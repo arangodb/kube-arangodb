@@ -41,11 +41,13 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Defines Object Path/Key
 type StorageV2Path struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Defines Object Path/Key
 	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 }
 
@@ -88,12 +90,15 @@ func (x *StorageV2Path) GetPath() string {
 	return ""
 }
 
+// Defines Object Details
 type StorageV2Object struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Path *StorageV2Path       `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	// Defines Object Path/Key
+	Path *StorageV2Path `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	// Defines Object Info
 	Info *StorageV2ObjectInfo `protobuf:"bytes,2,opt,name=info,proto3" json:"info,omitempty"`
 }
 
@@ -143,12 +148,15 @@ func (x *StorageV2Object) GetInfo() *StorageV2ObjectInfo {
 	return nil
 }
 
+// Defines Object Info
 type StorageV2ObjectInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Size        uint64                 `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitempty"`
+	// Size in bytes of the object
+	Size uint64 `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitempty"`
+	// Timestamp of last update
 	LastUpdated *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=last_updated,json=lastUpdated,proto3" json:"last_updated,omitempty"`
 }
 
@@ -198,11 +206,13 @@ func (x *StorageV2ObjectInfo) GetLastUpdated() *timestamppb.Timestamp {
 	return nil
 }
 
+// StorageV2 ReadObject Request
 type StorageV2ReadObjectRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Defines Object Path/Key
 	Path *StorageV2Path `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 }
 
@@ -245,11 +255,13 @@ func (x *StorageV2ReadObjectRequest) GetPath() *StorageV2Path {
 	return nil
 }
 
+// StorageV2 ReadObject Response
 type StorageV2ReadObjectResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Bytes of the object
 	Chunk []byte `protobuf:"bytes,1,opt,name=chunk,proto3" json:"chunk,omitempty"`
 }
 
@@ -292,13 +304,16 @@ func (x *StorageV2ReadObjectResponse) GetChunk() []byte {
 	return nil
 }
 
+// StorageV2 WriteObject Request
 type StorageV2WriteObjectRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Path  *StorageV2Path `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	Chunk []byte         `protobuf:"bytes,2,opt,name=chunk,proto3" json:"chunk,omitempty"`
+	// Defines Object Path/Key
+	Path *StorageV2Path `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	// Bytes of the object
+	Chunk []byte `protobuf:"bytes,2,opt,name=chunk,proto3" json:"chunk,omitempty"`
 }
 
 func (x *StorageV2WriteObjectRequest) Reset() {
@@ -347,12 +362,15 @@ func (x *StorageV2WriteObjectRequest) GetChunk() []byte {
 	return nil
 }
 
+// StorageV2 WriteObject Response
 type StorageV2WriteObjectResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Bytes    int64  `protobuf:"varint,1,opt,name=bytes,proto3" json:"bytes,omitempty"`
+	// Bytes Saved
+	Bytes int64 `protobuf:"varint,1,opt,name=bytes,proto3" json:"bytes,omitempty"`
+	// Checksum (sha256) of the object
 	Checksum string `protobuf:"bytes,2,opt,name=checksum,proto3" json:"checksum,omitempty"`
 }
 
@@ -402,11 +420,13 @@ func (x *StorageV2WriteObjectResponse) GetChecksum() string {
 	return ""
 }
 
+// StorageV2 HeadObject Request
 type StorageV2HeadObjectRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Defines Object Path/Key
 	Path *StorageV2Path `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 }
 
@@ -449,11 +469,13 @@ func (x *StorageV2HeadObjectRequest) GetPath() *StorageV2Path {
 	return nil
 }
 
+// StorageV2 HeadObject Response
 type StorageV2HeadObjectResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Defines Object Info
 	Info *StorageV2ObjectInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 }
 
@@ -496,11 +518,13 @@ func (x *StorageV2HeadObjectResponse) GetInfo() *StorageV2ObjectInfo {
 	return nil
 }
 
+// StorageV2 DeleteObject Request
 type StorageV2DeleteObjectRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Defines Object Path/Key
 	Path *StorageV2Path `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 }
 
@@ -543,6 +567,7 @@ func (x *StorageV2DeleteObjectRequest) GetPath() *StorageV2Path {
 	return nil
 }
 
+// StorageV2 DeleteObject Response
 type StorageV2DeleteObjectResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -581,11 +606,13 @@ func (*StorageV2DeleteObjectResponse) Descriptor() ([]byte, []int) {
 	return file_integrations_storage_v2_definition_storage_proto_rawDescGZIP(), []int{10}
 }
 
+// StorageV2 ListObjects Request
 type StorageV2ListObjectsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Defines Object Path/Key
 	Path *StorageV2Path `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 }
 
@@ -628,11 +655,13 @@ func (x *StorageV2ListObjectsRequest) GetPath() *StorageV2Path {
 	return nil
 }
 
+// StorageV2 ListObjects Response
 type StorageV2ListObjectsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// List of the objects
 	Files []*StorageV2Object `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
 }
 

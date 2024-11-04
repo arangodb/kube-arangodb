@@ -42,6 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoplatformstorage"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
@@ -139,6 +140,7 @@ type inspectorState struct {
 	arangoMembers                 *arangoMembersInspector
 	arangoTasks                   *arangoTasksInspector
 	arangoProfiles                *arangoProfilesInspector
+	arangoPlatformStorages        *arangoPlatformStoragesInspector
 	arangoRoutes                  *arangoRoutesInspector
 	arangoClusterSynchronizations *arangoClusterSynchronizationsInspector
 	endpoints                     *endpointsInspector
@@ -176,6 +178,10 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 
 	if _, err := i.ArangoProfile().V1Beta1(); err == nil {
 		arango.Scheduler().V1beta1().ArangoProfiles().Informer().AddEventHandler(i.eventHandler(definitions.ArangoProfile))
+	}
+
+	if _, err := i.ArangoPlatformStorage().V1Alpha1(); err == nil {
+		arango.Platform().V1alpha1().ArangoPlatformStorages().Informer().AddEventHandler(i.eventHandler(definitions.ArangoPlatformStorage))
 	}
 
 	if _, err := i.ArangoRoute().V1Alpha1(); err == nil {
@@ -346,6 +352,10 @@ func (i *inspectorState) ArangoProfile() arangoprofile.Definition {
 	return i.arangoProfiles
 }
 
+func (i *inspectorState) ArangoPlatformStorage() arangoplatformstorage.Definition {
+	return i.arangoPlatformStorages
+}
+
 func (i *inspectorState) Refresh(ctx context.Context) error {
 	return i.refresh(ctx, inspectorLoadersList...)
 }
@@ -505,6 +515,10 @@ func (i *inspectorState) validate() error {
 		return err
 	}
 
+	if err := i.arangoPlatformStorages.validate(); err != nil {
+		return err
+	}
+
 	if err := i.arangoTasks.validate(); err != nil {
 		return err
 	}
@@ -539,6 +553,7 @@ func (i *inspectorState) copyCore() *inspectorState {
 		arangoTasks:                   i.arangoTasks,
 		arangoRoutes:                  i.arangoRoutes,
 		arangoProfiles:                i.arangoProfiles,
+		arangoPlatformStorages:        i.arangoPlatformStorages,
 		arangoClusterSynchronizations: i.arangoClusterSynchronizations,
 		throttles:                     i.throttles.Copy(),
 		versionInfo:                   i.versionInfo,

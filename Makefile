@@ -927,14 +927,14 @@ sync: sync-crds
 
 .PHONY: sync-charts
 sync-charts:
-	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -exec mkdir -p "$(ROOT)/chart/kube-arangodb-enterprise/{}" \;)
-	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-enterprise/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -and -not -name README.md -exec mkdir -p "$(ROOT)/chart/kube-arangodb-enterprise/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -and -not -name README.md -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-enterprise/{}" \;)
 
-	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -exec mkdir -p "$(ROOT)/chart/kube-arangodb-enterprise-arm64/{}" \;)
-	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-enterprise-arm64/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -and -not -name README.md -exec mkdir -p "$(ROOT)/chart/kube-arangodb-enterprise-arm64/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -and -not -name README.md -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-enterprise-arm64/{}" \;)
 
-	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -exec mkdir -p "$(ROOT)/chart/kube-arangodb-arm64/{}" \;)
-	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-arm64/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type d -not -name values.yaml -and -not -name README.md -exec mkdir -p "$(ROOT)/chart/kube-arangodb-arm64/{}" \;)
+	@(cd "$(ROOT)/chart/kube-arangodb"; find . -type f -not -name values.yaml -and -not -name README.md -not -name Chart.yaml -exec cp "$(ROOT)/chart/kube-arangodb/{}" "$(ROOT)/chart/kube-arangodb-arm64/{}" \;)
 
 sync: sync-charts
 

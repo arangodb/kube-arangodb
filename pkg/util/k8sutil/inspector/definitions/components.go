@@ -30,6 +30,7 @@ const (
 	ArangoTask                   Component = "ArangoTask"
 	ArangoRoute                  Component = "ArangoRoute"
 	ArangoProfile                Component = "ArangoProfile"
+	ArangoPlatformStorage        Component = "ArangoPlatformStorage"
 	Node                         Component = "Node"
 	PersistentVolume             Component = "PersistentVolume"
 	PersistentVolumeClaim        Component = "PersistentVolumeClaim"
@@ -50,6 +51,7 @@ func AllComponents() []Component {
 		ArangoTask,
 		ArangoRoute,
 		ArangoProfile,
+		ArangoPlatformStorage,
 		Node,
 		PersistentVolume,
 		PersistentVolumeClaim,

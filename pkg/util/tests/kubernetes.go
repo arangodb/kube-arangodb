@@ -47,6 +47,8 @@ import (
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
 	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
@@ -299,6 +301,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.NetworkingV1alpha1().ArangoRoutes(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **platformApi.ArangoPlatformStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -506,6 +514,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.NetworkingV1alpha1().ArangoRoutes(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **platformApi.ArangoPlatformStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -679,6 +693,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.NetworkingV1alpha1().ArangoRoutes(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **platformApi.ArangoPlatformStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1170,6 +1189,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **platformApi.ArangoPlatformStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to get object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1414,6 +1448,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			networking.ArangoRouteResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
+	case *platformApi.ArangoPlatformStorage:
+		v.Kind = platform.ArangoPlatformStorageResourceKind
+		v.APIVersion = networkingApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			platformApi.SchemeGroupVersion.String(),
+			platform.ArangoPlatformStorageResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}
@@ -1642,6 +1684,12 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 			Group:   networking.ArangoNetworkingGroupName,
 			Version: networkingApi.ArangoNetworkingVersion,
 			Kind:    networking.ArangoRouteResourceKind,
+		}
+	case *platformApi.ArangoPlatformStorage:
+		return schema.GroupVersionKind{
+			Group:   platform.ArangoPlatformGroupName,
+			Version: platformApi.ArangoPlatformVersion,
+			Kind:    platform.ArangoPlatformStorageResourceKind,
 		}
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))

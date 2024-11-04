@@ -27,6 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
@@ -71,6 +72,10 @@ type ArangoMemberMods interface {
 	V1() generic.ModStatusClient[*api.ArangoMember]
 }
 
+type ArangoPlatformStorageMods interface {
+	V1Alpha1() generic.ModStatusClient[*platformApi.ArangoPlatformStorage]
+}
+
 type ArangoTaskMods interface {
 	V1() generic.ModStatusClient[*api.ArangoTask]
 }
@@ -103,4 +108,5 @@ type Mods interface {
 	ArangoClusterSynchronizationModInterface() ArangoClusterSynchronizationMods
 	ArangoRouteModInterface() ArangoRouteMods
 	ArangoProfileModInterface() ArangoProfileMods
+	ArangoPlatformStorageModInterface() ArangoPlatformStorageMods
 }

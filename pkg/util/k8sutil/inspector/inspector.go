@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangodeployment"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoplatformstorage"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
@@ -96,6 +97,7 @@ type Inspector interface {
 	arangotask.Inspector
 	arangoroute.Inspector
 	arangoprofile.Inspector
+	arangoplatformstorage.Inspector
 
 	mods.Mods
 

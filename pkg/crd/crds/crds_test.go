@@ -153,6 +153,7 @@ func Test_CRDGetters(t *testing.T) {
 		SchedulerCronJobWithOptions,
 		AnalyticsGAEWithOptions,
 		NetworkingRouteWithOptions,
+		PlatformStorageWithOptions,
 	}
 	require.Equal(t, len(AllDefinitions()), len(getters))
 

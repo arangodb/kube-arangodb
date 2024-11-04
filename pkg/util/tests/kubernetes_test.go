@@ -37,6 +37,7 @@ import (
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -98,4 +99,5 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*schedulerApi.ArangoSchedulerCronJob](t)
 	NewMetaObjectRun[*analyticsApi.GraphAnalyticsEngine](t)
 	NewMetaObjectRun[*networkingApi.ArangoRoute](t)
+	NewMetaObjectRun[*platformApi.ArangoPlatformStorage](t)
 }
