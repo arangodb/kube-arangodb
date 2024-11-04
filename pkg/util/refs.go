@@ -21,6 +21,7 @@
 package util
 
 import (
+	"context"
 	"encoding/json"
 	"reflect"
 )
@@ -196,4 +197,8 @@ func InitOptional[T any](in *T, ok bool) *T {
 
 	var z T
 	return &z
+}
+
+type NextIterator[T any] interface {
+	Next(ctx context.Context) (T, error)
 }
