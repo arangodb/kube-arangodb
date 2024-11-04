@@ -177,6 +177,7 @@ func (r *Reconciler) pvcResizePlan(group api.ServerGroup, member api.MemberStatu
 	case api.PVCResizeModeRotate:
 		return withWaitForMember(api.Plan{
 			actions.NewAction(getResignLeadershipActionType(), group, member),
+			actions.NewAction(api.ActionTypeEnsureSecuredResignLeadership, group, member),
 			actions.NewAction(api.ActionTypeKillMemberPod, group, member),
 			actions.NewAction(api.ActionTypeRotateStartMember, group, member),
 			actions.NewAction(api.ActionTypePVCResize, group, member),

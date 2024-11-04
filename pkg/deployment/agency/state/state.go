@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -260,6 +260,48 @@ func (s State) PlanLeaderServersWithFailOver() Servers {
 	}
 
 	return r
+}
+
+// IsServerWithShardBackup returns true if server can be restarted with risk
+func (s State) IsServerWithShardBackup(server Server) bool {
+	for db, dbData := range s.Plan.Collections {
+		for collection, collectionData := range dbData {
+			for shard, shardDetails := range collectionData.Shards {
+				if len(shardDetails) <= 1 {
+					// RF is 1, nothing to do
+					continue
+				}
+
+				// Fund current state
+				currentDBs, ok := s.Current.Collections[db]
+				if !ok {
+					continue
+				}
+
+				currentCollection, ok := currentDBs[collection]
+				if !ok {
+					continue
+				}
+
+				currentShard, ok := currentCollection[shard]
+				if !ok {
+					continue
+				}
+
+				if len(currentShard.Servers) == 0 {
+					continue
+				}
+
+				if currentShard.Servers[0] == server {
+					if len(currentShard.Servers) == 1 {
+						return false
+					}
+				}
+			}
+		}
+	}
+
+	return true
 }
 
 type CollectionShardDetails []CollectionShardDetail

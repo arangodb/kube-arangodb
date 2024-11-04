@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -283,6 +283,16 @@ func Test_Actions(t *testing.T) {
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.True(t, api.ActionTypeEnforceResignLeadership.Optional())
+		})
+	})
+
+	t.Run("EnsureSecuredResignLeadership", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeEnsureSecuredResignLeadership)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeEnsureSecuredResignLeadership.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeEnsureSecuredResignLeadership.Optional())
 		})
 	})
 

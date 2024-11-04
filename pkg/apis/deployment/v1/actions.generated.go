@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,6 +100,9 @@ const (
 
 	// ActionEnforceResignLeadershipDefaultTimeout define default timeout for action ActionEnforceResignLeadership
 	ActionEnforceResignLeadershipDefaultTimeout time.Duration = 2700 * time.Second // 45m0s
+
+	// ActionEnsureSecuredResignLeadershipDefaultTimeout define default timeout for action ActionEnsureSecuredResignLeadership
+	ActionEnsureSecuredResignLeadershipDefaultTimeout time.Duration = 600 * time.Second // 10m0s
 
 	// ActionIdleDefaultTimeout define default timeout for action ActionIdle
 	ActionIdleDefaultTimeout time.Duration = ActionsDefaultTimeout
@@ -362,6 +365,9 @@ const (
 	// ActionTypeEnforceResignLeadership in scopes Normal. Run the ResignLeadership job on DBServer and checks data compatibility after
 	ActionTypeEnforceResignLeadership ActionType = "EnforceResignLeadership"
 
+	// ActionTypeEnsureSecuredResignLeadership in scopes Normal. Ensures that data is still replicated on other servers
+	ActionTypeEnsureSecuredResignLeadership ActionType = "EnsureSecuredResignLeadership"
+
 	// ActionTypeIdle in scopes Normal. Define idle operation in case if preconditions are not meet
 	ActionTypeIdle ActionType = "Idle"
 
@@ -601,6 +607,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionEncryptionKeyStatusUpdateDefaultTimeout
 	case ActionTypeEnforceResignLeadership:
 		return ActionEnforceResignLeadershipDefaultTimeout
+	case ActionTypeEnsureSecuredResignLeadership:
+		return ActionEnsureSecuredResignLeadershipDefaultTimeout
 	case ActionTypeIdle:
 		return ActionIdleDefaultTimeout
 	case ActionTypeJWTAdd:
@@ -778,6 +786,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeEncryptionKeyStatusUpdate:
 		return ActionPriorityNormal
 	case ActionTypeEnforceResignLeadership:
+		return ActionPriorityNormal
+	case ActionTypeEnsureSecuredResignLeadership:
 		return ActionPriorityNormal
 	case ActionTypeIdle:
 		return ActionPriorityNormal
@@ -969,6 +979,8 @@ func (a ActionType) Optional() bool {
 		return false
 	case ActionTypeEnforceResignLeadership:
 		return true
+	case ActionTypeEnsureSecuredResignLeadership:
+		return false
 	case ActionTypeIdle:
 		return false
 	case ActionTypeJWTAdd:
