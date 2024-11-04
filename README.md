@@ -195,7 +195,7 @@ Flags:
       --kubernetes.max-batch-size int                          Size of batch during objects read (default 256)
       --kubernetes.qps float32                                 Number of queries per second for k8s API (default 15)
       --log.format string                                      Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
-      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, chaos-monkey, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, http, inspector, integration-config-v1, integration-envoy-auth-v3, integrations, k8s-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, server, server-authentication (default [info])
+      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, chaos-monkey, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, helm, http, inspector, integration-config-v1, integration-envoy-auth-v3, integration-scheduler-v2, integrations, k8s-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, server, server-authentication (default [info])
       --log.sampling                                           If true, operator will try to minimize duplication of logging events (default true)
       --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
       --metrics.excluded-prefixes stringArray                  List of the excluded metrics prefixes
@@ -283,8 +283,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.2.36
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.2.36
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.2.43
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.2.43
 ```
 
 ##### Enterprise Edition example
@@ -293,8 +293,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.2.36
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.2.36
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.2.43
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.2.43
 ```
 
 ### Installation of latest release using Helm

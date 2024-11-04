@@ -22,7 +22,6 @@ package inspector
 
 import (
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
-	arangoRoutev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
@@ -38,7 +37,7 @@ type arangoRouteMod struct {
 	i *inspectorState
 }
 
-func (p arangoRouteMod) V1Alpha1() arangoRoutev1.ModInterface {
+func (p arangoRouteMod) V1Alpha1() generic.ModStatusClient[*networkingApi.ArangoRoute] {
 	return wrapMod[*networkingApi.ArangoRoute](definitions.ArangoRoute, p.i.GetThrottles, p.clientv1alpha1)
 }
 

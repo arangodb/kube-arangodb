@@ -695,6 +695,8 @@ v1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -712,6 +714,13 @@ v1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -862,6 +871,8 @@ v1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -1167,6 +1178,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -1625,6 +1638,8 @@ v1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -1642,6 +1657,13 @@ v1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -1792,6 +1814,8 @@ v1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -2052,6 +2076,8 @@ v1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -2914,6 +2940,8 @@ v1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -2931,6 +2959,13 @@ v1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -3081,6 +3116,8 @@ v1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -3386,6 +3423,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -3844,6 +3883,8 @@ v1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -3861,6 +3902,13 @@ v1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -4011,6 +4059,8 @@ v1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -4271,6 +4321,8 @@ v1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -5051,6 +5103,8 @@ v1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -5068,6 +5122,13 @@ v1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -5218,6 +5279,8 @@ v1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -5523,6 +5586,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -5981,6 +6046,8 @@ v1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -5998,6 +6065,13 @@ v1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -6148,6 +6222,8 @@ v1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -6408,6 +6484,8 @@ v1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -7270,6 +7348,8 @@ v1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -7287,6 +7367,13 @@ v1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -7437,6 +7524,8 @@ v1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -7742,6 +7831,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -8200,6 +8291,8 @@ v1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -8217,6 +8310,13 @@ v1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -8367,6 +8467,8 @@ v1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -8627,6 +8729,8 @@ v1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -9070,6 +9174,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -9543,6 +9649,8 @@ v1:
                           properties:
                             name:
                               type: string
+                            request:
+                              type: string
                           type: object
                         type: array
                       limits:
@@ -9558,6 +9666,13 @@ v1:
                     properties:
                       allowPrivilegeEscalation:
                         type: boolean
+                      appArmorProfile:
+                        properties:
+                          localhostProfile:
+                            type: string
+                          type:
+                            type: string
+                        type: object
                       capabilities:
                         properties:
                           add:
@@ -9689,6 +9804,8 @@ v1:
                           type: string
                         readOnly:
                           type: boolean
+                        recursiveReadOnly:
+                          type: string
                         subPath:
                           type: string
                         subPathExpr:
@@ -9736,6 +9853,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -9797,6 +9916,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -10583,6 +10704,8 @@ v1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -10600,6 +10723,13 @@ v1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -10750,6 +10880,8 @@ v1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -11055,6 +11187,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -11513,6 +11647,8 @@ v1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -11530,6 +11666,13 @@ v1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -11680,6 +11823,8 @@ v1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -11940,6 +12085,8 @@ v1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -12863,6 +13010,8 @@ v1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -12880,6 +13029,13 @@ v1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -13030,6 +13186,8 @@ v1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -13335,6 +13493,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -13793,6 +13953,8 @@ v1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -13810,6 +13972,13 @@ v1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -13960,6 +14129,8 @@ v1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -14220,6 +14391,8 @@ v1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -14993,6 +15166,8 @@ v1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -15010,6 +15185,13 @@ v1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -15160,6 +15342,8 @@ v1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -15465,6 +15649,8 @@ v1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -15923,6 +16109,8 @@ v1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -15940,6 +16128,13 @@ v1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -16090,6 +16285,8 @@ v1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -16350,6 +16547,8 @@ v1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -17223,6 +17422,8 @@ v1alpha:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -17240,6 +17441,13 @@ v1alpha:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -17390,6 +17598,8 @@ v1alpha:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -17695,6 +17905,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -18153,6 +18365,8 @@ v1alpha:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -18170,6 +18384,13 @@ v1alpha:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -18320,6 +18541,8 @@ v1alpha:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -18580,6 +18803,8 @@ v1alpha:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -19442,6 +19667,8 @@ v1alpha:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -19459,6 +19686,13 @@ v1alpha:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -19609,6 +19843,8 @@ v1alpha:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -19914,6 +20150,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -20372,6 +20610,8 @@ v1alpha:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -20389,6 +20629,13 @@ v1alpha:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -20539,6 +20786,8 @@ v1alpha:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -20799,6 +21048,8 @@ v1alpha:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -21579,6 +21830,8 @@ v1alpha:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -21596,6 +21849,13 @@ v1alpha:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -21746,6 +22006,8 @@ v1alpha:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -22051,6 +22313,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -22509,6 +22773,8 @@ v1alpha:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -22526,6 +22792,13 @@ v1alpha:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -22676,6 +22949,8 @@ v1alpha:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -22936,6 +23211,8 @@ v1alpha:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -23798,6 +24075,8 @@ v1alpha:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -23815,6 +24094,13 @@ v1alpha:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -23965,6 +24251,8 @@ v1alpha:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -24270,6 +24558,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -24728,6 +25018,8 @@ v1alpha:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -24745,6 +25037,13 @@ v1alpha:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -24895,6 +25194,8 @@ v1alpha:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -25155,6 +25456,8 @@ v1alpha:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -25598,6 +25901,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -26071,6 +26376,8 @@ v1alpha:
                           properties:
                             name:
                               type: string
+                            request:
+                              type: string
                           type: object
                         type: array
                       limits:
@@ -26086,6 +26393,13 @@ v1alpha:
                     properties:
                       allowPrivilegeEscalation:
                         type: boolean
+                      appArmorProfile:
+                        properties:
+                          localhostProfile:
+                            type: string
+                          type:
+                            type: string
+                        type: object
                       capabilities:
                         properties:
                           add:
@@ -26217,6 +26531,8 @@ v1alpha:
                           type: string
                         readOnly:
                           type: boolean
+                        recursiveReadOnly:
+                          type: string
                         subPath:
                           type: string
                         subPathExpr:
@@ -26264,6 +26580,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -26325,6 +26643,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -27111,6 +27431,8 @@ v1alpha:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -27128,6 +27450,13 @@ v1alpha:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -27278,6 +27607,8 @@ v1alpha:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -27583,6 +27914,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -28041,6 +28374,8 @@ v1alpha:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -28058,6 +28393,13 @@ v1alpha:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -28208,6 +28550,8 @@ v1alpha:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -28468,6 +28812,8 @@ v1alpha:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -29391,6 +29737,8 @@ v1alpha:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -29408,6 +29756,13 @@ v1alpha:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -29558,6 +29913,8 @@ v1alpha:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -29863,6 +30220,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -30321,6 +30680,8 @@ v1alpha:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -30338,6 +30699,13 @@ v1alpha:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -30488,6 +30856,8 @@ v1alpha:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -30748,6 +31118,8 @@ v1alpha:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -31521,6 +31893,8 @@ v1alpha:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -31538,6 +31912,13 @@ v1alpha:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -31688,6 +32069,8 @@ v1alpha:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -31993,6 +32376,8 @@ v1alpha:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -32451,6 +32836,8 @@ v1alpha:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -32468,6 +32855,13 @@ v1alpha:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -32618,6 +33012,8 @@ v1alpha:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -32878,6 +33274,8 @@ v1alpha:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -33751,6 +34149,8 @@ v2alpha1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -33768,6 +34168,13 @@ v2alpha1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -33918,6 +34325,8 @@ v2alpha1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -34223,6 +34632,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -34681,6 +35092,8 @@ v2alpha1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -34698,6 +35111,13 @@ v2alpha1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -34848,6 +35268,8 @@ v2alpha1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -35108,6 +35530,8 @@ v2alpha1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -35970,6 +36394,8 @@ v2alpha1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -35987,6 +36413,13 @@ v2alpha1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -36137,6 +36570,8 @@ v2alpha1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -36442,6 +36877,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -36900,6 +37337,8 @@ v2alpha1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -36917,6 +37356,13 @@ v2alpha1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -37067,6 +37513,8 @@ v2alpha1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -37327,6 +37775,8 @@ v2alpha1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -38107,6 +38557,8 @@ v2alpha1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -38124,6 +38576,13 @@ v2alpha1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -38274,6 +38733,8 @@ v2alpha1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -38579,6 +39040,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -39037,6 +39500,8 @@ v2alpha1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -39054,6 +39519,13 @@ v2alpha1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -39204,6 +39676,8 @@ v2alpha1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -39464,6 +39938,8 @@ v2alpha1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -40326,6 +40802,8 @@ v2alpha1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -40343,6 +40821,13 @@ v2alpha1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -40493,6 +40978,8 @@ v2alpha1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -40798,6 +41285,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -41256,6 +41745,8 @@ v2alpha1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -41273,6 +41764,13 @@ v2alpha1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -41423,6 +41921,8 @@ v2alpha1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -41683,6 +42183,8 @@ v2alpha1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -42126,6 +42628,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -42599,6 +43103,8 @@ v2alpha1:
                           properties:
                             name:
                               type: string
+                            request:
+                              type: string
                           type: object
                         type: array
                       limits:
@@ -42614,6 +43120,13 @@ v2alpha1:
                     properties:
                       allowPrivilegeEscalation:
                         type: boolean
+                      appArmorProfile:
+                        properties:
+                          localhostProfile:
+                            type: string
+                          type:
+                            type: string
+                        type: object
                       capabilities:
                         properties:
                           add:
@@ -42745,6 +43258,8 @@ v2alpha1:
                           type: string
                         readOnly:
                           type: boolean
+                        recursiveReadOnly:
+                          type: string
                         subPath:
                           type: string
                         subPathExpr:
@@ -42792,6 +43307,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -42853,6 +43370,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -43639,6 +44158,8 @@ v2alpha1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -43656,6 +44177,13 @@ v2alpha1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -43806,6 +44334,8 @@ v2alpha1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -44111,6 +44641,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -44569,6 +45101,8 @@ v2alpha1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -44586,6 +45120,13 @@ v2alpha1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -44736,6 +45277,8 @@ v2alpha1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -44996,6 +45539,8 @@ v2alpha1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -45919,6 +46464,8 @@ v2alpha1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -45936,6 +46483,13 @@ v2alpha1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -46086,6 +46640,8 @@ v2alpha1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -46391,6 +46947,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -46849,6 +47407,8 @@ v2alpha1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -46866,6 +47426,13 @@ v2alpha1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -47016,6 +47583,8 @@ v2alpha1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -47276,6 +47845,8 @@ v2alpha1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:
@@ -48049,6 +48620,8 @@ v2alpha1:
                                 properties:
                                   name:
                                     type: string
+                                  request:
+                                    type: string
                                 type: object
                               type: array
                             limits:
@@ -48066,6 +48639,13 @@ v2alpha1:
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
+                            appArmorProfile:
+                              properties:
+                                localhostProfile:
+                                  type: string
+                                type:
+                                  type: string
+                              type: object
                             capabilities:
                               properties:
                                 add:
@@ -48216,6 +48796,8 @@ v2alpha1:
                                 type: string
                               readOnly:
                                 type: boolean
+                              recursiveReadOnly:
+                                type: string
                               subPath:
                                 type: string
                               subPathExpr:
@@ -48521,6 +49103,8 @@ v2alpha1:
                     items:
                       properties:
                         name:
+                          type: string
+                        request:
                           type: string
                       type: object
                     type: array
@@ -48979,6 +49563,8 @@ v2alpha1:
                             properties:
                               name:
                                 type: string
+                              request:
+                                type: string
                             type: object
                           type: array
                         limits:
@@ -48996,6 +49582,13 @@ v2alpha1:
                       properties:
                         allowPrivilegeEscalation:
                           type: boolean
+                        appArmorProfile:
+                          properties:
+                            localhostProfile:
+                              type: string
+                            type:
+                              type: string
+                          type: object
                         capabilities:
                           properties:
                             add:
@@ -49146,6 +49739,8 @@ v2alpha1:
                             type: string
                           readOnly:
                             type: boolean
+                          recursiveReadOnly:
+                            type: string
                           subPath:
                             type: string
                           subPathExpr:
@@ -49406,6 +50001,8 @@ v2alpha1:
                       type: string
                     readOnly:
                       type: boolean
+                    recursiveReadOnly:
+                      type: string
                     subPath:
                       type: string
                     subPathExpr:

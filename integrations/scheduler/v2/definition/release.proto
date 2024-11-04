@@ -1,0 +1,117 @@
+//
+// DISCLAIMER
+//
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package scheduler;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition";
+
+// Release Object
+message SchedulerV2Release {
+  // Release Name
+  string name = 1;
+  // Release Namespace
+  string namespace = 2;
+  // Release Values Json Bytes
+  bytes values = 3;
+  // Release Version
+  int64 version = 4;
+  // Release Labels
+  map<string, string> labels = 5;
+  // Release Info
+  optional SchedulerV2ReleaseInfo info = 6;
+}
+
+// Release Object Info
+message SchedulerV2ReleaseInfo {
+  // Release First Deployed time
+  optional google.protobuf.Timestamp first_deployed = 1;
+  // Release Last Deployed time
+  optional google.protobuf.Timestamp last_deployed = 2;
+  // Release Deleted time
+  optional google.protobuf.Timestamp deleted = 3;
+  // Release Info Description
+  string description = 4;
+  // Release Info Notes
+  string notes = 5;
+  // Release Info Status
+  SchedulerV2ReleaseInfoStatus status = 6;
+  // Release Resources
+  repeated SchedulerV2ReleaseInfoResource resources = 7;
+}
+
+// Release Object Info Status Enum
+enum SchedulerV2ReleaseInfoStatus {
+  // Unknown
+  SCHEDULER_V2_RELEASE_INFO_STATUS_UNKNOWN_UNSPECIFIED = 0;
+  // Release is Deployed
+  SCHEDULER_V2_RELEASE_INFO_STATUS_DEPLOYED = 1;
+  // Release is Uninstalled, but not removed
+  SCHEDULER_V2_RELEASE_INFO_STATUS_UNINSTALLED = 2;
+  // Release is Hibernated
+  SCHEDULER_V2_RELEASE_INFO_STATUS_SUPERSEDED = 3;
+  // Release is Failed
+  SCHEDULER_V2_RELEASE_INFO_STATUS_FAILED = 4;
+  // Release is Uninstalling
+  SCHEDULER_V2_RELEASE_INFO_STATUS_UNINSTALLING = 5;
+  // Release is Pending Installation
+  SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGINSTALL = 6;
+  // Release is Pending Upgrade
+  SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGUPGRADE = 7;
+  // Release is Pending Rollback
+  SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGROLLBACK = 8;
+}
+
+// Release Object Info Resource
+message SchedulerV2ReleaseInfoResourceObject {
+  // Release Object Resource
+  SchedulerV2ReleaseInfoResource resource = 1;
+  // Release Object Data
+  optional SchedulerV2ReleaseInfoResourceObjectData data = 2;
+}
+
+// Release Object Info Resource bytes
+message SchedulerV2ReleaseInfoResourceObjectData {
+  // Release Object Json Bytes
+  bytes data = 1;
+}
+
+// Release Object Info Resource Meta
+message SchedulerV2ReleaseInfoResource {
+  // GroupVersionKind
+  SchedulerV2GVK gvk = 1;
+  // Kubernetes API Object Name
+  string name = 2;
+  // Kubernetes API Object Namespace
+  string namespace = 3;
+}
+
+// GroupVersionKind
+message SchedulerV2GVK {
+  // Kubernetes API Group
+  string group = 1;
+  // Kubernetes API Version
+  string version = 2;
+  // Kubernetes API Kind
+  string kind = 3;
+}

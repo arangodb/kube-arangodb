@@ -185,6 +185,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.BackupV1().ArangoBackups(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **backupApi.ArangoBackupPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		case **mlApi.ArangoMLExtension:
 			require.NotNil(t, v)
 
@@ -386,6 +392,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.BackupV1().ArangoBackups(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **backupApi.ArangoBackupPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		case **mlApi.ArangoMLExtension:
 			require.NotNil(t, v)
 
@@ -572,6 +584,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.BackupV1().ArangoBackups(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **backupApi.ArangoBackupPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **mlApi.ArangoMLExtension:
 			require.NotNil(t, v)
 
@@ -859,6 +876,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			vl := *v
 
 			vn, err := arango.BackupV1().ArangoBackups(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **backupApi.ArangoBackupPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -1238,6 +1270,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			backup.ArangoBackupResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
+	case *backupApi.ArangoBackupPolicy:
+		v.Kind = backup.ArangoBackupPolicyResourceKind
+		v.APIVersion = backupApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			backupApi.SchemeGroupVersion.String(),
+			backup.ArangoBackupPolicyResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
 	case *mlApi.ArangoMLExtension:
 		v.Kind = ml.ArangoMLExtensionResourceKind
 		v.APIVersion = mlApi.SchemeGroupVersion.String()
@@ -1397,6 +1437,7 @@ func NewMetaObject[T meta.Object](t *testing.T, namespace, name string, mods ...
 	}
 	obj.SetName(name)
 	obj.SetUID(uuid.NewUUID())
+	obj.SetCreationTimestamp(meta.Now())
 
 	SetMetaBasedOnType(t, obj)
 
@@ -1493,6 +1534,12 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 			Group:   backup.ArangoBackupGroupName,
 			Version: backupApi.ArangoBackupVersion,
 			Kind:    backup.ArangoBackupResourceKind,
+		}
+	case *backupApi.ArangoBackupPolicy:
+		return schema.GroupVersionKind{
+			Group:   backup.ArangoBackupGroupName,
+			Version: backupApi.ArangoBackupVersion,
+			Kind:    backup.ArangoBackupPolicyResourceKind,
 		}
 	case *mlApi.ArangoMLExtension:
 		return schema.GroupVersionKind{

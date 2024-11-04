@@ -1,0 +1,186 @@
+//
+// DISCLAIMER
+//
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package scheduler;
+
+import "integrations/scheduler/v2/definition/release.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition";
+
+// Request
+message SchedulerV2ListRequest {
+  // Request Options
+  optional SchedulerV2ListRequestOptions options = 1;
+}
+
+// Request Options
+message SchedulerV2ListRequestOptions {
+  // Label selectors
+  map<string, string> selectors = 1;
+}
+
+// Response
+message SchedulerV2ListResponse {
+  // List of the releases
+  map<string, SchedulerV2Release> releases = 1;
+}
+
+// Request
+message SchedulerV2StatusRequest {
+  // Request Options
+  optional SchedulerV2StatusRequestOptions options = 1;
+
+  // Helm Release Name
+  string name = 2;
+}
+
+// Request Options
+message SchedulerV2StatusRequestOptions {
+}
+
+// Response
+message SchedulerV2StatusResponse {
+  // Helm Release Object
+  optional SchedulerV2Release release = 1;
+}
+
+
+// Request
+message SchedulerV2StatusObjectsRequest {
+  // Request Options
+  optional SchedulerV2StatusRequestOptions options = 1;
+
+  // Helm Release Name
+  string name = 2;
+}
+
+// Response
+message SchedulerV2StatusObjectsResponse {
+  // Helm Release Object
+  optional SchedulerV2Release release = 1;
+
+  // List of the Kubernetes Objects
+  repeated SchedulerV2ReleaseInfoResourceObject objects = 2;
+}
+
+
+// Request
+message SchedulerV2InstallRequest {
+  // Request Options
+  optional SchedulerV2InstallRequestOptions options = 1;
+
+  // Helm Release Name
+  string name = 2;
+
+  // Helm Chart Tar GZip File Bytes
+  bytes chart = 3;
+
+  // Helm Chart Values bytes
+  bytes values = 4;
+}
+
+// Request Options
+message SchedulerV2InstallRequestOptions {
+  // Release Labels
+  map<string, string> labels = 1;
+}
+
+// Response
+message SchedulerV2InstallResponse {
+  // Helm Release Object
+  optional SchedulerV2Release release = 1;
+}
+
+
+// Request
+message SchedulerV2UpgradeRequest {
+  // Request Options
+  optional SchedulerV2UpgradeRequestOptions options = 1;
+
+  // Helm Release Name
+  string name = 2;
+
+  // Helm Chart Tar GZip File Bytes
+  bytes chart = 3;
+
+  // Helm Chart Values bytes
+  bytes values = 4;
+}
+
+// Request Options
+message SchedulerV2UpgradeRequestOptions {
+  // Release Labels
+  map<string, string> labels = 1;
+}
+
+// Response
+message SchedulerV2UpgradeResponse {
+  // Helm Release Object Before
+  optional SchedulerV2Release before = 1;
+
+
+  // Helm Release Object After
+  optional SchedulerV2Release after = 2;
+}
+
+
+// Request
+message SchedulerV2UninstallRequest {
+  // Request Options
+  optional SchedulerV2UninstallRequestOptions options = 1;
+
+  // Helm Release Name
+  string name = 2;
+}
+
+// Request Options
+message SchedulerV2UninstallRequestOptions {
+}
+
+// Response
+message SchedulerV2UninstallResponse {
+  // Uninstall info
+  string info = 1;
+
+  // Helm Release Object
+  optional SchedulerV2Release release = 2;
+}
+
+
+// Request
+message SchedulerV2TestRequest {
+  // Request Options
+  optional SchedulerV2TestRequestOptions options = 1;
+
+  // Helm Release Name
+  string name = 2;
+}
+
+// Request Options
+message SchedulerV2TestRequestOptions {
+}
+
+// Response
+message SchedulerV2TestResponse {
+  // Helm Release Object
+  optional SchedulerV2Release release = 1;
+}

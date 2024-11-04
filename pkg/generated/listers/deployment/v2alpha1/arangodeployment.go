@@ -24,8 +24,8 @@ package v2alpha1
 
 import (
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoDeploymentLister interface {
 
 // arangoDeploymentLister implements the ArangoDeploymentLister interface.
 type arangoDeploymentLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v2alpha1.ArangoDeployment]
 }
 
 // NewArangoDeploymentLister returns a new ArangoDeploymentLister.
 func NewArangoDeploymentLister(indexer cache.Indexer) ArangoDeploymentLister {
-	return &arangoDeploymentLister{indexer: indexer}
-}
-
-// List lists all ArangoDeployments in the indexer.
-func (s *arangoDeploymentLister) List(selector labels.Selector) (ret []*v2alpha1.ArangoDeployment, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v2alpha1.ArangoDeployment))
-	})
-	return ret, err
+	return &arangoDeploymentLister{listers.New[*v2alpha1.ArangoDeployment](indexer, v2alpha1.Resource("arangodeployment"))}
 }
 
 // ArangoDeployments returns an object that can list and get ArangoDeployments.
 func (s *arangoDeploymentLister) ArangoDeployments(namespace string) ArangoDeploymentNamespaceLister {
-	return arangoDeploymentNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoDeploymentNamespaceLister{listers.NewNamespaced[*v2alpha1.ArangoDeployment](s.ResourceIndexer, namespace)}
 }
 
 // ArangoDeploymentNamespaceLister helps list and get ArangoDeployments.
@@ -78,26 +70,5 @@ type ArangoDeploymentNamespaceLister interface {
 // arangoDeploymentNamespaceLister implements the ArangoDeploymentNamespaceLister
 // interface.
 type arangoDeploymentNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoDeployments in the indexer for a given namespace.
-func (s arangoDeploymentNamespaceLister) List(selector labels.Selector) (ret []*v2alpha1.ArangoDeployment, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v2alpha1.ArangoDeployment))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoDeployment from the indexer for a given namespace and name.
-func (s arangoDeploymentNamespaceLister) Get(name string) (*v2alpha1.ArangoDeployment, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v2alpha1.Resource("arangodeployment"), name)
-	}
-	return obj.(*v2alpha1.ArangoDeployment), nil
+	listers.ResourceIndexer[*v2alpha1.ArangoDeployment]
 }

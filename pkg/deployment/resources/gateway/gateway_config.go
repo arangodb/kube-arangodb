@@ -170,7 +170,13 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 			UpstreamProtocolOptions: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_{
 				ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
 					ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
-						Http2ProtocolOptions: &coreAPI.Http2ProtocolOptions{},
+						Http2ProtocolOptions: &coreAPI.Http2ProtocolOptions{
+							ConnectionKeepalive: &coreAPI.KeepaliveSettings{
+								Interval:               durationpb.New(15 * time.Second),
+								Timeout:                durationpb.New(30 * time.Second),
+								ConnectionIdleInterval: durationpb.New(60 * time.Second),
+							},
+						},
 					},
 				},
 			},

@@ -21,6 +21,7 @@
 package util
 
 import (
+	"encoding/json"
 	"reflect"
 )
 
@@ -36,6 +37,15 @@ func NewTypeOrNil[T interface{}](input *T) *T {
 	}
 
 	return NewType(*input)
+}
+
+// OptionalType returns the default value (or T default value)
+func OptionalType[T any](in *T, v T) T {
+	if in == nil {
+		return v
+	}
+
+	return *in
 }
 
 // TypeOrDefault returns the default value (or T default value) if input is nil, otherwise returns the referenced value.
@@ -154,4 +164,36 @@ func And(in ...bool) bool {
 	}
 
 	return len(in) > 0
+}
+
+type Mod[T any] func(in *T)
+
+func ApplyMods[T any](in *T, mods ...Mod[T]) {
+	for _, mod := range mods {
+		mod(in)
+	}
+}
+
+func JSONRemarshal[A, B any](in A) (B, error) {
+	d, err := json.Marshal(in)
+	if err != nil {
+		return Default[B](), err
+	}
+
+	var o B
+
+	if err := json.Unmarshal(d, &o); err != nil {
+		return Default[B](), err
+	}
+
+	return o, nil
+}
+
+func InitOptional[T any](in *T, ok bool) *T {
+	if ok {
+		return in
+	}
+
+	var z T
+	return &z
 }

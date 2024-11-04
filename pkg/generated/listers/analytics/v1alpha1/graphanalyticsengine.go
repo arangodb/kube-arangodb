@@ -24,8 +24,8 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type GraphAnalyticsEngineLister interface {
 
 // graphAnalyticsEngineLister implements the GraphAnalyticsEngineLister interface.
 type graphAnalyticsEngineLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.GraphAnalyticsEngine]
 }
 
 // NewGraphAnalyticsEngineLister returns a new GraphAnalyticsEngineLister.
 func NewGraphAnalyticsEngineLister(indexer cache.Indexer) GraphAnalyticsEngineLister {
-	return &graphAnalyticsEngineLister{indexer: indexer}
-}
-
-// List lists all GraphAnalyticsEngines in the indexer.
-func (s *graphAnalyticsEngineLister) List(selector labels.Selector) (ret []*v1alpha1.GraphAnalyticsEngine, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.GraphAnalyticsEngine))
-	})
-	return ret, err
+	return &graphAnalyticsEngineLister{listers.New[*v1alpha1.GraphAnalyticsEngine](indexer, v1alpha1.Resource("graphanalyticsengine"))}
 }
 
 // GraphAnalyticsEngines returns an object that can list and get GraphAnalyticsEngines.
 func (s *graphAnalyticsEngineLister) GraphAnalyticsEngines(namespace string) GraphAnalyticsEngineNamespaceLister {
-	return graphAnalyticsEngineNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return graphAnalyticsEngineNamespaceLister{listers.NewNamespaced[*v1alpha1.GraphAnalyticsEngine](s.ResourceIndexer, namespace)}
 }
 
 // GraphAnalyticsEngineNamespaceLister helps list and get GraphAnalyticsEngines.
@@ -78,26 +70,5 @@ type GraphAnalyticsEngineNamespaceLister interface {
 // graphAnalyticsEngineNamespaceLister implements the GraphAnalyticsEngineNamespaceLister
 // interface.
 type graphAnalyticsEngineNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all GraphAnalyticsEngines in the indexer for a given namespace.
-func (s graphAnalyticsEngineNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.GraphAnalyticsEngine, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.GraphAnalyticsEngine))
-	})
-	return ret, err
-}
-
-// Get retrieves the GraphAnalyticsEngine from the indexer for a given namespace and name.
-func (s graphAnalyticsEngineNamespaceLister) Get(name string) (*v1alpha1.GraphAnalyticsEngine, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("graphanalyticsengine"), name)
-	}
-	return obj.(*v1alpha1.GraphAnalyticsEngine), nil
+	listers.ResourceIndexer[*v1alpha1.GraphAnalyticsEngine]
 }

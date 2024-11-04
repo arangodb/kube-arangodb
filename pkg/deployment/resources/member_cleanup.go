@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
 )
 
 const (
@@ -190,7 +189,9 @@ func (r *Resources) EnsureArangoMembers(ctx context.Context, cachedStatus inspec
 		}
 
 		return nil
-	}, arangomemberv1.FilterByDeploymentUID(obj.GetUID())); err != nil {
+	}, func(obj *api.ArangoMember) bool {
+		return obj != nil && obj.Spec.DeploymentUID == obj.GetUID()
+	}); err != nil {
 		return err
 	}
 

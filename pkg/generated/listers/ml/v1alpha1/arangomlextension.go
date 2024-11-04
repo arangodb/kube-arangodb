@@ -24,8 +24,8 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoMLExtensionLister interface {
 
 // arangoMLExtensionLister implements the ArangoMLExtensionLister interface.
 type arangoMLExtensionLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.ArangoMLExtension]
 }
 
 // NewArangoMLExtensionLister returns a new ArangoMLExtensionLister.
 func NewArangoMLExtensionLister(indexer cache.Indexer) ArangoMLExtensionLister {
-	return &arangoMLExtensionLister{indexer: indexer}
-}
-
-// List lists all ArangoMLExtensions in the indexer.
-func (s *arangoMLExtensionLister) List(selector labels.Selector) (ret []*v1alpha1.ArangoMLExtension, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ArangoMLExtension))
-	})
-	return ret, err
+	return &arangoMLExtensionLister{listers.New[*v1alpha1.ArangoMLExtension](indexer, v1alpha1.Resource("arangomlextension"))}
 }
 
 // ArangoMLExtensions returns an object that can list and get ArangoMLExtensions.
 func (s *arangoMLExtensionLister) ArangoMLExtensions(namespace string) ArangoMLExtensionNamespaceLister {
-	return arangoMLExtensionNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoMLExtensionNamespaceLister{listers.NewNamespaced[*v1alpha1.ArangoMLExtension](s.ResourceIndexer, namespace)}
 }
 
 // ArangoMLExtensionNamespaceLister helps list and get ArangoMLExtensions.
@@ -78,26 +70,5 @@ type ArangoMLExtensionNamespaceLister interface {
 // arangoMLExtensionNamespaceLister implements the ArangoMLExtensionNamespaceLister
 // interface.
 type arangoMLExtensionNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoMLExtensions in the indexer for a given namespace.
-func (s arangoMLExtensionNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.ArangoMLExtension, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ArangoMLExtension))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoMLExtension from the indexer for a given namespace and name.
-func (s arangoMLExtensionNamespaceLister) Get(name string) (*v1alpha1.ArangoMLExtension, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("arangomlextension"), name)
-	}
-	return obj.(*v1alpha1.ArangoMLExtension), nil
+	listers.ResourceIndexer[*v1alpha1.ArangoMLExtension]
 }

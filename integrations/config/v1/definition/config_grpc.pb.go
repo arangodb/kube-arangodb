@@ -23,8 +23,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConfigV1Client interface {
+	// Returns list of registered modules
 	Modules(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*ConfigV1ModulesResponse, error)
+	// Returns details of the module
 	ModuleDetails(ctx context.Context, in *ConfigV1ModuleDetailsRequest, opts ...grpc.CallOption) (*ConfigV1ModuleDetailsResponse, error)
+	// Returns file details
 	FileDetails(ctx context.Context, in *ConfigV1FileDetailsRequest, opts ...grpc.CallOption) (*ConfigV1FileDetailsResponse, error)
 }
 
@@ -67,8 +70,11 @@ func (c *configV1Client) FileDetails(ctx context.Context, in *ConfigV1FileDetail
 // All implementations must embed UnimplementedConfigV1Server
 // for forward compatibility
 type ConfigV1Server interface {
+	// Returns list of registered modules
 	Modules(context.Context, *definition.Empty) (*ConfigV1ModulesResponse, error)
+	// Returns details of the module
 	ModuleDetails(context.Context, *ConfigV1ModuleDetailsRequest) (*ConfigV1ModuleDetailsResponse, error)
+	// Returns file details
 	FileDetails(context.Context, *ConfigV1FileDetailsRequest) (*ConfigV1FileDetailsResponse, error)
 	mustEmbedUnimplementedConfigV1Server()
 }

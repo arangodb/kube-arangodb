@@ -49,7 +49,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
@@ -715,7 +715,7 @@ func RenderArangoPod(ctx context.Context, cachedStatus inspectorInterface.Inspec
 // CreateArangoPod creates a new Pod with container provided by parameter 'containerCreator'
 // If the pod already exists, nil is returned.
 // If another error occurs, that error is returned.
-func CreateArangoPod(ctx context.Context, c podv1.ModInterface, deployment k8sutil.APIObject,
+func CreateArangoPod(ctx context.Context, c generic.ModClient[*core.Pod], deployment k8sutil.APIObject,
 	deploymentSpec api.DeploymentSpec, group api.ServerGroup, pod *core.Pod) (string, types.UID, error) {
 	podName, uid, err := k8sutil.CreatePod(ctx, c, pod, deployment.GetNamespace(), deployment.AsOwner())
 	if err != nil {

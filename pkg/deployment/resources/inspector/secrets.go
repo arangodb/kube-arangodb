@@ -25,11 +25,12 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
@@ -49,90 +50,16 @@ func (p secretsInspectorLoader) Component() definitions.Component {
 
 func (p secretsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q secretsInspector
-	p.loadV1(ctx, i, &q)
+
+	q.v1 = newInspectorVersion[*core.SecretList, *core.Secret](ctx,
+		constants.SecretGRv1(),
+		constants.SecretGKv1(),
+		i.client.Kubernetes().CoreV1().Secrets(i.namespace),
+		secret.List())
+
 	i.secrets = &q
 	q.state = i
 	q.last = time.Now()
-}
-
-func (p secretsInspectorLoader) loadV1(ctx context.Context, i *inspectorState, q *secretsInspector) {
-	var z secretsInspectorV1
-
-	z.secretInspector = q
-
-	z.secrets, z.err = p.getV1Secrets(ctx, i)
-
-	q.v1 = &z
-}
-
-func (p secretsInspectorLoader) getV1Secrets(ctx context.Context, i *inspectorState) (map[string]*core.Secret, error) {
-	objs, err := p.getV1SecretsList(ctx, i)
-	if err != nil {
-		return nil, err
-	}
-
-	r := make(map[string]*core.Secret, len(objs))
-
-	for id := range objs {
-		r[objs[id].GetName()] = objs[id]
-	}
-
-	return r, nil
-}
-
-func (p secretsInspectorLoader) getV1SecretsList(ctx context.Context, i *inspectorState) ([]*core.Secret, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().CoreV1().Secrets(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit: globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	items := obj.Items
-	cont := obj.Continue
-	var s = int64(len(items))
-
-	if z := obj.RemainingItemCount; z != nil {
-		s += *z
-	}
-
-	ptrs := make([]*core.Secret, 0, s)
-
-	for {
-		for id := range items {
-			ptrs = append(ptrs, &items[id])
-		}
-
-		if cont == "" {
-			break
-		}
-
-		items, cont, err = p.getV1SecretsListRequest(ctx, i, cont)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return ptrs, nil
-}
-
-func (p secretsInspectorLoader) getV1SecretsListRequest(ctx context.Context, i *inspectorState, cont string) ([]core.Secret, string, error) {
-	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-	defer cancel()
-	obj, err := i.client.Kubernetes().CoreV1().Secrets(i.namespace).List(ctxChild, meta.ListOptions{
-		Limit:    globals.GetGlobals().Kubernetes().RequestBatchSize().Get(),
-		Continue: cont,
-	})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return obj.Items, obj.Continue, err
 }
 
 func (p secretsInspectorLoader) Verify(i *inspectorState) error {
@@ -163,7 +90,7 @@ type secretsInspector struct {
 
 	last time.Time
 
-	v1 *secretsInspectorV1
+	v1 *inspectorVersion[*core.Secret]
 }
 
 func (p *secretsInspector) LastRefresh() time.Time {
@@ -193,4 +120,8 @@ func (p *secretsInspector) validate() error {
 	}
 
 	return p.v1.validate()
+}
+
+func (p *secretsInspector) V1() generic.Inspector[*core.Secret] {
+	return p.v1
 }

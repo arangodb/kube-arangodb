@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,12 @@
 package kclient
 
 import (
-	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
-	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
-	poddisruptionbudgetv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
-	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
-	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
-	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 func NewModInterface(client Client, namespace string) ModInterface {
@@ -39,14 +37,14 @@ func NewModInterface(client Client, namespace string) ModInterface {
 }
 
 type ModInterface interface {
-	Secrets() secretv1.ModInterface
-	Pods() podv1.ModInterface
-	Services() servicev1.ModInterface
-	ServiceAccounts() serviceaccountv1.ModInterface
-	PersistentVolumeClaims() persistentvolumeclaimv1.ModInterface
-	PodDisruptionBudgets() poddisruptionbudgetv1.ModInterface
-	ServiceMonitors() servicemonitorv1.ModInterface
-	ArangoMembers() arangomemberv1.ModInterface
+	Secrets() generic.ModClient[*core.Secret]
+	Pods() generic.ModClient[*core.Pod]
+	Services() generic.ModClient[*core.Service]
+	ServiceAccounts() generic.ModClient[*core.ServiceAccount]
+	PersistentVolumeClaims() generic.ModClient[*core.PersistentVolumeClaim]
+	PodDisruptionBudgets() generic.ModClient[*policy.PodDisruptionBudget]
+	ServiceMonitors() generic.ModClient[*monitoring.ServiceMonitor]
+	ArangoMembers() generic.ModStatusClient[*api.ArangoMember]
 }
 
 type modInterface struct {
@@ -54,34 +52,34 @@ type modInterface struct {
 	namespace string
 }
 
-func (m modInterface) PersistentVolumeClaims() persistentvolumeclaimv1.ModInterface {
+func (m modInterface) PersistentVolumeClaims() generic.ModClient[*core.PersistentVolumeClaim] {
 	return m.client.Kubernetes().CoreV1().PersistentVolumeClaims(m.namespace)
 }
 
-func (m modInterface) PodDisruptionBudgets() poddisruptionbudgetv1.ModInterface {
+func (m modInterface) PodDisruptionBudgets() generic.ModClient[*policy.PodDisruptionBudget] {
 	return m.client.Kubernetes().PolicyV1().PodDisruptionBudgets(m.namespace)
 }
 
-func (m modInterface) ServiceMonitors() servicemonitorv1.ModInterface {
+func (m modInterface) ServiceMonitors() generic.ModClient[*monitoring.ServiceMonitor] {
 	return m.client.Monitoring().MonitoringV1().ServiceMonitors(m.namespace)
 }
 
-func (m modInterface) ArangoMembers() arangomemberv1.ModInterface {
+func (m modInterface) ArangoMembers() generic.ModStatusClient[*api.ArangoMember] {
 	return m.client.Arango().DatabaseV1().ArangoMembers(m.namespace)
 }
 
-func (m modInterface) Services() servicev1.ModInterface {
+func (m modInterface) Services() generic.ModClient[*core.Service] {
 	return m.client.Kubernetes().CoreV1().Services(m.namespace)
 }
 
-func (m modInterface) ServiceAccounts() serviceaccountv1.ModInterface {
+func (m modInterface) ServiceAccounts() generic.ModClient[*core.ServiceAccount] {
 	return m.client.Kubernetes().CoreV1().ServiceAccounts(m.namespace)
 }
 
-func (m modInterface) Pods() podv1.ModInterface {
+func (m modInterface) Pods() generic.ModClient[*core.Pod] {
 	return m.client.Kubernetes().CoreV1().Pods(m.namespace)
 }
 
-func (m modInterface) Secrets() secretv1.ModInterface {
+func (m modInterface) Secrets() generic.ModClient[*core.Secret] {
 	return m.client.Kubernetes().CoreV1().Secrets(m.namespace)
 }

@@ -24,8 +24,8 @@ package v1
 
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoBackupLister interface {
 
 // arangoBackupLister implements the ArangoBackupLister interface.
 type arangoBackupLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.ArangoBackup]
 }
 
 // NewArangoBackupLister returns a new ArangoBackupLister.
 func NewArangoBackupLister(indexer cache.Indexer) ArangoBackupLister {
-	return &arangoBackupLister{indexer: indexer}
-}
-
-// List lists all ArangoBackups in the indexer.
-func (s *arangoBackupLister) List(selector labels.Selector) (ret []*v1.ArangoBackup, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ArangoBackup))
-	})
-	return ret, err
+	return &arangoBackupLister{listers.New[*v1.ArangoBackup](indexer, v1.Resource("arangobackup"))}
 }
 
 // ArangoBackups returns an object that can list and get ArangoBackups.
 func (s *arangoBackupLister) ArangoBackups(namespace string) ArangoBackupNamespaceLister {
-	return arangoBackupNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoBackupNamespaceLister{listers.NewNamespaced[*v1.ArangoBackup](s.ResourceIndexer, namespace)}
 }
 
 // ArangoBackupNamespaceLister helps list and get ArangoBackups.
@@ -78,26 +70,5 @@ type ArangoBackupNamespaceLister interface {
 // arangoBackupNamespaceLister implements the ArangoBackupNamespaceLister
 // interface.
 type arangoBackupNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoBackups in the indexer for a given namespace.
-func (s arangoBackupNamespaceLister) List(selector labels.Selector) (ret []*v1.ArangoBackup, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ArangoBackup))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoBackup from the indexer for a given namespace and name.
-func (s arangoBackupNamespaceLister) Get(name string) (*v1.ArangoBackup, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("arangobackup"), name)
-	}
-	return obj.(*v1.ArangoBackup), nil
+	listers.ResourceIndexer[*v1.ArangoBackup]
 }

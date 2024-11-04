@@ -31,6 +31,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -59,14 +60,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors/panics"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	arangomemberv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember/v1"
-	persistentvolumeclaimv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim/v1"
-	podv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod/v1"
-	poddisruptionbudgetv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget/v1"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
-	servicev1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/service/v1"
-	serviceaccountv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount/v1"
-	servicemonitorv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
@@ -184,35 +178,35 @@ func (c *testContext) GetAgencyCache() (state.State, bool) {
 	return state.State{}, true
 }
 
-func (c *testContext) SecretsModInterface() secretv1.ModInterface {
+func (c *testContext) SecretsModInterface() generic.ModClient[*core.Secret] {
 	panic("implement me")
 }
 
-func (c *testContext) PodsModInterface() podv1.ModInterface {
+func (c *testContext) PodsModInterface() generic.ModClient[*core.Pod] {
 	panic("implement me")
 }
 
-func (c *testContext) ServiceAccountsModInterface() serviceaccountv1.ModInterface {
+func (c *testContext) ServiceAccountsModInterface() generic.ModClient[*core.ServiceAccount] {
 	panic("implement me")
 }
 
-func (c *testContext) ServicesModInterface() servicev1.ModInterface {
+func (c *testContext) ServicesModInterface() generic.ReadClient[*core.Service] {
 	panic("implement me")
 }
 
-func (c *testContext) PersistentVolumeClaimsModInterface() persistentvolumeclaimv1.ModInterface {
+func (c *testContext) PersistentVolumeClaimsModInterface() generic.ModClient[*core.PersistentVolumeClaim] {
 	panic("implement me")
 }
 
-func (c *testContext) PodDisruptionBudgetsModInterface() poddisruptionbudgetv1.ModInterface {
+func (c *testContext) PodDisruptionBudgetsModInterface() generic.ModClient[*policy.PodDisruptionBudget] {
 	panic("implement me")
 }
 
-func (c *testContext) ServiceMonitorsModInterface() servicemonitorv1.ModInterface {
+func (c *testContext) ServiceMonitorsModInterface() generic.ModClient[*core.Service] {
 	panic("implement me")
 }
 
-func (c *testContext) ArangoMembersModInterface() arangomemberv1.ModInterface {
+func (c *testContext) ArangoMembersModInterface() generic.ModClient[*api.ArangoMember] {
 	panic("implement me")
 }
 
@@ -264,7 +258,7 @@ func (c *testContext) GetBackup(_ context.Context, backup string) (*backupApi.Ar
 	panic("implement me")
 }
 
-func (c *testContext) SecretsInterface() secretv1.Interface {
+func (c *testContext) SecretsInterface() generic.ModClient[*core.Secret] {
 	panic("implement me")
 }
 

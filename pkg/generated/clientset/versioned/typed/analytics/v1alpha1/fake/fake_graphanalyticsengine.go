@@ -45,22 +45,24 @@ var graphanalyticsenginesKind = v1alpha1.SchemeGroupVersion.WithKind("GraphAnaly
 
 // Get takes name of the graphAnalyticsEngine, and returns the corresponding graphAnalyticsEngine object, and an error if there is any.
 func (c *FakeGraphAnalyticsEngines) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GraphAnalyticsEngine, err error) {
+	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(graphanalyticsenginesResource, c.ns, name), &v1alpha1.GraphAnalyticsEngine{})
+		Invokes(testing.NewGetActionWithOptions(graphanalyticsenginesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.GraphAnalyticsEngine), err
 }
 
 // List takes label and field selectors, and returns the list of GraphAnalyticsEngines that match those selectors.
 func (c *FakeGraphAnalyticsEngines) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GraphAnalyticsEngineList, err error) {
+	emptyResult := &v1alpha1.GraphAnalyticsEngineList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(graphanalyticsenginesResource, graphanalyticsenginesKind, c.ns, opts), &v1alpha1.GraphAnalyticsEngineList{})
+		Invokes(testing.NewListActionWithOptions(graphanalyticsenginesResource, graphanalyticsenginesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeGraphAnalyticsEngines) List(ctx context.Context, opts v1.ListOption
 // Watch returns a watch.Interface that watches the requested graphAnalyticsEngines.
 func (c *FakeGraphAnalyticsEngines) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(graphanalyticsenginesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(graphanalyticsenginesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a graphAnalyticsEngine and creates it.  Returns the server's representation of the graphAnalyticsEngine, and an error, if there is any.
 func (c *FakeGraphAnalyticsEngines) Create(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.CreateOptions) (result *v1alpha1.GraphAnalyticsEngine, err error) {
+	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(graphanalyticsenginesResource, c.ns, graphAnalyticsEngine), &v1alpha1.GraphAnalyticsEngine{})
+		Invokes(testing.NewCreateActionWithOptions(graphanalyticsenginesResource, c.ns, graphAnalyticsEngine, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.GraphAnalyticsEngine), err
 }
 
 // Update takes the representation of a graphAnalyticsEngine and updates it. Returns the server's representation of the graphAnalyticsEngine, and an error, if there is any.
 func (c *FakeGraphAnalyticsEngines) Update(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (result *v1alpha1.GraphAnalyticsEngine, err error) {
+	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(graphanalyticsenginesResource, c.ns, graphAnalyticsEngine), &v1alpha1.GraphAnalyticsEngine{})
+		Invokes(testing.NewUpdateActionWithOptions(graphanalyticsenginesResource, c.ns, graphAnalyticsEngine, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.GraphAnalyticsEngine), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGraphAnalyticsEngines) UpdateStatus(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (*v1alpha1.GraphAnalyticsEngine, error) {
+func (c *FakeGraphAnalyticsEngines) UpdateStatus(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (result *v1alpha1.GraphAnalyticsEngine, err error) {
+	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(graphanalyticsenginesResource, "status", c.ns, graphAnalyticsEngine), &v1alpha1.GraphAnalyticsEngine{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(graphanalyticsenginesResource, "status", c.ns, graphAnalyticsEngine, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.GraphAnalyticsEngine), err
 }
@@ -127,7 +132,7 @@ func (c *FakeGraphAnalyticsEngines) Delete(ctx context.Context, name string, opt
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeGraphAnalyticsEngines) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(graphanalyticsenginesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(graphanalyticsenginesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.GraphAnalyticsEngineList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeGraphAnalyticsEngines) DeleteCollection(ctx context.Context, opts v
 
 // Patch applies the patch and returns the patched graphAnalyticsEngine.
 func (c *FakeGraphAnalyticsEngines) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GraphAnalyticsEngine, err error) {
+	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(graphanalyticsenginesResource, c.ns, name, pt, data, subresources...), &v1alpha1.GraphAnalyticsEngine{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(graphanalyticsenginesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.GraphAnalyticsEngine), err
 }

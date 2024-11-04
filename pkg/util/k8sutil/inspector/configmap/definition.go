@@ -21,11 +21,10 @@
 package configmap
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	v1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
+	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/base"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 type Inspector interface {
@@ -33,12 +32,7 @@ type Inspector interface {
 }
 
 type Definition interface {
-	refresh.Inspector
+	base.Inspector
 
-	gvk.GK
-	anonymous.Impl
-
-	Version() version.Version
-
-	V1() v1.Inspector
+	V1() generic.Inspector[*core.ConfigMap]
 }

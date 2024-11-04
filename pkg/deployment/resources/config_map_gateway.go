@@ -40,11 +40,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-	configMapsV1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
-func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps configMapsV1.ModInterface) error {
+func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps generic.ModClient[*core.ConfigMap]) error {
 	deploymentName := r.context.GetAPIObject().GetName()
 	configMapName := GetGatewayConfigMapName(deploymentName)
 

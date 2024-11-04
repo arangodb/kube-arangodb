@@ -24,8 +24,8 @@ package v1alpha
 
 import (
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -43,30 +43,10 @@ type ArangoLocalStorageLister interface {
 
 // arangoLocalStorageLister implements the ArangoLocalStorageLister interface.
 type arangoLocalStorageLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha.ArangoLocalStorage]
 }
 
 // NewArangoLocalStorageLister returns a new ArangoLocalStorageLister.
 func NewArangoLocalStorageLister(indexer cache.Indexer) ArangoLocalStorageLister {
-	return &arangoLocalStorageLister{indexer: indexer}
-}
-
-// List lists all ArangoLocalStorages in the indexer.
-func (s *arangoLocalStorageLister) List(selector labels.Selector) (ret []*v1alpha.ArangoLocalStorage, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha.ArangoLocalStorage))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoLocalStorage from the index for a given name.
-func (s *arangoLocalStorageLister) Get(name string) (*v1alpha.ArangoLocalStorage, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha.Resource("arangolocalstorage"), name)
-	}
-	return obj.(*v1alpha.ArangoLocalStorage), nil
+	return &arangoLocalStorageLister{listers.New[*v1alpha.ArangoLocalStorage](indexer, v1alpha.Resource("arangolocalstorage"))}
 }

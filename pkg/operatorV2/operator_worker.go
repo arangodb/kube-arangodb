@@ -78,27 +78,14 @@ func (o *operator) processNextItem() bool {
 	return true
 }
 
-func (o *operator) processObject(obj interface{}) error {
-	defer o.workqueue.Done(obj)
-	var item operation.Item
-	var key string
-	var ok bool
+func (o *operator) processObject(item operation.Item) error {
+	defer o.workqueue.Done(item)
 	var err error
 
-	if key, ok = obj.(string); !ok {
-		o.workqueue.Forget(obj)
-		return nil
-	}
-
-	if item, err = operation.NewItemFromString(key); err != nil {
-		o.workqueue.Forget(obj)
-		return nil
-	}
-
 	if item.Operation != operation.Update {
+		o.workqueue.Forget(item)
 		item.Operation = operation.Update
-		o.workqueue.Forget(obj)
-		o.workqueue.Add(item.String())
+		o.workqueue.Add(item)
 		return nil
 	}
 
@@ -113,10 +100,10 @@ func (o *operator) processObject(obj interface{}) error {
 		item.Name)
 
 	if err = o.processItem(item); err != nil {
-		o.workqueue.AddRateLimited(key)
+		o.workqueue.AddRateLimited(item)
 
 		if !IsReconcile(err) {
-			message := fmt.Sprintf("error syncing '%s': %s, re-queuing", key, err.Error())
+			message := fmt.Sprintf("error syncing '%s': %s, re-queuing", item.String(), err.Error())
 			loggerWorker.Debug(message)
 			return errors.Errorf(message)
 		}
@@ -132,7 +119,7 @@ func (o *operator) processObject(obj interface{}) error {
 		item.Namespace,
 		item.Name)
 
-	o.workqueue.Forget(obj)
+	o.workqueue.Forget(item)
 	return nil
 }
 

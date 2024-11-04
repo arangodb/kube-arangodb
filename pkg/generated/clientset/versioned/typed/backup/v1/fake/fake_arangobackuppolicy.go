@@ -45,22 +45,24 @@ var arangobackuppoliciesKind = v1.SchemeGroupVersion.WithKind("ArangoBackupPolic
 
 // Get takes name of the arangoBackupPolicy, and returns the corresponding arangoBackupPolicy object, and an error if there is any.
 func (c *FakeArangoBackupPolicies) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ArangoBackupPolicy, err error) {
+	emptyResult := &v1.ArangoBackupPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangobackuppoliciesResource, c.ns, name), &v1.ArangoBackupPolicy{})
+		Invokes(testing.NewGetActionWithOptions(arangobackuppoliciesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoBackupPolicy), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoBackupPolicies that match those selectors.
 func (c *FakeArangoBackupPolicies) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ArangoBackupPolicyList, err error) {
+	emptyResult := &v1.ArangoBackupPolicyList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangobackuppoliciesResource, arangobackuppoliciesKind, c.ns, opts), &v1.ArangoBackupPolicyList{})
+		Invokes(testing.NewListActionWithOptions(arangobackuppoliciesResource, arangobackuppoliciesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoBackupPolicies) List(ctx context.Context, opts metav1.ListOpt
 // Watch returns a watch.Interface that watches the requested arangoBackupPolicies.
 func (c *FakeArangoBackupPolicies) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangobackuppoliciesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangobackuppoliciesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoBackupPolicy and creates it.  Returns the server's representation of the arangoBackupPolicy, and an error, if there is any.
 func (c *FakeArangoBackupPolicies) Create(ctx context.Context, arangoBackupPolicy *v1.ArangoBackupPolicy, opts metav1.CreateOptions) (result *v1.ArangoBackupPolicy, err error) {
+	emptyResult := &v1.ArangoBackupPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangobackuppoliciesResource, c.ns, arangoBackupPolicy), &v1.ArangoBackupPolicy{})
+		Invokes(testing.NewCreateActionWithOptions(arangobackuppoliciesResource, c.ns, arangoBackupPolicy, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoBackupPolicy), err
 }
 
 // Update takes the representation of a arangoBackupPolicy and updates it. Returns the server's representation of the arangoBackupPolicy, and an error, if there is any.
 func (c *FakeArangoBackupPolicies) Update(ctx context.Context, arangoBackupPolicy *v1.ArangoBackupPolicy, opts metav1.UpdateOptions) (result *v1.ArangoBackupPolicy, err error) {
+	emptyResult := &v1.ArangoBackupPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangobackuppoliciesResource, c.ns, arangoBackupPolicy), &v1.ArangoBackupPolicy{})
+		Invokes(testing.NewUpdateActionWithOptions(arangobackuppoliciesResource, c.ns, arangoBackupPolicy, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoBackupPolicy), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoBackupPolicies) UpdateStatus(ctx context.Context, arangoBackupPolicy *v1.ArangoBackupPolicy, opts metav1.UpdateOptions) (*v1.ArangoBackupPolicy, error) {
+func (c *FakeArangoBackupPolicies) UpdateStatus(ctx context.Context, arangoBackupPolicy *v1.ArangoBackupPolicy, opts metav1.UpdateOptions) (result *v1.ArangoBackupPolicy, err error) {
+	emptyResult := &v1.ArangoBackupPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangobackuppoliciesResource, "status", c.ns, arangoBackupPolicy), &v1.ArangoBackupPolicy{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangobackuppoliciesResource, "status", c.ns, arangoBackupPolicy, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoBackupPolicy), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoBackupPolicies) Delete(ctx context.Context, name string, opts
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoBackupPolicies) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangobackuppoliciesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangobackuppoliciesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.ArangoBackupPolicyList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoBackupPolicies) DeleteCollection(ctx context.Context, opts me
 
 // Patch applies the patch and returns the patched arangoBackupPolicy.
 func (c *FakeArangoBackupPolicies) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoBackupPolicy, err error) {
+	emptyResult := &v1.ArangoBackupPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangobackuppoliciesResource, c.ns, name, pt, data, subresources...), &v1.ArangoBackupPolicy{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangobackuppoliciesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.ArangoBackupPolicy), err
 }

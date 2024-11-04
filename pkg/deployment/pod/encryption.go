@@ -36,7 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
@@ -66,7 +66,7 @@ func GroupEncryptionSupported(mode api.DeploymentMode, group api.ServerGroup) bo
 	}
 }
 
-func GetEncryptionKey(ctx context.Context, secrets secretv1.ReadInterface, name string) (string, []byte, bool, error) {
+func GetEncryptionKey(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string) (string, []byte, bool, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 

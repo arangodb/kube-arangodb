@@ -201,6 +201,10 @@ func NewStaticClient(kubernetes kubernetes.Interface, kubernetesExtensions apiex
 	}
 }
 
+func NewClient(name string, cfg *rest.Config) (Client, error) {
+	return newClient(name, cfg)
+}
+
 func newClient(name string, cfg *rest.Config) (*client, error) {
 	var c client
 

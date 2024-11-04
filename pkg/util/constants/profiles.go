@@ -31,11 +31,14 @@ const (
 	ProfilesIntegrationAuthn = "authn"
 	ProfilesIntegrationAuthz = "authz"
 	ProfilesIntegrationSched = "sched"
+	ProfilesIntegrationEnvoy = "envoy"
 )
 
 const (
 	ProfilesIntegrationV0 = "v0"
 	ProfilesIntegrationV1 = "v1"
+	ProfilesIntegrationV2 = "v2"
+	ProfilesIntegrationV3 = "v3"
 )
 
 func NewProfileIntegration(name, version string) (string, string) {

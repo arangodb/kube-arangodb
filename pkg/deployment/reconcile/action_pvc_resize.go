@@ -29,6 +29,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -89,7 +90,7 @@ func (a *actionPVCResize) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	am := cache.ArangoMember().V1().GetSimpleOptional(m.ArangoMemberName(a.actionCtx.GetName(), group))
+	am := util.InitOptional(cache.ArangoMember().V1().GetSimple(m.ArangoMemberName(a.actionCtx.GetName(), group)))
 
 	var res core.ResourceList
 	if am.Spec.Overrides.HasVolumeClaimTemplate(&groupSpec) {

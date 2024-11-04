@@ -45,22 +45,24 @@ var arangomlcronjobsKind = v1alpha1.SchemeGroupVersion.WithKind("ArangoMLCronJob
 
 // Get takes name of the arangoMLCronJob, and returns the corresponding arangoMLCronJob object, and an error if there is any.
 func (c *FakeArangoMLCronJobs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ArangoMLCronJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangomlcronjobsResource, c.ns, name), &v1alpha1.ArangoMLCronJob{})
+		Invokes(testing.NewGetActionWithOptions(arangomlcronjobsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLCronJob), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoMLCronJobs that match those selectors.
 func (c *FakeArangoMLCronJobs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ArangoMLCronJobList, err error) {
+	emptyResult := &v1alpha1.ArangoMLCronJobList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangomlcronjobsResource, arangomlcronjobsKind, c.ns, opts), &v1alpha1.ArangoMLCronJobList{})
+		Invokes(testing.NewListActionWithOptions(arangomlcronjobsResource, arangomlcronjobsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoMLCronJobs) List(ctx context.Context, opts v1.ListOptions) (r
 // Watch returns a watch.Interface that watches the requested arangoMLCronJobs.
 func (c *FakeArangoMLCronJobs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangomlcronjobsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangomlcronjobsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoMLCronJob and creates it.  Returns the server's representation of the arangoMLCronJob, and an error, if there is any.
 func (c *FakeArangoMLCronJobs) Create(ctx context.Context, arangoMLCronJob *v1alpha1.ArangoMLCronJob, opts v1.CreateOptions) (result *v1alpha1.ArangoMLCronJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangomlcronjobsResource, c.ns, arangoMLCronJob), &v1alpha1.ArangoMLCronJob{})
+		Invokes(testing.NewCreateActionWithOptions(arangomlcronjobsResource, c.ns, arangoMLCronJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLCronJob), err
 }
 
 // Update takes the representation of a arangoMLCronJob and updates it. Returns the server's representation of the arangoMLCronJob, and an error, if there is any.
 func (c *FakeArangoMLCronJobs) Update(ctx context.Context, arangoMLCronJob *v1alpha1.ArangoMLCronJob, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLCronJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangomlcronjobsResource, c.ns, arangoMLCronJob), &v1alpha1.ArangoMLCronJob{})
+		Invokes(testing.NewUpdateActionWithOptions(arangomlcronjobsResource, c.ns, arangoMLCronJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLCronJob), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoMLCronJobs) UpdateStatus(ctx context.Context, arangoMLCronJob *v1alpha1.ArangoMLCronJob, opts v1.UpdateOptions) (*v1alpha1.ArangoMLCronJob, error) {
+func (c *FakeArangoMLCronJobs) UpdateStatus(ctx context.Context, arangoMLCronJob *v1alpha1.ArangoMLCronJob, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLCronJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangomlcronjobsResource, "status", c.ns, arangoMLCronJob), &v1alpha1.ArangoMLCronJob{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangomlcronjobsResource, "status", c.ns, arangoMLCronJob, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLCronJob), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoMLCronJobs) Delete(ctx context.Context, name string, opts v1.
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoMLCronJobs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangomlcronjobsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangomlcronjobsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ArangoMLCronJobList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoMLCronJobs) DeleteCollection(ctx context.Context, opts v1.Del
 
 // Patch applies the patch and returns the patched arangoMLCronJob.
 func (c *FakeArangoMLCronJobs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoMLCronJob, err error) {
+	emptyResult := &v1alpha1.ArangoMLCronJob{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangomlcronjobsResource, c.ns, name, pt, data, subresources...), &v1alpha1.ArangoMLCronJob{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangomlcronjobsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ArangoMLCronJob), err
 }

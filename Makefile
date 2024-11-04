@@ -9,8 +9,8 @@ ifeq ($(shell uname),Darwin)
 	REALPATH ?= grealpath
 endif
 
-KUBERNETES_VERSION_MINOR:=29
-KUBERNETES_VERSION_PATCH:=6
+KUBERNETES_VERSION_MINOR:=31
+KUBERNETES_VERSION_PATCH:=1
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -25,7 +25,13 @@ RELEASE_MODE ?= community
 
 MAIN_DIR := $(ROOT)/pkg/entry/$(RELEASE_MODE)
 
-GOBUILDDIR := $(SCRIPTDIR)/.gobuild
+ifndef KEEP_GOPATH
+	GOBUILDDIR := $(SCRIPTDIR)/.gobuild
+	GOPATH := $(GOBUILDDIR)
+else
+	GOBUILDDIR := $(GOPATH)
+endif
+
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
@@ -41,10 +47,6 @@ REPODIR := $(ORGDIR)/$(REPONAME)
 REPOPATH := $(ORGPATH)/$(REPONAME)
 
 include $(ROOT)/$(RELEASE_MODE).mk
-
-ifndef KEEP_GOPATH
-	GOPATH := $(GOBUILDDIR)
-endif
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
@@ -427,34 +429,8 @@ update-vendor:
 
 .PHONY: update-generated
 update-generated:
-	@rm -fr $(ORGDIR)
-	@mkdir -p $(ORGDIR)
-	@ln -s -f $(SCRIPTDIR) $(ORGDIR)/kube-arangodb
 	@$(SED) -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
-	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
-			"client lister informer deepcopy" \
-			"github.com/arangodb/kube-arangodb/pkg/generated" \
-			"github.com/arangodb/kube-arangodb/pkg/apis" \
-			"deployment:v1 deployment:v2alpha1 \
-			replication:v1 replication:v2alpha1 \
-			storage:v1alpha \
-			backup:v1 \
-			apps:v1 \
-			ml:v1alpha1 ml:v1beta1 \
-			scheduler:v1alpha1 scheduler:v1beta1 \
-			analytics:v1alpha1 \
-			networking:v1alpha1" \
-			--go-header-file "./tools/codegen/boilerplate.go.txt" \
-			$(VERIFYARGS)
-	GOPATH=$(GOBUILDDIR) $(VENDORDIR)/k8s.io/code-generator/generate-groups.sh  \
-			"deepcopy" \
-			"github.com/arangodb/kube-arangodb/pkg/generated" \
-			"github.com/arangodb/kube-arangodb/pkg/apis" \
-			"shared:v1 \
-			scheduler:v1alpha1/container scheduler:v1alpha1/container/resources scheduler:v1alpha1/pod scheduler:v1alpha1/pod/resources \
-			scheduler:v1beta1/integration scheduler:v1beta1/policy scheduler:v1beta1/container scheduler:v1beta1/container/resources scheduler:v1beta1/pod scheduler:v1beta1/pod/resources" \
-			--go-header-file "./tools/codegen/boilerplate.go.txt" \
-			$(VERIFYARGS)
+	bash "${ROOTDIR}/scripts/codegen.sh" "${ROOTDIR}"
 
 dashboard/assets.go:
 	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)
@@ -815,7 +791,7 @@ tools: tools-min
 	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 	@echo ">> Fetching govulncheck"
-	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v1.0.4
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v1.1.3
 
 .PHONY: vendor
 vendor:
@@ -917,7 +893,7 @@ check-community:
 _check: sync-crds
 	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin-all vulncheck-optional
 
-generate: generate-internal generate-proto fmt yamlfmt
+generate: generate-internal generate-proto fmt yamlfmt license
 
 generate-internal:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
@@ -963,6 +939,6 @@ sync-charts:
 sync: sync-charts
 
 ci-check:
-	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license
+	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint
 	@git checkout -- go.sum # ignore changes in go.sum
 	@if [ ! -z "$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; exit 1; fi

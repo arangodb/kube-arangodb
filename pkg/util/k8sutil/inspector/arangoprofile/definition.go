@@ -21,11 +21,9 @@
 package arangoprofile
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile/v1beta1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/base"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 type Inspector interface {
@@ -33,12 +31,7 @@ type Inspector interface {
 }
 
 type Definition interface {
-	refresh.Inspector
+	base.Inspector
 
-	gvk.GK
-	anonymous.Impl
-
-	Version() version.Version
-
-	V1Beta1() (v1beta1.Inspector, error)
+	V1Beta1() (generic.Inspector[*schedulerApi.ArangoProfile], error)
 }

@@ -72,10 +72,10 @@ message StatusMetadata {
   bool created = 1;
 
   // Defines checksum
-  optional string checksum =2;
+  optional string checksum = 2;
 
   // Defines uid
-  optional string uid =3;
+  optional string uid = 3;
 
   // Defiles list of applied profiles
   repeated string profiles = 4;

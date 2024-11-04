@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,14 @@ import (
 	"time"
 
 	jg "github.com/golang-jwt/jwt"
+	core "k8s.io/api/core/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	secret "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
@@ -67,7 +68,7 @@ func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (string, error) 
 // generateAndSaveJWT tries to generate new JWT using signing key retrieved from secret.
 // If it is not present, it creates a new key.
 // The resulting JWT is stored in secrets.
-func generateAndSaveJWT(secrets secret.Interface, cfg ServerConfig) error {
+func generateAndSaveJWT(secrets generic.InspectorInterface[*core.Secret], cfg ServerConfig) error {
 	claims := jg.MapClaims{
 		"iss": fmt.Sprintf("kube-arangodb/%s", cfg.ServerName),
 		"iat": time.Now().Unix(),
@@ -79,7 +80,7 @@ func generateAndSaveJWT(secrets secret.Interface, cfg ServerConfig) error {
 	return err
 }
 
-func createSigningKey(secrets secret.ModInterface, keySecretName string) (string, error) {
+func createSigningKey(secrets generic.ModClient[*core.Secret], keySecretName string) (string, error) {
 	signingKey := make([]byte, 32)
 	_, err := util.Rand().Read(signingKey)
 	if err != nil {

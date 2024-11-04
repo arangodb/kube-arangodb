@@ -84,6 +84,7 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*api.ArangoDeployment](t)
 	NewMetaObjectRun[*api.ArangoClusterSynchronization](t)
 	NewMetaObjectRun[*backupApi.ArangoBackup](t)
+	NewMetaObjectRun[*backupApi.ArangoBackupPolicy](t)
 	NewMetaObjectRun[*mlApi.ArangoMLExtension](t)
 	NewMetaObjectRun[*mlApi.ArangoMLStorage](t)
 	NewMetaObjectRun[*mlApiv1alpha1.ArangoMLExtension](t)

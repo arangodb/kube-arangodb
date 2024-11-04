@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PongV1Client interface {
+	// Sends ping to the server
 	Ping(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*PongV1PingResponse, error)
 }
 
@@ -47,6 +48,7 @@ func (c *pongV1Client) Ping(ctx context.Context, in *definition.Empty, opts ...g
 // All implementations must embed UnimplementedPongV1Server
 // for forward compatibility
 type PongV1Server interface {
+	// Sends ping to the server
 	Ping(context.Context, *definition.Empty) (*PongV1PingResponse, error)
 	mustEmbedUnimplementedPongV1Server()
 }

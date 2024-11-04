@@ -24,8 +24,8 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -42,25 +42,17 @@ type ArangoMLBatchJobLister interface {
 
 // arangoMLBatchJobLister implements the ArangoMLBatchJobLister interface.
 type arangoMLBatchJobLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.ArangoMLBatchJob]
 }
 
 // NewArangoMLBatchJobLister returns a new ArangoMLBatchJobLister.
 func NewArangoMLBatchJobLister(indexer cache.Indexer) ArangoMLBatchJobLister {
-	return &arangoMLBatchJobLister{indexer: indexer}
-}
-
-// List lists all ArangoMLBatchJobs in the indexer.
-func (s *arangoMLBatchJobLister) List(selector labels.Selector) (ret []*v1alpha1.ArangoMLBatchJob, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ArangoMLBatchJob))
-	})
-	return ret, err
+	return &arangoMLBatchJobLister{listers.New[*v1alpha1.ArangoMLBatchJob](indexer, v1alpha1.Resource("arangomlbatchjob"))}
 }
 
 // ArangoMLBatchJobs returns an object that can list and get ArangoMLBatchJobs.
 func (s *arangoMLBatchJobLister) ArangoMLBatchJobs(namespace string) ArangoMLBatchJobNamespaceLister {
-	return arangoMLBatchJobNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return arangoMLBatchJobNamespaceLister{listers.NewNamespaced[*v1alpha1.ArangoMLBatchJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoMLBatchJobNamespaceLister helps list and get ArangoMLBatchJobs.
@@ -78,26 +70,5 @@ type ArangoMLBatchJobNamespaceLister interface {
 // arangoMLBatchJobNamespaceLister implements the ArangoMLBatchJobNamespaceLister
 // interface.
 type arangoMLBatchJobNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ArangoMLBatchJobs in the indexer for a given namespace.
-func (s arangoMLBatchJobNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.ArangoMLBatchJob, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ArangoMLBatchJob))
-	})
-	return ret, err
-}
-
-// Get retrieves the ArangoMLBatchJob from the indexer for a given namespace and name.
-func (s arangoMLBatchJobNamespaceLister) Get(name string) (*v1alpha1.ArangoMLBatchJob, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("arangomlbatchjob"), name)
-	}
-	return obj.(*v1alpha1.ArangoMLBatchJob), nil
+	listers.ResourceIndexer[*v1alpha1.ArangoMLBatchJob]
 }

@@ -45,22 +45,24 @@ var arangoschedulerpodsKind = v1beta1.SchemeGroupVersion.WithKind("ArangoSchedul
 
 // Get takes name of the arangoSchedulerPod, and returns the corresponding arangoSchedulerPod object, and an error if there is any.
 func (c *FakeArangoSchedulerPods) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.ArangoSchedulerPod, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerPod{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(arangoschedulerpodsResource, c.ns, name), &v1beta1.ArangoSchedulerPod{})
+		Invokes(testing.NewGetActionWithOptions(arangoschedulerpodsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerPod), err
 }
 
 // List takes label and field selectors, and returns the list of ArangoSchedulerPods that match those selectors.
 func (c *FakeArangoSchedulerPods) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.ArangoSchedulerPodList, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerPodList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(arangoschedulerpodsResource, arangoschedulerpodsKind, c.ns, opts), &v1beta1.ArangoSchedulerPodList{})
+		Invokes(testing.NewListActionWithOptions(arangoschedulerpodsResource, arangoschedulerpodsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -79,40 +81,43 @@ func (c *FakeArangoSchedulerPods) List(ctx context.Context, opts v1.ListOptions)
 // Watch returns a watch.Interface that watches the requested arangoSchedulerPods.
 func (c *FakeArangoSchedulerPods) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(arangoschedulerpodsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(arangoschedulerpodsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a arangoSchedulerPod and creates it.  Returns the server's representation of the arangoSchedulerPod, and an error, if there is any.
 func (c *FakeArangoSchedulerPods) Create(ctx context.Context, arangoSchedulerPod *v1beta1.ArangoSchedulerPod, opts v1.CreateOptions) (result *v1beta1.ArangoSchedulerPod, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerPod{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(arangoschedulerpodsResource, c.ns, arangoSchedulerPod), &v1beta1.ArangoSchedulerPod{})
+		Invokes(testing.NewCreateActionWithOptions(arangoschedulerpodsResource, c.ns, arangoSchedulerPod, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerPod), err
 }
 
 // Update takes the representation of a arangoSchedulerPod and updates it. Returns the server's representation of the arangoSchedulerPod, and an error, if there is any.
 func (c *FakeArangoSchedulerPods) Update(ctx context.Context, arangoSchedulerPod *v1beta1.ArangoSchedulerPod, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerPod, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerPod{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(arangoschedulerpodsResource, c.ns, arangoSchedulerPod), &v1beta1.ArangoSchedulerPod{})
+		Invokes(testing.NewUpdateActionWithOptions(arangoschedulerpodsResource, c.ns, arangoSchedulerPod, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerPod), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoSchedulerPods) UpdateStatus(ctx context.Context, arangoSchedulerPod *v1beta1.ArangoSchedulerPod, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerPod, error) {
+func (c *FakeArangoSchedulerPods) UpdateStatus(ctx context.Context, arangoSchedulerPod *v1beta1.ArangoSchedulerPod, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerPod, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerPod{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(arangoschedulerpodsResource, "status", c.ns, arangoSchedulerPod), &v1beta1.ArangoSchedulerPod{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoschedulerpodsResource, "status", c.ns, arangoSchedulerPod, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerPod), err
 }
@@ -127,7 +132,7 @@ func (c *FakeArangoSchedulerPods) Delete(ctx context.Context, name string, opts 
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeArangoSchedulerPods) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(arangoschedulerpodsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(arangoschedulerpodsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1beta1.ArangoSchedulerPodList{})
 	return err
@@ -135,11 +140,12 @@ func (c *FakeArangoSchedulerPods) DeleteCollection(ctx context.Context, opts v1.
 
 // Patch applies the patch and returns the patched arangoSchedulerPod.
 func (c *FakeArangoSchedulerPods) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerPod, err error) {
+	emptyResult := &v1beta1.ArangoSchedulerPod{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(arangoschedulerpodsResource, c.ns, name, pt, data, subresources...), &v1beta1.ArangoSchedulerPod{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoschedulerpodsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1beta1.ArangoSchedulerPod), err
 }

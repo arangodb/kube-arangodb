@@ -23,7 +23,6 @@ package inspector
 import (
 	core "k8s.io/api/core/v1"
 
-	configMapv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
@@ -40,7 +39,7 @@ type configMapsMod struct {
 	i *inspectorState
 }
 
-func (p configMapsMod) V1() configMapv1.ModInterface {
+func (p configMapsMod) V1() generic.ModClient[*core.ConfigMap] {
 	return wrapMod[*core.ConfigMap](definitions.ConfigMap, p.i.GetThrottles, generic.WithModStatusGetter[*core.ConfigMap](constants.ConfigMapGKv1(), p.clientv1))
 }
 

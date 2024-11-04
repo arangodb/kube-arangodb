@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,12 @@
 package reconcile
 
 import (
+	core "k8s.io/api/core/v1"
+
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/generated/timezones"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	secretv1 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 const defaultTimezone = "UTC"
@@ -36,7 +38,7 @@ func GetTimezone(tz *string) (timezones.Timezone, bool) {
 	return timezones.GetTimezone(*tz)
 }
 
-func IsTimezoneValid(cache secretv1.Inspector, name string, timezone timezones.Timezone) bool {
+func IsTimezoneValid(cache generic.Inspector[*core.Secret], name string, timezone timezones.Timezone) bool {
 	sn := pod.TimezoneSecret(name)
 
 	tzd, ok := timezone.GetData()

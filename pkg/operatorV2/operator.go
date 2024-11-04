@@ -63,7 +63,9 @@ func NewOperator(name, namespace, image string) Operator {
 		name:      name,
 		namespace: namespace,
 		image:     image,
-		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), name),
+		workqueue: workqueue.NewTypedRateLimitingQueueWithConfig(workqueue.DefaultTypedControllerRateLimiter[operation.Item](), workqueue.TypedRateLimitingQueueConfig[operation.Item]{
+			Name: name,
+		}),
 	}
 
 	// Declaration of prometheus interface
@@ -85,7 +87,7 @@ type operator struct {
 	starters  []Starter
 	handlers  []Handler
 
-	workqueue workqueue.RateLimitingInterface
+	workqueue workqueue.TypedRateLimitingInterface[operation.Item]
 
 	// Implement prometheus collector
 	*prometheusMetrics
@@ -155,7 +157,7 @@ func (o *operator) RegisterStarter(starter Starter) error {
 }
 
 func (o *operator) EnqueueItem(item operation.Item) {
-	o.workqueue.Add(item.String())
+	o.workqueue.Add(item)
 }
 
 func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, version, kind string, filters ...InformerFilter) error {
