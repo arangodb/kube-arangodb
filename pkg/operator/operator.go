@@ -38,6 +38,7 @@ import (
 	depldef "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
+	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 	repldef "github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
@@ -48,6 +49,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/networking/route"
+	platformStorage "github.com/arangodb/kube-arangodb/pkg/handlers/platform/storage"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
 	schedulerBatchJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/batchjob"
 	schedulerCronJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/cronjob"
@@ -80,6 +82,7 @@ const (
 	mlOperator         operatorV2type = "ml"
 	analyticsOperator  operatorV2type = "analytics"
 	networkingOperator operatorV2type = "networking"
+	platformOperator   operatorV2type = "platform"
 	schedulerOperator  operatorV2type = "scheduler"
 	appsOperator       operatorV2type = "apps"
 )
@@ -113,6 +116,7 @@ type Config struct {
 	EnableML                    bool
 	EnableAnalytics             bool
 	EnableNetworking            bool
+	EnablePlatform              bool
 	EnableScheduler             bool
 	EnableBackup                bool
 	EnableApps                  bool
@@ -137,6 +141,7 @@ type Dependencies struct {
 	MlProbe                    *probe.ReadyProbe
 	AnalyticsProbe             *probe.ReadyProbe
 	NetworkingProbe            *probe.ReadyProbe
+	PlatformProbe              *probe.ReadyProbe
 	SchedulerProbe             *probe.ReadyProbe
 	AppsProbe                  *probe.ReadyProbe
 	K2KClusterSyncProbe        *probe.ReadyProbe
@@ -211,6 +216,13 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-networking-operator", constants.NetworkingLabelRole, o.onStartNetworking, o.Dependencies.NetworkingProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-networking-operator", constants.NetworkingLabelRole, o.onStartNetworking, o.Dependencies.NetworkingProbe)
+		}
+	}
+	if o.Config.EnablePlatform {
+		if !o.Config.SingleMode {
+			go o.runLeaderElection("arango-platform-operator", constants.PlatformLabelRole, o.onStartPlatform, o.Dependencies.PlatformProbe)
+		} else {
+			go o.runWithoutLeaderElection("arango-platform-operator", constants.PlatformLabelRole, o.onStartPlatform, o.Dependencies.PlatformProbe)
 		}
 	}
 	if o.Config.EnableScheduler {
@@ -295,6 +307,11 @@ func (o *Operator) onStartNetworking(stop <-chan struct{}) {
 	o.onStartOperatorV2(networkingOperator, stop)
 }
 
+// onStartPlatform starts the operator and run till given channel is closed.
+func (o *Operator) onStartPlatform(stop <-chan struct{}) {
+	o.onStartOperatorV2(platformOperator, stop)
+}
+
 // onStartNetworking starts the operator and run till given channel is closed.
 func (o *Operator) onStartScheduler(stop <-chan struct{}) {
 	o.onStartOperatorV2(schedulerOperator, stop)
@@ -331,6 +348,9 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	case networkingOperator:
 		o.onStartOperatorV2Networking(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
 		o.Dependencies.NetworkingProbe.SetReady()
+	case platformOperator:
+		o.onStartOperatorV2Platform(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer)
+		o.Dependencies.PlatformProbe.SetReady()
 	case schedulerOperator:
 		o.onStartOperatorV2Scheduler(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
 		o.Dependencies.SchedulerProbe.SetReady()
@@ -373,6 +393,18 @@ func (o *Operator) onStartOperatorV2Networking(operator operatorV2.Operator, rec
 	o.waitForCRD(networking.ArangoRouteCRDName, checkFn)
 
 	if err := route.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+}
+
+func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) {
+	checkFn := func() error {
+		_, err := o.Client.Arango().PlatformV1alpha1().ArangoPlatformStorages(o.Namespace).List(context.Background(), meta.ListOptions{})
+		return err
+	}
+	o.waitForCRD(platform.ArangoPlatformStorageCRDName, checkFn)
+
+	if err := platformStorage.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
 		panic(err)
 	}
 }

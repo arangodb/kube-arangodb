@@ -123,6 +123,9 @@ spec:
 {{ if .Values.operator.features.scheduler }}
                     - --operator.scheduler
 {{- end }}
+{{ if .Values.operator.features.platform }}
+                    - --operator.platform
+{{- end }}
 {{ if .Values.operator.features.k8sToK8sClusterSync }}
                     - --operator.k2k-cluster-sync
 {{- end }}

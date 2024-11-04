@@ -120,6 +120,7 @@ var (
 		enableML                    bool // Run ml operator
 		enableAnalytics             bool // Run analytics operator
 		enableNetworking            bool // Run networking operator
+		enablePlatform              bool // Run platform operator
 		enableScheduler             bool // Run scheduler operator
 		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
 		enableK2KClusterSync        bool // Run k2kClusterSync operator
@@ -187,6 +188,7 @@ var (
 	mlProbe                    probe.ReadyProbe
 	analyticsProbe             probe.ReadyProbe
 	networkingProbe            probe.ReadyProbe
+	platformProbe              probe.ReadyProbe
 	schedulerProbe             probe.ReadyProbe
 	k2KClusterSyncProbe        probe.ReadyProbe
 )
@@ -215,6 +217,7 @@ func init() {
 	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Enable to run the ArangoML operator")
 	f.BoolVar(&operatorOptions.enableAnalytics, "operator.analytics", false, "Enable to run the Analytics operator")
 	f.BoolVar(&operatorOptions.enableNetworking, "operator.networking", false, "Enable to run the Networking operator")
+	f.BoolVar(&operatorOptions.enablePlatform, "operator.platform", false, "Enable to run the Platform operator")
 	f.BoolVar(&operatorOptions.enableScheduler, "operator.scheduler", false, "Enable to run the Scheduler operator")
 	f.BoolVar(&operatorOptions.enableK2KClusterSync, "operator.k2k-cluster-sync", false, "Enable to run the ListSimple operator")
 	f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator")
@@ -350,15 +353,22 @@ func executeMain(cmd *cobra.Command, args []string) {
 	})
 
 	// Check operating mode
-	if !operatorOptions.enableDeployment && !operatorOptions.enableDeploymentReplication && !operatorOptions.enableStorage &&
-		!operatorOptions.enableBackup && !operatorOptions.enableApps && !operatorOptions.enableK2KClusterSync &&
-		!operatorOptions.enableML && !operatorOptions.enableAnalytics &&
-		!operatorOptions.enableNetworking && !operatorOptions.enableScheduler {
+	if !operatorOptions.enableDeployment &&
+		!operatorOptions.enableDeploymentReplication &&
+		!operatorOptions.enableStorage &&
+		!operatorOptions.enableBackup &&
+		!operatorOptions.enableApps &&
+		!operatorOptions.enableK2KClusterSync &&
+		!operatorOptions.enableML &&
+		!operatorOptions.enableAnalytics &&
+		!operatorOptions.enableNetworking &&
+		!operatorOptions.enableScheduler &&
+		!operatorOptions.enablePlatform {
 		if !operatorOptions.versionOnly {
 			if version.GetVersionV1().IsEnterprise() {
-				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml, --operator.analytics, --operator.networking, --operator.scheduler or any combination of these")
+				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml, --operator.analytics, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
 			} else {
-				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.networking, --operator.scheduler or any combination of these")
+				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
 			}
 		}
 	} else if operatorOptions.versionOnly {
@@ -504,6 +514,10 @@ func executeMain(cmd *cobra.Command, args []string) {
 				Enabled: cfg.EnableNetworking,
 				Probe:   &networkingProbe,
 			},
+			Platform: server.OperatorDependency{
+				Enabled: cfg.EnablePlatform,
+				Probe:   &platformProbe,
+			},
 			Scheduler: server.OperatorDependency{
 				Enabled: cfg.EnableScheduler,
 				Probe:   &schedulerProbe,
@@ -593,6 +607,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableML:                    operatorOptions.enableML,
 		EnableAnalytics:             operatorOptions.enableAnalytics,
 		EnableNetworking:            operatorOptions.enableNetworking,
+		EnablePlatform:              operatorOptions.enablePlatform,
 		EnableScheduler:             operatorOptions.enableScheduler,
 		EnableK2KClusterSync:        operatorOptions.enableK2KClusterSync,
 		AllowChaos:                  chaosOptions.allowed,
@@ -615,6 +630,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		MlProbe:                    &mlProbe,
 		AnalyticsProbe:             &analyticsProbe,
 		NetworkingProbe:            &networkingProbe,
+		PlatformProbe:              &platformProbe,
 		SchedulerProbe:             &schedulerProbe,
 		K2KClusterSyncProbe:        &k2KClusterSyncProbe,
 	}
