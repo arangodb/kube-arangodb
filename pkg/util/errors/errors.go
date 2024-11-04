@@ -51,6 +51,43 @@ func CauseWithNil(err error) error {
 	}
 }
 
+func ExtractCause[T error](err error) (T, bool) {
+	var d T
+
+	if err == nil {
+		return d, true
+	}
+
+	var v T
+	if errors.As(err, &v) {
+		return v, true
+	}
+
+	if err := CauseWithNil(err); err != nil {
+		return ExtractCause[T](err)
+	}
+
+	return d, false
+}
+
+func ExtractCauseHelper[T error](err error, extr func(err error) (T, bool)) (T, bool) {
+	var d T
+
+	if err == nil {
+		return d, true
+	}
+
+	if v, ok := extr(err); ok {
+		return v, true
+	}
+
+	if err := CauseWithNil(err); err != nil {
+		return ExtractCauseHelper[T](err, extr)
+	}
+
+	return d, false
+}
+
 func New(message string) error {
 	return errors.New(message)
 }
