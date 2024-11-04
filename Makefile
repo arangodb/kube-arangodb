@@ -528,7 +528,7 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
 		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=true" \
 		--set "operator.features.scheduler=true" \
-        --set "operator.features.platform=true"))
+		--set "operator.features.platform=true"))
 
 $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
 		--set "operator.features.deployment=false" \
