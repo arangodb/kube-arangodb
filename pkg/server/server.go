@@ -71,6 +71,7 @@ type Dependencies struct {
 	ML                    OperatorDependency
 	Analytics             OperatorDependency
 	Networking            OperatorDependency
+	Platform              OperatorDependency
 	Scheduler             OperatorDependency
 	ClusterSync           OperatorDependency
 	Operators             Operators
@@ -199,6 +200,10 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 	if deps.Networking.Enabled {
 		r.GET("/ready/networking", gin.WrapF(deps.Networking.Probe.ReadyHandler))
 		readyProbes = append(readyProbes, deps.Networking.Probe)
+	}
+	if deps.Platform.Enabled {
+		r.GET("/ready/platform", gin.WrapF(deps.Platform.Probe.ReadyHandler))
+		readyProbes = append(readyProbes, deps.Platform.Probe)
 	}
 	if deps.Scheduler.Enabled {
 		r.GET("/ready/scheduler", gin.WrapF(deps.Scheduler.Probe.ReadyHandler))

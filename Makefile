@@ -527,7 +527,8 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
 		--set "operator.features.ml=false" \
 		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=true" \
-		--set "operator.features.scheduler=true"))
+		--set "operator.features.scheduler=true" \
+		--set "operator.features.platform=true"))
 
 $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
 		--set "operator.features.deployment=false" \
@@ -539,7 +540,8 @@ $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
 		--set "operator.features.ml=false" \
 		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
-		--set "operator.features.scheduler=false"))
+		--set "operator.features.scheduler=false" \
+		--set "operator.features.platform=false"))
 
 $(eval $(call manifest-generator, storage, kube-arangodb, \
 		--set "operator.features.deployment=false" \
@@ -551,7 +553,8 @@ $(eval $(call manifest-generator, storage, kube-arangodb, \
 		--set "operator.features.ml=false" \
 		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
-		--set "operator.features.scheduler=false"))
+		--set "operator.features.scheduler=false" \
+ 		--set "operator.features.platform=false"))
 
 $(eval $(call manifest-generator, backup, kube-arangodb, \
 		--set "operator.features.deployment=false" \
@@ -563,7 +566,8 @@ $(eval $(call manifest-generator, backup, kube-arangodb, \
 		--set "operator.features.ml=false" \
 		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
-		--set "operator.features.scheduler=false"))
+		--set "operator.features.scheduler=false" \
+ 		--set "operator.features.platform=false"))
 
 $(eval $(call manifest-generator, apps, kube-arangodb, \
 		--set "operator.features.deployment=false" \
@@ -575,7 +579,8 @@ $(eval $(call manifest-generator, apps, kube-arangodb, \
 		--set "operator.features.ml=false" \
 		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
-		--set "operator.features.scheduler=false"))
+		--set "operator.features.scheduler=false" \
+ 		--set "operator.features.platform=false"))
 
 $(eval $(call manifest-generator, ml, kube-arangodb, \
 		--set "operator.features.deployment=false" \
@@ -587,7 +592,8 @@ $(eval $(call manifest-generator, ml, kube-arangodb, \
 		--set "operator.features.ml=true" \
 		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
-		--set "operator.features.scheduler=false"))
+		--set "operator.features.scheduler=false" \
+ 		--set "operator.features.platform=false"))
 
 $(eval $(call manifest-generator, k2kclustersync, kube-arangodb, \
 		--set "operator.features.deployment=false" \
@@ -599,7 +605,8 @@ $(eval $(call manifest-generator, k2kclustersync, kube-arangodb, \
 		--set "operator.features.ml=false" \
 		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
-		--set "operator.features.scheduler=false"))
+		--set "operator.features.scheduler=false" \
+ 		--set "operator.features.platform=false"))
 
 $(eval $(call manifest-generator, all, kube-arangodb, \
 		--set "operator.features.deployment=true" \
@@ -611,7 +618,8 @@ $(eval $(call manifest-generator, all, kube-arangodb, \
 		--set "operator.features.ml=true" \
 		--set "operator.features.analytics=true" \
 		--set "operator.features.networking=true" \
-		--set "operator.features.scheduler=true"))
+		--set "operator.features.scheduler=true" \
+		--set "operator.features.platform=true"))
 
 .PHONY: chart-crd
 chart-crd: export CHART_NAME := kube-arangodb-crd

@@ -30,6 +30,7 @@ import (
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 )
 
@@ -79,4 +80,8 @@ func WithSchedulerCronJobUpdateStatusInterfaceRetry(ctx context.Context, client 
 
 func WithArangoStorageUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage], obj *mlApi.ArangoMLStorage, status mlApi.ArangoMLStorageStatus, opts meta.UpdateOptions) (*mlApi.ArangoMLStorage, error) {
 	return WithUpdateStatusInterfaceRetry[mlApi.ArangoMLStorageStatus, *mlApi.ArangoMLStorage](ctx, client, obj, status, opts)
+}
+
+func WithArangoPlatformStorageUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[platformApi.ArangoPlatformStorageStatus, *platformApi.ArangoPlatformStorage], obj *platformApi.ArangoPlatformStorage, status platformApi.ArangoPlatformStorageStatus, opts meta.UpdateOptions) (*platformApi.ArangoPlatformStorage, error) {
+	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformStorageStatus, *platformApi.ArangoPlatformStorage](ctx, client, obj, status, opts)
 }
