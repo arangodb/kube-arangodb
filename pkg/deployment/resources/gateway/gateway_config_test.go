@@ -25,12 +25,16 @@ import (
 	"testing"
 
 	bootstrapAPI "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	httpConnectionManagerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
 func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *testing.T, b *bootstrapAPI.Bootstrap)) {
+	require.NoError(t, cfg.Validate())
+
 	data, checksum, obj, err := cfg.RenderYAML()
 	require.NoError(t, err)
 
@@ -73,6 +77,136 @@ func Test_GatewayConfig(t *testing.T) {
 			require.NotNil(t, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress())
 			require.EqualValues(t, "127.0.0.1", b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress().Address)
 			require.EqualValues(t, 12345, b.StaticResources.Clusters[0].LoadAssignment.Endpoints[0].LbEndpoints[0].GetEndpoint().Address.GetSocketAddress().GetPortValue())
+		})
+	})
+	t.Run("Without WebSocket", func(t *testing.T) {
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Targets: []ConfigDestinationTarget{
+					{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+			},
+		}, func(t *testing.T, b *bootstrapAPI.Bootstrap) {
+			require.NotNil(t, b)
+			require.NotNil(t, b.StaticResources)
+			require.NotNil(t, b.StaticResources.Listeners)
+			require.Len(t, b.StaticResources.Listeners, 1)
+			require.NotNil(t, b.StaticResources.Listeners[0])
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain)
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters)
+			require.Len(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters, 1)
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0])
+			var o httpConnectionManagerAPI.HttpConnectionManager
+			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			rc := o.GetRouteConfig()
+			require.NotNil(t, rc)
+			require.NotNil(t, rc.VirtualHosts)
+			require.Len(t, rc.VirtualHosts, 1)
+			require.NotNil(t, rc.VirtualHosts[0])
+			require.Len(t, rc.VirtualHosts[0].Routes, 1)
+			require.NotNil(t, rc.VirtualHosts[0].Routes[0])
+			r := rc.VirtualHosts[0].Routes[0].GetRoute()
+			require.NotNil(t, r)
+			require.Len(t, r.UpgradeConfigs, 0)
+		})
+	})
+
+	t.Run("With WebSocket", func(t *testing.T) {
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Targets: []ConfigDestinationTarget{
+					{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				UpgradeConfigs: ConfigDestinationsUpgrade{
+					{
+						Type: "websocket",
+					},
+				},
+			},
+		}, func(t *testing.T, b *bootstrapAPI.Bootstrap) {
+			require.NotNil(t, b)
+			require.NotNil(t, b.StaticResources)
+			require.NotNil(t, b.StaticResources.Listeners)
+			require.Len(t, b.StaticResources.Listeners, 1)
+			require.NotNil(t, b.StaticResources.Listeners[0])
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain)
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters)
+			require.Len(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters, 1)
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0])
+			var o httpConnectionManagerAPI.HttpConnectionManager
+			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			rc := o.GetRouteConfig()
+			require.NotNil(t, rc)
+			require.NotNil(t, rc.VirtualHosts)
+			require.Len(t, rc.VirtualHosts, 1)
+			require.NotNil(t, rc.VirtualHosts[0])
+			require.Len(t, rc.VirtualHosts[0].Routes, 1)
+			require.NotNil(t, rc.VirtualHosts[0].Routes[0])
+			r := rc.VirtualHosts[0].Routes[0].GetRoute()
+			require.NotNil(t, r)
+			require.Len(t, r.UpgradeConfigs, 1)
+			require.NotNil(t, r.UpgradeConfigs[0])
+			require.EqualValues(t, "websocket", r.UpgradeConfigs[0].UpgradeType)
+			require.NotNil(t, r.UpgradeConfigs[0].Enabled)
+			require.True(t, r.UpgradeConfigs[0].Enabled.GetValue())
+		})
+	})
+
+	t.Run("With Multi WebSocket", func(t *testing.T) {
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Targets: []ConfigDestinationTarget{
+					{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				UpgradeConfigs: ConfigDestinationsUpgrade{
+					{
+						Type: "websocket",
+					},
+					{
+						Type:    "websocket",
+						Enabled: util.NewType(false),
+					},
+				},
+			},
+		}, func(t *testing.T, b *bootstrapAPI.Bootstrap) {
+			require.NotNil(t, b)
+			require.NotNil(t, b.StaticResources)
+			require.NotNil(t, b.StaticResources.Listeners)
+			require.Len(t, b.StaticResources.Listeners, 1)
+			require.NotNil(t, b.StaticResources.Listeners[0])
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain)
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters)
+			require.Len(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters, 1)
+			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0])
+			var o httpConnectionManagerAPI.HttpConnectionManager
+			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			rc := o.GetRouteConfig()
+			require.NotNil(t, rc)
+			require.NotNil(t, rc.VirtualHosts)
+			require.Len(t, rc.VirtualHosts, 1)
+			require.NotNil(t, rc.VirtualHosts[0])
+			require.Len(t, rc.VirtualHosts[0].Routes, 1)
+			require.NotNil(t, rc.VirtualHosts[0].Routes[0])
+			r := rc.VirtualHosts[0].Routes[0].GetRoute()
+			require.NotNil(t, r)
+			require.Len(t, r.UpgradeConfigs, 2)
+			require.NotNil(t, r.UpgradeConfigs[0])
+			require.NotNil(t, r.UpgradeConfigs[1])
+			require.EqualValues(t, "websocket", r.UpgradeConfigs[0].UpgradeType)
+			require.NotNil(t, r.UpgradeConfigs[0].Enabled)
+			require.True(t, r.UpgradeConfigs[0].Enabled.GetValue())
+			require.EqualValues(t, "websocket", r.UpgradeConfigs[1].UpgradeType)
+			require.NotNil(t, r.UpgradeConfigs[1].Enabled)
+			require.False(t, r.UpgradeConfigs[1].Enabled.GetValue())
 		})
 	})
 

@@ -80,6 +80,24 @@ v1alpha1:
                     type: boolean
                 type: object
             type: object
+          options:
+            description: Options defines connection upgrade options
+            properties:
+              upgrade:
+                description: Upgrade keeps the connection upgrade options
+                items:
+                  properties:
+                    enabled:
+                      description: Enabled defines if upgrade option is enabled
+                      type: boolean
+                    type:
+                      description: Type defines type of the Upgrade
+                      enum:
+                        - websocket
+                      type: string
+                  type: object
+                type: array
+            type: object
           route:
             description: Route defines the route spec
             properties:

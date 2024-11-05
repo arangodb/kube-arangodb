@@ -15,6 +15,7 @@
 - (Feature) (Platform) Storage V1Alpha1
 - (Feature) StorageV2 Integration Service Implementation
 - (Feature) (Platform) Storage V1Alpha1 RC
+- (Feature) (Networking) ArangoRotue WebSocket Support
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD

@@ -31,6 +31,9 @@ type ArangoRouteSpec struct {
 
 	// Route defines the route spec
 	Route *ArangoRouteSpecRoute `json:"route,omitempty"`
+
+	// Options defines connection upgrade options
+	Options *ArangoRouteSpecOptions `json:"options,omitempty"`
 }
 
 func (s *ArangoRouteSpec) GetDeployment() string {
@@ -65,6 +68,7 @@ func (s *ArangoRouteSpec) Validate() error {
 		shared.PrefixResourceErrors("deployment", shared.ValidateResourceNamePointer(s.Deployment)),
 		shared.ValidateRequiredInterfacePath("destination", s.Destination),
 		shared.ValidateOptionalInterfacePath("route", s.Route),
+		shared.ValidateOptionalInterfacePath("options", s.Options),
 	)); err != nil {
 		return err
 	}
