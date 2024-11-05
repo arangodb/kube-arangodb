@@ -237,7 +237,7 @@ func (r *Resources) ensureArangoProfilesFactory(ctx context.Context, cachedStatu
 func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspectorInterface.Inspector, name string, expected *schedulerApi.ArangoProfile) (bool, error) {
 	arangoProfiles := cachedStatus.ArangoProfileModInterface().V1Beta1()
 
-	if expected.GetName() != name {
+	if expected != nil && expected.GetName() != name {
 		return false, errors.Errorf("Name mismatch")
 	}
 
