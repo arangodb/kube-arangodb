@@ -196,11 +196,7 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 
 	var internalHandlers, externalHandlers, healthHandlers []svc.Handler
 
-	pong := pbImplPongV1.New()
-
-	internalHandlers = append(internalHandlers, pong)
-	externalHandlers = append(externalHandlers, pong)
-	healthHandlers = append(healthHandlers, pong)
+	var services []pbImplPongV1.Service
 
 	for _, handler := range c.registered {
 		if ok, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s", handler.Name())); err != nil {
@@ -223,6 +219,17 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 				Bool("external", externalEnabled).
 				Info("Service discovered")
 
+			ps := strings.Split(handler.Name(), ".")
+			if len(ps) < 2 {
+				return errors.Errorf("Expected atleast 2 elements")
+			}
+
+			services = append(services, pbImplPongV1.Service{
+				Name:    strings.Join(ps[:len(ps)-1], "."),
+				Version: ps[len(ps)-1],
+				Enabled: ok,
+			})
+
 			if ok && (internalEnabled || externalEnabled) {
 				if svc, err := handler.Handler(ctx, cmd); err != nil {
 					return err
@@ -238,6 +245,15 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 			}
 		}
 	}
+
+	pong, err := pbImplPongV1.New(services...)
+	if err != nil {
+		return err
+	}
+
+	internalHandlers = append(internalHandlers, pong)
+	externalHandlers = append(externalHandlers, pong)
+	healthHandlers = append(healthHandlers, pong)
 
 	if c.health.shutdownEnabled {
 		healthHandlers = append(healthHandlers, pbImplShutdownV1.New(cancel))

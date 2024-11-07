@@ -25,6 +25,8 @@ const _ = grpc.SupportPackageIsVersion7
 type PongV1Client interface {
 	// Sends ping to the server
 	Ping(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*PongV1PingResponse, error)
+	// Asks for the services details
+	Services(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*PongV1ServicesResponse, error)
 }
 
 type pongV1Client struct {
@@ -44,12 +46,23 @@ func (c *pongV1Client) Ping(ctx context.Context, in *definition.Empty, opts ...g
 	return out, nil
 }
 
+func (c *pongV1Client) Services(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*PongV1ServicesResponse, error) {
+	out := new(PongV1ServicesResponse)
+	err := c.cc.Invoke(ctx, "/pong.PongV1/Services", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PongV1Server is the server API for PongV1 service.
 // All implementations must embed UnimplementedPongV1Server
 // for forward compatibility
 type PongV1Server interface {
 	// Sends ping to the server
 	Ping(context.Context, *definition.Empty) (*PongV1PingResponse, error)
+	// Asks for the services details
+	Services(context.Context, *definition.Empty) (*PongV1ServicesResponse, error)
 	mustEmbedUnimplementedPongV1Server()
 }
 
@@ -59,6 +72,9 @@ type UnimplementedPongV1Server struct {
 
 func (UnimplementedPongV1Server) Ping(context.Context, *definition.Empty) (*PongV1PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedPongV1Server) Services(context.Context, *definition.Empty) (*PongV1ServicesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Services not implemented")
 }
 func (UnimplementedPongV1Server) mustEmbedUnimplementedPongV1Server() {}
 
@@ -91,6 +107,24 @@ func _PongV1_Ping_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PongV1_Services_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(definition.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PongV1Server).Services(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pong.PongV1/Services",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PongV1Server).Services(ctx, req.(*definition.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PongV1_ServiceDesc is the grpc.ServiceDesc for PongV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -101,6 +135,10 @@ var PongV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _PongV1_Ping_Handler,
+		},
+		{
+			MethodName: "Services",
+			Handler:    _PongV1_Services_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
