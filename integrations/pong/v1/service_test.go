@@ -33,10 +33,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func Client(t *testing.T, ctx context.Context) pbPongV1.PongV1Client {
+func Client(t *testing.T, ctx context.Context, services ...Service) pbPongV1.PongV1Client {
+	h, err := New(services...)
+	require.NoError(t, err)
+
 	local := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, New())
+	}, h)
 
 	start := local.Start(ctx)
 
@@ -60,4 +63,37 @@ func Test_Ping(t *testing.T) {
 	require.NoError(t, err)
 
 	require.True(t, r2.GetTime().AsTime().After(r1.GetTime().AsTime()))
+}
+
+func Test_Services(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	v2 := Service{
+		Name:    "A",
+		Version: "V2",
+		Enabled: true,
+	}
+
+	v3 := Service{
+		Name:    "A",
+		Version: "V3",
+		Enabled: false,
+	}
+
+	client := Client(t, ctx,
+		v3,
+		v2,
+	)
+
+	r1, err := client.Services(ctx, &pbSharedV1.Empty{})
+	require.NoError(t, err)
+
+	require.Len(t, r1.GetServices(), 2)
+
+	require.NotNil(t, r1.GetServices()[0])
+	require.NotNil(t, r1.GetServices()[1])
+
+	require.EqualValues(t, v2.asService(), r1.GetServices()[0])
+	require.EqualValues(t, v3.asService(), r1.GetServices()[1])
 }

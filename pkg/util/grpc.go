@@ -25,11 +25,13 @@ import (
 	"crypto/tls"
 	"io"
 
+	any1 "github.com/golang/protobuf/ptypes/any"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+	proto "google.golang.org/protobuf/proto"
 
 	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
@@ -132,4 +134,12 @@ func TokenAuthInterceptors(token string) []grpc.DialOption {
 
 func attachTokenAuthToInterceptors(ctx context.Context, token string) context.Context {
 	return metadata.AppendToOutgoingContext(ctx, AuthorizationGRPCHeader, token)
+}
+
+func GRPCAnyCastAs[T proto.Message](in *any1.Any, v T) error {
+	if err := in.UnmarshalTo(v); err != nil {
+		return err
+	}
+
+	return nil
 }

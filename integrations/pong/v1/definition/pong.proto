@@ -32,6 +32,9 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/pong/v1/defi
 service PongV1 {
   // Sends ping to the server
   rpc Ping(shared.Empty) returns (PongV1PingResponse);
+
+  // Asks for the services details
+  rpc Services(shared.Empty) returns (PongV1ServicesResponse);
 }
 
 // Responses
@@ -41,4 +44,20 @@ service PongV1 {
 message PongV1PingResponse {
   // Current time in UTC
   google.protobuf.Timestamp time = 1;
+}
+
+// PongV1 Services Call Response
+message PongV1ServicesResponse {
+  // List of the Services
+  repeated PongV1Service services = 1;
+}
+
+// Service Definition
+message PongV1Service {
+  // Service Name
+  string name = 1;
+  // Service Version
+  string version = 2;
+  // states if service is enabled
+  bool enabled = 3;
 }

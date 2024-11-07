@@ -181,6 +181,17 @@ func ValidateRequiredInterfacePath[T ValidateInterface](path string, in T) error
 	return PrefixResourceErrors(path, ValidateRequiredInterface(in))
 }
 
+// ValidateInterfaceList Validates object if is not nil with path
+func ValidateInterfaceList[T ValidateInterface](in []T) error {
+	errors := make([]error, len(in))
+
+	for id := range in {
+		errors[id] = PrefixResourceError(fmt.Sprintf("[%d]", id), in[id].Validate())
+	}
+
+	return WithErrors(errors...)
+}
+
 // ValidateList validates all elements on the list
 func ValidateList[T any](in []T, validator func(T) error, checks ...func(in []T) error) error {
 	errors := make([]error, len(in)+len(checks))

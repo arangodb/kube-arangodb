@@ -29,6 +29,8 @@ type Configuration struct {
 	Namespace string
 
 	Client kclient.Client
+
+	Driver *ConfigurationDriver
 }
 
 func (c *Configuration) Validate() error {
@@ -42,6 +44,10 @@ func (c *Configuration) Validate() error {
 
 	if c.Client == nil {
 		return errors.Errorf("Namespace cannot be empty")
+	}
+
+	if err := c.Driver.Validate(); err != nil {
+		return err
 	}
 
 	return nil

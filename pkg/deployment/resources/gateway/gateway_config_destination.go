@@ -67,6 +67,8 @@ type ConfigDestination struct {
 	Path *string `json:"path,omitempty"`
 
 	AuthExtension *ConfigAuthZExtension `json:"authExtension,omitempty"`
+
+	UpgradeConfigs ConfigDestinationsUpgrade `json:"upgradeConfigs,omitempty"`
 }
 
 func (c *ConfigDestination) Validate() error {
@@ -78,6 +80,7 @@ func (c *ConfigDestination) Validate() error {
 		shared.PrefixResourceError("type", c.Type.Validate()),
 		shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
 		shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
+		shared.PrefixResourceError("upgradeConfigs", c.UpgradeConfigs.Validate()),
 	)
 }
 
@@ -111,11 +114,20 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 				ClusterSpecifier: &routeAPI.RouteAction_Cluster{
 					Cluster: name,
 				},
-				PrefixRewrite: c.GetPath(),
+				UpgradeConfigs: c.getUpgradeConfigs().render(),
+				PrefixRewrite:  c.GetPath(),
 			},
 		},
 		TypedPerFilterConfig: tc,
 	}, nil
+}
+
+func (c *ConfigDestination) getUpgradeConfigs() ConfigDestinationsUpgrade {
+	if c == nil {
+		return nil
+	}
+
+	return c.UpgradeConfigs
 }
 
 func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, error) {

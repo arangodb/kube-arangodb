@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,40 @@
 package util
 
 import "sync"
+
+func ParallelProcess[T any](caller func(in T), threads int, in []T) {
+	r := ParallelInput(in)
+
+	var wg sync.WaitGroup
+
+	for id := 0; id < threads; id++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			for el := range r {
+				caller(el)
+			}
+		}()
+	}
+
+	wg.Wait()
+}
+
+func ParallelInput[T any](in []T) <-chan T {
+	r := make(chan T)
+
+	go func() {
+		defer close(r)
+
+		for id := range in {
+			r <- in[id]
+		}
+	}()
+
+	return r
+}
 
 // RunParallel runs actions parallelly throttling them to the given maximum number.
 func RunParallel(max int, actions ...func() error) error {

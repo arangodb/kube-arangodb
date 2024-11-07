@@ -27,6 +27,7 @@ import (
 
 	pbImplSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2"
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
@@ -42,6 +43,7 @@ func init() {
 
 type schedulerV2 struct {
 	Configuration pbImplSchedulerV2.Configuration
+	Driver        string
 }
 
 func (b *schedulerV2) Name() string {
@@ -56,6 +58,7 @@ func (b *schedulerV2) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
 		fs.StringVar(&b.Configuration.Namespace, "namespace", constants.NamespaceWithDefault("default"), "Kubernetes Namespace"),
 		fs.StringVar(&b.Configuration.Deployment, "deployment", "", "ArangoDeployment Name"),
+		fs.StringVar(&b.Driver, "driver", string(helm.ConfigurationDriverSecret), "Helm Driver"),
 	)
 }
 
@@ -68,6 +71,7 @@ func (b *schedulerV2) Handler(ctx context.Context, cmd *cobra.Command) (svc.Hand
 	helm, err := helm.NewClient(helm.Configuration{
 		Namespace: b.Configuration.Namespace,
 		Client:    client,
+		Driver:    (*helm.ConfigurationDriver)(util.NewType(b.Driver)),
 	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to create Helm Client")

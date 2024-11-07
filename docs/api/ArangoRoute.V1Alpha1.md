@@ -145,6 +145,25 @@ Insecure allows Insecure traffic
 
 ***
 
+### .spec.options.upgrade\[int\].enabled
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_options_upgrade.go#L37)</sup>
+
+Enabled defines if upgrade option is enabled
+
+***
+
+### .spec.options.upgrade\[int\].type
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_options_upgrade.go#L34)</sup>
+
+Type defines type of the Upgrade
+
+Possible Values: 
+* `"websocket"` (default) - HTTP WebSocket Upgrade type
+
+***
+
 ### .spec.route.path
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_route.go#L29)</sup>
