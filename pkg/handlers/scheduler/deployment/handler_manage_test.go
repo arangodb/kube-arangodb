@@ -25,9 +25,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 	apps "k8s.io/api/apps/v1"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
+	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
@@ -202,10 +205,24 @@ func Test_Handler_Profile(t *testing.T) {
 	handler := newFakeHandler()
 
 	// Arrange
-	profile := tests.NewMetaObject[*schedulerApi.ArangoProfile](t, tests.FakeNamespace, "test", tests.MarkArangoProfileAsReady)
+	profile := tests.NewMetaObject[*schedulerApi.ArangoProfile](t, tests.FakeNamespace, "test", func(t *testing.T, obj *schedulerApi.ArangoProfile) {
+		obj.Spec.Template = &schedulerApi.ProfileTemplate{
+			Pod: &schedulerPodApi.Pod{
+				Volumes: &schedulerPodResourcesApi.Volumes{
+					Volumes: []core.Volume{
+						{
+							Name:         "test",
+							VolumeSource: core.VolumeSource{},
+						},
+					},
+				},
+			},
+		}
+	}, tests.MarkArangoProfileAsReady)
 	extension := tests.NewMetaObject[*schedulerApi.ArangoSchedulerDeployment](t, tests.FakeNamespace, "test",
 		func(t *testing.T, obj *schedulerApi.ArangoSchedulerDeployment) {
 			obj.Spec.Profiles = []string{profile.GetName()}
+			obj.Spec.DeploymentSpec.Replicas = util.NewType[int32](10)
 		})
 	deployment := tests.NewMetaObject[*apps.Deployment](t, tests.FakeNamespace, "test")
 
@@ -222,6 +239,11 @@ func Test_Handler_Profile(t *testing.T) {
 	tests.RefreshObjects(t, handler.kubeClient, handler.client, &deployment)
 	require.NotNil(t, deployment)
 
+	require.NotNil(t, deployment.Spec.Replicas)
+	require.EqualValues(t, 10, *deployment.Spec.Replicas)
+
 	require.Len(t, extension.Status.Profiles, 1)
 	require.Equal(t, profile.GetName(), extension.Status.Profiles[0])
+	require.Len(t, deployment.Spec.Template.Spec.Volumes, 1)
+	require.EqualValues(t, "test", deployment.Spec.Template.Spec.Volumes[0].Name)
 }
