@@ -39,7 +39,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func NewClient(cfg Configuration) (Client, error) {
@@ -49,7 +48,7 @@ func NewClient(cfg Configuration) (Client, error) {
 
 	var helm action.Configuration
 
-	if err := helm.Init(kclient.NewRESTClientGetter(tests.FakeNamespace, nil, cfg.Client.Config()), cfg.Namespace, "configmap", func(format string, v ...interface{}) {
+	if err := helm.Init(kclient.NewRESTClientGetter(cfg.Namespace, nil, cfg.Client.Config()), cfg.Namespace, string(cfg.Driver.Get()), func(format string, v ...interface{}) {
 		logger.Debug(format, v...)
 	}); err != nil {
 		return nil, err
