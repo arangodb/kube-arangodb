@@ -20,35 +20,29 @@
 
 package helm
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
+
+type ConfigurationDriver string
+
+const (
+	ConfigurationDriverDefault                       = ConfigurationDriverSecret
+	ConfigurationDriverConfigMap ConfigurationDriver = "configmap"
+	ConfigurationDriverSecret    ConfigurationDriver = "secret"
 )
 
-type Configuration struct {
-	Namespace string
-
-	Client kclient.Client
-
-	Driver *ConfigurationDriver
+func (c *ConfigurationDriver) Validate() error {
+	switch v := c.Get(); v {
+	case ConfigurationDriverConfigMap, ConfigurationDriverSecret:
+		return nil
+	default:
+		return errors.Errorf("Unknown option: %s", v)
+	}
 }
 
-func (c *Configuration) Validate() error {
+func (c *ConfigurationDriver) Get() ConfigurationDriver {
 	if c == nil {
-		return errors.Errorf("Configuration cannot be nil")
+		return ConfigurationDriverDefault
 	}
 
-	if c.Namespace == "" {
-		return errors.Errorf("Namespace cannot be empty")
-	}
-
-	if c.Client == nil {
-		return errors.Errorf("Namespace cannot be empty")
-	}
-
-	if err := c.Driver.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return *c
 }
