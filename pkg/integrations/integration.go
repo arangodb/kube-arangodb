@@ -32,6 +32,7 @@ type Factory func() Integration
 
 type Integration interface {
 	Name() string
+
 	Description() string
 
 	Register(cmd *cobra.Command, fs FlagEnvHandler) error

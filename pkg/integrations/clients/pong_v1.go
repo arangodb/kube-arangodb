@@ -21,10 +21,13 @@
 package clients
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
@@ -59,6 +62,15 @@ func (s *pongV1) Register(cmd *cobra.Command) error {
 		_, err = client.Ping(shutdown.Context(), &pbSharedV1.Empty{})
 		if err != nil {
 			return err
+		}
+
+		services, err := client.Services(shutdown.Context(), &pbSharedV1.Empty{})
+		if err != nil {
+			return err
+		}
+
+		for _, svc := range services.GetServices() {
+			println(fmt.Sprintf("%s.%s: %s", svc.GetName(), svc.GetVersion(), util.BoolSwitch(svc.GetEnabled(), "Enabled", "Disabled")))
 		}
 
 		return nil
