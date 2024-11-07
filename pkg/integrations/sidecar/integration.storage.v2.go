@@ -21,6 +21,7 @@
 package sidecar
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/util/aws"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -82,7 +83,7 @@ func (i IntegrationStorageV2) Envs() ([]core.EnvVar, error) {
 
 		envs = append(envs,
 			core.EnvVar{
-				Name:  "INTEGRATION_STORAGE_V2_S3_PROVIDER_TYPE",
+				Name:  "INTEGRATION_STORAGE_V2_TYPE",
 				Value: string(storage.S3),
 			},
 			core.EnvVar{
@@ -108,6 +109,10 @@ func (i IntegrationStorageV2) Envs() ([]core.EnvVar, error) {
 			core.EnvVar{
 				Name:  "INTEGRATION_STORAGE_V2_S3_BUCKET_PREFIX",
 				Value: s3.GetBucketPrefix(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_S3_PROVIDER_TYPE",
+				Value: string(aws.ProviderTypeFile),
 			},
 			core.EnvVar{
 				Name:  "INTEGRATION_STORAGE_V2_S3_PROVIDER_FILE_SECRET_KEY",
