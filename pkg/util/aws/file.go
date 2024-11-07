@@ -75,7 +75,7 @@ func (f *fileProvider) Retrieve() (credentials.Value, error) {
 
 	f.recent = util.RecentFileModTime(f.accessKeyIDFile, f.secretAccessKeyFile, f.sessionTokenFile)
 
-	return credentials.Value{}, nil
+	return v, nil
 }
 
 func (f *fileProvider) IsExpired() bool {
