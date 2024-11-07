@@ -21,7 +21,6 @@
 package sidecar
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util/aws"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -30,6 +29,7 @@ import (
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/ml/storage"
+	"github.com/arangodb/kube-arangodb/pkg/util/aws"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
