@@ -18,12 +18,30 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package kubernetes
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import (
+	"github.com/rs/zerolog"
 
-const (
-	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
-	SpecValidCondition       api.ConditionType = "SpecValid"
-	ReadyCondition           api.ConditionType = "Ready"
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
+
+func Platform() shared.Factory {
+	return shared.NewFactory("platform", true, platform)
+}
+
+func platform(logger zerolog.Logger, files chan<- shared.File) error {
+	k, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		return errors.Errorf("Client is not initialised")
+	}
+
+	if err := platformArangoPlatformStorages(logger, files, k); err != nil {
+		logger.Err(err).Msgf("Error while collecting platform arango storages")
+		return err
+	}
+
+	return nil
+}

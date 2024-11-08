@@ -30,6 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
@@ -75,12 +76,17 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
-	gen := func(name, version string, integrations ...sidecar.Integration) func() (string, *schedulerApi.ArangoProfile, error) {
+	gen := func(name, version string, generator func() (sidecar.Integration, bool)) func() (string, *schedulerApi.ArangoProfile, error) {
 		return func() (string, *schedulerApi.ArangoProfile, error) {
 			counterMetric.Inc()
 			fullName := fmt.Sprintf("%s-int-%s-%s", deploymentName, name, version)
 
-			integration, err := sidecar.NewIntegrationEnablement(integrations...)
+			intgr, exists := generator()
+			if !exists {
+				return fullName, nil, nil
+			}
+
+			integration, err := sidecar.NewIntegrationEnablement(intgr)
 			if err != nil {
 				return "", nil, err
 			}
@@ -103,6 +109,12 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 					Template: integration,
 				},
 			}, nil
+		}
+	}
+
+	always := func(in sidecar.Integration) func() (sidecar.Integration, bool) {
+		return func() (sidecar.Integration, bool) {
+			return in, true
 		}
 	}
 
@@ -134,12 +146,24 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				},
 			}, nil
 		},
-		gen(constants.ProfilesIntegrationAuthz, constants.ProfilesIntegrationV0, sidecar.IntegrationAuthorizationV0{}),
-		gen(constants.ProfilesIntegrationAuthn, constants.ProfilesIntegrationV1, sidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()}),
-		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV1, sidecar.IntegrationSchedulerV1{}),
-		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV2, sidecar.IntegrationSchedulerV2{}),
-		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, sidecar.IntegrationEnvoyV3{Spec: spec}),
-	); err != nil {
+		gen(constants.ProfilesIntegrationAuthz, constants.ProfilesIntegrationV0, always(sidecar.IntegrationAuthorizationV0{})),
+		gen(constants.ProfilesIntegrationAuthn, constants.ProfilesIntegrationV1, always(sidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()})),
+		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV1, always(sidecar.IntegrationSchedulerV1{})),
+		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV2, always(sidecar.IntegrationSchedulerV2{})),
+		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, always(sidecar.IntegrationEnvoyV3{Spec: spec})),
+		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV2, func() (sidecar.Integration, bool) {
+			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {
+				if p, ok := v.GetSimple(deploymentName); ok {
+					if p.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
+						return sidecar.IntegrationStorageV2{
+							Storage: p,
+						}, true
+					}
+				}
+			}
+
+			return nil, false
+		})); err != nil {
 		return err
 	} else if changed {
 		reconcileRequired.Required()
@@ -213,7 +237,7 @@ func (r *Resources) ensureArangoProfilesFactory(ctx context.Context, cachedStatu
 func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspectorInterface.Inspector, name string, expected *schedulerApi.ArangoProfile) (bool, error) {
 	arangoProfiles := cachedStatus.ArangoProfileModInterface().V1Beta1()
 
-	if expected.GetName() != name {
+	if expected != nil && expected.GetName() != name {
 		return false, errors.Errorf("Name mismatch")
 	}
 

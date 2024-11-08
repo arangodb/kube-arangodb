@@ -151,7 +151,7 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 	for _, service := range c.registered {
 		prefix := fmt.Sprintf("integration.%s", service.Name())
 
-		fs := f.WithPrefix(prefix)
+		fs := f.WithPrefix(prefix).WithVisibility(GetIntegrationVisibility(service))
 		internal, external := GetIntegrationEnablement(service)
 
 		if err := errors.Errors(

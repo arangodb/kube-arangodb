@@ -148,8 +148,8 @@ func (h *handler) HandleObject(ctx context.Context, item operation.Item, extensi
 			Labels:      extension.ObjectMeta.Labels,
 			Annotations: extension.ObjectMeta.Annotations,
 		}
-		extension.Spec.DeploymentSpec.DeepCopyInto(&obj.Spec)
-		extension.Spec.DeploymentSpec.Template.DeepCopyInto(&obj.Spec.Template)
+		deploymentTemplate.Spec.DeepCopyInto(&obj.Spec)
+		deploymentTemplate.Spec.Template.DeepCopyInto(&obj.Spec.Template)
 
 		obj.OwnerReferences = append(obj.OwnerReferences, extension.AsOwner())
 

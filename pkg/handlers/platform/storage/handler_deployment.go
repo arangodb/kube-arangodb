@@ -28,50 +28,30 @@ import (
 
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func (h *handler) HandleArangoDeployment(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformStorage, status *platformApi.ArangoPlatformStorageStatus) (bool, error) {
-	var name = util.WithDefault(extension.Spec.Deployment)
-
-	if status.Deployment != nil {
-		name = status.Deployment.GetName()
-	}
-
-	deployment, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.DatabaseV1().ArangoDeployments(item.Namespace).Get, name, meta.GetOptions{})
+	deployment, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.DatabaseV1().ArangoDeployments(item.Namespace).Get, extension.GetName(), meta.GetOptions{})
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
 			// Condition for Found should be set to false
 			if util.Or(
-				status.Conditions.Update(networkingApi.DeploymentFoundCondition, false, "ArangoDeployment not found", "ArangoDeployment not found"),
+				status.Conditions.Update(platformApi.DeploymentFoundCondition, false, "ArangoDeployment not found", "ArangoDeployment not found"),
 			) {
 				return true, operator.Reconcile("Conditions updated")
 			}
-			return false, nil
+			return false, operator.Stop("Deployment Not Found")
 		}
 
 		return false, err
 	}
 
-	if status.Deployment == nil {
-		status.Deployment = util.NewType(sharedApi.NewObject(deployment))
-		return true, operator.Reconcile("Deployment saved")
-	} else if !status.Deployment.Equals(deployment) {
-		if util.Or(
-			status.Conditions.Update(networkingApi.DeploymentFoundCondition, false, "ArangoDeployment changed", "ArangoDeployment changed"),
-		) {
-			return true, operator.Reconcile("Conditions updated")
-		}
-
-		return false, operator.Stop("ArangoDeployment Changed")
-	}
-
 	// Condition for Found should be set to true
 
-	if status.Conditions.Update(networkingApi.DeploymentFoundCondition, true, "ArangoDeployment found", "ArangoDeployment found") {
+	if status.Conditions.UpdateWithHash(networkingApi.DeploymentFoundCondition, true, "ArangoDeployment found", "ArangoDeployment found", string(deployment.GetUID())) {
 		return true, operator.Reconcile("Conditions updated")
 	}
 

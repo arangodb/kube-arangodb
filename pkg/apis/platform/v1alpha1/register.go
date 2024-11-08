@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
+	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 )
 
 const (
@@ -36,7 +36,7 @@ var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-	SchemeGroupVersion = schema.GroupVersion{Group: networking.ArangoNetworkingGroupName, Version: ArangoPlatformVersion}
+	SchemeGroupVersion = schema.GroupVersion{Group: platform.ArangoPlatformGroupName, Version: ArangoPlatformVersion}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource

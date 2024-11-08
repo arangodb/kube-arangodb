@@ -634,6 +634,7 @@ func (r *Resources) createPodForMember(ctx context.Context, cachedStatus inspect
 	}
 	// Create event
 	r.context.CreateEvent(k8sutil.NewPodCreatedEvent(m.Pod.GetName(), role, apiObject))
+	cachedStatus.GetThrottles().Pod().Invalidate()
 
 	return nil
 }
@@ -776,6 +777,10 @@ func (r *Resources) EnsurePods(ctx context.Context, cachedStatus inspectorInterf
 			}
 
 			log.Warn("Ensuring pod")
+
+			if err := cachedStatus.Refresh(ctx); err != nil {
+				return err
+			}
 
 			spec := r.context.GetSpec()
 			if err := r.createPodForMember(ctx, cachedStatus, spec, member, m.ID, imageNotFoundOnce); err != nil {

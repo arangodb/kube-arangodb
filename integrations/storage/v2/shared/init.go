@@ -18,12 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package shared
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+type InitOptions struct {
+	Create *bool
+}
 
-const (
-	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
-	SpecValidCondition       api.ConditionType = "SpecValid"
-	ReadyCondition           api.ConditionType = "Ready"
-)
+func (i *InitOptions) GetCreate() bool {
+	if i == nil || i.Create == nil {
+		return false
+	}
+
+	return *i.Create
+}

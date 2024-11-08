@@ -116,11 +116,3 @@ Region defines the availability zone name.
 
 Default Value: `""`
 
-***
-
-### .spec.deployment
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/platform/v1alpha1/storage_spec.go#L29)</sup>
-
-Deployment specifies the ArangoDeployment object name
-

@@ -36,12 +36,14 @@ import (
 
 func NewFlagEnvHandler(fs *flag.FlagSet) FlagEnvHandler {
 	return flagEnvHandler{
-		fs: fs,
+		fs:      fs,
+		visible: true,
 	}
 }
 
 type FlagEnvHandler interface {
 	WithPrefix(prefix string) FlagEnvHandler
+	WithVisibility(visible bool) FlagEnvHandler
 
 	StringVar(p *string, name string, value string, usage string) error
 	String(name string, value string, usage string) error
@@ -60,8 +62,9 @@ type FlagEnvHandler interface {
 }
 
 type flagEnvHandler struct {
-	prefix string
-	fs     *flag.FlagSet
+	prefix  string
+	visible bool
+	fs      *flag.FlagSet
 }
 
 func (f flagEnvHandler) StringVar(p *string, name string, value string, usage string) error {
@@ -70,7 +73,15 @@ func (f flagEnvHandler) StringVar(p *string, name string, value string, usage st
 		return err
 	}
 
-	f.fs.StringVar(p, f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.StringVar(p, fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -81,7 +92,15 @@ func (f flagEnvHandler) String(name string, value string, usage string) error {
 		return err
 	}
 
-	f.fs.String(f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.String(fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -92,7 +111,15 @@ func (f flagEnvHandler) StringSliceVar(p *[]string, name string, value []string,
 		return err
 	}
 
-	f.fs.StringSliceVar(p, f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.StringSliceVar(p, fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -103,7 +130,15 @@ func (f flagEnvHandler) StringSlice(name string, value []string, usage string) e
 		return err
 	}
 
-	f.fs.StringSlice(f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.StringSlice(fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -114,7 +149,15 @@ func (f flagEnvHandler) BoolVar(p *bool, name string, value bool, usage string) 
 		return err
 	}
 
-	f.fs.BoolVar(p, f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.BoolVar(p, fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -125,7 +168,15 @@ func (f flagEnvHandler) Bool(name string, value bool, usage string) error {
 		return err
 	}
 
-	f.fs.Bool(f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.Bool(fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -136,7 +187,15 @@ func (f flagEnvHandler) DurationVar(p *time.Duration, name string, value time.Du
 		return err
 	}
 
-	f.fs.DurationVar(p, f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.DurationVar(p, fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -147,7 +206,15 @@ func (f flagEnvHandler) Duration(name string, value time.Duration, usage string)
 		return err
 	}
 
-	f.fs.Duration(f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.Duration(fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -158,7 +225,15 @@ func (f flagEnvHandler) Uint16Var(p *uint16, name string, value uint16, usage st
 		return err
 	}
 
-	f.fs.Uint16Var(p, f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.Uint16Var(p, fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -169,7 +244,15 @@ func (f flagEnvHandler) Uint16(name string, value uint16, usage string) error {
 		return err
 	}
 
-	f.fs.Uint16(f.name(name), v, f.varDesc(name, usage))
+	fname := f.name(name)
+
+	f.fs.Uint16(fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -198,8 +281,17 @@ func (f flagEnvHandler) name(n string) string {
 
 func (f flagEnvHandler) WithPrefix(prefix string) FlagEnvHandler {
 	return flagEnvHandler{
-		prefix: f.name(prefix),
-		fs:     f.fs,
+		prefix:  f.name(prefix),
+		fs:      f.fs,
+		visible: f.visible,
+	}
+}
+
+func (f flagEnvHandler) WithVisibility(visible bool) FlagEnvHandler {
+	return flagEnvHandler{
+		prefix:  f.prefix,
+		fs:      f.fs,
+		visible: visible,
 	}
 }
 
