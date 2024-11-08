@@ -18,47 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shared
+package s3
 
 import (
 	"context"
-	"io"
-	"time"
 
+	"github.com/aws/aws-sdk-go/service/s3"
+
+	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type Writer interface {
-	io.Writer
+func (i *ios) Init(ctx context.Context, opts *pbImplStorageV2Shared.InitOptions) error {
+	if opts.GetCreate() {
+		if _, err := i.client.HeadBucketWithContext(ctx, &s3.HeadBucketInput{
+			Bucket: util.NewType(i.config.BucketName),
+		}); err != nil {
+			if !IsAWSNotFoundError(err) {
+				return err
+			}
 
-	Close(ctx context.Context) (string, int64, error)
+			if _, err := i.client.CreateBucketWithContext(ctx, &s3.CreateBucketInput{
+				Bucket: util.NewType(i.config.BucketName),
+			}); err != nil {
+				return err
+			}
+		}
+	}
 
-	Closed() bool
-}
-
-type Reader interface {
-	io.Reader
-
-	Close(ctx context.Context) (string, int64, error)
-
-	Closed() bool
-}
-
-type File struct {
-	Key  string
-	Info Info
-}
-
-type Info struct {
-	Size          uint64
-	LastUpdatedAt time.Time
-}
-
-type IO interface {
-	Init(ctx context.Context, opts *InitOptions) error
-	Write(ctx context.Context, key string) (Writer, error)
-	Read(ctx context.Context, key string) (Reader, error)
-	Head(ctx context.Context, key string) (*Info, error)
-	Delete(ctx context.Context, key string) (bool, error)
-	List(ctx context.Context, key string) (util.NextIterator[[]File], error)
+	return nil
 }

@@ -26,6 +26,15 @@ import (
 	"reflect"
 )
 
+// NewPointer returns a reference to a copy of the pointer value
+func NewPointer[T any](input *T) *T {
+	if input == nil {
+		return nil
+	}
+
+	return NewType(*input)
+}
+
 // NewType returns a reference to a simple type with given value.
 func NewType[T interface{}](input T) *T {
 	return &input

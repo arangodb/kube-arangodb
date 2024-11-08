@@ -28,6 +28,9 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/storage/v2/d
 
 // Defines StorageV2 Service
 service StorageV2 {
+  // Allows to init the Storage settings (like bucket creation)
+  rpc Init(StorageV2InitRequest) returns (StorageV2InitResponse);
+
   // Allows to Read Objects using stream
   rpc ReadObject(StorageV2ReadObjectRequest) returns (stream StorageV2ReadObjectResponse);
 
@@ -64,6 +67,16 @@ message StorageV2ObjectInfo {
   uint64 size = 1;
   // Timestamp of last update
   google.protobuf.Timestamp last_updated = 2;
+}
+
+// StorageV2 Init Request
+message StorageV2InitRequest {
+  // Defines if required resources should be created
+  optional bool create = 1;
+}
+
+// StorageV2 Init Response
+message StorageV2InitResponse {
 }
 
 // StorageV2 ReadObject Request
