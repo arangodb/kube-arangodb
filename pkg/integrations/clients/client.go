@@ -31,6 +31,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
@@ -74,7 +75,7 @@ func client[T any](ctx context.Context, cfg *Config, in func(cc grpc.ClientConnI
 	var opts []grpc.DialOption
 
 	if token := cfg.Token; token != "" {
-		opts = append(opts, util.TokenAuthInterceptors(token)...)
+		opts = append(opts, ugrpc.TokenAuthInterceptors(token)...)
 	}
 
 	if cfg.TLS.Enabled {
@@ -99,18 +100,18 @@ func client[T any](ctx context.Context, cfg *Config, in func(cc grpc.ClientConnI
 		}
 
 		if cfg.TLS.Fallback {
-			client, closer, err := util.NewOptionalTLSGRPCClient(ctx, in, cfg.Address, config, opts...)
+			client, closer, err := ugrpc.NewOptionalTLSGRPCClient(ctx, in, cfg.Address, config, opts...)
 			if err != nil {
 				return util.Default[T](), nil, err
 			}
 
 			return client, closer, nil
 		} else {
-			opts = append(opts, util.ClientTLS(config)...)
+			opts = append(opts, ugrpc.ClientTLS(config)...)
 		}
 	}
 
-	client, closer, err := util.NewGRPCClient(ctx, in, cfg.Address, opts...)
+	client, closer, err := ugrpc.NewGRPCClient(ctx, in, cfg.Address, opts...)
 	if err != nil {
 		return util.Default[T](), nil, err
 	}

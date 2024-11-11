@@ -28,7 +28,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 func basicTokenAuthAuthorize(ctx context.Context, token string) error {
@@ -37,7 +37,7 @@ func basicTokenAuthAuthorize(ctx context.Context, token string) error {
 		return status.Errorf(codes.Unauthenticated, "metadata is not provided")
 	}
 
-	values := md[util.AuthorizationGRPCHeader]
+	values := md[ugrpc.AuthorizationGRPCHeader]
 	if len(values) == 0 {
 		return status.Errorf(codes.Unauthenticated, "authorization token is not provided")
 	}

@@ -19,6 +19,7 @@
 - (Feature) (Scheduler) Helm Driver Param
 - (Feature) (Integration) Services Endpoint
 - (Feature) (Platform) Storage
+- (Maintenance) Extract GRPC Client Package
 - (Feature) (Platform) Chart
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
