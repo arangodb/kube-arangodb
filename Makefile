@@ -922,7 +922,8 @@ CRDS:=apps-job \
       ml-storage ml-extension ml-job-batch ml-job-cron \
       scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \
       analytics-graphanalyticsengine \
-      networking-route
+      networking-route \
+      platform-storage platform-chart
 
 .PHONY: sync
 sync:
