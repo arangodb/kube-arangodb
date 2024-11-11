@@ -2069,18 +2069,38 @@ v1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -4314,18 +4334,38 @@ v1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -6477,18 +6517,38 @@ v1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -8722,18 +8782,38 @@ v1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -12078,18 +12158,38 @@ v1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -14384,18 +14484,38 @@ v1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -16540,18 +16660,38 @@ v1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -18796,18 +18936,38 @@ v1alpha:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -21041,18 +21201,38 @@ v1alpha:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -23204,18 +23384,38 @@ v1alpha:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -25449,18 +25649,38 @@ v1alpha:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -28805,18 +29025,38 @@ v1alpha:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -31111,18 +31351,38 @@ v1alpha:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -33267,18 +33527,38 @@ v1alpha:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -35523,18 +35803,38 @@ v2alpha1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -37768,18 +38068,38 @@ v2alpha1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -39931,18 +40251,38 @@ v2alpha1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -42176,18 +42516,38 @@ v2alpha1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -45532,18 +45892,38 @@ v2alpha1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -47838,18 +48218,38 @@ v2alpha1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
@@ -49994,18 +50394,38 @@ v2alpha1:
                 items:
                   properties:
                     mountPath:
+                      description: |-
+                        Path within the container at which the volume should be mounted.  Must
+                        not contain ':'.
                       type: string
                     mountPropagation:
+                      description: |-
+                        mountPropagation determines how mounts are propagated from the host
+                        to container and the other way around.
+                        When not set, MountPropagationNone is used.
+                        This field is beta in 1.10.
+                        When RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified
+                        (which defaults to None).
                       type: string
                     name:
+                      description: This must match the Name of a Volume.
                       type: string
                     readOnly:
+                      description: |-
+                        Mounted read-only if true, read-write otherwise (false or unspecified).
+                        Defaults to false.
                       type: boolean
-                    recursiveReadOnly:
-                      type: string
                     subPath:
+                      description: |-
+                        Path within the volume from which the container's volume should be mounted.
+                        Defaults to "" (volume's root).
                       type: string
                     subPathExpr:
+                      description: |-
+                        Expanded path within the volume from which the container's volume should be mounted.
+                        Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
+                        Defaults to "" (volume's root).
+                        SubPathExpr and SubPath are mutually exclusive.
                       type: string
                   type: object
                 type: array
