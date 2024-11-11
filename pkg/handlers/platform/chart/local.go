@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package storage
+package chart
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
@@ -26,7 +26,7 @@ import (
 )
 
 func Kind() string {
-	return platform.ArangoPlatformStorageResourceKind
+	return platform.ArangoPlatformChartResourceKind
 }
 
 func Group() string {

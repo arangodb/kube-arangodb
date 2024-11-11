@@ -26,7 +26,6 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -51,7 +50,7 @@ func (h *handler) HandleArangoDeployment(ctx context.Context, item operation.Ite
 
 	// Condition for Found should be set to true
 
-	if status.Conditions.UpdateWithHash(networkingApi.DeploymentFoundCondition, true, "ArangoDeployment found", "ArangoDeployment found", string(deployment.GetUID())) {
+	if status.Conditions.UpdateWithHash(platformApi.DeploymentFoundCondition, true, "ArangoDeployment found", "ArangoDeployment found", string(deployment.GetUID())) {
 		return true, operator.Reconcile("Conditions updated")
 	}
 
