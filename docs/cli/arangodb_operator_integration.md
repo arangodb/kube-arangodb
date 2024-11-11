@@ -53,6 +53,7 @@ Flags:
       --integration.scheduler.v1.verify-access                      Verify the CRD Access (Env: INTEGRATION_SCHEDULER_V1_VERIFY_ACCESS) (default true)
       --integration.scheduler.v2                                    SchedulerV2 Integration (Env: INTEGRATION_SCHEDULER_V2)
       --integration.scheduler.v2.deployment string                  ArangoDeployment Name (Env: INTEGRATION_SCHEDULER_V2_DEPLOYMENT)
+      --integration.scheduler.v2.driver string                      Helm Driver (Env: INTEGRATION_SCHEDULER_V2_DRIVER) (default "secret")
       --integration.scheduler.v2.external                           Defones if External access to service scheduler.v2 is enabled (Env: INTEGRATION_SCHEDULER_V2_EXTERNAL)
       --integration.scheduler.v2.internal                           Defones if Internal access to service scheduler.v2 is enabled (Env: INTEGRATION_SCHEDULER_V2_INTERNAL) (default true)
       --integration.scheduler.v2.namespace string                   Kubernetes Namespace (Env: INTEGRATION_SCHEDULER_V2_NAMESPACE) (default "default")
