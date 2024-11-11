@@ -142,6 +142,17 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 		return true, operator.Reconcile("Spec changed")
 	}
 
+	if chart.Name() != extension.GetName() {
+		status.Info = &platformApi.ChartStatusInfo{
+			Definition: extension.Spec.Definition,
+			Checksum:   extension.Spec.Definition.SHA256(),
+			Valid:      false,
+			Message:    "Chart Name mismatch",
+		}
+
+		return true, operator.Reconcile("Spec changed")
+	}
+
 	status.Info = &platformApi.ChartStatusInfo{
 		Definition: extension.Spec.Definition,
 		Checksum:   extension.Spec.Definition.SHA256(),

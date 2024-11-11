@@ -21,6 +21,7 @@
 package chart
 
 import (
+	_ "embed"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
@@ -30,6 +31,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 )
+
+//go:embed suite/example-1.0.0.tgz
+var chart_1_0 []byte
+
+//go:embed suite/example-1.1.0.tgz
+var chart_1_1 []byte
 
 func newFakeHandler() *handler {
 	f := fakeClientSet.NewSimpleClientset()

@@ -24,3 +24,19 @@ type ChartDetails struct {
 	Name    string `json:"name,omitempty"`
 	Version string `json:"version,omitempty"`
 }
+
+func (c *ChartDetails) GetName() string {
+	if c == nil {
+		return ""
+	}
+
+	return c.Name
+}
+
+func (c *ChartDetails) GetVersion() string {
+	if c == nil {
+		return ""
+	}
+
+	return c.Version
+}
