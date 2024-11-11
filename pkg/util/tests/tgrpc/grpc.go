@@ -32,12 +32,12 @@ import (
 	"google.golang.org/grpc/status"
 	proto "google.golang.org/protobuf/proto"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func NewGRPCClient[T any](t *testing.T, ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, opts ...grpc.DialOption) T {
-	client, closer, err := util.NewGRPCClient(ctx, in, addr, opts...)
+	client, closer, err := ugrpc.NewGRPCClient(ctx, in, addr, opts...)
 	require.NoError(t, err)
 	go func() {
 		<-ctx.Done()
@@ -76,5 +76,5 @@ func AsGRPCError(t *testing.T, err error) ErrorStatusValidator {
 }
 
 func GRPCAnyCastAs[T proto.Message](t *testing.T, in *any1.Any, v T) {
-	require.NoError(t, util.GRPCAnyCastAs[T](in, v))
+	require.NoError(t, ugrpc.GRPCAnyCastAs[T](in, v))
 }
