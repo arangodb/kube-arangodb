@@ -18,16 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package v1alpha1
 
-const (
-	ArangoPlatformStorageCRDName        = ArangoPlatformStorageResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformStorageResourceKind   = "ArangoPlatformStorage"
-	ArangoPlatformStorageResourcePlural = "arangoplatformstorages"
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
-	ArangoPlatformChartCRDName        = ArangoPlatformChartResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformChartResourceKind   = "ArangoPlatformChart"
-	ArangoPlatformChartResourcePlural = "arangoplatformcharts"
+type ChartStatusInfo struct {
+	Definition sharedApi.Data `json:"definition,omitempty"`
+	Checksum   string         `json:"checksum,omitempty"`
 
-	ArangoPlatformGroupName = "platform.arangodb.com"
-)
+	Valid   bool   `json:"valid,omitempty"`
+	Message string `json:"message,omitempty"`
+
+	Details *ChartDetails `json:"details,omitempty"`
+}

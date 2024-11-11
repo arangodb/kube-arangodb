@@ -18,16 +18,26 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package v1alpha1
 
-const (
-	ArangoPlatformStorageCRDName        = ArangoPlatformStorageResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformStorageResourceKind   = "ArangoPlatformStorage"
-	ArangoPlatformStorageResourcePlural = "arangoplatformstorages"
-
-	ArangoPlatformChartCRDName        = ArangoPlatformChartResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformChartResourceKind   = "ArangoPlatformChart"
-	ArangoPlatformChartResourcePlural = "arangoplatformcharts"
-
-	ArangoPlatformGroupName = "platform.arangodb.com"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+type ArangoPlatformChartSpec struct {
+	Definition sharedApi.Data `json:"definition,omitempty"`
+}
+
+func (c *ArangoPlatformChartSpec) Validate() error {
+	if c == nil {
+		return errors.Errorf("Nil spec not allowed")
+	}
+
+	if len(c.Definition) == 0 {
+		return shared.PrefixResourceError("definition", errors.Errorf("Chart definition cannot be empty"))
+	}
+
+	return nil
+}
