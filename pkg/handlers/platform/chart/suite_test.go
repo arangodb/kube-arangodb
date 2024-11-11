@@ -22,6 +22,7 @@ package chart
 
 import (
 	_ "embed"
+
 	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
