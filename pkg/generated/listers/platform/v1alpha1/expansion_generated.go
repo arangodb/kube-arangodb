@@ -22,6 +22,14 @@
 
 package v1alpha1
 
+// ArangoPlatformChartListerExpansion allows custom methods to be added to
+// ArangoPlatformChartLister.
+type ArangoPlatformChartListerExpansion interface{}
+
+// ArangoPlatformChartNamespaceListerExpansion allows custom methods to be added to
+// ArangoPlatformChartNamespaceLister.
+type ArangoPlatformChartNamespaceListerExpansion interface{}
+
 // ArangoPlatformStorageListerExpansion allows custom methods to be added to
 // ArangoPlatformStorageLister.
 type ArangoPlatformStorageListerExpansion interface{}
