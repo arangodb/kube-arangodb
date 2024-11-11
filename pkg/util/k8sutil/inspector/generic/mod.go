@@ -22,8 +22,8 @@ package generic
 
 import (
 	"context"
-	autoscaling "k8s.io/api/autoscaling/v1"
 
+	autoscaling "k8s.io/api/autoscaling/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
