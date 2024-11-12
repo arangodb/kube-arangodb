@@ -23,6 +23,7 @@ package generic
 import (
 	"context"
 
+	autoscaling "k8s.io/api/autoscaling/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -59,6 +60,19 @@ type PatchInterface[S meta.Object] interface {
 
 type DeleteInterface[S meta.Object] interface {
 	Delete(ctx context.Context, name string, opts meta.DeleteOptions) error
+}
+
+type ScaleGet interface {
+	GetScale(ctx context.Context, name string, options meta.GetOptions) (*autoscaling.Scale, error)
+}
+
+type ScaleUpdate interface {
+	UpdateScale(ctx context.Context, name string, scale *autoscaling.Scale, opts meta.UpdateOptions) (*autoscaling.Scale, error)
+}
+
+type Scale interface {
+	ScaleGet
+	ScaleUpdate
 }
 
 type ReadClient[S meta.Object] interface {
