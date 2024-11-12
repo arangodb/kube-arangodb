@@ -24,7 +24,6 @@ package v1beta1
 
 import (
 	"context"
-	v12 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
@@ -33,10 +32,6 @@ import (
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
 )
-
-func init()  {
-	z :=v12.CustomResourceDefinition{}
-}
 
 // ArangoSchedulerDeploymentsGetter has a method to return a ArangoSchedulerDeploymentInterface.
 // A group's client should implement this interface.
