@@ -23,4 +23,3 @@ spec:
         scale:
           specReplicasPath: .spec.replicas
           statusReplicasPath: .status.replicas
-          labelSelectorPath: .spec.selector.matchLabels
