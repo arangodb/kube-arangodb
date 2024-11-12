@@ -100,4 +100,5 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*analyticsApi.GraphAnalyticsEngine](t)
 	NewMetaObjectRun[*networkingApi.ArangoRoute](t)
 	NewMetaObjectRun[*platformApi.ArangoPlatformStorage](t)
+	NewMetaObjectRun[*platformApi.ArangoPlatformChart](t)
 }

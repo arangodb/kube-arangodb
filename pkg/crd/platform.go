@@ -27,6 +27,7 @@ import (
 func init() {
 	defs := []func(...func(options *crds.CRDOptions)) crds.Definition{
 		crds.PlatformStorageDefinitionWithOptions,
+		crds.PlatformChartDefinitionWithOptions,
 	}
 	for _, getDef := range defs {
 		defFn := getDef // bring into scope

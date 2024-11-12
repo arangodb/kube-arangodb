@@ -49,6 +49,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/networking/route"
+	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	platformStorage "github.com/arangodb/kube-arangodb/pkg/handlers/platform/storage"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
 	schedulerBatchJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/batchjob"
@@ -405,6 +406,10 @@ func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recor
 	o.waitForCRD(platform.ArangoPlatformStorageCRDName, checkFn)
 
 	if err := platformStorage.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+		panic(err)
+	}
+
+	if err := platformChart.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
 		panic(err)
 	}
 }

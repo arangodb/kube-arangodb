@@ -18,16 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package v1alpha1
 
-const (
-	ArangoPlatformStorageCRDName        = ArangoPlatformStorageResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformStorageResourceKind   = "ArangoPlatformStorage"
-	ArangoPlatformStorageResourcePlural = "arangoplatformstorages"
+type ChartDetails struct {
+	Name    string `json:"name,omitempty"`
+	Version string `json:"version,omitempty"`
+}
 
-	ArangoPlatformChartCRDName        = ArangoPlatformChartResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformChartResourceKind   = "ArangoPlatformChart"
-	ArangoPlatformChartResourcePlural = "arangoplatformcharts"
+func (c *ChartDetails) GetName() string {
+	if c == nil {
+		return ""
+	}
 
-	ArangoPlatformGroupName = "platform.arangodb.com"
-)
+	return c.Name
+}
+
+func (c *ChartDetails) GetVersion() string {
+	if c == nil {
+		return ""
+	}
+
+	return c.Version
+}

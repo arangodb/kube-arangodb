@@ -307,6 +307,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **platformApi.ArangoPlatformChart:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PlatformV1alpha1().ArangoPlatformCharts(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -520,6 +526,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **platformApi.ArangoPlatformChart:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PlatformV1alpha1().ArangoPlatformCharts(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -698,6 +710,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **platformApi.ArangoPlatformChart:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.PlatformV1alpha1().ArangoPlatformCharts(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1204,6 +1221,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **platformApi.ArangoPlatformChart:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.PlatformV1alpha1().ArangoPlatformCharts(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to get object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1456,6 +1488,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			platform.ArangoPlatformStorageResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
+	case *platformApi.ArangoPlatformChart:
+		v.Kind = platform.ArangoPlatformChartResourceKind
+		v.APIVersion = networkingApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			platformApi.SchemeGroupVersion.String(),
+			platform.ArangoPlatformChartResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 	}
@@ -1690,6 +1730,12 @@ func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
 			Group:   platform.ArangoPlatformGroupName,
 			Version: platformApi.ArangoPlatformVersion,
 			Kind:    platform.ArangoPlatformStorageResourceKind,
+		}
+	case *platformApi.ArangoPlatformChart:
+		return schema.GroupVersionKind{
+			Group:   platform.ArangoPlatformGroupName,
+			Version: platformApi.ArangoPlatformVersion,
+			Kind:    platform.ArangoPlatformChartResourceKind,
 		}
 	default:
 		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))

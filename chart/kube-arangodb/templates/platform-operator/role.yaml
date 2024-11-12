@@ -14,10 +14,11 @@ metadata:
         release: {{ .Release.Name }}
 rules:
   - apiGroups: ["platform.arangodb.com"]
-    resources: ["arangoplatformstorages", "arangoplatformstorages/status"]
+    resources:
+    - "arangoplatformstorages"
+    - "arangoplatformstorages/status"
+    - "arangoplatformcharts"
+    - "arangoplatformcharts/status"
     verbs: ["*"]
-  - apiGroups: [""]
-    resources: ["pods", "services", "endpoints"]
-    verbs: ["get", "list", "watch"]
 {{- end }}
 {{- end }}

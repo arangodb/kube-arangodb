@@ -354,6 +354,9 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoPlatformStorage.V1Alpha1": {
 						"Spec": platformApi.ArangoPlatformStorage{}.Spec,
 					},
+					"ArangoPlatformChart.V1Alpha1": {
+						"Spec": platformApi.ArangoPlatformChart{}.Spec,
+					},
 				},
 				Shared: []string{
 					"shared/v1",

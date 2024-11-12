@@ -18,16 +18,42 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package v1
 
-const (
-	ArangoPlatformStorageCRDName        = ArangoPlatformStorageResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformStorageResourceKind   = "ArangoPlatformStorage"
-	ArangoPlatformStorageResourcePlural = "arangoplatformstorages"
+import (
+	"encoding/base64"
+	"encoding/json"
 
-	ArangoPlatformChartCRDName        = ArangoPlatformChartResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformChartResourceKind   = "ArangoPlatformChart"
-	ArangoPlatformChartResourcePlural = "arangoplatformcharts"
-
-	ArangoPlatformGroupName = "platform.arangodb.com"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+var _ json.Marshaler = &Data{}
+var _ json.Unmarshaler = &Data{}
+
+type Data []byte
+
+func (d Data) MarshalJSON() ([]byte, error) {
+	s := base64.StdEncoding.EncodeToString(d)
+
+	return json.Marshal(s)
+}
+
+func (d Data) SHA256() string {
+	return util.SHA256(d)
+}
+
+func (d *Data) UnmarshalJSON(bytes []byte) error {
+	if d == nil {
+		return errors.Errorf("nil object provided")
+	}
+
+	ret, err := base64.StdEncoding.DecodeString(string(bytes))
+	if err != nil {
+		return err
+	}
+
+	*d = ret
+
+	return nil
+}
