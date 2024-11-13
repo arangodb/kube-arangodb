@@ -25,7 +25,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 	"testing"
@@ -37,6 +36,7 @@ import (
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 func listAllFilesHelper(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2Client, prefix string) []*pbStorageV2.StorageV2Object {
@@ -49,15 +49,10 @@ func listAllFilesHelper(t *testing.T, ctx context.Context, h pbStorageV2.Storage
 	})
 	require.NoError(t, err)
 
-	for {
-		files, err := res.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		require.NoError(t, err)
-
-		r = append(r, files.GetFiles()...)
-	}
+	require.NoError(t, ugrpc.Recv[*pbStorageV2.StorageV2ListObjectsResponse](res, func(response *pbStorageV2.StorageV2ListObjectsResponse) error {
+		r = append(r, response.GetFiles()...)
+		return nil
+	}))
 
 	return r
 }

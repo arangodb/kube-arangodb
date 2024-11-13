@@ -28,7 +28,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 func (i *implementation) DiscoverAPIResources(ctx context.Context, in *pbSchedulerV2.SchedulerV2DiscoverAPIResourcesRequest) (*pbSchedulerV2.SchedulerV2DiscoverAPIResourcesResponse, error) {
@@ -93,10 +95,37 @@ func (i *implementation) KubernetesGet(ctx context.Context, in *pbSchedulerV2.Sc
 	resp, err := i.client.NativeGet(ctx, reqs...)
 	if err != nil {
 		logger.Err(err).Warn("Unable to run action: KubernetesGet")
-		return nil, status.Errorf(codes.Internal, "Unable to run action: KubernetesGet: %s", err.Error())
+		return nil, asGRPCError(err)
 	}
 
 	return &pbSchedulerV2.SchedulerV2KubernetesGetResponse{
 		Objects: newReleaseInfoResourceObjectsFromResourceObjects(resp),
 	}, nil
+}
+
+func (i *implementation) KubernetesPermissionCheck(ctx context.Context, in *pbSchedulerV2.SchedulerV2KubernetesPermissionCheckRequest) (*pbSchedulerV2.SchedulerV2KubernetesPermissionCheckResponse, error) {
+	resp := kresources.AccessRequest{
+		Verb:        in.GetVerb(),
+		Group:       in.GetGroup(),
+		Version:     in.GetVersion(),
+		Resource:    in.GetResource(),
+		SubResource: in.GetSubResource(),
+		Name:        in.GetName(),
+		Namespace:   util.OptionalType(in.Namespace, i.client.Namespace()),
+	}.Verify(ctx, i.client.Client().Kubernetes())
+
+	var res pbSchedulerV2.SchedulerV2KubernetesPermissionCheckResponse
+
+	res.Allowed = resp.Allowed
+	if resp.Denied {
+		res.Denied = util.NewType(resp.Denied)
+	}
+	if resp.Reason != "" {
+		res.Reason = util.NewType(resp.Reason)
+	}
+	if resp.EvaluationError != "" {
+		res.EvaluationError = util.NewType(resp.EvaluationError)
+	}
+
+	return &res, nil
 }

@@ -91,3 +91,43 @@ message SchedulerV2KubernetesGetResponse {
   // Kubernetes API Objects
   repeated SchedulerV2ReleaseInfoResourceObject objects = 1;
 }
+
+// SchedulerV2 KubernetesPermissionCheck Request
+message SchedulerV2KubernetesPermissionCheckRequest {
+  // Verb is a kubernetes resource API verb, like: get, list, watch, create, update, delete, proxy.  "*" means all.
+  string verb =1;
+  // Group is the API Group of the Resource.  "*" means all.
+  string group=2;
+  // Version is the API Version of the Resource.  "*" means all.
+  string version=3;
+  // Resource is one of the existing resource types.  "*" means all.
+  string resource=4;
+  // Subresource is one of the existing resource types.  "" means none.
+  string sub_resource=5;
+  // Name is the name of the resource being requested for a "get" or deleted for a "delete". "" (empty) means all.
+  string name=6;
+  // Namespace is the namespace of the action being requested.
+  // "" (empty) is defaulted for LocalSubjectAccessReviews
+  // "" (empty) is empty for cluster-scoped resources
+  // "" (empty) means "all" for namespace scoped resources from a SubjectAccessReview or SelfSubjectAccessReview
+  // Defaults to the current namespace
+  optional string namespace=7;
+}
+
+// SchedulerV2 KubernetesPermissionCheck Response
+message SchedulerV2KubernetesPermissionCheckResponse {
+  // Allowed is required. True if the action would be allowed, false otherwise.
+  bool allowed =1;
+  // Denied is optional. True if the action would be denied, otherwise
+  // false. If both allowed is false and denied is false, then the
+  // authorizer has no opinion on whether to authorize the action. Denied
+  // may not be true if Allowed is true.
+  // +optional
+  optional bool denied =2;
+  // Reason is optional.  It indicates why a request was allowed or denied.
+  optional string reason =3;
+  // EvaluationError is an indication that some error occurred during the authorization check.
+  // It is entirely possible to get an error and be able to continue determine authorization status in spite of it.
+  // For instance, RBAC can be missing a role, but enough roles are still present and bound to reason about the request.
+  optional string evaluation_error=4;
+}

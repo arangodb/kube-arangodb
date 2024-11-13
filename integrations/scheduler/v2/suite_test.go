@@ -54,7 +54,25 @@ func Handler(t *testing.T, ctx context.Context, client helm.Client, mods ...Mod)
 	return handler
 }
 
-func Client(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, helm.Client) {
+func InternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, helm.Client) {
+	client := kclient.NewFakeClient()
+
+	h, err := helm.NewClient(helm.Configuration{
+		Namespace: tests.FakeNamespace,
+		Client:    client,
+	})
+	require.NoError(t, err)
+
+	local := svc.NewService(svc.Configuration{
+		Address: "127.0.0.1:0",
+	}, Handler(t, ctx, h, mods...))
+
+	start := local.Start(ctx)
+
+	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), h
+}
+
+func ExternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, helm.Client) {
 	z, ok := os.LookupEnv("TEST_KUBECONFIG")
 	if !ok {
 		t.Skipf("TEST_KUBECONFIG is not set")

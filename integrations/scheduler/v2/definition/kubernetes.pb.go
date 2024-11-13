@@ -491,6 +491,195 @@ func (x *SchedulerV2KubernetesGetResponse) GetObjects() []*SchedulerV2ReleaseInf
 	return nil
 }
 
+// SchedulerV2 KubernetesPermissionCheck Request
+type SchedulerV2KubernetesPermissionCheckRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Verb is a kubernetes resource API verb, like: get, list, watch, create, update, delete, proxy.  "*" means all.
+	Verb string `protobuf:"bytes,1,opt,name=verb,proto3" json:"verb,omitempty"`
+	// Group is the API Group of the Resource.  "*" means all.
+	Group string `protobuf:"bytes,2,opt,name=group,proto3" json:"group,omitempty"`
+	// Version is the API Version of the Resource.  "*" means all.
+	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	// Resource is one of the existing resource types.  "*" means all.
+	Resource string `protobuf:"bytes,4,opt,name=resource,proto3" json:"resource,omitempty"`
+	// Subresource is one of the existing resource types.  "" means none.
+	SubResource string `protobuf:"bytes,5,opt,name=sub_resource,json=subResource,proto3" json:"sub_resource,omitempty"`
+	// Name is the name of the resource being requested for a "get" or deleted for a "delete". "" (empty) means all.
+	Name string `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
+	// Namespace is the namespace of the action being requested.
+	// "" (empty) is defaulted for LocalSubjectAccessReviews
+	// "" (empty) is empty for cluster-scoped resources
+	// "" (empty) means "all" for namespace scoped resources from a SubjectAccessReview or SelfSubjectAccessReview
+	// Defaults to the current namespace
+	Namespace *string `protobuf:"bytes,7,opt,name=namespace,proto3,oneof" json:"namespace,omitempty"`
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) Reset() {
+	*x = SchedulerV2KubernetesPermissionCheckRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SchedulerV2KubernetesPermissionCheckRequest) ProtoMessage() {}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SchedulerV2KubernetesPermissionCheckRequest.ProtoReflect.Descriptor instead.
+func (*SchedulerV2KubernetesPermissionCheckRequest) Descriptor() ([]byte, []int) {
+	return file_integrations_scheduler_v2_definition_kubernetes_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) GetVerb() string {
+	if x != nil {
+		return x.Verb
+	}
+	return ""
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) GetGroup() string {
+	if x != nil {
+		return x.Group
+	}
+	return ""
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) GetResource() string {
+	if x != nil {
+		return x.Resource
+	}
+	return ""
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) GetSubResource() string {
+	if x != nil {
+		return x.SubResource
+	}
+	return ""
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckRequest) GetNamespace() string {
+	if x != nil && x.Namespace != nil {
+		return *x.Namespace
+	}
+	return ""
+}
+
+// SchedulerV2 KubernetesPermissionCheck Response
+type SchedulerV2KubernetesPermissionCheckResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Allowed is required. True if the action would be allowed, false otherwise.
+	Allowed bool `protobuf:"varint,1,opt,name=allowed,proto3" json:"allowed,omitempty"`
+	// Denied is optional. True if the action would be denied, otherwise
+	// false. If both allowed is false and denied is false, then the
+	// authorizer has no opinion on whether to authorize the action. Denied
+	// may not be true if Allowed is true.
+	// +optional
+	Denied *bool `protobuf:"varint,2,opt,name=denied,proto3,oneof" json:"denied,omitempty"`
+	// Reason is optional.  It indicates why a request was allowed or denied.
+	Reason *string `protobuf:"bytes,3,opt,name=reason,proto3,oneof" json:"reason,omitempty"`
+	// EvaluationError is an indication that some error occurred during the authorization check.
+	// It is entirely possible to get an error and be able to continue determine authorization status in spite of it.
+	// For instance, RBAC can be missing a role, but enough roles are still present and bound to reason about the request.
+	EvaluationError *string `protobuf:"bytes,4,opt,name=evaluation_error,json=evaluationError,proto3,oneof" json:"evaluation_error,omitempty"`
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckResponse) Reset() {
+	*x = SchedulerV2KubernetesPermissionCheckResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SchedulerV2KubernetesPermissionCheckResponse) ProtoMessage() {}
+
+func (x *SchedulerV2KubernetesPermissionCheckResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SchedulerV2KubernetesPermissionCheckResponse.ProtoReflect.Descriptor instead.
+func (*SchedulerV2KubernetesPermissionCheckResponse) Descriptor() ([]byte, []int) {
+	return file_integrations_scheduler_v2_definition_kubernetes_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckResponse) GetAllowed() bool {
+	if x != nil {
+		return x.Allowed
+	}
+	return false
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckResponse) GetDenied() bool {
+	if x != nil && x.Denied != nil {
+		return *x.Denied
+	}
+	return false
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckResponse) GetReason() string {
+	if x != nil && x.Reason != nil {
+		return *x.Reason
+	}
+	return ""
+}
+
+func (x *SchedulerV2KubernetesPermissionCheckResponse) GetEvaluationError() string {
+	if x != nil && x.EvaluationError != nil {
+		return *x.EvaluationError
+	}
+	return ""
+}
+
 var File_integrations_scheduler_v2_definition_kubernetes_proto protoreflect.FileDescriptor
 
 var file_integrations_scheduler_v2_definition_kubernetes_proto_rawDesc = []byte{
@@ -563,12 +752,42 @@ var file_integrations_scheduler_v2_definition_kubernetes_proto_rawDesc = []byte{
 	0x2f, 0x2e, 0x73, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x72, 0x2e, 0x53, 0x63, 0x68, 0x65,
 	0x64, 0x75, 0x6c, 0x65, 0x72, 0x56, 0x32, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x49, 0x6e,
 	0x66, 0x6f, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74,
-	0x52, 0x07, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x42, 0x48, 0x5a, 0x46, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x72, 0x61, 0x6e, 0x67, 0x6f, 0x64, 0x62,
-	0x2f, 0x6b, 0x75, 0x62, 0x65, 0x2d, 0x61, 0x72, 0x61, 0x6e, 0x67, 0x6f, 0x64, 0x62, 0x2f, 0x69,
-	0x6e, 0x74, 0x65, 0x67, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x73, 0x63, 0x68, 0x65,
-	0x64, 0x75, 0x6c, 0x65, 0x72, 0x2f, 0x76, 0x32, 0x2f, 0x64, 0x65, 0x66, 0x69, 0x6e, 0x69, 0x74,
-	0x69, 0x6f, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x07, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x22, 0xf5, 0x01, 0x0a, 0x2b, 0x53, 0x63,
+	0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x72, 0x56, 0x32, 0x4b, 0x75, 0x62, 0x65, 0x72, 0x6e, 0x65,
+	0x74, 0x65, 0x73, 0x50, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x43, 0x68, 0x65,
+	0x63, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x76, 0x65, 0x72,
+	0x62, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x76, 0x65, 0x72, 0x62, 0x12, 0x14, 0x0a,
+	0x05, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a,
+	0x08, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x73, 0x75, 0x62,
+	0x5f, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0b, 0x73, 0x75, 0x62, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x12, 0x0a, 0x04,
+	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65,
+	0x12, 0x21, 0x0a, 0x09, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x07, 0x20,
+	0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x09, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65,
+	0x88, 0x01, 0x01, 0x42, 0x0c, 0x0a, 0x0a, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63,
+	0x65, 0x22, 0xdd, 0x01, 0x0a, 0x2c, 0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x72, 0x56,
+	0x32, 0x4b, 0x75, 0x62, 0x65, 0x72, 0x6e, 0x65, 0x74, 0x65, 0x73, 0x50, 0x65, 0x72, 0x6d, 0x69,
+	0x73, 0x73, 0x69, 0x6f, 0x6e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x6c, 0x6c, 0x6f, 0x77, 0x65, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x07, 0x61, 0x6c, 0x6c, 0x6f, 0x77, 0x65, 0x64, 0x12, 0x1b, 0x0a, 0x06,
+	0x64, 0x65, 0x6e, 0x69, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x48, 0x00, 0x52, 0x06,
+	0x64, 0x65, 0x6e, 0x69, 0x65, 0x64, 0x88, 0x01, 0x01, 0x12, 0x1b, 0x0a, 0x06, 0x72, 0x65, 0x61,
+	0x73, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x48, 0x01, 0x52, 0x06, 0x72, 0x65, 0x61,
+	0x73, 0x6f, 0x6e, 0x88, 0x01, 0x01, 0x12, 0x2e, 0x0a, 0x10, 0x65, 0x76, 0x61, 0x6c, 0x75, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
+	0x48, 0x02, 0x52, 0x0f, 0x65, 0x76, 0x61, 0x6c, 0x75, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x72,
+	0x72, 0x6f, 0x72, 0x88, 0x01, 0x01, 0x42, 0x09, 0x0a, 0x07, 0x5f, 0x64, 0x65, 0x6e, 0x69, 0x65,
+	0x64, 0x42, 0x09, 0x0a, 0x07, 0x5f, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x42, 0x13, 0x0a, 0x11,
+	0x5f, 0x65, 0x76, 0x61, 0x6c, 0x75, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x65, 0x72, 0x72, 0x6f,
+	0x72, 0x42, 0x48, 0x5a, 0x46, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x61, 0x72, 0x61, 0x6e, 0x67, 0x6f, 0x64, 0x62, 0x2f, 0x6b, 0x75, 0x62, 0x65, 0x2d, 0x61, 0x72,
+	0x61, 0x6e, 0x67, 0x6f, 0x64, 0x62, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x67, 0x72, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x73, 0x2f, 0x73, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x72, 0x2f, 0x76, 0x32,
+	0x2f, 0x64, 0x65, 0x66, 0x69, 0x6e, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -583,28 +802,30 @@ func file_integrations_scheduler_v2_definition_kubernetes_proto_rawDescGZIP() []
 	return file_integrations_scheduler_v2_definition_kubernetes_proto_rawDescData
 }
 
-var file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_integrations_scheduler_v2_definition_kubernetes_proto_goTypes = []interface{}{
-	(*SchedulerV2DiscoverAPIResourcesRequest)(nil),  // 0: scheduler.SchedulerV2DiscoverAPIResourcesRequest
-	(*SchedulerV2DiscoverAPIResourcesResponse)(nil), // 1: scheduler.SchedulerV2DiscoverAPIResourcesResponse
-	(*SchedulerV2DiscoverAPIResourceRequest)(nil),   // 2: scheduler.SchedulerV2DiscoverAPIResourceRequest
-	(*SchedulerV2DiscoverAPIResourceResponse)(nil),  // 3: scheduler.SchedulerV2DiscoverAPIResourceResponse
-	(*SchedulerV2DiscoverAPIResource)(nil),          // 4: scheduler.SchedulerV2DiscoverAPIResource
-	(*SchedulerV2KubernetesGetRequest)(nil),         // 5: scheduler.SchedulerV2KubernetesGetRequest
-	(*SchedulerV2KubernetesGetResponse)(nil),        // 6: scheduler.SchedulerV2KubernetesGetResponse
-	(*SchedulerV2ReleaseInfoResource)(nil),          // 7: scheduler.SchedulerV2ReleaseInfoResource
-	(*SchedulerV2ReleaseInfoResourceObject)(nil),    // 8: scheduler.SchedulerV2ReleaseInfoResourceObject
+	(*SchedulerV2DiscoverAPIResourcesRequest)(nil),       // 0: scheduler.SchedulerV2DiscoverAPIResourcesRequest
+	(*SchedulerV2DiscoverAPIResourcesResponse)(nil),      // 1: scheduler.SchedulerV2DiscoverAPIResourcesResponse
+	(*SchedulerV2DiscoverAPIResourceRequest)(nil),        // 2: scheduler.SchedulerV2DiscoverAPIResourceRequest
+	(*SchedulerV2DiscoverAPIResourceResponse)(nil),       // 3: scheduler.SchedulerV2DiscoverAPIResourceResponse
+	(*SchedulerV2DiscoverAPIResource)(nil),               // 4: scheduler.SchedulerV2DiscoverAPIResource
+	(*SchedulerV2KubernetesGetRequest)(nil),              // 5: scheduler.SchedulerV2KubernetesGetRequest
+	(*SchedulerV2KubernetesGetResponse)(nil),             // 6: scheduler.SchedulerV2KubernetesGetResponse
+	(*SchedulerV2KubernetesPermissionCheckRequest)(nil),  // 7: scheduler.SchedulerV2KubernetesPermissionCheckRequest
+	(*SchedulerV2KubernetesPermissionCheckResponse)(nil), // 8: scheduler.SchedulerV2KubernetesPermissionCheckResponse
+	(*SchedulerV2ReleaseInfoResource)(nil),               // 9: scheduler.SchedulerV2ReleaseInfoResource
+	(*SchedulerV2ReleaseInfoResourceObject)(nil),         // 10: scheduler.SchedulerV2ReleaseInfoResourceObject
 }
 var file_integrations_scheduler_v2_definition_kubernetes_proto_depIdxs = []int32{
-	4, // 0: scheduler.SchedulerV2DiscoverAPIResourcesResponse.resources:type_name -> scheduler.SchedulerV2DiscoverAPIResource
-	4, // 1: scheduler.SchedulerV2DiscoverAPIResourceResponse.resource:type_name -> scheduler.SchedulerV2DiscoverAPIResource
-	7, // 2: scheduler.SchedulerV2KubernetesGetRequest.resources:type_name -> scheduler.SchedulerV2ReleaseInfoResource
-	8, // 3: scheduler.SchedulerV2KubernetesGetResponse.objects:type_name -> scheduler.SchedulerV2ReleaseInfoResourceObject
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	4,  // 0: scheduler.SchedulerV2DiscoverAPIResourcesResponse.resources:type_name -> scheduler.SchedulerV2DiscoverAPIResource
+	4,  // 1: scheduler.SchedulerV2DiscoverAPIResourceResponse.resource:type_name -> scheduler.SchedulerV2DiscoverAPIResource
+	9,  // 2: scheduler.SchedulerV2KubernetesGetRequest.resources:type_name -> scheduler.SchedulerV2ReleaseInfoResource
+	10, // 3: scheduler.SchedulerV2KubernetesGetResponse.objects:type_name -> scheduler.SchedulerV2ReleaseInfoResourceObject
+	4,  // [4:4] is the sub-list for method output_type
+	4,  // [4:4] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_integrations_scheduler_v2_definition_kubernetes_proto_init() }
@@ -698,15 +919,41 @@ func file_integrations_scheduler_v2_definition_kubernetes_proto_init() {
 				return nil
 			}
 		}
+		file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SchedulerV2KubernetesPermissionCheckRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SchedulerV2KubernetesPermissionCheckResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[3].OneofWrappers = []interface{}{}
+	file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[7].OneofWrappers = []interface{}{}
+	file_integrations_scheduler_v2_definition_kubernetes_proto_msgTypes[8].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_integrations_scheduler_v2_definition_kubernetes_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery/fake"
 	kubernetesFake "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	versionedFake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -109,6 +110,9 @@ func (f *fakeClientBuilder) Client() Client {
 		panic("Unable to get client")
 	}
 	return NewStaticClient(
+		&rest.Config{
+			Host: "x.y.z.d:12345",
+		},
 		q,
 		apiextensionsclientFake.NewSimpleClientset(f.filter(apiextensionsclientFake.AddToScheme)...),
 		versionedFake.NewSimpleClientset(f.filter(versionedFake.AddToScheme)...),

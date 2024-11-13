@@ -592,7 +592,7 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 
 	deps := Dependencies{
 		EventRecorder: eventRecorder,
-		Client:        kclient.NewStaticClient(kubernetesClientSet, kubernetesExtClientSet, arangoClientSet, monitoringClientSet),
+		Client:        kclient.NewStaticClient(nil, kubernetesClientSet, kubernetesExtClientSet, arangoClientSet, monitoringClientSet),
 	}
 
 	i := inspector.NewInspector(throttle.NewAlwaysThrottleComponents(), deps.Client, arangoDeployment.GetNamespace(), arangoDeployment.GetName())
