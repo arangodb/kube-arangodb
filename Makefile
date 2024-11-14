@@ -922,7 +922,8 @@ CRDS:=apps-job \
       ml-storage ml-extension ml-job-batch ml-job-cron \
       scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \
       analytics-graphanalyticsengine \
-      networking-route
+      networking-route \
+      platform-storage platform-chart
 
 .PHONY: sync
 sync:
@@ -949,4 +950,4 @@ sync: sync-charts
 ci-check:
 	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint
 	@git checkout -- go.sum # ignore changes in go.sum
-	@if [ ! -z "$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; exit 1; fi
+	@if [ ! -z "$$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; exit 1; fi

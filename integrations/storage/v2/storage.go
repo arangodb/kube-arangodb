@@ -277,3 +277,13 @@ func (i *implementation) ListObjects(req *pbStorageV2.StorageV2ListObjectsReques
 		}
 	}
 }
+
+func (i *implementation) Init(ctx context.Context, in *pbStorageV2.StorageV2InitRequest) (*pbStorageV2.StorageV2InitResponse, error) {
+	if err := i.io.Init(ctx, &pbImplStorageV2Shared.InitOptions{
+		Create: util.NewPointer(in.Create),
+	}); err != nil {
+		return nil, err
+	}
+
+	return &pbStorageV2.StorageV2InitResponse{}, nil
+}

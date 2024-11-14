@@ -21,12 +21,12 @@
 package storage
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
+	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 )
 
 func Kind() string {
-	return ml.ArangoMLStorageResourceKind
+	return platform.ArangoPlatformStorageResourceKind
 }
 
 func Group() string {

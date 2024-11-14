@@ -23,7 +23,7 @@ package v1alpha1
 import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
+	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -53,7 +53,7 @@ func (a *ArangoPlatformStorage) AsOwner() meta.OwnerReference {
 	trueVar := true
 	return meta.OwnerReference{
 		APIVersion: SchemeGroupVersion.String(),
-		Kind:       networking.ArangoRouteResourceKind,
+		Kind:       platform.ArangoPlatformStorageResourceKind,
 		Name:       a.Name,
 		UID:        a.UID,
 		Controller: &trueVar,

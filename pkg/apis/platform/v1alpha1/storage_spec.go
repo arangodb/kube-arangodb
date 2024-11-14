@@ -25,19 +25,8 @@ import (
 )
 
 type ArangoPlatformStorageSpec struct {
-	// Deployment specifies the ArangoDeployment object name
-	Deployment *string `json:"deployment,omitempty"`
-
 	// Backend defines how storage is implemented
 	Backend *ArangoPlatformStorageSpecBackend `json:"backend,omitempty"`
-}
-
-func (s *ArangoPlatformStorageSpec) GetDeployment() string {
-	if s == nil || s.Deployment == nil {
-		return ""
-	}
-
-	return *s.Deployment
 }
 
 func (s *ArangoPlatformStorageSpec) GetBackend() *ArangoPlatformStorageSpecBackend {

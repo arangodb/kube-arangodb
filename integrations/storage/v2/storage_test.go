@@ -146,32 +146,7 @@ func testFileListing(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2C
 
 		t.Run("UploadAll", func(t *testing.T) {
 			util.ParallelProcess(func(in string) {
-				wr, err := h.WriteObject(ctx)
-				require.NoError(t, err)
-
-				buff := make([]byte, 1024)
-
-				cf := bytes.NewReader(data)
-
-				for {
-					n, err := cf.Read(buff)
-					if err != nil {
-						if errors.Is(err, io.EOF) {
-							break
-						}
-
-						require.NoError(t, err)
-					}
-
-					require.NoError(t, wr.Send(&pbStorageV2.StorageV2WriteObjectRequest{
-						Path: &pbStorageV2.StorageV2Path{
-							Path: in,
-						},
-						Chunk: buff[:n],
-					}))
-				}
-
-				ds, err := wr.CloseAndRecv()
+				ds, err := pbStorageV2.Send(ctx, h, in, bytes.NewReader(data))
 				require.NoError(t, err)
 
 				require.NotNil(t, ds)
@@ -268,32 +243,7 @@ func testS3BucketFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.S
 		})
 
 		t.Run("Send Object", func(t *testing.T) {
-			wr, err := h.WriteObject(ctx)
-			require.NoError(t, err)
-
-			buff := make([]byte, 1024)
-
-			cf := bytes.NewReader(dataOne)
-
-			for {
-				n, err := cf.Read(buff)
-				if err != nil {
-					if errors.Is(err, io.EOF) {
-						break
-					}
-
-					require.NoError(t, err)
-				}
-
-				require.NoError(t, wr.Send(&pbStorageV2.StorageV2WriteObjectRequest{
-					Path: &pbStorageV2.StorageV2Path{
-						Path: name,
-					},
-					Chunk: buff[:n],
-				}))
-			}
-
-			ds, err := wr.CloseAndRecv()
+			ds, err := pbStorageV2.Send(ctx, h, name, bytes.NewReader(dataOne))
 			require.NoError(t, err)
 
 			require.NotNil(t, ds)
@@ -313,23 +263,10 @@ func testS3BucketFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.S
 		})
 
 		t.Run("Download Object", func(t *testing.T) {
-			wr, err := h.ReadObject(ctx, &pbStorageV2.StorageV2ReadObjectRequest{
-				Path: &pbStorageV2.StorageV2Path{Path: name},
-			})
-			require.NoError(t, err)
-
 			data := bytes.NewBuffer(nil)
-
-			for {
-				resp, err := wr.Recv()
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				require.NoError(t, err)
-
-				_, err = util.WriteAll(data, resp.GetChunk())
-				require.NoError(t, err)
-			}
+			n, err := pbStorageV2.Receive(ctx, h, name, data)
+			require.NoError(t, err)
+			require.EqualValues(t, n, size)
 
 			pdata := data.Bytes()
 
@@ -340,32 +277,7 @@ func testS3BucketFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.S
 		})
 
 		t.Run("Re-Send Object", func(t *testing.T) {
-			wr, err := h.WriteObject(ctx)
-			require.NoError(t, err)
-
-			buff := make([]byte, 1024)
-
-			cf := bytes.NewReader(dataTwo)
-
-			for {
-				n, err := cf.Read(buff)
-				if err != nil {
-					if errors.Is(err, io.EOF) {
-						break
-					}
-
-					require.NoError(t, err)
-				}
-
-				require.NoError(t, wr.Send(&pbStorageV2.StorageV2WriteObjectRequest{
-					Path: &pbStorageV2.StorageV2Path{
-						Path: name,
-					},
-					Chunk: buff[:n],
-				}))
-			}
-
-			ds, err := wr.CloseAndRecv()
+			ds, err := pbStorageV2.Send(ctx, h, name, bytes.NewReader(dataTwo))
 			require.NoError(t, err)
 
 			require.NotNil(t, ds)
@@ -380,32 +292,7 @@ func testS3BucketFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.S
 		})
 
 		t.Run("Send Second Object", func(t *testing.T) {
-			wr, err := h.WriteObject(ctx)
-			require.NoError(t, err)
-
-			buff := make([]byte, 1024)
-
-			cf := bytes.NewReader(dataOne)
-
-			for {
-				n, err := cf.Read(buff)
-				if err != nil {
-					if errors.Is(err, io.EOF) {
-						break
-					}
-
-					require.NoError(t, err)
-				}
-
-				require.NoError(t, wr.Send(&pbStorageV2.StorageV2WriteObjectRequest{
-					Path: &pbStorageV2.StorageV2Path{
-						Path: nameTwo,
-					},
-					Chunk: buff[:n],
-				}))
-			}
-
-			ds, err := wr.CloseAndRecv()
+			ds, err := pbStorageV2.Send(ctx, h, nameTwo, bytes.NewReader(dataOne))
 			require.NoError(t, err)
 
 			require.NotNil(t, ds)
@@ -414,23 +301,10 @@ func testS3BucketFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.S
 		})
 
 		t.Run("Re-Download Object", func(t *testing.T) {
-			wr, err := h.ReadObject(ctx, &pbStorageV2.StorageV2ReadObjectRequest{
-				Path: &pbStorageV2.StorageV2Path{Path: name},
-			})
-			require.NoError(t, err)
-
 			data := bytes.NewBuffer(nil)
-
-			for {
-				resp, err := wr.Recv()
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				require.NoError(t, err)
-
-				_, err = util.WriteAll(data, resp.GetChunk())
-				require.NoError(t, err)
-			}
+			n, err := pbStorageV2.Receive(ctx, h, name, data)
+			require.NoError(t, err)
+			require.EqualValues(t, n, size)
 
 			pdata := data.Bytes()
 

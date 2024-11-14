@@ -22,6 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StorageV2Client interface {
+	// Allows to init the Storage settings (like bucket creation)
+	Init(ctx context.Context, in *StorageV2InitRequest, opts ...grpc.CallOption) (*StorageV2InitResponse, error)
 	// Allows to Read Objects using stream
 	ReadObject(ctx context.Context, in *StorageV2ReadObjectRequest, opts ...grpc.CallOption) (StorageV2_ReadObjectClient, error)
 	// Allows to Write Objects using stream
@@ -40,6 +42,15 @@ type storageV2Client struct {
 
 func NewStorageV2Client(cc grpc.ClientConnInterface) StorageV2Client {
 	return &storageV2Client{cc}
+}
+
+func (c *storageV2Client) Init(ctx context.Context, in *StorageV2InitRequest, opts ...grpc.CallOption) (*StorageV2InitResponse, error) {
+	out := new(StorageV2InitResponse)
+	err := c.cc.Invoke(ctx, "/shutdown.StorageV2/Init", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *storageV2Client) ReadObject(ctx context.Context, in *StorageV2ReadObjectRequest, opts ...grpc.CallOption) (StorageV2_ReadObjectClient, error) {
@@ -162,6 +173,8 @@ func (x *storageV2ListObjectsClient) Recv() (*StorageV2ListObjectsResponse, erro
 // All implementations must embed UnimplementedStorageV2Server
 // for forward compatibility
 type StorageV2Server interface {
+	// Allows to init the Storage settings (like bucket creation)
+	Init(context.Context, *StorageV2InitRequest) (*StorageV2InitResponse, error)
 	// Allows to Read Objects using stream
 	ReadObject(*StorageV2ReadObjectRequest, StorageV2_ReadObjectServer) error
 	// Allows to Write Objects using stream
@@ -179,6 +192,9 @@ type StorageV2Server interface {
 type UnimplementedStorageV2Server struct {
 }
 
+func (UnimplementedStorageV2Server) Init(context.Context, *StorageV2InitRequest) (*StorageV2InitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Init not implemented")
+}
 func (UnimplementedStorageV2Server) ReadObject(*StorageV2ReadObjectRequest, StorageV2_ReadObjectServer) error {
 	return status.Errorf(codes.Unimplemented, "method ReadObject not implemented")
 }
@@ -205,6 +221,24 @@ type UnsafeStorageV2Server interface {
 
 func RegisterStorageV2Server(s grpc.ServiceRegistrar, srv StorageV2Server) {
 	s.RegisterService(&StorageV2_ServiceDesc, srv)
+}
+
+func _StorageV2_Init_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StorageV2InitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageV2Server).Init(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/shutdown.StorageV2/Init",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageV2Server).Init(ctx, req.(*StorageV2InitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _StorageV2_ReadObject_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -318,6 +352,10 @@ var StorageV2_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "shutdown.StorageV2",
 	HandlerType: (*StorageV2Server)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Init",
+			Handler:    _StorageV2_Init_Handler,
+		},
 		{
 			MethodName: "HeadObject",
 			Handler:    _StorageV2_HeadObject_Handler,

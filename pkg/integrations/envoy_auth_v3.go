@@ -27,7 +27,7 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -60,7 +60,7 @@ func (a *envoyAuthV3) Handler(ctx context.Context, cmd *cobra.Command) (svc.Hand
 		return nil, err
 	}
 
-	c, _, err := util.NewGRPCClient(ctx, pbAuthenticationV1.NewAuthenticationV1Client, v)
+	c, _, err := ugrpc.NewGRPCClient(ctx, pbAuthenticationV1.NewAuthenticationV1Client, v)
 	if err != nil {
 		return nil, err
 	}

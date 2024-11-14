@@ -25,5 +25,9 @@ const (
 	ArangoPlatformStorageResourceKind   = "ArangoPlatformStorage"
 	ArangoPlatformStorageResourcePlural = "arangoplatformstorages"
 
+	ArangoPlatformChartCRDName        = ArangoPlatformChartResourcePlural + "." + ArangoPlatformGroupName
+	ArangoPlatformChartResourceKind   = "ArangoPlatformChart"
+	ArangoPlatformChartResourcePlural = "arangoplatformcharts"
+
 	ArangoPlatformGroupName = "platform.arangodb.com"
 )

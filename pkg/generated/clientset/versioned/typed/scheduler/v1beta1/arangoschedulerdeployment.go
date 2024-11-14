@@ -27,6 +27,7 @@ import (
 
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -51,6 +52,9 @@ type ArangoSchedulerDeploymentInterface interface {
 	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ArangoSchedulerDeploymentList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerDeployment, err error)
+	GetScale(ctx context.Context, arangoSchedulerDeploymentName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
+	UpdateScale(ctx context.Context, arangoSchedulerDeploymentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
+
 	ArangoSchedulerDeploymentExpansion
 }
 
@@ -70,4 +74,33 @@ func newArangoSchedulerDeployments(c *SchedulerV1beta1Client, namespace string) 
 			func() *v1beta1.ArangoSchedulerDeployment { return &v1beta1.ArangoSchedulerDeployment{} },
 			func() *v1beta1.ArangoSchedulerDeploymentList { return &v1beta1.ArangoSchedulerDeploymentList{} }),
 	}
+}
+
+// GetScale takes name of the arangoSchedulerDeployment, and returns the corresponding autoscalingv1.Scale object, and an error if there is any.
+func (c *arangoSchedulerDeployments) GetScale(ctx context.Context, arangoSchedulerDeploymentName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
+	err = c.GetClient().Get().
+		Namespace(c.GetNamespace()).
+		Resource("arangoschedulerdeployments").
+		Name(arangoSchedulerDeploymentName).
+		SubResource("scale").
+		VersionedParams(&options, scheme.ParameterCodec).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *arangoSchedulerDeployments) UpdateScale(ctx context.Context, arangoSchedulerDeploymentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
+	err = c.GetClient().Put().
+		Namespace(c.GetNamespace()).
+		Resource("arangoschedulerdeployments").
+		Name(arangoSchedulerDeploymentName).
+		SubResource("scale").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(scale).
+		Do(ctx).
+		Into(result)
+	return
 }

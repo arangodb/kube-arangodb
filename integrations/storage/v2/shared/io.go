@@ -55,6 +55,7 @@ type Info struct {
 }
 
 type IO interface {
+	Init(ctx context.Context, opts *InitOptions) error
 	Write(ctx context.Context, key string) (Writer, error)
 	Read(ctx context.Context, key string) (Reader, error)
 	Head(ctx context.Context, key string) (*Info, error)

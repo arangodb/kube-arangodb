@@ -29,6 +29,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
+	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
@@ -206,7 +208,20 @@ func Test_Handler_Profile(t *testing.T) {
 	handler := newFakeHandler()
 
 	// Arrange
-	profile := tests.NewMetaObject[*schedulerApi.ArangoProfile](t, tests.FakeNamespace, "test", tests.MarkArangoProfileAsReady)
+	profile := tests.NewMetaObject[*schedulerApi.ArangoProfile](t, tests.FakeNamespace, "test", func(t *testing.T, obj *schedulerApi.ArangoProfile) {
+		obj.Spec.Template = &schedulerApi.ProfileTemplate{
+			Pod: &schedulerPodApi.Pod{
+				Volumes: &schedulerPodResourcesApi.Volumes{
+					Volumes: []core.Volume{
+						{
+							Name:         "test",
+							VolumeSource: core.VolumeSource{},
+						},
+					},
+				},
+			},
+		}
+	}, tests.MarkArangoProfileAsReady)
 	extension := tests.NewMetaObject[*schedulerApi.ArangoSchedulerCronJob](t, tests.FakeNamespace, "test",
 		func(t *testing.T, obj *schedulerApi.ArangoSchedulerCronJob) {
 			obj.Spec.Profiles = []string{profile.GetName()}
@@ -228,4 +243,9 @@ func Test_Handler_Profile(t *testing.T) {
 
 	require.Len(t, extension.Status.Profiles, 1)
 	require.Equal(t, profile.GetName(), extension.Status.Profiles[0])
+
+	require.Len(t, extension.Status.Profiles, 1)
+	require.Equal(t, profile.GetName(), extension.Status.Profiles[0])
+	require.Len(t, cronJob.Spec.JobTemplate.Spec.Template.Spec.Volumes, 1)
+	require.EqualValues(t, "test", cronJob.Spec.JobTemplate.Spec.Template.Spec.Volumes[0].Name)
 }

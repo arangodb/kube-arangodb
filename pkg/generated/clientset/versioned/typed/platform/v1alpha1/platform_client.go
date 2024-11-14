@@ -32,12 +32,17 @@ import (
 
 type PlatformV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	ArangoPlatformChartsGetter
 	ArangoPlatformStoragesGetter
 }
 
 // PlatformV1alpha1Client is used to interact with features provided by the platform.arangodb.com group.
 type PlatformV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *PlatformV1alpha1Client) ArangoPlatformCharts(namespace string) ArangoPlatformChartInterface {
+	return newArangoPlatformCharts(c, namespace)
 }
 
 func (c *PlatformV1alpha1Client) ArangoPlatformStorages(namespace string) ArangoPlatformStorageInterface {

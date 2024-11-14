@@ -32,6 +32,10 @@ type FakePlatformV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakePlatformV1alpha1) ArangoPlatformCharts(namespace string) v1alpha1.ArangoPlatformChartInterface {
+	return &FakeArangoPlatformCharts{c, namespace}
+}
+
 func (c *FakePlatformV1alpha1) ArangoPlatformStorages(namespace string) v1alpha1.ArangoPlatformStorageInterface {
 	return &FakeArangoPlatformStorages{c, namespace}
 }

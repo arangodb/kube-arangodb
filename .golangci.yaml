@@ -53,6 +53,14 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1
       - alias: pbShutdownV1
         pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition
+      - alias: pbImplStorageV2
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2
+      - alias: pbImplStorageV2Shared
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared
+      - alias: pbImplStorageV2SharedS3
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3
+      - alias: pbStorageV2
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/definition
       - alias: analyticsApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1
       - alias: mlApiv1alpha1
@@ -61,6 +69,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1
       - alias: networkingApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
+      - alias: platformApi
+        pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1
       - alias: schedulerApiv1alpha1
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1
       - alias: schedulerContainerApiv1alpha1
@@ -121,8 +131,12 @@ linters-settings:
         pkg: k8s.io/api/storage/v1
       - alias: meta
         pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+      - alias: autoscaling
+        pkg: k8s.io/api/autoscaling/v1
       - alias: typedCore
         pkg: k8s.io/client-go/kubernetes/typed/core/v1
+      - alias: ugrpc
+        pkg: github.com/arangodb/kube-arangodb/pkg/util/grpc
   gci:
     sections:
       - standard

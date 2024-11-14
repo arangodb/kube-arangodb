@@ -339,6 +339,15 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				},
 			},
 		},
+		"platform-chart": {
+			fmt.Sprintf("%s/pkg/apis/platform/v1alpha1", root): {
+				"v1alpha1": {
+					objects: map[string]interface{}{
+						"spec": platformApi.ArangoPlatformChart{}.Spec,
+					},
+				},
+			},
+		},
 	}
 
 	for filePrefix, packagesToVersion := range input {

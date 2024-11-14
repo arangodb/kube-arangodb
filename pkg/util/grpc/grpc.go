@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package grpc
 
 import (
 	"context"
@@ -35,6 +35,7 @@ import (
 
 	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -43,7 +44,7 @@ const AuthorizationGRPCHeader = "adb-authorization"
 func NewGRPCClient[T any](ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, opts ...grpc.DialOption) (T, io.Closer, error) {
 	con, err := NewGRPCConn(addr, opts...)
 	if err != nil {
-		return Default[T](), nil, err
+		return util.Default[T](), nil, err
 	}
 
 	return in(con), con, nil
@@ -52,7 +53,7 @@ func NewGRPCClient[T any](ctx context.Context, in func(cc grpc.ClientConnInterfa
 func NewOptionalTLSGRPCClient[T any](ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, tls *tls.Config, opts ...grpc.DialOption) (T, io.Closer, error) {
 	con, err := NewOptionalTLSGRPCConn(ctx, addr, tls, opts...)
 	if err != nil {
-		return Default[T](), nil, err
+		return util.Default[T](), nil, err
 	}
 
 	return in(con), con, nil
