@@ -43,5 +43,10 @@ func platform(logger zerolog.Logger, files chan<- shared.File) error {
 		return err
 	}
 
+	if err := platformArangoPlatformCharts(logger, files, k); err != nil {
+		logger.Err(err).Msgf("Error while collecting platform arango charts")
+		return err
+	}
+
 	return nil
 }
