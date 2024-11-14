@@ -20,7 +20,11 @@
 
 package util
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"sigs.k8s.io/yaml"
+)
 
 func JSONRemarshal[A, B any](in A) (B, error) {
 	d, err := json.Marshal(in)
@@ -35,4 +39,22 @@ func JSONRemarshal[A, B any](in A) (B, error) {
 	}
 
 	return o, nil
+}
+
+func JsonOrYamlUnmarshal[T any](b []byte) (T, error) {
+	var z T
+
+	if json.Valid(b) {
+		if err := json.Unmarshal(b, &z); err != nil {
+			return Default[T](), err
+		}
+
+		return z, nil
+	}
+
+	if err := yaml.UnmarshalStrict(b, &z); err != nil {
+		return Default[T](), err
+	}
+
+	return z, nil
 }
