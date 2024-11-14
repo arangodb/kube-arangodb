@@ -21,8 +21,6 @@
 package util
 
 import (
-	"context"
-	"encoding/json"
 	"reflect"
 )
 
@@ -176,29 +174,6 @@ func And(in ...bool) bool {
 	return len(in) > 0
 }
 
-type Mod[T any] func(in *T)
-
-func ApplyMods[T any](in *T, mods ...Mod[T]) {
-	for _, mod := range mods {
-		mod(in)
-	}
-}
-
-func JSONRemarshal[A, B any](in A) (B, error) {
-	d, err := json.Marshal(in)
-	if err != nil {
-		return Default[B](), err
-	}
-
-	var o B
-
-	if err := json.Unmarshal(d, &o); err != nil {
-		return Default[B](), err
-	}
-
-	return o, nil
-}
-
 func InitOptional[T any](in *T, ok bool) *T {
 	if ok {
 		return in
@@ -206,8 +181,4 @@ func InitOptional[T any](in *T, ok bool) *T {
 
 	var z T
 	return &z
-}
-
-type NextIterator[T any] interface {
-	Next(ctx context.Context) (T, error)
 }
