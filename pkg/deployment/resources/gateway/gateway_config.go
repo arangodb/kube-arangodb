@@ -37,10 +37,9 @@ import (
 	httpConnectionManagerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	upstreamHttpApi "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	discoveryApi "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -198,7 +197,7 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 					},
 				},
 			},
-			TypedExtensionProtocolOptions: map[string]*any.Any{
+			TypedExtensionProtocolOptions: map[string]*anypb.Any{
 				"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": hpo,
 			},
 		}
@@ -310,7 +309,7 @@ func (c Config) RenderFilters() ([]*listenerAPI.Filter, error) {
 						Routes:  routes,
 					},
 				},
-				ValidateClusters: &wrappers.BoolValue{
+				ValidateClusters: &wrapperspb.BoolValue{
 					Value: false,
 				},
 			},
