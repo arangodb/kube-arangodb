@@ -1,0 +1,59 @@
+//
+// DISCLAIMER
+//
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package scheduler;
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition";
+
+// Chart Info
+message SchedulerV2ChartInfo {
+  // Chart Name
+  string name = 1;
+  // Chart Version
+  string version = 2;
+}
+
+// SchedulerV2 ListCharts Request
+message SchedulerV2ListChartsRequest {
+  // Maximum items per batch
+  optional int64 items = 1;
+}
+
+// SchedulerV2 ListCharts Response
+message SchedulerV2ListChartsResponse {
+  // List of the charts
+  repeated string charts =1;
+}
+
+// SchedulerV2 GetChart Request
+message SchedulerV2GetChartRequest {
+  // Chart Name
+  string name = 1;
+}
+
+// SchedulerV2 GetChart Response
+message SchedulerV2GetChartResponse {
+  // Chart Data
+  bytes chart = 1;
+  // Chart Info
+  SchedulerV2ChartInfo info = 2;
+}

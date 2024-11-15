@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery/fake"
 	kubernetesFake "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	versionedFake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -109,6 +110,9 @@ func (f *fakeClientBuilder) Client() Client {
 		panic("Unable to get client")
 	}
 	return NewStaticClient(
+		&rest.Config{
+			Host: "x.y.z.d:12345",
+		},
 		q,
 		apiextensionsclientFake.NewSimpleClientset(f.filter(apiextensionsclientFake.AddToScheme)...),
 		versionedFake.NewSimpleClientset(f.filter(versionedFake.AddToScheme)...),

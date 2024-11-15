@@ -191,13 +191,14 @@ type Client interface {
 	Config() *rest.Config
 }
 
-func NewStaticClient(kubernetes kubernetes.Interface, kubernetesExtensions apiextensionsclient.Interface, arango versioned.Interface, monitoring monitoring.Interface) Client {
+func NewStaticClient(config *rest.Config, kubernetes kubernetes.Interface, kubernetesExtensions apiextensionsclient.Interface, arango versioned.Interface, monitoring monitoring.Interface) Client {
 	return &client{
 		name:                 "static",
 		kubernetes:           kubernetes,
 		kubernetesExtensions: kubernetesExtensions,
 		arango:               arango,
 		monitoring:           monitoring,
+		config:               config,
 	}
 }
 

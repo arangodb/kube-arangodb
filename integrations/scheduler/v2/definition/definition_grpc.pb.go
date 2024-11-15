@@ -47,6 +47,12 @@ type SchedulerV2Client interface {
 	DiscoverAPIResource(ctx context.Context, in *SchedulerV2DiscoverAPIResourceRequest, opts ...grpc.CallOption) (*SchedulerV2DiscoverAPIResourceResponse, error)
 	// Gets Kubernetes objects from the API
 	KubernetesGet(ctx context.Context, in *SchedulerV2KubernetesGetRequest, opts ...grpc.CallOption) (*SchedulerV2KubernetesGetResponse, error)
+	// Checks if principal can take an action
+	KubernetesPermissionCheck(ctx context.Context, in *SchedulerV2KubernetesPermissionCheckRequest, opts ...grpc.CallOption) (*SchedulerV2KubernetesPermissionCheckResponse, error)
+	// Lists installed ArangoPlatform Charts
+	ListCharts(ctx context.Context, in *SchedulerV2ListChartsRequest, opts ...grpc.CallOption) (SchedulerV2_ListChartsClient, error)
+	// Gets Installed ArangoDB Chart
+	GetChart(ctx context.Context, in *SchedulerV2GetChartRequest, opts ...grpc.CallOption) (*SchedulerV2GetChartResponse, error)
 }
 
 type schedulerV2Client struct {
@@ -165,6 +171,56 @@ func (c *schedulerV2Client) KubernetesGet(ctx context.Context, in *SchedulerV2Ku
 	return out, nil
 }
 
+func (c *schedulerV2Client) KubernetesPermissionCheck(ctx context.Context, in *SchedulerV2KubernetesPermissionCheckRequest, opts ...grpc.CallOption) (*SchedulerV2KubernetesPermissionCheckResponse, error) {
+	out := new(SchedulerV2KubernetesPermissionCheckResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV2/KubernetesPermissionCheck", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV2Client) ListCharts(ctx context.Context, in *SchedulerV2ListChartsRequest, opts ...grpc.CallOption) (SchedulerV2_ListChartsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &SchedulerV2_ServiceDesc.Streams[0], "/scheduler.SchedulerV2/ListCharts", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &schedulerV2ListChartsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type SchedulerV2_ListChartsClient interface {
+	Recv() (*SchedulerV2ListChartsResponse, error)
+	grpc.ClientStream
+}
+
+type schedulerV2ListChartsClient struct {
+	grpc.ClientStream
+}
+
+func (x *schedulerV2ListChartsClient) Recv() (*SchedulerV2ListChartsResponse, error) {
+	m := new(SchedulerV2ListChartsResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *schedulerV2Client) GetChart(ctx context.Context, in *SchedulerV2GetChartRequest, opts ...grpc.CallOption) (*SchedulerV2GetChartResponse, error) {
+	out := new(SchedulerV2GetChartResponse)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV2/GetChart", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SchedulerV2Server is the server API for SchedulerV2 service.
 // All implementations must embed UnimplementedSchedulerV2Server
 // for forward compatibility
@@ -193,6 +249,12 @@ type SchedulerV2Server interface {
 	DiscoverAPIResource(context.Context, *SchedulerV2DiscoverAPIResourceRequest) (*SchedulerV2DiscoverAPIResourceResponse, error)
 	// Gets Kubernetes objects from the API
 	KubernetesGet(context.Context, *SchedulerV2KubernetesGetRequest) (*SchedulerV2KubernetesGetResponse, error)
+	// Checks if principal can take an action
+	KubernetesPermissionCheck(context.Context, *SchedulerV2KubernetesPermissionCheckRequest) (*SchedulerV2KubernetesPermissionCheckResponse, error)
+	// Lists installed ArangoPlatform Charts
+	ListCharts(*SchedulerV2ListChartsRequest, SchedulerV2_ListChartsServer) error
+	// Gets Installed ArangoDB Chart
+	GetChart(context.Context, *SchedulerV2GetChartRequest) (*SchedulerV2GetChartResponse, error)
 	mustEmbedUnimplementedSchedulerV2Server()
 }
 
@@ -235,6 +297,15 @@ func (UnimplementedSchedulerV2Server) DiscoverAPIResource(context.Context, *Sche
 }
 func (UnimplementedSchedulerV2Server) KubernetesGet(context.Context, *SchedulerV2KubernetesGetRequest) (*SchedulerV2KubernetesGetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method KubernetesGet not implemented")
+}
+func (UnimplementedSchedulerV2Server) KubernetesPermissionCheck(context.Context, *SchedulerV2KubernetesPermissionCheckRequest) (*SchedulerV2KubernetesPermissionCheckResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KubernetesPermissionCheck not implemented")
+}
+func (UnimplementedSchedulerV2Server) ListCharts(*SchedulerV2ListChartsRequest, SchedulerV2_ListChartsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListCharts not implemented")
+}
+func (UnimplementedSchedulerV2Server) GetChart(context.Context, *SchedulerV2GetChartRequest) (*SchedulerV2GetChartResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetChart not implemented")
 }
 func (UnimplementedSchedulerV2Server) mustEmbedUnimplementedSchedulerV2Server() {}
 
@@ -465,6 +536,63 @@ func _SchedulerV2_KubernetesGet_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SchedulerV2_KubernetesPermissionCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SchedulerV2KubernetesPermissionCheckRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV2Server).KubernetesPermissionCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV2/KubernetesPermissionCheck",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV2Server).KubernetesPermissionCheck(ctx, req.(*SchedulerV2KubernetesPermissionCheckRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV2_ListCharts_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SchedulerV2ListChartsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SchedulerV2Server).ListCharts(m, &schedulerV2ListChartsServer{stream})
+}
+
+type SchedulerV2_ListChartsServer interface {
+	Send(*SchedulerV2ListChartsResponse) error
+	grpc.ServerStream
+}
+
+type schedulerV2ListChartsServer struct {
+	grpc.ServerStream
+}
+
+func (x *schedulerV2ListChartsServer) Send(m *SchedulerV2ListChartsResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _SchedulerV2_GetChart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SchedulerV2GetChartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV2Server).GetChart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV2/GetChart",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV2Server).GetChart(ctx, req.(*SchedulerV2GetChartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SchedulerV2_ServiceDesc is the grpc.ServiceDesc for SchedulerV2 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -520,7 +648,21 @@ var SchedulerV2_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "KubernetesGet",
 			Handler:    _SchedulerV2_KubernetesGet_Handler,
 		},
+		{
+			MethodName: "KubernetesPermissionCheck",
+			Handler:    _SchedulerV2_KubernetesPermissionCheck_Handler,
+		},
+		{
+			MethodName: "GetChart",
+			Handler:    _SchedulerV2_GetChart_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ListCharts",
+			Handler:       _SchedulerV2_ListCharts_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "integrations/scheduler/v2/definition/definition.proto",
 }

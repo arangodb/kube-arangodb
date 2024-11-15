@@ -18,48 +18,27 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package v2
 
 import (
-	"encoding/base64"
-	"encoding/json"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
-var _ json.Marshaler = &Data{}
-var _ json.Unmarshaler = &Data{}
-
-type Data []byte
-
-func (d Data) MarshalJSON() ([]byte, error) {
-	s := base64.StdEncoding.EncodeToString(d)
-
-	return json.Marshal(s)
-}
-
-func (d Data) SHA256() string {
-	return util.SHA256(d)
-}
-
-func (d *Data) UnmarshalJSON(bytes []byte) error {
-	if d == nil {
-		return errors.Errorf("nil object provided")
+func asGRPCError(err error) error {
+	if err == nil {
+		return nil
 	}
 
-	var s string
-
-	if err := json.Unmarshal(bytes, &s); err != nil {
-		return err
+	if kerrors.IsForbiddenC(err) {
+		return status.Errorf(codes.PermissionDenied, "Permission Denied: %s", err.Error())
 	}
 
-	ret, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return err
+	if kerrors.IsNotFound(err) {
+		return status.Errorf(codes.NotFound, "NotFound: %s", err.Error())
 	}
 
-	*d = ret
-
-	return nil
+	return status.Errorf(codes.Internal, "Unable to run action: %s", err.Error())
 }
