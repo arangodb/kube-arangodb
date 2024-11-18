@@ -25,12 +25,12 @@ import (
 	"fmt"
 	"testing"
 
-	any1 "github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	proto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
@@ -75,6 +75,6 @@ func AsGRPCError(t *testing.T, err error) ErrorStatusValidator {
 	return errorStatusValidator{st: st}
 }
 
-func GRPCAnyCastAs[T proto.Message](t *testing.T, in *any1.Any, v T) {
+func GRPCAnyCastAs[T proto.Message](t *testing.T, in *anypb.Any, v T) {
 	require.NoError(t, ugrpc.GRPCAnyCastAs[T](in, v))
 }
