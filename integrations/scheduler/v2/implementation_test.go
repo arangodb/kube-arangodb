@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"helm.sh/helm/v3/pkg/action"
 
-	"github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
+	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
@@ -71,7 +71,7 @@ func Test_Implementation(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	scheduler, h := Client(t, ctx, func(c Configuration) Configuration {
+	scheduler, h := ExternalClient(t, ctx, func(c Configuration) Configuration {
 		c.Namespace = tests.FakeNamespace
 		c.Deployment = tests.FakeNamespace
 		return c
@@ -90,7 +90,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Check API Resources", func(t *testing.T) {
-		o, err := scheduler.DiscoverAPIResources(context.Background(), &definition.SchedulerV2DiscoverAPIResourcesRequest{
+		o, err := scheduler.DiscoverAPIResources(context.Background(), &pbSchedulerV2.SchedulerV2DiscoverAPIResourcesRequest{
 			Version: "v1",
 		})
 		require.NoError(t, err)
@@ -101,7 +101,7 @@ func Test_Implementation(t *testing.T) {
 
 	t.Run("Check API Resource", func(t *testing.T) {
 
-		oz, err := scheduler.DiscoverAPIResource(context.Background(), &definition.SchedulerV2DiscoverAPIResourceRequest{
+		oz, err := scheduler.DiscoverAPIResource(context.Background(), &pbSchedulerV2.SchedulerV2DiscoverAPIResourceRequest{
 			Version: "v1",
 			Kind:    "ConfigMap",
 		})
@@ -111,7 +111,7 @@ func Test_Implementation(t *testing.T) {
 
 	t.Run("Check API Resource - Missing", func(t *testing.T) {
 
-		oz, err := scheduler.DiscoverAPIResource(context.Background(), &definition.SchedulerV2DiscoverAPIResourceRequest{
+		oz, err := scheduler.DiscoverAPIResource(context.Background(), &pbSchedulerV2.SchedulerV2DiscoverAPIResourceRequest{
 			Version: "v1",
 			Kind:    "ConfigMap2",
 		})
@@ -120,7 +120,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Status on Missing", func(t *testing.T) {
-		status, err := scheduler.Status(context.Background(), &definition.SchedulerV2StatusRequest{
+		status, err := scheduler.Status(context.Background(), &pbSchedulerV2.SchedulerV2StatusRequest{
 			Name: "test",
 		})
 		require.NoError(t, err)
@@ -129,14 +129,14 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("List Empty", func(t *testing.T) {
-		status, err := scheduler.List(context.Background(), &definition.SchedulerV2ListRequest{})
+		status, err := scheduler.List(context.Background(), &pbSchedulerV2.SchedulerV2ListRequest{})
 		require.NoError(t, err)
 
 		require.Len(t, status.GetReleases(), 0)
 	})
 
 	t.Run("Install", func(t *testing.T) {
-		status, err := scheduler.Install(context.Background(), &definition.SchedulerV2InstallRequest{
+		status, err := scheduler.Install(context.Background(), &pbSchedulerV2.SchedulerV2InstallRequest{
 			Name:   "test",
 			Values: nil,
 			Chart:  example_1_0_0,
@@ -147,7 +147,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("List After", func(t *testing.T) {
-		status, err := scheduler.List(context.Background(), &definition.SchedulerV2ListRequest{})
+		status, err := scheduler.List(context.Background(), &pbSchedulerV2.SchedulerV2ListRequest{})
 		require.NoError(t, err)
 
 		require.Len(t, status.GetReleases(), 1)
@@ -163,18 +163,18 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("List After - Still should not see first one", func(t *testing.T) {
-		status, err := scheduler.List(context.Background(), &definition.SchedulerV2ListRequest{})
+		status, err := scheduler.List(context.Background(), &pbSchedulerV2.SchedulerV2ListRequest{})
 		require.NoError(t, err)
 
 		require.Len(t, status.GetReleases(), 1)
 	})
 
 	t.Run("Install Second", func(t *testing.T) {
-		status, err := scheduler.Install(context.Background(), &definition.SchedulerV2InstallRequest{
+		status, err := scheduler.Install(context.Background(), &pbSchedulerV2.SchedulerV2InstallRequest{
 			Name:   "test-x",
 			Values: nil,
 			Chart:  example_1_0_0,
-			Options: &definition.SchedulerV2InstallRequestOptions{
+			Options: &pbSchedulerV2.SchedulerV2InstallRequestOptions{
 				Labels: map[string]string{
 					"X": "X",
 				},
@@ -198,15 +198,15 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("List After - Should see 2 services", func(t *testing.T) {
-		status, err := scheduler.List(context.Background(), &definition.SchedulerV2ListRequest{})
+		status, err := scheduler.List(context.Background(), &pbSchedulerV2.SchedulerV2ListRequest{})
 		require.NoError(t, err)
 
 		require.Len(t, status.GetReleases(), 2)
 	})
 
 	t.Run("List After - Filter one", func(t *testing.T) {
-		status, err := scheduler.List(context.Background(), &definition.SchedulerV2ListRequest{
-			Options: &definition.SchedulerV2ListRequestOptions{
+		status, err := scheduler.List(context.Background(), &pbSchedulerV2.SchedulerV2ListRequest{
+			Options: &pbSchedulerV2.SchedulerV2ListRequestOptions{
 				Selectors: map[string]string{
 					"X": "X",
 				},
@@ -218,7 +218,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Check - Version 1", func(t *testing.T) {
-		status, err := scheduler.Status(context.Background(), &definition.SchedulerV2StatusRequest{
+		status, err := scheduler.Status(context.Background(), &pbSchedulerV2.SchedulerV2StatusRequest{
 			Name: "test",
 		})
 		require.NoError(t, err)
@@ -231,7 +231,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Upgrade", func(t *testing.T) {
-		status, err := scheduler.Upgrade(context.Background(), &definition.SchedulerV2UpgradeRequest{
+		status, err := scheduler.Upgrade(context.Background(), &pbSchedulerV2.SchedulerV2UpgradeRequest{
 			Name:   "test",
 			Values: values,
 			Chart:  example_1_0_0,
@@ -244,7 +244,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Check - Version 2", func(t *testing.T) {
-		status, err := scheduler.Status(context.Background(), &definition.SchedulerV2StatusRequest{
+		status, err := scheduler.Status(context.Background(), &pbSchedulerV2.SchedulerV2StatusRequest{
 			Name: "test",
 		})
 		require.NoError(t, err)
@@ -257,7 +257,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Test", func(t *testing.T) {
-		status, err := scheduler.Test(context.Background(), &definition.SchedulerV2TestRequest{
+		status, err := scheduler.Test(context.Background(), &pbSchedulerV2.SchedulerV2TestRequest{
 			Name: "test",
 		})
 		require.NoError(t, err)
@@ -266,7 +266,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Uninstall", func(t *testing.T) {
-		status, err := scheduler.Uninstall(context.Background(), &definition.SchedulerV2UninstallRequest{
+		status, err := scheduler.Uninstall(context.Background(), &pbSchedulerV2.SchedulerV2UninstallRequest{
 			Name: "test",
 		})
 		require.NoError(t, err)

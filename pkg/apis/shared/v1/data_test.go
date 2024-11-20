@@ -21,45 +21,17 @@
 package v1
 
 import (
-	"encoding/base64"
-	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-var _ json.Marshaler = &Data{}
-var _ json.Unmarshaler = &Data{}
+func Test_Data(t *testing.T) {
+	var d Data = make([]byte, 1024)
 
-type Data []byte
-
-func (d Data) MarshalJSON() ([]byte, error) {
-	s := base64.StdEncoding.EncodeToString(d)
-
-	return json.Marshal(s)
-}
-
-func (d Data) SHA256() string {
-	return util.SHA256(d)
-}
-
-func (d *Data) UnmarshalJSON(bytes []byte) error {
-	if d == nil {
-		return errors.Errorf("nil object provided")
-	}
-
-	var s string
-
-	if err := json.Unmarshal(bytes, &s); err != nil {
-		return err
-	}
-
-	ret, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return err
-	}
-
-	*d = ret
-
-	return nil
+	z, err := util.JSONRemarshal[Data, Data](d)
+	require.NoError(t, err)
+	require.EqualValues(t, d, z)
 }

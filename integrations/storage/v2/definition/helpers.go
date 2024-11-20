@@ -26,6 +26,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 const BufferSize = 4094
@@ -38,35 +39,19 @@ func Send(ctx context.Context, client StorageV2Client, key string, in io.Reader)
 		return nil, err
 	}
 
-	for {
+	return ugrpc.Send[*StorageV2WriteObjectRequest, *StorageV2WriteObjectResponse](wr, func() (*StorageV2WriteObjectRequest, error) {
 		n, err := in.Read(cache)
 		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-
-			if cerr := wr.CloseSend(); cerr != nil {
-				return nil, errors.Errors(err, cerr)
-			}
-
 			return nil, err
 		}
 
-		if err := wr.Send(&StorageV2WriteObjectRequest{
+		return &StorageV2WriteObjectRequest{
 			Path: &StorageV2Path{
 				Path: key,
 			},
 			Chunk: cache[:n],
-		}); err != nil {
-			if cerr := wr.CloseSend(); cerr != nil {
-				return nil, errors.Errors(err, cerr)
-			}
-
-			return nil, err
-		}
-	}
-
-	return wr.CloseAndRecv()
+		}, nil
+	})
 }
 
 func Receive(ctx context.Context, client StorageV2Client, key string, out io.Writer) (int, error) {
@@ -79,30 +64,21 @@ func Receive(ctx context.Context, client StorageV2Client, key string, out io.Wri
 
 	var bytes int
 
-	for {
-		resp, err := wr.Recv()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-
-			if cerr := wr.CloseSend(); cerr != nil {
-				return 0, errors.Errors(err, cerr)
-			}
-
-			return 0, err
-		}
-
-		n, err := util.WriteAll(out, resp.GetChunk())
+	if err := ugrpc.Recv[*StorageV2ReadObjectResponse](wr, func(response *StorageV2ReadObjectResponse) error {
+		n, err := util.WriteAll(out, response.GetChunk())
 		if err != nil {
 			if cerr := wr.CloseSend(); cerr != nil {
-				return 0, errors.Errors(err, cerr)
+				return errors.Errors(err, cerr)
 			}
 
-			return 0, err
+			return err
 		}
 
 		bytes += n
+
+		return nil
+	}); err != nil {
+		return 0, err
 	}
 
 	return bytes, nil

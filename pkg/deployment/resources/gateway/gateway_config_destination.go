@@ -28,7 +28,6 @@ import (
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	upstreamHttpApi "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
-	"github.com/golang/protobuf/ptypes/any"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
@@ -162,7 +161,7 @@ func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, err
 				},
 			},
 		},
-		TypedExtensionProtocolOptions: map[string]*any.Any{
+		TypedExtensionProtocolOptions: map[string]*anypb.Any{
 			"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": hpo,
 		},
 	}

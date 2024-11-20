@@ -45,6 +45,10 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1
       - alias: pbSchedulerV1
         pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition
+      - alias: pbImplSchedulerV2
+        pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v2
+      - alias: pbSchedulerV2
+        pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition
       - alias: pbImplSharedV1
         pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1
       - alias: pbSharedV1

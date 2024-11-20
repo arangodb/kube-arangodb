@@ -22,6 +22,7 @@ syntax = "proto3";
 
 package scheduler;
 
+import "integrations/scheduler/v2/definition/chart.proto";
 import "integrations/scheduler/v2/definition/helm.proto";
 import "integrations/scheduler/v2/definition/kubernetes.proto";
 import "integrations/shared/v1/definition/empty.proto";
@@ -57,5 +58,15 @@ service SchedulerV2 {
 
   // Gets Kubernetes objects from the API
   rpc KubernetesGet(SchedulerV2KubernetesGetRequest) returns (SchedulerV2KubernetesGetResponse);
+
+  // Checks if principal can take an action
+  rpc KubernetesPermissionCheck(SchedulerV2KubernetesPermissionCheckRequest)
+      returns (SchedulerV2KubernetesPermissionCheckResponse);
+
+  // Lists installed ArangoPlatform Charts
+  rpc ListCharts(SchedulerV2ListChartsRequest) returns (stream SchedulerV2ListChartsResponse);
+
+  // Gets Installed ArangoDB Chart
+  rpc GetChart(SchedulerV2GetChartRequest) returns (SchedulerV2GetChartResponse);
 }
 

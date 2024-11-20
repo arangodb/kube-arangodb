@@ -22,6 +22,8 @@
 - (Maintenance) Extract GRPC Client Package
 - (Feature) (Platform) Chart
 - (Feature) (Scheduler) Deployment Scale Functionality
+- (Feature) (Platform) Chart Integration
+- (Maintenance) Switch to google.golang.org/protobuf
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD
