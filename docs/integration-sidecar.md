@@ -1,3 +1,11 @@
+---
+layout: page
+has_children: true
+title: Integration Sidecars
+parent: ArangoDBPlatform
+has_toc: false
+---
+
 # Integration 
 
 ## Profile
@@ -31,7 +39,7 @@ metadata:
     integration.profiles.arangodb.com/<< integration name >>: << integration version >>
 ```
 
-#### [Authentication V1](/integrations/authentication/v1/definition/README.md)
+#### [Authentication V1](/docs/integration/authentication.v1.md)
 
 Authentication Integration Sidecar
 
@@ -43,7 +51,7 @@ metadata:
     integration.profiles.arangodb.com/authn: v1
 ```
 
-#### [Authorization V0](/integrations/authorization/v0/definition/README.md)
+#### [Authorization V0](/docs/integration/authorization.v0.md)
 
 Authorization Integration Sidecar
 
@@ -55,7 +63,7 @@ metadata:
     integration.profiles.arangodb.com/authz: v0
 ```
 
-#### [Scheduler V2](/integrations/scheduler/v2/definition/README.md)
+#### [Scheduler V2](/docs/integration/scheduler.v2.md)
 
 Scheduler Integration Sidecar
 
@@ -67,7 +75,7 @@ metadata:
     integration.profiles.arangodb.com/sched: v2
 ```
 
-#### [Storage V2](/integrations/storage/v2/definition/README.md)
+#### [Storage V2](/docs/integration/storage.v2.md)
 
 Storage Integration Sidecar
 
