@@ -66,7 +66,7 @@ func (a *ArangoRouteSpecDestination) GetEndpoints() *ArangoRouteSpecDestinationE
 }
 
 func (a *ArangoRouteSpecDestination) GetProtocol() *ArangoRouteDestinationProtocol {
-	if a == nil || a.Schema == nil {
+	if a == nil || a.Protocol == nil {
 		return nil
 	}
 
