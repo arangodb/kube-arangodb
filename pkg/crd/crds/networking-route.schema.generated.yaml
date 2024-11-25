@@ -49,8 +49,17 @@ v1alpha1:
               path:
                 description: Path defines service path used for overrides
                 type: string
+              protocol:
+                description: Protocol defines http protocol used for the route
+                enum:
+                  - http1
+                  - http2
+                type: string
               schema:
                 description: Schema defines HTTP/S schema used for connection
+                enum:
+                  - http
+                  - https
                 type: string
               service:
                 description: Service defines service upstream reference

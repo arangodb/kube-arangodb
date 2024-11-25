@@ -24,10 +24,8 @@ import (
 	"time"
 
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	upstreamHttpApi "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
@@ -63,6 +61,8 @@ type ConfigDestination struct {
 
 	Type *ConfigDestinationType `json:"type,omitempty"`
 
+	Protocol *ConfigDestinationProtocol `json:"protocol,omitempty"`
+
 	Path *string `json:"path,omitempty"`
 
 	AuthExtension *ConfigAuthZExtension `json:"authExtension,omitempty"`
@@ -77,6 +77,7 @@ func (c *ConfigDestination) Validate() error {
 	return shared.WithErrors(
 		shared.PrefixResourceError("targets", c.Targets.Validate()),
 		shared.PrefixResourceError("type", c.Type.Validate()),
+		shared.PrefixResourceError("protocol", c.Protocol.Validate()),
 		shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
 		shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
 		shared.PrefixResourceError("upgradeConfigs", c.UpgradeConfigs.Validate()),
@@ -130,21 +131,7 @@ func (c *ConfigDestination) getUpgradeConfigs() ConfigDestinationsUpgrade {
 }
 
 func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, error) {
-	hpo, err := anypb.New(&upstreamHttpApi.HttpProtocolOptions{
-		UpstreamProtocolOptions: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_{
-			ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
-				ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
-					Http2ProtocolOptions: &coreAPI.Http2ProtocolOptions{
-						ConnectionKeepalive: &coreAPI.KeepaliveSettings{
-							Interval:               durationpb.New(15 * time.Second),
-							Timeout:                durationpb.New(30 * time.Second),
-							ConnectionIdleInterval: durationpb.New(60 * time.Second),
-						},
-					},
-				},
-			},
-		},
-	})
+	hpo, err := anypb.New(c.Protocol.Options())
 	if err != nil {
 		return nil, err
 	}
