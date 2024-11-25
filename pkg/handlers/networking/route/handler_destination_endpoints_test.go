@@ -238,7 +238,7 @@ func Test_Handler_Destination_Endpoints_Valid_HTTP2(t *testing.T) {
 
 	require.Len(t, extension.Status.Target.RenderURLs(), 1)
 	require.EqualValues(t, "http://127.0.0.1:10244/", extension.Status.Target.RenderURLs()[0])
-	require.EqualValues(t, "http1", extension.Status.Target.Protocol)
+	require.EqualValues(t, "http2", extension.Status.Target.Protocol)
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)

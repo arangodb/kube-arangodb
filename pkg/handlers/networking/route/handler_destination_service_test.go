@@ -227,7 +227,7 @@ func Test_Handler_Destination_Service_Valid_HTTP2(t *testing.T) {
 
 	require.Len(t, extension.Status.Target.RenderURLs(), 1)
 	require.EqualValues(t, "http://deployment.fake.svc:10244/", extension.Status.Target.RenderURLs()[0])
-	require.EqualValues(t, "http1", extension.Status.Target.Protocol)
+	require.EqualValues(t, "http2", extension.Status.Target.Protocol)
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
