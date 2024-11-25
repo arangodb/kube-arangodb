@@ -15,14 +15,14 @@ Usage:
 Available Commands:
   admin           Administration operations
   completion      Generate the autocompletion script for the specified shell
-  crd         CRD operations
-  debug-package   Generate debug package for debugging
+  crd           CRD operations
+  debug-package Generate debug package for debugging
   exporter        
   features        Describe all operator features
   help            Help about any command
   integration     
   storage         
-  task        
+  task          
   version         
 
 Flags:
