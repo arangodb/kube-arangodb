@@ -18,34 +18,38 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package suite
 
-type ChartDetails struct {
-	Name     string                `json:"name,omitempty"`
-	Version  string                `json:"version,omitempty"`
-	Platform *ChartDetailsPlatform `json:"platform,omitempty"`
-}
+import (
+	_ "embed"
+	"testing"
 
-func (c *ChartDetails) GetPlatform() *ChartDetailsPlatform {
-	if c == nil {
-		return nil
+	"github.com/stretchr/testify/require"
+)
+
+//go:embed chart/example-1.0.0.tgz
+var chart_example_1_0_0 []byte
+
+//go:embed chart/example-1.0.1.tgz
+var chart_example_1_0_1 []byte
+
+//go:embed chart/example-1.1.0.tgz
+var chart_example_1_1_0 []byte
+
+func GetChart(t *testing.T, name, version string) []byte {
+	switch name {
+	case "example":
+		switch version {
+		case "1.0.0":
+			return chart_example_1_0_0
+		case "1.0.1":
+			return chart_example_1_0_1
+		case "1.1.0":
+			return chart_example_1_1_0
+		}
 	}
 
-	return c.Platform
-}
+	require.Fail(t, "Chart with version not found")
 
-func (c *ChartDetails) GetName() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Name
-}
-
-func (c *ChartDetails) GetVersion() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Version
+	return nil
 }

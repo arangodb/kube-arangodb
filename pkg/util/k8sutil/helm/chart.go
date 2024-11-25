@@ -30,8 +30,12 @@ import (
 
 type Chart []byte
 
-func (c Chart) Get() (*chart.Chart, error) {
-	return newChartReaderFromBytes(c)
+func (c Chart) Get() (ChartData, error) {
+	return newChartFromData(c)
+}
+
+func (c Chart) Raw() []byte {
+	return c
 }
 
 func newChartReaderFromBytes(in []byte) (*chart.Chart, error) {

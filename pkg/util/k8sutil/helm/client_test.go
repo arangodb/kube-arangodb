@@ -30,6 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/suite"
 )
 
 func cleanup(t *testing.T, c Client) func() {
@@ -81,7 +82,7 @@ func Test_Connection(t *testing.T) {
 	})
 
 	t.Run("Install", func(t *testing.T) {
-		resp, err := c.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+		resp, err := c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 			in.ReleaseName = "test"
 		})
 		require.NoError(t, err)
@@ -90,7 +91,7 @@ func Test_Connection(t *testing.T) {
 	})
 
 	t.Run("Upgrade With No change", func(t *testing.T) {
-		resp, err := c.Upgrade(context.Background(), "test", example_1_0_0, nil)
+		resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "example", "1.0.0"), nil)
 		require.NoError(t, err)
 
 		require.NotNil(t, resp)
@@ -99,7 +100,7 @@ func Test_Connection(t *testing.T) {
 	})
 
 	t.Run("Upgrade With change", func(t *testing.T) {
-		resp, err := c.Upgrade(context.Background(), "test", example_1_0_0, Values(`{"A":"X"}`))
+		resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "example", "1.0.0"), Values(`{"A":"X"}`))
 		require.NoError(t, err)
 
 		require.NotNil(t, resp)
@@ -135,7 +136,7 @@ func Test_Connection(t *testing.T) {
 	})
 
 	t.Run("Reinstall", func(t *testing.T) {
-		resp, err := c.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+		resp, err := c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 			in.ReleaseName = "test"
 			in.Labels = map[string]string{
 				"X1": "X1",
@@ -150,7 +151,7 @@ func Test_Connection(t *testing.T) {
 		defer cleanup(t, c)()
 
 		t.Run("Install", func(t *testing.T) {
-			resp, err := c.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+			resp, err := c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test-1"
 				in.Labels = map[string]string{
 					"X1": "X1",
@@ -160,7 +161,7 @@ func Test_Connection(t *testing.T) {
 
 			require.Len(t, resp.Labels, 1)
 
-			resp, err = c.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+			resp, err = c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test-2"
 				in.Labels = map[string]string{
 					"X1": "X2",
@@ -170,7 +171,7 @@ func Test_Connection(t *testing.T) {
 
 			require.Len(t, resp.Labels, 1)
 
-			resp, err = c.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+			resp, err = c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test-3"
 				in.Labels = map[string]string{
 					"X1": "X1",
@@ -181,7 +182,7 @@ func Test_Connection(t *testing.T) {
 
 			require.Len(t, resp.Labels, 2)
 
-			resp, err = c.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+			resp, err = c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test-4"
 			})
 			require.NoError(t, err)
@@ -236,7 +237,7 @@ func Test_Connection(t *testing.T) {
 		defer cleanup(t, c)()
 
 		t.Run("Install", func(t *testing.T) {
-			resp, err := c.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+			resp, err := c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test"
 			})
 			require.NoError(t, err)
@@ -250,7 +251,7 @@ func Test_Connection(t *testing.T) {
 		})
 
 		t.Run("Update", func(t *testing.T) {
-			resp, err := c.Upgrade(context.Background(), "test", example_1_0_0, newValues(t, map[string]any{
+			resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "example", "1.0.0"), newValues(t, map[string]any{
 				"data": map[string]string{
 					"test": "test",
 				},

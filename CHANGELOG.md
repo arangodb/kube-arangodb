@@ -25,6 +25,7 @@
 - (Feature) (Platform) Chart Integration
 - (Maintenance) Switch to google.golang.org/protobuf
 - (Feature) Add DebugPackage to the OPS Binary
+- (Feature) (Platform) Platform Requirements support
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD

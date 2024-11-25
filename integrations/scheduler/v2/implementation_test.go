@@ -23,14 +23,19 @@ package v2
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"helm.sh/helm/v3/pkg/action"
+	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/suite"
 )
 
 func cleanup(t *testing.T, c helm.Client) func() {
@@ -47,6 +52,32 @@ func cleanup(t *testing.T, c helm.Client) func() {
 				require.NoError(t, err)
 			})
 		}
+
+		t.Run("Remove NS", func(t *testing.T) {
+			if err := c.Client().Kubernetes().CoreV1().Namespaces().Delete(context.Background(), tests.FakeNamespace, meta.DeleteOptions{}); !kerrors.IsNotFound(err) {
+				require.NoError(t, err)
+			}
+
+			for {
+				time.Sleep(time.Second)
+
+				if _, err := c.Client().Kubernetes().CoreV1().Namespaces().Get(context.Background(), tests.FakeNamespace, meta.GetOptions{}); !kerrors.IsNotFound(err) {
+					require.NoError(t, err)
+					continue
+				}
+
+				break
+			}
+		})
+
+		t.Run("Create NS", func(t *testing.T) {
+			_, err = c.Client().Kubernetes().CoreV1().Namespaces().Create(context.Background(), &core.Namespace{
+				ObjectMeta: meta.ObjectMeta{
+					Name: tests.FakeNamespace,
+				},
+			}, meta.CreateOptions{})
+			require.NoError(t, err)
+		})
 	})
 
 	return func() {
@@ -63,6 +94,23 @@ func cleanup(t *testing.T, c helm.Client) func() {
 					require.NoError(t, err)
 				})
 			}
+
+			t.Run("Remove NS", func(t *testing.T) {
+				if err := c.Client().Kubernetes().CoreV1().Namespaces().Delete(context.Background(), tests.FakeNamespace, meta.DeleteOptions{}); !kerrors.IsNotFound(err) {
+					require.NoError(t, err)
+				}
+
+				for {
+					time.Sleep(time.Second)
+
+					if _, err := c.Client().Kubernetes().CoreV1().Namespaces().Get(context.Background(), tests.FakeNamespace, meta.GetOptions{}); !kerrors.IsNotFound(err) {
+						require.NoError(t, err)
+						continue
+					}
+
+					break
+				}
+			})
 		})
 	}
 }
@@ -139,7 +187,7 @@ func Test_Implementation(t *testing.T) {
 		status, err := scheduler.Install(context.Background(), &pbSchedulerV2.SchedulerV2InstallRequest{
 			Name:   "test",
 			Values: nil,
-			Chart:  example_1_0_0,
+			Chart:  suite.GetChart(t, "example", "1.0.0"),
 		})
 		require.NoError(t, err)
 
@@ -154,7 +202,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Install Outside", func(t *testing.T) {
-		resp, err := h.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+		resp, err := h.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 			in.ReleaseName = "test-outside"
 		})
 		require.NoError(t, err)
@@ -173,7 +221,7 @@ func Test_Implementation(t *testing.T) {
 		status, err := scheduler.Install(context.Background(), &pbSchedulerV2.SchedulerV2InstallRequest{
 			Name:   "test-x",
 			Values: nil,
-			Chart:  example_1_0_0,
+			Chart:  suite.GetChart(t, "example", "1.0.0"),
 			Options: &pbSchedulerV2.SchedulerV2InstallRequestOptions{
 				Labels: map[string]string{
 					"X": "X",
@@ -186,7 +234,7 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Install Second Outside", func(t *testing.T) {
-		resp, err := h.Install(context.Background(), example_1_0_0, nil, func(in *action.Install) {
+		resp, err := h.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
 			in.ReleaseName = "test-outside-x"
 			in.Labels = map[string]string{
 				"X": "X",
@@ -234,7 +282,20 @@ func Test_Implementation(t *testing.T) {
 		status, err := scheduler.Upgrade(context.Background(), &pbSchedulerV2.SchedulerV2UpgradeRequest{
 			Name:   "test",
 			Values: values,
-			Chart:  example_1_0_0,
+			Chart:  suite.GetChart(t, "example", "1.0.0"),
+		})
+		require.NoError(t, err)
+
+		require.NotNil(t, status.GetAfter())
+		t.Logf("Data: %s", string(status.GetAfter().GetValues()))
+		require.Len(t, status.GetAfter().GetValues(), len(values))
+	})
+
+	t.Run("Upgrade to 1", func(t *testing.T) {
+		status, err := scheduler.Upgrade(context.Background(), &pbSchedulerV2.SchedulerV2UpgradeRequest{
+			Name:   "test",
+			Values: values,
+			Chart:  suite.GetChart(t, "example", "1.0.1"),
 		})
 		require.NoError(t, err)
 
@@ -251,7 +312,7 @@ func Test_Implementation(t *testing.T) {
 
 		require.NotNil(t, status.GetRelease())
 
-		require.EqualValues(t, 2, status.GetRelease().GetVersion())
+		require.EqualValues(t, 3, status.GetRelease().GetVersion())
 		t.Logf("Data: %s", string(status.GetRelease().GetValues()))
 		require.Len(t, status.GetRelease().GetValues(), len(values))
 	})
