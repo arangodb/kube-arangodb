@@ -119,6 +119,7 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 
 	target.Path = dest.GetPath()
 	target.Type = networkingApi.ArangoRouteStatusTargetServiceType
+	target.Protocol = dest.GetProtocol().Get()
 
 	// Render Auth Settings
 

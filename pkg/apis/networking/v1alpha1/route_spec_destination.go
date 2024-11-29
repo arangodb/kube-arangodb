@@ -30,7 +30,14 @@ type ArangoRouteSpecDestination struct {
 	Endpoints *ArangoRouteSpecDestinationEndpoints `json:"endpoints,omitempty"`
 
 	// Schema defines HTTP/S schema used for connection
+	// +doc/enum: http|HTTP Connection
+	// +doc/enum: https|HTTPS Connection (HTTP with TLS)
 	Schema *ArangoRouteSpecDestinationSchema `json:"schema,omitempty"`
+
+	// Protocol defines http protocol used for the route
+	// +doc/enum: http1|HTTP 1.1 Protocol
+	// +doc/enum: http2|HTTP 2 Protocol
+	Protocol *ArangoRouteDestinationProtocol `json:"protocol,omitempty"`
 
 	// TLS defines TLS Configuration
 	TLS *ArangoRouteSpecDestinationTLS `json:"tls,omitempty"`
@@ -56,6 +63,14 @@ func (a *ArangoRouteSpecDestination) GetEndpoints() *ArangoRouteSpecDestinationE
 	}
 
 	return a.Endpoints
+}
+
+func (a *ArangoRouteSpecDestination) GetProtocol() *ArangoRouteDestinationProtocol {
+	if a == nil || a.Protocol == nil {
+		return nil
+	}
+
+	return a.Protocol
 }
 
 func (a *ArangoRouteSpecDestination) GetSchema() *ArangoRouteSpecDestinationSchema {
@@ -100,6 +115,7 @@ func (a *ArangoRouteSpecDestination) Validate() error {
 		shared.ValidateOptionalInterfacePath("service", a.Service),
 		shared.ValidateOptionalInterfacePath("endpoints", a.Endpoints),
 		shared.ValidateOptionalInterfacePath("schema", a.Schema),
+		shared.ValidateOptionalInterfacePath("protocol", a.Protocol),
 		shared.ValidateOptionalInterfacePath("tls", a.TLS),
 		shared.ValidateOptionalInterfacePath("authentication", a.Authentication),
 		shared.PrefixResourceError("path", shared.ValidateAPIPath(a.GetPath())),
