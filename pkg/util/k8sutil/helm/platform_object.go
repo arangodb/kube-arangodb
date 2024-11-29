@@ -18,34 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package helm
 
-type ChartDetails struct {
-	Name     string                `json:"name,omitempty"`
-	Version  string                `json:"version,omitempty"`
-	Platform *ChartDetailsPlatform `json:"platform,omitempty"`
+type Platform struct {
+	Requirements PlatformRequirements `json:"requirements,omitempty"`
 }
 
-func (c *ChartDetails) GetPlatform() *ChartDetailsPlatform {
-	if c == nil {
-		return nil
-	}
+type PlatformRequirements map[string]PlatformVersionDefinition
 
-	return c.Platform
-}
-
-func (c *ChartDetails) GetName() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Name
-}
-
-func (c *ChartDetails) GetVersion() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Version
-}
+type PlatformVersionDefinition string

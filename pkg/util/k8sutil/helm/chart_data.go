@@ -18,34 +18,41 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package helm
 
-type ChartDetails struct {
-	Name     string                `json:"name,omitempty"`
-	Version  string                `json:"version,omitempty"`
-	Platform *ChartDetailsPlatform `json:"platform,omitempty"`
+import (
+	"helm.sh/helm/v3/pkg/chart"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
+
+type ChartData interface {
+	Chart() *chart.Chart
+
+	Platform() (*Platform, error)
 }
 
-func (c *ChartDetails) GetPlatform() *ChartDetailsPlatform {
-	if c == nil {
-		return nil
-	}
-
-	return c.Platform
+type chartData struct {
+	chart *chart.Chart
 }
 
-func (c *ChartDetails) GetName() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Name
+func (c chartData) Platform() (*Platform, error) {
+	return extractPlatform(c.chart)
 }
 
-func (c *ChartDetails) GetVersion() string {
-	if c == nil {
-		return ""
+func (c chartData) Chart() *chart.Chart {
+	return c.chart
+}
+
+func newChartFromData(data []byte) (ChartData, error) {
+	var c chartData
+
+	v, err := newChartReaderFromBytes(data)
+	if err != nil {
+		return nil, errors.Errorf("Unable to load chart")
 	}
 
-	return c.Version
+	c.chart = v
+
+	return c, nil
 }
