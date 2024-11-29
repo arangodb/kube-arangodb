@@ -36,6 +36,9 @@ type ArangoRouteStatusTarget struct {
 	// TLS Keeps target TLS Settings (if not nil, TLS is enabled)
 	TLS *ArangoRouteStatusTargetTLS `json:"TLS,omitempty"`
 
+	// Protocol defines http protocol used for the route
+	Protocol ArangoRouteDestinationProtocol `json:"protocol,omitempty"`
+
 	// Authentication specifies the authentication details
 	Authentication ArangoRouteStatusTargetAuthentication `json:"authentication,omitempty"`
 

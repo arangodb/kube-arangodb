@@ -18,34 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package helm
 
-type ChartDetails struct {
-	Name     string                `json:"name,omitempty"`
-	Version  string                `json:"version,omitempty"`
-	Platform *ChartDetailsPlatform `json:"platform,omitempty"`
-}
+import (
+	"testing"
 
-func (c *ChartDetails) GetPlatform() *ChartDetailsPlatform {
-	if c == nil {
-		return nil
-	}
+	"github.com/stretchr/testify/require"
 
-	return c.Platform
-}
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/suite"
+)
 
-func (c *ChartDetails) GetName() string {
-	if c == nil {
-		return ""
-	}
+func Test_Platform(t *testing.T) {
+	c1, err := Chart(suite.GetChart(t, "example", "1.0.0")).Get()
+	require.NoError(t, err)
 
-	return c.Name
-}
+	p1, err := c1.Platform()
+	require.NoError(t, err)
 
-func (c *ChartDetails) GetVersion() string {
-	if c == nil {
-		return ""
-	}
+	c2, err := Chart(suite.GetChart(t, "example", "1.0.1")).Get()
+	require.NoError(t, err)
 
-	return c.Version
+	p2, err := c2.Platform()
+	require.NoError(t, err)
+
+	require.Nil(t, p1)
+	require.NotNil(t, p2)
 }

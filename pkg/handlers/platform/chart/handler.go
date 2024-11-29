@@ -142,7 +142,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 		return true, operator.Reconcile("Spec changed")
 	}
 
-	if chart.Name() != extension.GetName() {
+	if chart.Chart().Name() != extension.GetName() {
 		status.Info = &platformApi.ChartStatusInfo{
 			Definition: extension.Spec.Definition,
 			Checksum:   extension.Spec.Definition.SHA256(),
@@ -153,11 +153,23 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 		return true, operator.Reconcile("Spec changed")
 	}
 
+	platform, err := chart.Platform()
+	if err != nil {
+		status.Info = &platformApi.ChartStatusInfo{
+			Definition: extension.Spec.Definition,
+			Checksum:   extension.Spec.Definition.SHA256(),
+			Valid:      false,
+			Message:    "Chart is invalid: Unable to get platform details",
+		}
+
+		return true, operator.Reconcile("Spec changed")
+	}
+
 	status.Info = &platformApi.ChartStatusInfo{
 		Definition: extension.Spec.Definition,
 		Checksum:   extension.Spec.Definition.SHA256(),
 		Valid:      true,
-		Details:    chartInfoExtract(chart),
+		Details:    chartInfoExtract(chart.Chart(), platform),
 	}
 
 	return true, operator.Reconcile("Spec changed")
@@ -169,13 +181,29 @@ func (h *handler) CanBeHandled(item operation.Item) bool {
 		item.Kind == Kind()
 }
 
-func chartInfoExtract(chart *chart.Chart) *platformApi.ChartDetails {
+func chartInfoExtract(chart *chart.Chart, platform *helm.Platform) *platformApi.ChartDetails {
 	if chart == nil || chart.Metadata == nil {
 		return nil
 	}
 
-	return &platformApi.ChartDetails{
+	r := &platformApi.ChartDetails{
 		Name:    chart.Name(),
 		Version: chart.Metadata.Version,
 	}
+
+	if platform != nil {
+		var c platformApi.ChartDetailsPlatform
+
+		if len(platform.Requirements) > 0 {
+			c.Requirements = make(platformApi.ChartDetailsPlatformRequirements, len(platform.Requirements))
+
+			for k, v := range platform.Requirements {
+				c.Requirements[k] = platformApi.ChartDetailsPlatformVersionConstrain(v)
+			}
+		}
+
+		r.Platform = &c
+	}
+
+	return r
 }

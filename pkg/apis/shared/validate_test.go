@@ -36,7 +36,7 @@ func Test_ValidateAPIPath(t *testing.T) {
 	require.NoError(t, ValidateAPIPath(""))
 	require.NoError(t, ValidateAPIPath("/"))
 	require.Error(t, ValidateAPIPath("//"))
-	require.Error(t, ValidateAPIPath("/api/zz"))
+	require.NoError(t, ValidateAPIPath("/api/zz"))
 	require.NoError(t, ValidateAPIPath("/api/"))
 	require.NoError(t, ValidateAPIPath("/api/test/qw/"))
 	require.NoError(t, ValidateAPIPath("/api/test/2/"))

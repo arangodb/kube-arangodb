@@ -71,6 +71,12 @@ func GenerateCLIArangoDBOperatorOpsReadme(root string) error {
 		readmeSections["arangodb_operator_ops_cmd_crd_generate"] = section
 	}
 
+	if section, err := GenerateHelpQuoted(cmd.CommandOps(), "debug-package"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_ops_cmd_debug_package"] = section
+	}
+
 	if err := md.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator_ops.md"), readmeSections); err != nil {
 		return err
 	}

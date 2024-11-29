@@ -50,17 +50,17 @@ func Test_Manager(t *testing.T) {
 
 				vchart, err := vdata.Get()
 				require.NoError(t, err)
-				require.NotNil(t, vchart.Metadata)
+				require.NotNil(t, vchart.Chart().Metadata)
 
 				data, err := mgr.Chart(context.Background(), repo, "latest")
 				require.NoError(t, err)
 
 				chart, err := data.Get()
 				require.NoError(t, err)
-				require.NotNil(t, chart.Metadata)
+				require.NotNil(t, chart.Chart().Metadata)
 
-				require.EqualValues(t, v, vchart.Metadata.Version)
-				require.EqualValues(t, v, chart.Metadata.Version)
+				require.EqualValues(t, v, vchart.Chart().Metadata.Version)
+				require.EqualValues(t, v, chart.Chart().Metadata.Version)
 			})
 			t.Run("ByVersion", func(t *testing.T) {
 				for _, version := range limitArray(mgr.Versions(repo), 5) {
@@ -71,8 +71,8 @@ func Test_Manager(t *testing.T) {
 						c, err := data.Get()
 						require.NoError(t, err)
 
-						require.NotNil(t, c.Metadata)
-						require.EqualValues(t, version, c.Metadata.Version)
+						require.NotNil(t, c.Chart().Metadata)
+						require.EqualValues(t, version, c.Chart().Metadata.Version)
 					})
 				}
 			})

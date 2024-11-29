@@ -44,9 +44,6 @@ func init() {
 	})
 }
 
-//go:embed suite/example-1.0.0.tgz
-var example_1_0_0 []byte
-
 func Handler(t *testing.T, ctx context.Context, client helm.Client, mods ...Mod) svc.Handler {
 	handler, err := New(client, NewConfiguration().With(mods...))
 	require.NoError(t, err)

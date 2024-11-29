@@ -38,9 +38,6 @@ func init() {
 	})
 }
 
-//go:embed suite/example-1.0.0.tgz
-var example_1_0_0 []byte
-
 func newValues(t *testing.T, in any) Values {
 	v, err := NewValues(in)
 	require.NoError(t, err)

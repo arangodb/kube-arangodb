@@ -83,17 +83,33 @@ UID keeps the information about object UID
 
 ### .spec.destination.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L46)</sup>
 
 Path defines service path used for overrides
 
 ***
 
+### .spec.destination.protocol
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L40)</sup>
+
+Protocol defines http protocol used for the route
+
+Possible Values: 
+* `"http1"` (default) - HTTP 1.1 Protocol
+* `"http2"` - HTTP 2 Protocol
+
+***
+
 ### .spec.destination.schema
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L33)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L35)</sup>
 
 Schema defines HTTP/S schema used for connection
+
+Possible Values: 
+* `"http"` (default) - HTTP Connection
+* `"https"` - HTTPS Connection (HTTP with TLS)
 
 ***
 
@@ -238,9 +254,17 @@ Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .status.target.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L43)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L46)</sup>
 
 Path specifies request path override
+
+***
+
+### .status.target.protocol
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L40)</sup>
+
+Protocol defines http protocol used for the route
 
 ***
 

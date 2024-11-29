@@ -34,6 +34,9 @@ func init() {
 	cmdMain.AddCommand(debugPackage)
 	cmdMain.AddCommand(debugPackageV2)
 
+	cmdOps.AddCommand(debugPackage)
+	cmdOps.AddCommand(debugPackageV2)
+
 	debugPackage.Flags().StringVarP(&debugPackageInput.Output, "output", "o", "out.tar.gz", "Output of the result gz file. If set to `-` then stdout is used")
 	debugPackageV2.Flags().StringVarP(&debugPackageInput.Output, "output", "o", "out.tar.gz", "Output of the result gz file. If set to `-` then stdout is used")
 
