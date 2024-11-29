@@ -147,6 +147,11 @@ func (in *ArangoRouteSpecDestination) DeepCopyInto(out *ArangoRouteSpecDestinati
 		*out = new(ArangoRouteSpecDestinationSchema)
 		**out = **in
 	}
+	if in.Protocol != nil {
+		in, out := &in.Protocol, &out.Protocol
+		*out = new(ArangoRouteDestinationProtocol)
+		**out = **in
+	}
 	if in.TLS != nil {
 		in, out := &in.TLS, &out.TLS
 		*out = new(ArangoRouteSpecDestinationTLS)
