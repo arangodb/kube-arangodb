@@ -29,6 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/suite"
 )
 
 func Test_ChartReconcile_EmptyChart(t *testing.T) {
@@ -78,7 +79,7 @@ func Test_ChartReconcile_EmptyChart(t *testing.T) {
 	t.Run("Invalid chart name", func(t *testing.T) {
 		// Arrange
 		tests.Apply(t, extension_invalid_name, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
-			obj.Spec.Definition = chart_1_0
+			obj.Spec.Definition = suite.GetChart(t, "example", "1.0.0")
 		})
 		tests.UpdateObjects(t, handler.kubeClient, handler.client, &extension_invalid_name)
 
@@ -99,7 +100,7 @@ func Test_ChartReconcile_EmptyChart(t *testing.T) {
 	t.Run("Valid chart 1.0.0", func(t *testing.T) {
 		// Arrange
 		tests.Apply(t, extension, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
-			obj.Spec.Definition = chart_1_0
+			obj.Spec.Definition = suite.GetChart(t, "example", "1.0.0")
 		})
 		tests.UpdateObjects(t, handler.kubeClient, handler.client, &extension)
 
@@ -117,14 +118,41 @@ func Test_ChartReconcile_EmptyChart(t *testing.T) {
 		require.NotNil(t, extension.Status.Info.Details)
 		require.EqualValues(t, "example", extension.Status.Info.Details.GetName())
 		require.EqualValues(t, "1.0.0", extension.Status.Info.Details.GetVersion())
-		require.EqualValues(t, util.SHA256(chart_1_0), extension.Status.Info.Checksum)
+		require.EqualValues(t, util.SHA256(suite.GetChart(t, "example", "1.0.0")), extension.Status.Info.Checksum)
+		require.Nil(t, extension.Status.Info.Details.Platform)
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ReadyCondition))
+	})
+
+	t.Run("Valid chart 1.0.1", func(t *testing.T) {
+		// Arrange
+		tests.Apply(t, extension, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+			obj.Spec.Definition = suite.GetChart(t, "example", "1.0.1")
+		})
+		tests.UpdateObjects(t, handler.kubeClient, handler.client, &extension)
+
+		// Test
+		require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+		// Refresh
+		refresh(t)
+
+		// Validate
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.SpecValidCondition))
+		require.NotNil(t, extension.Status.Info)
+		require.True(t, extension.Status.Info.Valid)
+		require.EqualValues(t, extension.Status.Info.Message, "")
+		require.NotNil(t, extension.Status.Info.Details)
+		require.EqualValues(t, "example", extension.Status.Info.Details.GetName())
+		require.EqualValues(t, "1.0.1", extension.Status.Info.Details.GetVersion())
+		require.EqualValues(t, util.SHA256(suite.GetChart(t, "example", "1.0.1")), extension.Status.Info.Checksum)
+		require.NotNil(t, extension.Status.Info.Details.Platform)
 		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ReadyCondition))
 	})
 
 	t.Run("Valid chart 1.1.0", func(t *testing.T) {
 		// Arrange
 		tests.Apply(t, extension, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
-			obj.Spec.Definition = chart_1_1
+			obj.Spec.Definition = suite.GetChart(t, "example", "1.1.0")
 		})
 		tests.UpdateObjects(t, handler.kubeClient, handler.client, &extension)
 
@@ -142,7 +170,8 @@ func Test_ChartReconcile_EmptyChart(t *testing.T) {
 		require.NotNil(t, extension.Status.Info.Details)
 		require.EqualValues(t, "example", extension.Status.Info.Details.GetName())
 		require.EqualValues(t, "1.1.0", extension.Status.Info.Details.GetVersion())
-		require.EqualValues(t, util.SHA256(chart_1_1), extension.Status.Info.Checksum)
+		require.Nil(t, extension.Status.Info.Details.Platform)
+		require.EqualValues(t, util.SHA256(suite.GetChart(t, "example", "1.1.0")), extension.Status.Info.Checksum)
 		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ReadyCondition))
 	})
 }

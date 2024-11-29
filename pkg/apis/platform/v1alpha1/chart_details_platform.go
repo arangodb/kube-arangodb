@@ -20,32 +20,14 @@
 
 package v1alpha1
 
-type ChartDetails struct {
-	Name     string                `json:"name,omitempty"`
-	Version  string                `json:"version,omitempty"`
-	Platform *ChartDetailsPlatform `json:"platform,omitempty"`
+type ChartDetailsPlatform struct {
+	Requirements ChartDetailsPlatformRequirements `json:"requirements,omitempty"`
 }
 
-func (c *ChartDetails) GetPlatform() *ChartDetailsPlatform {
+func (c *ChartDetailsPlatform) GetRequirements() ChartDetailsPlatformRequirements {
 	if c == nil {
 		return nil
 	}
 
-	return c.Platform
-}
-
-func (c *ChartDetails) GetName() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Name
-}
-
-func (c *ChartDetails) GetVersion() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Version
+	return c.Requirements
 }

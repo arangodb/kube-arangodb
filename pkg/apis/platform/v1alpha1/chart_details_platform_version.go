@@ -20,32 +20,18 @@
 
 package v1alpha1
 
-type ChartDetails struct {
-	Name     string                `json:"name,omitempty"`
-	Version  string                `json:"version,omitempty"`
-	Platform *ChartDetailsPlatform `json:"platform,omitempty"`
-}
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
-func (c *ChartDetails) GetPlatform() *ChartDetailsPlatform {
+type ChartDetailsPlatformRequirements map[string]ChartDetailsPlatformVersionConstrain
+
+type ChartDetailsPlatformVersionConstrain string
+
+func (c *ChartDetailsPlatformVersionConstrain) AsSemverConstrain() (util.VersionConstrain, error) {
 	if c == nil {
-		return nil
+		return nil, nil
 	}
 
-	return c.Platform
-}
-
-func (c *ChartDetails) GetName() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Name
-}
-
-func (c *ChartDetails) GetVersion() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Version
+	return util.NewVersionConstrain(string(*c))
 }

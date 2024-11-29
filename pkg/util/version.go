@@ -18,34 +18,40 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package util
 
-type ChartDetails struct {
-	Name     string                `json:"name,omitempty"`
-	Version  string                `json:"version,omitempty"`
-	Platform *ChartDetailsPlatform `json:"platform,omitempty"`
+import "github.com/Masterminds/semver/v3"
+
+type VersionConstrain interface {
+	Validate(version string) (bool, error)
 }
 
-func (c *ChartDetails) GetPlatform() *ChartDetailsPlatform {
-	if c == nil {
-		return nil
-	}
-
-	return c.Platform
+type versionConstrain struct {
+	constrain *semver.Constraints
 }
 
-func (c *ChartDetails) GetName() string {
-	if c == nil {
-		return ""
+func (v versionConstrain) Validate(version string) (bool, error) {
+	ver, err := semver.NewVersion(version)
+	if err != nil {
+		return false, err
 	}
 
-	return c.Name
+	if ver.Prerelease() != "" {
+		nver, nerr := ver.SetPrerelease("")
+		if nerr != nil {
+			return false, nerr
+		}
+		ver = &nver
+	}
+
+	return v.constrain.Check(ver), nil
 }
 
-func (c *ChartDetails) GetVersion() string {
-	if c == nil {
-		return ""
+func NewVersionConstrain(constrain string) (VersionConstrain, error) {
+	c, err := semver.NewConstraint(constrain)
+	if err != nil {
+		return nil, err
 	}
 
-	return c.Version
+	return versionConstrain{constrain: c}, nil
 }

@@ -207,6 +207,19 @@ func ValidateList[T any](in []T, validator func(T) error, checks ...func(in []T)
 	return WithErrors(errors...)
 }
 
+// ValidateInterfaceMap Validates object if is not nil with path
+func ValidateInterfaceMap[T ValidateInterface](in map[string]T) error {
+	errors := make([]error, 0, len(in))
+
+	for id := range in {
+		if err := PrefixResourceError(id, in[id].Validate()); err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	return WithErrors(errors...)
+}
+
 // ValidateMap validates all elements on the list
 func ValidateMap[T any](in map[string]T, validator func(string, T) error, checks ...func(in map[string]T) error) error {
 	errors := make([]error, 0, len(in)+len(checks))

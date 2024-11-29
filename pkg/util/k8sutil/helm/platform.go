@@ -18,34 +18,37 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package helm
 
-type ChartDetails struct {
-	Name     string                `json:"name,omitempty"`
-	Version  string                `json:"version,omitempty"`
-	Platform *ChartDetailsPlatform `json:"platform,omitempty"`
-}
+import (
+	"helm.sh/helm/v3/pkg/chart"
 
-func (c *ChartDetails) GetPlatform() *ChartDetailsPlatform {
-	if c == nil {
-		return nil
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
+
+const (
+	PlatformFileName = "platform.yml"
+)
+
+func extractPlatform(chart *chart.Chart) (*Platform, error) {
+	if chart == nil {
+		return nil, nil
 	}
 
-	return c.Platform
-}
+	for _, file := range chart.Files {
+		if file == nil {
+			return nil, nil
+		}
 
-func (c *ChartDetails) GetName() string {
-	if c == nil {
-		return ""
+		if file.Name == PlatformFileName {
+			obj, err := util.JsonOrYamlUnmarshal[Platform](file.Data)
+			if err != nil {
+				return nil, err
+			}
+
+			return &obj, nil
+		}
 	}
 
-	return c.Name
-}
-
-func (c *ChartDetails) GetVersion() string {
-	if c == nil {
-		return ""
-	}
-
-	return c.Version
+	return nil, nil
 }

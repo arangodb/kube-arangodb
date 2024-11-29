@@ -30,6 +30,14 @@ message SchedulerV2ChartInfo {
   string name = 1;
   // Chart Version
   string version = 2;
+  // Keeps the Platform details from the output
+  optional SchedulerV2ChartPlatform platform = 3;
+}
+
+// Chart Platform Details
+message SchedulerV2ChartPlatform {
+  // List of the requirements
+  map<string, string> requirements = 1;
 }
 
 // SchedulerV2 ListCharts Request

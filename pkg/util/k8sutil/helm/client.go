@@ -184,7 +184,7 @@ func (c *client) Install(ctx context.Context, chart Chart, values Values, mods .
 		return nil, err
 	}
 
-	result, err := act.Run(chartData, valuesData)
+	result, err := act.Run(chartData.Chart(), valuesData)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +217,7 @@ func (c *client) Upgrade(ctx context.Context, name string, chart Chart, values V
 	}
 
 	if release != nil {
-		if meta := chartData.Metadata; meta != nil {
+		if meta := chartData.Chart().Metadata; meta != nil {
 			if release.GetChart().GetMetadata().GetVersion() == meta.Version {
 				// We are on the same version
 				if release.Values.Equals(values) {
@@ -230,7 +230,7 @@ func (c *client) Upgrade(ctx context.Context, name string, chart Chart, values V
 		}
 	}
 
-	result, err := act.Run(name, chartData, valuesData)
+	result, err := act.Run(name, chartData.Chart(), valuesData)
 	if err != nil {
 		return nil, err
 	}
