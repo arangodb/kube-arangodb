@@ -1,4 +1,5 @@
 operator:
+  nameOverride: ""
   image: arangodb/kube-arangodb:1.2.43
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []

@@ -18,7 +18,7 @@ Expand the name of the release.
 Expand the name of the operator.
 */}}
 {{- define "kube-arangodb.operatorName" -}}
-{{- printf "arango-%s-operator" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- printf (or .Values.operator.nameOverride (printf "arango-%s-operator" .Release.Name | trunc 63 | trimSuffix "-")) -}}
 {{- end -}}
 
 {{/*
