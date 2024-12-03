@@ -54,6 +54,7 @@ func (c *ConfigTLS) RenderListenerTransportSocket() (*coreAPI.TransportSocket, e
 					},
 				},
 			},
+			AlpnProtocols: []string{"h2,http/1.1"},
 		},
 	})
 	if err != nil {
