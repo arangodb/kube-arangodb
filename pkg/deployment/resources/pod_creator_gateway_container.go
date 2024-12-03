@@ -131,15 +131,6 @@ func (a *ArangoGatewayContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource)
 
 	envs.Add(true, k8sutil.GetLifecycleEnv()...)
 
-	if cm, ok := a.cachedStatus.ConfigMap().V1().GetSimple(GetGatewayConfigMapName(a.input.ArangoMember.GetName())); ok {
-		if v, ok := cm.Data[ConfigMapChecksumKey]; ok {
-			envs.Add(true, core.EnvVar{
-				Name:  MemberConfigChecksumENV,
-				Value: v,
-			})
-		}
-	}
-
 	if !a.spec.Gateway.IsDynamic() {
 		if cm, ok := a.cachedStatus.ConfigMap().V1().GetSimple(GetGatewayConfigMapName(a.input.ApiObject.GetName())); ok {
 			if v, ok := cm.Data[ConfigMapChecksumKey]; ok {
