@@ -297,8 +297,9 @@ func (c Config) RenderFilters() ([]*listenerAPI.Filter, error) {
 	}
 
 	filterConfigType, err := anypb.New(&httpConnectionManagerAPI.HttpConnectionManager{
-		StatPrefix: "ingress_http",
-		CodecType:  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
+		StatPrefix:                 "ingress_http",
+		CodecType:                  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
+		ServerHeaderTransformation: httpConnectionManagerAPI.HttpConnectionManager_PASS_THROUGH,
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
 			RouteConfig: &routeAPI.RouteConfiguration{
 				Name: "default",
