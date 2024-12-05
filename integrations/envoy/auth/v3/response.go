@@ -66,7 +66,7 @@ func (d DeniedResponse) GetCheckResponse() (*pbEnvoyAuthV3.CheckResponse, error)
 		resp.Body = string(z)
 		resp.Headers = append(resp.Headers, &corev3.HeaderValueOption{
 			Header: &corev3.HeaderValue{
-				Key:   "content/type",
+				Key:   "content-type",
 				Value: "application/json",
 			},
 			AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
