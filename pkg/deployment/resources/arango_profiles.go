@@ -153,6 +153,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			Spec:           spec,
 			DeploymentName: apiObject.GetName(),
 		})),
+		gen(constants.ProfilesIntegrationShutdown, constants.ProfilesIntegrationV1, always(sidecar.IntegrationShutdownV1{})),
 		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, always(sidecar.IntegrationEnvoyV3{Spec: spec})),
 		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV2, func() (sidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {

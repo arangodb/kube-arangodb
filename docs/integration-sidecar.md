@@ -87,6 +87,18 @@ metadata:
     integration.profiles.arangodb.com/storage: v2
 ```
 
+#### [Shutdown V1](/docs/integration/shutdown.v1.md)
+
+Shutdown Integration Sidecar
+
+To enable:
+
+```yaml
+metadata:
+  labels:
+    integration.profiles.arangodb.com/shutdown: v1
+```
+
 ### Envs
 
 #### INTEGRATION_API_ADDRESS

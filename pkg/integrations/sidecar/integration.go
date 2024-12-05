@@ -29,14 +29,6 @@ const (
 	ListenPortHealthName = "health"
 )
 
-type Integration interface {
-	Name() []string
-	Envs() ([]core.EnvVar, error)
-	GlobalEnvs() ([]core.EnvVar, error)
-	Volumes() ([]core.Volume, []core.VolumeMount, error)
-	Validate() error
-}
-
 func NewShutdownAnnotations(coreContainers []string) *schedulerApi.ProfileTemplate {
 	pt := schedulerApi.ProfileTemplate{
 		Pod: &schedulerPodApi.Pod{
@@ -57,6 +49,7 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	var envs, gEnvs []core.EnvVar
 	var volumes []core.Volume
 	var volumeMounts []core.VolumeMount
+	var annotations = map[string]string{}
 
 	for _, integration := range integrations {
 		name := strings.Join(integration.Name(), "/")
@@ -70,6 +63,14 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 		} else if len(lvolumes) > 0 || len(lvolumeMounts) > 0 {
 			volumes = append(volumes, lvolumes...)
 			volumeMounts = append(volumeMounts, lvolumeMounts...)
+		}
+
+		if anns, err := getIntegrationAnnotations(integration); err != nil {
+			return nil, errors.Wrapf(err, "Failure in annotations %s", name)
+		} else {
+			for k, v := range anns {
+				annotations[k] = v
+			}
 		}
 
 		if lenvs, err := integration.Envs(); err != nil {
@@ -92,6 +93,9 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	return &schedulerApi.ProfileTemplate{
 		Priority: util.NewType(127),
 		Pod: &schedulerPodApi.Pod{
+			Metadata: &schedulerPodResourcesApi.Metadata{
+				Annotations: annotations,
+			},
 			Volumes: &schedulerPodResourcesApi.Volumes{
 				Volumes: volumes,
 			},
@@ -204,9 +208,6 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 			},
 		},
 	}
-
-	pt.Pod.Metadata.Annotations[fmt.Sprintf("%s/%s", constants.AnnotationShutdownContainer, ContainerName)] = ListenPortHealthName
-	pt.Pod.Metadata.Annotations[constants.AnnotationShutdownManagedContainer] = "true"
 
 	pt.Container.All.Environments = &schedulerContainerResourcesApi.Environments{
 		Env: envs,
