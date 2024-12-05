@@ -1,5 +1,5 @@
 ARG IMAGE=ubuntu:24.04
-ARG ENVOY_IMAGE=envoyproxy/envoy:v1.31.0
+ARG ENVOY_IMAGE=envoyproxy/envoy:v1.32.1
 
 # Build Steps
 
