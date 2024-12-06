@@ -21,11 +21,22 @@
 package sidecar
 
 import (
+	"fmt"
+
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 type IntegrationShutdownV1 struct {
 	Core *Core
+}
+
+func (i IntegrationShutdownV1) Annotations() (map[string]string, error) {
+	return map[string]string{
+		fmt.Sprintf("%s/%s", constants.AnnotationShutdownContainer, ContainerName): ListenPortHealthName,
+		constants.AnnotationShutdownManagedContainer:                               "true",
+	}, nil
 }
 
 func (i IntegrationShutdownV1) Name() []string {

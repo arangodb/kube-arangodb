@@ -28,11 +28,12 @@ const ProfilesDeployment = ProfileGroup + "/deployment"
 const ProfilesIntegrationPrefix = "integration." + ProfileGroup
 
 const (
-	ProfilesIntegrationAuthn   = "authn"
-	ProfilesIntegrationAuthz   = "authz"
-	ProfilesIntegrationSched   = "sched"
-	ProfilesIntegrationEnvoy   = "envoy"
-	ProfilesIntegrationStorage = "storage"
+	ProfilesIntegrationAuthn    = "authn"
+	ProfilesIntegrationAuthz    = "authz"
+	ProfilesIntegrationSched    = "sched"
+	ProfilesIntegrationEnvoy    = "envoy"
+	ProfilesIntegrationStorage  = "storage"
+	ProfilesIntegrationShutdown = "shutdown"
 )
 
 const (
