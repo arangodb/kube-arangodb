@@ -1,0 +1,17 @@
+{{ if .Values.certificate.enabled -}}
+
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ template "kube-arangodb.operatorName" . }}-ca
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  selfSigned: {}
+
+{{- end }}
