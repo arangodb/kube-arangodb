@@ -1,0 +1,24 @@
+{{ if .Values.certificate.enabled -}}
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ template "kube-arangodb.operatorName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  secretName: {{ template "kube-arangodb.operatorName" . }}-cert
+  duration: {{ .Values.certificate.cert.duration }}
+  issuerRef:
+    name: {{ template "kube-arangodb.operatorName" . }}
+  dnsNames:
+    - {{ template "kube-arangodb.operatorName" . }}
+    - {{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}
+    - {{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.svc
+
+{{- end }}

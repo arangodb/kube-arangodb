@@ -110,7 +110,7 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 
 	var cert, key string
 	if cfg.TLSSecretName != "" && cfg.TLSSecretNamespace != "" {
-		// Load TLS certificate from secret
+		serverLogger.Str("addr", cfg.Address).Str("secret", cfg.TLSSecretName).Str("secret-namespace", cfg.TLSSecretNamespace).Info("Using existing TLS Certificate")
 		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(context.Background(), cfg.TLSSecretName, meta.GetOptions{})
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -126,7 +126,7 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 		cert = string(certBytes)
 		key = string(keyBytes)
 	} else {
-		// Secret not specified, create our own TLS certificate
+		serverLogger.Str("addr", cfg.Address).Info("Using SelfSigned TLS Certificate")
 		options := certificates.CreateCertificateOptions{
 			CommonName: cfg.PodName,
 			Hosts:      []string{cfg.PodName, cfg.PodIP},

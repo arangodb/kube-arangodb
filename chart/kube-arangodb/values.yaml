@@ -45,3 +45,10 @@ rbac:
     acs: true
     at: true
     debug: false
+certificate:
+  enabled: false
+  ca:
+    duration: 43800h
+    commonName: "kube-arangodb.operator.cert"
+  cert:
+    duration: 8760h
