@@ -206,6 +206,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				}
 				if tls := target.TLS; tls != nil {
 					dest.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
+					dest.TLS.Insecure = util.NewType(tls.IsInsecure())
 				}
 				switch target.Protocol {
 				case networkingApi.ArangoRouteDestinationProtocolHTTP1:
