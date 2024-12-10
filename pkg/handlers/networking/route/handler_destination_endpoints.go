@@ -122,6 +122,8 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 	target.Type = networkingApi.ArangoRouteStatusTargetEndpointsType
 	target.Protocol = dest.GetProtocol().Get()
 
+	target.Options = extension.Spec.Options.AsStatus()
+
 	// Render Auth Settings
 
 	target.Authentication.Type = dest.GetAuthentication().GetType()

@@ -17,8 +17,8 @@ Example:
 ```yaml
 metadata:
   annotations:
-    core.shutdown.arangodb.com/app: "true"
-    core.shutdown.arangodb.com/app2: "true"
+    core.shutdown.arangodb.com/app: "wait"
+    core.shutdown.arangodb.com/app2: "wait"
     container.shutdown.arangodb.com/app3: port1
 spec:
   containers:

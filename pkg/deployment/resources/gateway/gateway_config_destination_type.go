@@ -25,6 +25,7 @@ import (
 	tlsApi "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -48,11 +49,15 @@ func (c *ConfigDestinationType) Get() ConfigDestinationType {
 	}
 }
 
-func (c *ConfigDestinationType) RenderUpstreamTransportSocket() (*coreAPI.TransportSocket, error) {
+func (c *ConfigDestinationType) RenderUpstreamTransportSocket(config ConfigDestinationTLS) (*coreAPI.TransportSocket, error) {
 	if c.Get() == ConfigDestinationTypeHTTPS {
 		tlsConfig, err := anypb.New(&tlsApi.UpstreamTlsContext{
 			CommonTlsContext: &tlsApi.CommonTlsContext{
-				ValidationContextType: &tlsApi.CommonTlsContext_ValidationContext{},
+				ValidationContextType: &tlsApi.CommonTlsContext_ValidationContext{
+					ValidationContext: &tlsApi.CertificateValidationContext{
+						TrustChainVerification: util.BoolSwitch(!config.IsInsecure(), tlsApi.CertificateValidationContext_VERIFY_TRUST_CHAIN, tlsApi.CertificateValidationContext_ACCEPT_UNTRUSTED),
+					},
+				},
 			},
 		})
 		if err != nil {
