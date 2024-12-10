@@ -50,6 +50,17 @@ func (c *ConfigDestinationProtocol) Get() ConfigDestinationProtocol {
 	}
 }
 
+func (c *ConfigDestinationProtocol) ALPN() ALPNProtocol {
+	switch c.Get() {
+	case ConfigDestinationProtocolHTTP1:
+		return ALPNProtocolHTTP1
+	case ConfigDestinationProtocolHTTP2:
+		return ALPNProtocolHTTP2
+	default:
+		return ALPNProtocolHTTP1
+	}
+}
+
 func (c *ConfigDestinationProtocol) Options() *upstreamHttpApi.HttpProtocolOptions {
 	switch c.Get() {
 	case ConfigDestinationProtocolHTTP1:

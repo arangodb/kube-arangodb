@@ -156,7 +156,7 @@ func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, err
 		},
 	}
 
-	if t, err := c.Type.RenderUpstreamTransportSocket(c.TLS); err != nil {
+	if t, err := c.Type.RenderUpstreamTransportSocket(c.Protocol, c.TLS); err != nil {
 		return nil, err
 	} else {
 		cluster.TransportSocket = t

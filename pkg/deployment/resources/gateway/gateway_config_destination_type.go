@@ -49,10 +49,11 @@ func (c *ConfigDestinationType) Get() ConfigDestinationType {
 	}
 }
 
-func (c *ConfigDestinationType) RenderUpstreamTransportSocket(config ConfigDestinationTLS) (*coreAPI.TransportSocket, error) {
+func (c *ConfigDestinationType) RenderUpstreamTransportSocket(protocol *ConfigDestinationProtocol, config ConfigDestinationTLS) (*coreAPI.TransportSocket, error) {
 	if c.Get() == ConfigDestinationTypeHTTPS {
 		tlsConfig, err := anypb.New(&tlsApi.UpstreamTlsContext{
 			CommonTlsContext: &tlsApi.CommonTlsContext{
+				AlpnProtocols: []string{protocol.ALPN().String()},
 				ValidationContextType: &tlsApi.CommonTlsContext_ValidationContext{
 					ValidationContext: &tlsApi.CertificateValidationContext{
 						TrustChainVerification: util.BoolSwitch(!config.IsInsecure(), tlsApi.CertificateValidationContext_VERIFY_TRUST_CHAIN, tlsApi.CertificateValidationContext_ACCEPT_UNTRUSTED),
