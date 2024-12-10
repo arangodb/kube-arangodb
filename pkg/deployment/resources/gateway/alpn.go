@@ -18,35 +18,27 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package gateway
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import "strings"
 
-type ArangoRouteSpecOptions struct {
-	// Upgrade keeps the connection upgrade options
-	Upgrade ArangoRouteSpecOptionsUpgrade `json:"upgrade,omitempty"`
-}
+type ALPNProtocol int
 
-func (a *ArangoRouteSpecOptions) AsStatus() *ArangoRouteStatusTargetOptions {
-	if a == nil {
-		return nil
+const (
+	ALPNProtocolHTTP1 ALPNProtocol = 1 << iota
+	ALPNProtocolHTTP2 ALPNProtocol = 1 << iota
+)
+
+func (a ALPNProtocol) String() string {
+	elements := make([]string, 0, 2)
+
+	if a&ALPNProtocolHTTP2 == ALPNProtocolHTTP2 {
+		elements = append(elements, "h2")
 	}
 
-	return &ArangoRouteStatusTargetOptions{
-		Upgrade: a.Upgrade.asStatus(),
-	}
-}
-
-func (a *ArangoRouteSpecOptions) Validate() error {
-	if a == nil {
-		a = &ArangoRouteSpecOptions{}
+	if a&ALPNProtocolHTTP1 == ALPNProtocolHTTP1 {
+		elements = append(elements, "http/1.1")
 	}
 
-	if err := shared.WithErrors(
-		shared.ValidateOptionalInterfacePath("upgrade", a.Upgrade),
-	); err != nil {
-		return err
-	}
-
-	return nil
+	return strings.Join(elements, ",")
 }

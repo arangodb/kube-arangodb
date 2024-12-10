@@ -83,6 +83,11 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 				// Container is not yet stopped, skip shutdown
 				return nil
 			}
+		default:
+			if container.State.Terminated == nil {
+				// Container is not yet stopped, skip shutdown
+				return nil
+			}
 		}
 	}
 

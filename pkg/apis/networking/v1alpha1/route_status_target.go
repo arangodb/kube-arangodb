@@ -34,13 +34,16 @@ type ArangoRouteStatusTarget struct {
 	Type ArangoRouteStatusTargetType `json:"type,omitempty"`
 
 	// TLS Keeps target TLS Settings (if not nil, TLS is enabled)
-	TLS *ArangoRouteStatusTargetTLS `json:"TLS,omitempty"`
+	TLS *ArangoRouteStatusTargetTLS `json:"tls,omitempty"`
 
 	// Protocol defines http protocol used for the route
 	Protocol ArangoRouteDestinationProtocol `json:"protocol,omitempty"`
 
 	// Authentication specifies the authentication details
 	Authentication ArangoRouteStatusTargetAuthentication `json:"authentication,omitempty"`
+
+	// Options defines connection upgrade options
+	Options *ArangoRouteStatusTargetOptions `json:"options,omitempty"`
 
 	// Path specifies request path override
 	Path string `json:"path,omitempty"`
@@ -70,5 +73,5 @@ func (a *ArangoRouteStatusTarget) Hash() string {
 	if a == nil {
 		return ""
 	}
-	return util.SHA256FromStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Path, a.Authentication.Hash())
+	return util.SHA256FromStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Protocol.String(), a.Path, a.Authentication.Hash(), a.Options.Hash())
 }

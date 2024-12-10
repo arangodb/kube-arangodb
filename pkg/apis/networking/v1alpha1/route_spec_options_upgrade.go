@@ -20,12 +20,25 @@
 
 package v1alpha1
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import (
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 type ArangoRouteSpecOptionsUpgrade []ArangoRouteSpecOptionUpgrade
 
 func (a ArangoRouteSpecOptionsUpgrade) Validate() error {
 	return shared.ValidateInterfaceList(a)
+}
+
+func (a ArangoRouteSpecOptionsUpgrade) asStatus() ArangoRouteStatusTargetOptionsUpgrade {
+	if len(a) == 0 {
+		return nil
+	}
+
+	return util.FormatList(a, func(a ArangoRouteSpecOptionUpgrade) ArangoRouteStatusTargetOptionUpgrade {
+		return a.asStatus()
+	})
 }
 
 type ArangoRouteSpecOptionUpgrade struct {
@@ -35,6 +48,13 @@ type ArangoRouteSpecOptionUpgrade struct {
 
 	// Enabled defines if upgrade option is enabled
 	Enabled *bool `json:"enabled,omitempty"`
+}
+
+func (a ArangoRouteSpecOptionUpgrade) asStatus() ArangoRouteStatusTargetOptionUpgrade {
+	return ArangoRouteStatusTargetOptionUpgrade{
+		Type:    a.Type,
+		Enabled: util.NewType(util.WithDefault(a.Enabled)),
+	}
 }
 
 func (a ArangoRouteSpecOptionUpgrade) Validate() error {

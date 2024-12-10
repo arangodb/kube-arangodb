@@ -18,35 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package gateway
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-
-type ArangoRouteSpecOptions struct {
-	// Upgrade keeps the connection upgrade options
-	Upgrade ArangoRouteSpecOptionsUpgrade `json:"upgrade,omitempty"`
+type ConfigDestinationTLS struct {
+	Insecure *bool `json:"insecure,omitempty"`
 }
 
-func (a *ArangoRouteSpecOptions) AsStatus() *ArangoRouteStatusTargetOptions {
-	if a == nil {
-		return nil
-	}
-
-	return &ArangoRouteStatusTargetOptions{
-		Upgrade: a.Upgrade.asStatus(),
-	}
-}
-
-func (a *ArangoRouteSpecOptions) Validate() error {
-	if a == nil {
-		a = &ArangoRouteSpecOptions{}
-	}
-
-	if err := shared.WithErrors(
-		shared.ValidateOptionalInterfacePath("upgrade", a.Upgrade),
-	); err != nil {
-		return err
-	}
-
+func (c *ConfigDestinationTLS) Validate() error {
 	return nil
+}
+
+func (c *ConfigDestinationTLS) IsInsecure() bool {
+	if c == nil || c.Insecure == nil {
+		return false
+	}
+
+	return *c.Insecure
 }

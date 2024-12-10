@@ -18,35 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package gateway
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import (
+	"testing"
 
-type ArangoRouteSpecOptions struct {
-	// Upgrade keeps the connection upgrade options
-	Upgrade ArangoRouteSpecOptionsUpgrade `json:"upgrade,omitempty"`
-}
+	"github.com/stretchr/testify/require"
+)
 
-func (a *ArangoRouteSpecOptions) AsStatus() *ArangoRouteStatusTargetOptions {
-	if a == nil {
-		return nil
-	}
-
-	return &ArangoRouteStatusTargetOptions{
-		Upgrade: a.Upgrade.asStatus(),
-	}
-}
-
-func (a *ArangoRouteSpecOptions) Validate() error {
-	if a == nil {
-		a = &ArangoRouteSpecOptions{}
-	}
-
-	if err := shared.WithErrors(
-		shared.ValidateOptionalInterfacePath("upgrade", a.Upgrade),
-	); err != nil {
-		return err
-	}
-
-	return nil
+func Test_ALPN(t *testing.T) {
+	require.Equal(t, "", ALPNProtocol(0).String())
+	require.Equal(t, "http/1.1", ALPNProtocolHTTP1.String())
+	require.Equal(t, "h2", ALPNProtocolHTTP2.String())
+	require.Equal(t, "h2,http/1.1", (ALPNProtocolHTTP1 | ALPNProtocolHTTP2).String())
+	require.Equal(t, "h2,http/1.1", (ALPNProtocolHTTP2 | ALPNProtocolHTTP1).String())
 }

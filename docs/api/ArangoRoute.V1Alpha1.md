@@ -163,7 +163,7 @@ Insecure allows Insecure traffic
 
 ### .spec.options.upgrade\[int\].enabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_options_upgrade.go#L37)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_options_upgrade.go#L50)</sup>
 
 Enabled defines if upgrade option is enabled
 
@@ -171,7 +171,7 @@ Enabled defines if upgrade option is enabled
 
 ### .spec.options.upgrade\[int\].type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_options_upgrade.go#L34)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_options_upgrade.go#L47)</sup>
 
 Type defines type of the Upgrade
 
@@ -252,9 +252,28 @@ Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ***
 
+### .status.target.options.upgrade\[int\].enabled
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target_options_upgrade.go#L43)</sup>
+
+Enabled defines if upgrade option is enabled
+
+***
+
+### .status.target.options.upgrade\[int\].type
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target_options_upgrade.go#L40)</sup>
+
+Type defines type of the Upgrade
+
+Possible Values: 
+* `"websocket"` (default) - HTTP WebSocket Upgrade type
+
+***
+
 ### .status.target.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L46)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L49)</sup>
 
 Path specifies request path override
 
@@ -268,7 +287,7 @@ Protocol defines http protocol used for the route
 
 ***
 
-### .status.target.TLS.insecure
+### .status.target.tls.insecure
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target_tls.go#L27)</sup>
 

@@ -206,6 +206,21 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				}
 				if tls := target.TLS; tls != nil {
 					dest.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
+					dest.TLS.Insecure = util.NewType(tls.IsInsecure())
+				}
+				switch target.Protocol {
+				case networkingApi.ArangoRouteDestinationProtocolHTTP1:
+					dest.Protocol = util.NewType(gateway.ConfigDestinationProtocolHTTP1)
+				case networkingApi.ArangoRouteDestinationProtocolHTTP2:
+					dest.Protocol = util.NewType(gateway.ConfigDestinationProtocolHTTP2)
+				}
+				if opts := target.Options; opts != nil {
+					for _, upgrade := range opts.Upgrade {
+						dest.UpgradeConfigs = append(dest.UpgradeConfigs, gateway.ConfigDestinationUpgrade{
+							Type:    string(upgrade.Type),
+							Enabled: util.NewType(util.WithDefault(upgrade.Enabled)),
+						})
+					}
 				}
 				dest.Path = util.NewType(target.Path)
 				dest.AuthExtension = &gateway.ConfigAuthZExtension{

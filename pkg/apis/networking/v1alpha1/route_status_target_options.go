@@ -12,7 +12,7 @@
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// See the License for the Statusific language governing permissions and
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
@@ -20,33 +20,17 @@
 
 package v1alpha1
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import "github.com/arangodb/kube-arangodb/pkg/util"
 
-type ArangoRouteSpecOptions struct {
+type ArangoRouteStatusTargetOptions struct {
 	// Upgrade keeps the connection upgrade options
-	Upgrade ArangoRouteSpecOptionsUpgrade `json:"upgrade,omitempty"`
+	Upgrade ArangoRouteStatusTargetOptionsUpgrade `json:"upgrade,omitempty"`
 }
 
-func (a *ArangoRouteSpecOptions) AsStatus() *ArangoRouteStatusTargetOptions {
+func (a *ArangoRouteStatusTargetOptions) Hash() string {
 	if a == nil {
-		return nil
+		return ""
 	}
 
-	return &ArangoRouteStatusTargetOptions{
-		Upgrade: a.Upgrade.asStatus(),
-	}
-}
-
-func (a *ArangoRouteSpecOptions) Validate() error {
-	if a == nil {
-		a = &ArangoRouteSpecOptions{}
-	}
-
-	if err := shared.WithErrors(
-		shared.ValidateOptionalInterfacePath("upgrade", a.Upgrade),
-	); err != nil {
-		return err
-	}
-
-	return nil
+	return util.SHA256FromStringArray(a.Upgrade.Hash())
 }

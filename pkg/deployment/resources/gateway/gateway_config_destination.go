@@ -68,6 +68,8 @@ type ConfigDestination struct {
 	AuthExtension *ConfigAuthZExtension `json:"authExtension,omitempty"`
 
 	UpgradeConfigs ConfigDestinationsUpgrade `json:"upgradeConfigs,omitempty"`
+
+	TLS ConfigDestinationTLS `json:"tls,omitempty"`
 }
 
 func (c *ConfigDestination) Validate() error {
@@ -78,6 +80,7 @@ func (c *ConfigDestination) Validate() error {
 		shared.PrefixResourceError("targets", c.Targets.Validate()),
 		shared.PrefixResourceError("type", c.Type.Validate()),
 		shared.PrefixResourceError("protocol", c.Protocol.Validate()),
+		shared.PrefixResourceError("tls", c.TLS.Validate()),
 		shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
 		shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
 		shared.PrefixResourceError("upgradeConfigs", c.UpgradeConfigs.Validate()),
@@ -153,7 +156,7 @@ func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, err
 		},
 	}
 
-	if t, err := c.Type.RenderUpstreamTransportSocket(); err != nil {
+	if t, err := c.Type.RenderUpstreamTransportSocket(c.Protocol, c.TLS); err != nil {
 		return nil, err
 	} else {
 		cluster.TransportSocket = t
