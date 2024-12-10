@@ -73,5 +73,5 @@ func (a *ArangoRouteStatusTarget) Hash() string {
 	if a == nil {
 		return ""
 	}
-	return util.SHA256FromStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Path, a.Authentication.Hash(), a.Options.Hash())
+	return util.SHA256FromStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Protocol.String(), a.Path, a.Authentication.Hash(), a.Options.Hash())
 }
