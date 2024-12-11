@@ -21,30 +21,32 @@
 package webhook
 
 import (
+	"context"
+
 	admission "k8s.io/api/admission/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-type CanHandleFunc[T meta.Object] func(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) bool
+type CanHandleFunc[T meta.Object] func(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) bool
 
-type MutateFunc[T meta.Object] func(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) (MutationResponse, error)
+type MutateFunc[T meta.Object] func(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) (MutationResponse, error)
 
-type ValidateFunc[T meta.Object] func(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) (ValidationResponse, error)
+type ValidateFunc[T meta.Object] func(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) (ValidationResponse, error)
 
 type Handler[T meta.Object] interface {
-	CanHandle(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) bool
+	CanHandle(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) bool
 }
 
 type MutationHandler[T meta.Object] interface {
 	Handler[T]
 
-	Mutate(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) (MutationResponse, error)
+	Mutate(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) (MutationResponse, error)
 }
 
 type ValidationHandler[T meta.Object] interface {
 	Handler[T]
 
-	Validate(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) (ValidationResponse, error)
+	Validate(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new T) (ValidationResponse, error)
 }

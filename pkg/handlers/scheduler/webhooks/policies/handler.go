@@ -23,7 +23,6 @@ package policies
 import (
 	"context"
 	"strings"
-	"time"
 
 	admission "k8s.io/api/admission/v1"
 	core "k8s.io/api/core/v1"
@@ -38,25 +37,22 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	kerrors "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/webhook"
 )
 
-func NewPoliciesPodHandler(client kclient.Client, timeout time.Duration) webhook.Handler[*core.Pod] {
+func NewPoliciesPodHandler(client kclient.Client) webhook.Handler[*core.Pod] {
 	return handler{
-		client:  client,
-		timeout: timeout,
+		client: client,
 	}
 }
 
 var _ webhook.MutationHandler[*core.Pod] = handler{}
 
 type handler struct {
-	client  kclient.Client
-	timeout time.Duration
+	client kclient.Client
 }
 
-func (h handler) CanHandle(log logging.Logger, t webhook.AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) bool {
+func (h handler) CanHandle(ctx context.Context, log logging.Logger, t webhook.AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) bool {
 	if request == nil {
 		return false
 	}
@@ -69,21 +65,18 @@ func (h handler) CanHandle(log logging.Logger, t webhook.AdmissionRequestType, r
 		return false
 	}
 
-	_, ok := new.GetLabels()[constants.ProfilesIntegrationPrefix]
+	_, ok := new.GetLabels()[constants.ProfilesDeployment]
 	return ok
 }
 
-func (h handler) Mutate(log logging.Logger, t webhook.AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (webhook.MutationResponse, error) {
-	if !h.CanHandle(log, t, request, old, new) {
+func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (webhook.MutationResponse, error) {
+	if !h.CanHandle(ctx, log, t, request, old, new) {
 		return webhook.MutationResponse{}, errors.Errorf("Object cannot be handled")
 	}
 
-	ctx, c := context.WithTimeout(shutdown.Context(), h.timeout)
-	defer c()
-
 	labels := new.GetLabels()
 
-	v := labels[constants.ProfilesIntegrationPrefix]
+	v := labels[constants.ProfilesDeployment]
 	depl, err := h.client.Arango().DatabaseV1().ArangoDeployments(request.Namespace).Get(ctx, v, meta.GetOptions{})
 	if err != nil {
 		if kerrors.IsNotFound(err) {

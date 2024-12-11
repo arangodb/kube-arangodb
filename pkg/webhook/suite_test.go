@@ -45,9 +45,9 @@ func Test(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	addr := startHTTPServer(t, ctx, newPodAdmission("test", newPodHandler(func(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) bool {
+	addr := startHTTPServer(t, ctx, newPodAdmission("test", newPodHandler(func(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) bool {
 		return true
-	}, nil, func(log logging.Logger, at AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (ValidationResponse, error) {
+	}, nil, func(ctx context.Context, log logging.Logger, at AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (ValidationResponse, error) {
 		require.Nil(t, old)
 		require.NotNil(t, new)
 

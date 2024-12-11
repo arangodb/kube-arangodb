@@ -12,6 +12,31 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
-webhooks: []
+webhooks:
+  - name: "pods.policies.scheduler.arangodb.com"
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - {{ .Release.Namespace }}
+    objectSelector:
+      matchExpressions:
+        - key: profiles.arangodb.com/deployment
+          operator: Exists
+    rules:
+      - apiGroups:   [""]
+        apiVersions: ["v1"]
+        operations:  ["CREATE"]
+        resources:   ["pods"]
+        scope:       "Namespaced"
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ template "kube-arangodb.operatorName" . }}-webhook
+        path: /webhook/core/v1/pods/policies/mutate
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    timeoutSeconds: 5
 
 {{- end }}

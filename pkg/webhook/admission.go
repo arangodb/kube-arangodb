@@ -21,10 +21,12 @@
 package webhook
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	goHttp "net/http"
 	"reflect"
+	"time"
 
 	"github.com/pkg/errors"
 	admission "k8s.io/api/admission/v1"
@@ -33,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 func NewAdmissionHandler[T meta.Object](name, group, version, kind, resource string, handlers ...Handler[T]) Admission {
@@ -131,7 +134,22 @@ func (a admissionImpl[T]) request(t AdmissionRequestType, writer goHttp.Response
 
 	log.Info("Request Received")
 
-	code, data := a.requestWriterJSON(log, t, request)
+	timeout := time.Second
+
+	if request.URL.Query().Has("timeout") {
+		if v, err := time.ParseDuration(request.URL.Query().Get("timeout")); err == nil {
+			if v > 500*time.Millisecond {
+				timeout = v - 200*time.Millisecond
+			} else {
+				timeout = v
+			}
+		}
+	}
+
+	ctx, c := context.WithTimeout(shutdown.Context(), timeout)
+	defer c()
+
+	code, data := a.requestWriterJSON(ctx, log, t, request)
 	writer.WriteHeader(code)
 	if len(data) > 0 {
 		if _, err := util.WriteAll(writer, data); err != nil {
@@ -140,8 +158,8 @@ func (a admissionImpl[T]) request(t AdmissionRequestType, writer goHttp.Response
 	}
 }
 
-func (a admissionImpl[T]) requestWriterJSON(log logging.Logger, t AdmissionRequestType, request *goHttp.Request) (int, []byte) {
-	code, obj, err := a.requestWriter(log, t, request)
+func (a admissionImpl[T]) requestWriterJSON(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *goHttp.Request) (int, []byte) {
+	code, obj, err := a.requestWriter(ctx, log, t, request)
 
 	if err != nil {
 		if herr, ok := http.IsError(err); ok {
@@ -165,7 +183,7 @@ func (a admissionImpl[T]) requestWriterJSON(log logging.Logger, t AdmissionReque
 	return code, data
 }
 
-func (a admissionImpl[T]) requestWriter(log logging.Logger, t AdmissionRequestType, request *goHttp.Request) (int, any, error) {
+func (a admissionImpl[T]) requestWriter(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *goHttp.Request) (int, any, error) {
 	switch t {
 	case AdmissionRequestValidate, AdmissionRequestMutate:
 	default:
@@ -183,14 +201,15 @@ func (a admissionImpl[T]) requestWriter(log logging.Logger, t AdmissionRequestTy
 		return 0, nil, http.WrapError(goHttp.StatusBadRequest, err)
 	}
 
-	resp := a.admissionHandle(log, t, req.Request)
+	resp := a.admissionHandle(ctx, log, t, req.Request)
 
 	return 200, admission.AdmissionReview{
+		TypeMeta: req.TypeMeta,
 		Response: resp,
 	}, nil
 }
 
-func (a admissionImpl[T]) admissionHandle(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest) *admission.AdmissionResponse {
+func (a admissionImpl[T]) admissionHandle(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest) *admission.AdmissionResponse {
 	if request == nil {
 		return &admission.AdmissionResponse{
 			Allowed: false,
@@ -207,7 +226,7 @@ func (a admissionImpl[T]) admissionHandle(log logging.Logger, t AdmissionRequest
 		}
 	}
 
-	resp, err := a.admissionHandleE(log, t, request)
+	resp, err := a.admissionHandleE(ctx, log, t, request)
 	if err != nil {
 		return &admission.AdmissionResponse{
 			UID:     request.UID,
@@ -233,7 +252,7 @@ func (a admissionImpl[T]) admissionHandle(log logging.Logger, t AdmissionRequest
 	return resp
 }
 
-func (a admissionImpl[T]) admissionHandleE(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest) (*admission.AdmissionResponse, error) {
+func (a admissionImpl[T]) admissionHandleE(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest) (*admission.AdmissionResponse, error) {
 	old, err := a.evaluateObject(request.OldObject.Raw)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to parse old object")
@@ -247,9 +266,9 @@ func (a admissionImpl[T]) admissionHandleE(log logging.Logger, t AdmissionReques
 	switch t {
 	case AdmissionRequestValidate:
 		for _, handler := range a.handlers {
-			if handler.CanHandle(log, t, request, old, new) {
+			if handler.CanHandle(ctx, log, t, request, old, new) {
 				if v, ok := handler.(ValidationHandler[T]); ok {
-					result, err := v.Validate(log, t, request, old, new)
+					result, err := v.Validate(ctx, log, t, request, old, new)
 					if err != nil {
 						return nil, err
 					}
@@ -257,16 +276,19 @@ func (a admissionImpl[T]) admissionHandleE(log logging.Logger, t AdmissionReques
 					return result.AsResponse()
 				}
 
-				return &admission.AdmissionResponse{Allowed: true}, nil
+				return ValidationResponse{
+					Allowed: false,
+					Message: "Request not handled",
+				}.AsResponse()
 			}
 		}
 
 		return &admission.AdmissionResponse{Allowed: true}, nil
 	case AdmissionRequestMutate:
 		for _, handler := range a.handlers {
-			if handler.CanHandle(log, t, request, old, new) {
+			if handler.CanHandle(ctx, log, t, request, old, new) {
 				if v, ok := handler.(MutationHandler[T]); ok {
-					result, err := v.Mutate(log, t, request, old, new)
+					result, err := v.Mutate(ctx, log, t, request, old, new)
 					if err != nil {
 						return nil, err
 					}
@@ -274,7 +296,10 @@ func (a admissionImpl[T]) admissionHandleE(log logging.Logger, t AdmissionReques
 					return result.AsResponse()
 				}
 
-				return &admission.AdmissionResponse{Allowed: true}, nil
+				return ValidationResponse{
+					Allowed: false,
+					Message: "Request not handled",
+				}.AsResponse()
 			}
 		}
 

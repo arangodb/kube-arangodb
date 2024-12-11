@@ -12,31 +12,6 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
-webhooks:
-  - name: "policies.pods.scheduler.arangodb.com"
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: In
-          values:
-            - {{ .Release.Namespace }}
-    objectSelector:
-      matchExpressions:
-        - key: profiles.arangodb.com/deployment
-          operator: Exists
-    rules:
-      - apiGroups:   [""]
-        apiVersions: ["v1"]
-        operations:  ["CREATE"]
-        resources:   ["pods"]
-        scope:       "Namespaced"
-    clientConfig:
-      service:
-        namespace: {{ .Release.Namespace }}
-        name: {{ template "kube-arangodb.operatorName" . }}-webhook
-        path: /webhooks/core/v1/pods/policy/validation
-    admissionReviewVersions: ["v1"]
-    sideEffects: None
-    timeoutSeconds: 5
+webhooks: []
 
 {{- end }}

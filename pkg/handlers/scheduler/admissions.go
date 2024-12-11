@@ -21,8 +21,6 @@
 package scheduler
 
 import (
-	"time"
-
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/webhooks/policies"
@@ -39,7 +37,7 @@ func WebhookAdmissions(client kclient.Client) webhook.Admissions {
 			constants.PodVersionV1,
 			constants.PodKind,
 			constants.PodResource,
-			policies.NewPoliciesPodHandler(client, 5*time.Second),
+			policies.NewPoliciesPodHandler(client),
 		),
 	}
 }

@@ -21,6 +21,7 @@
 package webhook
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -85,26 +86,26 @@ type podHandler struct {
 	validate ValidateFunc[*core.Pod]
 }
 
-func (p podHandler) Validate(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (ValidationResponse, error) {
+func (p podHandler) Validate(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (ValidationResponse, error) {
 	if p.validate == nil {
 		return ValidationResponse{}, nil
 	}
 
-	return p.validate(log, t, request, old, new)
+	return p.validate(ctx, log, t, request, old, new)
 }
 
-func (p podHandler) Mutate(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (MutationResponse, error) {
+func (p podHandler) Mutate(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (MutationResponse, error) {
 	if p.mutate == nil {
 		return MutationResponse{}, nil
 	}
 
-	return p.mutate(log, t, request, old, new)
+	return p.mutate(ctx, log, t, request, old, new)
 }
 
-func (p podHandler) CanHandle(log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) bool {
+func (p podHandler) CanHandle(ctx context.Context, log logging.Logger, t AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) bool {
 	if p.can == nil {
 		return false
 	}
 
-	return p.can(log, t, request, old, new)
+	return p.can(ctx, log, t, request, old, new)
 }
