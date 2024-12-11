@@ -22,6 +22,7 @@ package webhook
 
 import (
 	"encoding/json"
+	"fmt"
 
 	admission "k8s.io/api/admission/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +30,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+func NewValidationResponse(allowed bool, msg string, args ...any) ValidationResponse {
+	return ValidationResponse{
+		Allowed: allowed,
+		Message: fmt.Sprintf(msg, args...),
+	}
+}
 
 type ValidationResponse struct {
 	Allowed  bool

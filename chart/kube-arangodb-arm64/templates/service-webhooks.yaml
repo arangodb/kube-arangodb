@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "kube-arangodb.operatorName" . }}-webhooks
+  name: {{ template "kube-arangodb.operatorName" . }}-webhook
   namespace: {{ .Release.Namespace }}
 {{- if .Values.operator.annotations }}
   annotations:
@@ -18,7 +18,7 @@ metadata:
 spec:
   ports:
     - name: webhooks
-      port: 8828
+      port: 443
       protocol: TCP
       targetPort: webhooks
   selector:
@@ -26,7 +26,6 @@ spec:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
-    role: webhooks
   type: ClusterIP
 
 {{- end }}

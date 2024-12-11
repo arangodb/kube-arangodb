@@ -198,11 +198,11 @@ spec:
                   image: {{ .Values.operator.image }}
                   args:
                     - webhook
-{{- if .Values.webhooks.args }}
 {{- if .Values.certificate.enabled }}
-                    - --ssl.secret.name={{ template "kube-arangodb.operatorName" . }}-cert
+                    - --ssl.secret.name={{ template "kube-arangodb.operatorName" . }}-webhook-cert
                     - --ssl.secret.namespace={{ .Release.Namespace }}
 {{- end -}}
+{{- if .Values.webhooks.args }}
 {{- range .Values.webhooks.args }}
                     - {{ . | quote }}
 {{- end }}

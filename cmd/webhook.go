@@ -27,6 +27,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -73,7 +74,11 @@ func cmdWebhookCheckE() error {
 		return errors.Errorf("Unable to get client")
 	}
 
-	server, err := webhookServer(ctx, client)
+	var admissions webhook.Admissions
+
+	admissions = append(admissions, scheduler.WebhookAdmissions(client)...)
+
+	server, err := webhookServer(ctx, client, admissions...)
 	if err != nil {
 		return err
 	}
@@ -91,7 +96,7 @@ func webhookServer(ctx context.Context, client kclient.Client, admissions ...web
 				return util.NewSecretTLSConfig(client.Kubernetes().CoreV1().Secrets(webhookInput.secretNamespace), webhookInput.secretName)
 			}
 
-			return util.EmptyTLSConfig
+			return util.NewSelfSignedTLSConfig("operator")
 		}),
 		http.WithServeMux(
 			func(in *goHttp.ServeMux) {
