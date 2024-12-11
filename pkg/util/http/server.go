@@ -21,140 +21,147 @@
 package http
 
 import (
+	"context"
 	"crypto/tls"
+	"net"
 	"net/http"
-	"sync"
+	"time"
 
-	"github.com/arangodb-helper/go-certificates"
-
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func NewServer(server *http.Server) PlainServer {
-	return &plainServer{server: server}
+func DefaultHTTPServerSettings(in *http.Server, _ context.Context) error {
+	in.ReadTimeout = time.Second * 30
+	in.ReadHeaderTimeout = time.Second * 15
+	in.WriteTimeout = time.Second * 30
+	in.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
+
+	return nil
 }
 
-type ServerRunner interface {
-	Stop()
-	Wait() error
+func WithTLSConfigFetcherGen(gen func() util.TLSConfigFetcher) util.ModEP1[http.Server, context.Context] {
+	return WithTLSConfigFetcher(gen())
 }
 
-type PlainServer interface {
-	Server
-	WithSSL(key, cert string) (Server, error)
-	WithKeyfile(keyfile string) (Server, error)
+func WithTLSConfigFetcher(fetcher util.TLSConfigFetcher) util.ModEP1[http.Server, context.Context] {
+	return func(in *http.Server, p1 context.Context) error {
+		v, err := fetcher.Eval(p1)
+		if err != nil {
+			return err
+		}
+
+		in.TLSConfig = v
+
+		return nil
+	}
+}
+
+func WithServeMux(mods ...util.Mod[http.ServeMux]) util.ModEP1[http.Server, context.Context] {
+	return func(in *http.Server, p1 context.Context) error {
+		mux := http.NewServeMux()
+
+		util.ApplyMods(mux, mods...)
+
+		in.Handler = mux
+
+		return nil
+	}
+}
+
+func NewServer(ctx context.Context, mods ...util.ModEP1[http.Server, context.Context]) (Server, error) {
+	var sv http.Server
+
+	if err := util.ApplyModsEP1(&sv, ctx, mods...); err != nil {
+		return nil, err
+	}
+
+	return &server{
+		server: &sv,
+	}, nil
 }
 
 type Server interface {
-	Start() (ServerRunner, error)
+	AsyncAddr(ctx context.Context, addr string) func() error
+	Async(ctx context.Context, ln net.Listener) func() error
+
+	StartAddr(ctx context.Context, addr string) error
+	Start(ctx context.Context, ln net.Listener) error
 }
 
-var _ Server = &tlsServer{}
-
-type tlsServer struct {
+type server struct {
 	server *http.Server
 }
 
-func (t *tlsServer) Start() (ServerRunner, error) {
-	i := serverRunner{
-		stopCh: make(chan struct{}),
-		doneCh: make(chan struct{}),
-	}
+func (s *server) AsyncAddr(ctx context.Context, addr string) func() error {
+	var err error
 
-	go i.run(t.server, func(s *http.Server) error {
-		return s.ListenAndServeTLS("", "")
-	})
+	done := make(chan any)
 
-	return &i, nil
-}
-
-var _ PlainServer = &plainServer{}
-
-type plainServer struct {
-	server *http.Server
-}
-
-func (p *plainServer) WithKeyfile(keyfile string) (Server, error) {
-	certificate, err := certificates.LoadKeyFile(keyfile)
-	if err != nil {
-		return nil, err
-	}
-
-	s := p.server
-	s.TLSConfig = &tls.Config{
-		Certificates: []tls.Certificate{certificate},
-	}
-
-	return &tlsServer{server: s}, nil
-}
-
-func (p *plainServer) Start() (ServerRunner, error) {
-	i := serverRunner{
-		stopCh: make(chan struct{}),
-		doneCh: make(chan struct{}),
-	}
-
-	go i.run(p.server, func(s *http.Server) error {
-		return s.ListenAndServe()
-	})
-
-	return &i, nil
-}
-
-func (p *plainServer) WithSSL(key, cert string) (Server, error) {
-	certificate, err := tls.LoadX509KeyPair(cert, key)
-	if err != nil {
-		return nil, err
-	}
-
-	s := p.server
-	s.TLSConfig = &tls.Config{
-		Certificates: []tls.Certificate{certificate},
-	}
-
-	return &tlsServer{server: s}, nil
-}
-
-var _ ServerRunner = &serverRunner{}
-
-type serverRunner struct {
-	lock sync.Mutex
-
-	stopCh chan struct{}
-	doneCh chan struct{}
-	err    error
-}
-
-func (s *serverRunner) run(server *http.Server, f func(s *http.Server) error) {
 	go func() {
-		defer close(s.doneCh)
-		if err := f(server); err != nil {
+		defer close(done)
+
+		err = s.StartAddr(ctx, addr)
+	}()
+
+	return func() error {
+		<-done
+
+		return err
+	}
+}
+
+func (s *server) Async(ctx context.Context, ln net.Listener) func() error {
+	var err error
+
+	done := make(chan any)
+
+	go func() {
+		defer close(done)
+
+		err = s.Start(ctx, ln)
+	}()
+
+	return func() error {
+		<-done
+
+		return err
+	}
+}
+
+func (s *server) StartAddr(ctx context.Context, addr string) error {
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+
+	return s.Start(ctx, ln)
+}
+
+func (s *server) Start(ctx context.Context, ln net.Listener) error {
+	go func() {
+		<-ctx.Done()
+
+		if err := s.server.Close(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
-				s.err = err
+				logger.Err(err).Warn("Unable to close server")
 			}
 		}
 	}()
 
-	<-s.stopCh
-
-	server.Close()
-
-	<-s.doneCh
-}
-
-func (s *serverRunner) Stop() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	select {
-	case <-s.stopCh:
-		return
-	default:
-		close(s.stopCh)
+	if s.server.TLSConfig == nil {
+		if err := s.server.Serve(ln); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				return err
+			}
+		}
+	} else {
+		if err := s.server.ServeTLS(ln, "", ""); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				return err
+			}
+		}
 	}
-}
 
-func (s *serverRunner) Wait() error {
-	<-s.doneCh
-
-	return s.err
+	return nil
 }

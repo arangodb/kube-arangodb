@@ -44,6 +44,16 @@ rbac:
     acs: true
     at: true
     debug: false
+webhooks:
+  enabled: false
+  args: []
+  resources:
+    limits:
+      cpu: 1
+      memory: 128Mi
+    requests:
+      cpu: 250m
+      memory: 128Mi
 certificate:
   enabled: false
   ca:

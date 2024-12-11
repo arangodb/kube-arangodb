@@ -1,0 +1,32 @@
+{{ if .Values.webhooks.enabled }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "kube-arangodb.operatorName" . }}-webhooks
+  namespace: {{ .Release.Namespace }}
+{{- if .Values.operator.annotations }}
+  annotations:
+{{ toYaml .Values.operator.annotations | indent 8 }}
+{{- end }}
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  ports:
+    - name: webhooks
+      port: 8828
+      protocol: TCP
+      targetPort: webhooks
+  selector:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+    role: webhooks
+  type: ClusterIP
+
+{{- end }}

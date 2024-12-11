@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package exporter
+package logging
 
-type Authentication func() (string, error)
+import (
+	"net/http"
 
-// CreateArangodJwtAuthorizationHeader calculates a JWT authorization header, for authorization
-// of a request to an arangod server, based on the given secret.
-// If the secret is empty, nothing is done.
-func CreateArangodJwtAuthorizationHeader(jwt string) (string, error) {
-	return "bearer " + jwt, nil
+	"github.com/rs/zerolog"
+)
+
+func HTTPRequestWrap(request *http.Request) Wrap {
+	return func(in *zerolog.Event) *zerolog.Event {
+		if request == nil {
+			return in
+		}
+
+		in = in.Str("method", request.Method)
+		in = in.Str("url", request.RequestURI)
+
+		return in
+	}
 }

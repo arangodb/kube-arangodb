@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,11 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package exporter
+package cmd
 
-type Authentication func() (string, error)
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-// CreateArangodJwtAuthorizationHeader calculates a JWT authorization header, for authorization
-// of a request to an arangod server, based on the given secret.
-// If the secret is empty, nothing is done.
-func CreateArangodJwtAuthorizationHeader(jwt string) (string, error) {
-	return "bearer " + jwt, nil
-}
+var (
+	logger        = logging.Global().RegisterAndGetLogger("root", logging.Info)
+	eventRecorder = logging.Global().RegisterAndGetLogger("root-event-recorder", logging.Info)
+)

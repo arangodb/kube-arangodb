@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package exporter
+package tests
 
-type Authentication func() (string, error)
+import (
+	"fmt"
+	"net"
+	"time"
+)
 
-// CreateArangodJwtAuthorizationHeader calculates a JWT authorization header, for authorization
-// of a request to an arangod server, based on the given secret.
-// If the secret is empty, nothing is done.
-func CreateArangodJwtAuthorizationHeader(jwt string) (string, error) {
-	return "bearer " + jwt, nil
+func WaitForTCPPort(addr string, port int) Timeout {
+	return func() error {
+		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", addr, port), time.Second)
+		if err != nil {
+			return nil
+		}
+
+		if err := conn.Close(); err != nil {
+			return nil
+		}
+
+		return Interrupt()
+	}
 }

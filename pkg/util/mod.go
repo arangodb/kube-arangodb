@@ -22,16 +22,6 @@ package util
 
 func emptyMod[T any](_ *T) {}
 
-func WithMods[T any](mods ...Mod[T]) Mod[T] {
-	return func(in *T) {
-		for _, m := range mods {
-			if m != nil {
-				m(in)
-			}
-		}
-	}
-}
-
 type Mod[T any] func(in *T)
 
 func (m Mod[T]) Optional() Mod[T] {
@@ -46,4 +36,52 @@ func ApplyMods[T any](in *T, mods ...Mod[T]) {
 	for _, mod := range mods {
 		mod(in)
 	}
+}
+
+func emptyModE[T any](_ *T) error {
+	return nil
+}
+
+type ModE[T any] func(in *T) error
+
+func (m ModE[T]) Optional() ModE[T] {
+	if m == nil {
+		return emptyModE[T]
+	}
+
+	return m
+}
+
+func ApplyModsE[T any](in *T, mods ...ModE[T]) error {
+	for _, mod := range mods {
+		if err := mod(in); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func emptyModEP1[T, P1 any](_ *T, _ P1) error {
+	return nil
+}
+
+type ModEP1[T, P1 any] func(in *T, p1 P1) error
+
+func (m ModEP1[T, P1]) Optional() ModEP1[T, P1] {
+	if m == nil {
+		return emptyModEP1[T, P1]
+	}
+
+	return m
+}
+
+func ApplyModsEP1[T, P1 any](in *T, p1 P1, mods ...ModEP1[T, P1]) error {
+	for _, mod := range mods {
+		if err := mod(in, p1); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
