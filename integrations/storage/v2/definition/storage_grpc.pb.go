@@ -46,7 +46,7 @@ func NewStorageV2Client(cc grpc.ClientConnInterface) StorageV2Client {
 
 func (c *storageV2Client) Init(ctx context.Context, in *StorageV2InitRequest, opts ...grpc.CallOption) (*StorageV2InitResponse, error) {
 	out := new(StorageV2InitResponse)
-	err := c.cc.Invoke(ctx, "/shutdown.StorageV2/Init", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage.StorageV2/Init", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (c *storageV2Client) Init(ctx context.Context, in *StorageV2InitRequest, op
 }
 
 func (c *storageV2Client) ReadObject(ctx context.Context, in *StorageV2ReadObjectRequest, opts ...grpc.CallOption) (StorageV2_ReadObjectClient, error) {
-	stream, err := c.cc.NewStream(ctx, &StorageV2_ServiceDesc.Streams[0], "/shutdown.StorageV2/ReadObject", opts...)
+	stream, err := c.cc.NewStream(ctx, &StorageV2_ServiceDesc.Streams[0], "/storage.StorageV2/ReadObject", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (x *storageV2ReadObjectClient) Recv() (*StorageV2ReadObjectResponse, error)
 }
 
 func (c *storageV2Client) WriteObject(ctx context.Context, opts ...grpc.CallOption) (StorageV2_WriteObjectClient, error) {
-	stream, err := c.cc.NewStream(ctx, &StorageV2_ServiceDesc.Streams[1], "/shutdown.StorageV2/WriteObject", opts...)
+	stream, err := c.cc.NewStream(ctx, &StorageV2_ServiceDesc.Streams[1], "/storage.StorageV2/WriteObject", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (x *storageV2WriteObjectClient) CloseAndRecv() (*StorageV2WriteObjectRespon
 
 func (c *storageV2Client) HeadObject(ctx context.Context, in *StorageV2HeadObjectRequest, opts ...grpc.CallOption) (*StorageV2HeadObjectResponse, error) {
 	out := new(StorageV2HeadObjectResponse)
-	err := c.cc.Invoke(ctx, "/shutdown.StorageV2/HeadObject", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage.StorageV2/HeadObject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (c *storageV2Client) HeadObject(ctx context.Context, in *StorageV2HeadObjec
 
 func (c *storageV2Client) DeleteObject(ctx context.Context, in *StorageV2DeleteObjectRequest, opts ...grpc.CallOption) (*StorageV2DeleteObjectResponse, error) {
 	out := new(StorageV2DeleteObjectResponse)
-	err := c.cc.Invoke(ctx, "/shutdown.StorageV2/DeleteObject", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/storage.StorageV2/DeleteObject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (c *storageV2Client) DeleteObject(ctx context.Context, in *StorageV2DeleteO
 }
 
 func (c *storageV2Client) ListObjects(ctx context.Context, in *StorageV2ListObjectsRequest, opts ...grpc.CallOption) (StorageV2_ListObjectsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &StorageV2_ServiceDesc.Streams[2], "/shutdown.StorageV2/ListObjects", opts...)
+	stream, err := c.cc.NewStream(ctx, &StorageV2_ServiceDesc.Streams[2], "/storage.StorageV2/ListObjects", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +233,7 @@ func _StorageV2_Init_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/shutdown.StorageV2/Init",
+		FullMethod: "/storage.StorageV2/Init",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StorageV2Server).Init(ctx, req.(*StorageV2InitRequest))
@@ -298,7 +298,7 @@ func _StorageV2_HeadObject_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/shutdown.StorageV2/HeadObject",
+		FullMethod: "/storage.StorageV2/HeadObject",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StorageV2Server).HeadObject(ctx, req.(*StorageV2HeadObjectRequest))
@@ -316,7 +316,7 @@ func _StorageV2_DeleteObject_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/shutdown.StorageV2/DeleteObject",
+		FullMethod: "/storage.StorageV2/DeleteObject",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StorageV2Server).DeleteObject(ctx, req.(*StorageV2DeleteObjectRequest))
@@ -349,7 +349,7 @@ func (x *storageV2ListObjectsServer) Send(m *StorageV2ListObjectsResponse) error
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var StorageV2_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "shutdown.StorageV2",
+	ServiceName: "storage.StorageV2",
 	HandlerType: (*StorageV2Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{
