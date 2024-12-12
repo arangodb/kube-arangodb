@@ -122,6 +122,18 @@ func FormatList[A, B any](in []A, format func(A) B) []B {
 	return r
 }
 
+func FilterList[A any](in []A, filter func(A) bool) []A {
+	r := make([]A, 0, len(in))
+
+	for _, el := range in {
+		if filter(el) {
+			r = append(r, el)
+		}
+	}
+
+	return r
+}
+
 func ContainsList[A comparable](in []A, item A) bool {
 	for _, el := range in {
 		if el == item {

@@ -89,7 +89,11 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		}, nil
 	}
 
-	profiles := strings.Split(labels[constants.ProfilesList], ",")
+	profiles := util.FilterList(util.FormatList(strings.Split(labels[constants.ProfilesList], ","), func(s string) string {
+		return strings.TrimSpace(s)
+	}), func(s string) bool {
+		return s != ""
+	})
 
 	calculatedProfiles, profilesChecksum, err := scheduler.Profiles(ctx, h.client.Arango().SchedulerV1beta1().ArangoProfiles(depl.GetNamespace()), labels, profiles...)
 	if err != nil {
