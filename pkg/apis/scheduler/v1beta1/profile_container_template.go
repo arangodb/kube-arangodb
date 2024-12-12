@@ -28,8 +28,10 @@ import (
 )
 
 type ProfileContainerTemplate struct {
+	// Containers applies values per container
 	Containers schedulerContainerApi.Containers `json:"containers,omitempty"`
 
+	// All applies generic values to all Containers
 	All *schedulerContainerApi.Generic `json:"all,omitempty"`
 }
 

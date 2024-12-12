@@ -29,10 +29,14 @@ import (
 )
 
 type ProfileTemplate struct {
+	// Priority defines Priority of the Profile. Higher value means Profile will get applied first.
+	// If Priority across Profiles is same, Profiles are also sorted by name.
 	Priority *int `json:"priority,omitempty"`
 
+	// Pod Template
 	Pod *schedulerPodApi.Pod `json:"pod,omitempty"`
 
+	// Container Template
 	Container *ProfileContainerTemplate `json:"container,omitempty"`
 }
 

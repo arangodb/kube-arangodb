@@ -406,5 +406,8 @@ Links:
 
 ### .spec.template.priority
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/scheduler/v1beta1/profile_template.go#L32)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/scheduler/v1beta1/profile_template.go#L34)</sup>
+
+Priority defines Priority of the Profile. Higher value means Profile will get applied first.
+If Priority across Profiles is same, Profiles are also sorted by name.
 
