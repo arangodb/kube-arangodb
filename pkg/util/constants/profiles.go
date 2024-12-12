@@ -28,7 +28,7 @@ const ProfilesDeployment = ProfileGroup + "/deployment"
 const ProfilesIntegrationPrefix = "integration." + ProfileGroup
 const ProfilesList = ProfileGroup + "/profiles"
 
-const ProfilesAnnotationApplied = ProfileGroup + "/appliad"
+const ProfilesAnnotationApplied = ProfileGroup + "/applied"
 const ProfilesAnnotationChecksum = ProfileGroup + "/checksum"
 const ProfilesAnnotationProfiles = ProfileGroup + "/profiles"
 
