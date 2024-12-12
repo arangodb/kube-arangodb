@@ -112,6 +112,7 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		template.Annotations = map[string]string{}
 	}
 
+	template.Annotations[constants.ProfilesAnnotationApplied] = "true"
 	template.Annotations[constants.ProfilesAnnotationChecksum] = profilesChecksum
 	template.Annotations[constants.ProfilesAnnotationProfiles] = strings.Join(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) string {
 		return a.K
