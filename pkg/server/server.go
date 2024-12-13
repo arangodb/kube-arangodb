@@ -29,13 +29,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jessevdk/go-assets"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	"github.com/arangodb-helper/go-certificates"
-
 	"github.com/arangodb/kube-arangodb/dashboard"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
@@ -108,40 +105,16 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 		TLSNextProto:      make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 
-	var cert, key string
+	var fetcher util.TLSConfigFetcher
 	if cfg.TLSSecretName != "" && cfg.TLSSecretNamespace != "" {
 		serverLogger.Str("addr", cfg.Address).Str("secret", cfg.TLSSecretName).Str("secret-namespace", cfg.TLSSecretNamespace).Info("Using existing TLS Certificate")
-		s, err := cli.Secrets(cfg.TLSSecretNamespace).Get(context.Background(), cfg.TLSSecretName, meta.GetOptions{})
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		certBytes, found := s.Data[core.TLSCertKey]
-		if !found {
-			return nil, errors.WithStack(errors.Errorf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName))
-		}
-		keyBytes, found := s.Data[core.TLSPrivateKeyKey]
-		if !found {
-			return nil, errors.WithStack(errors.Errorf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName))
-		}
-		cert = string(certBytes)
-		key = string(keyBytes)
+		fetcher = util.NewSecretTLSConfig(cli.Secrets(cfg.TLSSecretNamespace), cfg.TLSSecretName)
 	} else {
 		serverLogger.Str("addr", cfg.Address).Info("Using SelfSigned TLS Certificate")
-		options := certificates.CreateCertificateOptions{
-			CommonName: cfg.PodName,
-			Hosts:      []string{cfg.PodName, cfg.PodIP},
-			ValidFrom:  time.Now(),
-			ValidFor:   time.Hour * 24 * 365 * 10,
-			IsCA:       false,
-			ECDSACurve: "P256",
-		}
-		var err error
-		cert, key, err = certificates.CreateCertificate(options, nil)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
+		fetcher = util.NewSelfSignedTLSConfig(cfg.PodName, cfg.PodIP)
 	}
-	tlsConfig, err := createTLSConfig(cert, key)
+
+	tlsConfig, err := fetcher.Eval(context.Background())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -254,19 +227,6 @@ func (s *Server) Run() error {
 		return errors.WithStack(err)
 	}
 	return nil
-}
-
-// createTLSConfig creates a TLS config based on given config
-func createTLSConfig(cert, key string) (*tls.Config, error) {
-	var result *tls.Config
-	c, err := tls.X509KeyPair([]byte(cert), []byte(key))
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	result = &tls.Config{
-		Certificates: []tls.Certificate{c},
-	}
-	return result, nil
 }
 
 func ready(probes ...*probe.ReadyProbe) func(w http.ResponseWriter, r *http.Request) {

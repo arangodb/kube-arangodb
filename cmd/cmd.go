@@ -84,9 +84,6 @@ const (
 )
 
 var (
-	logger        = logging.Global().RegisterAndGetLogger("root", logging.Info)
-	eventRecorder = logging.Global().RegisterAndGetLogger("root-event-recorder", logging.Info)
-
 	cmdMain = cobra.Command{
 		Use: "arangodb_operator",
 		Run: executeMain,

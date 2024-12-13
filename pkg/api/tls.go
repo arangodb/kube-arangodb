@@ -21,70 +21,15 @@
 package api
 
 import (
-	"context"
-	"crypto/tls"
-	"time"
-
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	"github.com/arangodb-helper/go-certificates"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func prepareTLSConfig(cli typedCore.CoreV1Interface, cfg ServerConfig) (*tls.Config, error) {
-	cert, key, err := loadOrSelfSignCertificate(cli, cfg)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	tlsConfig, err := createTLSConfig(cert, key)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return tlsConfig, nil
-}
-
-// loadOrSelfSignCertificate loads TLS certificate from secret or creates a new one
-func loadOrSelfSignCertificate(cli typedCore.CoreV1Interface, cfg ServerConfig) (string, string, error) {
+func prepareTLSConfig(cli typedCore.CoreV1Interface, cfg ServerConfig) util.TLSConfigFetcher {
 	if cfg.TLSSecretName != "" {
-		// Load TLS certificate from secret
-		s, err := cli.Secrets(cfg.Namespace).Get(context.Background(), cfg.TLSSecretName, meta.GetOptions{})
-		if err != nil {
-			return "", "", err
-		}
-		certBytes, found := s.Data[core.TLSCertKey]
-		if !found {
-			return "", "", errors.Errorf("No %s found in secret %s", core.TLSCertKey, cfg.TLSSecretName)
-		}
-		keyBytes, found := s.Data[core.TLSPrivateKeyKey]
-		if !found {
-			return "", "", errors.Errorf("No %s found in secret %s", core.TLSPrivateKeyKey, cfg.TLSSecretName)
-		}
-		return string(certBytes), string(keyBytes), nil
+		return util.NewSecretTLSConfig(cli.Secrets(cfg.Namespace), cfg.TLSSecretName)
 	}
-	// Secret not specified, create our own TLS certificate
-	options := certificates.CreateCertificateOptions{
-		CommonName: cfg.ServerName,
-		Hosts:      append([]string{cfg.ServerName}, cfg.ServerAltNames...),
-		ValidFrom:  time.Now(),
-		ValidFor:   time.Hour * 24 * 365 * 10,
-		IsCA:       false,
-		ECDSACurve: "P256",
-	}
-	return certificates.CreateCertificate(options, nil)
-}
 
-// createTLSConfig creates a TLS config based on given config
-func createTLSConfig(cert, key string) (*tls.Config, error) {
-	var result *tls.Config
-	c, err := tls.X509KeyPair([]byte(cert), []byte(key))
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	result = &tls.Config{
-		Certificates: []tls.Certificate{c},
-	}
-	return result, nil
+	return util.NewSelfSignedTLSConfig(cfg.ServerName, cfg.ServerAltNames...)
 }

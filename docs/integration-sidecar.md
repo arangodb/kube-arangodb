@@ -29,6 +29,20 @@ metadata:
     profiles.arangodb.com/deployment: << deployment name >>
 ```
 
+### Webhooks
+
+When Webhook support is enabled Integration Sidecar is supported in Kubernetes Pod resources.
+
+To inject integration sidecar for specific deployment label needs to be defined:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    profiles.arangodb.com/deployment: << deployment name >>
+```
+
 ### Integrations
 
 To enable integration in specific version, labels needs to be added:

@@ -22,17 +22,16 @@ package cmd
 
 import (
 	"context"
+	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/exporter"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
 var (
@@ -67,23 +66,14 @@ func init() {
 
 func cmdExporterCheck(cmd *cobra.Command, args []string) {
 	if err := cmdExporterCheckE(); err != nil {
-		log.Error().Err(err).Msgf("Fatal")
+		logger.Err(err).Error("Fatal")
 		os.Exit(1)
 	}
 }
 
-func onSigterm(f func()) {
-	sigs := make(chan os.Signal, 1)
-
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		defer f()
-		<-sigs
-	}()
-}
-
 func cmdExporterCheckE() error {
+	ctx := util.CreateSignalContext(context.Background())
+
 	if len(exporterInput.endpoints) < 1 {
 		return errors.Errorf("Requires at least one ArangoDB Endpoint to be present")
 	}
@@ -117,26 +107,34 @@ func cmdExporterCheckE() error {
 		return string(data), nil
 	}, false, 15*time.Second)
 
-	go mon.UpdateMonitorStatus(util.CreateSignalContext(context.Background()))
+	go mon.UpdateMonitorStatus(ctx)
 
-	exporter := exporter.NewExporter(exporterInput.listenAddress, "/metrics", p)
-	if exporterInput.keyfile != "" {
-		if e, err := exporter.WithKeyfile(exporterInput.keyfile); err != nil {
-			return err
-		} else {
-			if r, err := e.Start(); err != nil {
-				return err
-			} else {
-				onSigterm(r.Stop)
-				return r.Wait()
+	server, err := operatorHTTP.NewServer(ctx,
+		operatorHTTP.DefaultHTTPServerSettings,
+		operatorHTTP.WithServeMux(func(in *http.ServeMux) {
+			in.Handle("/metrics", p)
+		}, func(in *http.ServeMux) {
+			in.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte(`<html>
+             <head><title>ArangoDB Exporter</title></head>
+             <body>
+             <h1>ArangoDB Exporter</h1>
+             <p><a href='/metrics'>Metrics</a></p>
+             </body>
+             </html>`))
+			})
+		}),
+		operatorHTTP.WithTLSConfigFetcherGen(func() util.TLSConfigFetcher {
+			if exporterInput.keyfile != "" {
+				return util.NewKeyfileTLSConfig(exporterInput.keyfile)
 			}
-		}
-	} else {
-		if r, err := exporter.Start(); err != nil {
-			return err
-		} else {
-			onSigterm(r.Stop)
-			return r.Wait()
-		}
+
+			return nil
+		}),
+	)
+	if err != nil {
+		return err
 	}
+
+	return server.StartAddr(ctx, exporterInput.listenAddress)
 }

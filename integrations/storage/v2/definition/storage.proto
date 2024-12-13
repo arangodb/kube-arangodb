@@ -20,7 +20,7 @@
 
 syntax = "proto3";
 
-package shutdown;
+package storage;
 
 import "google/protobuf/timestamp.proto";
 

@@ -21,6 +21,7 @@
 package tests
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -83,6 +84,36 @@ func (t Timeout) WithTimeout(timeout, interval time.Duration) error {
 	}
 }
 
+func (t Timeout) WithContextTimeout(ctx context.Context, timeout, interval time.Duration) error {
+	timeoutT := time.NewTimer(timeout)
+	defer timeoutT.Stop()
+
+	intervalT := time.NewTicker(interval)
+	defer intervalT.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.Errorf("ContextCancelled!")
+		case <-timeoutT.C:
+			return errors.Errorf("Timeouted!")
+		case <-intervalT.C:
+			if err := t(); err != nil {
+				var interrupt interrupt
+				if errors.As(err, &interrupt) {
+					return nil
+				}
+
+				return err
+			}
+		}
+	}
+}
+
 func (t Timeout) WithTimeoutT(z *testing.T, timeout, interval time.Duration) {
 	require.NoError(z, t.WithTimeout(timeout, interval))
+}
+
+func (t Timeout) WithContextTimeoutT(z *testing.T, ctx context.Context, timeout, interval time.Duration) {
+	require.NoError(z, t.WithContextTimeout(ctx, timeout, interval))
 }

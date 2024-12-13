@@ -1,0 +1,17 @@
+{{ if .Values.webhooks.enabled }}
+
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: "{{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com"
+  annotations:
+    cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/{{ template "kube-arangodb.operatorName" . }}-ca"
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+webhooks: []
+
+{{- end }}

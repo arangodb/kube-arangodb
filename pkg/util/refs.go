@@ -22,6 +22,8 @@ package util
 
 import (
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // NewPointer returns a reference to a copy of the pointer value
@@ -133,6 +135,42 @@ func InitType[T interface{}](in *T) *T {
 
 	var q T
 	return &q
+}
+
+func DeepType[T any]() (T, error) {
+	var z T
+
+	if err := InitDeepType(&z); err != nil {
+		return Default[T](), err
+	}
+
+	return z, nil
+}
+
+func InitDeepType(in any) error {
+	return initDeepType(reflect.ValueOf(in))
+}
+
+func initDeepType(v reflect.Value) error {
+	switch v.Kind() {
+	case reflect.Pointer:
+		if !v.Elem().CanSet() {
+			return errors.Errorf("Unable to set interface")
+		}
+
+		switch v.Elem().Kind() {
+		case reflect.Pointer:
+			nv := reflect.New(v.Type().Elem().Elem())
+			if err := initDeepType(nv); err != nil {
+				return err
+			}
+			v.Elem().Set(nv)
+		default:
+			v.Elem().Set(reflect.New(v.Elem().Type()).Elem())
+		}
+	}
+
+	return nil
 }
 
 type ConditionalFunction[T interface{}] func() (T, bool)

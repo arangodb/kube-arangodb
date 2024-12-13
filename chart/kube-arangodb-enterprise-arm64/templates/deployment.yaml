@@ -192,6 +192,67 @@ spec:
                       initialDelaySeconds: 5
                       periodSeconds: 10
 {{- end }}
+{{ if .Values.webhooks.enabled }}
+                - name: webhooks
+                  imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
+                  image: {{ .Values.operator.image }}
+                  args:
+                    - webhook
+{{- if .Values.certificate.enabled }}
+                    - --ssl.secret.name={{ template "kube-arangodb.operatorName" . }}-webhook-cert
+                    - --ssl.secret.namespace={{ .Release.Namespace }}
+{{- end -}}
+{{- if .Values.webhooks.args }}
+{{- range .Values.webhooks.args }}
+                    - {{ . | quote }}
+{{- end }}
+{{- end }}
+                  env:
+                      - name: MY_POD_NAMESPACE
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.namespace
+                      - name: MY_POD_NAME
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: metadata.name
+                      - name: MY_CONTAINER_NAME
+                        value: "webhooks"
+                      - name: MY_POD_IP
+                        valueFrom:
+                            fieldRef:
+                                fieldPath: status.podIP
+                  ports:
+                      - name: webhooks
+                        containerPort: 8828
+                  securityContext:
+                      privileged: false
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                          drop:
+                              - 'ALL'
+{{- if .Values.webhooks.resources }}
+                  resources:
+{{ toYaml .Values.webhooks.resources | indent 22 }}
+{{- end }}
+{{- if not .Values.webhooks.debug }}
+                  livenessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8828
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                  readinessProbe:
+                      httpGet:
+                          path: /ready
+                          port: 8828
+                          scheme: HTTPS
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+{{- end }}
+{{- end }}
             tolerations:
                 - key: "node.kubernetes.io/unreachable"
                   operator: "Exists"

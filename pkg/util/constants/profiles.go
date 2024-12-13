@@ -26,6 +26,11 @@ const ProfileGroup = "profiles.arangodb.com"
 
 const ProfilesDeployment = ProfileGroup + "/deployment"
 const ProfilesIntegrationPrefix = "integration." + ProfileGroup
+const ProfilesList = ProfileGroup + "/profiles"
+
+const ProfilesAnnotationApplied = ProfileGroup + "/applied"
+const ProfilesAnnotationChecksum = ProfileGroup + "/checksum"
+const ProfilesAnnotationProfiles = ProfileGroup + "/profiles"
 
 const (
 	ProfilesIntegrationAuthn    = "authn"

@@ -55,6 +55,7 @@ import (
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -1506,13 +1507,8 @@ func NewMetaObjectInDefaultNamespace[T meta.Object](t *testing.T, name string, m
 }
 
 func NewMetaObject[T meta.Object](t *testing.T, namespace, name string, mods ...MetaObjectMod[T]) T {
-	var obj T
-
-	if objT := reflect.TypeOf(obj); objT.Kind() == reflect.Pointer {
-		newObj := reflect.New(objT.Elem())
-
-		reflect.ValueOf(&obj).Elem().Set(newObj)
-	}
+	obj, err := util.DeepType[T]()
+	require.NoError(t, err)
 
 	if IsNamespaced(obj) {
 		obj.SetNamespace(namespace)
