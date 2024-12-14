@@ -138,3 +138,9 @@ Example: `deployment`
 HTTP/S Endpoint of the ArangoDeployment Internal Service.
 
 Example: `https://deployment.default.svc:8529`
+
+#### ARANGO_DEPLOYMENT_CA (optional)
+
+Path to the CA in the PEM format. If not set, TLS is disabled.
+
+Example: `/etc/deployment-int/ca/ca.pem`

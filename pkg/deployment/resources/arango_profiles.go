@@ -34,6 +34,8 @@ import (
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
+	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
+	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
@@ -125,7 +127,10 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 			integration, err := sidecar.NewIntegration(&schedulerContainerResourcesApi.Image{
 				Image: util.NewType(r.context.GetOperatorImage()),
-			}, spec.Integration.GetSidecar(), r.arangoDeploymentProfileTemplate(cachedStatus))
+			}, spec.Integration.GetSidecar(),
+				r.arangoDeploymentProfileTemplate(cachedStatus),
+				r.arangoDeploymentCATemplate(),
+			)
 			if err != nil {
 				return "", nil, err
 			}
@@ -212,6 +217,52 @@ func (r *Resources) arangoDeploymentProfileTemplate(cachedStatus inspectorInterf
 						{
 							Name:  "ARANGO_DEPLOYMENT_ENDPOINT",
 							Value: r.arangoDeploymentInternalAddress(cachedStatus),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *Resources) arangoDeploymentCATemplate() *schedulerApi.ProfileTemplate {
+	t := r.context.GetSpec().TLS
+	if !t.IsSecure() {
+		return nil
+	}
+
+	return &schedulerApi.ProfileTemplate{
+		Pod: &schedulerPodApi.Pod{
+			Volumes: &schedulerPodResourcesApi.Volumes{
+				Volumes: []core.Volume{
+					{
+						Name: "deployment-int-ca",
+						VolumeSource: core.VolumeSource{
+							Secret: &core.SecretVolumeSource{
+								SecretName: GetCASecretName(r.context.GetAPIObject()),
+							},
+						},
+					},
+				},
+			},
+		},
+		Container: &schedulerApi.ProfileContainerTemplate{
+			All: &schedulerContainerApi.Generic{
+				Environments: &schedulerContainerResourcesApi.Environments{
+					Env: []core.EnvVar{
+						{
+							Name:  "ARANGO_DEPLOYMENT_CA",
+							Value: fmt.Sprintf("/etc/deployment-int/ca/%s", CACertName),
+						},
+					},
+				},
+				VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
+					VolumeMounts: []core.VolumeMount{
+						{
+							Name:              "deployment-int-ca",
+							ReadOnly:          true,
+							RecursiveReadOnly: nil,
+							MountPath:         "/etc/deployment-int/ca",
 						},
 					},
 				},
