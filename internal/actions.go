@@ -352,11 +352,11 @@ func RenderActions(root string) error {
 
 		type actionRow struct {
 			Action      string `table:"Action" table_align:"center"`
-			Timeout     string `table:"Timeout" table_align:"center"`
-			Description string `table:"Description" table_align:"center"`
 			Internal    string `table:"Internal" table_align:"center"`
+			Timeout     string `table:"Timeout" table_align:"center"`
 			Optional    string `table:"Optional" table_align:"center"`
 			Edition     string `table:"Edition" table_align:"center"`
+			Description string `table:"Description" table_align:"center"`
 		}
 
 		out, err := pretty.NewTable[actionRow]()

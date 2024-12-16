@@ -246,8 +246,8 @@ func generateMetricsREADME(root string, in MetricsDoc) error {
 					Name:        rname,
 					Namespace:   namespace,
 					Group:       g,
-					Type:        details.ShortDescription,
-					Description: details.Type,
+					Type:        details.Type,
+					Description: details.ShortDescription,
 				})
 
 				if err := generateMetricFile(root, mname, details); err != nil {

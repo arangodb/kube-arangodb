@@ -21,6 +21,7 @@
 package pretty
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -44,7 +45,7 @@ type tableImpl[T any] struct {
 }
 
 func (t tableImpl[T]) RenderMarkdown() string {
-	return t.wr.RenderMarkdown()
+	return fmt.Sprintf("%s\n", t.wr.RenderMarkdown())
 }
 
 func (t tableImpl[T]) Add(in ...T) Table[T] {

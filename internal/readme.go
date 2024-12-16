@@ -191,8 +191,8 @@ func GenerateHelpRaw(cmd *cobra.Command, args ...string) (string, error) {
 func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) {
 	type tableRow struct {
 		Feature         string `table:"Feature" table_align:"left"`
-		Introduced      string `table:"Introduced" table_align:"left"`
 		OperatorVersion string `table:"Operator Version" table_align:"left"`
+		Introduced      string `table:"Introduced" table_align:"left"`
 		ArangoDBVersion string `table:"ArangoDB Version" table_align:"left"`
 		ArangoDBEdition string `table:"ArangoDB Edition" table_align:"left"`
 		State           string `table:"State" table_align:"left"`

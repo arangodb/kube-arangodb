@@ -17,6 +17,7 @@ Counter for actions which requires ops attention
 | namespace | Deployment Namespace |
 | name | Deployment Name |
 
+
 ## Alerting
 
 | Priority | Query | Description |

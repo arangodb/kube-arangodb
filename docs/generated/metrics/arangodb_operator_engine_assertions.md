@@ -16,6 +16,7 @@ Number of assertions invoked during Operator runtime
 |:---:|:--- |
 | key | Assertion Key |
 
+
 ## Alerting
 
 | Priority | Query | Description |
