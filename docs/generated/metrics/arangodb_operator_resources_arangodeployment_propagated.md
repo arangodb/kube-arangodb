@@ -12,7 +12,7 @@ Defines if ArangoDeployment Spec is propagated
 
 ## Labels
 
-|   Label   | Description          |
-|:---------:|:---------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | Deployment Namespace |
-|   name    | Deployment Name      |
+| name | Deployment Name |

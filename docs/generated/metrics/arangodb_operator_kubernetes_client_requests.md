@@ -12,7 +12,7 @@ Number of Kubernetes Client requests
 
 ## Labels
 
-|   Label   | Description                                                  |
-|:---------:|:-------------------------------------------------------------|
-| component | K8S Resource name                                            |
-|   verb    | Verb (create,update,update-status,patch,delete,force-delete) |
+| Label | Description |
+|:---:|:--- |
+| component | K8S Resource name |
+| verb | Verb (create,update,update-status,patch,delete,force-delete) |

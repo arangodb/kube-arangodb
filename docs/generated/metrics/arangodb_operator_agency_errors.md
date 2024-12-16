@@ -12,7 +12,7 @@ Current count of agency cache fetch errors
 
 ## Labels
 
-|   Label   | Description          |
-|:---------:|:---------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | Deployment Namespace |
-|   name    | Deployment Name      |
+| name | Deployment Name |

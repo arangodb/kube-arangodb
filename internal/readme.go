@@ -35,9 +35,9 @@ import (
 	"github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/cmd"
-	"github.com/arangodb/kube-arangodb/internal/md"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/pretty"
 )
 
 type PlatformsDoc struct {
@@ -137,7 +137,7 @@ func GenerateReadme(root string) error {
 		readmeSections["operatorArguments"] = section
 	}
 
-	if err := md.ReplaceSectionsInFile(path.Join(root, "README.md"), readmeSections); err != nil {
+	if err := pretty.ReplaceSectionsInFile(path.Join(root, "README.md"), readmeSections); err != nil {
 		return err
 	}
 
@@ -162,7 +162,7 @@ func GenerateHelp(cmd *cobra.Command, args ...string) (string, error) {
 
 	lines = append(lines, "```")
 
-	return md.WrapWithNewLines(md.WrapWithNewLines(strings.Join(lines, "\n"))), nil
+	return pretty.WrapWithNewLines(pretty.WrapWithNewLines(strings.Join(lines, "\n"))), nil
 }
 
 func GenerateHelpQuoted(cmd *cobra.Command, args ...string) (string, error) {
@@ -189,26 +189,22 @@ func GenerateHelpRaw(cmd *cobra.Command, args ...string) (string, error) {
 }
 
 func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) {
-	feature := md.NewColumn("Feature", md.ColumnLeftAlign)
-	introduced := md.NewColumn("Introduced", md.ColumnLeftAlign)
-	oVersion := md.NewColumn("Operator Version", md.ColumnLeftAlign)
-	aVersion := md.NewColumn("ArangoDB Version", md.ColumnLeftAlign)
-	aEdition := md.NewColumn("ArangoDB Edition", md.ColumnLeftAlign)
-	state := md.NewColumn("State", md.ColumnLeftAlign)
-	enabled := md.NewColumn("Enabled", md.ColumnLeftAlign)
-	flag := md.NewColumn("Flag", md.ColumnLeftAlign)
-	remarks := md.NewColumn("Remarks", md.ColumnLeftAlign)
-	t := md.NewTable(
-		feature,
-		oVersion,
-		introduced,
-		aVersion,
-		aEdition,
-		state,
-		enabled,
-		flag,
-		remarks,
-	)
+	type tableRow struct {
+		Feature         string `table:"Feature" table_align:"left"`
+		Introduced      string `table:"Introduced" table_align:"left"`
+		OperatorVersion string `table:"Operator Version" table_align:"left"`
+		ArangoDBVersion string `table:"ArangoDB Version" table_align:"left"`
+		ArangoDBEdition string `table:"ArangoDB Edition" table_align:"left"`
+		State           string `table:"State" table_align:"left"`
+		Enabled         string `table:"Enabled" table_align:"left"`
+		Flag            string `table:"Flag" table_align:"left"`
+		Remarks         string `table:"Remarks" table_align:"left"`
+	}
+
+	tb, err := pretty.NewTable[tableRow]()
+	if err != nil {
+		return "", err
+	}
 
 	var d FeaturesDoc
 
@@ -266,36 +262,33 @@ func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) 
 			n = fmt.Sprintf("[%s](%s)", n, p)
 		}
 
-		if err := t.AddRow(map[md.Column]string{
-			feature:    n,
-			oVersion:   util.TypeOrDefault[string](util.First(r.OperatorVersion, f.OperatorVersion), "ANY"),
-			introduced: util.TypeOrDefault[string](f.Releases[0].OperatorVersion, "ANY"),
-			aVersion:   util.TypeOrDefault[string](util.First(r.ArangoDBVersion, f.ArangoDBVersion), fmt.Sprintf(">= %s", features.MinSupportedArangoDBVersion)),
-			aEdition:   util.TypeOrDefault[string](util.First(r.ArangoDBEdition, f.ArangoDBEdition), "Community, Enterprise"),
-			aEdition:   util.TypeOrDefault[string](util.First(r.ArangoDBEdition, f.ArangoDBEdition), "Community, Enterprise"),
-			state:      util.TypeOrDefault[string](util.First(r.State, f.State), "Alpha"),
-			enabled:    util.BoolSwitch[string](util.TypeOrDefault[bool](util.First(r.Enabled, f.Enabled), true), "True", "False"),
-			flag:       util.TypeOrDefault[string](util.First(r.Flag, f.Flag), "N/A"),
-			remarks:    util.TypeOrDefault[string](util.First(r.Remarks, f.Remarks), "N/A"),
-		}); err != nil {
-			return "", err
-		}
+		tb.Add(tableRow{
+			Feature:         n,
+			Introduced:      util.TypeOrDefault[string](f.Releases[0].OperatorVersion, "ANY"),
+			OperatorVersion: util.TypeOrDefault[string](util.First(r.OperatorVersion, f.OperatorVersion)),
+			ArangoDBVersion: util.TypeOrDefault[string](util.First(r.ArangoDBVersion, f.ArangoDBVersion), fmt.Sprintf(">= %s", features.MinSupportedArangoDBVersion)),
+			ArangoDBEdition: util.TypeOrDefault[string](util.First(r.ArangoDBEdition, f.ArangoDBEdition), "Community, Enterprise"),
+			State:           util.TypeOrDefault[string](util.First(r.State, f.State), "Alpha"),
+			Enabled:         util.BoolSwitch[string](util.TypeOrDefault[bool](util.First(r.Enabled, f.Enabled), true), "True", "False"),
+			Flag:            util.TypeOrDefault[string](util.First(r.Flag, f.Flag), "N/A"),
+			Remarks:         util.TypeOrDefault[string](util.First(r.Remarks, f.Remarks), "N/A"),
+		})
 	}
 
-	return md.WrapWithNewLines(t.Render()), nil
+	return pretty.WrapWithNewLines(tb.RenderMarkdown()), nil
 }
 
 func GenerateReadmeLimits(root string) (string, error) {
-	limit := md.NewColumn("Limit", md.ColumnLeftAlign)
-	description := md.NewColumn("Description", md.ColumnLeftAlign)
-	community := md.NewColumn("Community", md.ColumnLeftAlign)
-	enterprise := md.NewColumn("Enterprise", md.ColumnLeftAlign)
-	t := md.NewTable(
-		limit,
-		description,
-		community,
-		enterprise,
-	)
+	type tableRow struct {
+		Limit       string `table:"Limit" table_align:"left"`
+		Description string `table:"Description" table_align:"left"`
+		Community   string `table:"Community" table_align:"left"`
+		Enterprise  string `table:"Enterprise" table_align:"left"`
+	}
+	tb, err := pretty.NewTable[tableRow]()
+	if err != nil {
+		return "", err
+	}
 
 	var d LimitsDoc
 
@@ -309,34 +302,30 @@ func GenerateReadmeLimits(root string) (string, error) {
 	}
 
 	for _, l := range d.Limits {
-		if err := t.AddRow(map[md.Column]string{
-			limit:       l.Name,
-			description: l.Description,
-			community:   util.TypeOrDefault[string](l.Community, "N/A"),
-			enterprise:  util.TypeOrDefault[string](l.Enterprise, "N/A"),
-		}); err != nil {
-			return "", err
-		}
+		tb.Add(tableRow{
+			Limit:       l.Name,
+			Description: l.Description,
+			Community:   util.TypeOrDefault[string](l.Community, "N/A"),
+			Enterprise:  util.TypeOrDefault[string](l.Enterprise, "N/A"),
+		})
 	}
 
-	return md.WrapWithNewLines(t.Render()), nil
+	return pretty.WrapWithNewLines(tb.RenderMarkdown()), nil
 }
 
 func GenerateReadmePlatforms(root string) (string, error) {
-	platform := md.NewColumn("Platform", md.ColumnLeftAlign)
-	kVersion := md.NewColumn("Kubernetes Version", md.ColumnLeftAlign)
-	aVersion := md.NewColumn("ArangoDB Version", md.ColumnLeftAlign)
-	state := md.NewColumn("State", md.ColumnLeftAlign)
-	remarks := md.NewColumn("Remarks", md.ColumnLeftAlign)
-	pRemarks := md.NewColumn("Provider Remarks", md.ColumnLeftAlign)
-	t := md.NewTable(
-		platform,
-		state,
-		kVersion,
-		aVersion,
-		remarks,
-		pRemarks,
-	)
+	type tableRow struct {
+		Platform          string `table:"Platform" table_align:"left"`
+		KubernetesVersion string `table:"Kubernetes Version" table_align:"left"`
+		ArangoDBVersion   string `table:"ArangoDB Version" table_align:"left"`
+		State             string `table:"State" table_align:"left"`
+		Remarks           string `table:"Remarks" table_align:"left"`
+		ProviderRemarks   string `table:"Provider Remarks" table_align:"left"`
+	}
+	tb, err := pretty.NewTable[tableRow]()
+	if err != nil {
+		return "", err
+	}
 
 	var d PlatformsDoc
 
@@ -355,18 +344,16 @@ func GenerateReadmePlatforms(root string) (string, error) {
 			if id == 0 {
 				n = p.Name
 			}
-			if err := t.AddRow(map[md.Column]string{
-				platform: n,
-				kVersion: util.TypeOrDefault[string](v.KubernetesVersion, ""),
-				aVersion: util.TypeOrDefault[string](v.ArangoDBVersion, ""),
-				state:    util.TypeOrDefault[string](v.State, ""),
-				remarks:  util.TypeOrDefault[string](v.Remarks, ""),
-				pRemarks: util.TypeOrDefault[string](v.ProviderRemarks, ""),
-			}); err != nil {
-				return "", err
-			}
+			tb.Add(tableRow{
+				Platform:          n,
+				KubernetesVersion: util.TypeOrDefault[string](v.KubernetesVersion, ""),
+				ArangoDBVersion:   util.TypeOrDefault[string](v.ArangoDBVersion, ""),
+				State:             util.TypeOrDefault[string](v.State, ""),
+				Remarks:           util.TypeOrDefault[string](v.Remarks, ""),
+				ProviderRemarks:   util.TypeOrDefault[string](v.ProviderRemarks, ""),
+			})
 		}
 	}
 
-	return md.WrapWithNewLines(t.Render()), nil
+	return pretty.WrapWithNewLines(tb.RenderMarkdown()), nil
 }

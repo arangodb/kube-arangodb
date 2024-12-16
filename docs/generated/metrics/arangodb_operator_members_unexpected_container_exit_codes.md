@@ -12,12 +12,12 @@ Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContai
 
 ## Labels
 
-|     Label      | Description                                |
-|:--------------:|:-------------------------------------------|
-|   namespace    | Deployment Namespace                       |
-|      name      | Deployment Name                            |
-|     member     | Member ID                                  |
-|   container    | Container Name                             |
+| Label | Description |
+|:---:|:--- |
+| namespace | Deployment Namespace |
+| name | Deployment Name |
+| member | Member ID |
+| container | Container Name |
 | container_type | Container/InitContainer/EphemeralContainer |
-|      code      | ExitCode                                   |
-|     reason     | Reason                                     |
+| code | ExitCode |
+| reason | Reason |

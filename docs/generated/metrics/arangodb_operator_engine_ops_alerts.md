@@ -12,14 +12,13 @@ Counter for actions which requires ops attention
 
 ## Labels
 
-|   Label   | Description          |
-|:---------:|:---------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | Deployment Namespace |
-|   name    | Deployment Name      |
-
+| name | Deployment Name |
 
 ## Alerting
 
-| Priority |                       Query                        | Description                                 |
-|:--------:|:--------------------------------------------------:|:--------------------------------------------|
-| Warning  | irate(arangodb_operator_engine_ops_alerts[1m]) &gt; 1 | Trigger an alert if OPS attention is needed |
+| Priority | Query | Description |
+|:---:|:---:|:--- |
+| Warning | irate(arangodb_operator_engine_ops_alerts[1m]) &gt; 1 | Trigger an alert if OPS attention is needed |

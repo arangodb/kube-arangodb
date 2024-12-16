@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,4 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package md
+package pretty
+
+import "fmt"
+
+func WrapWithNewLines(in string) string {
+	return fmt.Sprintf("\n%s\n", in)
+}
+
+func WrapWithYAMLSegment(in string) string {
+	return WrapWithSegment(in, "yaml")
+}
+
+func WrapWithSegment(in, segment string) string {
+	return fmt.Sprintf("```%s\n%s\n```", segment, in)
+}

@@ -12,7 +12,7 @@ Defines if ArangoDeploymentReplication is in Failed phase
 
 ## Labels
 
-|   Label   | Description                     |
-|:---------:|:--------------------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | DeploymentReplication Namespace |
-|   name    | DeploymentReplication Name      |
+| name | DeploymentReplication Name |

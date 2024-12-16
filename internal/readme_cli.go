@@ -25,7 +25,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/cmd"
 	"github.com/arangodb/kube-arangodb/cmd/integration"
-	"github.com/arangodb/kube-arangodb/internal/md"
+	"github.com/arangodb/kube-arangodb/pkg/util/pretty"
 )
 
 func GenerateCLIArangoDBOperatorReadme(root string) error {
@@ -37,7 +37,7 @@ func GenerateCLIArangoDBOperatorReadme(root string) error {
 		readmeSections["arangodb_operator_cmd"] = section
 	}
 
-	if err := md.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator.md"), readmeSections); err != nil {
+	if err := pretty.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator.md"), readmeSections); err != nil {
 		return err
 	}
 
@@ -77,7 +77,7 @@ func GenerateCLIArangoDBOperatorOpsReadme(root string) error {
 		readmeSections["arangodb_operator_ops_cmd_debug_package"] = section
 	}
 
-	if err := md.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator_ops.md"), readmeSections); err != nil {
+	if err := pretty.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator_ops.md"), readmeSections); err != nil {
 		return err
 	}
 
@@ -99,7 +99,7 @@ func GenerateCLIArangoDBOperatorIntegrationReadme(root string) error {
 		readmeSections["arangodb_operator_integration_cmd_client"] = section
 	}
 
-	if err := md.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator_integration.md"), readmeSections); err != nil {
+	if err := pretty.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator_integration.md"), readmeSections); err != nil {
 		return err
 	}
 
