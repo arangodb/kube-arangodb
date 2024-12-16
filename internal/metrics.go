@@ -28,7 +28,7 @@ import (
 	"path"
 	"sort"
 
-	"github.com/arangodb/kube-arangodb/internal/md"
+	"github.com/arangodb/kube-arangodb/pkg/util/pretty"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
@@ -155,38 +155,40 @@ func GenerateMetricsDocumentation(root string, in MetricsDoc) error {
 }
 
 func generateMetricFile(root, name string, m Metric) error {
-	key := md.NewColumn("Label", md.ColumnCenterAlign)
-	description := md.NewColumn("Description", md.ColumnLeftAlign)
-	priority := md.NewColumn("Priority", md.ColumnCenterAlign)
-	query := md.NewColumn("Query", md.ColumnCenterAlign)
-	t := md.NewTable(
-		key,
-		description,
-	)
-
-	for _, l := range m.Labels {
-		if err := t.AddRow(map[md.Column]string{
-			key:         l.Key,
-			description: l.Description,
-		}); err != nil {
-			return err
-		}
+	type tableRowLabels struct {
+		Label       string `table:"Label" table_align:"center"`
+		Description string `table:"Description" table_align:"left"`
+	}
+	type tableRowPriority struct {
+		Priority    string `table:"Priority" table_align:"center"`
+		Query       string `table:"Query" table_align:"center"`
+		Description string `table:"Description" table_align:"left"`
 	}
 
-	ta := md.NewTable(
-		priority,
-		query,
-		description,
-	)
+	t, err := pretty.NewTable[tableRowLabels]()
+	if err != nil {
+		return err
+	}
+
+	ta, err := pretty.NewTable[tableRowPriority]()
+	if err != nil {
+		return err
+	}
+
+	for _, l := range m.Labels {
+		t.Add(tableRowLabels{
+			Label:       l.Key,
+			Description: l.Description,
+		})
+	}
 
 	for _, l := range m.AlertingRules {
-		if err := ta.AddRow(map[md.Column]string{
-			priority:    l.Priority,
-			query:       l.Query,
-			description: l.Description,
-		}); err != nil {
-			return err
-		}
+		//nolint:all
+		ta.Add(tableRowPriority{
+			Priority:    l.Priority,
+			Query:       l.Query,
+			Description: l.Description,
+		})
 	}
 
 	q, err := template.New("metrics").Parse(string(metricItemTemplate))
@@ -203,9 +205,9 @@ func generateMetricFile(root, name string, m Metric) error {
 		"name":           name,
 		"type":           m.Type,
 		"description":    m.Description,
-		"labels_table":   t.Render(),
+		"labels_table":   t.RenderMarkdown(),
 		"labels":         len(m.Labels) > 0,
-		"alerting_table": ta.Render(),
+		"alerting_table": ta.RenderMarkdown(),
 		"alerting":       len(m.AlertingRules) > 0,
 	}); err != nil {
 		return err
@@ -219,18 +221,18 @@ func generateMetricFile(root, name string, m Metric) error {
 }
 
 func generateMetricsREADME(root string, in MetricsDoc) error {
-	name := md.NewColumn("Name", md.ColumnCenterAlign)
-	ns := md.NewColumn("Namespace", md.ColumnCenterAlign)
-	group := md.NewColumn("Group", md.ColumnCenterAlign)
-	typeCol := md.NewColumn("Type", md.ColumnCenterAlign)
-	description := md.NewColumn("Description", md.ColumnLeftAlign)
-	t := md.NewTable(
-		name,
-		ns,
-		group,
-		typeCol,
-		description,
-	)
+	type tableRow struct {
+		Name        string `table:"Name" table_align:"center"`
+		Namespace   string `table:"Namespace" table_align:"center"`
+		Group       string `table:"Group" table_align:"center"`
+		Type        string `table:"Type" table_align:"center"`
+		Description string `table:"Description" table_align:"left"`
+	}
+
+	t, err := pretty.NewTable[tableRow]()
+	if err != nil {
+		return err
+	}
 
 	for _, namespace := range in.Namespaces.Keys() {
 		for _, g := range in.Namespaces[namespace].Keys() {
@@ -240,15 +242,13 @@ func generateMetricsREADME(root string, in MetricsDoc) error {
 
 				details := in.Namespaces[namespace][g][metric]
 
-				if err := t.AddRow(map[md.Column]string{
-					name:        rname,
-					ns:          namespace,
-					group:       g,
-					description: details.ShortDescription,
-					typeCol:     details.Type,
-				}); err != nil {
-					return err
-				}
+				t.Add(tableRow{
+					Name:        rname,
+					Namespace:   namespace,
+					Group:       g,
+					Type:        details.Type,
+					Description: details.ShortDescription,
+				})
 
 				if err := generateMetricFile(root, mname, details); err != nil {
 					return err
@@ -257,8 +257,8 @@ func generateMetricsREADME(root string, in MetricsDoc) error {
 		}
 	}
 
-	if err := md.ReplaceSectionsInFile(path.Join(root, "README.md"), map[string]string{
-		"metricsTable": md.WrapWithNewLines(t.Render()),
+	if err := pretty.ReplaceSectionsInFile(path.Join(root, "README.md"), map[string]string{
+		"metricsTable": pretty.WrapWithNewLines(t.RenderMarkdown()),
 	}); err != nil {
 		return err
 	}

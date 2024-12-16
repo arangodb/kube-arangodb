@@ -12,6 +12,6 @@ Number of Panics recovered inside Operator reconciliation loop. Section represen
 
 ## Labels
 
-|  Label  | Description   |
-|:-------:|:--------------|
+| Label | Description |
+|:---:|:--- |
 | section | Panic Section |

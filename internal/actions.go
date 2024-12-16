@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/arangodb/kube-arangodb/internal/md"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/pretty"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
@@ -350,20 +350,19 @@ func RenderActions(root string) error {
 	{
 		actions := path.Join(root, "docs", "generated", "actions.md")
 
-		action := md.NewColumn("Action", md.ColumnCenterAlign)
-		timeout := md.NewColumn("Timeout", md.ColumnCenterAlign)
-		description := md.NewColumn("Description", md.ColumnCenterAlign)
-		internal := md.NewColumn("Internal", md.ColumnCenterAlign)
-		optional := md.NewColumn("Optional", md.ColumnCenterAlign)
-		edition := md.NewColumn("Edition", md.ColumnCenterAlign)
-		t := md.NewTable(
-			action,
-			internal,
-			timeout,
-			optional,
-			edition,
-			description,
-		)
+		type actionRow struct {
+			Action      string `table:"Action" table_align:"center"`
+			Internal    string `table:"Internal" table_align:"center"`
+			Timeout     string `table:"Timeout" table_align:"center"`
+			Optional    string `table:"Optional" table_align:"center"`
+			Edition     string `table:"Edition" table_align:"center"`
+			Description string `table:"Description" table_align:"center"`
+		}
+
+		out, err := pretty.NewTable[actionRow]()
+		if err != nil {
+			return err
+		}
 
 		for _, k := range in.Keys() {
 			name := k
@@ -390,16 +389,14 @@ func RenderActions(root string) error {
 				opt = "no"
 			}
 
-			if err := t.AddRow(map[md.Column]string{
-				action:      name,
-				timeout:     v,
-				description: a.Description,
-				edition:     vr,
-				optional:    opt,
-				internal:    int,
-			}); err != nil {
-				return err
-			}
+			out.Add(actionRow{
+				Action:      name,
+				Timeout:     v,
+				Description: a.Description,
+				Internal:    int,
+				Optional:    opt,
+				Edition:     vr,
+			})
 		}
 
 		timeouts := api.ActionTimeouts{}
@@ -424,9 +421,9 @@ func RenderActions(root string) error {
 			return err
 		}
 
-		if err := md.ReplaceSectionsInFile(actions, map[string]string{
-			"actionsTable":   md.WrapWithNewLines(t.Render()),
-			"actionsModYaml": md.WrapWithNewLines(md.WrapWithYAMLSegment(string(d))),
+		if err := pretty.ReplaceSectionsInFile(actions, map[string]string{
+			"actionsTable":   pretty.WrapWithNewLines(out.RenderMarkdown()),
+			"actionsModYaml": pretty.WrapWithNewLines(pretty.WrapWithYAMLSegment(string(d))),
 		}); err != nil {
 			return err
 		}

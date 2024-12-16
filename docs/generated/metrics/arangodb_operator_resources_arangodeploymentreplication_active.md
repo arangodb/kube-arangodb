@@ -12,7 +12,7 @@ Defines if ArangoDeploymentReplication is configured and running
 
 ## Labels
 
-|   Label   | Description                     |
-|:---------:|:--------------------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | DeploymentReplication Namespace |
-|   name    | DeploymentReplication Name      |
+| name | DeploymentReplication Name |
