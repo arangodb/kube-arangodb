@@ -49,7 +49,7 @@ func init() {
 	f.SetKubeConfigGetter(NewStaticConfigGetter(kconfig.NewConfig))
 
 	if err := f.Refresh(); err != nil {
-		println("Error while getting client: ", err.Error())
+		logger.Err(err).Warn("Error while getting client")
 	}
 }
 

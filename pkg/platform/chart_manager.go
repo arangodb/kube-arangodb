@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,41 +18,27 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package helm
+package platform
 
 import (
-	"bytes"
-	"io"
+	"fmt"
+	"net/http"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
+	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
-type Chart []byte
-
-func (c Chart) Get() (ChartData, error) {
-	return newChartFromData(c)
-}
-
-func (c Chart) Raw() []byte {
-	return c
-}
-
-func (c Chart) SHA256SUM() string {
-	return util.SHA256(c)
-}
-
-func newChartReaderFromBytes(in []byte) (*chart.Chart, error) {
-	return newChartReader(bytes.NewBuffer(in))
-}
-
-func newChartReader(in io.Reader) (*chart.Chart, error) {
-	files, err := loader.LoadArchiveFiles(in)
+func getChartManager(cmd *cobra.Command) (helm.ChartManager, error) {
+	endpoint, err := flagPlatformEndpoint.Get(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.LoadFiles(files)
+	stage, err := flagPlatformStage.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	return helm.NewChartManager(cmd.Context(), http.DefaultClient, "%s/index.yaml", fmt.Sprintf(endpoint, stage))
 }

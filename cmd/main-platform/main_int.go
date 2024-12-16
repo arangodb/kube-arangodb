@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,41 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package main
 
 import (
-	"testing"
+	"errors"
+	"os"
 
-	"github.com/stretchr/testify/require"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/platform"
+	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 )
 
-func ensureExitCode(t *testing.T, err error, code int) {
-	require.Error(t, err)
-	v, ok := err.(CommandExitCode)
-	require.True(t, ok)
-	require.Equal(t, v.ExitCode, code)
+func main() {
+	if err := mainE(); err != nil {
+		var v cli.CommandExitCode
+		if errors.As(err, &v) {
+			os.Exit(v.ExitCode)
+		}
+
+		os.Exit(1)
+	}
+}
+
+func mainE() error {
+	c, err := platform.NewInstaller()
+	if err != nil {
+		return err
+	}
+
+	if err := logging.Init(c); err != nil {
+		return err
+	}
+
+	if err := c.Execute(); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -201,10 +201,7 @@ func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) 
 		Remarks         string `table:"Remarks" table_align:"left"`
 	}
 
-	tb, err := pretty.NewTable[tableRow]()
-	if err != nil {
-		return "", err
-	}
+	tb := pretty.NewTable[tableRow]()
 
 	var d FeaturesDoc
 
@@ -275,7 +272,12 @@ func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) 
 		})
 	}
 
-	return pretty.WrapWithNewLines(tb.RenderMarkdown()), nil
+	o, err := tb.RenderMarkdown()
+	if err != nil {
+		return "", err
+	}
+
+	return pretty.WrapWithNewLines(o), nil
 }
 
 func GenerateReadmeLimits(root string) (string, error) {
@@ -285,11 +287,7 @@ func GenerateReadmeLimits(root string) (string, error) {
 		Community   string `table:"Community" table_align:"left"`
 		Enterprise  string `table:"Enterprise" table_align:"left"`
 	}
-	tb, err := pretty.NewTable[tableRow]()
-	if err != nil {
-		return "", err
-	}
-
+	tb := pretty.NewTable[tableRow]()
 	var d LimitsDoc
 
 	data, err := os.ReadFile(path.Join(root, "internal", "limits.yaml"))
@@ -310,7 +308,12 @@ func GenerateReadmeLimits(root string) (string, error) {
 		})
 	}
 
-	return pretty.WrapWithNewLines(tb.RenderMarkdown()), nil
+	o, err := tb.RenderMarkdown()
+	if err != nil {
+		return "", err
+	}
+
+	return pretty.WrapWithNewLines(o), nil
 }
 
 func GenerateReadmePlatforms(root string) (string, error) {
@@ -322,10 +325,7 @@ func GenerateReadmePlatforms(root string) (string, error) {
 		Remarks           string `table:"Remarks" table_align:"left"`
 		ProviderRemarks   string `table:"Provider Remarks" table_align:"left"`
 	}
-	tb, err := pretty.NewTable[tableRow]()
-	if err != nil {
-		return "", err
-	}
+	tb := pretty.NewTable[tableRow]()
 
 	var d PlatformsDoc
 
@@ -355,5 +355,10 @@ func GenerateReadmePlatforms(root string) (string, error) {
 		}
 	}
 
-	return pretty.WrapWithNewLines(tb.RenderMarkdown()), nil
+	o, err := tb.RenderMarkdown()
+	if err != nil {
+		return "", err
+	}
+
+	return pretty.WrapWithNewLines(o), nil
 }

@@ -18,41 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package helm
+package platform
 
-import (
-	"bytes"
-	"io"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
+var (
+	logger = logging.Global().RegisterAndGetLogger("installer", logging.Info)
 )
-
-type Chart []byte
-
-func (c Chart) Get() (ChartData, error) {
-	return newChartFromData(c)
-}
-
-func (c Chart) Raw() []byte {
-	return c
-}
-
-func (c Chart) SHA256SUM() string {
-	return util.SHA256(c)
-}
-
-func newChartReaderFromBytes(in []byte) (*chart.Chart, error) {
-	return newChartReader(bytes.NewBuffer(in))
-}
-
-func newChartReader(in io.Reader) (*chart.Chart, error) {
-	files, err := loader.LoadArchiveFiles(in)
-	if err != nil {
-		return nil, err
-	}
-
-	return loader.LoadFiles(files)
-}

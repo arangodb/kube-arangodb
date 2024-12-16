@@ -76,6 +76,7 @@ func (c chartManagerRepo) Get(version string) (ChartManagerRepoVersion, bool) {
 	for _, z := range r {
 		if z.Version == version {
 			return chartManagerRepoVersion{
+				version: version,
 				manager: c.manager,
 				chart:   z,
 			}, true
@@ -95,6 +96,7 @@ func (c chartManagerRepo) Latest() (ChartManagerRepoVersion, bool) {
 		return nil, false
 	} else {
 		return chartManagerRepoVersion{
+			version: v.Version,
 			manager: c.manager,
 			chart:   v,
 		}, true

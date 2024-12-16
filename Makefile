@@ -234,12 +234,16 @@ BIN_OPS := $(BINDIR)/$(BIN_OPS_NAME)
 BIN_INT_NAME := $(PROJECT)_integration
 BIN_INT := $(BINDIR)/$(BIN_INT_NAME)
 
+BIN_PLATFORM_NAME := $(PROJECT)_platform
+BIN_PLATFORM := $(BINDIR)/$(BIN_PLATFORM_NAME)
+
 define binary
 $(eval _OS:=$(call UPPER_ENV,$1))
 $(eval _ARCH:=$(call UPPER_ENV,$2))
 VBIN_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BINNAME)
 VBIN_OPS_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_OPS_NAME)
 VBIN_INT_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_INT_NAME)
+VBIN_PLATFORM_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_PLATFORM_NAME)
 
 $$(VBIN_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
@@ -253,7 +257,13 @@ $$(VBIN_INT_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-int
 
-bin-all: $$(VBIN_$(_OS)_$(_ARCH)) $$(VBIN_OPS_$(_OS)_$(_ARCH)) $$(VBIN_INT_$(_OS)_$(_ARCH))
+.PHONY: $$(VBIN_PLATFORM_$(_OS)_$(_ARCH))
+
+$$(VBIN_PLATFORM_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-platform
+
+bin-all: $$(VBIN_$(_OS)_$(_ARCH)) $$(VBIN_OPS_$(_OS)_$(_ARCH)) $$(VBIN_INT_$(_OS)_$(_ARCH)) $$(VBIN_PLATFORM_$(_OS)_$(_ARCH))
 
 endef
 
@@ -454,7 +464,7 @@ dashboard/assets.go:
 .PHONY: bin
 bin: $(BIN)
 
-$(BIN): $(VBIN_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64)
+$(BIN): $(VBIN_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64) $(VBIN_PLATFORM_LINUX_AMD64)
 	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
 	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
 

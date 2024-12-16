@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -165,15 +165,9 @@ func generateMetricFile(root, name string, m Metric) error {
 		Description string `table:"Description" table_align:"left"`
 	}
 
-	t, err := pretty.NewTable[tableRowLabels]()
-	if err != nil {
-		return err
-	}
+	t := pretty.NewTable[tableRowLabels]()
 
-	ta, err := pretty.NewTable[tableRowPriority]()
-	if err != nil {
-		return err
-	}
+	ta := pretty.NewTable[tableRowPriority]()
 
 	for _, l := range m.Labels {
 		t.Add(tableRowLabels{
@@ -201,13 +195,23 @@ func generateMetricFile(root, name string, m Metric) error {
 		return err
 	}
 
+	tr, err := t.RenderMarkdown()
+	if err != nil {
+		return err
+	}
+
+	tar, err := ta.RenderMarkdown()
+	if err != nil {
+		return err
+	}
+
 	if err := q.Execute(out, map[string]interface{}{
 		"name":           name,
 		"type":           m.Type,
 		"description":    m.Description,
-		"labels_table":   t.RenderMarkdown(),
+		"labels_table":   tr,
 		"labels":         len(m.Labels) > 0,
-		"alerting_table": ta.RenderMarkdown(),
+		"alerting_table": tar,
 		"alerting":       len(m.AlertingRules) > 0,
 	}); err != nil {
 		return err
@@ -229,10 +233,7 @@ func generateMetricsREADME(root string, in MetricsDoc) error {
 		Description string `table:"Description" table_align:"left"`
 	}
 
-	t, err := pretty.NewTable[tableRow]()
-	if err != nil {
-		return err
-	}
+	t := pretty.NewTable[tableRow]()
 
 	for _, namespace := range in.Namespaces.Keys() {
 		for _, g := range in.Namespaces[namespace].Keys() {
@@ -257,8 +258,13 @@ func generateMetricsREADME(root string, in MetricsDoc) error {
 		}
 	}
 
+	o, err := t.RenderMarkdown()
+	if err != nil {
+		return err
+	}
+
 	if err := pretty.ReplaceSectionsInFile(path.Join(root, "README.md"), map[string]string{
-		"metricsTable": pretty.WrapWithNewLines(t.RenderMarkdown()),
+		"metricsTable": pretty.WrapWithNewLines(o),
 	}); err != nil {
 		return err
 	}
