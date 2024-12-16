@@ -316,9 +316,9 @@ func GenerateReadmeLimits(root string) (string, error) {
 func GenerateReadmePlatforms(root string) (string, error) {
 	type tableRow struct {
 		Platform          string `table:"Platform" table_align:"left"`
+		State             string `table:"State" table_align:"left"`
 		KubernetesVersion string `table:"Kubernetes Version" table_align:"left"`
 		ArangoDBVersion   string `table:"ArangoDB Version" table_align:"left"`
-		State             string `table:"State" table_align:"left"`
 		Remarks           string `table:"Remarks" table_align:"left"`
 		ProviderRemarks   string `table:"Provider Remarks" table_align:"left"`
 	}

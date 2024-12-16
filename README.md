@@ -52,32 +52,32 @@ covers individual newer features separately.
 
 [START_INJECT]: # (kubernetesVersionsTable)
 
-| Platform | Kubernetes Version | ArangoDB Version | State | Remarks | Provider Remarks |
+| Platform | State | Kubernetes Version | ArangoDB Version | Remarks | Provider Remarks |
 |:--- |:--- |:--- |:--- |:--- |:--- |
-| Google GKE | 1.28-1.31 | >= 3.11.0 | Production | Don't use micro nodes |  |
-|  | 1.25-1.27 | 3.9.0-3.10.0 | EOL | Don't use micro nodes |  |
-|  | < 1.25 | < 3.8.0 | NotSupported | Don't use micro nodes |  |
-| Azure AKS | 1.28-1.32 | >= 3.11.0 | Production |  |  |
-|  | 1.25-1.27 | 3.9.0-3.10.0 | EOL |  |  |
-|  | < 1.25 | < 3.8.0 | NotSupported |  |  |
-| Amazon EKS | 1.28-1.31 | >= 3.11.0 | Production |  | [Amazon EKS](./docs/providers/eks) |
-|  | 1.25-1.27 | 3.9.0-3.10.0 | EOL |  | [Amazon EKS](./docs/providers/eks) |
-|  | < 1.25 | < 3.8.0 | NotSupported |  | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud | 1.29-1.31 | >= 3.11.0 | Production |  |  |
-|  | 1.25-1.28 | 3.9.0-3.10.0 | EOL |  |  |
-|  | < 1.25 | < 3.8.0 | NotSupported |  |  |
-| OpenShift | 4.11-4.17 | >= 3.11.0 | Production |  |  |
-|  | 4.2-4.11 | 3.9.0-3.10.0 | EOL |  |  |
-|  | < 4.2 | < 3.8.0 | NotSupported |  |  |
-| BareMetal (kubeadm) | 1.28-1.31 | >= 3.11.0 | Production |  |  |
-|  | 1.25-1.27 | 3.9.0-3.10.0 | EOL |  |  |
-|  | < 1.25 | < 3.8.0 | NotSupported |  |  |
-| Minikube | 1.28-1.31 | >= 3.11.0 | Devel Only |  |  |
-|  | 1.25-1.27 | 3.9.0-3.10.0 | EOL |  |  |
-|  | < 1.25 | < 3.8.0 | NotSupported |  |  |
-| Other | 1.28-1.31 | >= 3.11.0 | Production |  |  |
-|  | 1.25-1.27 | 3.9.0-3.10.0 | EOL |  |  |
-|  | < 1.25 | < 3.8.0 | NotSupported |  |  |
+| Google GKE | Production | 1.28-1.31 | >= 3.11.0 | Don't use micro nodes |  |
+|  | EOL | 1.25-1.27 | 3.9.0-3.10.0 | Don't use micro nodes |  |
+|  | NotSupported | < 1.25 | < 3.8.0 | Don't use micro nodes |  |
+| Azure AKS | Production | 1.28-1.32 | >= 3.11.0 |  |  |
+|  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
+|  | NotSupported | < 1.25 | < 3.8.0 |  |  |
+| Amazon EKS | Production | 1.28-1.31 | >= 3.11.0 |  | [Amazon EKS](./docs/providers/eks) |
+|  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  | [Amazon EKS](./docs/providers/eks) |
+|  | NotSupported | < 1.25 | < 3.8.0 |  | [Amazon EKS](./docs/providers/eks) |
+| IBM Cloud | Production | 1.29-1.31 | >= 3.11.0 |  |  |
+|  | EOL | 1.25-1.28 | 3.9.0-3.10.0 |  |  |
+|  | NotSupported | < 1.25 | < 3.8.0 |  |  |
+| OpenShift | Production | 4.11-4.17 | >= 3.11.0 |  |  |
+|  | EOL | 4.2-4.11 | 3.9.0-3.10.0 |  |  |
+|  | NotSupported | < 4.2 | < 3.8.0 |  |  |
+| BareMetal (kubeadm) | Production | 1.28-1.31 | >= 3.11.0 |  |  |
+|  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
+|  | NotSupported | < 1.25 | < 3.8.0 |  |  |
+| Minikube | Devel Only | 1.28-1.31 | >= 3.11.0 |  |  |
+|  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
+|  | NotSupported | < 1.25 | < 3.8.0 |  |  |
+| Other | Production | 1.28-1.31 | >= 3.11.0 |  |  |
+|  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
+|  | NotSupported | < 1.25 | < 3.8.0 |  |  |
 
 [END_INJECT]: # (kubernetesVersionsTable)
 
