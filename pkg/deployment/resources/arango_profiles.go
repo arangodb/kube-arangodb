@@ -160,6 +160,19 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		})),
 		gen(constants.ProfilesIntegrationShutdown, constants.ProfilesIntegrationV1, always(sidecar.IntegrationShutdownV1{})),
 		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, always(sidecar.IntegrationEnvoyV3{Spec: spec})),
+		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV1, func() (sidecar.Integration, bool) {
+			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {
+				if p, ok := v.GetSimple(deploymentName); ok {
+					if p.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
+						return sidecar.IntegrationStorageV1Community{
+							Storage: p,
+						}, true
+					}
+				}
+			}
+
+			return nil, false
+		}),
 		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV2, func() (sidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {
 				if p, ok := v.GetSimple(deploymentName); ok {
@@ -172,7 +185,8 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			}
 
 			return nil, false
-		})); err != nil {
+		}),
+	); err != nil {
 		return err
 	} else if changed {
 		reconcileRequired.Required()
