@@ -885,6 +885,9 @@ v1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -3150,6 +3153,9 @@ v1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -5333,6 +5339,9 @@ v1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -7598,6 +7607,9 @@ v1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -10974,6 +10986,9 @@ v1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -13300,6 +13315,9 @@ v1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -15476,6 +15494,9 @@ v1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -17752,6 +17773,9 @@ v1alpha:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -20017,6 +20041,9 @@ v1alpha:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -22200,6 +22227,9 @@ v1alpha:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -24465,6 +24495,9 @@ v1alpha:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -27841,6 +27874,9 @@ v1alpha:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -30167,6 +30203,9 @@ v1alpha:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -32343,6 +32382,9 @@ v1alpha:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -34619,6 +34661,9 @@ v2alpha1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -36884,6 +36929,9 @@ v2alpha1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -39067,6 +39115,9 @@ v2alpha1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -41332,6 +41383,9 @@ v2alpha1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -44708,6 +44762,9 @@ v2alpha1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -47034,6 +47091,9 @@ v2alpha1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:
@@ -49210,6 +49270,9 @@ v2alpha1:
                     type: array
                   mode:
                     description: Mode keep container replace mode
+                    enum:
+                      - update
+                      - ignore
                     type: string
                 type: object
               internalPort:

@@ -169,7 +169,7 @@ Possible Values:
 
 ### .spec.agents.initContainers.containers
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L91)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L93)</sup>
 
 Containers contains list of containers
 
@@ -180,9 +180,13 @@ Links:
 
 ### .spec.agents.initContainers.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L94)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L98)</sup>
 
 Mode keep container replace mode
+
+Possible Values: 
+* `"update"` (default) - Enforce update of pod if init container has been changed
+* `"ignore"` - Ignores init container changes in pod recreation flow
 
 ***
 
@@ -1235,7 +1239,7 @@ Possible Values:
 
 ### .spec.coordinators.initContainers.containers
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L91)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L93)</sup>
 
 Containers contains list of containers
 
@@ -1246,9 +1250,13 @@ Links:
 
 ### .spec.coordinators.initContainers.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L94)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L98)</sup>
 
 Mode keep container replace mode
+
+Possible Values: 
+* `"update"` (default) - Enforce update of pod if init container has been changed
+* `"ignore"` - Ignores init container changes in pod recreation flow
 
 ***
 
@@ -2169,7 +2177,7 @@ Possible Values:
 
 ### .spec.dbservers.initContainers.containers
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L91)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L93)</sup>
 
 Containers contains list of containers
 
@@ -2180,9 +2188,13 @@ Links:
 
 ### .spec.dbservers.initContainers.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L94)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L98)</sup>
 
 Mode keep container replace mode
+
+Possible Values: 
+* `"update"` (default) - Enforce update of pod if init container has been changed
+* `"ignore"` - Ignores init container changes in pod recreation flow
 
 ***
 
@@ -3235,7 +3247,7 @@ Possible Values:
 
 ### .spec.gateways.initContainers.containers
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L91)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L93)</sup>
 
 Containers contains list of containers
 
@@ -3246,9 +3258,13 @@ Links:
 
 ### .spec.gateways.initContainers.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L94)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L98)</sup>
 
 Mode keep container replace mode
+
+Possible Values: 
+* `"update"` (default) - Enforce update of pod if init container has been changed
+* `"ignore"` - Ignores init container changes in pod recreation flow
 
 ***
 
@@ -4912,7 +4928,7 @@ Possible Values:
 
 ### .spec.single.initContainers.containers
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L91)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L93)</sup>
 
 Containers contains list of containers
 
@@ -4923,9 +4939,13 @@ Links:
 
 ### .spec.single.initContainers.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L94)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L98)</sup>
 
 Mode keep container replace mode
+
+Possible Values: 
+* `"update"` (default) - Enforce update of pod if init container has been changed
+* `"ignore"` - Ignores init container changes in pod recreation flow
 
 ***
 
@@ -6047,7 +6067,7 @@ Possible Values:
 
 ### .spec.syncmasters.initContainers.containers
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L91)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L93)</sup>
 
 Containers contains list of containers
 
@@ -6058,9 +6078,13 @@ Links:
 
 ### .spec.syncmasters.initContainers.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L94)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L98)</sup>
 
 Mode keep container replace mode
+
+Possible Values: 
+* `"update"` (default) - Enforce update of pod if init container has been changed
+* `"ignore"` - Ignores init container changes in pod recreation flow
 
 ***
 
@@ -6973,7 +6997,7 @@ Possible Values:
 
 ### .spec.syncworkers.initContainers.containers
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L91)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L93)</sup>
 
 Containers contains list of containers
 
@@ -6984,9 +7008,13 @@ Links:
 
 ### .spec.syncworkers.initContainers.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L94)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/server_group_init_containers.go#L98)</sup>
 
 Mode keep container replace mode
+
+Possible Values: 
+* `"update"` (default) - Enforce update of pod if init container has been changed
+* `"ignore"` - Ignores init container changes in pod recreation flow
 
 ***
 

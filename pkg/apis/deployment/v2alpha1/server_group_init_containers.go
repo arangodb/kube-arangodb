@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ type ServerGroupInitContainerMode string
 
 func (s *ServerGroupInitContainerMode) Get() ServerGroupInitContainerMode {
 	if s == nil {
-		return ServerGroupInitContainerUpdateMode // default
+		return ServerGroupInitContainerDefaultMode // default
 	}
 
 	return *s
@@ -78,6 +78,8 @@ func (s *ServerGroupInitContainerMode) Validate() error {
 }
 
 const (
+	// ServerGroupInitContainerDefaultMode default mode
+	ServerGroupInitContainerDefaultMode = ServerGroupInitContainerIgnoreMode
 	// ServerGroupInitContainerIgnoreMode ignores init container changes in pod recreation flow
 	ServerGroupInitContainerIgnoreMode ServerGroupInitContainerMode = "ignore"
 	// ServerGroupInitContainerUpdateMode enforce update of pod if init container has been changed
@@ -91,6 +93,8 @@ type ServerGroupInitContainers struct {
 	Containers []core.Container `json:"containers,omitempty"`
 
 	// Mode keep container replace mode
+	// +doc/enum: update|Enforce update of pod if init container has been changed
+	// +doc/enum: ignore|Ignores init container changes in pod recreation flow
 	Mode *ServerGroupInitContainerMode `json:"mode,omitempty"`
 }
 

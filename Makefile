@@ -843,6 +843,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/apis/networking/" \
 	      "$(ROOT)/pkg/apis/scheduler/" \
+	      "$(ROOT)/pkg/apis/platform/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
@@ -858,6 +859,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/apis/networking/" \
 	      "$(ROOT)/pkg/apis/scheduler/" \
+	      "$(ROOT)/pkg/apis/platform/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
@@ -873,6 +875,7 @@ set-api-version/%:
 		  "$(ROOT)/pkg/apis/backup/" \
 	      "$(ROOT)/pkg/apis/networking/" \
 	      "$(ROOT)/pkg/apis/scheduler/" \
+	      "$(ROOT)/pkg/apis/platform/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"

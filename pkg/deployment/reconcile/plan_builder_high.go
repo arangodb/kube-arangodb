@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -265,10 +265,14 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 				return nil, nil
 			}
 
-			if spec.MemberPropagationMode.Get() == api.DeploymentMemberPropagationModeAlways {
-				return restartMemberConditionAction(group, member.ID, reason), nil
-			} else {
+			switch a := spec.MemberPropagationMode.Get(); a {
+			case api.DeploymentMemberPropagationModeOnRestart:
 				return api.Plan{pendingRestartMemberConditionAction(group, member.ID, reason)}, nil
+			case api.DeploymentMemberPropagationModeAlways:
+				return restartMemberConditionAction(group, member.ID, reason), nil
+			default:
+				r.log.Str("mode", a.String()).Warn("Unknown DeploymentMemberPropagationMode, fallback to Default")
+				return restartMemberConditionAction(group, member.ID, reason), nil
 			}
 		default:
 			return nil, nil
