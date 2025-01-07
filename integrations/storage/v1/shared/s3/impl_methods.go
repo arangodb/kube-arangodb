@@ -3,6 +3,7 @@ package s3
 import (
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
 	"strings"
 	"sync"
@@ -11,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	pbTypes "github.com/gogo/protobuf/types"
 	"golang.org/x/sync/errgroup"
 
 	pbCommon "github.com/arangodb-managed/apis/common/v1"
@@ -714,11 +714,7 @@ func (s *s3impl) GetObjectInfo(ctx context.Context, req *pbStorage.PathRequest) 
 		return nil, pbCommon.NotFound(path)
 	}
 
-	lastUpdatedAt, err := pbTypes.TimestampProto(result.LastUpdatedAt)
-	if err != nil {
-		log.Err(err).Warn("TimestampProto failed")
-		return nil, pbCommon.Unknown("unexpected err: %s", err.Error())
-	}
+	lastUpdatedAt := timestamppb.New(result.LastUpdatedAt)
 
 	return &pbStorage.ObjectInfo{
 		IsLocked:      result.IsLocked,
