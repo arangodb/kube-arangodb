@@ -75,7 +75,6 @@ require (
 	github.com/arangodb-managed/apis v0.89.1
 	github.com/arangodb-managed/integration-apis v0.2.1
 	github.com/aws/aws-sdk-go v1.55.5
-	github.com/gogo/protobuf v1.3.2
 	github.com/jedib0t/go-pretty/v6 v6.6.5
 	helm.sh/helm/v3 v3.16.2
 )
@@ -135,6 +134,7 @@ require (
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
