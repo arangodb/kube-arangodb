@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,18 +67,18 @@ func (r *Reconciler) createRotateOrUpgradeDecision(spec api.DeploymentSpec, stat
 	upgradeOrder := util.BoolSwitch(features.UpgradeAlternativeOrder().Enabled(), alternativeUpgradeOrder, api.AllServerGroups)
 
 	for _, m := range status.Members.AsListInGroups(upgradeOrder...) {
-		d[m.Member.ID] = r.createRotateOrUpgradeDecisionMember(spec, status, context, m)
+		d[m.Member.ID] = r.createRotateOrUpgradeDecisionMember(spec.Mode.Get(), spec, status, context, m)
 	}
 
 	return d
 }
 
-func (r *Reconciler) createRotateOrUpgradeDecisionMember(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, element api.DeploymentStatusMemberElement) (d updateUpgradeDecision) {
+func (r *Reconciler) createRotateOrUpgradeDecisionMember(mode api.DeploymentMode, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, element api.DeploymentStatusMemberElement) (d updateUpgradeDecision) {
 	if element.Member.Phase == api.MemberPhaseCreated && element.Member.Pod.GetName() != "" {
 		// Only upgrade when phase is created
 
 		// Got pod, compare it with what it should be
-		decision := r.podNeedsUpgrading(element.Member, spec, status.Images)
+		decision := r.podNeedsUpgrading(mode, element.Member, spec, status.Images)
 
 		if decision.UpgradeNeeded || decision.Hold {
 			d.upgrade = true

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -329,6 +329,10 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 		return nil, errors.WithStack(errors.Errorf("Member '%s' not found", memberID))
 	}
 	groupSpec := spec.GetServerGroupSpec(group)
+
+	if spec.Mode.Get() == api.DeploymentModeActiveFailover && !features.ActiveFailover().ImageSupported(&imageInfo) {
+		return nil, errors.Errorf("ActiveFailover starting from ArangoDB 3.12 is not supported")
+	}
 
 	memberName := m.ArangoMemberName(r.context.GetAPIObject().GetName(), group)
 
