@@ -57,6 +57,14 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1
       - alias: pbShutdownV1
         pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition
+      - alias: pbImplStorageV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1
+      - alias: pbImplStorageV1Shared
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/shared
+      - alias: pbImplStorageV1SharedS3
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/shared/s3
+      - alias: pbStorageV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/definition
       - alias: pbImplStorageV2
         pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2
       - alias: pbImplStorageV2Shared

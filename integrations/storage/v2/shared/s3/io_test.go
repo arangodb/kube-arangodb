@@ -31,45 +31,14 @@ import (
 
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	awsHelper "github.com/arangodb/kube-arangodb/pkg/util/aws"
-)
-
-const (
-	TestAwsProfile util.EnvironmentVariable = "TEST_AWS_PROFILE"
-	TestAwsRole    util.EnvironmentVariable = "TEST_AWS_ROLE"
-	TestAWSBucket  util.EnvironmentVariable = "TEST_AWS_BUCKET"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func getClient(t *testing.T) pbImplStorageV2Shared.IO {
-	v, ok := TestAwsProfile.Lookup()
-	if !ok {
-		t.Skipf("Client does not exists")
-	}
-
-	b, ok := TestAWSBucket.Lookup()
-	if !ok {
-		t.Skipf("Bucket does not exists")
-	}
-
-	var c awsHelper.Config
-	c.Region = "eu-central-1"
-
-	c.Provider.Config = awsHelper.ProviderConfig{
-		Profile: v,
-	}
-
-	r, ok := TestAwsRole.Lookup()
-	if ok {
-		c.Provider.Impersonate = awsHelper.ProviderImpersonate{
-			Role: r,
-			Name: "Test",
-		}
-	}
-
 	var cfg Configuration
 
-	cfg.Client = c
-	cfg.BucketName = b
+	cfg.Client = tests.GetAWSClientConfig(t)
+	cfg.BucketName = tests.GetAWSS3Bucket(t)
 	cfg.BucketPrefix = fmt.Sprintf("test/%s/", uuid.NewUUID())
 
 	z, err := cfg.New()
@@ -118,4 +87,8 @@ func Test(t *testing.T) {
 	t.Logf("Read Checksum: %s", echecksum)
 
 	require.EqualValues(t, echecksum, checksum)
+
+	removed, err := w.Delete(ctx, "test.data")
+	require.NoError(t, err)
+	require.True(t, removed)
 }

@@ -27,8 +27,8 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	pbImplStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/ml/storage"
 	"github.com/arangodb/kube-arangodb/pkg/util/aws"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -84,7 +84,7 @@ func (i IntegrationStorageV2) Envs() ([]core.EnvVar, error) {
 		envs = append(envs,
 			core.EnvVar{
 				Name:  "INTEGRATION_STORAGE_V2_TYPE",
-				Value: string(storage.S3),
+				Value: string(pbImplStorageV2.ConfigurationTypeS3),
 			},
 			core.EnvVar{
 				Name:  "INTEGRATION_STORAGE_V2_S3_ENDPOINT",
