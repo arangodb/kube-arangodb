@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,50 +32,16 @@ import (
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	pbImplStorageV2SharedS3 "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	awsHelper "github.com/arangodb/kube-arangodb/pkg/util/aws"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-const (
-	TestAwsProfile util.EnvironmentVariable = "TEST_AWS_PROFILE"
-	TestAwsRole    util.EnvironmentVariable = "TEST_AWS_ROLE"
-	TestAWSBucket  util.EnvironmentVariable = "TEST_AWS_BUCKET"
-)
-
 func getClient(t *testing.T, mods ...Mod) Configuration {
-	v, ok := TestAwsProfile.Lookup()
-	if !ok {
-		t.Skipf("Client does not exists")
-	}
-
-	b, ok := TestAWSBucket.Lookup()
-	if !ok {
-		t.Skipf("Bucket does not exists")
-	}
-
-	var c awsHelper.Config
-	c.Region = "eu-central-1"
-
-	c.Provider.Config = awsHelper.ProviderConfig{
-		Profile: v,
-	}
-	c.Provider.Type = awsHelper.ProviderTypeConfig
-
-	r, ok := TestAwsRole.Lookup()
-	if ok {
-		c.Provider.Impersonate = awsHelper.ProviderImpersonate{
-			Impersonate: true,
-			Role:        r,
-			Name:        "Test",
-		}
-	}
-
 	var scfg pbImplStorageV2SharedS3.Configuration
 
-	scfg.Client = c
-	scfg.BucketName = b
+	scfg.Client = tests.GetAWSClientConfig(t)
+	scfg.BucketName = tests.GetAWSS3Bucket(t)
 	scfg.BucketPrefix = fmt.Sprintf("test/%s/", uuid.NewUUID())
 
 	var cfg Configuration

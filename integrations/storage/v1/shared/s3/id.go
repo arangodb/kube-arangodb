@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,20 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package storage
+package s3
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/ml/storage/s3"
+	"strings"
+
+	"github.com/dchest/uniuri"
 )
 
-type Type string
-
-const (
-	S3 = Type("s3")
-)
-
-type Configuration struct {
-	Type Type
-
-	S3 s3.Configuration
+// newID creates a new unique ID.
+func newID() string {
+	return strings.ToLower(uniuri.NewLen(uniuri.UUIDLen))
 }

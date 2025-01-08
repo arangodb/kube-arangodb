@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,31 +18,42 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package s3
+package v1
 
-import "github.com/arangodb/kube-arangodb/pkg/util/errors"
+import (
+	pbImplStorageV1SharedS3 "github.com/arangodb/kube-arangodb/integrations/storage/v1/shared/s3"
+)
+
+type Mod func(c Configuration) Configuration
+
+type ConfigurationType string
+
+const (
+	ConfigurationTypeS3 ConfigurationType = "s3"
+)
+
+func NewConfiguration(mods ...Mod) Configuration {
+	var cfg Configuration
+
+	return cfg.With(mods...)
+}
 
 type Configuration struct {
-	Endpoint      string
-	AllowInsecure bool
-	CACrtFile     string
-	CAKeyFile     string
-	DisableSSL    bool
-	Region        string
-	BucketName    string
-	AccessKeyFile string // path to file containing S3 AccessKey
-	SecretKeyFile string // path to file containing S3 SecretKey
+	Type ConfigurationType
+
+	S3 pbImplStorageV1SharedS3.Configuration
 }
 
 func (c Configuration) Validate() error {
-	if c.AccessKeyFile == "" {
-		return errors.Errorf("AccessKeyFile is not defined")
-	}
-	if c.SecretKeyFile == "" {
-		return errors.Errorf("SecretKeyFile is not defined")
-	}
-	if c.Endpoint == "" {
-		return errors.Errorf("Endpoint is not defined")
-	}
 	return nil
+}
+
+func (c Configuration) With(mods ...Mod) Configuration {
+	n := c
+
+	for _, mod := range mods {
+		n = mod(n)
+	}
+
+	return n
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -160,6 +160,19 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		})),
 		gen(constants.ProfilesIntegrationShutdown, constants.ProfilesIntegrationV1, always(sidecar.IntegrationShutdownV1{})),
 		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, always(sidecar.IntegrationEnvoyV3{Spec: spec})),
+		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV1, func() (sidecar.Integration, bool) {
+			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {
+				if p, ok := v.GetSimple(deploymentName); ok {
+					if p.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
+						return sidecar.IntegrationStorageV1{
+							PlatformStorage: p,
+						}, true
+					}
+				}
+			}
+
+			return nil, false
+		}),
 		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV2, func() (sidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {
 				if p, ok := v.GetSimple(deploymentName); ok {

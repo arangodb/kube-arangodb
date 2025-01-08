@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build !enterprise
-
-package storage
+package s3
 
 import (
-	"context"
+	"testing"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
-func NewService(_ context.Context, _ Configuration) (svc.Handler, error) {
-	return nil, errors.New("this service is available only in enterprise edition of operator")
+func getClient(t *testing.T) Configuration {
+	var scfg Configuration
+
+	scfg.Client = tests.GetAWSClientConfig(t)
+	scfg.BucketName = tests.GetAWSS3Bucket(t)
+
+	return scfg
 }
