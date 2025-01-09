@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,31 +41,42 @@ func Test_Manager(t *testing.T) {
 
 	for _, repo := range limitArray(mgr.Repositories(), 5) {
 		t.Run(repo, func(t *testing.T) {
+			r, ok := mgr.Get(repo)
+			require.True(t, ok)
+
 			t.Run("Latest", func(t *testing.T) {
-				v, ok := mgr.Latest(repo)
+				v, ok := r.Latest()
 				require.True(t, ok)
 
-				vdata, err := mgr.Chart(context.Background(), repo, v)
+				vdata, err := v.Get(context.Background())
 				require.NoError(t, err)
+
+				t.Logf("Chart %s, Version %s, Release %s", repo, v.Chart().Version, v.Chart().Created.String())
 
 				vchart, err := vdata.Get()
 				require.NoError(t, err)
 				require.NotNil(t, vchart.Chart().Metadata)
 
-				data, err := mgr.Chart(context.Background(), repo, "latest")
+				vl, ok := r.Get("latest")
+				require.True(t, ok)
+
+				vldata, err := vl.Get(context.Background())
 				require.NoError(t, err)
 
-				chart, err := data.Get()
+				chart, err := vldata.Get()
 				require.NoError(t, err)
 				require.NotNil(t, chart.Chart().Metadata)
 
-				require.EqualValues(t, v, vchart.Chart().Metadata.Version)
-				require.EqualValues(t, v, chart.Chart().Metadata.Version)
+				require.EqualValues(t, v.Chart().Version, vchart.Chart().Metadata.Version)
+				require.EqualValues(t, v.Chart().Version, chart.Chart().Metadata.Version)
 			})
 			t.Run("ByVersion", func(t *testing.T) {
-				for _, version := range limitArray(mgr.Versions(repo), 5) {
+				for _, version := range limitArray(r.Versions(), 5) {
 					t.Run(version, func(t *testing.T) {
-						data, err := mgr.Chart(context.Background(), repo, version)
+						v, ok := r.Get(version)
+						require.True(t, ok)
+
+						data, err := v.Get(context.Background())
 						require.NoError(t, err)
 
 						c, err := data.Get()
