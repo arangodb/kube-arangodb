@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,4 +82,26 @@ func Receive(ctx context.Context, client StorageV2Client, key string, out io.Wri
 	}
 
 	return bytes, nil
+}
+
+func List(ctx context.Context, client StorageV2Client, prefix string) ([]*StorageV2Object, error) {
+	var r []*StorageV2Object
+
+	res, err := client.ListObjects(ctx, &StorageV2ListObjectsRequest{
+		Path: &StorageV2Path{
+			Path: prefix,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ugrpc.Recv[*StorageV2ListObjectsResponse](res, func(response *StorageV2ListObjectsResponse) error {
+		r = append(r, response.GetFiles()...)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }
