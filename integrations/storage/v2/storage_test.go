@@ -185,9 +185,9 @@ func testFileListing(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2C
 
 func testS3BucketFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2Client, size int) {
 	t.Run(fmt.Sprintf("Size:%d", size), func(t *testing.T) {
-		prefix := fmt.Sprintf("%s", uuid.NewUUID())
-		name := fmt.Sprintf("%s/test.local", prefix)
-		nameTwo := fmt.Sprintf("%s/test.local.two", prefix)
+		prefix := fmt.Sprintf("%s/", uuid.NewUUID())
+		name := fmt.Sprintf("%stest.local", prefix)
+		nameTwo := fmt.Sprintf("%stest.local.two", prefix)
 		t.Logf("File: %s", name)
 
 		dataOne := make([]byte, size)
