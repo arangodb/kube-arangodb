@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,6 +42,10 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
+)
+
+const (
+	EnvoyRouteHeader = "arangodb-platform-route"
 )
 
 func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps generic.ModClient[*core.ConfigMap]) error {
@@ -228,6 +232,9 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 						pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: util.BoolSwitch[string](target.Authentication.Type.Get() == networkingApi.ArangoRouteSpecAuthenticationTypeRequired, pbImplEnvoyAuthV3.AuthConfigKeywordTrue, pbImplEnvoyAuthV3.AuthConfigKeywordFalse),
 						pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(target.Authentication.PassMode),
 					},
+				}
+				dest.ResponseHeaders = map[string]string{
+					EnvoyRouteHeader: at.GetName(),
 				}
 				cfg.Destinations[at.Spec.GetRoute().GetPath()] = dest
 			}

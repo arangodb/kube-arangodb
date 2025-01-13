@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,6 +91,7 @@ func (i *SchedulerV2InstallRequestOptions) Options() []util.Mod[action.Install] 
 	if v := i.GetLabels(); len(v) > 0 {
 		opts = append(opts, func(in *action.Install) {
 			in.Labels = v
+			in.Wait = util.OptionalType(i.Wait, false)
 		})
 	}
 
@@ -107,6 +108,7 @@ func (i *SchedulerV2UpgradeRequestOptions) Options() []util.Mod[action.Upgrade] 
 	if v := i.GetLabels(); len(v) > 0 {
 		opts = append(opts, func(in *action.Upgrade) {
 			in.Labels = v
+			in.Wait = util.OptionalType(i.Wait, false)
 		})
 	}
 
@@ -143,6 +145,10 @@ func (i *SchedulerV2UninstallRequestOptions) Options() []util.Mod[action.Uninsta
 	}
 
 	var opts []util.Mod[action.Uninstall]
+
+	opts = append(opts, func(in *action.Uninstall) {
+		in.Wait = util.OptionalType(i.Wait, false)
+	})
 
 	return opts
 }

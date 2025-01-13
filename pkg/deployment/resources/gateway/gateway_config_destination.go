@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -70,6 +71,8 @@ type ConfigDestination struct {
 	UpgradeConfigs ConfigDestinationsUpgrade `json:"upgradeConfigs,omitempty"`
 
 	TLS ConfigDestinationTLS `json:"tls,omitempty"`
+
+	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"`
 }
 
 func (c *ConfigDestination) Validate() error {
@@ -106,12 +109,26 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 		return nil, err
 	}
 
+	var headers []*coreAPI.HeaderValueOption
+
+	for k, v := range c.ResponseHeaders {
+		headers = append(headers, &coreAPI.HeaderValueOption{
+			Header: &coreAPI.HeaderValue{
+				Key:   k,
+				Value: v,
+			},
+			AppendAction:   coreAPI.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			KeepEmptyValue: false,
+		})
+	}
+
 	return &routeAPI.Route{
 		Match: &routeAPI.RouteMatch{
 			PathSpecifier: &routeAPI.RouteMatch_Prefix{
 				Prefix: prefix,
 			},
 		},
+		ResponseHeadersToAdd: headers,
 		Action: &routeAPI.Route_Route{
 			Route: &routeAPI.RouteAction{
 				ClusterSpecifier: &routeAPI.RouteAction_Cluster{
