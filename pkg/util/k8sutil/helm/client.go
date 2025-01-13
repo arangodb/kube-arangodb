@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ func (c *client) Install(ctx context.Context, chart Chart, values Values, mods .
 		return nil, err
 	}
 
-	result, err := act.Run(chartData.Chart(), valuesData)
+	result, err := act.RunWithContext(ctx, chartData.Chart(), valuesData)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (c *client) Upgrade(ctx context.Context, name string, chart Chart, values V
 		}
 	}
 
-	result, err := act.Run(name, chartData.Chart(), valuesData)
+	result, err := act.RunWithContext(ctx, name, chartData.Chart(), valuesData)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,37 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
+func NewMergeValues(opts ValuesMergeMethod, vs ...any) (Values, error) {
+	if len(vs) == 0 {
+		return nil, nil
+	}
+
+	o, err := NewValues(vs[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if len(vs) == 1 {
+		return o, nil
+	}
+
+	for _, el := range vs[1:] {
+		a, err := NewValues(el)
+		if err != nil {
+			return nil, err
+		}
+
+		no, err := opts.Merge(o, a)
+		if err != nil {
+			return nil, err
+		}
+
+		o = no
+	}
+
+	return o, nil
+}
+
 func NewValues(in any) (Values, error) {
 	data, err := json.Marshal(in)
 	if err != nil {
@@ -38,35 +69,25 @@ func NewValues(in any) (Values, error) {
 type Values []byte
 
 func (v Values) Equals(other Values) bool {
-	a, err := v.Marshal()
+	a, err := v.MarshalJSON()
 	if err != nil {
 		return false
 	}
 
-	if len(a) == 0 {
-		a = nil
-	}
-
-	ad, err := json.Marshal(a)
+	b, err := other.MarshalJSON()
 	if err != nil {
 		return false
 	}
 
-	b, err := other.Marshal()
-	if err != nil {
-		return false
-	}
+	return util.SHA256(a) == util.SHA256(b)
+}
 
-	if len(b) == 0 {
-		b = nil
-	}
+func (v Values) MarshalJSON() ([]byte, error) {
+	return v, nil
+}
 
-	bd, err := json.Marshal(b)
-	if err != nil {
-		return false
-	}
-
-	return util.SHA256(ad) == util.SHA256(bd)
+func (v Values) String() string {
+	return string(v)
 }
 
 func (v Values) Marshal() (map[string]interface{}, error) {
