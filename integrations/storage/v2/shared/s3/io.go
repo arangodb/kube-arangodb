@@ -41,7 +41,7 @@ type ios struct {
 }
 
 func (i *ios) key(keys ...string) string {
-	return path.Join(i.config.BucketPrefix, path.Join(keys...))
+	return path.Join(strings.TrimPrefix(i.config.BucketPrefix, "/"), path.Join(keys...))
 }
 
 func (i *ios) clean(key string) string {
