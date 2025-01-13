@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -36,26 +35,7 @@ import (
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
-
-func listAllFilesHelper(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2Client, prefix string) []*pbStorageV2.StorageV2Object {
-	var r []*pbStorageV2.StorageV2Object
-
-	res, err := h.ListObjects(ctx, &pbStorageV2.StorageV2ListObjectsRequest{
-		Path: &pbStorageV2.StorageV2Path{
-			Path: prefix,
-		},
-	})
-	require.NoError(t, err)
-
-	require.NoError(t, ugrpc.Recv[*pbStorageV2.StorageV2ListObjectsResponse](res, func(response *pbStorageV2.StorageV2ListObjectsResponse) error {
-		r = append(r, response.GetFiles()...)
-		return nil
-	}))
-
-	return r
-}
 
 func Test_List(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
@@ -163,27 +143,30 @@ func testFileListing(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2C
 		})
 
 		t.Run("List", func(t *testing.T) {
-			revcFiles := listAllFilesHelper(t, ctx, h, prefix)
+			revcFiles, err := pbStorageV2.List(ctx, h, prefix)
+			require.NoError(t, err)
 
 			require.Len(t, revcFiles, len(files))
 
 			for id := range files {
-				require.EqualValues(t, strings.TrimPrefix(files[id], prefix), revcFiles[id].GetPath().GetPath())
+				require.EqualValues(t, files[id], revcFiles[id].GetPath().GetPath())
 				require.EqualValues(t, revcFiles[id].GetInfo().GetSize(), len(data))
 			}
 		})
 
 		t.Run("ListSubFolder", func(t *testing.T) {
-			revcFiles := listAllFilesHelper(t, ctx, h, fmt.Sprintf("%spath0000/", prefix))
+			revcFiles, err := pbStorageV2.List(ctx, h, fmt.Sprintf("%spath0000/", prefix))
+			require.NoError(t, err)
 
 			require.Len(t, revcFiles, 1)
 
-			require.EqualValues(t, "file", revcFiles[0].GetPath().GetPath())
+			require.EqualValues(t, fmt.Sprintf("%spath0000/file", prefix), revcFiles[0].GetPath().GetPath())
 			require.EqualValues(t, len(data), revcFiles[0].GetInfo().GetSize())
 		})
 
 		t.Run("ListMisSubFolder", func(t *testing.T) {
-			revcFiles := listAllFilesHelper(t, ctx, h, fmt.Sprintf("%snon-existent/", prefix))
+			revcFiles, err := pbStorageV2.List(ctx, h, fmt.Sprintf("%snon-existent/", prefix))
+			require.NoError(t, err)
 
 			require.Len(t, revcFiles, 0)
 		})
@@ -281,7 +264,8 @@ func testS3BucketFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.S
 		})
 
 		t.Run("List Objects", func(t *testing.T) {
-			revcFiles := listAllFilesHelper(t, ctx, h, prefix)
+			revcFiles, err := pbStorageV2.List(ctx, h, "/")
+			require.NoError(t, err)
 
 			t.Logf("Size: %d", len(revcFiles))
 		})

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@ package s3
 
 import (
 	"context"
-	"fmt"
+	"path"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -39,8 +40,12 @@ type ios struct {
 	downloader *s3manager.Downloader
 }
 
-func (i *ios) key(key string) string {
-	return fmt.Sprintf("%s%s", i.config.BucketPrefix, key)
+func (i *ios) key(keys ...string) string {
+	return path.Join(strings.TrimPrefix(i.config.BucketPrefix, "/"), path.Join(keys...))
+}
+
+func (i *ios) clean(key string) string {
+	return strings.TrimPrefix(strings.TrimPrefix(key, i.key()), "/")
 }
 
 func (i *ios) Write(ctx context.Context, key string) (pbImplStorageV2Shared.Writer, error) {

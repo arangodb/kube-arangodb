@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ package s3
 import (
 	"context"
 	"io"
-	"strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -86,7 +85,7 @@ func (l *listIterator) Next(ctx context.Context) ([]pbImplStorageV2Shared.File, 
 		info.LastUpdatedAt = util.TypeOrDefault(obj.LastModified)
 
 		results = append(results, pbImplStorageV2Shared.File{
-			Key:  strings.TrimPrefix(*obj.Key, l.parent.key(l.key)),
+			Key:  l.parent.clean(*obj.Key),
 			Info: info,
 		})
 
