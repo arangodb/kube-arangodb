@@ -27,6 +27,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -47,6 +48,11 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
+)
+
+var (
+	divisor1m  = resource.MustParse("1m")
+	divisor1Mi = resource.MustParse("1Mi")
 )
 
 var (
@@ -218,6 +224,30 @@ func (r *Resources) arangoDeploymentProfileTemplate(cachedStatus inspectorInterf
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 
+	var envs []core.EnvVar
+
+	envs = append(envs,
+		core.EnvVar{
+			Name:  "ARANGO_DEPLOYMENT_NAME",
+			Value: deploymentName,
+		},
+		core.EnvVar{
+			Name:  "ARANGO_DEPLOYMENT_ENDPOINT",
+			Value: r.arangoDeploymentInternalAddress(cachedStatus),
+		},
+		core.EnvVar{
+			Name:  "ARANGODB_ENDPOINT",
+			Value: r.arangoDeploymentInternalAddress(cachedStatus),
+		},
+	)
+
+	if !r.context.GetSpec().IsAuthenticated() {
+		envs = append(envs, core.EnvVar{
+			Name:  "AUTHENTICATION_ENABLED",
+			Value: r.arangoDeploymentInternalAddress(cachedStatus),
+		})
+	}
+
 	return &schedulerApi.ProfileTemplate{
 		Container: &schedulerApi.ProfileContainerTemplate{
 			All: &schedulerContainerApi.Generic{
@@ -230,6 +260,105 @@ func (r *Resources) arangoDeploymentProfileTemplate(cachedStatus inspectorInterf
 						{
 							Name:  "ARANGO_DEPLOYMENT_ENDPOINT",
 							Value: r.arangoDeploymentInternalAddress(cachedStatus),
+						},
+						{
+							Name:  "ARANGODB_ENDPOINT",
+							Value: r.arangoDeploymentInternalAddress(cachedStatus),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *Resources) tempalteKubernetesEnvs() *schedulerApi.ProfileTemplate {
+	return &schedulerApi.ProfileTemplate{
+		Container: &schedulerApi.ProfileContainerTemplate{
+			All: &schedulerContainerApi.Generic{
+				Environments: &schedulerContainerResourcesApi.Environments{
+					Env: []core.EnvVar{
+						{
+							Name: "KUBERNETES_NAMESPACE",
+							ValueFrom: &core.EnvVarSource{
+								FieldRef: &core.ObjectFieldSelector{
+									FieldPath: "metadata.namespace",
+								},
+							},
+						},
+						{
+							Name: "KUBERNETES_POD_NAME",
+							ValueFrom: &core.EnvVarSource{
+								FieldRef: &core.ObjectFieldSelector{
+									FieldPath: "metadata.name",
+								},
+							},
+						},
+						{
+							Name: "KUBERNETES_POD_IP",
+							ValueFrom: &core.EnvVarSource{
+								FieldRef: &core.ObjectFieldSelector{
+									FieldPath: "status.podIP",
+								},
+							},
+						},
+						{
+							Name: "KUBERNETES_SERVICE_ACCOUNT",
+							ValueFrom: &core.EnvVarSource{
+								FieldRef: &core.ObjectFieldSelector{
+									FieldPath: "spec.serviceAccountName",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *Resources) templateResourceEnvs() *schedulerApi.ProfileTemplate {
+	return &schedulerApi.ProfileTemplate{
+		Container: &schedulerApi.ProfileContainerTemplate{
+			All: &schedulerContainerApi.Generic{
+				Environments: &schedulerContainerResourcesApi.Environments{
+					Env: []core.EnvVar{
+
+						{
+							Name: "CONTAINER_CPU_REQUESTS",
+							ValueFrom: &core.EnvVarSource{
+								ResourceFieldRef: &core.ResourceFieldSelector{
+									Resource: "requests.cpu",
+									Divisor:  divisor1m,
+								},
+							},
+						},
+						{
+							Name: "CONTAINER_MEMORY_REQUESTS",
+							ValueFrom: &core.EnvVarSource{
+								ResourceFieldRef: &core.ResourceFieldSelector{
+									Resource: "requests.memory",
+									Divisor:  divisor1Mi,
+								},
+							},
+						},
+						{
+							Name: "CONTAINER_CPU_LIMITS",
+							ValueFrom: &core.EnvVarSource{
+								ResourceFieldRef: &core.ResourceFieldSelector{
+									Resource: "limits.cpu",
+									Divisor:  divisor1m,
+								},
+							},
+						},
+						{
+							Name: "CONTAINER_MEMORY_LIMITS",
+							ValueFrom: &core.EnvVarSource{
+								ResourceFieldRef: &core.ResourceFieldSelector{
+									Resource: "limits.memory",
+									Divisor:  divisor1Mi,
+								},
+							},
 						},
 					},
 				},
