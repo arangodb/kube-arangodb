@@ -136,6 +136,8 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			}, spec.Integration.GetSidecar(),
 				r.arangoDeploymentProfileTemplate(cachedStatus),
 				r.arangoDeploymentCATemplate(),
+				r.templateKubernetesEnvs(),
+				r.templateResourceEnvs(),
 			)
 			if err != nil {
 				return "", nil, err
@@ -252,27 +254,14 @@ func (r *Resources) arangoDeploymentProfileTemplate(cachedStatus inspectorInterf
 		Container: &schedulerApi.ProfileContainerTemplate{
 			All: &schedulerContainerApi.Generic{
 				Environments: &schedulerContainerResourcesApi.Environments{
-					Env: []core.EnvVar{
-						{
-							Name:  "ARANGO_DEPLOYMENT_NAME",
-							Value: deploymentName,
-						},
-						{
-							Name:  "ARANGO_DEPLOYMENT_ENDPOINT",
-							Value: r.arangoDeploymentInternalAddress(cachedStatus),
-						},
-						{
-							Name:  "ARANGODB_ENDPOINT",
-							Value: r.arangoDeploymentInternalAddress(cachedStatus),
-						},
-					},
+					Env: envs,
 				},
 			},
 		},
 	}
 }
 
-func (r *Resources) tempalteKubernetesEnvs() *schedulerApi.ProfileTemplate {
+func (r *Resources) templateKubernetesEnvs() *schedulerApi.ProfileTemplate {
 	return &schedulerApi.ProfileTemplate{
 		Container: &schedulerApi.ProfileContainerTemplate{
 			All: &schedulerContainerApi.Generic{
