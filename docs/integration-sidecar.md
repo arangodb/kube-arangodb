@@ -133,7 +133,7 @@ ArangoDeployment name.
 
 Example: `deployment`
 
-#### ARANGO_DEPLOYMENT_ENDPOINT
+#### ARANGO_DEPLOYMENT_ENDPOINT / ARANGODB_ENDPOINT
 
 HTTP/S Endpoint of the ArangoDeployment Internal Service.
 
@@ -144,3 +144,52 @@ Example: `https://deployment.default.svc:8529`
 Path to the CA in the PEM format. If not set, TLS is disabled.
 
 Example: `/etc/deployment-int/ca/ca.pem`
+
+#### KUBERNETES_NAMESPACE
+
+Kubernetes Namespace.
+
+Example: `default`
+
+#### KUBERNETES_POD_NAME
+
+Kubernetes Pod Name.
+
+Example: `example`
+
+#### KUBERNETES_POD_IP
+
+Kubernetes Pod IP.
+
+Example: `127.0.0.1`
+
+#### KUBERNETES_SERVICE_ACCOUNT
+
+Kubernetes Service Account mounted for the Pod.
+
+Example: `sa-example`
+
+#### CONTAINER_CPU_REQUESTS
+
+Kubernetes Pod Container CPU Requests (1000 = 1CPU).
+
+Example: `500`
+
+#### CONTAINER_MEMORY_REQUESTS
+
+Kubernetes Pod Container Memory Requests in Megabytes.
+
+Example: `128`
+
+#### CONTAINER_CPU_LIMITS
+
+Kubernetes Pod Container CPU Limits (1000 = 1CPU).
+
+Example: `500`
+
+#### CONTAINER_MEMORY_LIMITS
+
+Kubernetes Pod Container Memory Limits in Megabytes.
+
+Example: `128`
+

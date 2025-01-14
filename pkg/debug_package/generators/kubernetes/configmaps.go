@@ -29,29 +29,21 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-func Secrets() shared.Factory {
-	return shared.NewFactory("kubernetes-secrets", true, secrets)
+func ConfigMaps() shared.Factory {
+	return shared.NewFactory("kubernetes-configmaps", true, configmaps)
 }
 
-func listSecrets(client kubernetes.Interface) func() ([]*core.Secret, error) {
-	return func() ([]*core.Secret, error) {
-		return ListObjects[*core.SecretList, *core.Secret](context.Background(), client.CoreV1().Secrets(cli.GetInput().Namespace), func(result *core.SecretList) []*core.Secret {
-			q := make([]*core.Secret, len(result.Items))
+func listConfigMaps(client kubernetes.Interface) func() ([]*core.ConfigMap, error) {
+	return func() ([]*core.ConfigMap, error) {
+		return ListObjects[*core.ConfigMapList, *core.ConfigMap](context.Background(), client.CoreV1().ConfigMaps(cli.GetInput().Namespace), func(result *core.ConfigMapList) []*core.ConfigMap {
+			q := make([]*core.ConfigMap, len(result.Items))
 
 			for id, e := range result.Items {
-				z := e.DeepCopy()
-
-				if cli.GetInput().HideSensitiveData {
-					for k := range z.Data {
-						z.Data[k] = []byte(util.SHA256(z.Data[k]))
-					}
-				}
-				q[id] = z.DeepCopy()
+				q[id] = e.DeepCopy()
 			}
 
 			return q
@@ -59,13 +51,13 @@ func listSecrets(client kubernetes.Interface) func() ([]*core.Secret, error) {
 	}
 }
 
-func secrets(logger zerolog.Logger, files chan<- shared.File) error {
+func configmaps(logger zerolog.Logger, files chan<- shared.File) error {
 	k, ok := kclient.GetDefaultFactory().Client()
 	if !ok {
 		return errors.Errorf("Client is not initialised")
 	}
 
-	files <- shared.NewYAMLFile("kubernetes/secrets.yaml", listSecrets(k.Kubernetes()))
+	files <- shared.NewYAMLFile("kubernetes/configmaps.yaml", listConfigMaps(k.Kubernetes()))
 
 	return nil
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,5 +30,13 @@ import (
 )
 
 func ListObjects[L generic.ListContinue, T meta.Object](ctx context.Context, k generic.ListInterface[L], extract func(result L) []T) ([]T, error) {
-	return list.APIList[L, T](ctx, k, meta.ListOptions{}, extract)
+	return list.APIList[L, T](ctx, k, meta.ListOptions{}, func(in L) []T {
+		z := extract(in)
+
+		for id := range z {
+			z[id].SetManagedFields(nil)
+		}
+
+		return z
+	})
 }

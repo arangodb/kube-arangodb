@@ -102,6 +102,9 @@ message SchedulerV2InstallRequest {
 message SchedulerV2InstallRequestOptions {
   // Release Labels
   map<string, string> labels = 1;
+
+  // Waits for the upgrade to be completed
+  optional bool wait = 2;
 }
 
 // Response
@@ -130,6 +133,9 @@ message SchedulerV2UpgradeRequest {
 message SchedulerV2UpgradeRequestOptions {
   // Release Labels
   map<string, string> labels = 1;
+
+  // Waits for the upgrade to be completed
+  optional bool wait = 2;
 }
 
 // Response
@@ -154,6 +160,8 @@ message SchedulerV2UninstallRequest {
 
 // Request Options
 message SchedulerV2UninstallRequestOptions {
+  // Waits for the upgrade to be completed
+  optional bool wait = 1;
 }
 
 // Response
