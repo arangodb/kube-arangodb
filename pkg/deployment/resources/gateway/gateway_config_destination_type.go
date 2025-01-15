@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ type ConfigDestinationType int
 const (
 	ConfigDestinationTypeHTTP ConfigDestinationType = iota
 	ConfigDestinationTypeHTTPS
+	ConfigDestinationTypeStatic
 )
 
 func (c *ConfigDestinationType) Get() ConfigDestinationType {
@@ -42,7 +43,7 @@ func (c *ConfigDestinationType) Get() ConfigDestinationType {
 	}
 
 	switch v := *c; v {
-	case ConfigDestinationTypeHTTP, ConfigDestinationTypeHTTPS:
+	case ConfigDestinationTypeHTTP, ConfigDestinationTypeHTTPS, ConfigDestinationTypeStatic:
 		return v
 	default:
 		return ConfigDestinationTypeHTTP
@@ -78,7 +79,7 @@ func (c *ConfigDestinationType) RenderUpstreamTransportSocket(protocol *ConfigDe
 
 func (c *ConfigDestinationType) Validate() error {
 	switch c.Get() {
-	case ConfigDestinationTypeHTTP, ConfigDestinationTypeHTTPS:
+	case ConfigDestinationTypeHTTP, ConfigDestinationTypeHTTPS, ConfigDestinationTypeStatic:
 		return nil
 	default:
 		return errors.Errorf("Invalid destination type")

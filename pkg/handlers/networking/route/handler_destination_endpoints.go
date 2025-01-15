@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -119,6 +119,7 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 	var target networkingApi.ArangoRouteStatusTarget
 
 	target.Path = dest.GetPath()
+	target.Timeout = dest.GetTimeout()
 	target.Type = networkingApi.ArangoRouteStatusTargetEndpointsType
 	target.Protocol = dest.GetProtocol().Get()
 

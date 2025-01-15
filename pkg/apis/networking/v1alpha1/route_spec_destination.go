@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,12 @@
 
 package v1alpha1
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import (
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+)
 
 type ArangoRouteSpecDestination struct {
 	// Service defines service upstream reference
@@ -47,6 +52,9 @@ type ArangoRouteSpecDestination struct {
 
 	// Authentication defines auth methods
 	Authentication *ArangoRouteSpecDestinationAuthentication `json:"authentication,omitempty"`
+
+	// Timeout specify the upstream request timeout
+	Timeout *meta.Duration `json:"timeout,omitempty"`
 }
 
 func (a *ArangoRouteSpecDestination) GetService() *ArangoRouteSpecDestinationService {
@@ -87,6 +95,16 @@ func (a *ArangoRouteSpecDestination) GetPath() string {
 	}
 
 	return *a.Path
+}
+
+func (a *ArangoRouteSpecDestination) GetTimeout() meta.Duration {
+	if a == nil || a.Timeout == nil {
+		return meta.Duration{
+			Duration: constants.DefaultEnvoyUpstreamTimeout,
+		}
+	}
+
+	return *a.Timeout
 }
 
 func (a *ArangoRouteSpecDestination) GetTLS() *ArangoRouteSpecDestinationTLS {
