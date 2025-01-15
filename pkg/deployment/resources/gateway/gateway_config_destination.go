@@ -105,10 +105,10 @@ func (c *ConfigDestination) Validate() error {
 			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
 			shared.PrefixResourceError("upgradeConfigs", c.UpgradeConfigs.Validate()),
 			shared.PrefixResourceErrorFunc("timeout", func() error {
-				if t := c.GetTimeout(); t < 15*time.Second {
-					return errors.Errorf("Timeout lower than 15 seconds not allowed")
-				} else if t > 15*time.Minute {
-					return errors.Errorf("Timeout greater than 15 seconds not allowed")
+				if t := c.GetTimeout(); t < constants.MinGatewayTimeout {
+					return errors.Errorf("Timeout lower than %s not allowed", constants.MinGatewayTimeout.String())
+				} else if t > constants.MaxGatewayTimeout {
+					return errors.Errorf("Timeout greater than %s not allowed", constants.MaxGatewayTimeout.String())
 				}
 				return nil
 			}),

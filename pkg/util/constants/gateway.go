@@ -20,7 +20,12 @@
 
 package constants
 
+import "time"
+
 const (
+	MaxGatewayTimeout = 15 * time.Minute
+	MinGatewayTimeout = 15 * time.Second
+
 	ConfigMapChecksumKey = "CHECKSUM"
 
 	ArangoGatewayExecutor = "/usr/local/bin/envoy"

@@ -189,6 +189,9 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 			},
 		},
 		AuthExtension: &gateway.ConfigAuthZExtension{},
+		Timeout: &meta.Duration{
+			Duration: constants.MaxGatewayTimeout,
+		},
 	}
 
 	if spec.TLS.IsSecure() {
@@ -266,6 +269,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					}
 				}
 				dest.Path = util.NewType(target.Path)
+				dest.Timeout = target.Timeout.DeepCopy()
 				dest.AuthExtension = &gateway.ConfigAuthZExtension{
 					AuthZExtension: map[string]string{
 						pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: util.BoolSwitch[string](target.Authentication.Type.Get() == networkingApi.ArangoRouteSpecAuthenticationTypeRequired, pbImplEnvoyAuthV3.AuthConfigKeywordTrue, pbImplEnvoyAuthV3.AuthConfigKeywordFalse),
