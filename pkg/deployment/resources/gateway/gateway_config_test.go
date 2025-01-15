@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -397,6 +397,68 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 					Path: util.NewType("/test/path/"),
 					Type: util.NewType(ConfigDestinationTypeHTTP),
+				},
+			},
+		})
+	})
+
+	t.Run("Default", func(t *testing.T) {
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Targets: []ConfigDestinationTarget{
+					{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				Path: util.NewType("/test/path/"),
+				Type: util.NewType(ConfigDestinationTypeHTTPS),
+			},
+			DefaultTLS: &ConfigTLS{
+				CertificatePath: "/test",
+				PrivateKeyPath:  "/test12",
+			},
+			SNI: []ConfigSNI{
+				{
+					ConfigTLS: ConfigTLS{
+						CertificatePath: "/cp",
+						PrivateKeyPath:  "/pp",
+					},
+					ServerNames: []string{
+						"example.com",
+					},
+				},
+				{
+					ConfigTLS: ConfigTLS{
+						CertificatePath: "/c2",
+						PrivateKeyPath:  "/p2",
+					},
+					ServerNames: []string{
+						"2.example.com",
+					},
+				},
+			},
+			Destinations: ConfigDestinations{
+				"/_test/": {
+					Targets: []ConfigDestinationTarget{
+						{
+							Host: "127.0.0.1",
+							Port: 12346,
+						},
+					},
+					Path: util.NewType("/test/path/"),
+					Type: util.NewType(ConfigDestinationTypeHTTP),
+				},
+				"/_test2": {
+					Type: util.NewType(ConfigDestinationTypeStatic),
+					Static: &ConfigDestinationStatic{
+						Code: util.NewType[uint32](302),
+						Response: struct {
+							Data string `json:"data"`
+						}{
+							Data: "TEST",
+						},
+					},
 				},
 			},
 		})

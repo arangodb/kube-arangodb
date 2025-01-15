@@ -81,6 +81,9 @@ v1alpha1:
                     description: UID keeps the information about object UID
                     type: string
                 type: object
+              timeout:
+                description: Timeout specify the upstream request timeout
+                type: string
               tls:
                 description: TLS defines TLS Configuration
                 properties:

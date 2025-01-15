@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
@@ -70,7 +71,7 @@ func (a *ArangoGatewayContainer) GetPorts() []core.ContainerPort {
 }
 
 func (a *ArangoGatewayContainer) GetExecutor() string {
-	return a.groupSpec.GetEntrypoint(ArangoGatewayExecutor)
+	return a.groupSpec.GetEntrypoint(constants.ArangoGatewayExecutor)
 }
 
 func (a *ArangoGatewayContainer) GetSecurityContext() *core.SecurityContext {
@@ -133,9 +134,9 @@ func (a *ArangoGatewayContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource)
 
 	if !a.spec.Gateway.IsDynamic() {
 		if cm, ok := a.cachedStatus.ConfigMap().V1().GetSimple(GetGatewayConfigMapName(a.input.ApiObject.GetName())); ok {
-			if v, ok := cm.Data[ConfigMapChecksumKey]; ok {
+			if v, ok := cm.Data[constants.ConfigMapChecksumKey]; ok {
 				envs.Add(true, core.EnvVar{
-					Name:  GatewayConfigChecksumENV,
+					Name:  constants.GatewayConfigChecksumENV,
 					Value: v,
 				})
 			}

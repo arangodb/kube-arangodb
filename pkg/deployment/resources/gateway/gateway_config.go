@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import (
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -56,6 +57,8 @@ type Config struct {
 	IntegrationSidecar *ConfigDestinationTarget `json:"integrationSidecar,omitempty"`
 
 	SNI ConfigSNIList `json:"sni,omitempty"`
+
+	Options *ConfigOptions `json:"options,omitempty"`
 }
 
 func (c Config) Validate() error {
@@ -212,6 +215,9 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 			return nil, err
 		}
 
+		if c == nil {
+			continue
+		}
 		clusters = append(clusters, c)
 	}
 
@@ -267,7 +273,7 @@ func (c Config) RenderIntegrationSidecarFilter() (*httpConnectionManagerAPI.Http
 	}
 
 	return &httpConnectionManagerAPI.HttpFilter{
-		Name: IntegrationSidecarFilterName,
+		Name: constants.EnvoyIntegrationSidecarFilterName,
 		ConfigType: &httpConnectionManagerAPI.HttpFilter_TypedConfig{
 			TypedConfig: e,
 		},
@@ -300,6 +306,7 @@ func (c Config) RenderFilters() ([]*listenerAPI.Filter, error) {
 		StatPrefix:                 "ingress_http",
 		CodecType:                  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
 		ServerHeaderTransformation: httpConnectionManagerAPI.HttpConnectionManager_PASS_THROUGH,
+		MergeSlashes:               c.Options.GetMergeSlashes(),
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
 			RouteConfig: &routeAPI.RouteConfiguration{
 				Name: "default",

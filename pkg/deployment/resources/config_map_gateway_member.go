@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
@@ -34,17 +35,17 @@ func (r *Resources) ensureMemberConfigGatewayConfig(ctx context.Context, cachedS
 	}
 
 	data, _, _, err := gateway.NodeDynamicConfig("arangodb", member.Member.ID, &gateway.DynamicConfig{
-		Path: GatewayVolumeMountDir,
-		File: GatewayCDSConfigFileName,
+		Path: constants.GatewayVolumeMountDir,
+		File: constants.GatewayCDSConfigFileName,
 	}, &gateway.DynamicConfig{
-		Path: GatewayVolumeMountDir,
-		File: GatewayLDSConfigFileName,
+		Path: constants.GatewayVolumeMountDir,
+		File: constants.GatewayLDSConfigFileName,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]string{
-		GatewayDynamicConfigFileName: string(data),
+		constants.GatewayDynamicConfigFileName: string(data),
 	}, nil
 }

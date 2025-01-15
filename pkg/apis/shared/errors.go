@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,11 @@ func (p *ResourceError) Format(s fmt.State, verb rune) {
 	case 'q':
 		fmt.Fprintf(s, "%q", p.Error())
 	}
+}
+
+// PrefixResourceErrorFunc creates new prefixed error from func output. If error is already prefixed then current key is appended
+func PrefixResourceErrorFunc(prefix string, f func() error) error {
+	return PrefixResourceError(prefix, f())
 }
 
 // PrefixResourceError creates new prefixed error. If error is already prefixed then current key is appended

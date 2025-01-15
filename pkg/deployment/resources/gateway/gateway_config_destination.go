@@ -21,6 +21,7 @@
 package gateway
 
 import (
+	"encoding/json"
 	"time"
 
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -29,8 +30,10 @@ import (
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -72,22 +75,53 @@ type ConfigDestination struct {
 
 	TLS ConfigDestinationTLS `json:"tls,omitempty"`
 
+	Timeout *meta.Duration `json:"timeout,omitempty"`
+
 	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"`
+
+	Static *ConfigDestinationStatic `json:"static,omitempty"`
 }
 
 func (c *ConfigDestination) Validate() error {
 	if c == nil {
 		c = &ConfigDestination{}
 	}
-	return shared.WithErrors(
-		shared.PrefixResourceError("targets", c.Targets.Validate()),
-		shared.PrefixResourceError("type", c.Type.Validate()),
-		shared.PrefixResourceError("protocol", c.Protocol.Validate()),
-		shared.PrefixResourceError("tls", c.TLS.Validate()),
-		shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
-		shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
-		shared.PrefixResourceError("upgradeConfigs", c.UpgradeConfigs.Validate()),
-	)
+
+	switch c.Type.Get() {
+	case ConfigDestinationTypeStatic:
+		return shared.WithErrors(
+			shared.PrefixResourceError("type", c.Type.Validate()),
+			shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
+			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
+			shared.PrefixResourceError("static", shared.ValidateRequiredInterface(c.Static)),
+		)
+	default:
+		return shared.WithErrors(
+			shared.PrefixResourceError("targets", c.Targets.Validate()),
+			shared.PrefixResourceError("type", c.Type.Validate()),
+			shared.PrefixResourceError("protocol", c.Protocol.Validate()),
+			shared.PrefixResourceError("tls", c.TLS.Validate()),
+			shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
+			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
+			shared.PrefixResourceError("upgradeConfigs", c.UpgradeConfigs.Validate()),
+			shared.PrefixResourceErrorFunc("timeout", func() error {
+				if t := c.GetTimeout(); t < 15*time.Second {
+					return errors.Errorf("Timeout lower than 15 seconds not allowed")
+				} else if t > 15*time.Minute {
+					return errors.Errorf("Timeout greater than 15 seconds not allowed")
+				}
+				return nil
+			}),
+		)
+	}
+}
+
+func (c *ConfigDestination) GetTimeout() time.Duration {
+	if c == nil || c.Timeout == nil {
+		return constants.DefaultEnvoyUpstreamTimeout
+	}
+
+	return c.Timeout.Duration
 }
 
 func (c *ConfigDestination) GetPath() string {
@@ -99,16 +133,6 @@ func (c *ConfigDestination) GetPath() string {
 }
 
 func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, error) {
-	var tcg []TypedFilterConfigGen
-
-	if c != nil && c.AuthExtension != nil {
-		tcg = append(tcg, c.AuthExtension)
-	}
-	tc, err := NewTypedFilterConfig(tcg...)
-	if err != nil {
-		return nil, err
-	}
-
 	var headers []*coreAPI.HeaderValueOption
 
 	for k, v := range c.ResponseHeaders {
@@ -122,24 +146,72 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 		})
 	}
 
-	return &routeAPI.Route{
+	var tcg []TypedFilterConfigGen
+
+	if c != nil && c.AuthExtension != nil {
+		tcg = append(tcg, c.AuthExtension)
+	}
+	tc, err := NewTypedFilterConfig(tcg...)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &routeAPI.Route{
 		Match: &routeAPI.RouteMatch{
 			PathSpecifier: &routeAPI.RouteMatch_Prefix{
 				Prefix: prefix,
 			},
 		},
 		ResponseHeadersToAdd: headers,
-		Action: &routeAPI.Route_Route{
-			Route: &routeAPI.RouteAction{
-				ClusterSpecifier: &routeAPI.RouteAction_Cluster{
-					Cluster: name,
-				},
-				UpgradeConfigs: c.getUpgradeConfigs().render(),
-				PrefixRewrite:  c.GetPath(),
-			},
-		},
+
 		TypedPerFilterConfig: tc,
-	}, nil
+	}
+
+	if err := c.appendRouteAction(r, name); err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func (c *ConfigDestination) appendRouteAction(route *routeAPI.Route, name string) error {
+	if c.Type.Get() == ConfigDestinationTypeStatic {
+		obj := c.Static.GetResponse()
+
+		if obj == nil {
+			obj = struct{}{}
+		}
+
+		data, err := json.Marshal(obj)
+		if err != nil {
+			return err
+		}
+
+		// Return static response
+		route.Action = &routeAPI.Route_DirectResponse{
+			DirectResponse: &routeAPI.DirectResponseAction{
+				Status: c.Static.GetCode(),
+				Body: &coreAPI.DataSource{
+					Specifier: &coreAPI.DataSource_InlineBytes{
+						InlineBytes: data,
+					},
+				},
+			},
+		}
+		return nil
+	}
+
+	route.Action = &routeAPI.Route_Route{
+		Route: &routeAPI.RouteAction{
+			ClusterSpecifier: &routeAPI.RouteAction_Cluster{
+				Cluster: name,
+			},
+			UpgradeConfigs: c.getUpgradeConfigs().render(),
+			PrefixRewrite:  c.GetPath(),
+			Timeout:        durationpb.New(c.GetTimeout()),
+		},
+	}
+	return nil
 }
 
 func (c *ConfigDestination) getUpgradeConfigs() ConfigDestinationsUpgrade {
@@ -151,6 +223,10 @@ func (c *ConfigDestination) getUpgradeConfigs() ConfigDestinationsUpgrade {
 }
 
 func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, error) {
+	if c.Type.Get() == ConfigDestinationTypeStatic {
+		return nil, nil
+	}
+
 	hpo, err := anypb.New(c.Protocol.Options())
 	if err != nil {
 		return nil, err

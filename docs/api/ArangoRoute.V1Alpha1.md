@@ -83,7 +83,7 @@ UID keeps the information about object UID
 
 ### .spec.destination.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L46)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L51)</sup>
 
 Path defines service path used for overrides
 
@@ -91,7 +91,7 @@ Path defines service path used for overrides
 
 ### .spec.destination.protocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L40)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L45)</sup>
 
 Protocol defines http protocol used for the route
 
@@ -103,7 +103,7 @@ Possible Values:
 
 ### .spec.destination.schema
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L35)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L40)</sup>
 
 Schema defines HTTP/S schema used for connection
 
@@ -150,6 +150,14 @@ Port defines Port or Port Name used as destination
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/shared/v1/object.go#L58)</sup>
 
 UID keeps the information about object UID
+
+***
+
+### .spec.destination.timeout
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_spec_destination.go#L57)</sup>
+
+Timeout specify the upstream request timeout
 
 ***
 
@@ -273,7 +281,7 @@ Possible Values:
 
 ### .status.target.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L49)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L51)</sup>
 
 Path specifies request path override
 
@@ -281,9 +289,17 @@ Path specifies request path override
 
 ### .status.target.protocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L40)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L42)</sup>
 
 Protocol defines http protocol used for the route
+
+***
+
+### .status.target.timeout
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L54)</sup>
+
+Timeout specify the upstream request timeout
 
 ***
 
@@ -297,7 +313,7 @@ Insecure allows Insecure traffic
 
 ### .status.target.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L34)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/networking/v1alpha1/route_status_target.go#L36)</sup>
 
 Type define destination type
 

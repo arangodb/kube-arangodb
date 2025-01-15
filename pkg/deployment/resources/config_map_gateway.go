@@ -34,6 +34,7 @@ import (
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
+	"github.com/arangodb/kube-arangodb/pkg/platform"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -42,10 +43,6 @@ import (
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
-)
-
-const (
-	EnvoyRouteHeader = "arangodb-platform-route"
 )
 
 func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps generic.ModClient[*core.ConfigMap]) error {
@@ -57,6 +54,30 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 	cfg, err := r.renderGatewayConfig(cachedStatus)
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to generate gateway config"))
+	}
+
+	_, baseGatewayCfgYamlChecksum, _, err := cfg.RenderYAML()
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
+	}
+
+	cfg.Destinations[constants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
+		Type: util.NewType(gateway.ConfigDestinationTypeStatic),
+		Path: util.NewType("/_inventory"),
+		AuthExtension: &gateway.ConfigAuthZExtension{
+			AuthZExtension: map[string]string{
+				pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordTrue,
+				pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
+			},
+		},
+		Static: &gateway.ConfigDestinationStatic{
+			Code: util.NewType[uint32](200),
+			Response: &platform.State{
+				Configuration: platform.StateConfiguration{
+					Hash: baseGatewayCfgYamlChecksum,
+				},
+			},
+		},
 	}
 
 	gatewayCfgYaml, _, _, err := cfg.RenderYAML()
@@ -75,9 +96,9 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 	}
 
 	elements, err := r.renderConfigMap(map[string]string{
-		GatewayConfigFileName:    string(gatewayCfgYaml),
-		GatewayCDSConfigFileName: string(gatewayCfgCDSYaml),
-		GatewayLDSConfigFileName: string(gatewayCfgLDSYaml),
+		constants.GatewayConfigFileName:    string(gatewayCfgYaml),
+		constants.GatewayCDSConfigFileName: string(gatewayCfgCDSYaml),
+		constants.GatewayLDSConfigFileName: string(gatewayCfgLDSYaml),
 	})
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
@@ -108,7 +129,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.Reconcile()
 	} else {
 		// CM Exists, checks checksum - if key is not in the map we return empty string
-		if currentSha, expectedSha := util.Optional(cm.Data, ConfigMapChecksumKey, ""), util.Optional(elements, ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
+		if currentSha, expectedSha := util.Optional(cm.Data, constants.ConfigMapChecksumKey, ""), util.Optional(elements, constants.ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
 			// We need to do the update
 			if _, changed, err := patcher.Patcher[*core.ConfigMap](ctx, cachedStatus.ConfigMapsModInterface().V1(), cm, meta.PatchOptions{},
 				patcher.PatchConfigMapData(elements)); err != nil {
@@ -136,6 +157,10 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 	}
 
 	var cfg gateway.Config
+
+	cfg.Options = &gateway.ConfigOptions{
+		MergeSlashes: util.NewType(true),
+	}
 
 	cfg.IntegrationSidecar = &gateway.ConfigDestinationTarget{
 		Host: "127.0.0.1",
@@ -234,7 +259,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					},
 				}
 				dest.ResponseHeaders = map[string]string{
-					EnvoyRouteHeader: at.GetName(),
+					constants.EnvoyRouteHeader: at.GetName(),
 				}
 				cfg.Destinations[at.Spec.GetRoute().GetPath()] = dest
 			}

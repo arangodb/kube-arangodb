@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -36,15 +37,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
-)
-
-const (
-	ConfigMapChecksumKey = "CHECKSUM"
-
-	MemberConfigVolumeMountDir = "/etc/member/"
-	MemberConfigVolumeName     = "member-config"
-
-	MemberConfigChecksumENV = "MEMBER_CONFIG_CHECKSUM"
 )
 
 type memberConfigMapRenderer func(ctx context.Context, cachedStatus inspectorInterface.Inspector, member api.DeploymentStatusMemberElement) (map[string]string, error)
@@ -111,7 +103,7 @@ func (r *Resources) ensureMemberConfig(ctx context.Context, cachedStatus inspect
 					return errors.Reconcile()
 				} else {
 					// CM Exists, checks checksum - if key is not in the map we return empty string
-					if currentSha, expectedSha := util.Optional(obj.Data, ConfigMapChecksumKey, ""), util.Optional(elements, ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
+					if currentSha, expectedSha := util.Optional(obj.Data, constants.ConfigMapChecksumKey, ""), util.Optional(elements, constants.ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
 						// We need to do the update
 						if _, changed, err := patcher.Patcher[*core.ConfigMap](ctx, cachedStatus.ConfigMapsModInterface().V1(), obj, meta.PatchOptions{},
 							patcher.PatchConfigMapData(elements)); err != nil {
@@ -152,7 +144,7 @@ func (r *Resources) renderConfigMap(elements ...map[string]string) (map[string]s
 		return nil, nil
 	}
 
-	result[ConfigMapChecksumKey] = util.SHA256FromStringMap(result)
+	result[constants.ConfigMapChecksumKey] = util.SHA256FromStringMap(result)
 
 	return result, nil
 }

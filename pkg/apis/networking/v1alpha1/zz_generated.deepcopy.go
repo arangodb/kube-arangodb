@@ -27,7 +27,8 @@ package v1alpha1
 
 import (
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -167,6 +168,11 @@ func (in *ArangoRouteSpecDestination) DeepCopyInto(out *ArangoRouteSpecDestinati
 		*out = new(ArangoRouteSpecDestinationAuthentication)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Timeout != nil {
+		in, out := &in.Timeout, &out.Timeout
+		*out = new(v1.Duration)
+		**out = **in
+	}
 	return
 }
 
@@ -211,7 +217,7 @@ func (in *ArangoRouteSpecDestinationEndpoints) DeepCopyInto(out *ArangoRouteSpec
 	*out = *in
 	if in.Object != nil {
 		in, out := &in.Object, &out.Object
-		*out = new(v1.Object)
+		*out = new(sharedv1.Object)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Port != nil {
@@ -237,7 +243,7 @@ func (in *ArangoRouteSpecDestinationService) DeepCopyInto(out *ArangoRouteSpecDe
 	*out = *in
 	if in.Object != nil {
 		in, out := &in.Object, &out.Object
-		*out = new(v1.Object)
+		*out = new(sharedv1.Object)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Port != nil {
@@ -378,7 +384,7 @@ func (in *ArangoRouteStatus) DeepCopyInto(out *ArangoRouteStatus) {
 	}
 	if in.Deployment != nil {
 		in, out := &in.Deployment, &out.Deployment
-		*out = new(v1.Object)
+		*out = new(sharedv1.Object)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Target != nil {
@@ -418,6 +424,7 @@ func (in *ArangoRouteStatusTarget) DeepCopyInto(out *ArangoRouteStatusTarget) {
 		*out = new(ArangoRouteStatusTargetOptions)
 		(*in).DeepCopyInto(*out)
 	}
+	out.Timeout = in.Timeout
 	return
 }
 
