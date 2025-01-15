@@ -63,7 +63,6 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 
 	cfg.Destinations[constants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
 		Type: util.NewType(gateway.ConfigDestinationTypeStatic),
-		Path: util.NewType("/_inventory"),
 		AuthExtension: &gateway.ConfigAuthZExtension{
 			AuthZExtension: map[string]string{
 				pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordTrue,

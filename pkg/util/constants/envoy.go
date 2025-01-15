@@ -25,7 +25,7 @@ import "time"
 const (
 	EnvoyRouteHeader = "arangodb-platform-route"
 
-	EnvoyInventoryConfigDestination = "config"
+	EnvoyInventoryConfigDestination = "/_inventory"
 
 	EnvoyIntegrationSidecarFilterName = "envoy.filters.http.ext_authz"
 
