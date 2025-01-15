@@ -57,8 +57,8 @@ func createGatewayVolumes(input pod.Input) pod.Volumes {
 		ReadOnly:  true,
 	})
 	volumes.AddVolumeMount(core.VolumeMount{
-		Name:      constants.GatewayCDSVolumeName,
-		MountPath: constants.GatewayCDSVolumeMountDir,
+		Name:      constants.GatewayLDSVolumeName,
+		MountPath: constants.GatewayLDSVolumeMountDir,
 		ReadOnly:  true,
 	})
 	volumes.AddVolumeMount(core.VolumeMount{
