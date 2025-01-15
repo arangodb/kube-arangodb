@@ -22,6 +22,7 @@ package resources
 
 import (
 	"fmt"
+	"strings"
 
 	core "k8s.io/api/core/v1"
 
@@ -30,18 +31,34 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func GetGatewayConfigMapName(name string) string {
-	return fmt.Sprintf("%s-gateway", name)
+func GetGatewayConfigMapName(name string, parts ...string) string {
+	if len(parts) == 0 {
+		return fmt.Sprintf("%s-gateway", name)
+	}
+
+	return fmt.Sprintf("%s-gateway-%s", name, strings.Join(parts, "-"))
 }
 
 func createGatewayVolumes(input pod.Input) pod.Volumes {
 	volumes := pod.NewVolumes()
 
 	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName())))
+	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayCDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "cds")))
+	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayLDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "lds")))
 	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.MemberConfigVolumeName, input.ArangoMember.GetName()))
 	volumes.AddVolumeMount(core.VolumeMount{
 		Name:      constants.GatewayVolumeName,
 		MountPath: constants.GatewayVolumeMountDir,
+		ReadOnly:  true,
+	})
+	volumes.AddVolumeMount(core.VolumeMount{
+		Name:      constants.GatewayCDSVolumeName,
+		MountPath: constants.GatewayCDSVolumeMountDir,
+		ReadOnly:  true,
+	})
+	volumes.AddVolumeMount(core.VolumeMount{
+		Name:      constants.GatewayCDSVolumeName,
+		MountPath: constants.GatewayCDSVolumeMountDir,
 		ReadOnly:  true,
 	})
 	volumes.AddVolumeMount(core.VolumeMount{

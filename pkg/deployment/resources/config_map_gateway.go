@@ -46,11 +46,6 @@ import (
 )
 
 func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps generic.ModClient[*core.ConfigMap]) error {
-	deploymentName := r.context.GetAPIObject().GetName()
-	configMapName := GetGatewayConfigMapName(deploymentName)
-
-	log := r.log.Str("section", "gateway-config").Str("name", configMapName)
-
 	cfg, err := r.renderGatewayConfig(cachedStatus)
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to generate gateway config"))
@@ -94,20 +89,40 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway lds config"))
 	}
 
-	elements, err := r.renderConfigMap(map[string]string{
-		constants.GatewayConfigFileName:    string(gatewayCfgYaml),
-		constants.GatewayCDSConfigFileName: string(gatewayCfgCDSYaml),
-		constants.GatewayLDSConfigFileName: string(gatewayCfgLDSYaml),
-	})
+	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName()), map[string]string{
+		constants.GatewayConfigFileName: string(gatewayCfgYaml),
+	}); err != nil {
+		return err
+	}
+
+	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "cds"), map[string]string{
+		constants.GatewayConfigFileName: string(gatewayCfgCDSYaml),
+	}); err != nil {
+		return err
+	}
+
+	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "lds"), map[string]string{
+		constants.GatewayConfigFileName: string(gatewayCfgLDSYaml),
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Resources) ensureGatewayConfigMap(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps generic.ModClient[*core.ConfigMap], name string, data map[string]string) error {
+	log := r.log.Str("section", "gateway-config").Str("name", name)
+
+	elements, err := r.renderConfigMap(data)
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
 	}
 
-	if cm, exists := cachedStatus.ConfigMap().V1().GetSimple(configMapName); !exists {
+	if cm, exists := cachedStatus.ConfigMap().V1().GetSimple(name); !exists {
 		// Create
 		cm = &core.ConfigMap{
 			ObjectMeta: meta.ObjectMeta{
-				Name: configMapName,
+				Name: name,
 			},
 			Data: elements,
 		}

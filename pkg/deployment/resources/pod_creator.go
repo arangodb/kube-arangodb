@@ -290,7 +290,7 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 func createArangoGatewayArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	if input.Deployment.Gateway.IsDynamic() {
-		options.Add("--config-path", path.Join(constants.MemberConfigVolumeMountDir, constants.GatewayDynamicConfigFileName))
+		options.Add("--config-path", path.Join(constants.MemberConfigVolumeMountDir, constants.GatewayConfigFileName))
 	} else {
 		options.Add("--config-path", path.Join(constants.GatewayVolumeMountDir, constants.GatewayConfigFileName))
 	}

@@ -35,17 +35,17 @@ func (r *Resources) ensureMemberConfigGatewayConfig(ctx context.Context, cachedS
 	}
 
 	data, _, _, err := gateway.NodeDynamicConfig("arangodb", member.Member.ID, &gateway.DynamicConfig{
-		Path: constants.GatewayVolumeMountDir,
-		File: constants.GatewayCDSConfigFileName,
+		Path: constants.GatewayCDSVolumeMountDir,
+		File: constants.GatewayConfigFileName,
 	}, &gateway.DynamicConfig{
-		Path: constants.GatewayVolumeMountDir,
-		File: constants.GatewayLDSConfigFileName,
+		Path: constants.GatewayLDSVolumeMountDir,
+		File: constants.GatewayConfigFileName,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]string{
-		constants.GatewayDynamicConfigFileName: string(data),
+		constants.GatewayConfigFileName: string(data),
 	}, nil
 }

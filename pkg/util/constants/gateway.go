@@ -23,15 +23,20 @@ package constants
 const (
 	ConfigMapChecksumKey = "CHECKSUM"
 
-	ArangoGatewayExecutor        = "/usr/local/bin/envoy"
-	GatewayVolumeMountDir        = "/etc/gateway/"
-	GatewayVolumeName            = "gateway"
-	GatewayConfigFileName        = "gateway.yaml"
-	GatewayDynamicConfigFileName = "gateway.dynamic.yaml"
-	GatewayCDSConfigFileName     = "gateway.dynamic.cds.yaml"
-	GatewayLDSConfigFileName     = "gateway.dynamic.lds.yaml"
-	GatewayConfigChecksumENV     = "GATEWAY_CONFIG_CHECKSUM"
+	ArangoGatewayExecutor = "/usr/local/bin/envoy"
 
-	MemberConfigVolumeMountDir = "/etc/member/"
+	GatewayConfigFileName    = "gateway.yaml"
+	GatewayConfigChecksumENV = "GATEWAY_CONFIG_CHECKSUM"
+
+	GatewayVolumeMountDir = "/etc/gateway/core/"
+	GatewayVolumeName     = "gateway"
+
+	GatewayLDSVolumeMountDir = "/etc/gateway/lds/"
+	GatewayLDSVolumeName     = "gateway-lds"
+
+	GatewayCDSVolumeMountDir = "/etc/gateway/cds/"
+	GatewayCDSVolumeName     = "gateway-cds"
+
+	MemberConfigVolumeMountDir = "/etc/gateway/member/"
 	MemberConfigVolumeName     = "member-config"
 )
