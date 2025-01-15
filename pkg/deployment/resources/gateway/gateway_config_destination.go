@@ -133,6 +133,9 @@ func (c *ConfigDestination) GetPath() string {
 }
 
 func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, error) {
+	if c == nil {
+		return nil, errors.Errorf("Route cannot be nil")
+	}
 	var headers []*coreAPI.HeaderValueOption
 
 	for k, v := range c.ResponseHeaders {
@@ -148,7 +151,7 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 
 	var tcg []TypedFilterConfigGen
 
-	if c != nil && c.AuthExtension != nil {
+	if c.AuthExtension != nil {
 		tcg = append(tcg, c.AuthExtension)
 	}
 	tc, err := NewTypedFilterConfig(tcg...)
