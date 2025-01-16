@@ -27001,6 +27001,8 @@ v1beta1:
                 description: UID keeps the information about object UID
                 type: string
             type: object
+          storageType:
+            type: string
         type: object
       status:
         description: Object with preserved fields for backward compatibility

@@ -3188,6 +3188,18 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 UID keeps the information about object UID
 
+***
+
+### .spec.storageType
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/ml/v1beta1/extension_spec.go#L52)</sup>
+
+ArangoMLExtensionSpecStorageType defines storage used for extension
+
+Possible Values: 
+* `"extension"` (default) - Uses AragoMLStorage
+* `"platform"` - Uses AragoPlatformStorage
+
 ## Status
 
 ### .status.arangoDB.secret.checksum

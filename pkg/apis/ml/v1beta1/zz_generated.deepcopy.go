@@ -129,6 +129,11 @@ func (in *ArangoMLExtensionSpec) DeepCopyInto(out *ArangoMLExtensionSpec) {
 		*out = new(integration.Sidecar)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.StorageType != nil {
+		in, out := &in.StorageType, &out.StorageType
+		*out = new(ArangoMLExtensionSpecStorageType)
+		**out = **in
+	}
 	return
 }
 
