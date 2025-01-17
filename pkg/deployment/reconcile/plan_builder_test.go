@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -703,7 +703,7 @@ func (l *LastLogRecord) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 	for _, s := range panics.GetStack(0) {
 		l.t.Logf("Stack: %s", s.String())
 	}
-	l.t.Logf(msg)
+	l.t.Log(msg)
 	l.msg = msg
 }
 

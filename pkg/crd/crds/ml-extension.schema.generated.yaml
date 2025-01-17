@@ -13249,6 +13249,7 @@ v1beta1:
       spec:
         properties:
           deployment:
+            description: Deployment specifies how the ML extension will be deployed into cluster
             properties:
               affinity:
                 properties:
@@ -13663,6 +13664,7 @@ v1beta1:
                   type: object
                 type: array
               gpu:
+                description: GPU defined if GPU Jobs are enabled.
                 type: boolean
               hostIPC:
                 type: boolean
@@ -13932,6 +13934,7 @@ v1beta1:
                     type: object
                 type: object
               port:
+                description: Port defines on which port the container will be listening for connections
                 format: int32
                 type: integer
               ports:
@@ -14017,6 +14020,7 @@ v1beta1:
                     type: integer
                 type: object
               replicas:
+                description: Replicas defines the number of replicas running specified components. No replicas created if no components are defined.
                 format: int32
                 type: integer
               resources:
@@ -14108,8 +14112,16 @@ v1beta1:
                     type: object
                 type: object
               service:
+                description: Service defines how components will be exposed
                 properties:
                   type:
+                    description: Type determines how the Service is exposed
+                    enum:
+                      - ClusterIP
+                      - NodePort
+                      - LoadBalancer
+                      - ExternalName
+                      - None
                     type: string
                 type: object
               serviceAccountName:
@@ -14182,6 +14194,7 @@ v1beta1:
                     type: integer
                 type: object
               tls:
+                description: TLS defined TLS Settings for extension
                 properties:
                   altNames:
                     description: AltNames define TLS AltNames used when TLS on the ArangoDB is enabled
@@ -14918,6 +14931,7 @@ v1beta1:
                 type: string
             type: object
           init:
+            description: ArangoMLExtensionTemplate define Init job specification
             properties:
               affinity:
                 properties:
@@ -16563,6 +16577,7 @@ v1beta1:
                 type: string
             type: object
           integrationSidecar:
+            description: IntegrationSidecar define the integration sidecar spec
             properties:
               args:
                 items:
@@ -17065,10 +17080,13 @@ v1beta1:
                 type: string
             type: object
           jobsTemplates:
+            description: JobsTemplates defines templates for jobs
             properties:
               featurization:
+                description: Featurization defines template for the featurization job
                 properties:
                   cpu:
+                    description: CPU defines templates for CPU jobs
                     properties:
                       affinity:
                         properties:
@@ -18714,6 +18732,7 @@ v1beta1:
                         type: string
                     type: object
                   gpu:
+                    description: GPU defines templates for GPU jobs
                     properties:
                       affinity:
                         properties:
@@ -20360,8 +20379,10 @@ v1beta1:
                     type: object
                 type: object
               prediction:
+                description: Prediction defines template for the prediction job
                 properties:
                   cpu:
+                    description: CPU defines templates for CPU jobs
                     properties:
                       affinity:
                         properties:
@@ -22007,6 +22028,7 @@ v1beta1:
                         type: string
                     type: object
                   gpu:
+                    description: GPU defines templates for GPU jobs
                     properties:
                       affinity:
                         properties:
@@ -23653,8 +23675,10 @@ v1beta1:
                     type: object
                 type: object
               training:
+                description: Training defines template for the training job
                 properties:
                   cpu:
+                    description: CPU defines templates for CPU jobs
                     properties:
                       affinity:
                         properties:
@@ -25300,6 +25324,7 @@ v1beta1:
                         type: string
                     type: object
                   gpu:
+                    description: GPU defines templates for GPU jobs
                     properties:
                       affinity:
                         properties:
@@ -26947,16 +26972,21 @@ v1beta1:
                 type: object
             type: object
           metadataService:
+            description: MetadataService keeps the MetadataService configuration
             properties:
               local:
+                description: Local define to use Local ArangoDeployment as the Metadata Service
                 properties:
                   arangoMLFeatureStore:
+                    description: ArangoMLFeatureStoreDatabase define Database name to be used as MetadataService Backend in ArangoMLFeatureStoreDatabase
                     type: string
                   arangoPipeDatabase:
+                    description: ArangoPipeDatabase define Database name to be used as MetadataService Backend in ArangoPipe
                     type: string
                 type: object
             type: object
           storage:
+            description: Storage specifies the ArangoMLStorage used within Extension
             properties:
               checksum:
                 description: UID keeps the information about object Checksum

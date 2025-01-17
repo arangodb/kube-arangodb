@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -142,9 +142,7 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 	// Schedule new deployments
 	listOptions := meta.ListOptions{}
 	if policy.Spec.DeploymentSelector != nil &&
-		(policy.Spec.DeploymentSelector.MatchLabels != nil &&
-			len(policy.Spec.DeploymentSelector.MatchLabels) > 0 ||
-			policy.Spec.DeploymentSelector.MatchExpressions != nil) {
+		(len(policy.Spec.DeploymentSelector.MatchLabels) > 0 || policy.Spec.DeploymentSelector.MatchExpressions != nil) {
 		listOptions.LabelSelector = meta.FormatLabelSelector(policy.Spec.DeploymentSelector)
 	}
 

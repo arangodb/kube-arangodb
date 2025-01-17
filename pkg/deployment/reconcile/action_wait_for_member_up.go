@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,20 +77,20 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 	case api.ServerGroupTypeArangoD:
 		switch a.actionCtx.GetMode() {
 		case api.DeploymentModeSingle:
-			return a.checkProgressSingle(ctxChild)
+			return a.checkProgressSingle(ctxChild), false, nil
 		case api.DeploymentModeActiveFailover:
 			if a.action.Group == api.ServerGroupAgents {
-				return a.checkProgressAgent()
+				return a.checkProgressAgent(), false, nil
 			}
-			return a.checkProgressSingleInActiveFailover(ctxChild)
+			return a.checkProgressSingleInActiveFailover(ctxChild), false, nil
 		default:
 			if a.action.Group == api.ServerGroupAgents {
-				return a.checkProgressAgent()
+				return a.checkProgressAgent(), false, nil
 			}
-			return a.checkProgressCluster(ctx)
+			return a.checkProgressCluster(ctx), false, nil
 		}
 	case api.ServerGroupTypeArangoSync:
-		return a.checkProgressArangoSync(ctxChild)
+		return a.checkProgressArangoSync(ctxChild), false, nil
 	default:
 		assertion.InvalidGroupKey.Assert(true, "Unable to execute action WaitForMemberUp for an unknown group: %s", a.action.Group.AsRole())
 		return true, false, nil
@@ -99,68 +99,68 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 
 // checkProgressSingle checks the progress of the action in the case
 // of a single server.
-func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) (bool, bool, error) {
+func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) bool {
 	c, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		a.log.Err(err).Debug("Failed to create database client")
-		return false, false, nil
+		return false
 	}
 	if _, err := c.Version(ctx); err != nil {
 		a.log.Err(err).Debug("Failed to get version")
-		return false, false, nil
+		return false
 	}
-	return true, false, nil
+	return true
 }
 
 // checkProgressSingleInActiveFailover checks the progress of the action in the case
 // of a single server as part of an active failover deployment.
-func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.Context) (bool, bool, error) {
+func (a *actionWaitForMemberUp) checkProgressSingleInActiveFailover(ctx context.Context) bool {
 	c, err := a.actionCtx.GetMembersState().GetMemberClient(a.action.MemberID)
 	if err != nil {
 		a.log.Err(err).Debug("Failed to create database client")
-		return false, false, nil
+		return false
 	}
 	if _, err := c.Version(ctx); err != nil {
 		a.log.Err(err).Debug("Failed to get version")
-		return false, false, nil
+		return false
 	}
-	return true, false, nil
+	return true
 }
 
 // checkProgressAgent checks the progress of the action in the case
 // of an agent.
-func (a *actionWaitForMemberUp) checkProgressAgent() (bool, bool, error) {
+func (a *actionWaitForMemberUp) checkProgressAgent() bool {
 	agencyHealth, ok := a.actionCtx.GetAgencyHealth()
 	if !ok {
 		a.log.Debug("Agency health fetch failed")
-		return false, false, nil
+		return false
 	}
 	if err := agencyHealth.Healthy(); err != nil {
 		a.log.Err(err).Debug("Not all agents are ready")
-		return false, false, nil
+		return false
 	}
 
 	a.log.Debug("Agency is happy")
 
-	return true, false, nil
+	return true
 }
 
 // checkProgressCluster checks the progress of the action in the case
 // of a cluster deployment (coordinator/dbserver).
-func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool, bool, error) {
+func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) bool {
 	h, _ := a.actionCtx.GetMembersState().Health()
 	if h.Error != nil {
 		a.log.Err(h.Error).Debug("Cluster health is missing")
-		return false, false, nil
+		return false
 	}
 	sh, found := h.Members[driver.ServerID(a.action.MemberID)]
 	if !found {
 		a.log.Debug("Member not yet found in cluster health")
-		return false, false, nil
+		return false
 	}
 	if sh.Status != driver.ServerStatusGood {
 		a.log.Str("status", string(sh.Status)).Debug("Member set status not yet good")
-		return false, false, nil
+		return false
 	}
 
 	// Wait for the member to become ready from a kubernetes point of view
@@ -169,13 +169,13 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool,
 	m, found := a.actionCtx.GetMemberStatusByID(a.MemberID())
 	if !found {
 		a.log.Error("No such member")
-		return false, true, nil
+		return false
 	}
 
 	imageInfo, found := a.actionCtx.GetCurrentImageInfo()
 	if !found {
 		a.log.Info("Image not found")
-		return false, false, nil
+		return false
 	}
 
 	if resources.IsServerProgressAvailable(a.action.Group, imageInfo) {
@@ -189,28 +189,28 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) (bool,
 
 	if !m.Conditions.IsTrue(api.ConditionTypeReady) {
 		a.log.Debug("Member not yet ready")
-		return false, false, nil
+		return false
 	}
 
-	return true, false, nil
+	return true
 }
 
 // checkProgressArangoSync checks the progress of the action in the case
 // of a sync master / worker.
-func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) (bool, bool, error) {
+func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) bool {
 	c, err := a.actionCtx.GetMembersState().GetMemberSyncClient(a.action.MemberID)
 	if err != nil {
 		a.log.Err(err).Debug("Failed to create arangosync client")
-		return false, false, nil
+		return false
 	}
 
 	// When replication is in initial-sync state, then it can take a long time to be in running state.
 	// This is the reason why Health of ArangoSync can not be checked here.
 	if _, err := c.Version(ctx); err != nil {
 		a.log.Err(err).Debug("Member is not ready yet")
-		return false, false, nil
+		return false
 	}
-	return true, false, nil
+	return true
 }
 
 func (a actionWaitForMemberUp) getServerStatus(ctx context.Context) (client.ServerStatus, error) {
