@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ type ArangoMLExtensionSpec struct {
 	// +doc/immutable: This setting cannot be changed after the MetadataService has been created.
 	MetadataService *ArangoMLExtensionSpecMetadataService `json:"metadataService,omitempty"`
 
-	// Storage specifies the ArangoMLStorage used within Extension
+	// Storage specifies the ArangoMLStorage used within Extension, if extension storage is used
 	Storage *sharedApi.Object `json:"storage,omitempty"`
 
 	// ArangoMLExtensionTemplate define Init job specification
@@ -45,6 +45,11 @@ type ArangoMLExtensionSpec struct {
 
 	// IntegrationSidecar define the integration sidecar spec
 	IntegrationSidecar *schedulerIntegrationApi.Sidecar `json:"integrationSidecar,omitempty"`
+
+	// ArangoMLExtensionSpecStorageType defines storage used for extension
+	// +doc/enum: extension|Uses AragoMLStorage
+	// +doc/enum: platform|Uses AragoPlatformStorage
+	StorageType *ArangoMLExtensionSpecStorageType `json:"storageType,omitempty"`
 }
 
 func (a *ArangoMLExtensionSpec) GetMetadataService() *ArangoMLExtensionSpecMetadataService {
@@ -69,6 +74,14 @@ func (a *ArangoMLExtensionSpec) GetStorage() *sharedApi.Object {
 	}
 
 	return a.Storage
+}
+
+func (a *ArangoMLExtensionSpec) GetStorageType() ArangoMLExtensionSpecStorageType {
+	if a == nil {
+		return ArangoMLExtensionSpecStorageTypeDefault
+	}
+
+	return a.StorageType.Get()
 }
 
 func (a *ArangoMLExtensionSpec) GetDeployment() *ArangoMLExtensionSpecDeployment {
@@ -99,7 +112,7 @@ func (a *ArangoMLExtensionSpec) Validate() error {
 
 	return shared.WithErrors(shared.PrefixResourceErrors("spec",
 		shared.PrefixResourceErrors("metadataService", a.GetMetadataService().Validate()),
-		shared.PrefixResourceErrors("storage", shared.ValidateRequired(a.GetStorage(), func(obj sharedApi.Object) error { return obj.Validate() })),
+		shared.PrefixResourceErrors("storage", shared.ValidateOptionalInterface(a.GetStorage())),
 		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
 		shared.PrefixResourceErrors("deployment", a.GetDeployment().Validate()),
 		shared.PrefixResourceErrors("jobsTemplates", a.GetJobsTemplates().Validate()),

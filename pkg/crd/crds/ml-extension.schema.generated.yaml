@@ -26986,7 +26986,7 @@ v1beta1:
                 type: object
             type: object
           storage:
-            description: Storage specifies the ArangoMLStorage used within Extension
+            description: Storage specifies the ArangoMLStorage used within Extension, if extension storage is used
             properties:
               checksum:
                 description: UID keeps the information about object Checksum
@@ -27001,6 +27001,12 @@ v1beta1:
                 description: UID keeps the information about object UID
                 type: string
             type: object
+          storageType:
+            description: ArangoMLExtensionSpecStorageType defines storage used for extension
+            enum:
+              - extension
+              - platform
+            type: string
         type: object
       status:
         description: Object with preserved fields for backward compatibility
