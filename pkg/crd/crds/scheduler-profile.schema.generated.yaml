@@ -1787,8 +1787,10 @@ v1beta1:
       spec:
         properties:
           selectors:
+            description: Selectors keeps information about ProfileSelectors
             properties:
               label:
+                description: Label keeps information about label selector
                 properties:
                   matchExpressions:
                     items:
@@ -1810,10 +1812,13 @@ v1beta1:
                 type: object
             type: object
           template:
+            description: Template keeps the Profile Template
             properties:
               container:
+                description: Container Template
                 properties:
                   all:
+                    description: All applies generic values to all Containers
                     properties:
                       env:
                         items:
@@ -2399,9 +2404,11 @@ v1beta1:
                         workingDir:
                           type: string
                       type: object
+                    description: Containers applies values per container
                     type: object
                 type: object
               pod:
+                description: Pod Template
                 properties:
                   affinity:
                     properties:
@@ -3554,6 +3561,9 @@ v1beta1:
                     type: array
                 type: object
               priority:
+                description: |-
+                  Priority defines Priority of the Profile. Higher value means Profile will get applied first.
+                  If Priority across Profiles is same, Profiles are also sorted by name.
                 format: int32
                 type: integer
             type: object

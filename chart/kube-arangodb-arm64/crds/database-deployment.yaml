@@ -21,13 +21,6 @@ spec:
           x-kubernetes-preserve-unknown-fields: true
       served: true
       storage: true
-    - name: v1alpha
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: false
     - name: v2alpha1
       schema:
         openAPIV3Schema:

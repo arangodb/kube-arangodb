@@ -1,7 +1,8 @@
 run:
   issues-exit-code: 3
   timeout: 30m
-  skip-dirs:
+issues:
+  exclude-dirs:
     - vendor
     - .gobuild
     - deps
@@ -20,6 +21,15 @@ linters:
     - importas
     - gci
 linters-settings:
+  govet:
+    disable:
+      - printf
+  staticcheck:
+    checks:
+      - all
+      - -SA1019
+  unparam:
+    check-exported: false
   importas:
     no-unaliased: true
     alias:

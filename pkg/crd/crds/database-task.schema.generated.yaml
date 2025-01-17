@@ -14,22 +14,6 @@ v1:
         type: object
         x-kubernetes-preserve-unknown-fields: true
     type: object
-v1alpha:
-  openAPIV3Schema:
-    properties:
-      spec:
-        properties:
-          details:
-            format: byte
-            type: string
-          type:
-            type: string
-        type: object
-      status:
-        description: Object with preserved fields for backward compatibility
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    type: object
 v2alpha1:
   openAPIV3Schema:
     properties:

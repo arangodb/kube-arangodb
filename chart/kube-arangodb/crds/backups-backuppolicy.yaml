@@ -37,26 +37,3 @@ spec:
           type: string
       subresources:
         status: {}
-    - name: v1alpha
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: false
-      additionalPrinterColumns:
-        - jsonPath: .spec.schedule
-          description: Schedule
-          name: Schedule
-          type: string
-        - jsonPath: .status.scheduled
-          description: Scheduled
-          name: Scheduled
-          type: string
-        - jsonPath: .status.message
-          priority: 1
-          description: Message of the ArangoBackupPolicy object
-          name: Message
-          type: string
-      subresources:
-        status: {}

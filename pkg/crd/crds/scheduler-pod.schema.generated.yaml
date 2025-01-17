@@ -2000,6 +2000,7 @@ v1beta1:
           priorityClassName:
             type: string
           profiles:
+            description: Profiles keeps list of the profiles
             items:
               type: string
             type: array

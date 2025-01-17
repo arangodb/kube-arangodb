@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 	// CR file prefix -> packages to parse -> versions -> obj
 	input := map[string]map[string]map[string]genSpec{
 		"apps-job": {
-			fmt.Sprintf("%s/pkg/apis/apps/v1", root): {
+			fmt.Sprintf("%s/pkg/apis/apps", root): {
 				"v1": {
 					objects: map[string]interface{}{
 						"spec": appsv1.ArangoJob{}.Spec,
@@ -85,13 +85,8 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"backups-backup": {
-			fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
+			fmt.Sprintf("%s/pkg/apis/backup", root): {
 				"v1": {
-					objects: map[string]interface{}{
-						"spec": backupv1.ArangoBackup{}.Spec,
-					},
-				},
-				"v1alpha": {
 					objects: map[string]interface{}{
 						"spec": backupv1.ArangoBackup{}.Spec,
 					},
@@ -99,13 +94,8 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"backups-backuppolicy": {
-			fmt.Sprintf("%s/pkg/apis/backup/v1", root): {
+			fmt.Sprintf("%s/pkg/apis/backup", root): {
 				"v1": {
-					objects: map[string]interface{}{
-						"spec": backupv1.ArangoBackupPolicy{}.Spec,
-					},
-				},
-				"v1alpha": {
 					objects: map[string]interface{}{
 						"spec": backupv1.ArangoBackupPolicy{}.Spec,
 					},
@@ -113,19 +103,12 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"database-deployment": {
-			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
+			fmt.Sprintf("%s/pkg/apis/deployment", root): {
 				"v1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv1.ArangoDeployment{}.Spec,
 					},
 				},
-				"v1alpha": {
-					objects: map[string]interface{}{
-						"spec": deploymentv1.ArangoDeployment{}.Spec,
-					},
-				},
-			},
-			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv2alpha1.ArangoDeployment{}.Spec,
@@ -134,14 +117,12 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"database-member": {
-			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
+			fmt.Sprintf("%s/pkg/apis/deployment", root): {
 				"v1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv1.ArangoMember{}.Spec,
 					},
 				},
-			},
-			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv2alpha1.ArangoMember{}.Spec,
@@ -150,14 +131,12 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"database-clustersynchronization": {
-			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
+			fmt.Sprintf("%s/pkg/apis/deployment", root): {
 				"v1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv1.ArangoClusterSynchronization{}.Spec,
 					},
 				},
-			},
-			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv2alpha1.ArangoClusterSynchronization{}.Spec,
@@ -166,19 +145,12 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"database-task": {
-			fmt.Sprintf("%s/pkg/apis/deployment/v1", root): {
+			fmt.Sprintf("%s/pkg/apis/deployment", root): {
 				"v1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv1.ArangoTask{}.Spec,
 					},
 				},
-				"v1alpha": {
-					objects: map[string]interface{}{
-						"spec": deploymentv1.ArangoTask{}.Spec,
-					},
-				},
-			},
-			fmt.Sprintf("%s/pkg/apis/deployment/v2alpha1", root): {
 				"v2alpha1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv2alpha1.ArangoTask{}.Spec,
@@ -187,19 +159,12 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"replication-deploymentreplication": {
-			fmt.Sprintf("%s/pkg/apis/replication/v1", root): {
+			fmt.Sprintf("%s/pkg/apis/replication", root): {
 				"v1": {
 					objects: map[string]interface{}{
 						"spec": replicationv1.ArangoDeploymentReplication{}.Spec,
 					},
 				},
-				"v1alpha": {
-					objects: map[string]interface{}{
-						"spec": replicationv1.ArangoDeploymentReplication{}.Spec,
-					},
-				},
-			},
-			fmt.Sprintf("%s/pkg/apis/replication/v2alpha1", root): {
 				"v2alpha1": {
 					objects: map[string]interface{}{
 						"spec": replicationv2alpha1.ArangoDeploymentReplication{}.Spec,
@@ -208,7 +173,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"storage-localstorage": {
-			fmt.Sprintf("%s/pkg/apis/storage/v1alpha", root): {
+			fmt.Sprintf("%s/pkg/apis/storage", root): {
 				"v1alpha": {
 					objects: map[string]interface{}{
 						"spec": storagev1alpha.ArangoLocalStorage{}.Spec,
@@ -217,7 +182,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"scheduler-profile": {
-			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/scheduler", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": schedulerApiv1alpha1.ArangoProfile{}.Spec,
@@ -231,7 +196,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"scheduler-pod": {
-			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/scheduler", root): {
 				"v1beta1": {
 					objects: map[string]interface{}{
 						"spec": schedulerApi.ArangoSchedulerPod{}.Spec,
@@ -240,7 +205,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"scheduler-deployment": {
-			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/scheduler", root): {
 				"v1beta1": {
 					objects: map[string]interface{}{
 						"spec": schedulerApi.ArangoSchedulerDeployment{}.Spec,
@@ -249,7 +214,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"scheduler-batchjob": {
-			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/scheduler", root): {
 				"v1beta1": {
 					objects: map[string]interface{}{
 						"spec": schedulerApi.ArangoSchedulerBatchJob{}.Spec,
@@ -258,7 +223,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"scheduler-cronjob": {
-			fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/scheduler", root): {
 				"v1beta1": {
 					objects: map[string]interface{}{
 						"spec": schedulerApi.ArangoSchedulerCronJob{}.Spec,
@@ -267,7 +232,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"ml-extension": {
-			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/ml", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": mlApiv1alpha1.ArangoMLExtension{}.Spec,
@@ -281,7 +246,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"ml-storage": {
-			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/ml", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": mlApiv1alpha1.ArangoMLStorage{}.Spec,
@@ -295,7 +260,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"ml-job-cron": {
-			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/ml", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": mlApiv1alpha1.ArangoMLCronJob{}.Spec,
@@ -304,7 +269,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"ml-job-batch": {
-			fmt.Sprintf("%s/pkg/apis/ml/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/ml", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": mlApiv1alpha1.ArangoMLBatchJob{}.Spec,
@@ -313,7 +278,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"analytics-graphanalyticsengine": {
-			fmt.Sprintf("%s/pkg/apis/analytics/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/analytics", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": analyticsApi.GraphAnalyticsEngine{}.Spec,
@@ -322,7 +287,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"networking-route": {
-			fmt.Sprintf("%s/pkg/apis/networking/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/networking", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": networkingApi.ArangoRoute{}.Spec,
@@ -331,7 +296,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"platform-storage": {
-			fmt.Sprintf("%s/pkg/apis/platform/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/platform", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": platformApi.ArangoPlatformStorage{}.Spec,
@@ -340,7 +305,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			},
 		},
 		"platform-chart": {
-			fmt.Sprintf("%s/pkg/apis/platform/v1alpha1", root): {
+			fmt.Sprintf("%s/pkg/apis/platform", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": platformApi.ArangoPlatformChart{}.Spec,
@@ -362,14 +327,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 
 			validationPerVersion := make(map[string]apiextensions.CustomResourceValidation, len(packagesToVersion))
 			for apiDir, versionMap := range packagesToVersion {
-				fields := parseSourceFiles(t, root, fset, apiDir)
-
-				for n, f := range sharedFields {
-					require.NotContains(t, fields, n)
-					fields[n] = f
-				}
-
 				for version, generationSpec := range versionMap {
+					fields := parseSourceFiles(t, root, fset, path.Join(apiDir, version))
+
+					for n, f := range sharedFields {
+						require.NotContains(t, fields, n)
+						fields[n] = f
+					}
+
 					crdVersion := findCRDVersion(t, crd, version)
 
 					t.Log(crdVersion.Schema)
