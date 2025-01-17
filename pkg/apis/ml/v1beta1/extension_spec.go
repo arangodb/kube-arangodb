@@ -68,7 +68,7 @@ func (a *ArangoMLExtensionSpec) GetInit() *ArangoMLExtensionTemplate {
 	return a.Init
 }
 
-func (a *ArangoMLExtensionSpec) GetStorage2() *sharedApi.Object {
+func (a *ArangoMLExtensionSpec) GetStorage() *sharedApi.Object {
 	if a == nil || a.Storage == nil {
 		return nil
 	}
@@ -112,7 +112,7 @@ func (a *ArangoMLExtensionSpec) Validate() error {
 
 	return shared.WithErrors(shared.PrefixResourceErrors("spec",
 		shared.PrefixResourceErrors("metadataService", a.GetMetadataService().Validate()),
-		shared.PrefixResourceErrors("storage", shared.ValidateOptionalInterface(a.GetStorage2())),
+		shared.PrefixResourceErrors("storage", shared.ValidateOptionalInterface(a.GetStorage())),
 		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
 		shared.PrefixResourceErrors("deployment", a.GetDeployment().Validate()),
 		shared.PrefixResourceErrors("jobsTemplates", a.GetJobsTemplates().Validate()),
