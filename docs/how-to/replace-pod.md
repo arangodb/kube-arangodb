@@ -14,7 +14,7 @@ Replacement is disabled for:
 - Single Servers
 
 Replacement of member for particular groups will result in:
-- Agents - Member and PVC is recreated, Operator ensures that Quorum is keept during this operation
+- Agents - Member and PVC is recreated, Operator ensures that Quorum is kept during this operation
 - DBServers - New DBServer is added where data is migrated before removal
 - Coordinator, Gateway - Simple shutdown
 
