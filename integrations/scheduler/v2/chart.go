@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ func (i *implementation) ListCharts(req *pbSchedulerV2.SchedulerV2ListChartsRequ
 	var ct string
 
 	for {
-		resp, err := i.client.Client().Arango().PlatformV1alpha1().ArangoPlatformCharts(i.client.Namespace()).List(ctx, meta.ListOptions{
+		resp, err := i.kclient.Arango().PlatformV1alpha1().ArangoPlatformCharts(i.client.Namespace()).List(ctx, meta.ListOptions{
 			Limit:    util.OptionalType(req.Items, 128),
 			Continue: ct,
 		})
@@ -67,7 +67,7 @@ func (i *implementation) ListCharts(req *pbSchedulerV2.SchedulerV2ListChartsRequ
 }
 
 func (i *implementation) GetChart(ctx context.Context, in *pbSchedulerV2.SchedulerV2GetChartRequest) (*pbSchedulerV2.SchedulerV2GetChartResponse, error) {
-	resp, err := i.client.Client().Arango().PlatformV1alpha1().ArangoPlatformCharts(i.client.Namespace()).Get(ctx, in.GetName(), meta.GetOptions{})
+	resp, err := i.kclient.Arango().PlatformV1alpha1().ArangoPlatformCharts(i.client.Namespace()).Get(ctx, in.GetName(), meta.GetOptions{})
 	if err != nil {
 		logger.Err(err).Warn("Unable to run action: GetChart")
 		return nil, asGRPCError(err)

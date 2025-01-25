@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,11 +34,12 @@ import (
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/suite"
 )
 
-func cleanup(t *testing.T, c helm.Client) func() {
+func cleanup(t *testing.T, client kclient.Client, c helm.Client) func() {
 	t.Run("Cleanup Pre", func(t *testing.T) {
 		items, err := c.List(context.Background(), func(in *action.List) {
 			in.All = true
@@ -54,14 +55,14 @@ func cleanup(t *testing.T, c helm.Client) func() {
 		}
 
 		t.Run("Remove NS", func(t *testing.T) {
-			if err := c.Client().Kubernetes().CoreV1().Namespaces().Delete(context.Background(), tests.FakeNamespace, meta.DeleteOptions{}); !kerrors.IsNotFound(err) {
+			if err := client.Kubernetes().CoreV1().Namespaces().Delete(context.Background(), tests.FakeNamespace, meta.DeleteOptions{}); !kerrors.IsNotFound(err) {
 				require.NoError(t, err)
 			}
 
 			for {
 				time.Sleep(time.Second)
 
-				if _, err := c.Client().Kubernetes().CoreV1().Namespaces().Get(context.Background(), tests.FakeNamespace, meta.GetOptions{}); !kerrors.IsNotFound(err) {
+				if _, err := client.Kubernetes().CoreV1().Namespaces().Get(context.Background(), tests.FakeNamespace, meta.GetOptions{}); !kerrors.IsNotFound(err) {
 					require.NoError(t, err)
 					continue
 				}
@@ -71,7 +72,7 @@ func cleanup(t *testing.T, c helm.Client) func() {
 		})
 
 		t.Run("Create NS", func(t *testing.T) {
-			_, err = c.Client().Kubernetes().CoreV1().Namespaces().Create(context.Background(), &core.Namespace{
+			_, err = client.Kubernetes().CoreV1().Namespaces().Create(context.Background(), &core.Namespace{
 				ObjectMeta: meta.ObjectMeta{
 					Name: tests.FakeNamespace,
 				},
@@ -96,14 +97,14 @@ func cleanup(t *testing.T, c helm.Client) func() {
 			}
 
 			t.Run("Remove NS", func(t *testing.T) {
-				if err := c.Client().Kubernetes().CoreV1().Namespaces().Delete(context.Background(), tests.FakeNamespace, meta.DeleteOptions{}); !kerrors.IsNotFound(err) {
+				if err := client.Kubernetes().CoreV1().Namespaces().Delete(context.Background(), tests.FakeNamespace, meta.DeleteOptions{}); !kerrors.IsNotFound(err) {
 					require.NoError(t, err)
 				}
 
 				for {
 					time.Sleep(time.Second)
 
-					if _, err := c.Client().Kubernetes().CoreV1().Namespaces().Get(context.Background(), tests.FakeNamespace, meta.GetOptions{}); !kerrors.IsNotFound(err) {
+					if _, err := client.Kubernetes().CoreV1().Namespaces().Get(context.Background(), tests.FakeNamespace, meta.GetOptions{}); !kerrors.IsNotFound(err) {
 						require.NoError(t, err)
 						continue
 					}
@@ -119,7 +120,7 @@ func Test_Implementation(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	scheduler, h := ExternalClient(t, ctx, func(c Configuration) Configuration {
+	scheduler, kc, h := ExternalClient(t, ctx, func(c Configuration) Configuration {
 		c.Namespace = tests.FakeNamespace
 		c.Deployment = tests.FakeNamespace
 		return c
@@ -130,7 +131,7 @@ func Test_Implementation(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	defer cleanup(t, h)()
+	defer cleanup(t, kc, h)()
 
 	t.Run("Alive", func(t *testing.T) {
 		_, err := scheduler.Alive(context.Background(), &pbSharedV1.Empty{})

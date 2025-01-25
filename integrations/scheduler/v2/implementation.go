@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,31 +28,34 @@ import (
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 var _ pbSchedulerV2.SchedulerV2Server = &implementation{}
 var _ svc.Handler = &implementation{}
 
-func New(client helm.Client, cfg Configuration) (svc.Handler, error) {
-	return newInternal(client, cfg)
+func New(kclient kclient.Client, client helm.Client, cfg Configuration) (svc.Handler, error) {
+	return newInternal(kclient, client, cfg)
 }
 
-func newInternal(client helm.Client, c Configuration) (*implementation, error) {
+func newInternal(kclient kclient.Client, client helm.Client, c Configuration) (*implementation, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}
 
 	return &implementation{
-		cfg:    c,
-		client: client,
+		cfg:     c,
+		client:  client,
+		kclient: kclient,
 	}, nil
 }
 
 type implementation struct {
 	cfg Configuration
 
-	client helm.Client
+	kclient kclient.Client
+	client  helm.Client
 
 	pbSchedulerV2.UnimplementedSchedulerV2Server
 }

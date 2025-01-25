@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,32 +44,32 @@ func init() {
 	})
 }
 
-func Handler(t *testing.T, ctx context.Context, client helm.Client, mods ...Mod) svc.Handler {
-	handler, err := New(client, NewConfiguration().With(mods...))
+func Handler(t *testing.T, ctx context.Context, kclient kclient.Client, client helm.Client, mods ...Mod) svc.Handler {
+	handler, err := New(kclient, client, NewConfiguration().With(mods...))
 	require.NoError(t, err)
 
 	return handler
 }
 
-func InternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, helm.Client) {
+func InternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, kclient.Client, helm.Client) {
 	client := kclient.NewFakeClient()
 
 	h, err := helm.NewClient(helm.Configuration{
 		Namespace: tests.FakeNamespace,
-		Client:    client,
+		Config:    client.Config(),
 	})
 	require.NoError(t, err)
 
 	local := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, Handler(t, ctx, h, mods...))
+	}, Handler(t, ctx, client, h, mods...))
 
 	start := local.Start(ctx)
 
-	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), h
+	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), client, h
 }
 
-func ExternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, helm.Client) {
+func ExternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, kclient.Client, helm.Client) {
 	z, ok := os.LookupEnv("TEST_KUBECONFIG")
 	if !ok {
 		t.Skipf("TEST_KUBECONFIG is not set")
@@ -83,15 +83,15 @@ func ExternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbScheduler
 
 	h, err := helm.NewClient(helm.Configuration{
 		Namespace: tests.FakeNamespace,
-		Client:    client,
+		Config:    client.Config(),
 	})
 	require.NoError(t, err)
 
 	local := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, Handler(t, ctx, h, mods...))
+	}, Handler(t, ctx, client, h, mods...))
 
 	start := local.Start(ctx)
 
-	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), h
+	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), client, h
 }

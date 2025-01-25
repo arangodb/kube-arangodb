@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/kconfig"
 )
 
 const (
@@ -45,7 +46,7 @@ var (
 func init() {
 	f := GetDefaultFactory()
 
-	f.SetKubeConfigGetter(NewStaticConfigGetter(newKubeConfig))
+	f.SetKubeConfigGetter(NewStaticConfigGetter(kconfig.NewConfig))
 
 	if err := f.Refresh(); err != nil {
 		println("Error while getting client: ", err.Error())

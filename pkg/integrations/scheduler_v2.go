@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,14 +70,14 @@ func (b *schedulerV2) Handler(ctx context.Context, cmd *cobra.Command) (svc.Hand
 
 	helm, err := helm.NewClient(helm.Configuration{
 		Namespace: b.Configuration.Namespace,
-		Client:    client,
+		Config:    client.Config(),
 		Driver:    (*helm.ConfigurationDriver)(util.NewType(b.Driver)),
 	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to create Helm Client")
 	}
 
-	return pbImplSchedulerV2.New(helm, b.Configuration)
+	return pbImplSchedulerV2.New(client, helm, b.Configuration)
 }
 
 func (*schedulerV2) Init(ctx context.Context, cmd *cobra.Command) error {

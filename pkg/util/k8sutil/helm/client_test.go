@@ -68,7 +68,7 @@ func cleanup(t *testing.T, c Client) func() {
 }
 
 func Test_Connection(t *testing.T) {
-	c := newClient(t, tests.FakeNamespace)
+	client, c := newClient(t, tests.FakeNamespace)
 
 	require.NoError(t, c.Alive(context.Background()))
 
@@ -245,7 +245,7 @@ func Test_Connection(t *testing.T) {
 		})
 
 		t.Run("Verify", func(t *testing.T) {
-			cm, err := c.Client().Kubernetes().CoreV1().ConfigMaps(tests.FakeNamespace).Get(context.Background(), "test", meta.GetOptions{})
+			cm, err := client.Kubernetes().CoreV1().ConfigMaps(tests.FakeNamespace).Get(context.Background(), "test", meta.GetOptions{})
 			require.NoError(t, err)
 			require.Len(t, cm.Data, 0)
 		})
@@ -261,7 +261,7 @@ func Test_Connection(t *testing.T) {
 		})
 
 		t.Run("Verify", func(t *testing.T) {
-			cm, err := c.Client().Kubernetes().CoreV1().ConfigMaps(tests.FakeNamespace).Get(context.Background(), "test", meta.GetOptions{})
+			cm, err := client.Kubernetes().CoreV1().ConfigMaps(tests.FakeNamespace).Get(context.Background(), "test", meta.GetOptions{})
 			require.NoError(t, err)
 			require.Len(t, cm.Data, 1)
 			require.Contains(t, cm.Data, "test")
