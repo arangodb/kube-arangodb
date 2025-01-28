@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,11 @@ func (h *handler) HandleArangoDestination(ctx context.Context, item operation.It
 
 func (h *handler) HandleArangoDestinationWithTargets(ctx context.Context, item operation.Item, extension *networkingApi.ArangoRoute, status *networkingApi.ArangoRouteStatus, depl *api.ArangoDeployment) (*operator.Condition, bool, error) {
 	c, changed, err := h.HandleArangoDestination(ctx, item, extension, status, depl)
+
+	if operator.IsTemporary(err) {
+		return nil, false, err
+	}
+
 	if c == nil && !c.Status && status.Target != nil {
 		status.Target = nil
 		changed = true

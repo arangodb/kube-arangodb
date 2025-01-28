@@ -33,6 +33,7 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 func (h *handler) HandleArangoDestinationService(ctx context.Context, item operation.Item, extension *networkingApi.ArangoRoute, status *networkingApi.ArangoRouteStatus, deployment *api.ArangoDeployment, dest *networkingApi.ArangoRouteSpecDestination, svc *networkingApi.ArangoRouteSpecDestinationService) (*operator.Condition, bool, error) {
@@ -48,7 +49,7 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 
 	s, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.kubeClient.CoreV1().Services(svc.GetNamespace(extension)).Get, svc.GetName(), meta.GetOptions{})
 	if err != nil {
-		if api.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return &operator.Condition{
 				Status:  false,
 				Reason:  "Destination Not Found",
@@ -56,11 +57,7 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 			}, false, nil
 		}
 
-		return &operator.Condition{
-			Status:  false,
-			Reason:  "Destination Not Found",
-			Message: fmt.Sprintf("Unknown error for service `%s/%s`: %s", svc.GetNamespace(extension), svc.GetName(), err.Error()),
-		}, false, nil
+		return nil, false, operator.Temporary(err, "Unable to get service")
 	}
 
 	if !svc.Equals(s) {

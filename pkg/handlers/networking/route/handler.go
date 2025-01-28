@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ package route
 import (
 	"context"
 
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -34,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("networking-route-operator", logging.Info)
@@ -56,7 +56,7 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 
 	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.NetworkingV1alpha1().ArangoRoutes(item.Namespace).Get, item.Name, meta.GetOptions{})
 	if err != nil {
-		if apiErrors.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return nil
 		}
 

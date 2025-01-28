@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ func ExtractCause[T error](err error) (T, bool) {
 	var d T
 
 	if err == nil {
-		return d, true
+		return d, false
 	}
 
 	var v T
@@ -65,24 +65,6 @@ func ExtractCause[T error](err error) (T, bool) {
 
 	if err := CauseWithNil(err); err != nil {
 		return ExtractCause[T](err)
-	}
-
-	return d, false
-}
-
-func ExtractCauseHelper[T error](err error, extr func(err error) (T, bool)) (T, bool) {
-	var d T
-
-	if err == nil {
-		return d, true
-	}
-
-	if v, ok := extr(err); ok {
-		return v, true
-	}
-
-	if err := CauseWithNil(err); err != nil {
-		return ExtractCauseHelper[T](err, extr)
 	}
 
 	return d, false

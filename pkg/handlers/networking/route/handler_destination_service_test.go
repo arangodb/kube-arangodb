@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ func Test_Handler_Destination_Service_Missing(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Not Found")
-	require.EqualValues(t, c.Message, "Unknown error for service `fake/deployment`: services \"deployment\" not found")
+	require.EqualValues(t, c.Message, "Service `fake/deployment` Not found")
 }
 
 func Test_Handler_Destination_Service_Valid(t *testing.T) {

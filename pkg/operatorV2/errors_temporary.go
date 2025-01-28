@@ -21,27 +21,39 @@
 package operator
 
 import (
-	"fmt"
-
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func Reconcile(msg string, args ...interface{}) error {
-	return reconcile{
-		message: fmt.Sprintf(msg, args...),
+func Temporary(cause error, msg string, args ...interface{}) error {
+	if cause == nil {
+		return temporary{
+			cause: errors.Errorf(msg, args...),
+		}
+	}
+
+	return temporary{
+		cause: errors.Wrapf(cause, msg, args...),
 	}
 }
 
-type reconcile struct {
-	message string
+type temporary struct {
+	cause error
 }
 
-func (r reconcile) Error() string {
-	return r.message
+func (t temporary) Error() string {
+	return t.cause.Error()
 }
 
-func IsReconcile(err error) bool {
-	if _, ok := errors.ExtractCause[reconcile](err); ok {
+func (t temporary) Temporary() bool {
+	return true
+}
+
+func (t temporary) Cause() error {
+	return t.cause
+}
+
+func IsTemporary(err error) bool {
+	if _, ok := errors.ExtractCause[temporary](err); ok {
 		return true
 	}
 

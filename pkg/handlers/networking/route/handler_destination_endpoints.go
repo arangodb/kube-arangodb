@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	core "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -48,7 +49,7 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 
 	s, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.kubeClient.CoreV1().Services(endpoints.GetNamespace(extension)).Get, endpoints.GetName(), meta.GetOptions{})
 	if err != nil {
-		if api.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return &operator.Condition{
 				Status:  false,
 				Reason:  "Destination Not Found",
@@ -56,11 +57,7 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 			}, false, nil
 		}
 
-		return &operator.Condition{
-			Status:  false,
-			Reason:  "Destination Not Found",
-			Message: fmt.Sprintf("Unknown error for service `%s/%s`: %s", endpoints.GetNamespace(extension), endpoints.GetName(), err.Error()),
-		}, false, nil
+		return nil, false, operator.Temporary(err, "Unable to get service")
 	}
 
 	if !endpoints.Equals(s) {
@@ -73,7 +70,7 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 
 	e, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.kubeClient.CoreV1().Endpoints(endpoints.GetNamespace(extension)).Get, endpoints.GetName(), meta.GetOptions{})
 	if err != nil {
-		if api.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			return &operator.Condition{
 				Status:  false,
 				Reason:  "Destination Not Found",
@@ -81,11 +78,7 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 			}, false, nil
 		}
 
-		return &operator.Condition{
-			Status:  false,
-			Reason:  "Destination Not Found",
-			Message: fmt.Sprintf("Unknown error for endpoints `%s/%s`: %s", endpoints.GetNamespace(extension), endpoints.GetName(), err.Error()),
-		}, false, nil
+		return nil, false, operator.Temporary(err, "Unable to get endpoints")
 	}
 
 	// Discover port name - empty names are allowed

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,45 +21,21 @@
 package errors
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type grpcError interface {
-	error
-	GRPCStatus() *status.Status
-}
+func Test_GRPC(t *testing.T) {
+	v, ok := ExtractCause[grpcError](status.Error(codes.InvalidArgument, "path missing"))
+	require.True(t, ok)
+	require.EqualValues(t, codes.InvalidArgument, v.GRPCStatus().Code())
 
-func GRPCStatus(err error) (*status.Status, bool) {
-	v, ok := ExtractCause[grpcError](err)
+	v, ok = ExtractCause[grpcError](WithStack(status.Error(codes.InvalidArgument, "path missing")))
+	require.True(t, ok)
+	require.EqualValues(t, codes.InvalidArgument, v.GRPCStatus().Code())
 
-	if !ok {
-		return status.New(codes.Unknown, err.Error()), false
-	}
-
-	return v.GRPCStatus(), true
-}
-
-func GRPCCode(err error) codes.Code {
-	if err == nil {
-		return codes.OK
-	}
-
-	if v, ok := GRPCStatus(err); ok {
-		return v.Code()
-	}
-
-	return codes.Unknown
-}
-
-func IsGRPCCode(err error, codes ...codes.Code) bool {
-	vc := GRPCCode(err)
-
-	for _, code := range codes {
-		if vc == code {
-			return true
-		}
-	}
-
-	return false
+	require.EqualValues(t, codes.InvalidArgument, GRPCCode(status.Error(codes.InvalidArgument, "path missing")))
 }
