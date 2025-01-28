@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ func Test_Chart_List(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	scheduler, h := InternalClient(t, ctx, func(c Configuration) Configuration {
+	scheduler, client, _ := InternalClient(t, ctx, func(c Configuration) Configuration {
 		c.Namespace = tests.FakeNamespace
 		c.Deployment = tests.FakeNamespace
 		return c
@@ -51,7 +51,7 @@ func Test_Chart_List(t *testing.T) {
 
 	t.Run("Create Charts", func(t *testing.T) {
 		for i := 0; i < 1024; i++ {
-			_, err := h.Client().Arango().PlatformV1alpha1().ArangoPlatformCharts(tests.FakeNamespace).Create(context.Background(), &platformApi.ArangoPlatformChart{
+			_, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(tests.FakeNamespace).Create(context.Background(), &platformApi.ArangoPlatformChart{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      fmt.Sprintf("chart-%05d", i),
 					Namespace: tests.FakeNamespace,
@@ -105,13 +105,13 @@ func Test_Chart_Get(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	scheduler, h := InternalClient(t, ctx, func(c Configuration) Configuration {
+	scheduler, client, _ := InternalClient(t, ctx, func(c Configuration) Configuration {
 		c.Namespace = tests.FakeNamespace
 		c.Deployment = tests.FakeNamespace
 		return c
 	})
 
-	z := h.Client().Arango().PlatformV1alpha1().ArangoPlatformCharts(tests.FakeNamespace)
+	z := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(tests.FakeNamespace)
 
 	t1, err := z.Create(context.Background(), &platformApi.ArangoPlatformChart{
 		ObjectMeta: meta.ObjectMeta{

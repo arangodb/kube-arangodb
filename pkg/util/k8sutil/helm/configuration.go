@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,15 @@
 package helm
 
 import (
+	"k8s.io/client-go/rest"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 type Configuration struct {
 	Namespace string
 
-	Client kclient.Client
+	Config *rest.Config
 
 	Driver *ConfigurationDriver
 }
@@ -42,8 +43,8 @@ func (c *Configuration) Validate() error {
 		return errors.Errorf("Namespace cannot be empty")
 	}
 
-	if c.Client == nil {
-		return errors.Errorf("Namespace cannot be empty")
+	if c.Config == nil {
+		return errors.Errorf("Config needs to be defined")
 	}
 
 	if err := c.Driver.Validate(); err != nil {

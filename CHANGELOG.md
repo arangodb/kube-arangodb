@@ -50,6 +50,7 @@
 - (Maintenance) Fix CRD Generation and golangci version
 - (Feature) (ML) Allow to use PlatformStorage
 - (Maintenance) Bump Go Image to 1.22.11
+- (Feature) Split Helm and KClient
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD

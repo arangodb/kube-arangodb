@@ -38,7 +38,7 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/kconfig"
 )
 
 func NewClient(cfg Configuration) (Client, error) {
@@ -48,13 +48,13 @@ func NewClient(cfg Configuration) (Client, error) {
 
 	var helm action.Configuration
 
-	if err := helm.Init(kclient.NewRESTClientGetter(cfg.Namespace, nil, cfg.Client.Config()), cfg.Namespace, string(cfg.Driver.Get()), func(format string, v ...interface{}) {
+	if err := helm.Init(kconfig.NewRESTClientGetter(cfg.Namespace, nil, cfg.Config), cfg.Namespace, string(cfg.Driver.Get()), func(format string, v ...interface{}) {
 		logger.Debug(format, v...)
 	}); err != nil {
 		return nil, err
 	}
 
-	dClient, err := discovery.NewDiscoveryClientForConfig(cfg.Client.Config())
+	dClient, err := discovery.NewDiscoveryClientForConfig(cfg.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,6 @@ func NewClient(cfg Configuration) (Client, error) {
 
 type Client interface {
 	Namespace() string
-	Client() kclient.Client
 
 	Alive(ctx context.Context) error
 
@@ -101,10 +100,6 @@ type client struct {
 
 func (c *client) Namespace() string {
 	return c.cfg.Namespace
-}
-
-func (c *client) Client() kclient.Client {
-	return c.cfg.Client
 }
 
 func (c *client) Status(ctx context.Context, name string, mods ...util.Mod[action.Status]) (*Release, error) {
@@ -334,7 +329,7 @@ func (c *client) restClientForApiVersion(gv schema.GroupVersion) (rest.Interface
 		return v, nil
 	}
 
-	configShallowCopy := *c.cfg.Client.Config()
+	configShallowCopy := *c.cfg.Config
 	if configShallowCopy.RateLimiter == nil && configShallowCopy.QPS > 0 {
 		if configShallowCopy.Burst <= 0 {
 			return nil, fmt.Errorf("burst is required to be greater than 0 when RateLimiter is not set and QPS is set to greater than 0")
