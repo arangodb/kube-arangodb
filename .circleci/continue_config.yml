@@ -33,6 +33,8 @@ jobs:
       GO111MODULES: off
       KEEP_GOPATH: 1
     steps:
+      - apt-get update
+      - apt-get install -y unzip
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
