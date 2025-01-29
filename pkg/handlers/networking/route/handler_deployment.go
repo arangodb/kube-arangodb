@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ package route
 import (
 	"context"
 
-	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -32,6 +31,7 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
 func (h *handler) HandleArangoDeployment(ctx context.Context, item operation.Item, extension *networkingApi.ArangoRoute, status *networkingApi.ArangoRouteStatus) (bool, error) {
@@ -43,7 +43,7 @@ func (h *handler) HandleArangoDeployment(ctx context.Context, item operation.Ite
 
 	deployment, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.DatabaseV1().ArangoDeployments(item.Namespace).Get, name, meta.GetOptions{})
 	if err != nil {
-		if apiErrors.IsNotFound(err) {
+		if kerrors.IsNotFound(err) {
 			// Condition for Found should be set to false
 			if util.Or(
 				status.Conditions.Update(networkingApi.DeploymentFoundCondition, false, "ArangoDeployment not found", "ArangoDeployment not found"),

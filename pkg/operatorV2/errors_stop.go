@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,11 @@
 
 package operator
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
 
 func Stop(msg string, args ...interface{}) error {
 	return stop{
@@ -37,11 +41,7 @@ func (r stop) Error() string {
 }
 
 func IsStop(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	if _, ok := err.(stop); ok {
+	if _, ok := errors.ExtractCause[stop](err); ok {
 		return true
 	}
 
