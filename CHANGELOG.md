@@ -52,6 +52,7 @@
 - (Maintenance) Bump Go Image to 1.22.11
 - (Feature) Split Helm and KClient
 - (Bugfix) Fix ArangoRoute Target switch in case of temporary error
+- (Bugfix) Fix IntOrString Schema Type
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD

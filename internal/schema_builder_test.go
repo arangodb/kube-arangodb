@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,6 +72,9 @@ func (b *schemaBuilder) tryGetKubeOpenAPIV2Definitions(t *testing.T, obj interfa
 	type openAPISchemaFormatGetter interface {
 		OpenAPISchemaFormat() string
 	}
+	type openApiSchemaV3OneOfTypes interface {
+		OpenAPIV3OneOfTypes() []string
+	}
 	var typ, frmt string
 	if o, ok := obj.(openAPISchemaTypeGetter); ok {
 		strs := o.OpenAPISchemaType()
@@ -90,12 +93,25 @@ func (b *schemaBuilder) tryGetKubeOpenAPIV2Definitions(t *testing.T, obj interfa
 			}
 		}
 
+		if o, ok := obj.(openApiSchemaV3OneOfTypes); ok {
+			if b.isV3IntOrString(o.OpenAPIV3OneOfTypes()) {
+				return &apiextensions.JSONSchemaProps{
+					Type:         typ,
+					XIntOrString: true,
+				}
+			}
+		}
+
 		return &apiextensions.JSONSchemaProps{
 			Type:   typ,
 			Format: frmt,
 		}
 	}
 	return nil
+}
+
+func (b *schemaBuilder) isV3IntOrString(types []string) bool {
+	return len(types) == 2 && util.ContainsList(types, "number") && util.ContainsList(types, "string")
 }
 
 func (b *schemaBuilder) openAPIDefToSchemaPros(t *testing.T, _ *openapi.OpenAPIDefinition) *apiextensions.JSONSchemaProps {

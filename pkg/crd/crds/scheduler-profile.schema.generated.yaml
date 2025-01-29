@@ -66,6 +66,7 @@ v1alpha1:
                                       type: string
                                     divisor:
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     resource:
                                       type: string
                                   type: object
@@ -164,6 +165,7 @@ v1alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -458,10 +460,12 @@ v1alpha1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         securityContext:
@@ -1222,6 +1226,7 @@ v1alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -1234,6 +1239,7 @@ v1alpha1:
                               type: string
                             sizeLimit:
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         ephemeral:
                           properties:
@@ -1346,10 +1352,12 @@ v1alpha1:
                                         limits:
                                           additionalProperties:
                                             type: string
+                                            x-kubernetes-int-or-string: true
                                           type: object
                                         requests:
                                           additionalProperties:
                                             type: string
+                                            x-kubernetes-int-or-string: true
                                           type: object
                                       type: object
                                     selector:
@@ -1616,6 +1624,7 @@ v1alpha1:
                                                   type: string
                                                 divisor:
                                                   type: string
+                                                  x-kubernetes-int-or-string: true
                                                 resource:
                                                   type: string
                                               type: object
@@ -1851,6 +1860,7 @@ v1beta1:
                                       type: string
                                     divisor:
                                       type: string
+                                      x-kubernetes-int-or-string: true
                                     resource:
                                       type: string
                                   type: object
@@ -1949,6 +1959,7 @@ v1beta1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -2245,10 +2256,12 @@ v1beta1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         securityContext:
@@ -3011,6 +3024,7 @@ v1beta1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -3023,6 +3037,7 @@ v1beta1:
                               type: string
                             sizeLimit:
                               type: string
+                              x-kubernetes-int-or-string: true
                           type: object
                         ephemeral:
                           properties:
@@ -3135,10 +3150,12 @@ v1beta1:
                                         limits:
                                           additionalProperties:
                                             type: string
+                                            x-kubernetes-int-or-string: true
                                           type: object
                                         requests:
                                           additionalProperties:
                                             type: string
+                                            x-kubernetes-int-or-string: true
                                           type: object
                                       type: object
                                     selector:
@@ -3405,6 +3422,7 @@ v1beta1:
                                                   type: string
                                                 divisor:
                                                   type: string
+                                                  x-kubernetes-int-or-string: true
                                                 resource:
                                                   type: string
                                               type: object

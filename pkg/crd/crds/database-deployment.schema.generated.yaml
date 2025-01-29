@@ -326,6 +326,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -333,6 +334,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -397,6 +399,7 @@ v1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -702,10 +705,12 @@ v1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -1189,10 +1194,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -1343,6 +1350,7 @@ v1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -1648,10 +1656,12 @@ v1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -1982,10 +1992,12 @@ v1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -2030,10 +2042,12 @@ v1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -2141,6 +2155,7 @@ v1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -2594,6 +2609,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -2601,6 +2617,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -2665,6 +2682,7 @@ v1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -2970,10 +2988,12 @@ v1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -3457,10 +3477,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -3611,6 +3633,7 @@ v1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -3916,10 +3939,12 @@ v1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -4250,10 +4275,12 @@ v1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -4298,10 +4325,12 @@ v1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -4409,6 +4438,7 @@ v1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -4780,6 +4810,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -4787,6 +4818,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -4851,6 +4883,7 @@ v1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -5156,10 +5189,12 @@ v1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -5643,10 +5678,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -5797,6 +5834,7 @@ v1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -6102,10 +6140,12 @@ v1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -6436,10 +6476,12 @@ v1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -6484,10 +6526,12 @@ v1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -6595,6 +6639,7 @@ v1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -7048,6 +7093,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -7055,6 +7101,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -7119,6 +7166,7 @@ v1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -7424,10 +7472,12 @@ v1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -7911,10 +7961,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -8065,6 +8117,7 @@ v1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -8370,10 +8423,12 @@ v1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -8704,10 +8759,12 @@ v1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -8752,10 +8809,12 @@ v1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -8863,6 +8922,7 @@ v1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -9274,10 +9334,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               securityContext:
@@ -9449,6 +9511,7 @@ v1:
                                   type: string
                                 divisor:
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 resource:
                                   type: string
                               type: object
@@ -9748,10 +9811,12 @@ v1:
                       limits:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       requests:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                     type: object
                   securityContext:
@@ -9953,10 +10018,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
             type: object
@@ -10016,10 +10083,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               serviceMonitor:
@@ -10427,6 +10496,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -10434,6 +10504,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -10498,6 +10569,7 @@ v1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -10803,10 +10875,12 @@ v1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -11290,10 +11364,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -11444,6 +11520,7 @@ v1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -11749,10 +11826,12 @@ v1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -12083,10 +12162,12 @@ v1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -12131,10 +12212,12 @@ v1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -12242,6 +12325,7 @@ v1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -12756,6 +12840,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -12763,6 +12848,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -12827,6 +12913,7 @@ v1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -13132,10 +13219,12 @@ v1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -13619,10 +13708,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -13773,6 +13864,7 @@ v1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -14078,10 +14170,12 @@ v1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -14412,10 +14506,12 @@ v1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -14460,10 +14556,12 @@ v1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -14571,6 +14669,7 @@ v1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -14935,6 +15034,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -14942,6 +15042,7 @@ v1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -15006,6 +15107,7 @@ v1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -15311,10 +15413,12 @@ v1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -15798,10 +15902,12 @@ v1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -15952,6 +16058,7 @@ v1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -16257,10 +16364,12 @@ v1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -16591,10 +16700,12 @@ v1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -16639,10 +16750,12 @@ v1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -16750,6 +16863,7 @@ v1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -17214,6 +17328,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -17221,6 +17336,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -17285,6 +17401,7 @@ v2alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -17590,10 +17707,12 @@ v2alpha1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -18077,10 +18196,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -18231,6 +18352,7 @@ v2alpha1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -18536,10 +18658,12 @@ v2alpha1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -18870,10 +18994,12 @@ v2alpha1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -18918,10 +19044,12 @@ v2alpha1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -19029,6 +19157,7 @@ v2alpha1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -19482,6 +19611,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -19489,6 +19619,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -19553,6 +19684,7 @@ v2alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -19858,10 +19990,12 @@ v2alpha1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -20345,10 +20479,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -20499,6 +20635,7 @@ v2alpha1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -20804,10 +20941,12 @@ v2alpha1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -21138,10 +21277,12 @@ v2alpha1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -21186,10 +21327,12 @@ v2alpha1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -21297,6 +21440,7 @@ v2alpha1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -21668,6 +21812,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -21675,6 +21820,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -21739,6 +21885,7 @@ v2alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -22044,10 +22191,12 @@ v2alpha1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -22531,10 +22680,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -22685,6 +22836,7 @@ v2alpha1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -22990,10 +23142,12 @@ v2alpha1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -23324,10 +23478,12 @@ v2alpha1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -23372,10 +23528,12 @@ v2alpha1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -23483,6 +23641,7 @@ v2alpha1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -23936,6 +24095,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -23943,6 +24103,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -24007,6 +24168,7 @@ v2alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -24312,10 +24474,12 @@ v2alpha1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -24799,10 +24963,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -24953,6 +25119,7 @@ v2alpha1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -25258,10 +25425,12 @@ v2alpha1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -25592,10 +25761,12 @@ v2alpha1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -25640,10 +25811,12 @@ v2alpha1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -25751,6 +25924,7 @@ v2alpha1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -26162,10 +26336,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               securityContext:
@@ -26337,6 +26513,7 @@ v2alpha1:
                                   type: string
                                 divisor:
                                   type: string
+                                  x-kubernetes-int-or-string: true
                                 resource:
                                   type: string
                               type: object
@@ -26636,10 +26813,12 @@ v2alpha1:
                       limits:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       requests:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                     type: object
                   securityContext:
@@ -26841,10 +27020,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
             type: object
@@ -26904,10 +27085,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               serviceMonitor:
@@ -27315,6 +27498,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -27322,6 +27506,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -27386,6 +27571,7 @@ v2alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -27691,10 +27877,12 @@ v2alpha1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -28178,10 +28366,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -28332,6 +28522,7 @@ v2alpha1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -28637,10 +28828,12 @@ v2alpha1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -28971,10 +29164,12 @@ v2alpha1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -29019,10 +29214,12 @@ v2alpha1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -29130,6 +29327,7 @@ v2alpha1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -29644,6 +29842,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -29651,6 +29850,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -29715,6 +29915,7 @@ v2alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -30020,10 +30221,12 @@ v2alpha1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -30507,10 +30710,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -30661,6 +30866,7 @@ v2alpha1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -30966,10 +31172,12 @@ v2alpha1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -31300,10 +31508,12 @@ v2alpha1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -31348,10 +31558,12 @@ v2alpha1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -31459,6 +31671,7 @@ v2alpha1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
@@ -31823,6 +32036,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                   temp:
                     description: Temp define temp ephemeral volume in case if `ephemeral-volumes` feature is enabled.
@@ -31830,6 +32044,7 @@ v2alpha1:
                       size:
                         description: Size define size of the ephemeral volume
                         type: string
+                        x-kubernetes-int-or-string: true
                     type: object
                 type: object
               exporterPort:
@@ -31894,6 +32109,7 @@ v2alpha1:
                                         type: string
                                       divisor:
                                         type: string
+                                        x-kubernetes-int-or-string: true
                                       resource:
                                         type: string
                                     type: object
@@ -32199,10 +32415,12 @@ v2alpha1:
                             limits:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                             requests:
                               additionalProperties:
                                 type: string
+                                x-kubernetes-int-or-string: true
                               type: object
                           type: object
                         restartPolicy:
@@ -32686,10 +32904,12 @@ v2alpha1:
                   limits:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                   requests:
                     additionalProperties:
                       type: string
+                      x-kubernetes-int-or-string: true
                     type: object
                 type: object
               schedulerName:
@@ -32840,6 +33060,7 @@ v2alpha1:
                                     type: string
                                   divisor:
                                     type: string
+                                    x-kubernetes-int-or-string: true
                                   resource:
                                     type: string
                                 type: object
@@ -33145,10 +33366,12 @@ v2alpha1:
                         limits:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                         requests:
                           additionalProperties:
                             type: string
+                            x-kubernetes-int-or-string: true
                           type: object
                       type: object
                     restartPolicy:
@@ -33479,10 +33702,12 @@ v2alpha1:
                           limits:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                           requests:
                             additionalProperties:
                               type: string
+                              x-kubernetes-int-or-string: true
                             type: object
                         type: object
                       selector:
@@ -33527,10 +33752,12 @@ v2alpha1:
                       allocatedResources:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       capacity:
                         additionalProperties:
                           type: string
+                          x-kubernetes-int-or-string: true
                         type: object
                       conditions:
                         items:
@@ -33638,6 +33865,7 @@ v2alpha1:
                           type: string
                         sizeLimit:
                           type: string
+                          x-kubernetes-int-or-string: true
                       type: object
                     hostPath:
                       description: HostPath
