@@ -53,6 +53,7 @@
 - (Feature) Split Helm and KClient
 - (Bugfix) Fix ArangoRoute Target switch in case of temporary error
 - (Bugfix) Fix IntOrString Schema Type
+- (Feature) Enable Operator Handler StackTraces
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD
@@ -135,7 +136,6 @@
 - (Feature) DebugPackage ArangoProfiles
 - (Feature) Scheduler CLI
 - (Feature) Parametrize ForceDelete timeout
-<<<<<<< HEAD
 - (Feature) Scheduler BatchJob Integration Definition
 - (Feature) Scheduler CronJob Integration Definition
 - (Feature) Scheduler BatchJob Integration Service

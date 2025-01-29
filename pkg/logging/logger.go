@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -268,6 +268,7 @@ type Logger interface {
 	Interface(key string, i interface{}) Logger
 	Dur(key string, dur time.Duration) Logger
 	Time(key string, time time.Time) Logger
+	Stack() Logger
 
 	Trace(msg string, args ...interface{})
 	Debug(msg string, args ...interface{})
@@ -296,6 +297,12 @@ type chain struct {
 	parent  *chain
 	sampler Sampler
 	wrap    Wrap
+}
+
+func (c *chain) Stack() Logger {
+	return c.Wrap(func(in *zerolog.Event) *zerolog.Event {
+		return in.Stack()
+	})
 }
 
 func (c *chain) TraceIO() LoggerIO {
