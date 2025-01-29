@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ func (o *operator) processNextItem() bool {
 	err := o.processObject(obj)
 
 	if err != nil {
-		loggerWorker.Interface("object", obj).Error("Error during object handling: %v", err)
+		loggerWorker.Stack().Err(err).Interface("object", obj).Error("Error during object handling: %v", err)
 		return true
 	}
 
