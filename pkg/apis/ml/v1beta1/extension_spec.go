@@ -112,10 +112,17 @@ func (a *ArangoMLExtensionSpec) Validate() error {
 
 	return shared.WithErrors(shared.PrefixResourceErrors("spec",
 		shared.PrefixResourceErrors("metadataService", a.GetMetadataService().Validate()),
-		shared.PrefixResourceErrors("storage", shared.ValidateOptionalInterface(a.GetStorage())),
+		shared.PrefixResourceErrors("storage", func() error {
+			if a.GetStorageType() == ArangoMLExtensionSpecStorageTypeExtension {
+				return shared.ValidateRequiredInterface(a.Storage)
+			}
+
+			return nil
+		}()),
 		shared.PrefixResourceErrors("init", a.GetInit().Validate()),
 		shared.PrefixResourceErrors("deployment", a.GetDeployment().Validate()),
 		shared.PrefixResourceErrors("jobsTemplates", a.GetJobsTemplates().Validate()),
 		shared.PrefixResourceErrors("integrationSidecar", a.GetIntegrationSidecar().Validate()),
+		shared.PrefixResourceErrors("storageType", shared.ValidateOptionalInterface(a.StorageType)),
 	))
 }
