@@ -5886,9 +5886,21 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ***
 
-### .spec.sync.tls.sni.mapping.\<string\>
+### .spec.sync.tls.sni.mapping
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/tls_sni_spec.go#L30)</sup>
+Type: `map[string][]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/tls_sni_spec.go#L36)</sup>
+
+Mapping is the mapping of the SNI options.
+
+Links:
+* [Server Name Indication](https://docs.arangodb.com/stable/develop/http-api/security/)
+
+Example:
+```yaml
+mapping:
+  secret:
+  - domain.example.com
+```
 
 ***
 
@@ -7834,9 +7846,21 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ***
 
-### .spec.tls.sni.mapping.\<string\>
+### .spec.tls.sni.mapping
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/tls_sni_spec.go#L30)</sup>
+Type: `map[string][]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/tls_sni_spec.go#L36)</sup>
+
+Mapping is the mapping of the SNI options.
+
+Links:
+* [Server Name Indication](https://docs.arangodb.com/stable/develop/http-api/security/)
+
+Example:
+```yaml
+mapping:
+  secret:
+  - domain.example.com
+```
 
 ***
 
