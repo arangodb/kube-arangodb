@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,24 +23,25 @@ package token
 import (
 	jwt "github.com/golang-jwt/jwt"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func IsSignatureInvalidError(err error) bool {
-	return isJQError(err, jwt.ErrSignatureInvalid)
+func NewClaims() Claims {
+	return Claims{}
 }
 
-func isJQError(err, expected error) bool {
-	if err == nil || expected == nil {
-		return false
+type Claims jwt.MapClaims
+
+func (t Claims) With(mods ...util.ModR[Claims]) Claims {
+	q := t
+
+	if q == nil {
+		q = Claims{}
 	}
 
-	var v *jwt.ValidationError
-	if errors.As(err, &v) {
-		if errors.Is(v.Inner, expected) {
-			return true
-		}
-	}
+	return util.ApplyModsR(q, mods...)
+}
 
-	return false
+func (t Claims) Sign(secret Secret) (string, error) {
+	return secret.Sign(DefaultSigningMethod(), t)
 }

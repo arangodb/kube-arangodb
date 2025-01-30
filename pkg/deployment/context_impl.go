@@ -295,7 +295,7 @@ func (d *Deployment) getJWTToken() (string, bool) {
 func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
 	// Fetch monitoring token
 	secretName := d.GetSpec().Sync.Monitoring.GetTokenSecretName()
-	monitoringToken, err := k8sutil.GetTokenSecret(ctx, d.GetCachedStatus().Secret().V1().Read(), secretName)
+	monitoringToken, err := k8sutil.GetTokenSecretString(ctx, d.GetCachedStatus().Secret().V1().Read(), secretName)
 	if err != nil {
 		d.log.Err(err).Str("secret-name", secretName).Debug("Failed to get sync monitoring secret")
 		return nil, errors.WithStack(err)

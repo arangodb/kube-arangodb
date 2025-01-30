@@ -20,6 +20,15 @@
 
 package util
 
+type ModR[T any] func(in T) T
+
+func ApplyModsR[T any](in T, mods ...ModR[T]) T {
+	for _, mod := range mods {
+		in = mod(in)
+	}
+	return in
+}
+
 func emptyMod[T any](_ *T) {}
 
 type Mod[T any] func(in *T)
