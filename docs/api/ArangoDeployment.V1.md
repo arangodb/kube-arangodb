@@ -5890,16 +5890,16 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 Type: `map[string][]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/tls_sni_spec.go#L36)</sup>
 
-Mapping is the mapping of the SNI options.
+The mapping of the Server Name Indication options.
 
 Links:
-* [Server Name Indication](https://docs.arangodb.com/stable/develop/http-api/security/)
+* [Server Name Indication](https://docs.arangodb.com/stable/components/arangodb-server/options/#--sslserver-name-indication)
 
 Example:
 ```yaml
 mapping:
   secret:
-  - domain.example.com
+    - domain.example.com
 ```
 
 ***
@@ -7850,16 +7850,16 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 Type: `map[string][]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.43/pkg/apis/deployment/v1/tls_sni_spec.go#L36)</sup>
 
-Mapping is the mapping of the SNI options.
+The mapping of the Server Name Indication options.
 
 Links:
-* [Server Name Indication](https://docs.arangodb.com/stable/develop/http-api/security/)
+* [Server Name Indication](https://docs.arangodb.com/stable/components/arangodb-server/options/#--sslserver-name-indication)
 
 Example:
 ```yaml
 mapping:
   secret:
-  - domain.example.com
+    - domain.example.com
 ```
 
 ***

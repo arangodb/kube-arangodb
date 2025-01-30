@@ -12510,7 +12510,7 @@ v1:
                           items:
                             type: string
                           type: array
-                        description: Mapping is the mapping of the SNI options.
+                        description: The mapping of the Server Name Indication options.
                         type: object
                     type: object
                   ttl:
@@ -16961,7 +16961,7 @@ v1:
                       items:
                         type: string
                       type: array
-                    description: Mapping is the mapping of the SNI options.
+                    description: The mapping of the Server Name Indication options.
                     type: object
                 type: object
               ttl:
@@ -29514,7 +29514,7 @@ v2alpha1:
                           items:
                             type: string
                           type: array
-                        description: Mapping is the mapping of the SNI options.
+                        description: The mapping of the Server Name Indication options.
                         type: object
                     type: object
                   ttl:
@@ -33965,7 +33965,7 @@ v2alpha1:
                       items:
                         type: string
                       type: array
-                    description: Mapping is the mapping of the SNI options.
+                    description: The mapping of the Server Name Indication options.
                     type: object
                 type: object
               ttl:
