@@ -27,12 +27,12 @@ import (
 
 // TLSSNISpec holds TLS SNI additional certificates
 type TLSSNISpec struct {
-	// Mapping is the mapping of the SNI options.
+	// The mapping of the Server Name Indication options.
 	// +doc/type: map[string][]string
 	// +doc/example: mapping:
 	// +doc/example:   secret:
-	// +doc/example:   - domain.example.com
-	// +doc/link: Server Name Indication|https://docs.arangodb.com/stable/develop/http-api/security/
+	// +doc/example:     - domain.example.com
+	// +doc/link: Server Name Indication|https://docs.arangodb.com/stable/components/arangodb-server/options/#--sslserver-name-indication
 	Mapping map[string][]string `json:"mapping,omitempty"`
 }
 
