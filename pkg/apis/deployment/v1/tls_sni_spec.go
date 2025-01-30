@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,12 @@ import (
 
 // TLSSNISpec holds TLS SNI additional certificates
 type TLSSNISpec struct {
+	// The mapping of the Server Name Indication options.
+	// +doc/type: map[string][]string
+	// +doc/example: mapping:
+	// +doc/example:   secret:
+	// +doc/example:     - domain.example.com
+	// +doc/link: Server Name Indication|https://docs.arangodb.com/stable/components/arangodb-server/options/#--sslserver-name-indication
 	Mapping map[string][]string `json:"mapping,omitempty"`
 }
 
