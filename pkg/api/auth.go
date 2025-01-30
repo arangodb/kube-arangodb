@@ -31,14 +31,18 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+<<<<<<< HEAD
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+=======
+>>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 type authorization struct {
-	jwtSigningKey string
+	secret token.Secret
 }
 
+<<<<<<< HEAD
 func (a *authorization) isValid(t string) bool {
 	if _, err := token.Parse(t, []byte(a.jwtSigningKey)); err != nil {
 		if errors.Is(err, token.NotValidToken) {
@@ -49,6 +53,15 @@ func (a *authorization) isValid(t string) bool {
 		return false
 	}
 	return true
+=======
+func (a *authorization) isValid(token string) bool {
+	t, err := a.secret.Validate(token)
+	if err != nil {
+		apiLogger.Err(err).Info("invalid JWT: %s", token)
+		return false
+	}
+	return t.Valid()
+>>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 }
 
 // ensureHTTPAuth ensure a valid token exists within HTTP request header
