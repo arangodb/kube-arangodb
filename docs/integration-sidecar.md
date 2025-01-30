@@ -14,7 +14,7 @@ has_toc: false
 
 #### Selector
 
-Using [Selector](./api/ArangoProfile.V1Beta1.md) `.spec.selectors.label` you can select which profiles gonna be applied on the Pod.
+Using [Selector](./api/ArangoProfile.V1Beta1.md) `.spec.selectors.label` you can select which profiles are going to be applied on the Pod.
 
 To not match any pod:
 ```yaml
