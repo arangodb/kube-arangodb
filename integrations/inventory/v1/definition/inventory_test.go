@@ -18,12 +18,30 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package definition
 
-type State struct {
-	Configuration StateConfiguration `json:"configuration,omitempty"`
-}
+import (
+	"testing"
 
-type StateConfiguration struct {
-	Hash string `json:"hash,omitempty"`
+	"github.com/stretchr/testify/require"
+
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+)
+
+func Test_State_Marshal(t *testing.T) {
+	s := Inventory{
+		Configuration: &InventoryConfiguration{
+			Hash: "xyz",
+		},
+	}
+
+	data, err := ugrpc.Marshal(&s)
+	require.NoError(t, err)
+
+	res, err := ugrpc.Unmarshal[*Inventory](data)
+	require.NoError(t, err)
+
+	require.NotNil(t, res)
+
+	require.EqualValues(t, &s, res)
 }

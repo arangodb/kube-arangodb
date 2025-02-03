@@ -45,6 +45,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 type Config struct {
@@ -76,7 +77,11 @@ func (c Config) RenderYAML() ([]byte, string, *bootstrapAPI.Bootstrap, error) {
 		return nil, "", nil, err
 	}
 
-	return Marshal(cfg)
+	data, err := ugrpc.MarshalYAML(cfg)
+	if err != nil {
+		return nil, "", nil, err
+	}
+	return data, util.SHA256(data), cfg, nil
 }
 
 func (c Config) RenderCDSYAML() ([]byte, string, *discoveryApi.DiscoveryResponse, error) {
@@ -85,7 +90,11 @@ func (c Config) RenderCDSYAML() ([]byte, string, *discoveryApi.DiscoveryResponse
 		return nil, "", nil, err
 	}
 
-	return Marshal(cfg)
+	data, err := ugrpc.MarshalYAML(cfg)
+	if err != nil {
+		return nil, "", nil, err
+	}
+	return data, util.SHA256(data), cfg, nil
 }
 
 func (c Config) RenderLDSYAML() ([]byte, string, *discoveryApi.DiscoveryResponse, error) {
@@ -94,7 +103,11 @@ func (c Config) RenderLDSYAML() ([]byte, string, *discoveryApi.DiscoveryResponse
 		return nil, "", nil, err
 	}
 
-	return Marshal(cfg)
+	data, err := ugrpc.MarshalYAML(cfg)
+	if err != nil {
+		return nil, "", nil, err
+	}
+	return data, util.SHA256(data), cfg, nil
 }
 
 func (c Config) RenderCDS() (*discoveryApi.DiscoveryResponse, error) {

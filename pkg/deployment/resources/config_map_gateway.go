@@ -31,14 +31,15 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
+	pbInventoryV1 "github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
-	"github.com/arangodb/kube-arangodb/pkg/platform"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
@@ -64,13 +65,14 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 				pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
 			},
 		},
-		Static: &gateway.ConfigDestinationStatic{
+		Static: &gateway.ConfigDestinationStatic[*pbInventoryV1.Inventory]{
 			Code: util.NewType[uint32](200),
-			Response: &platform.State{
-				Configuration: platform.StateConfiguration{
+			Response: &pbInventoryV1.Inventory{
+				Configuration: &pbInventoryV1.InventoryConfiguration{
 					Hash: baseGatewayCfgYamlChecksum,
 				},
 			},
+			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
 		},
 	}
 

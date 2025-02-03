@@ -403,6 +403,9 @@ func Test_GatewayConfig(t *testing.T) {
 	})
 
 	t.Run("Default", func(t *testing.T) {
+		type td struct {
+			Data string `json:"data"`
+		}
 		renderAndPrintGatewayConfig(t, Config{
 			DefaultDestination: ConfigDestination{
 				Targets: []ConfigDestinationTarget{
@@ -451,11 +454,9 @@ func Test_GatewayConfig(t *testing.T) {
 				},
 				"/_test2": {
 					Type: util.NewType(ConfigDestinationTypeStatic),
-					Static: &ConfigDestinationStatic{
+					Static: &ConfigDestinationStatic[td]{
 						Code: util.NewType[uint32](302),
-						Response: struct {
-							Data string `json:"data"`
-						}{
+						Response: td{
 							Data: "TEST",
 						},
 					},

@@ -57,6 +57,7 @@
 - (Bugfix) Fix IntOrString Schema Type
 - (Feature) Enable Operator Handler StackTraces
 - (Feature) Add spec validation for MLExtension
+- (Feature) (Platform) Inventory as Proto
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD
