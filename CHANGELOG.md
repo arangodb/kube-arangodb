@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.44](https://github.com/arangodb/kube-arangodb/tree/1.2.44) (2025-02-03)
 - (Maintenance) Kubernetes 1.31.1 libraries
 - (Feature) Helm Client Support
 - (Feature) Helm Client Extension
