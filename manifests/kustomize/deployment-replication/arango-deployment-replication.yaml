@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -18,7 +18,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -37,7 +37,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-deployment-replication
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -56,7 +56,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -76,7 +76,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-deployment-replication
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -97,7 +97,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -123,7 +123,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -144,7 +144,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -179,7 +179,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -197,7 +197,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.43
+        helm.sh/chart: kube-arangodb-1.2.44
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -236,7 +236,7 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb:1.2.43
+          image: arangodb/kube-arangodb:1.2.44
           args:
             - --scope=legacy
             - --operator.deployment-replication
@@ -343,6 +343,22 @@ spec:
 ---
 
 
+# Source: kube-arangodb/templates/certificates/ca.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/certificate.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/issuer.ca.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/issuer.yaml
+---
+
+
 # Source: kube-arangodb/templates/deployment-operator/cluster-role-binding.yaml
 ---
 
@@ -415,6 +431,22 @@ spec:
 ---
 
 
+# Source: kube-arangodb/templates/platform-operator/cluster-role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/platform-operator/cluster-role.yaml
+---
+
+
+# Source: kube-arangodb/templates/platform-operator/role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/platform-operator/role.yaml
+---
+
+
 # Source: kube-arangodb/templates/scheduler-operator/cluster-role-binding.yaml
 ---
 
@@ -428,6 +460,10 @@ spec:
 
 
 # Source: kube-arangodb/templates/scheduler-operator/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/service-webhooks.yaml
 ---
 
 
@@ -448,5 +484,17 @@ spec:
 
 
 # Source: kube-arangodb/templates/storage-operator/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/certificate.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/mutation.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/validation.yaml
 ---
 

@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -18,7 +18,7 @@ metadata:
   name: arango-deployment-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -56,7 +56,7 @@ metadata:
   name: arango-deployment-operator-rbac-deployment
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -75,7 +75,23 @@ metadata:
   name: arango-deployment-operator-rbac-networking
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: deployment
+    release: deployment
+rules:
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: kube-arangodb/templates/platform-operator/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: arango-deployment-operator-rbac-platform
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -91,7 +107,7 @@ metadata:
   name: arango-deployment-operator-rbac-scheduler
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -107,7 +123,7 @@ metadata:
   name: arango-deployment-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -127,7 +143,7 @@ metadata:
   name: arango-deployment-operator-rbac-deployment
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -147,7 +163,7 @@ metadata:
   name: arango-deployment-operator-rbac-networking
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -160,6 +176,26 @@ subjects:
     name: arango-deployment-operator
     namespace: default
 ---
+# Source: kube-arangodb/templates/platform-operator/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-deployment-operator-rbac-platform
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.2.44
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: deployment
+    release: deployment
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-deployment-operator-rbac-platform
+subjects:
+  - kind: ServiceAccount
+    name: arango-deployment-operator
+    namespace: default
+---
 # Source: kube-arangodb/templates/scheduler-operator/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -167,7 +203,7 @@ metadata:
   name: arango-deployment-operator-rbac-scheduler
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -188,7 +224,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -205,16 +241,13 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
 rules:
   - apiGroups: ["database.arangodb.com"]
     resources: ["arangodeployments", "arangodeployments/status", "arangomembers", "arangomembers/status"]
-    verbs: ["*"]
-  - apiGroups: ["networking.arangodb.com"]
-    resources: ["arangoroutes", "arangoroutes/status"]
     verbs: ["*"]
   - apiGroups: ["database.arangodb.com"]
     resources: ["arangoclustersynchronizations", "arangoclustersynchronizations/status"]
@@ -234,6 +267,9 @@ rules:
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
     verbs: ["*"]
+  - apiGroups: ["platform.arangodb.com"]
+    resources: ["arangoplatformstorages", "arangoplatformstorages/status"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["backup.arangodb.com"]
     resources: ["arangobackuppolicies", "arangobackups"]
     verbs: ["get", "list", "watch"]
@@ -249,61 +285,37 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
 rules:
-  - apiGroups:
-      - "ml.arangodb.com"
-    resources:
-      - "arangomlextensions"
-      - "arangomlextensions/status"
-      - "arangomlbatchjobs"
-      - "arangomlbatchjobs/status"
-      - "arangomlcronjobs"
-      - "arangomlcronjobs/status"
-      - "arangomlstorages"
-      - "arangomlstorages/status"
-    verbs:
-      - "*"
-  - apiGroups:
-      - "scheduler.arangodb.com"
-    resources:
-      - "arangoprofiles"
-      - "arangoprofiles/status"
-    verbs:
-      - "*"
-  - apiGroups:
-      - "database.arangodb.com"
-    resources:
-      - "arangodeployments"
-    verbs:
-      - "get"
-      - "list"
-      - "watch"
-  - apiGroups:
-      - "rbac.authorization.k8s.io"
-    resources:
-      - "roles"
-      - "rolebindings"
-    verbs: ["*"]
-  - apiGroups:
-      - "batch"
-    resources:
-      - "cronjobs"
-      - "jobs"
-    verbs: ["*"]
-  - apiGroups: ["apps"]
-    resources:
-      - "statefulsets"
+  - apiGroups: ["networking.arangodb.com"]
+    resources: ["arangoroutes", "arangoroutes/status"]
     verbs: ["*"]
   - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: kube-arangodb/templates/platform-operator/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: arango-deployment-operator-rbac-platform
+  namespace: default
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.2.44
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: deployment
+    release: deployment
+rules:
+  - apiGroups: ["platform.arangodb.com"]
     resources:
-      - "pods"
-      - "secrets"
-      - "services"
-      - "serviceaccounts"
+      - "arangoplatformstorages"
+      - "arangoplatformstorages/status"
+      - "arangoplatformcharts"
+      - "arangoplatformcharts/status"
     verbs: ["*"]
 ---
 # Source: kube-arangodb/templates/scheduler-operator/role.yaml
@@ -314,7 +326,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -374,7 +386,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -395,7 +407,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -416,7 +428,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -424,6 +436,27 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: arango-deployment-operator-rbac-networking
+subjects:
+  - kind: ServiceAccount
+    name: arango-deployment-operator
+    namespace: default
+---
+# Source: kube-arangodb/templates/platform-operator/role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: arango-deployment-operator-rbac-platform
+  namespace: default
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.2.44
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: deployment
+    release: deployment
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: arango-deployment-operator-rbac-platform
 subjects:
   - kind: ServiceAccount
     name: arango-deployment-operator
@@ -437,7 +470,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -458,7 +491,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -493,7 +526,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment
     release: deployment
@@ -511,7 +544,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.43
+        helm.sh/chart: kube-arangodb-1.2.44
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment
         release: deployment
@@ -550,13 +583,14 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb:1.2.43
+          image: arangodb/kube-arangodb:1.2.44
           args:
             - --scope=legacy
             - --operator.deployment
             - --mode.single
             - --operator.networking
             - --operator.scheduler
+            - --operator.platform
             - --chaos.allowed=false
           env:
             - name: MY_POD_NAMESPACE
@@ -659,6 +693,22 @@ spec:
 ---
 
 
+# Source: kube-arangodb/templates/certificates/ca.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/certificate.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/issuer.ca.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/issuer.yaml
+---
+
+
 # Source: kube-arangodb/templates/deployment-replications-operator/cluster-role-binding.yaml
 ---
 
@@ -707,6 +757,10 @@ spec:
 ---
 
 
+# Source: kube-arangodb/templates/service-webhooks.yaml
+---
+
+
 # Source: kube-arangodb/templates/storage-operator/cluster-role-binding.yaml
 ---
 
@@ -724,5 +778,17 @@ spec:
 
 
 # Source: kube-arangodb/templates/storage-operator/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/certificate.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/mutation.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/validation.yaml
 ---
 

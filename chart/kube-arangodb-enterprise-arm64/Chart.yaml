@@ -1,5 +1,5 @@
 # do not switch to V2 yet - we still need to support Helm 2
 apiVersion: v1
 name: kube-arangodb-enterprise-arm64
-version: 1.2.43
+version: 1.2.44
 description: "ArangoDB Kubernetes Enterprise Operator with ARM64 defaults"

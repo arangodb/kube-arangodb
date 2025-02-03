@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -18,7 +18,7 @@ metadata:
   name: arango-backup-operator-rbac-backup
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -34,7 +34,7 @@ metadata:
   name: arango-backup-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -54,7 +54,7 @@ metadata:
   name: arango-backup-operator-rbac-backup
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -74,7 +74,7 @@ metadata:
   name: arango-backup-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -95,7 +95,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -127,7 +127,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -148,7 +148,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -183,7 +183,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.43
+    helm.sh/chart: kube-arangodb-1.2.44
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -201,7 +201,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.43
+        helm.sh/chart: kube-arangodb-1.2.44
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: backup
         release: backup
@@ -240,7 +240,7 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb:1.2.43
+          image: arangodb/kube-arangodb:1.2.44
           args:
             - --scope=legacy
             - --operator.backup
@@ -328,6 +328,22 @@ spec:
 
 
 # Source: kube-arangodb/templates/apps-operator/service-account-job.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/ca.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/certificate.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/issuer.ca.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/issuer.yaml
 ---
 
 
@@ -419,6 +435,22 @@ spec:
 ---
 
 
+# Source: kube-arangodb/templates/platform-operator/cluster-role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/platform-operator/cluster-role.yaml
+---
+
+
+# Source: kube-arangodb/templates/platform-operator/role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/platform-operator/role.yaml
+---
+
+
 # Source: kube-arangodb/templates/scheduler-operator/cluster-role-binding.yaml
 ---
 
@@ -432,6 +464,10 @@ spec:
 
 
 # Source: kube-arangodb/templates/scheduler-operator/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/service-webhooks.yaml
 ---
 
 
@@ -452,5 +488,17 @@ spec:
 
 
 # Source: kube-arangodb/templates/storage-operator/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/certificate.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/mutation.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/validation.yaml
 ---
 
