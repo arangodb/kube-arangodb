@@ -76,6 +76,7 @@ require (
 	github.com/arangodb-managed/integration-apis v0.2.1
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/jedib0t/go-pretty/v6 v6.6.5
+	google.golang.org/genproto/googleapis/api v0.0.0-20241113202542-65e8d215514f
 	helm.sh/helm/v3 v3.16.2
 )
 
@@ -211,7 +212,6 @@ require (
 	golang.org/x/net v0.31.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20241113202542-65e8d215514f // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

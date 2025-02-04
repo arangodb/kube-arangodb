@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) Inventory as Proto
 
 ## [1.2.44](https://github.com/arangodb/kube-arangodb/tree/1.2.44) (2025-02-03)
 - (Maintenance) Kubernetes 1.31.1 libraries
@@ -57,7 +58,6 @@
 - (Bugfix) Fix IntOrString Schema Type
 - (Feature) Enable Operator Handler StackTraces
 - (Feature) Add spec validation for MLExtension
-- (Feature) (Platform) Inventory as Proto
 
 ## [1.2.43](https://github.com/arangodb/kube-arangodb/tree/1.2.43) (2024-10-14)
 - (Feature) ArangoRoute CRD
