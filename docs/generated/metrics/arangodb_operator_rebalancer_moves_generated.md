@@ -12,7 +12,7 @@ Define how many moves were generated
 
 ## Labels
 
-|   Label   | Description          |
-|:---------:|:---------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | Deployment Namespace |
-|   name    | Deployment Name      |
+| name | Deployment Name |

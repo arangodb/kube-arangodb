@@ -12,7 +12,7 @@ Determines if agency is healthy
 
 ## Labels
 
-|   Label   | Description          |
-|:---------:|:---------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | Deployment Namespace |
-|   name    | Deployment Name      |
+| name | Deployment Name |

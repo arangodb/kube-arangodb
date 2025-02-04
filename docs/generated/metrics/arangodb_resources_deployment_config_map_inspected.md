@@ -12,6 +12,6 @@ Number of inspected ConfigMaps by Deployment
 
 ## Labels
 
-|   Label    | Description     |
-|:----------:|:----------------|
+| Label | Description |
+|:---:|:--- |
 | deployment | Deployment Name |

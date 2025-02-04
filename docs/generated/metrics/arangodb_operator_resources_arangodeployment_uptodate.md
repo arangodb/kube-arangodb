@@ -12,7 +12,7 @@ Defines if ArangoDeployment is uptodate
 
 ## Labels
 
-|   Label   | Description          |
-|:---------:|:---------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | Deployment Namespace |
-|   name    | Deployment Name      |
+| name | Deployment Name |
