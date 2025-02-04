@@ -21,28 +21,53 @@
 package gateway
 
 import (
+	"encoding/json"
 	"net/http"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type ConfigDestinationStatic struct {
-	Code *uint32 `json:"insecure,omitempty"`
-
-	Response any `json:"response,omitempty"`
+type ConfigDestinationStaticInterface interface {
+	Validate() error
+	StaticResponse() ([]byte, uint32, error)
 }
 
-func (c *ConfigDestinationStatic) Validate() error {
+type ConfigDestinationStaticMarshaller[T any] func(in T) ([]byte, error)
+
+type ConfigDestinationStatic[T any] struct {
+	Code *uint32 `json:"insecure,omitempty"`
+
+	Response T `json:"response,omitempty"`
+
+	Marshaller ConfigDestinationStaticMarshaller[T] `json:"-"`
+}
+
+func (c *ConfigDestinationStatic[T]) Validate() error {
 	return nil
 }
 
-func (c *ConfigDestinationStatic) GetResponse() any {
-	if c == nil || c.Response == nil {
-		return []byte("{}")
+func (c *ConfigDestinationStatic[T]) StaticResponse() ([]byte, uint32, error) {
+	data, err := c.Marshall()
+	if err != nil {
+		return nil, 0, err
 	}
 
-	return c.Response
+	return data, c.GetCode(), nil
 }
 
-func (c *ConfigDestinationStatic) GetCode() uint32 {
+func (c *ConfigDestinationStatic[T]) Marshall() ([]byte, error) {
+	if c == nil || util.IsDefault(c.Response) {
+		return []byte("{}"), nil
+	}
+
+	if m := c.Marshaller; m == nil {
+		return json.Marshal(c.Response)
+	} else {
+		return m(c.Response)
+	}
+}
+
+func (c *ConfigDestinationStatic[T]) GetCode() uint32 {
 	if c == nil || c.Code == nil {
 		return http.StatusOK
 	}

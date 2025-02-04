@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ import (
 	discoveryApi "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 type DynamicConfig struct {
@@ -75,7 +78,12 @@ func NodeDynamicConfig(cluster, id string, cds, lds *DynamicConfig) ([]byte, str
 		b.DynamicResources.LdsConfig = v.AsConfigSource()
 	}
 
-	return Marshal(&b)
+	data, err := ugrpc.MarshalYAML(&b)
+	if err != nil {
+		return nil, "", nil, err
+	}
+
+	return data, util.SHA256(data), &b, nil
 }
 
 func DynamicConfigResponse[T proto.Message](in ...T) (*discoveryApi.DiscoveryResponse, error) {

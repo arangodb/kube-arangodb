@@ -21,7 +21,6 @@
 package gateway
 
 import (
-	"encoding/json"
 	"time"
 
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -79,7 +78,7 @@ type ConfigDestination struct {
 
 	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"`
 
-	Static *ConfigDestinationStatic `json:"static,omitempty"`
+	Static ConfigDestinationStaticInterface `json:"static,omitempty"`
 }
 
 func (c *ConfigDestination) Validate() error {
@@ -179,13 +178,10 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 
 func (c *ConfigDestination) appendRouteAction(route *routeAPI.Route, name string) error {
 	if c.Type.Get() == ConfigDestinationTypeStatic {
-		obj := c.Static.GetResponse()
-
-		if obj == nil {
-			obj = struct{}{}
+		if c.Static == nil {
+			return errors.Errorf("Static response is not defined!")
 		}
-
-		data, err := json.Marshal(obj)
+		data, code, err := c.Static.StaticResponse()
 		if err != nil {
 			return err
 		}
@@ -193,7 +189,7 @@ func (c *ConfigDestination) appendRouteAction(route *routeAPI.Route, name string
 		// Return static response
 		route.Action = &routeAPI.Route_DirectResponse{
 			DirectResponse: &routeAPI.DirectResponseAction{
-				Status: c.Static.GetCode(),
+				Status: code,
 				Body: &coreAPI.DataSource{
 					Specifier: &coreAPI.DataSource_InlineBytes{
 						InlineBytes: data,

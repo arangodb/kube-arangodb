@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package gateway
+package grpc
 
 import (
 	"google.golang.org/protobuf/encoding/protojson"
@@ -28,20 +28,32 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func Marshal[T proto.Message](in T) ([]byte, string, T, error) {
+func Marshal[T proto.Message](in T) ([]byte, error) {
 	data, err := protojson.MarshalOptions{
 		UseProtoNames: true,
 	}.Marshal(in)
 	if err != nil {
-		return nil, "", util.Default[T](), err
+		return nil, err
+	}
+
+	return data, err
+}
+
+func MarshalYAML[T proto.Message](in T) ([]byte, error) {
+	data, err := Marshal[T](in)
+	if err != nil {
+		return nil, err
 	}
 
 	data, err = yaml.JSONToYAML(data)
-	return data, util.SHA256(data), in, err
+	return data, err
 }
 
 func Unmarshal[T proto.Message](data []byte) (T, error) {
-	var v T
+	v, err := util.DeepType[T]()
+	if err != nil {
+		return util.Default[T](), err
+	}
 
 	if err := (protojson.UnmarshalOptions{}).Unmarshal(data, v); err != nil {
 		return util.Default[T](), err
