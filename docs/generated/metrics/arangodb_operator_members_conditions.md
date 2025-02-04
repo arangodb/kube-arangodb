@@ -12,9 +12,9 @@ Representation of the ArangoMember condition state (true/false)
 
 ## Labels
 
-|   Label   | Description          |
-|:---------:|:---------------------|
+| Label | Description |
+|:---:|:--- |
 | namespace | Deployment Namespace |
-|   name    | Deployment Name      |
-|  member   | Member ID            |
-| condition | Condition Name       |
+| name | Deployment Name |
+| member | Member ID |
+| condition | Condition Name |

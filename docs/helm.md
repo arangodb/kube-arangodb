@@ -130,6 +130,31 @@ Define if RBAC should be enabled.
 
 Default: `true`
 
+### `certificate.enabled`
+
+Define if Cert via CertManager should be enabled.
+
+Default: `false`
+
+### `certificate.ca.duration`
+
+CA Duration.
+
+Default: `43800h`
+
+### `certificate.ca.commonName`
+
+CA CommonName.
+
+Default: `kube-arangodb.operator.cert`
+
+### `certificate.cert.duration`
+
+Cert Duration.
+
+Default: `8760h`
+
+
 ## Alternate namespaces
 
 The `kube-arangodb` chart supports deployment into a non-default namespace.
