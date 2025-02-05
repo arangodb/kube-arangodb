@@ -1,14 +1,14 @@
 ---
 layout: page
-title: Authentication V1
-parent: ArangoDBPlatform
+title: Shutdown V1
+parent: Integration Sidecars
 ---
 
 # Shutdown V1
 
 Definitions:
 
-- [Service](../../integrations/shutdown/v1/definition/definition.proto)
+- [Service](https://github.com/arangodb/kube-arangodb/blob/1.2.44/integrations/shutdown/v1/definition/shutdown.proto)
 
 Operator will send shutdown request once all containers marked with annotation are stopped.
 
