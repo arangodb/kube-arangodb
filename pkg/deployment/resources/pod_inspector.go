@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -464,6 +464,42 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 						log.Err(err).Error("Unknown error while deleting Pod")
 					}
 				}
+			}
+		}
+
+		switch group {
+		case api.ServerGroupDBServers:
+			if agencyCachePresent {
+				c := agencyCache.PlanServerUsage(state.Server(memberStatus.ID))
+				if c.Count() == 0 {
+					if memberStatus.Conditions.Update(api.ConditionTypeDBServerWithData, false, "No Shards Assigned", "No Shards Assigned") {
+						updateMemberStatusNeeded = true
+					}
+				} else {
+					if memberStatus.Conditions.Update(api.ConditionTypeDBServerWithData, true, "Shards Assigned", fmt.Sprintf("Server with %d shards assigned", c.Count())) {
+						updateMemberStatusNeeded = true
+					}
+				}
+				if c.Leader == 0 {
+					if memberStatus.Conditions.Update(api.ConditionTypeDBServerWithData, false, "No Shard Leaders Assigned", "No Shard Leaders Assigned") {
+						updateMemberStatusNeeded = true
+					}
+				} else {
+					if memberStatus.Conditions.Update(api.ConditionTypeDBServerWithData, true, "Shard Leaders Assigned", fmt.Sprintf("Server with %d shard leaders assigned", c.Leader)) {
+						updateMemberStatusNeeded = true
+					}
+				}
+			} else {
+				// Let's remove data present conditions to ensure that it won't get appended
+				if memberStatus.Conditions.Remove(api.ConditionTypeDBServerWithData) ||
+					memberStatus.Conditions.Remove(api.ConditionTypeDBServerWithDataLeader) {
+					updateMemberStatusNeeded = true
+				}
+			}
+		default:
+			if memberStatus.Conditions.Remove(api.ConditionTypeDBServerWithData) ||
+				memberStatus.Conditions.Remove(api.ConditionTypeDBServerWithDataLeader) {
+				updateMemberStatusNeeded = true
 			}
 		}
 

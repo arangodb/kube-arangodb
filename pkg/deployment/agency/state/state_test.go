@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -392,4 +393,71 @@ func Test_GetRebootID(t *testing.T) {
 		require.False(t, ok)
 		require.Equal(t, 0, id)
 	})
+}
+
+func Test_DBServerShardCount(t *testing.T) {
+	type testCase struct {
+		generator Generator
+
+		id Server
+
+		expectedLeader, expectedReplicas int
+	}
+
+	var testCases = map[string]testCase{
+		"Empty": {
+			generator:        NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(1).Add().Add(),
+			id:               "A",
+			expectedLeader:   0,
+			expectedReplicas: 0,
+		},
+		"NonExisting": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(1).
+				WithShard().WithPlan("B", "D").Add().
+				Add().Add(),
+			id:               "A",
+			expectedLeader:   0,
+			expectedReplicas: 0,
+		},
+		"SingleLeader": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(1).
+				WithShard().WithPlan("A", "B").Add().
+				Add().Add(),
+			id:               "A",
+			expectedLeader:   1,
+			expectedReplicas: 0,
+		},
+		"SingleFollower": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(1).
+				WithShard().WithPlan("B", "A").Add().
+				Add().Add(),
+			id:               "A",
+			expectedLeader:   0,
+			expectedReplicas: 1,
+		},
+		"Mixed": {
+			generator: NewDatabaseRandomGenerator().RandomCollection().WithWriteConcern(1).
+				WithShard().WithPlan("B", "A").Add().
+				WithShard().WithPlan("A").Add().
+				WithShard().WithPlan("C", "A").Add().
+				WithShard().WithPlan("B", "E").Add().
+				Add().Add(),
+			id:               "A",
+			expectedLeader:   1,
+			expectedReplicas: 2,
+		},
+	}
+
+	for n, v := range testCases {
+		t.Run(n, func(t *testing.T) {
+			var state State
+
+			v.generator(t, &state)
+
+			res := state.PlanServerUsage(v.id)
+
+			assert.Equal(t, v.expectedLeader, res.Leader)
+			assert.Equal(t, v.expectedReplicas, res.Follower)
+		})
+	}
 }

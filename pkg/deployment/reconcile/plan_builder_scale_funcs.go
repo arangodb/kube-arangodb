@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -168,10 +168,10 @@ func planBuilderScaleDownLowestShards(context PlanBuilderContext, status api.Dep
 			// init first server as result
 			if resultServer == "" {
 				resultServer = server
-				resultShards = shards
-			} else if shards < resultShards {
+				resultShards = shards.Count()
+			} else if shards.Count() < resultShards {
 				resultServer = server
-				resultShards = shards
+				resultShards = shards.Count()
 			}
 		}
 
