@@ -281,6 +281,12 @@ YAML_EXCLUDE_FILES :=
 YAML_QUERY := find ./ -type f -name '*.yaml' $(foreach EXCLUDE_DIR,$(YAML_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(YAML_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 YAMLS := $(shell $(YAML_QUERY))
 
+
+DOCS_EXCLUDE_DIRS := 
+DOCS_EXCLUDE_FILES :=
+DOCS_QUERY := find ./docs/ -type f -name '*.md' $(foreach EXCLUDE_DIR,$(DOCS_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(DOCS_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
+DOCS := $(shell $(DOCS_QUERY))
+
 DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
 ifeq ($(RELEASE_MODE),enterprise)
@@ -745,18 +751,22 @@ run-unit-tests: $(SOURCES)
 
 .PHONY: patch-readme
 patch-readme:
-	$(ROOTDIR)/scripts/patch_readme.sh $(VERSION_MAJOR_MINOR_PATCH)
+	@$(ROOTDIR)/scripts/patch_readme.sh $(VERSION_MAJOR_MINOR_PATCH)
 
 .PHONY: patch-examples
 patch-examples:
-	$(ROOTDIR)/scripts/patch_examples.sh $(VERSION_MAJOR_MINOR_PATCH)
+	@$(ROOTDIR)/scripts/patch_examples.sh $(VERSION_MAJOR_MINOR_PATCH)
+
+.PHONY: patch-docs
+patch-docs:
+	@$(ROOTDIR)/scripts/patch_docs.sh $(VERSION_MAJOR_MINOR_PATCH) $(DOCS)
 
 .PHONY: patch-release
 patch-release: patch-readme patch-examples patch-chart
 
 .PHONY: patch-chart
 patch-chart:
-	$(ROOTDIR)/scripts/patch_chart.sh $(VERSION_MAJOR_MINOR_PATCH)
+	@$(ROOTDIR)/scripts/patch_chart.sh $(VERSION_MAJOR_MINOR_PATCH)
 
 .PHONY: patch
 patch: patch-chart patch-release patch-examples patch-readme
@@ -955,6 +965,6 @@ sync-charts:
 sync: sync-charts
 
 ci-check:
-	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint
+	@$(MAKE) tidy vendor patch generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint
 	@git checkout -- go.sum # ignore changes in go.sum
 	@if [ ! -z "$$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; exit 1; fi
