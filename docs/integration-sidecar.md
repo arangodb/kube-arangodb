@@ -23,9 +23,7 @@ kind: ArangoProfile
 metadata:
   name: example
 spec:
-  selectors:
-    label:
-      matchLabels: {}
+  selectors: {}
   template: ...
 ```
 

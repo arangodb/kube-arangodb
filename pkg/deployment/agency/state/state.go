@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,6 +65,24 @@ type Supervision struct {
 	Maintenance Timestamp `json:"Maintenance,omitempty"`
 }
 
+type ShardCountDetails struct {
+	Leader, Follower int
+}
+
+func (s ShardCountDetails) Count() int {
+	return s.Leader + s.Follower
+}
+
+func (s ShardCountDetails) Add(leader bool) ShardCountDetails {
+	if leader {
+		s.Leader += 1
+	} else {
+		s.Follower += 1
+	}
+
+	return s
+}
+
 func (s State) CountShards() int {
 	count := 0
 
@@ -76,14 +94,14 @@ func (s State) CountShards() int {
 }
 
 // ShardsByDBServers returns a map of DBServers and the amount of shards they have
-func (s State) ShardsByDBServers() map[Server]int {
-	result := make(map[Server]int)
+func (s State) ShardsByDBServers() map[Server]ShardCountDetails {
+	result := make(map[Server]ShardCountDetails)
 
 	for _, collections := range s.Current.Collections {
 		for _, shards := range collections {
 			for _, shard := range shards {
-				for _, server := range shard.Servers {
-					result[server]++
+				for id, server := range shard.Servers {
+					result[server] = result[server].Add(id == 0)
 				}
 			}
 		}
@@ -101,10 +119,10 @@ func (s State) GetDBServerWithLowestShards() Server {
 		// init first server as result
 		if resultServer == "" {
 			resultServer = server
-			resultShards = shards
-		} else if shards < resultShards {
+			resultShards = shards.Count()
+		} else if shards.Count() < resultShards {
 			resultServer = server
-			resultShards = shards
+			resultShards = shards.Count()
 		}
 	}
 	return resultServer
@@ -236,6 +254,24 @@ func (s State) PlanLeaderServers() Servers {
 	}
 
 	return r
+}
+
+// PlanServerUsage returns number of the shards and replicas by a server
+func (s State) PlanServerUsage(id Server) ShardCountDetails {
+	var z ShardCountDetails
+	for _, db := range s.Plan.Collections {
+		for _, col := range db {
+			for _, shards := range col.Shards {
+				for i, shard := range shards {
+					if shard == id {
+						z = z.Add(i == 0)
+					}
+				}
+			}
+		}
+	}
+
+	return z
 }
 
 // PlanLeaderServersWithFailOver returns all servers which are part of the plan as a leader and can fail over
