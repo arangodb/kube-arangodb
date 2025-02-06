@@ -22,8 +22,6 @@ package pretty
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func Test_MarshTable(t *testing.T) {
@@ -31,8 +29,7 @@ func Test_MarshTable(t *testing.T) {
 		B string `table:"Table Name" table_align:"center"`
 	}
 
-	z, err := NewTable[q]()
-	require.NoError(t, err)
+	z := NewTable[q]()
 
 	println(z.Add(q{
 		B: "TEST",

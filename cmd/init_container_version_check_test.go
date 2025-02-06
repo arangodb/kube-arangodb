@@ -23,6 +23,8 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"os"
 	"testing"
 
@@ -57,7 +59,9 @@ func Test_extractVersionFromData(t *testing.T) {
 			if valid {
 				require.NoError(t, err)
 			} else {
-				ensureExitCode(t, err, cmdVersionCheckInitContainersInvalidVersionExitCode)
+				var v cli.CommandExitCode
+				require.True(t, errors.As(err, &v))
+				require.EqualValues(t, v.ExitCode, cmdVersionCheckInitContainersInvalidVersionExitCode)
 			}
 		})
 	}
