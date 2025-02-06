@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,6 +131,11 @@ const (
 
 	// ConditionTypeSyncEnabled Define if sync is enabled
 	ConditionTypeSyncEnabled ConditionType = "SyncEnabled"
+
+	// ConditionTypeSyncEnabled Define if DBServer contains any data
+	ConditionTypeDBServerWithData ConditionType = "DBServerWithData"
+	// ConditionTypeSyncEnabled Define if DBServer contains any active data leaders
+	ConditionTypeDBServerWithDataLeader ConditionType = "DBServerWithDataLeader"
 )
 
 // Condition represents one current condition of a deployment or deployment member.
