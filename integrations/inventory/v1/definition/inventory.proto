@@ -28,10 +28,40 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/inventory/v1
 message Inventory {
   // Current Envoy Configuration details
   optional InventoryConfiguration configuration = 1;
+  // ArangoDB Deployment Configuration
+  optional ArangoDBConfiguration arangodb = 2;
 }
 
 // Envoy Configuration details
 message InventoryConfiguration {
   // Configuration hash
   string hash = 1;
+}
+
+// ArangoDB Deployment Mode
+enum ArangoDBMode {
+  // Single Mode
+  SINGLE = 0;
+  // ActiveFailover Mode
+  ACTIVE_FAILOVER = 1;
+  // Cluster Mode
+  CLUSTER = 2;
+}
+
+// ArangoDB Deployment Edition
+enum ArangoDBEdition {
+  // Community Edition
+  COMMUNITY = 0;
+  // Enterprise Edition
+  ENTERPRISE = 1;
+}
+
+// ArangoDB Deployment Configuration
+message ArangoDBConfiguration {
+  // ArangoDB Deployment Mode
+    ArangoDBMode mode = 1;
+  // ArangoDB Deployment Edition
+    ArangoDBEdition edition = 2;
+  // ArangoDB Deployment Version
+    string version = 3;
 }

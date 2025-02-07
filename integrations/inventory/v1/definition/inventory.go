@@ -20,7 +20,10 @@
 
 package definition
 
-import ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+import (
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+)
 
 func (s *Inventory) JSON() ([]byte, error) {
 	if s == nil {
@@ -28,4 +31,29 @@ func (s *Inventory) JSON() ([]byte, error) {
 	}
 
 	return ugrpc.Marshal(s)
+}
+
+func NewArangoDBConfiguration(spec api.DeploymentSpec, status api.DeploymentStatus) *ArangoDBConfiguration {
+	var cfg ArangoDBConfiguration
+
+	switch spec.Mode.Get() {
+	case api.DeploymentModeSingle:
+		cfg.Mode = ArangoDBMode_SINGLE
+	case api.DeploymentModeActiveFailover:
+		cfg.Mode = ArangoDBMode_ACTIVE_FAILOVER
+	case api.DeploymentModeCluster:
+		cfg.Mode = ArangoDBMode_CLUSTER
+	}
+
+	cfg.Edition = ArangoDBEdition_COMMUNITY
+
+	if i := status.CurrentImage; i != nil {
+		if i.Enterprise {
+			cfg.Edition = ArangoDBEdition_ENTERPRISE
+		}
+
+		cfg.Version = string(i.ArangoDBVersion)
+	}
+
+	return &cfg
 }

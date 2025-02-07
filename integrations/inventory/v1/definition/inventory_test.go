@@ -33,10 +33,17 @@ func Test_State_Marshal(t *testing.T) {
 		Configuration: &InventoryConfiguration{
 			Hash: "xyz",
 		},
+		Arangodb: &ArangoDBConfiguration{
+			Mode:    ArangoDBMode_CLUSTER,
+			Edition: ArangoDBEdition_ENTERPRISE,
+			Version: "1.2.3",
+		},
 	}
 
 	data, err := ugrpc.Marshal(&s)
 	require.NoError(t, err)
+
+	t.Log(string(data))
 
 	res, err := ugrpc.Unmarshal[*Inventory](data)
 	require.NoError(t, err)
