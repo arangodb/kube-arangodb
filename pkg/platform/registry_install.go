@@ -29,7 +29,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"

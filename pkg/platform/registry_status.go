@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/pretty"

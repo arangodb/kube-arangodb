@@ -31,8 +31,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/pretty"
 )
 
-type out int
-
 func render(cmd *cobra.Command, f string, args ...interface{}) error {
 	_, err := fmt.Fprintf(cmd.OutOrStdout(), f, args...)
 	return err
