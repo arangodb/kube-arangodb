@@ -40,28 +40,32 @@ message InventoryConfiguration {
 
 // ArangoDB Deployment Mode
 enum ArangoDBMode {
+  // Default
+  ARANGO_DB_MODE_UNSPECIFIED = 0;
   // Single Mode
-  SINGLE = 0;
+  ARANGO_DB_MODE_SINGLE = 1;
   // ActiveFailover Mode
-  ACTIVE_FAILOVER = 1;
+  ARANGO_DB_MODE_ACTIVE_FAILOVER = 2;
   // Cluster Mode
-  CLUSTER = 2;
+  ARANGO_DB_MODE_CLUSTER = 3;
 }
 
 // ArangoDB Deployment Edition
 enum ArangoDBEdition {
+  // Default
+  ARANGO_DB_EDITION_UNSPECIFIED = 0;
   // Community Edition
-  COMMUNITY = 0;
+  ARANGO_DB_EDITION_COMMUNITY = 1;
   // Enterprise Edition
-  ENTERPRISE = 1;
+  ARANGO_DB_EDITION_ENTERPRISE = 2;
 }
 
 // ArangoDB Deployment Configuration
 message ArangoDBConfiguration {
   // ArangoDB Deployment Mode
-    ArangoDBMode mode = 1;
+  ArangoDBMode mode = 1;
   // ArangoDB Deployment Edition
-    ArangoDBEdition edition = 2;
+  ArangoDBEdition edition = 2;
   // ArangoDB Deployment Version
-    string version = 3;
+  string version = 3;
 }

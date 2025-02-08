@@ -38,18 +38,18 @@ func NewArangoDBConfiguration(spec api.DeploymentSpec, status api.DeploymentStat
 
 	switch spec.Mode.Get() {
 	case api.DeploymentModeSingle:
-		cfg.Mode = ArangoDBMode_SINGLE
+		cfg.Mode = ArangoDBMode_ARANGO_DB_MODE_SINGLE
 	case api.DeploymentModeActiveFailover:
-		cfg.Mode = ArangoDBMode_ACTIVE_FAILOVER
+		cfg.Mode = ArangoDBMode_ARANGO_DB_MODE_ACTIVE_FAILOVER
 	case api.DeploymentModeCluster:
-		cfg.Mode = ArangoDBMode_CLUSTER
+		cfg.Mode = ArangoDBMode_ARANGO_DB_MODE_CLUSTER
 	}
 
-	cfg.Edition = ArangoDBEdition_COMMUNITY
+	cfg.Edition = ArangoDBEdition_ARANGO_DB_EDITION_COMMUNITY
 
 	if i := status.CurrentImage; i != nil {
 		if i.Enterprise {
-			cfg.Edition = ArangoDBEdition_ENTERPRISE
+			cfg.Edition = ArangoDBEdition_ARANGO_DB_EDITION_ENTERPRISE
 		}
 
 		cfg.Version = string(i.ArangoDBVersion)
