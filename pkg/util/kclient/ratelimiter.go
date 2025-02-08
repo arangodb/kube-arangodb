@@ -29,7 +29,7 @@ import (
 
 const (
 	DefaultQPS   float32 = 32
-	DefaultBurst         = 64
+	DefaultBurst float32 = 64
 )
 
 var (

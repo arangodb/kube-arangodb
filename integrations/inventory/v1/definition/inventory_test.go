@@ -34,8 +34,8 @@ func Test_State_Marshal(t *testing.T) {
 			Hash: "xyz",
 		},
 		Arangodb: &ArangoDBConfiguration{
-			Mode:    ArangoDBMode_CLUSTER,
-			Edition: ArangoDBEdition_ENTERPRISE,
+			Mode:    ArangoDBMode_ARANGO_DB_MODE_CLUSTER,
+			Edition: ArangoDBEdition_ARANGO_DB_EDITION_ENTERPRISE,
 			Version: "1.2.3",
 		},
 	}
