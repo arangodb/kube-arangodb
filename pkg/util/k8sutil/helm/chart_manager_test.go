@@ -36,7 +36,7 @@ func limitArray[T any](in []T, max int) []T {
 }
 
 func Test_Manager(t *testing.T) {
-	mgr, err := NewChartManager(context.Background(), nil, "https://arangodb-platform-dev-chart-registry.s3.amazonaws.com")
+	mgr, err := NewChartManager(context.Background(), nil, "https://arangodb-platform-dev-chart-registry.s3.amazonaws.com/index.yaml")
 	require.NoError(t, err)
 
 	for _, repo := range limitArray(mgr.Repositories(), 5) {
