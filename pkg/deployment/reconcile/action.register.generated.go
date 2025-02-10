@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,6 +131,9 @@ var (
 
 	_ Action        = &actionMemberStatusSync{}
 	_ actionFactory = newMemberStatusSyncAction
+
+	_ Action        = &actionMigrateMember{}
+	_ actionFactory = newMigrateMemberAction
 
 	_ Action        = &actionPVCResize{}
 	_ actionFactory = newPVCResizeAction
@@ -793,6 +796,20 @@ func init() {
 
 		// Get Action defition
 		function := newMemberStatusSyncAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// MigrateMember
+	{
+		// Get Action type
+		action := api.ActionTypeMigrateMember
+
+		// Get Action defition
+		function := newMigrateMemberAction
 
 		// Wrap action main function
 

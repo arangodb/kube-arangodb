@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,7 +147,10 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 			switch group {
 			case api.ServerGroupDBServers:
 				if len(status.Members.DBServers) <= spec.DBServers.GetCount() {
-					plan = append(plan, actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")))
+					plan = append(plan,
+						actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")),
+						actions.NewAction(api.ActionTypeMigrateMember, group, sharedReconcile.WithPredefinedMember(api.MemberIDPreviousAction)).AddParam(actionMigrateMemberSourceKey, member.ID),
+					)
 					r.planLogger.
 						Str("role", group.AsRole()).
 						Debug("Creating replacement plan")

@@ -115,6 +115,9 @@ func (r *Reconciler) syncMemberStatus(ctx context.Context, apiObject k8sutil.API
 		}
 
 		if !amember.Status.InSync(e.Member) {
+			if _, _, d, err := compare.Diff(&amember.Status.Conditions, &e.Member.Conditions); err == nil {
+				logger.Str("diff", d).Warn("XXXXX InvalidDiff!")
+			}
 			plan = append(plan, actions.NewAction(api.ActionTypeMemberStatusSync, e.Group, e.Member, "Sync Status of ArangoMember"))
 		}
 	}
