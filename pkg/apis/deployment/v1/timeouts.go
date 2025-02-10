@@ -92,8 +92,11 @@ func (t *Timeout) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (t Timeout) MarshalJSON() ([]byte, error) {
-	return meta.Duration(t).MarshalJSON()
+func (t *Timeout) MarshalJSON() ([]byte, error) {
+	if t == nil {
+		return nil, nil
+	}
+	return meta.Duration(*t).MarshalJSON()
 }
 
 func (t *Timeout) Infinite() bool {

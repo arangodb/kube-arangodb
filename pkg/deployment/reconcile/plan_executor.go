@@ -446,6 +446,8 @@ func (d *Reconciler) executeActionStart(ctx context.Context, action Action) (don
 func (d *Reconciler) createAction(action api.Action) (Action, ActionContext) {
 	actionCtx := newActionContext(d.log, d.context, &d.metrics)
 
+	actionCtx.SetProgress(action.Progress)
+
 	f, ok := getActionFactory(action.Type)
 	if !ok {
 		panic(fmt.Sprintf("Unknown action type '%s'", action.Type))

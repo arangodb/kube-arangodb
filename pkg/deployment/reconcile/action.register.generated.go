@@ -135,6 +135,9 @@ var (
 	_ Action        = &actionMemberStatusSync{}
 	_ actionFactory = newMemberStatusSyncAction
 
+	_ Action        = &actionMigrateMember{}
+	_ actionFactory = newMigrateMemberAction
+
 	_ Action        = &actionPVCResize{}
 	_ actionFactory = newPVCResizeAction
 
@@ -810,6 +813,20 @@ func init() {
 
 		// Get Action defition
 		function := newMemberStatusSyncAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// MigrateMember
+	{
+		// Get Action type
+		action := api.ActionTypeMigrateMember
+
+		// Get Action defition
+		function := newMigrateMemberAction
 
 		// Wrap action main function
 

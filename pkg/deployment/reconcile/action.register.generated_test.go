@@ -429,6 +429,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("MigrateMember", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeMigrateMember)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeMigrateMember.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeMigrateMember.Optional())
+		})
+	})
+
 	t.Run("PVCResize", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypePVCResize)
 		t.Run("Internal", func(t *testing.T) {

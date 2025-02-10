@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,74 +22,12 @@ package client
 
 import (
 	"context"
-	"net/http"
-
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type RebalanceClient interface {
-	GenerateRebalanceMoves(ctx context.Context, request *RebalancePlanRequest) (RebalancePlanResponse, error)
-}
+	RebalancePlan(ctx context.Context, request *RebalancePlanRequest) (RebalancePlanResponse, error)
+	RebalanceGet(ctx context.Context) (RebalanceGetResponse, error)
 
-type RebalancePlanRequest struct {
-	Version              int   `json:"version"`
-	MaximumNumberOfMoves *int  `json:"maximumNumberOfMoves,omitempty"`
-	LeaderChanges        *bool `json:"leaderChanges,omitempty"`
-	MoveLeaders          *bool `json:"moveLeaders,omitempty"`
-	MoveFollowers        *bool `json:"moveFollowers,omitempty"`
-}
-
-type RebalancePlanResponse struct {
-	Result RebalancePlanResponseResult `json:"result"`
-}
-
-type RebalancePlanResponseResult struct {
-	Moves RebalancePlanMoves `json:"moves"`
-}
-
-type RebalancePlanMoves []RebalancePlanMove
-
-type RebalancePlanMove struct {
-	From  string `json:"from"`
-	To    string `json:"to"`
-	Shard string `json:"shard"`
-
-	Collection intstr.IntOrString `json:"collection"`
-}
-
-func (c *client) GenerateRebalanceMoves(ctx context.Context, request *RebalancePlanRequest) (RebalancePlanResponse, error) {
-	req, err := c.c.NewRequest(http.MethodPost, "/_admin/cluster/rebalance")
-	if err != nil {
-		return RebalancePlanResponse{}, err
-	}
-
-	request = util.InitType(request)
-
-	// Always set to 1
-	request.Version = 1
-
-	if r, err := req.SetBody(request); err != nil {
-		return RebalancePlanResponse{}, err
-	} else {
-		req = r
-	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return RebalancePlanResponse{}, err
-	}
-
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
-		return RebalancePlanResponse{}, err
-	}
-
-	var d RebalancePlanResponse
-
-	if err := resp.ParseBody("", &d); err != nil {
-		return RebalancePlanResponse{}, err
-	}
-
-	return d, nil
+	RebalanceExecute(ctx context.Context, request *RebalanceExecuteRequest) error
+	RebalanceExecuteMoves(ctx context.Context, moves ...RebalanceExecuteRequestMove) error
 }

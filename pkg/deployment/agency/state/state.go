@@ -61,10 +61,6 @@ type Plan struct {
 	Coordinators ServerMap[string] `json:"Coordinators,omitempty"`
 }
 
-type Supervision struct {
-	Maintenance Timestamp `json:"Maintenance,omitempty"`
-}
-
 type ShardCountDetails struct {
 	Leader, Follower int
 }

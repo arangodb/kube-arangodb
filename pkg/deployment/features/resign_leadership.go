@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package features
 
 func init() {
 	registerFeature(enforcedResignLeadership)
+	registerFeature(memberReplaceMigration)
 }
 
 var enforcedResignLeadership = &feature{
@@ -31,7 +32,19 @@ var enforcedResignLeadership = &feature{
 	enabledByDefault:   true,
 }
 
+var memberReplaceMigration = &feature{
+	name:               "replace-migration",
+	description:        "During member replacement shards are migrated directly to the new server",
+	enterpriseRequired: false,
+	enabledByDefault:   true,
+}
+
 // EnforcedResignLeadership returns enforced ResignLeadership.
 func EnforcedResignLeadership() Feature {
 	return enforcedResignLeadership
+}
+
+// MemberReplaceMigration returns enforced MemberReplaceMigration.
+func MemberReplaceMigration() Feature {
+	return memberReplaceMigration
 }
