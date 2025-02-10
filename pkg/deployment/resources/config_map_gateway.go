@@ -71,6 +71,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 				Configuration: &pbInventoryV1.InventoryConfiguration{
 					Hash: baseGatewayCfgYamlChecksum,
 				},
+				Arangodb: pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus()),
 			},
 			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
 		},

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,13 +24,12 @@ import (
 	"sync"
 
 	"golang.org/x/time/rate"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/flowcontrol"
 )
 
 const (
-	DefaultQPS   = rest.DefaultQPS * 3
-	DefaultBurst = rest.DefaultBurst * 3
+	DefaultQPS   float32 = 32
+	DefaultBurst int     = 64
 )
 
 var (
