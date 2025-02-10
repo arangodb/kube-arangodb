@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,20 +18,32 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package pretty
+package cli
 
-import (
-	"testing"
-)
+import "github.com/spf13/cobra"
 
-func Test_MarshTable(t *testing.T) {
-	type q struct {
-		B string `table:"Table Name" table_align:"center"`
+type RunE func(cmd *cobra.Command, args []string) error
+
+type Runner []RunE
+
+func (r Runner) Run(cmd *cobra.Command, args []string) error {
+	for _, e := range r {
+		if e != nil {
+			if err := e(cmd, args); err != nil {
+				return err
+			}
+		}
 	}
 
-	z := NewTable[q]()
+	return nil
+}
 
-	println(z.Add(q{
-		B: "TEST",
-	}).RenderMarkdown())
+func (r Runner) With(calls ...RunE) Runner {
+	ret := make(Runner, len(r)+len(calls))
+
+	copy(ret, r)
+
+	copy(ret[len(r):], calls)
+
+	return ret
 }

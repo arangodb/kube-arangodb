@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/cmd"
 	"github.com/arangodb/kube-arangodb/cmd/integration"
+	"github.com/arangodb/kube-arangodb/pkg/platform"
 	"github.com/arangodb/kube-arangodb/pkg/util/pretty"
 )
 
@@ -100,6 +101,69 @@ func GenerateCLIArangoDBOperatorIntegrationReadme(root string) error {
 	}
 
 	if err := pretty.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator_integration.md"), readmeSections); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GenerateCLIArangoDBOperatorPlatformReadme(root string) error {
+	readmeSections := map[string]string{}
+
+	cmd, err := platform.NewInstaller()
+	if err != nil {
+		return err
+	}
+
+	if section, err := GenerateHelpQuoted(cmd); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "registry"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_registry_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "registry", "install"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_registry_install_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "registry", "status"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_registry_status_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "service"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_service_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "service", "enable"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_service_enable_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "service", "enable-service"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_service_enableservice_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "service", "status"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_service_status_cmd"] = section
+	}
+
+	if err := pretty.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator_platform.md"), readmeSections); err != nil {
 		return err
 	}
 

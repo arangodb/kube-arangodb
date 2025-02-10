@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,20 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package pretty
+package kclient
 
-import (
-	"testing"
-)
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-func Test_MarshTable(t *testing.T) {
-	type q struct {
-		B string `table:"Table Name" table_align:"center"`
-	}
-
-	z := NewTable[q]()
-
-	println(z.Add(q{
-		B: "TEST",
-	}).RenderMarkdown())
-}
+var logger = logging.Global().RegisterAndGetLogger("kubernetes-client", logging.Error)

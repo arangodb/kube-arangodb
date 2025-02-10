@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@
 package pretty
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -33,75 +35,64 @@ import (
 )
 
 type Table[T any] interface {
+	json.Marshaler
+
 	Add(in ...T) Table[T]
 
-	RenderMarkdown() string
+	RenderMarkdown() (string, error)
+	Redner() (string, error)
 }
 
 type tableImpl[T any] struct {
-	wr table.Writer
+	lock sync.Mutex
 
-	fields []int
+	rows []T
 }
 
-func (t tableImpl[T]) RenderMarkdown() string {
-	return fmt.Sprintf("%s\n", t.wr.RenderMarkdown())
+type tableJSONOut[T any] struct {
+	Items []T `json:"items"`
 }
 
-func (t tableImpl[T]) Add(in ...T) Table[T] {
-	for _, el := range in {
-		v := reflect.ValueOf(el)
+func (t *tableImpl[T]) MarshalJSON() ([]byte, error) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
 
-		rows := make(table.Row, len(t.fields))
+	return json.Marshal(tableJSONOut[T]{Items: t.rows})
+}
 
-		for q, id := range t.fields {
-			rows[q] = v.Field(id).Interface()
-		}
-
-		t.wr.AppendRow(rows)
+func (t *tableImpl[T]) Redner() (string, error) {
+	o, err := t.table()
+	if err != nil {
+		return "", err
 	}
 
-	return t
+	return fmt.Sprintf("%s\n", o.Render()), nil
 }
 
-type TableTags struct {
-	Enabled *string `tag:"table"`
-	Align   *string `tag:"table_align"`
-}
-
-func (t TableTags) asColumnConfig() (table.ColumnConfig, error) {
-	var r table.ColumnConfig
-
-	r.Name = *t.Enabled
-
-	if a := t.Align; a != nil {
-		switch v := strings.ToLower(*a); v {
-		case "left":
-			r.Align = text.AlignLeft
-		case "right":
-			r.Align = text.AlignRight
-		case "center":
-			r.Align = text.AlignCenter
-		default:
-			return table.ColumnConfig{}, errors.Errorf("Unsuported align format: %s", v)
-		}
+func (t *tableImpl[T]) RenderMarkdown() (string, error) {
+	o, err := t.table()
+	if err != nil {
+		return "", err
 	}
 
-	return r, nil
+	return fmt.Sprintf("%s\n", o.RenderMarkdown()), nil
 }
 
-func NewTable[T any]() (Table[T], error) {
-	t := reflect.TypeOf(util.Default[T]())
+func (t *tableImpl[T]) table() (table.Writer, error) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
 
-	if t.Kind() != reflect.Struct {
+	z := reflect.TypeOf(util.Default[T]())
+
+	if z.Kind() != reflect.Struct {
 		return nil, errors.Errorf("Only Struct kind allowed")
 	}
 
 	var fields []int
 	var columns []table.ColumnConfig
 
-	for id := 0; id < t.NumField(); id++ {
-		f := t.Field(id)
+	for id := 0; id < z.NumField(); id++ {
+		f := z.Field(id)
 
 		if !f.IsExported() {
 			continue
@@ -139,8 +130,70 @@ func NewTable[T any]() (Table[T], error) {
 
 	wr.SuppressTrailingSpaces()
 
-	return tableImpl[T]{
-		wr:     wr,
-		fields: fields,
-	}, nil
+	for _, el := range t.rows {
+		v := reflect.ValueOf(el)
+
+		rows := make(table.Row, len(fields))
+
+		for q, id := range fields {
+			rows[q] = v.Field(id).Interface()
+		}
+
+		wr.AppendRow(rows)
+	}
+
+	return wr, nil
+}
+
+func (t *tableImpl[T]) Add(in ...T) Table[T] {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+
+	t.rows = append(t.rows, in...)
+
+	return t
+}
+
+type TableTags struct {
+	Enabled     *string `tag:"table"`
+	Align       *string `tag:"table_align"`
+	HeaderAlign *string `tag:"table_header_align"`
+}
+
+func (t TableTags) asColumnConfig() (table.ColumnConfig, error) {
+	var r table.ColumnConfig
+
+	r.Name = *t.Enabled
+
+	if a := t.Align; a != nil {
+		switch v := strings.ToLower(*a); v {
+		case "left":
+			r.Align = text.AlignLeft
+		case "right":
+			r.Align = text.AlignRight
+		case "center":
+			r.Align = text.AlignCenter
+		default:
+			return table.ColumnConfig{}, errors.Errorf("Unsuported align format: %s", v)
+		}
+	}
+
+	if a := t.HeaderAlign; a != nil {
+		switch v := strings.ToLower(*a); v {
+		case "left":
+			r.AlignHeader = text.AlignLeft
+		case "right":
+			r.AlignHeader = text.AlignRight
+		case "center":
+			r.AlignHeader = text.AlignCenter
+		default:
+			return table.ColumnConfig{}, errors.Errorf("Unsuported align format: %s", v)
+		}
+	}
+
+	return r, nil
+}
+
+func NewTable[T any]() Table[T] {
+	return &tableImpl[T]{}
 }

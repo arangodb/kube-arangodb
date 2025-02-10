@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,20 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package pretty
+package cli
 
 import (
-	"testing"
+	"fmt"
 )
 
-func Test_MarshTable(t *testing.T) {
-	type q struct {
-		B string `table:"Table Name" table_align:"center"`
+type CommandExitCode struct {
+	ExitCode int
+}
+
+func (c CommandExitCode) Error() string {
+	return fmt.Sprintf("Command exit: %d", c.ExitCode)
+}
+
+func Exit(code int) error {
+	return CommandExitCode{
+		ExitCode: code,
 	}
-
-	z := NewTable[q]()
-
-	println(z.Add(q{
-		B: "TEST",
-	}).RenderMarkdown())
 }

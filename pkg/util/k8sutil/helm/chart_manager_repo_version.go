@@ -30,8 +30,13 @@ import (
 )
 
 type chartManagerRepoVersion struct {
+	version string
 	manager *manager
 	chart   *repo.ChartVersion
+}
+
+func (m chartManagerRepoVersion) Version() string {
+	return m.version
 }
 
 func (m chartManagerRepoVersion) Chart() *repo.ChartVersion {
@@ -40,6 +45,8 @@ func (m chartManagerRepoVersion) Chart() *repo.ChartVersion {
 
 type ChartManagerRepoVersion interface {
 	Get(ctx context.Context) (Chart, error)
+
+	Version() string
 
 	Chart() *repo.ChartVersion
 }

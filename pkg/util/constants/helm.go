@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,22 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package constants
 
-import (
-	"fmt"
+const (
+	HelmLabelBase             = "platform.arangodb.com"
+	HelmLabelInstallationBase = "installation." + HelmLabelBase
+
+	HelmLabelArangoDBManaged = HelmLabelInstallationBase + "/managed"
+
+	HelmLabelArangoDBChart = HelmLabelInstallationBase + "/chart"
+
+	HelmLabelArangoDBDeployment = HelmLabelInstallationBase + "/deployment"
+
+	HelmLabelArangoDBService = HelmLabelInstallationBase + "/service"
+
+	// HelmLabelArangoDBType set to platform or service
+	HelmLabelArangoDBType = HelmLabelInstallationBase + "/type"
 )
-
-type CommandExitCode struct {
-	ExitCode int
-}
-
-func (c CommandExitCode) Error() string {
-	return fmt.Sprintf("Command exit: %d", c.ExitCode)
-}
-
-func Exit(code int) error {
-	return CommandExitCode{
-		ExitCode: code,
-	}
-}

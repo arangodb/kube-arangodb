@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -44,6 +45,7 @@ var (
 		format   string
 		levels   []string
 		sampling bool
+		stdout   bool
 	}
 )
 
@@ -53,6 +55,7 @@ func Init(cmd *cobra.Command) error {
 	f.StringVar(&cli.format, "log.format", "pretty", "Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used")
 	f.StringArrayVar(&cli.levels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(Global().Names(), ", ")))
 	f.BoolVar(&cli.sampling, "log.sampling", true, "If true, operator will try to minimize duplication of logging events")
+	f.BoolVar(&cli.stdout, "log.stdout", true, "If true, operator will log to the stdout")
 
 	return nil
 }
@@ -70,16 +73,33 @@ func Enable() error {
 		return errors.WithMessagef(err, "Unable to parse levels")
 	}
 
-	// Set root logger to stdout (JSON formatted) if not prettified
-	if strings.ToUpper(cli.format) == "JSON" {
-		Global().SetRoot(zerolog.New(os.Stdout).With().Timestamp().Logger())
-	} else if strings.ToLower(cli.format) != "pretty" && cli.format != "" {
+	out := os.Stderr
+
+	if cli.stdout {
+		out = os.Stdout
+	}
+
+	switch strings.ToUpper(cli.format) {
+	case "JSON":
+		Global().SetRoot(zerolog.New(out).With().Timestamp().Logger())
+	case "PRETTY", "":
+		Global().SetRoot(zerolog.New(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339Nano,
+			NoColor:    true,
+		}).With().Timestamp().Logger())
+	default:
 		return errors.Errorf("Unknown log format: %s", cli.format)
 	}
+
 	Global().Configure(Config{
 		Levels:   levels,
 		Sampling: cli.sampling,
 	})
 
 	return nil
+}
+
+func Runner(cmd *cobra.Command, args []string) error {
+	return Enable()
 }

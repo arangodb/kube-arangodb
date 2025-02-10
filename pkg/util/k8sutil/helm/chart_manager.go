@@ -100,7 +100,7 @@ func (m *manager) Reload(ctx context.Context) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	data, err := operatorHTTP.Download(ctx, m.client, fmt.Sprintf("%s/index.yaml", m.url))
+	data, err := operatorHTTP.Download(ctx, m.client, m.url)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,41 +18,30 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package helm
+package platform
 
 import (
-	"bytes"
-	"io"
+	"github.com/spf13/cobra"
 
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-type Chart []byte
+func getHelmClient(cmd *cobra.Command) (helm.Client, error) {
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		return nil, errors.Errorf("Unable to get client")
+	}
 
-func (c Chart) Get() (ChartData, error) {
-	return newChartFromData(c)
-}
-
-func (c Chart) Raw() []byte {
-	return c
-}
-
-func (c Chart) SHA256SUM() string {
-	return util.SHA256(c)
-}
-
-func newChartReaderFromBytes(in []byte) (*chart.Chart, error) {
-	return newChartReader(bytes.NewBuffer(in))
-}
-
-func newChartReader(in io.Reader) (*chart.Chart, error) {
-	files, err := loader.LoadArchiveFiles(in)
+	ns, err := flagNamespace.Get(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.LoadFiles(files)
+	return helm.NewClient(helm.Configuration{
+		Namespace: ns,
+		Config:    client.Config(),
+		Driver:    nil,
+	})
 }

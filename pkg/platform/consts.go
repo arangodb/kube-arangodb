@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,20 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package pretty
+package platform
 
-import (
-	"testing"
+const (
+	HelmLabelDomain = "installation.platform.arangodb.com"
+
+	HelmLabelManaged = HelmLabelDomain + "/managed"
+	HelmLabelService = HelmLabelDomain + "/service"
+	HelmLabelType    = HelmLabelDomain + "/type"
 )
-
-func Test_MarshTable(t *testing.T) {
-	type q struct {
-		B string `table:"Table Name" table_align:"center"`
-	}
-
-	z := NewTable[q]()
-
-	println(z.Add(q{
-		B: "TEST",
-	}).RenderMarkdown())
-}

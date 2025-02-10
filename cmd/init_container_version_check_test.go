@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func saveVersionFile(t *testing.T, v int, updates ...func(in *cmdVersionCheckInitContainersInputStruct)) *cmdVersionCheckInitContainersInputStruct {
@@ -57,7 +60,9 @@ func Test_extractVersionFromData(t *testing.T) {
 			if valid {
 				require.NoError(t, err)
 			} else {
-				ensureExitCode(t, err, cmdVersionCheckInitContainersInvalidVersionExitCode)
+				var v cli.CommandExitCode
+				require.True(t, errors.As(err, &v))
+				require.EqualValues(t, v.ExitCode, cmdVersionCheckInitContainersInvalidVersionExitCode)
 			}
 		})
 	}
