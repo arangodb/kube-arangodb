@@ -2987,7 +2987,7 @@ Possible Values:
 
 ### .spec.externalAccess.advertisedEndpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L59)</sup>
 
 AdvertisedEndpoint is passed to the coordinators/single servers for advertising a specific endpoint
 
@@ -2995,7 +2995,7 @@ AdvertisedEndpoint is passed to the coordinators/single servers for advertising 
 
 ### .spec.externalAccess.loadBalancerIP
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L48)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L49)</sup>
 
 LoadBalancerIP define optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 If you do not specify this setting, an IP will be chosen automatically by the load-balancer provisioner.
@@ -3004,7 +3004,7 @@ If you do not specify this setting, an IP will be chosen automatically by the lo
 
 ### .spec.externalAccess.loadBalancerSourceRanges
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L55)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L56)</sup>
 
 LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
@@ -3018,7 +3018,7 @@ Links:
 
 ### .spec.externalAccess.managedServiceNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L62)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L63)</sup>
 
 ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 It is only relevant when type of service is `managed`.
@@ -3027,7 +3027,7 @@ It is only relevant when type of service is `managed`.
 
 ### .spec.externalAccess.nodePort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L44)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L45)</sup>
 
 NodePort define optional port used in case of Auto or NodePort type.
 This setting is used when `spec.externalAccess.type` is set to `NodePort` or `Auto`.
@@ -3037,7 +3037,7 @@ If you do not specify this setting, a random port will be chosen automatically.
 
 ### .spec.externalAccess.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L40)</sup>
 
 Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
 
@@ -3046,6 +3046,7 @@ Possible Values:
 * `"None"` - limit access to application running inside the Kubernetes cluster.
 * `"LoadBalancer"` - Create a Service of type LoadBalancer for the ArangoDB deployment.
 * `"NodePort"` - Create a Service of type NodePort for the ArangoDB deployment.
+* `"Managed"` - Manages only existing services.
 
 ***
 
@@ -5764,7 +5765,7 @@ Links:
 
 ### .spec.sync.externalAccess.advertisedEndpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L59)</sup>
 
 AdvertisedEndpoint is passed to the coordinators/single servers for advertising a specific endpoint
 
@@ -5772,7 +5773,7 @@ AdvertisedEndpoint is passed to the coordinators/single servers for advertising 
 
 ### .spec.sync.externalAccess.loadBalancerIP
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L48)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L49)</sup>
 
 LoadBalancerIP define optional IP used to configure a load-balancer on, in case of Auto or LoadBalancer type.
 If you do not specify this setting, an IP will be chosen automatically by the load-balancer provisioner.
@@ -5781,7 +5782,7 @@ If you do not specify this setting, an IP will be chosen automatically by the lo
 
 ### .spec.sync.externalAccess.loadBalancerSourceRanges
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L55)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L56)</sup>
 
 LoadBalancerSourceRanges define LoadBalancerSourceRanges used for LoadBalancer Service type
 If specified and supported by the platform, this will restrict traffic through the cloud-provider
@@ -5795,7 +5796,7 @@ Links:
 
 ### .spec.sync.externalAccess.managedServiceNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L62)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L63)</sup>
 
 ManagedServiceNames keeps names of services which are not managed by KubeArangoDB.
 It is only relevant when type of service is `managed`.
@@ -5815,7 +5816,7 @@ If not set, this setting defaults to:
 
 ### .spec.sync.externalAccess.nodePort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L44)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L45)</sup>
 
 NodePort define optional port used in case of Auto or NodePort type.
 This setting is used when `spec.externalAccess.type` is set to `NodePort` or `Auto`.
@@ -5825,7 +5826,7 @@ If you do not specify this setting, a random port will be chosen automatically.
 
 ### .spec.sync.externalAccess.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/external_access_spec.go#L40)</sup>
 
 Type specifies the type of Service that will be created to provide access to the ArangoDB deployment from outside the Kubernetes cluster.
 
@@ -5834,6 +5835,7 @@ Possible Values:
 * `"None"` - limit access to application running inside the Kubernetes cluster.
 * `"LoadBalancer"` - Create a Service of type LoadBalancer for the ArangoDB deployment.
 * `"NodePort"` - Create a Service of type NodePort for the ArangoDB deployment.
+* `"Managed"` - Manages only existing services.
 
 ***
 
