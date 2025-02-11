@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 		a.log.Warn("Maintenance is enabled, skipping action")
 		// We are done, action cannot be handled on maintenance mode
 		return true, false, nil
-	} else if isServerRebooted(a.log, a.action, agencyState, driver.ServerID(m.ID)) {
+	} else if hasServerRebooted(a.log, a.action, agencyState, state.Server(m.ID)) {
 		return true, false, nil
 	}
 
