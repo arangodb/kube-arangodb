@@ -6748,6 +6748,7 @@ v1:
                   - None
                   - LoadBalancer
                   - NodePort
+                  - Managed
                 type: string
             type: object
           features:
@@ -12465,6 +12466,7 @@ v1:
                       - None
                       - LoadBalancer
                       - NodePort
+                      - Managed
                     type: string
                 type: object
               image:
@@ -23752,6 +23754,7 @@ v2alpha1:
                   - None
                   - LoadBalancer
                   - NodePort
+                  - Managed
                 type: string
             type: object
           features:
@@ -29469,6 +29472,7 @@ v2alpha1:
                       - None
                       - LoadBalancer
                       - NodePort
+                      - Managed
                     type: string
                 type: object
               image:

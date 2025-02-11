@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ type ExternalAccessSpec struct {
 	// +doc/enum: None|limit access to application running inside the Kubernetes cluster.
 	// +doc/enum: LoadBalancer|Create a Service of type LoadBalancer for the ArangoDB deployment.
 	// +doc/enum: NodePort|Create a Service of type NodePort for the ArangoDB deployment.
+	// +doc/enum: Managed|Manages only existing services.
 	Type *ExternalAccessType `json:"type,omitempty"`
 
 	// NodePort define optional port used in case of Auto or NodePort type.
