@@ -481,11 +481,11 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					}
 				}
 				if c.Leader == 0 {
-					if memberStatus.Conditions.Update(api.ConditionTypeDBServerWithData, false, "No Shard Leaders Assigned", "No Shard Leaders Assigned") {
+					if memberStatus.Conditions.Update(api.ConditionTypeDBServerWithDataLeader, false, "No Shard Leaders Assigned", "No Shard Leaders Assigned") {
 						updateMemberStatusNeeded = true
 					}
 				} else {
-					if memberStatus.Conditions.Update(api.ConditionTypeDBServerWithData, true, "Shard Leaders Assigned", fmt.Sprintf("Server with %d shard leaders assigned", c.Leader)) {
+					if memberStatus.Conditions.Update(api.ConditionTypeDBServerWithDataLeader, true, "Shard Leaders Assigned", fmt.Sprintf("Server with %d shard leaders assigned", c.Leader)) {
 						updateMemberStatusNeeded = true
 					}
 				}
