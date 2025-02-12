@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,6 +139,9 @@ const (
 
 	// ActionMemberStatusSyncDefaultTimeout define default timeout for action ActionMemberStatusSync
 	ActionMemberStatusSyncDefaultTimeout time.Duration = ActionsDefaultTimeout
+
+	// ActionMigrateMemberDefaultTimeout define default timeout for action ActionMigrateMember
+	ActionMigrateMemberDefaultTimeout time.Duration = 172800 * time.Second // 48h0m0s
 
 	// ActionPVCResizeDefaultTimeout define default timeout for action ActionPVCResize
 	ActionPVCResizeDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
@@ -403,6 +406,9 @@ const (
 	// ActionTypeMemberStatusSync in scopes High. Sync ArangoMember Status with ArangoDeployment Status, to keep Member information up to date
 	ActionTypeMemberStatusSync ActionType = "MemberStatusSync"
 
+	// ActionTypeMigrateMember in scopes Normal. Run the data movement actions on the member (migration)
+	ActionTypeMigrateMember ActionType = "MigrateMember"
+
 	// ActionTypePVCResize in scopes Normal. Start the resize procedure. Updates PVC Requests field
 	ActionTypePVCResize ActionType = "PVCResize"
 
@@ -627,6 +633,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionMemberRIDUpdateDefaultTimeout
 	case ActionTypeMemberStatusSync:
 		return ActionMemberStatusSyncDefaultTimeout
+	case ActionTypeMigrateMember:
+		return ActionMigrateMemberDefaultTimeout
 	case ActionTypePVCResize:
 		return ActionPVCResizeDefaultTimeout
 	case ActionTypePVCResized:
@@ -805,6 +813,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityHigh
 	case ActionTypeMemberStatusSync:
 		return ActionPriorityHigh
+	case ActionTypeMigrateMember:
+		return ActionPriorityNormal
 	case ActionTypePVCResize:
 		return ActionPriorityNormal
 	case ActionTypePVCResized:
@@ -994,6 +1004,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeMemberRIDUpdate:
 		return false
 	case ActionTypeMemberStatusSync:
+		return false
+	case ActionTypeMigrateMember:
 		return false
 	case ActionTypePVCResize:
 		return false
