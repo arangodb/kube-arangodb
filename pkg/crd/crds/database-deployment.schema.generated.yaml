@@ -1869,6 +1869,9 @@ v1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -4152,6 +4155,9 @@ v1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -6353,6 +6359,9 @@ v1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -8637,6 +8646,9 @@ v1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -12040,6 +12052,9 @@ v1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -14386,6 +14401,9 @@ v1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -16580,6 +16598,9 @@ v1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -18875,6 +18896,9 @@ v2alpha1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -21158,6 +21182,9 @@ v2alpha1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -23359,6 +23386,9 @@ v2alpha1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -25643,6 +25673,9 @@ v2alpha1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -29046,6 +29079,9 @@ v2alpha1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -31392,6 +31428,9 @@ v2alpha1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
@@ -33586,6 +33625,9 @@ v2alpha1:
                       type: string
                   type: object
                 type: array
+              upgradeMode:
+                description: UpgradeMode Defines the upgrade mode for the Member
+                type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
                 type: boolean
