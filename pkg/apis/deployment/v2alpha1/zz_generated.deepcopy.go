@@ -2634,6 +2634,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(ServerGroupSpecNumactl)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.UpgradeMode != nil {
+		in, out := &in.UpgradeMode, &out.UpgradeMode
+		*out = new(ServerGroupUpgradeMode)
+		**out = **in
+	}
 	return
 }
 

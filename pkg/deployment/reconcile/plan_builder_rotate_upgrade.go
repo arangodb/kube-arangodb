@@ -181,7 +181,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 	// Update phase
 
 	for _, m := range status.Members.AsList() {
-		d := decision[m.Member.ID]
+		d := decision[newUpdateUpgradeDecisionItemFromElement(m)]
 		if !d.update {
 			continue
 		}
@@ -263,59 +263,83 @@ func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObj
 }
 
 func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap, agencyCache state.State) (api.Plan, bool) {
-	for _, m := range status.Members.AsList() {
-		// Pre-check
-		d := decision[m.Member.ID]
-		if !d.upgrade {
-			continue
-		}
+	upgradeOrder := util.BoolSwitch(features.UpgradeAlternativeOrder().Enabled(), alternativeUpgradeOrder, api.AllServerGroups)
 
-		// We have member to upgrade
-		if d.upgradeDecision.Hold {
-			// Holding upgrade
-			continue
-		}
+	for _, group := range upgradeOrder {
+		for _, m := range status.Members.AsListInGroup(group) {
+			// Pre-check
+			d := decision[newUpdateUpgradeDecisionItemFromElement(m)]
+			if !d.upgrade {
+				continue
+			}
 
-		if !d.upgradeDecision.UpgradeAllowed {
-			context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion, d.upgradeDecision.FromLicense, d.upgradeDecision.ToLicense))
-			return nil, false
+			// We have member to upgrade
+			if d.upgradeDecision.Hold {
+				// Holding upgrade
+				continue
+			}
+
+			if !d.upgradeDecision.UpgradeAllowed {
+				context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion, d.upgradeDecision.FromLicense, d.upgradeDecision.ToLicense))
+				return nil, false
+			}
 		}
 	}
 
 	// Upgrade phase
 	// During upgrade always get first member which needs to be upgraded
-	for _, m := range status.Members.AsList() {
-		d := decision[m.Member.ID]
-		if !d.upgrade {
-			continue
-		}
+	for id, group := range upgradeOrder {
+		for _, m := range status.Members.AsListInGroup(group) {
+			d := decision[newUpdateUpgradeDecisionItemFromElement(m)]
+			if !d.upgrade {
+				continue
+			}
 
-		// We have member to upgrade
-		if d.upgradeDecision.Hold {
-			// Holding upgrade
-			return nil, false
-		}
+			// We have member to upgrade
+			if d.upgradeDecision.Hold {
+				// Holding upgrade
+				return nil, false
+			}
 
-		if !d.upgradeDecision.UpgradeNeeded {
-			// In upgrade scenario but upgrade is not needed
-			return nil, false
-		}
+			if !d.upgradeDecision.UpgradeNeeded {
+				// In upgrade scenario but upgrade is not needed
+				return nil, false
+			}
 
-		if !d.upgradeDecision.UpgradeAllowed {
-			context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion, d.upgradeDecision.FromLicense, d.upgradeDecision.ToLicense))
-			return nil, false
-		}
+			if !d.upgradeDecision.UpgradeAllowed {
+				context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion, d.upgradeDecision.FromLicense, d.upgradeDecision.ToLicense))
+				return nil, false
+			}
 
-		if d.updateAllowed {
-			// We are fine, group is alive so we can proceed
-			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Upgrade allowed")
-			return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, agencyCache), false
-		} else if d.unsafeUpdateAllowed {
-			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
-			return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, agencyCache), false
-		} else {
-			r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
-			return nil, true
+			if decision.AreGroupsPendingUpgrade(upgradeOrder[:id]...) {
+				// Not all members before were upgraded
+				return nil, false
+			}
+
+			switch group {
+			case api.ServerGroupDBServers:
+				gspec := spec.GetServerGroupSpec(group)
+
+				if gspec.UpgradeMode.Get() == api.ServerGroupUpgradeModeReplace {
+					// Members are suppose to be replaced
+					if !m.Member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+						return api.Plan{actions.NewAction(api.ActionTypeMarkToRemoveMember, m.Group, m.Member, "Replace by Upgrade")}, false
+					}
+					return nil, false
+				}
+			}
+
+			if d.updateAllowed {
+				// We are fine, group is alive so we can proceed
+				r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Upgrade allowed")
+				return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, agencyCache), false
+			} else if d.unsafeUpdateAllowed {
+				r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
+				return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, agencyCache), false
+			} else {
+				r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
+				return nil, true
+			}
 		}
 	}
 
