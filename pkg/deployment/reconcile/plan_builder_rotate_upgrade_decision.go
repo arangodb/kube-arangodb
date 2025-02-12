@@ -27,10 +27,70 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type updateUpgradeDecisionMap map[string]updateUpgradeDecision
+func newUpdateUpgradeDecisionItemFromElement(element api.DeploymentStatusMemberElement) updateUpgradeDecisionItem {
+	return newUpdateUpgradeDecisionItem(element.Group, element.Member.ID)
+}
+
+func newUpdateUpgradeDecisionItem(group api.ServerGroup, id string) updateUpgradeDecisionItem {
+	return updateUpgradeDecisionItem{
+		ID:    id,
+		Group: group,
+	}
+}
+
+type updateUpgradeDecisionItem struct {
+	ID    string
+	Group api.ServerGroup
+}
+
+type updateUpgradeDecisionMap map[updateUpgradeDecisionItem]updateUpgradeDecision
+
+func (u updateUpgradeDecisionMap) AreGroupsPendingUpgrade(groups ...api.ServerGroup) bool {
+	for _, group := range groups {
+		if u.IsGroupPendingUpgrade(group) {
+			return true
+		}
+	}
+	return false
+}
+
+func (u updateUpgradeDecisionMap) IsGroupPendingUpgrade(group api.ServerGroup) bool {
+	for i, k := range u {
+		if i.Group != group {
+			continue
+		}
+		if k.upgrade {
+			return true
+		}
+	}
+
+	return false
+}
 
 func (u updateUpgradeDecisionMap) IsUpgrade() bool {
 	for _, k := range u {
+		if k.upgrade {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (u updateUpgradeDecisionMap) AreGroupsPendingUpdate(groups ...api.ServerGroup) bool {
+	for _, group := range groups {
+		if u.IsGroupPendingUpdate(group) {
+			return true
+		}
+	}
+	return false
+}
+
+func (u updateUpgradeDecisionMap) IsGroupPendingUpdate(group api.ServerGroup) bool {
+	for i, k := range u {
+		if i.Group != group {
+			continue
+		}
 		if k.upgrade {
 			return true
 		}
@@ -67,7 +127,7 @@ func (r *Reconciler) createRotateOrUpgradeDecision(spec api.DeploymentSpec, stat
 	upgradeOrder := util.BoolSwitch(features.UpgradeAlternativeOrder().Enabled(), alternativeUpgradeOrder, api.AllServerGroups)
 
 	for _, m := range status.Members.AsListInGroups(upgradeOrder...) {
-		d[m.Member.ID] = r.createRotateOrUpgradeDecisionMember(spec.Mode.Get(), spec, status, context, m)
+		d[newUpdateUpgradeDecisionItem(m.Group, m.Member.ID)] = r.createRotateOrUpgradeDecisionMember(spec.Mode.Get(), spec, status, context, m)
 	}
 
 	return d
