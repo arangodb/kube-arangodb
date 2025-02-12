@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ package reconcile
 import (
 	"strconv"
 
-	"github.com/arangodb/go-driver"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -38,8 +36,8 @@ func getResignLeadershipActionType() api.ActionType {
 	return api.ActionTypeResignLeadership
 }
 
-// isServerRebooted returns true when a given server ID was rebooted during resignation of leadership.
-func isServerRebooted(log logging.Logger, action api.Action, agencyState state.State, serverID driver.ServerID) bool {
+// hasServerRebooted returns true when a given server ID was rebooted during resignation of leadership.
+func hasServerRebooted(log logging.Logger, action api.Action, agencyState state.State, serverID state.Server) bool {
 	rebootID, ok := agencyState.GetRebootID(serverID)
 	if !ok {
 		return false

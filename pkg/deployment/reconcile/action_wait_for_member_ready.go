@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2022-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -65,6 +66,25 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 
 	if a.actionCtx.GetMode() == api.DeploymentModeActiveFailover {
 		return true, false, nil
+	}
+
+	cache, ok := a.actionCtx.GetAgencyCache()
+	if !ok {
+		a.log.Debug("AgencyCache is not ready")
+		return false, false, nil
+	}
+
+	switch a.action.Group {
+	case api.ServerGroupDBServers:
+		if !cache.Plan.DBServers.Exists(state.Server(member.ID)) {
+			a.log.Debug("DBServer not yet present")
+			return false, false, nil
+		}
+	case api.ServerGroupCoordinators:
+		if !cache.Plan.Coordinators.Exists(state.Server(member.ID)) {
+			a.log.Debug("Coordinator not yet present")
+			return false, false, nil
+		}
 	}
 
 	return member.Conditions.IsTrue(api.ConditionTypeReady), false, nil

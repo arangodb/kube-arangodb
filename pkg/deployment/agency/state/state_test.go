@@ -70,6 +70,7 @@ var (
 		"3.9":           agencyDump39,
 		"3.9-satellite": agencyDump39Satellite,
 		"3.9-hotbackup": agencyDump39HotBackup,
+		"3.10":          agencyDump310,
 	}
 )
 
@@ -85,6 +86,11 @@ func Test_Unmarshal_MultiVersion(t *testing.T) {
 						require.NotNil(t, collection.Name)
 					}
 				}
+			})
+
+			t.Run("Ensure member discovery", func(t *testing.T) {
+				require.NotEmpty(t, s.Agency.Arango.Plan.DBServers)
+				require.NotEmpty(t, s.Agency.Arango.Plan.Coordinators)
 			})
 
 			t.Run("Ensure distributeShardsLike", func(t *testing.T) {
