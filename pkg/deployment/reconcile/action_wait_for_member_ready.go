@@ -76,11 +76,13 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 
 	switch a.action.Group {
 	case api.ServerGroupDBServers:
+		logger.JSON("data", cache.Plan.DBServers).Str("ask", member.ID).Warn("XXXX")
 		if !cache.Plan.DBServers.Exists(state.Server(member.ID)) {
 			a.log.Debug("DBServer not yet present")
 			return false, false, nil
 		}
 	case api.ServerGroupCoordinators:
+		logger.JSON("data", cache.Plan.Coordinators).Str("ask", member.ID).Warn("XXXX")
 		if !cache.Plan.Coordinators.Exists(state.Server(member.ID)) {
 			a.log.Debug("Coordinator not yet present")
 			return false, false, nil

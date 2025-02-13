@@ -259,6 +259,7 @@ type Logger interface {
 
 	Bool(key string, i bool) Logger
 	Str(key, value string) Logger
+	JSON(key string, value any) Logger
 	Strs(key string, values ...string) Logger
 	SinceStart(key string, start time.Time) Logger
 	Err(err error) Logger
@@ -393,6 +394,10 @@ func (c *chain) Int(key string, i int) Logger {
 
 func (c *chain) Interface(key string, i interface{}) Logger {
 	return c.Wrap(Interface(key, i))
+}
+
+func (c *chain) JSON(key string, value any) Logger {
+	return c.Wrap(JSON(key, value))
 }
 
 func (c *chain) Err(err error) Logger {

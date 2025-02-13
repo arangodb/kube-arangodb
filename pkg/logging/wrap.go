@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package logging
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -95,5 +96,15 @@ func Err(err error) Wrap {
 func Dur(key string, dur time.Duration) Wrap {
 	return func(in *zerolog.Event) *zerolog.Event {
 		return in.Dur(key, dur)
+	}
+}
+
+func JSON(key string, item any) Wrap {
+	return func(in *zerolog.Event) *zerolog.Event {
+		data, err := json.Marshal(item)
+		if err != nil {
+			return in
+		}
+		return in.Str(key, string(data))
 	}
 }
