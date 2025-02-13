@@ -23,9 +23,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/go-driver"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -77,14 +76,12 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 
 	switch a.action.Group {
 	case api.ServerGroupDBServers:
-		logger.JSON("data", cache.Plan).Str("ask", member.ID).Warn("XXXX")
-		if _, ok := cache.Plan.DBServers[driver.ServerID(member.ID)]; !ok {
+		if !cache.Plan.DBServers.Exists(state.Server(member.ID)) {
 			a.log.Debug("DBServer not yet present")
 			return false, false, nil
 		}
 	case api.ServerGroupCoordinators:
-		logger.JSON("data", cache.Plan).Str("ask", member.ID).Warn("XXXX")
-		if _, ok := cache.Plan.Coordinators[driver.ServerID(member.ID)]; !ok {
+		if !cache.Plan.Coordinators.Exists(state.Server(member.ID)) {
 			a.log.Debug("Coordinator not yet present")
 			return false, false, nil
 		}

@@ -27,6 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
@@ -97,7 +98,7 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 		a.log.Warn("Maintenance is enabled, skipping action")
 		// We are done, action cannot be handled on maintenance mode
 		return true, false, nil
-	} else if hasServerRebooted(a.log, a.action, agencyState, driver.ServerID(m.ID)) {
+	} else if hasServerRebooted(a.log, a.action, agencyState, state.Server(m.ID)) {
 		return true, false, nil
 	}
 
@@ -141,7 +142,7 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 	client, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		a.log.Err(err).Error("Unable to get client")
-		return false, false, nil
+		return false, false, errors.WithStack(err)
 	}
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
@@ -149,7 +150,7 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 	cluster, err := client.Cluster(ctxChild)
 	if err != nil {
 		a.log.Err(err).Error("Unable to get cluster client")
-		return false, false, nil
+		return false, false, errors.WithStack(err)
 	}
 
 	var jobID string
@@ -159,7 +160,7 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 	a.log.Debug("Temporary shutdown, resign leadership")
 	if err := cluster.ResignServer(jobCtx, m.ID); err != nil {
 		a.log.Err(err).Debug("Failed to resign server")
-		return false, false, nil
+		return false, false, errors.WithStack(err)
 	}
 
 	a.actionCtx.Add(resignLeadershipJobID, jobID, true)

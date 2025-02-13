@@ -40,8 +40,10 @@ const (
 
 	TargetHotBackupKey = "HotBackup"
 
-	PlanCollectionsKey = "Collections"
-	PlanDatabasesKey   = "Databases"
+	PlanCollectionsKey  = "Collections"
+	PlanDatabasesKey    = "Databases"
+	PlanDBServersKey    = "DBServers"
+	PlanCoordinatorsKey = "Coordinators"
 
 	SupervisionKey            = "Supervision"
 	SupervisionMaintenanceKey = "Maintenance"
@@ -74,6 +76,8 @@ func GetAgencyReadRequestFields() ReadRequest {
 		GetAgencyKey(ArangoKey, SupervisionKey, SupervisionMaintenanceKey),
 		GetAgencyKey(ArangoKey, PlanKey, PlanCollectionsKey),
 		GetAgencyKey(ArangoKey, PlanKey, PlanDatabasesKey),
+		GetAgencyKey(ArangoKey, PlanKey, PlanDBServersKey),
+		GetAgencyKey(ArangoKey, PlanKey, PlanCoordinatorsKey),
 		GetAgencyKey(ArangoKey, CurrentKey, PlanCollectionsKey),
 		GetAgencyKey(ArangoKey, CurrentKey, CurrentServersKnown),
 		GetAgencyKey(ArangoKey, CurrentKey, CurrentMaintenanceServers),
