@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@
 package crds
 
 import (
-	"fmt"
-
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -190,7 +188,7 @@ func getCRD(data DefinitionData, opts ...func(*CRDOptions)) *apiextensions.Custo
 		for i, v := range crdWithSchema.Spec.Versions {
 			schema, ok := schemas[v.Name]
 			if !ok {
-				panic(fmt.Sprintf("Validation schema is not defined for version %s of %s", v.Name, crd.Name))
+				continue
 			}
 			crdWithSchema.Spec.Versions[i].Schema = schema.DeepCopy()
 			if s := crdWithSchema.Spec.Versions[i].Schema.OpenAPIV3Schema; s != nil {
