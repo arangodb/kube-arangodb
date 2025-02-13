@@ -78,13 +78,13 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 	switch a.action.Group {
 	case api.ServerGroupDBServers:
 		logger.JSON("data", cache.Plan).Str("ask", member.ID).Warn("XXXX")
-		if _, ok := cache.Plan.DBServers[driver.ServerID(member.ID)]; ok {
+		if _, ok := cache.Plan.DBServers[driver.ServerID(member.ID)]; !ok {
 			a.log.Debug("DBServer not yet present")
 			return false, false, nil
 		}
 	case api.ServerGroupCoordinators:
 		logger.JSON("data", cache.Plan).Str("ask", member.ID).Warn("XXXX")
-		if _, ok := cache.Plan.Coordinators[driver.ServerID(member.ID)]; ok {
+		if _, ok := cache.Plan.Coordinators[driver.ServerID(member.ID)]; !ok {
 			a.log.Debug("Coordinator not yet present")
 			return false, false, nil
 		}
