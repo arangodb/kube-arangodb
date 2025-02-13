@@ -131,7 +131,7 @@ func (a *actionResignLeadership) CheckProgress(ctx context.Context) (bool, bool,
 			return false, false, errors.WithStack(err)
 		}
 		return true, false, nil
-	} else if hasServerRebooted(a.log, a.action, agencyState, state.Server(m.ID)) {
+	} else if hasServerRebooted(a.log, a.action, agencyState, driver.ServerID(m.ID)) {
 		return true, false, nil
 	}
 

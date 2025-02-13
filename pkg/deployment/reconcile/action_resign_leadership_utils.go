@@ -23,6 +23,8 @@ package reconcile
 import (
 	"strconv"
 
+	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -37,7 +39,7 @@ func getResignLeadershipActionType() api.ActionType {
 }
 
 // hasServerRebooted returns true when a given server ID was rebooted during resignation of leadership.
-func hasServerRebooted(log logging.Logger, action api.Action, agencyState state.State, serverID state.Server) bool {
+func hasServerRebooted(log logging.Logger, action api.Action, agencyState state.State, serverID driver.ServerID) bool {
 	rebootID, ok := agencyState.GetRebootID(serverID)
 	if !ok {
 		return false

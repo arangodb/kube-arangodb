@@ -196,7 +196,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 		}
 
 		if m.Member.Conditions.IsTrue(api.ConditionTypeRestart) {
-			return r.createRotateMemberPlan(m.Member, m.Group, spec, "Restart flag present", util.CheckConditionalP1Nil(agencyCache.GetRebootID, state.Server(m.Member.ID))), false
+			return r.createRotateMemberPlan(m.Member, m.Group, spec, "Restart flag present", util.CheckConditionalP1Nil(agencyCache.GetRebootID, driver.ServerID(m.Member.ID))), false
 		}
 
 		arangoMember, ok := context.ACS().CurrentClusterCache().ArangoMember().V1().GetSimple(m.Member.ArangoMemberName(apiObject.GetName(), m.Group))
@@ -560,7 +560,7 @@ func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
 		Str("action", string(upgradeAction)).
 		Info("Creating upgrade plan")
 
-	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason, util.CheckConditionalP1Nil(agencyCache.GetRebootID, state.Server(member.ID)))
+	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason, util.CheckConditionalP1Nil(agencyCache.GetRebootID, driver.ServerID(member.ID)))
 
 	if member.Image == nil || member.Image.Image != spec.GetImage() {
 		plan = plan.Before(actions.NewAction(api.ActionTypeSetMemberCurrentImage, group, member, reason).SetImage(spec.GetImage()))

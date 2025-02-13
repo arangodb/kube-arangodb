@@ -20,6 +20,8 @@
 
 package state
 
+import "github.com/arangodb/go-driver"
+
 type Root struct {
 	Arango   State `json:"arango"`
 	ArangoDB DB    `json:"arangodb,omitempty"`
@@ -51,14 +53,14 @@ type Current struct {
 	Collections        CurrentCollections        `json:"Collections"`
 
 	// ServersKnown stores information about ArangoDB servers.
-	ServersKnown ServerMap[ServerKnown] `json:"ServersKnown,omitempty"`
+	ServersKnown map[driver.ServerID]ServerKnown `json:"ServersKnown,omitempty"`
 }
 
 type Plan struct {
-	Collections  PlanCollections   `json:"Collections"`
-	Databases    PlanDatabases     `json:"Databases,omitempty"`
-	DBServers    ServerMap[string] `json:"DBServers,omitempty"`
-	Coordinators ServerMap[string] `json:"Coordinators,omitempty"`
+	Collections  PlanCollections            `json:"Collections"`
+	Databases    PlanDatabases              `json:"Databases,omitempty"`
+	DBServers    map[driver.ServerID]string `json:"DBServers,omitempty"`
+	Coordinators map[driver.ServerID]string `json:"Coordinators,omitempty"`
 }
 
 type Supervision struct {
@@ -67,13 +69,6 @@ type Supervision struct {
 
 type ShardCountDetails struct {
 	Leader, Follower int
-}
-
-type ServerMap[T any] map[Server]T
-
-func (s ServerMap[T]) Exists(server Server) bool {
-	_, ok := s[server]
-	return ok
 }
 
 func (s ShardCountDetails) Count() int {
@@ -452,7 +447,7 @@ func (s State) GetCollectionDatabaseByID(id string) (string, bool) {
 
 // GetRebootID returns reboot ID for a given server ID.
 // returns false when a server ID does not exist in cache.
-func (s State) GetRebootID(id Server) (int, bool) {
+func (s State) GetRebootID(id driver.ServerID) (int, bool) {
 	if v, ok := s.Current.ServersKnown[id]; ok {
 		return v.RebootID, true
 	}
