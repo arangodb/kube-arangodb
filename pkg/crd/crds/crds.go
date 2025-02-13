@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -188,6 +188,10 @@ func getCRD(data DefinitionData, opts ...func(*CRDOptions)) *apiextensions.Custo
 		schemas := data.schemaDefinitionLoader().MustGet()
 
 		for i, v := range crdWithSchema.Spec.Versions {
+			if !v.Served {
+				continue
+			}
+
 			schema, ok := schemas[v.Name]
 			if !ok {
 				panic(fmt.Sprintf("Validation schema is not defined for version %s of %s", v.Name, crd.Name))

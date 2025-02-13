@@ -10,6 +10,7 @@
 - (Bugfix) Fix Condition name
 - (Bugfix) Add missing ArangoDeployment ExternalAccess Managed Type definition
 - (Feature) Agency DBServer Discovery
+- (Bugfix) Fix Manifests
 
 ## [1.2.44](https://github.com/arangodb/kube-arangodb/tree/1.2.44) (2025-02-03)
 - (Maintenance) Kubernetes 1.31.1 libraries
