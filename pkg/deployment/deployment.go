@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -200,7 +200,12 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 				clients[m.ID] = a
 			}
 
-			return d.agencyCache.Reload(ctx, rsize, clients)
+			if offset, err := d.agencyCache.Reload(ctx, rsize, clients); err != nil {
+				d.agencyCache.Invalidate()
+				return 0, err
+			} else {
+				return offset, nil
+			}
 		}
 	}
 
