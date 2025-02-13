@@ -44,6 +44,9 @@ func ensureCRDCompliance(t *testing.T, name string, crdDef *apiextensions.Custom
 	require.Equal(t, name, crdDef.GetName())
 	for _, version := range crdDef.Spec.Versions {
 		t.Run(name+" "+version.Name, func(t *testing.T) {
+			if !version.Served {
+				t.Skip("Version is not served")
+			}
 			require.NotNil(t, version.Schema)
 			require.Equal(t, "object", version.Schema.OpenAPIV3Schema.Type)
 
