@@ -200,7 +200,12 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 				clients[m.ID] = a
 			}
 
-			return d.agencyCache.Reload(ctx, rsize, clients)
+			if offset, err := d.agencyCache.Reload(ctx, rsize, clients); err != nil {
+				d.agencyCache.Invalidate()
+				return 0, err
+			} else {
+				return offset, nil
+			}
 		}
 	}
 

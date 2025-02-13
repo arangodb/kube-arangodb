@@ -155,6 +155,8 @@ type Cache interface {
 	Health() (Health, bool)
 	// ShardsInSyncMap returns last in sync state of shards. If no state is available, false is returned.
 	ShardsInSyncMap() (state.ShardsSyncStatus, bool)
+
+	Invalidate()
 }
 
 func NewCache(namespace, name string, mode *api.DeploymentMode) Cache {
@@ -214,6 +216,9 @@ func (c cacheSingle) Data() (state.State, bool) {
 	return state.State{}, true
 }
 
+func (c cacheSingle) Invalidate() {
+}
+
 type cache struct {
 	namespace, name string
 
@@ -226,6 +231,10 @@ type cache struct {
 	health Health
 
 	shardsSyncStatus state.ShardsSyncStatus
+}
+
+func (c *cache) Invalidate() {
+	c.loader.Invalidate()
 }
 
 func (c *cache) WrapLogger(in *zerolog.Event) *zerolog.Event {
