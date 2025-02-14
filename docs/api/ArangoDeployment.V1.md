@@ -835,6 +835,14 @@ Links:
 
 ***
 
+### .spec.agents.upgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+
+UpgradeMode Defines the upgrade mode for the Member
+
+***
+
 ### .spec.agents.volumeAllowShrink
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
@@ -1905,6 +1913,14 @@ Links:
 
 ***
 
+### .spec.coordinators.upgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+
+UpgradeMode Defines the upgrade mode for the Member
+
+***
+
 ### .spec.coordinators.volumeAllowShrink
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
@@ -2840,6 +2856,14 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#toleration-v1-core)
+
+***
+
+### .spec.dbservers.upgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+
+UpgradeMode Defines the upgrade mode for the Member
 
 ***
 
@@ -3911,6 +3935,14 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#toleration-v1-core)
+
+***
+
+### .spec.gateways.upgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+
+UpgradeMode Defines the upgrade mode for the Member
 
 ***
 
@@ -5595,6 +5627,14 @@ Links:
 
 ***
 
+### .spec.single.upgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+
+UpgradeMode Defines the upgrade mode for the Member
+
+***
+
 ### .spec.single.volumeAllowShrink
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
@@ -6747,6 +6787,14 @@ Links:
 
 ***
 
+### .spec.syncmasters.upgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+
+UpgradeMode Defines the upgrade mode for the Member
+
+***
+
 ### .spec.syncmasters.volumeAllowShrink
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
@@ -7674,6 +7722,14 @@ For more information on tolerations, consult the https://kubernetes.io/docs/conc
 
 Links:
 * [Documentation of core.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#toleration-v1-core)
+
+***
+
+### .spec.syncworkers.upgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+
+UpgradeMode Defines the upgrade mode for the Member
 
 ***
 
