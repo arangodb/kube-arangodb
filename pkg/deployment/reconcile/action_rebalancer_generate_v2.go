@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ func (r actionRebalancerGenerateV2) Start(ctx context.Context) (bool, error) {
 	nctx, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
-	resp, err := client.NewClient(c.Connection(), r.log).GenerateRebalanceMoves(nctx, &client.RebalancePlanRequest{
+	resp, err := client.NewClient(c.Connection(), r.log).RebalancePlan(nctx, &client.RebalancePlanRequest{
 		MaximumNumberOfMoves: util.NewType(spec.Rebalancer.GetParallelMoves()),
 	})
 	if err != nil {
