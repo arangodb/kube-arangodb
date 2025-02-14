@@ -97,12 +97,12 @@ func (a *actionMigrateMember) CheckProgress(ctx context.Context) (bool, bool, er
 		return false, false, nil
 	}
 
-	if _, ok := cache.Plan.DBServers[state.Server(sourceMember.ID)]; !ok {
+	if !cache.Plan.DBServers.Exists(state.Server(sourceMember.ID)) {
 		a.log.JSON("databases", cache.Plan.DBServers).Str("id", sourceMember.ID).Debug("Source DBServer not yet present")
-		return false, false, nil
+		return true, false, nil
 	}
 
-	if _, ok := cache.Plan.DBServers[state.Server(m.ID)]; !ok {
+	if !cache.Plan.DBServers.Exists(state.Server(m.ID)) {
 		a.log.JSON("databases", cache.Plan.DBServers).Str("id", m.ID).Debug("Destination DBServer not yet present")
 		return false, false, nil
 	}
