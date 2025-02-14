@@ -115,8 +115,12 @@ func (a *actionEnforceResignLeadership) CheckProgress(ctx context.Context) (bool
 			a.log.Info("Job finished")
 			// Remove key
 			a.actionCtx.Add(resignLeadershipJobID, "N/A", true)
+		case state.JobPhasePending, state.JobPhaseToDo:
+			// Job not yet completed
+			return false, false, nil
 		case state.JobPhaseUnknown:
-			a.log.Str("status", string(jobStatus)).Error("Resign server job unknown status")
+			a.actionCtx.Add(resignLeadershipJobID, "N/A", true)
+			a.log.Str("status", string(jobStatus)).Error("Resign server job unknown status, retry")
 			return false, false, nil
 		default:
 			return false, false, nil
