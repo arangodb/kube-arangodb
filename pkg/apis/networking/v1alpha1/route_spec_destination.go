@@ -54,6 +54,8 @@ type ArangoRouteSpecDestination struct {
 	Authentication *ArangoRouteSpecDestinationAuthentication `json:"authentication,omitempty"`
 
 	// Timeout specify the upstream request timeout
+	// +doc/type: string
+	// +doc/default: 1m0s
 	Timeout *meta.Duration `json:"timeout,omitempty"`
 }
 

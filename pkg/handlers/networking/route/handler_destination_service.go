@@ -37,6 +37,8 @@ import (
 )
 
 func (h *handler) HandleArangoDestinationService(ctx context.Context, item operation.Item, extension *networkingApi.ArangoRoute, status *networkingApi.ArangoRouteStatus, deployment *api.ArangoDeployment, dest *networkingApi.ArangoRouteSpecDestination, svc *networkingApi.ArangoRouteSpecDestinationService) (*operator.Condition, bool, error) {
+	deploymentSpec := deployment.GetAcceptedSpec()
+
 	port := svc.Port
 
 	if port == nil {
@@ -115,7 +117,11 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 	var target networkingApi.ArangoRouteStatusTarget
 
 	target.Path = dest.GetPath()
-	target.Timeout = dest.GetTimeout()
+	if t := dest.Timeout; t != nil {
+		target.Timeout = dest.GetTimeout()
+	} else {
+		target.Timeout = deploymentSpec.Gateway.GetTimeout()
+	}
 	target.Type = networkingApi.ArangoRouteStatusTargetServiceType
 	target.Protocol = dest.GetProtocol().Get()
 

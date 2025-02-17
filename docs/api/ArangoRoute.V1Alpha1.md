@@ -155,9 +155,11 @@ UID keeps the information about object UID
 
 ### .spec.destination.timeout
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/networking/v1alpha1/route_spec_destination.go#L57)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/networking/v1alpha1/route_spec_destination.go#L59)</sup>
 
 Timeout specify the upstream request timeout
+
+Default Value: `1m0s`
 
 ***
 
