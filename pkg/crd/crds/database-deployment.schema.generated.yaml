@@ -6784,6 +6784,9 @@ v1:
                   Image is the image to use for the gateway.
                   By default, the image is determined by the operator.
                 type: string
+              timeout:
+                description: Timeout defines default timeout for the upstream actions (if not overridden)
+                type: string
             type: object
           gateways:
             description: Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
@@ -16939,12 +16942,12 @@ v1:
             properties:
               actions:
                 additionalProperties:
-                  type: object
+                  type: string
                 description: Actions keep map of the actions timeouts.
                 type: object
               maintenanceGracePeriod:
                 description: MaintenanceGracePeriod action timeout
-                type: object
+                type: string
             type: object
           timezone:
             description: |-
@@ -23811,6 +23814,9 @@ v2alpha1:
                   Image is the image to use for the gateway.
                   By default, the image is determined by the operator.
                 type: string
+              timeout:
+                description: Timeout defines default timeout for the upstream actions (if not overridden)
+                type: string
             type: object
           gateways:
             description: Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
@@ -33966,12 +33972,12 @@ v2alpha1:
             properties:
               actions:
                 additionalProperties:
-                  type: object
+                  type: string
                 description: Actions keep map of the actions timeouts.
                 type: object
               maintenanceGracePeriod:
                 description: MaintenanceGracePeriod action timeout
-                type: object
+                type: string
             type: object
           timezone:
             description: |-

@@ -3082,7 +3082,7 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .spec.gateway.dynamic
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/deployment_spec_gateway.go#L36)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/deployment_spec_gateway.go#L41)</sup>
 
 Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
 When enabled, gateway config will be reloaded by ConfigMap live updates.
@@ -3093,7 +3093,7 @@ Default Value: `false`
 
 ### .spec.gateway.enabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/deployment_spec_gateway.go#L31)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/deployment_spec_gateway.go#L36)</sup>
 
 Enabled setting enables/disables support for gateway in the cluster.
 When enabled, the cluster will contain a number of `gateway` servers.
@@ -3104,10 +3104,20 @@ Default Value: `false`
 
 ### .spec.gateway.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/deployment_spec_gateway.go#L40)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/deployment_spec_gateway.go#L45)</sup>
 
 Image is the image to use for the gateway.
 By default, the image is determined by the operator.
+
+***
+
+### .spec.gateway.timeout
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/deployment_spec_gateway.go#L50)</sup>
+
+Timeout defines default timeout for the upstream actions (if not overridden)
+
+Default Value: `1m0s`
 
 ***
 

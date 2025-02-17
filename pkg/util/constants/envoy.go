@@ -20,14 +20,10 @@
 
 package constants
 
-import "time"
-
 const (
 	EnvoyRouteHeader = "arangodb-platform-route"
 
 	EnvoyInventoryConfigDestination = "/_inventory"
 
 	EnvoyIntegrationSidecarFilterName = "envoy.filters.http.ext_authz"
-
-	DefaultEnvoyUpstreamTimeout = time.Minute
 )

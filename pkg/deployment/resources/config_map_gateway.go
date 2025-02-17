@@ -193,7 +193,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 		},
 		AuthExtension: &gateway.ConfigAuthZExtension{},
 		Timeout: &meta.Duration{
-			Duration: constants.MaxGatewayTimeout,
+			Duration: constants.MaxEnvoyUpstreamTimeout,
 		},
 	}
 
