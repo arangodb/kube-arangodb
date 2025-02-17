@@ -68,5 +68,5 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 
 // ActionPlanAppender appends wait methods to the plan
 func (a *actionAddMember) ActionPlanAppender(current api.Plan) (api.Plan, bool) {
-	return withWaitForMember(current, a.action.Group, sharedReconcile.WithPredefinedMember(a.action.MemberID)), true
+	return withWaitForMember(current, a.action.Group, sharedReconcile.WithPredefinedMember(a.newMemberID)), true
 }
