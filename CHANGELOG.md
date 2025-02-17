@@ -15,6 +15,7 @@
 - (Feature) Allow to continue if ResignServer job is gone
 - (Feature) UpgradeByReplace Flow
 - (Feature) (Platform) ArangoRoute Timeout option
+- (Feature) Delay Action
 
 ## [1.2.44](https://github.com/arangodb/kube-arangodb/tree/1.2.44) (2025-02-03)
 - (Maintenance) Kubernetes 1.31.1 libraries

@@ -66,6 +66,9 @@ var (
 	_ Action        = &actionClusterMemberCleanup{}
 	_ actionFactory = newClusterMemberCleanupAction
 
+	_ Action        = &actionDelay{}
+	_ actionFactory = newDelayAction
+
 	_ Action        = &actionDisableMaintenance{}
 	_ actionFactory = newDisableMaintenanceAction
 
@@ -446,6 +449,20 @@ func init() {
 
 		// Get Action defition
 		function := newClusterMemberCleanupAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// Delay
+	{
+		// Get Action type
+		action := api.ActionTypeDelay
+
+		// Get Action defition
+		function := newDelayAction
 
 		// Wrap action main function
 

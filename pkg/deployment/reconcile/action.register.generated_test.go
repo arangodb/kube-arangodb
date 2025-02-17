@@ -160,6 +160,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("Delay", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeDelay)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeDelay.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.True(t, api.ActionTypeDelay.Optional())
+		})
+	})
+
 	t.Run("DisableClusterScaling", func(t *testing.T) {
 		// nolint:staticcheck
 		ActionsExistence(t, api.ActionTypeDisableClusterScaling)
