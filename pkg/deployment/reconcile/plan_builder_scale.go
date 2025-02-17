@@ -150,7 +150,7 @@ func (r *Reconciler) createReplaceMemberPlan(ctx context.Context, apiObject k8su
 				if len(status.Members.DBServers) <= spec.DBServers.GetCount() {
 					plan = append(plan,
 						actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")),
-						actions.NewClusterAction(api.ActionTypeDelay).AddParam(DelayActionDuration, (15*time.Second).String()),
+						actions.NewAction(api.ActionTypeDelay, group, sharedReconcile.WithPredefinedMember("")).AddParam(DelayActionDuration, (15*time.Second).String()),
 						actions.NewAction(api.ActionTypeMigrateMember, group, sharedReconcile.WithPredefinedMember(api.MemberIDPreviousAction)).AddParam(actionMigrateMemberSourceKey, member.ID),
 					)
 					r.planLogger.
