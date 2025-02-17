@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,6 +64,9 @@ const (
 
 	// ActionClusterMemberCleanupDefaultTimeout define default timeout for action ActionClusterMemberCleanup
 	ActionClusterMemberCleanupDefaultTimeout time.Duration = ActionsDefaultTimeout
+
+	// ActionDelayDefaultTimeout define default timeout for action ActionDelay
+	ActionDelayDefaultTimeout time.Duration = ActionsDefaultTimeout
 
 	// ActionDisableClusterScalingDefaultTimeout define default timeout for action ActionDisableClusterScaling
 	ActionDisableClusterScalingDefaultTimeout time.Duration = ActionsDefaultTimeout
@@ -322,6 +325,9 @@ const (
 	// ActionTypeClusterMemberCleanup in scopes Normal. Remove member from Cluster if it is gone already (Coordinators)
 	ActionTypeClusterMemberCleanup ActionType = "ClusterMemberCleanup"
 
+	// ActionTypeDelay in scopes High and Normal. Define delay operation
+	ActionTypeDelay ActionType = "Delay"
+
 	// ActionTypeDisableClusterScaling in scopes Normal. Disable Cluster Scaling integration
 	//
 	// Deprecated: action is not used anymore
@@ -577,6 +583,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionCleanTLSKeyfileCertificateDefaultTimeout
 	case ActionTypeClusterMemberCleanup:
 		return ActionClusterMemberCleanupDefaultTimeout
+	case ActionTypeDelay:
+		return ActionDelayDefaultTimeout
 	case ActionTypeDisableClusterScaling:
 		return ActionDisableClusterScalingDefaultTimeout
 	case ActionTypeDisableMaintenance:
@@ -755,6 +763,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeClusterMemberCleanup:
 		return ActionPriorityNormal
+	case ActionTypeDelay:
+		return ActionPriorityHigh
 	case ActionTypeDisableClusterScaling:
 		return ActionPriorityNormal
 	case ActionTypeDisableMaintenance:
@@ -945,6 +955,8 @@ func (a ActionType) Optional() bool {
 		return false
 	case ActionTypeClusterMemberCleanup:
 		return false
+	case ActionTypeDelay:
+		return true
 	case ActionTypeDisableClusterScaling:
 		return false
 	case ActionTypeDisableMaintenance:

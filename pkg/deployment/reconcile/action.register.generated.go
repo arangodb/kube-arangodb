@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,6 +65,9 @@ var (
 
 	_ Action        = &actionClusterMemberCleanup{}
 	_ actionFactory = newClusterMemberCleanupAction
+
+	_ Action        = &actionDelay{}
+	_ actionFactory = newDelayAction
 
 	_ Action        = &actionDisableMaintenance{}
 	_ actionFactory = newDisableMaintenanceAction
@@ -446,6 +449,20 @@ func init() {
 
 		// Get Action defition
 		function := newClusterMemberCleanupAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// Delay
+	{
+		// Get Action type
+		action := api.ActionTypeDelay
+
+		// Get Action defition
+		function := newDelayAction
 
 		// Wrap action main function
 

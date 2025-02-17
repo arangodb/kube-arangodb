@@ -4,6 +4,12 @@ actions:
     description: Empty placeholder action
   Idle:
     description: Define idle operation in case if preconditions are not meet
+  Delay:
+    description: Define delay operation
+    optional: true
+    scopes:
+      - Normal
+      - High
   AddMember:
     description: Adds new member to the Member list
     timeout: 10m

@@ -25,6 +25,7 @@ nav_order: 11
 | CleanTLSCACertificate | no | 30m0s | no | Enterprise Only | Remove Certificate from CA TrustStore |
 | CleanTLSKeyfileCertificate | no | 30m0s | no | Enterprise Only | Remove old TLS certificate from server |
 | ClusterMemberCleanup | no | 10m0s | no | Community & Enterprise | Remove member from Cluster if it is gone already (Coordinators) |
+| Delay | no | 10m0s | yes | Community & Enterprise | Define delay operation |
 | ~~DisableClusterScaling~~ | no | 10m0s | no | Community & Enterprise | Disable Cluster Scaling integration |
 | DisableMaintenance | no | 10m0s | no | Community & Enterprise | Disable ArangoDB maintenance mode |
 | DisableMemberMaintenance | no | 10m0s | no | Enterprise Only | Disable ArangoDB DBServer maintenance mode |
@@ -121,6 +122,7 @@ spec:
       CleanTLSCACertificate: 30m0s
       CleanTLSKeyfileCertificate: 30m0s
       ClusterMemberCleanup: 10m0s
+      Delay: 10m0s
       DisableClusterScaling: 10m0s
       DisableMaintenance: 10m0s
       DisableMemberMaintenance: 10m0s
