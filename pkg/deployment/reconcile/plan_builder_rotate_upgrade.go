@@ -316,11 +316,15 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 				return nil, false
 			}
 
+			um := spec.GetServerGroupSpec(group).UpgradeMode
+
+			if features.IsUpgradeIndexOrderIssueEnabled(group, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion) && um == nil {
+				um = util.NewType(api.ServerGroupUpgradeModeReplace)
+			}
+
 			switch group {
 			case api.ServerGroupDBServers:
-				gspec := spec.GetServerGroupSpec(group)
-
-				if gspec.UpgradeMode.Get() == api.ServerGroupUpgradeModeReplace {
+				if um.Get() == api.ServerGroupUpgradeModeReplace {
 					// Members are suppose to be replaced
 					if !m.Member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
 						return api.Plan{actions.NewAction(api.ActionTypeMarkToRemoveMember, m.Group, m.Member, "Replace by Upgrade")}, false

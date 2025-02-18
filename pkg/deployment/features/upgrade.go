@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,17 @@
 
 package features
 
+import (
+	"github.com/arangodb/go-driver"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+)
+
 func init() {
 	registerFeature(upgradeVersionCheck)
 	registerFeature(upgradeVersionCheckV2)
 	registerFeature(upgradeAlternativeOrder)
+	registerFeature(upgradeIndexOrderIssue)
 }
 
 var upgradeVersionCheck Feature = &feature{
@@ -48,6 +55,14 @@ var upgradeAlternativeOrder Feature = &feature{
 	hidden:             true,
 }
 
+var upgradeIndexOrderIssue Feature = &feature{
+	name:               "upgrade-index-order-issue",
+	description:        "Changes the default upgrade mode for DBServers while upgrading from 3.12.2/3.12.3 to 3.12.4+",
+	enterpriseRequired: false,
+	enabledByDefault:   true,
+	hidden:             true,
+}
+
 func UpgradeVersionCheck() Feature {
 	return upgradeVersionCheck
 }
@@ -57,3 +72,26 @@ func UpgradeVersionCheckV2() Feature {
 }
 
 func UpgradeAlternativeOrder() Feature { return upgradeAlternativeOrder }
+
+func UpgradeIndexOrderIssue() Feature { return upgradeIndexOrderIssue }
+
+func IsUpgradeIndexOrderIssueEnabled(group api.ServerGroup, from, to driver.Version) bool {
+	if !UpgradeIndexOrderIssue().Enabled() {
+		return false
+	}
+
+	if group != api.ServerGroupDBServers {
+		return false
+	}
+
+	if from.CompareTo("3.12.2") < 0 || from.CompareTo("3.12.3") > 0 {
+		// Outside of versions
+		return false
+	}
+
+	if to.CompareTo("3.12.4") < 0 {
+		return false
+	}
+
+	return true
+}
