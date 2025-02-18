@@ -1871,6 +1871,9 @@ v1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -4157,6 +4160,9 @@ v1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -6361,6 +6367,9 @@ v1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -8651,6 +8660,9 @@ v1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -12057,6 +12069,9 @@ v1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -14406,6 +14421,9 @@ v1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -16603,6 +16621,9 @@ v1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -18901,6 +18922,9 @@ v2alpha1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -21187,6 +21211,9 @@ v2alpha1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -23391,6 +23418,9 @@ v2alpha1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -25681,6 +25711,9 @@ v2alpha1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -29087,6 +29120,9 @@ v2alpha1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -31436,6 +31472,9 @@ v2alpha1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume
@@ -33633,6 +33672,9 @@ v2alpha1:
                 type: array
               upgradeMode:
                 description: UpgradeMode Defines the upgrade mode for the Member
+                enum:
+                  - inplace
+                  - replace
                 type: string
               volumeAllowShrink:
                 description: VolumeAllowShrink allows shrinking of the volume

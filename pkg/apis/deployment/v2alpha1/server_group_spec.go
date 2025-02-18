@@ -214,6 +214,9 @@ type ServerGroupSpec struct {
 	Numactl *ServerGroupSpecNumactl `json:"numactl,omitempty"`
 
 	// UpgradeMode Defines the upgrade mode for the Member
+	// +doc/enum: inplace|Inplace Upgrade procedure (with Upgrade initContainer)
+	// +doc/enum: replace|Replaces server instead of upgrading. Takes an effect only on DBServer
+	// +doc/default: inplace
 	UpgradeMode *ServerGroupUpgradeMode `json:"upgradeMode,omitempty"`
 }
 
