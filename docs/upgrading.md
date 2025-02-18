@@ -1,3 +1,10 @@
+---
+layout: page
+has_children: true
+title: Upgrading ArangoDB version
+has_toc: false
+---
+
 # Upgrading ArangoDB version
 
 The ArangoDB Kubernetes Operator supports upgrading an ArangoDB from
@@ -51,3 +58,10 @@ Regardless of if you are not only changing the images of community and
 enterprise of the same major, minor and patch levels, or upgrade both
 to enterprise and a different version, the procedure is only performed
 once in a combined step of upgrading version and edition.
+
+## Upgrade Constrains
+
+### Upgrade for Index Sorting Order Issues
+
+Affected Versions: 3.12.2, 3.12.3
+
