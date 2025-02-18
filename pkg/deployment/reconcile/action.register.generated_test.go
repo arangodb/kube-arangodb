@@ -435,7 +435,7 @@ func Test_Actions(t *testing.T) {
 			require.False(t, api.ActionTypeMigrateMember.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
-			require.False(t, api.ActionTypeMigrateMember.Optional())
+			require.True(t, api.ActionTypeMigrateMember.Optional())
 		})
 	})
 

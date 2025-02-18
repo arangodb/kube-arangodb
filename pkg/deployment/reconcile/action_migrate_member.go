@@ -97,6 +97,12 @@ func (a *actionMigrateMember) CheckProgress(ctx context.Context) (bool, bool, er
 		return false, false, nil
 	}
 
+	if cache.Supervision.Maintenance.Exists() {
+		// We are done, action cannot be handled on maintenance mode
+		a.log.Warn("Maintenance is enabled, skipping action")
+		return true, false, nil
+	}
+
 	if !cache.Plan.DBServers.Exists(state.Server(sourceMember.ID)) {
 		a.log.JSON("databases", cache.Plan.DBServers).Str("id", sourceMember.ID).Debug("Source DBServer not yet present")
 		return true, false, nil

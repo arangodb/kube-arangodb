@@ -1018,7 +1018,7 @@ func (a ActionType) Optional() bool {
 	case ActionTypeMemberStatusSync:
 		return false
 	case ActionTypeMigrateMember:
-		return false
+		return true
 	case ActionTypePVCResize:
 		return false
 	case ActionTypePVCResized:

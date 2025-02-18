@@ -30,6 +30,7 @@ actions:
   MigrateMember:
     description: Run the data movement actions on the member (migration)
     timeout: 48h
+    optional: true
   ShutdownMember:
     description: Sends Shutdown requests and waits for container to be stopped
     timeout: 30m
