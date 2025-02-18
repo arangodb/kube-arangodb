@@ -110,180 +110,93 @@ nav_order: 11
 spec:
   timeouts:
     actions:
-      AddMember:
-        Duration: 600000000000
-      AppendTLSCACertificate:
-        Duration: 1800000000000
-      ArangoMemberUpdatePodSpec:
-        Duration: 600000000000
-      ArangoMemberUpdatePodStatus:
-        Duration: 600000000000
-      BackupRestore:
-        Duration: 900000000000
-      BackupRestoreClean:
-        Duration: 900000000000
-      BootstrapSetPassword:
-        Duration: 600000000000
-      BootstrapUpdate:
-        Duration: 600000000000
-      CleanMemberService:
-        Duration: 1800000000000
-      CleanOutMember:
-        Duration: 172800000000000
-      CleanTLSCACertificate:
-        Duration: 1800000000000
-      CleanTLSKeyfileCertificate:
-        Duration: 1800000000000
-      ClusterMemberCleanup:
-        Duration: 600000000000
-      Delay:
-        Duration: 600000000000
-      DisableClusterScaling:
-        Duration: 600000000000
-      DisableMaintenance:
-        Duration: 600000000000
-      DisableMemberMaintenance:
-        Duration: 600000000000
-      EnableClusterScaling:
-        Duration: 600000000000
-      EnableMaintenance:
-        Duration: 600000000000
-      EnableMemberMaintenance:
-        Duration: 600000000000
-      EncryptionKeyAdd:
-        Duration: 600000000000
-      EncryptionKeyPropagated:
-        Duration: 600000000000
-      EncryptionKeyRefresh:
-        Duration: 600000000000
-      EncryptionKeyRemove:
-        Duration: 600000000000
-      EncryptionKeyStatusUpdate:
-        Duration: 600000000000
-      EnforceResignLeadership:
-        Duration: 2700000000000
-      Idle:
-        Duration: 600000000000
-      JWTAdd:
-        Duration: 600000000000
-      JWTClean:
-        Duration: 600000000000
-      JWTPropagated:
-        Duration: 600000000000
-      JWTRefresh:
-        Duration: 600000000000
-      JWTSetActive:
-        Duration: 600000000000
-      JWTStatusUpdate:
-        Duration: 600000000000
-      KillMemberPod:
-        Duration: 600000000000
-      LicenseSet:
-        Duration: 600000000000
-      MarkToRemoveMember:
-        Duration: 600000000000
-      MemberPhaseUpdate:
-        Duration: 600000000000
-      MemberRIDUpdate:
-        Duration: 600000000000
-      MemberStatusSync:
-        Duration: 600000000000
-      MigrateMember:
-        Duration: 172800000000000
-      PVCResize:
-        Duration: 1800000000000
-      PVCResized:
-        Duration: 900000000000
-      PlaceHolder:
-        Duration: 600000000000
-      RebalancerCheck:
-        Duration: 600000000000
-      RebalancerCheckV2:
-        Duration: 600000000000
-      RebalancerClean:
-        Duration: 600000000000
-      RebalancerCleanV2:
-        Duration: 600000000000
-      RebalancerGenerate:
-        Duration: 600000000000
-      RebalancerGenerateV2:
-        Duration: 600000000000
-      RebuildOutSyncedShards:
-        Duration: 86400000000000
-      RecreateMember:
-        Duration: 900000000000
-      RefreshTLSCA:
-        Duration: 1800000000000
-      RefreshTLSKeyfileCertificate:
-        Duration: 1800000000000
-      RemoveMember:
-        Duration: 900000000000
-      RemoveMemberPVC:
-        Duration: 900000000000
-      RenewTLSCACertificate:
-        Duration: 1800000000000
-      RenewTLSCertificate:
-        Duration: 1800000000000
-      ResignLeadership:
-        Duration: 1800000000000
-      ResourceSync:
-        Duration: 600000000000
-      RotateMember:
-        Duration: 900000000000
-      RotateStartMember:
-        Duration: 900000000000
-      RotateStopMember:
-        Duration: 900000000000
-      RuntimeContainerArgsLogLevelUpdate:
-        Duration: 600000000000
-      RuntimeContainerImageUpdate:
-        Duration: 600000000000
-      RuntimeContainerSyncTolerations:
-        Duration: 600000000000
-      SetCondition:
-        Duration: 600000000000
-      SetConditionV2:
-        Duration: 600000000000
-      SetCurrentImage:
-        Duration: 21600000000000
-      SetCurrentMemberArch:
-        Duration: 600000000000
-      SetMaintenanceCondition:
-        Duration: 600000000000
-      SetMemberCondition:
-        Duration: 600000000000
-      SetMemberConditionV2:
-        Duration: 600000000000
-      SetMemberCurrentImage:
-        Duration: 600000000000
-      ShutdownMember:
-        Duration: 1800000000000
-      TLSKeyStatusUpdate:
-        Duration: 600000000000
-      TLSPropagated:
-        Duration: 600000000000
-      TimezoneSecretSet:
-        Duration: 1800000000000
-      TopologyDisable:
-        Duration: 600000000000
-      TopologyEnable:
-        Duration: 600000000000
-      TopologyMemberAssignment:
-        Duration: 600000000000
-      TopologyZonesUpdate:
-        Duration: 600000000000
-      UpToDateUpdate:
-        Duration: 600000000000
-      UpdateTLSSNI:
-        Duration: 600000000000
-      UpgradeMember:
-        Duration: 21600000000000
-      WaitForMemberInSync:
-        Duration: 1800000000000
-      WaitForMemberReady:
-        Duration: 1800000000000
-      WaitForMemberUp:
-        Duration: 1800000000000
+      AddMember: 10m0s
+      AppendTLSCACertificate: 30m0s
+      ArangoMemberUpdatePodSpec: 10m0s
+      ArangoMemberUpdatePodStatus: 10m0s
+      BackupRestore: 15m0s
+      BackupRestoreClean: 15m0s
+      BootstrapSetPassword: 10m0s
+      BootstrapUpdate: 10m0s
+      CleanMemberService: 30m0s
+      CleanOutMember: 48h0m0s
+      CleanTLSCACertificate: 30m0s
+      CleanTLSKeyfileCertificate: 30m0s
+      ClusterMemberCleanup: 10m0s
+      Delay: 10m0s
+      DisableClusterScaling: 10m0s
+      DisableMaintenance: 10m0s
+      DisableMemberMaintenance: 10m0s
+      EnableClusterScaling: 10m0s
+      EnableMaintenance: 10m0s
+      EnableMemberMaintenance: 10m0s
+      EncryptionKeyAdd: 10m0s
+      EncryptionKeyPropagated: 10m0s
+      EncryptionKeyRefresh: 10m0s
+      EncryptionKeyRemove: 10m0s
+      EncryptionKeyStatusUpdate: 10m0s
+      EnforceResignLeadership: 45m0s
+      Idle: 10m0s
+      JWTAdd: 10m0s
+      JWTClean: 10m0s
+      JWTPropagated: 10m0s
+      JWTRefresh: 10m0s
+      JWTSetActive: 10m0s
+      JWTStatusUpdate: 10m0s
+      KillMemberPod: 10m0s
+      LicenseSet: 10m0s
+      MarkToRemoveMember: 10m0s
+      MemberPhaseUpdate: 10m0s
+      MemberRIDUpdate: 10m0s
+      MemberStatusSync: 10m0s
+      MigrateMember: 48h0m0s
+      PVCResize: 30m0s
+      PVCResized: 15m0s
+      PlaceHolder: 10m0s
+      RebalancerCheck: 10m0s
+      RebalancerCheckV2: 10m0s
+      RebalancerClean: 10m0s
+      RebalancerCleanV2: 10m0s
+      RebalancerGenerate: 10m0s
+      RebalancerGenerateV2: 10m0s
+      RebuildOutSyncedShards: 24h0m0s
+      RecreateMember: 15m0s
+      RefreshTLSCA: 30m0s
+      RefreshTLSKeyfileCertificate: 30m0s
+      RemoveMember: 15m0s
+      RemoveMemberPVC: 15m0s
+      RenewTLSCACertificate: 30m0s
+      RenewTLSCertificate: 30m0s
+      ResignLeadership: 30m0s
+      ResourceSync: 10m0s
+      RotateMember: 15m0s
+      RotateStartMember: 15m0s
+      RotateStopMember: 15m0s
+      RuntimeContainerArgsLogLevelUpdate: 10m0s
+      RuntimeContainerImageUpdate: 10m0s
+      RuntimeContainerSyncTolerations: 10m0s
+      SetCondition: 10m0s
+      SetConditionV2: 10m0s
+      SetCurrentImage: 6h0m0s
+      SetCurrentMemberArch: 10m0s
+      SetMaintenanceCondition: 10m0s
+      SetMemberCondition: 10m0s
+      SetMemberConditionV2: 10m0s
+      SetMemberCurrentImage: 10m0s
+      ShutdownMember: 30m0s
+      TLSKeyStatusUpdate: 10m0s
+      TLSPropagated: 10m0s
+      TimezoneSecretSet: 30m0s
+      TopologyDisable: 10m0s
+      TopologyEnable: 10m0s
+      TopologyMemberAssignment: 10m0s
+      TopologyZonesUpdate: 10m0s
+      UpToDateUpdate: 10m0s
+      UpdateTLSSNI: 10m0s
+      UpgradeMember: 6h0m0s
+      WaitForMemberInSync: 30m0s
+      WaitForMemberReady: 30m0s
+      WaitForMemberUp: 30m0s
 
 ```
 [END_INJECT]: # (actionsModYaml)
