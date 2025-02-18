@@ -47,6 +47,7 @@ const (
 
 	SupervisionKey            = "Supervision"
 	SupervisionMaintenanceKey = "Maintenance"
+	SupervisionHealthKey      = "Health"
 
 	TargetJobToDoKey     = "ToDo"
 	TargetJobPendingKey  = "Pending"
@@ -74,6 +75,7 @@ func GetAgencyReadRequest(elements ...[]string) ReadRequest {
 func GetAgencyReadRequestFields() ReadRequest {
 	return GetAgencyReadRequest([]string{
 		GetAgencyKey(ArangoKey, SupervisionKey, SupervisionMaintenanceKey),
+		GetAgencyKey(ArangoKey, SupervisionKey, SupervisionHealthKey),
 		GetAgencyKey(ArangoKey, PlanKey, PlanCollectionsKey),
 		GetAgencyKey(ArangoKey, PlanKey, PlanDatabasesKey),
 		GetAgencyKey(ArangoKey, PlanKey, PlanDBServersKey),

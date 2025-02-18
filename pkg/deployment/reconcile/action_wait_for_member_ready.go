@@ -80,9 +80,26 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 			a.log.Debug("DBServer not yet present")
 			return false, false, nil
 		}
+
+		if s, ok := cache.Supervision.Health[state.Server(member.ID)]; !ok {
+			a.log.Debug("DBServer not yet present on the health")
+			return false, false, nil
+		} else if !s.IsHealthy() {
+			a.log.Str("Status", string(s.Status)).Str("SyncStatus", string(s.SyncStatus)).Debug("DBServer not yet healthy")
+			return false, false, nil
+		}
+
 	case api.ServerGroupCoordinators:
 		if !cache.Plan.Coordinators.Exists(state.Server(member.ID)) {
 			a.log.Debug("Coordinator not yet present")
+			return false, false, nil
+		}
+
+		if s, ok := cache.Supervision.Health[state.Server(member.ID)]; !ok {
+			a.log.Debug("Coordinator not yet present on the health")
+			return false, false, nil
+		} else if !s.IsHealthy() {
+			a.log.Str("Status", string(s.Status)).Str("SyncStatus", string(s.SyncStatus)).Debug("Coordinator not yet healthy")
 			return false, false, nil
 		}
 	}

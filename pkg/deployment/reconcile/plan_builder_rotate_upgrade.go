@@ -617,7 +617,10 @@ func skipResignLeadership(mode api.DeploymentMode, v driver.Version) bool {
 }
 
 func withWaitForMember(plan api.Plan, group api.ServerGroup, member api.MemberStatus) api.Plan {
-	return append(plan, waitForMemberActions(group, member)...)
+	return plan.AfterFirst(func(a api.Action) bool {
+		return a.Type == api.ActionTypeAddMember
+	}, waitForMemberActions(group, member)...)
+
 }
 
 func waitForMemberActions(group api.ServerGroup, member api.MemberStatus) api.Plan {

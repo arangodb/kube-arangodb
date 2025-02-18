@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,5 +68,5 @@ func (a *actionAddMember) Start(ctx context.Context) (bool, error) {
 
 // ActionPlanAppender appends wait methods to the plan
 func (a *actionAddMember) ActionPlanAppender(current api.Plan) (api.Plan, bool) {
-	return withWaitForMember(current, a.action.Group, sharedReconcile.WithPredefinedMember(a.action.MemberID)), true
+	return withWaitForMember(current, a.action.Group, sharedReconcile.WithPredefinedMember(a.newMemberID)), true
 }
