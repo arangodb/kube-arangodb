@@ -13,8 +13,8 @@ ArangoDB References:
 Feature: `--deployment.feature.upgrade-index-order-issue`
 
 Affected Versions:
+- 3.12.2
 - 3.12.3
-- 3.12.4
 
 # Changes
 
