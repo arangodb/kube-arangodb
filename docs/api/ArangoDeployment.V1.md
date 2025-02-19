@@ -837,9 +837,13 @@ Links:
 
 ### .spec.agents.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
@@ -1915,9 +1919,13 @@ Links:
 
 ### .spec.coordinators.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
@@ -2861,9 +2869,13 @@ Links:
 
 ### .spec.dbservers.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
@@ -3950,9 +3962,13 @@ Links:
 
 ### .spec.gateways.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
@@ -5639,9 +5655,13 @@ Links:
 
 ### .spec.single.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
@@ -6799,9 +6819,13 @@ Links:
 
 ### .spec.syncmasters.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
@@ -7737,9 +7761,13 @@ Links:
 
 ### .spec.syncworkers.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.44/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
