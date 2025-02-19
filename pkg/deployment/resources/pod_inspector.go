@@ -308,7 +308,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		// Member Maintenance
 		if agencyCachePresent {
-			if agencyCache.Current.MaintenanceServers.InMaintenance(state.Server(memberStatus.ID)) {
+			if agencyCache.Current.MaintenanceDBServers.InMaintenance(state.Server(memberStatus.ID)) {
 				if memberStatus.Conditions.Update(api.ConditionTypeMemberMaintenanceMode, true, "ArangoDB Member maintenance enabled", "") {
 					updateMemberStatusNeeded = true
 					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
