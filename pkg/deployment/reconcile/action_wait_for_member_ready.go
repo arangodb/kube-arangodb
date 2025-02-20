@@ -64,6 +64,10 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 		return true, false, nil
 	}
 
+	if a.actionCtx.GetMode() == api.DeploymentModeActiveFailover {
+		return true, false, nil
+	}
+
 	switch a.action.Group {
 	case api.ServerGroupDBServers:
 		cache, ok := a.actionCtx.GetAgencyCache()
@@ -104,6 +108,10 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 			a.log.Str("Status", string(s.Status)).Str("SyncStatus", string(s.SyncStatus)).Debug("Coordinator not yet healthy")
 			return false, false, nil
 		}
+	}
+
+	if member.Conditions.IsTrue(api.ConditionTypePendingRestart) || member.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
+		return true, false, nil
 	}
 
 	return member.Conditions.IsTrue(api.ConditionTypeReady), false, nil
