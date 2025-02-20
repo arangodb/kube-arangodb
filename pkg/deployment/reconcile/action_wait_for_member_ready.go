@@ -68,14 +68,14 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 		return true, false, nil
 	}
 
-	cache, ok := a.actionCtx.GetAgencyCache()
-	if !ok {
-		a.log.Debug("AgencyCache is not ready")
-		return false, false, nil
-	}
-
 	switch a.action.Group {
 	case api.ServerGroupDBServers:
+		cache, ok := a.actionCtx.GetAgencyCache()
+		if !ok {
+			a.log.Debug("AgencyCache is not ready")
+			return false, false, nil
+		}
+
 		if !cache.Plan.DBServers.Exists(state.Server(member.ID)) {
 			a.log.Debug("DBServer not yet present")
 			return false, false, nil
@@ -90,6 +90,12 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 		}
 
 	case api.ServerGroupCoordinators:
+		cache, ok := a.actionCtx.GetAgencyCache()
+		if !ok {
+			a.log.Debug("AgencyCache is not ready")
+			return false, false, nil
+		}
+
 		if !cache.Plan.Coordinators.Exists(state.Server(member.ID)) {
 			a.log.Debug("Coordinator not yet present")
 			return false, false, nil
@@ -102,6 +108,10 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 			a.log.Str("Status", string(s.Status)).Str("SyncStatus", string(s.SyncStatus)).Debug("Coordinator not yet healthy")
 			return false, false, nil
 		}
+	}
+
+	if member.Conditions.IsTrue(api.ConditionTypePendingRestart) || member.Conditions.IsTrue(api.ConditionTypePendingUpdate) {
+		return true, false, nil
 	}
 
 	return member.Conditions.IsTrue(api.ConditionTypeReady), false, nil

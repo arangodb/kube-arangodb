@@ -77,7 +77,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 	case api.ServerGroupTypeArangoD:
 		switch a.actionCtx.GetMode() {
 		case api.DeploymentModeSingle:
-			return a.checkProgressSingle(ctxChild), false, nil
+			return a.checkProgressSingle(), false, nil
 		case api.DeploymentModeActiveFailover:
 			if a.action.Group == api.ServerGroupAgents {
 				return a.checkProgressAgent(), false, nil
@@ -99,16 +99,18 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 
 // checkProgressSingle checks the progress of the action in the case
 // of a single server.
-func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) bool {
-	c, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
-	if err != nil {
-		a.log.Err(err).Debug("Failed to create database client")
+func (a *actionWaitForMemberUp) checkProgressSingle() bool {
+	m, found := a.actionCtx.GetMemberStatusByID(a.MemberID())
+	if !found {
+		a.log.Error("No such member")
 		return false
 	}
-	if _, err := c.Version(ctx); err != nil {
-		a.log.Err(err).Debug("Failed to get version")
+
+	if !m.Conditions.IsTrue(api.ConditionTypeActive) {
+		a.log.Debug("Member not yet active")
 		return false
 	}
+
 	return true
 }
 
@@ -187,8 +189,8 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) bool {
 		}
 	}
 
-	if !m.Conditions.IsTrue(api.ConditionTypeReady) {
-		a.log.Debug("Member not yet ready")
+	if !m.Conditions.IsTrue(api.ConditionTypeActive) {
+		a.log.Debug("Member not yet active")
 		return false
 	}
 

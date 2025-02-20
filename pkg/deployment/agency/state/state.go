@@ -47,8 +47,8 @@ type ServerKnown struct {
 }
 
 type Current struct {
-	MaintenanceServers CurrentMaintenanceServers `json:"MaintenanceServers,omitempty"`
-	Collections        CurrentCollections        `json:"Collections"`
+	MaintenanceDBServers CurrentMaintenanceDBServers `json:"MaintenanceDBServers,omitempty"`
+	Collections          CurrentCollections          `json:"Collections"`
 
 	// ServersKnown stores information about ArangoDB servers.
 	ServersKnown ServerMap[ServerKnown] `json:"ServersKnown,omitempty"`
