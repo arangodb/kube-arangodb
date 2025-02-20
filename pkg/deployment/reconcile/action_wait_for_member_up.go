@@ -77,7 +77,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 	case api.ServerGroupTypeArangoD:
 		switch a.actionCtx.GetMode() {
 		case api.DeploymentModeSingle:
-			return a.checkProgressSingle(ctxChild), false, nil
+			return a.checkProgressSingle(), false, nil
 		case api.DeploymentModeActiveFailover:
 			if a.action.Group == api.ServerGroupAgents {
 				return a.checkProgressAgent(), false, nil
@@ -99,7 +99,7 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 
 // checkProgressSingle checks the progress of the action in the case
 // of a single server.
-func (a *actionWaitForMemberUp) checkProgressSingle(ctx context.Context) bool {
+func (a *actionWaitForMemberUp) checkProgressSingle() bool {
 	m, found := a.actionCtx.GetMemberStatusByID(a.MemberID())
 	if !found {
 		a.log.Error("No such member")
