@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,9 @@
 package svc
 
 import (
+	"context"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	imHealth "google.golang.org/grpc/health"
 	pbHealth "google.golang.org/grpc/health/grpc_health_v1"
@@ -104,7 +107,11 @@ func (h *health) Register(registrar *grpc.Server) {
 	pbHealth.RegisterHealthServer(registrar, h)
 }
 
-func NewHealthService(cfg Configuration, t HealthType, handlers ...Handler) HealthService {
+func (h *health) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return nil
+}
+
+func NewHealthService(cfg Configuration, t HealthType, handlers ...Handler) (HealthService, error) {
 	health := &health{
 		Server: imHealth.NewServer(),
 		t:      t,
@@ -114,7 +121,12 @@ func NewHealthService(cfg Configuration, t HealthType, handlers ...Handler) Heal
 	h = append(h, health)
 	h = append(h, handlers...)
 
-	health.service = newService(cfg, h...)
+	z, err := newService(cfg, h...)
+	if err != nil {
+		return nil, err
+	}
 
-	return health
+	health.service = z
+
+	return health, nil
 }

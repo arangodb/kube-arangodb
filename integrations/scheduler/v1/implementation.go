@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ package v1
 import (
 	"context"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
 	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
@@ -180,6 +181,10 @@ func (i *implementation) Name() string {
 
 func (i *implementation) Register(registrar *grpc.Server) {
 	pbSchedulerV1.RegisterSchedulerV1Server(registrar, i)
+}
+
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return nil
 }
 
 func (i *implementation) Health() svc.HealthState {

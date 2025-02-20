@@ -22,6 +22,8 @@ syntax = "proto3";
 
 package pong;
 
+import "google/api/annotations.proto";
+
 import "google/protobuf/timestamp.proto";
 
 import "integrations/shared/v1/definition/empty.proto";
@@ -31,7 +33,11 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/pong/v1/defi
 // PongV1 Service implementation
 service PongV1 {
   // Sends ping to the server
-  rpc Ping(shared.Empty) returns (PongV1PingResponse);
+  rpc Ping(shared.Empty) returns (PongV1PingResponse) {
+    option (google.api.http) = {
+      get: "/_integration/pong/v1/ping"
+    };
+  }
 
   // Asks for the services details
   rpc Services(shared.Empty) returns (PongV1ServicesResponse);

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,9 +40,10 @@ func Handler(t *testing.T, ctx context.Context, client kclient.Client, mods ...M
 }
 
 func Client(t *testing.T, ctx context.Context, client kclient.Client, mods ...Mod) pbSchedulerV1.SchedulerV1Client {
-	local := svc.NewService(svc.Configuration{
+	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
 	}, Handler(t, ctx, client, mods...))
+	require.NoError(t, err)
 
 	start := local.Start(ctx)
 

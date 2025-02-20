@@ -27,6 +27,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
@@ -76,6 +77,10 @@ func (s *s3impl) Health() svc.HealthState {
 
 func (s *s3impl) Register(registrar *grpc.Server) {
 	pbStorage.RegisterBucketServiceServer(registrar, s)
+}
+
+func (s *s3impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return nil
 }
 
 func NewS3Impl(cfg Configuration) (ShutdownableBucketServiceServer, error) {

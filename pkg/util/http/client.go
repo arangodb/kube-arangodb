@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,19 +25,33 @@ import (
 	"crypto/x509"
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/mod"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func RoundTripper(mods ...mod.Mod[*http.Transport]) http.RoundTripper {
-	df := append([]mod.Mod[*http.Transport]{
+func NewHTTPClient(mods ...util.Mod[http.Client]) HTTPClient {
+	var c http.Client
+
+	util.ApplyMods(&c, mods...)
+
+	return &c
+}
+
+type HTTPClient Client[*http.Request, *http.Response]
+
+type Client[Req, Resp any] interface {
+	Do(req Req) (Resp, error)
+}
+
+func RoundTripper(mods ...util.Mod[http.Transport]) http.RoundTripper {
+	df := append([]util.Mod[http.Transport]{
 		configuration.DefaultTransport,
 	}, mods...)
 
 	return Transport(df...)
 }
 
-func RoundTripperWithShortTransport(mods ...mod.Mod[*http.Transport]) http.RoundTripper {
-	df := append([]mod.Mod[*http.Transport]{
+func RoundTripperWithShortTransport(mods ...util.Mod[http.Transport]) http.RoundTripper {
+	df := append([]util.Mod[http.Transport]{
 		configuration.ShortTransport,
 	}, mods...)
 
@@ -48,7 +62,7 @@ func Insecure(in *tls.Config) {
 	in.InsecureSkipVerify = true
 }
 
-func WithRootCA(ca *x509.CertPool) mod.Mod[*tls.Config] {
+func WithRootCA(ca *x509.CertPool) util.Mod[tls.Config] {
 	return func(in *tls.Config) {
 		in.RootCAs = ca
 	}

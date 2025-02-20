@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,23 +24,23 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/mod"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func Transport(mods ...mod.Mod[*http.Transport]) http.RoundTripper {
+func Transport(mods ...util.Mod[http.Transport]) http.RoundTripper {
 	var c http.Transport
 
-	mod.Exec[*http.Transport](&c, mods...)
+	util.ApplyMods[http.Transport](&c, mods...)
 
 	return &c
 }
 
-func WithTransportTLS(mods ...mod.Mod[*tls.Config]) mod.Mod[*http.Transport] {
+func WithTransportTLS(mods ...util.Mod[tls.Config]) util.Mod[http.Transport] {
 	return func(in *http.Transport) {
 		if in.TLSClientConfig == nil {
 			in.TLSClientConfig = &tls.Config{}
 		}
 
-		mod.Exec(in.TLSClientConfig, mods...)
+		util.ApplyMods(in.TLSClientConfig, mods...)
 	}
 }

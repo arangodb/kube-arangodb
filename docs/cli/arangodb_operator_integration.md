@@ -82,7 +82,11 @@ Flags:
       --services.external.auth.token string                         Token for external service (when auth service is token) (Env: SERVICES_EXTERNAL_AUTH_TOKEN)
       --services.external.auth.type string                          Auth type for external service (Env: SERVICES_EXTERNAL_AUTH_TYPE) (default "None")
       --services.external.enabled                                   Defines if external access is enabled (Env: SERVICES_EXTERNAL_ENABLED)
+      --services.external.gateway.address string                    Address to expose external gateway services (Env: SERVICES_EXTERNAL_GATEWAY_ADDRESS) (default "0.0.0.0:9193")
+      --services.external.gateway.enabled                           Defines if external gateway is enabled (Env: SERVICES_EXTERNAL_GATEWAY_ENABLED)
       --services.external.tls.keyfile string                        Path to the keyfile (Env: SERVICES_EXTERNAL_TLS_KEYFILE)
+      --services.gateway.address string                             Address to expose internal gateway services (Env: SERVICES_GATEWAY_ADDRESS) (default "127.0.0.1:9192")
+      --services.gateway.enabled                                    Defines if internal gateway is enabled (Env: SERVICES_GATEWAY_ENABLED) (default true)
       --services.tls.keyfile string                                 Path to the keyfile (Env: SERVICES_TLS_KEYFILE)
 
 Use "arangodb_operator_integration [command] --help" for more information about a command.

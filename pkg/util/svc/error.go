@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,10 @@ func (p serviceError) StartWithHealth(ctx context.Context, health Health) Servic
 }
 
 func (p serviceError) Address() string {
+	return ""
+}
+
+func (p serviceError) HTTPAddress() string {
 	return ""
 }
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ package v1
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -29,19 +31,29 @@ import (
 
 	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func Client(t *testing.T, ctx context.Context, services ...Service) pbPongV1.PongV1Client {
+func Server(t *testing.T, ctx context.Context, services ...Service) svc.ServiceStarter {
 	h, err := New(services...)
 	require.NoError(t, err)
 
-	local := svc.NewService(svc.Configuration{
+	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
+		Gateway: &svc.ConfigurationGateway{
+			Address: "127.0.0.1:0",
+		},
 	}, h)
+	require.NoError(t, err)
 
-	start := local.Start(ctx)
+	return local.Start(ctx)
+}
+
+func Client(t *testing.T, ctx context.Context, services ...Service) pbPongV1.PongV1Client {
+	start := Server(t, ctx, services...)
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbPongV1.NewPongV1Client, start.Address())
 
@@ -63,6 +75,20 @@ func Test_Ping(t *testing.T) {
 	require.NoError(t, err)
 
 	require.True(t, r2.GetTime().AsTime().After(r1.GetTime().AsTime()))
+}
+
+func Test_Ping_HTTP(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	server := Server(t, ctx)
+
+	client := operatorHTTP.NewHTTPClient()
+
+	resp := ugrpc.Get[*pbPongV1.PongV1PingResponse](ctx, client, fmt.Sprintf("http://%s/_integration/pong/v1/ping", server.HTTPAddress()))
+
+	_, err := resp.WithCode(http.StatusOK).Get()
+	require.NoError(t, err)
 }
 
 func Test_Services(t *testing.T) {

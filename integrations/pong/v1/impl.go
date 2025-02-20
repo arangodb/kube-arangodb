@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -90,6 +91,10 @@ func (i *impl) Health() svc.HealthState {
 
 func (i *impl) Register(registrar *grpc.Server) {
 	pbPongV1.RegisterPongV1Server(registrar, i)
+}
+
+func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return pbPongV1.RegisterPongV1HandlerServer(ctx, mux, i)
 }
 
 func (i *impl) Ping(context.Context, *pbSharedV1.Empty) (*pbPongV1.PongV1PingResponse, error) {
