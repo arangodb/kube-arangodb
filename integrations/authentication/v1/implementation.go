@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 
@@ -77,6 +78,10 @@ func (i *implementation) Health() svc.HealthState {
 
 func (i *implementation) Register(registrar *grpc.Server) {
 	pbAuthenticationV1.RegisterAuthenticationV1Server(registrar, i)
+}
+
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return nil
 }
 
 func (i *implementation) Validate(ctx context.Context, request *pbAuthenticationV1.ValidateRequest) (*pbAuthenticationV1.ValidateResponse, error) {

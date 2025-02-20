@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,9 +38,10 @@ func Test_ShutdownGRPC(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	local := svc.NewService(svc.Configuration{
+	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
 	}, New(c))
+	require.NoError(t, err)
 
 	start := local.Start(ctx)
 
@@ -48,7 +49,7 @@ func Test_ShutdownGRPC(t *testing.T) {
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbShutdownV1.NewShutdownV1Client, start.Address())
 
-	_, err := client.Shutdown(ctx, &pbSharedV1.Empty{})
+	_, err = client.Shutdown(ctx, &pbSharedV1.Empty{})
 	require.NoError(t, err)
 
 	time.Sleep(time.Second)

@@ -278,7 +278,7 @@ endif
 
 EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers
 EXCLUDE_FILES := *generated.deepcopy.go
-SOURCES_QUERY := find ./ -type f -name '*.go' ! -name '*.pb.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
+SOURCES_QUERY := find ./ -type f -name '*.go' ! -name '*.pb.gw.go' ! -name '*.pb.go' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 SOURCES := $(shell $(SOURCES_QUERY))
 
 NON_EE_SOURCES_QUERY := $(SOURCES_QUERY) ! -name '*.enterprise.go'
@@ -822,6 +822,7 @@ tools: tools-min
 	@echo ">> Fetching protoc go plugins..."
 	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+	@GOBIN=$(GOPATH)/bin go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.23.0
 	@echo ">> Fetching govulncheck"
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v1.1.3
 
@@ -941,6 +942,7 @@ generate-proto:
 	PATH="$(PATH):$(GOBUILDDIR)/bin" $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ -I.:$(GOBUILDDIR)/include/googleapis/ \
 			--go_out=. --go_opt=paths=source_relative \
 			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+			--grpc-gateway_out=. --grpc-gateway_opt=paths=source_relative \
 			$(PROTOSOURCES)
 
 .PHONY: fix

@@ -25,6 +25,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -71,6 +72,10 @@ func (i *implementation) Name() string {
 
 func (i *implementation) Register(registrar *grpc.Server) {
 	pbStorageV2.RegisterStorageV2Server(registrar, i)
+}
+
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return nil
 }
 
 func (i *implementation) Health() svc.HealthState {

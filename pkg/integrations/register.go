@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,6 +73,12 @@ type serviceConfiguration struct {
 
 	address string
 
+	gateway struct {
+		enabled bool
+
+		address string
+	}
+
 	tls struct {
 		keyfile string
 	}
@@ -111,6 +117,10 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 		}
 	}
 
+	if s.gateway.enabled {
+		cfg.Gateway = &svc.ConfigurationGateway{Address: s.gateway.address}
+	}
+
 	return cfg, nil
 }
 
@@ -139,12 +149,16 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 		f.StringVar(&c.services.internal.auth.t, "services.auth.type", "None", "Auth type for internal service"),
 		f.StringVar(&c.services.internal.auth.token, "services.auth.token", "", "Token for internal service (when auth service is token)"),
 		f.StringVar(&c.services.internal.tls.keyfile, "services.tls.keyfile", "", "Path to the keyfile"),
+		f.BoolVar(&c.services.internal.gateway.enabled, "services.gateway.enabled", true, "Defines if internal gateway is enabled"),
+		f.StringVar(&c.services.internal.gateway.address, "services.gateway.address", "127.0.0.1:9192", "Address to expose internal gateway services"),
 
 		f.BoolVar(&c.services.external.enabled, "services.external.enabled", false, "Defines if external access is enabled"),
 		f.StringVar(&c.services.external.address, "services.external.address", "0.0.0.0:9093", "Address to expose external services"),
 		f.StringVar(&c.services.external.auth.t, "services.external.auth.type", "None", "Auth type for external service"),
 		f.StringVar(&c.services.external.auth.token, "services.external.auth.token", "", "Token for external service (when auth service is token)"),
 		f.StringVar(&c.services.external.tls.keyfile, "services.external.tls.keyfile", "", "Path to the keyfile"),
+		f.BoolVar(&c.services.external.gateway.enabled, "services.external.gateway.enabled", false, "Defines if external gateway is enabled"),
+		f.StringVar(&c.services.external.gateway.address, "services.external.gateway.address", "0.0.0.0:9193", "Address to expose external gateway services"),
 	); err != nil {
 		return err
 	}
@@ -259,7 +273,10 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 		healthHandlers = append(healthHandlers, pbImplShutdownV1.New(cancel))
 	}
 
-	health := svc.NewHealthService(healthConfig, svc.Readiness, healthHandlers...)
+	health, err := svc.NewHealthService(healthConfig, svc.Readiness, healthHandlers...)
+	if err != nil {
+		return err
+	}
 
 	internalHandlers = append(internalHandlers, health)
 	externalHandlers = append(externalHandlers, health)
@@ -277,9 +294,15 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 
 		go func() {
 			defer wg.Done()
-			s := svc.NewService(internalConfig, internalHandlers...).StartWithHealth(ctx, health)
+			svc, err := svc.NewService(internalConfig, internalHandlers...)
+			if err != nil {
+				logger.Err(internal).Error("Service handler creation failed")
+				return
+			}
 
-			logger.Str("address", s.Address()).Str("type", "internal").Bool("ssl", internalConfig.TLSOptions != nil).Info("Service handler started")
+			s := svc.StartWithHealth(ctx, health)
+
+			logger.Str("address", s.Address()).Str("httpAddress", s.HTTPAddress()).Str("type", "internal").Bool("ssl", internalConfig.TLSOptions != nil).Info("Service handler started")
 
 			internal = s.Wait()
 
@@ -294,7 +317,13 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 
 		go func() {
 			defer wg.Done()
-			s := svc.NewService(externalConfig, externalHandlers...).StartWithHealth(ctx, health)
+			svc, err := svc.NewService(externalConfig, externalHandlers...)
+			if err != nil {
+				logger.Err(internal).Error("Service handler creation failed")
+				return
+			}
+
+			s := svc.StartWithHealth(ctx, health)
 
 			logger.Str("address", s.Address()).Str("type", "external").Bool("ssl", externalConfig.TLSOptions != nil).Info("Service handler started")
 

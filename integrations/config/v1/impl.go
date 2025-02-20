@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -83,6 +84,10 @@ type impl struct {
 	pbConfigV1.UnsafeConfigV1Server
 
 	config Config
+}
+
+func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return nil
 }
 
 func (i *impl) Name() string {

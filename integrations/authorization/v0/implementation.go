@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
 	pbAuthorizationV0 "github.com/arangodb/kube-arangodb/integrations/authorization/v0/definition"
@@ -56,6 +57,10 @@ func (i *implementation) Health() svc.HealthState {
 
 func (i *implementation) Register(registrar *grpc.Server) {
 	pbAuthorizationV0.RegisterAuthorizationV0Server(registrar, i)
+}
+
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return nil
 }
 
 func (i *implementation) Can(ctx context.Context, request *pbAuthorizationV0.CanRequest) (*pbAuthorizationV0.CanResponse, error) {

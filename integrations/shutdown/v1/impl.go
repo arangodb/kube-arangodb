@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
@@ -54,6 +55,11 @@ func (i *impl) Health() svc.HealthState {
 
 func (i *impl) Register(registrar *grpc.Server) {
 	pbShutdownV1.RegisterShutdownV1Server(registrar, i)
+}
+
+func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (i *impl) Shutdown(ctx context.Context, empty *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
