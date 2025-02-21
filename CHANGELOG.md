@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.45](https://github.com/arangodb/kube-arangodb/tree/1.2.45) (2025-02-21)
 - (Feature) (Platform) Inventory as Proto
 - (Docs) Update Refs
 - (Feature) Expose Agency Shard Details
