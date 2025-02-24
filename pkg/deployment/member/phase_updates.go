@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,6 +66,8 @@ var phase = phaseMap{
 				d := spec.Architecture.GetDefault()
 				m.Architecture = &d
 			}
+
+			removeBaseMemberConditionsMapFunc(m)
 		},
 	},
 	api.MemberPhasePending: {
@@ -77,6 +79,17 @@ var phase = phaseMap{
 			removeMemberConditionsMapFunc(m)
 		},
 	},
+}
+
+func removeBaseMemberConditionsMapFunc(m *api.MemberStatus) {
+	// Clean conditions
+	m.Conditions.Remove(api.ConditionTypeReady)
+	m.Conditions.Remove(api.ConditionTypeActive)
+	m.Conditions.Remove(api.ConditionTypeStarted)
+	m.Conditions.Remove(api.ConditionTypeScheduled)
+	m.Conditions.Remove(api.ConditionTypeReachable)
+	m.Conditions.Remove(api.ConditionTypeServing)
+	m.Conditions.Remove(api.ConditionTypeTerminating)
 }
 
 func removeMemberConditionsMapFunc(m *api.MemberStatus) {

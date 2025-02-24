@@ -70,6 +70,10 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		return true, false, nil
 	}
 
+	if member.Phase.IsPending() {
+		return false, false, nil
+	}
+
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
@@ -106,8 +110,12 @@ func (a *actionWaitForMemberUp) checkProgressSingle() bool {
 		return false
 	}
 
-	if !m.Conditions.IsTrue(api.ConditionTypeActive) {
-		a.log.Debug("Member not yet active")
+	if m.Phase.IsPending() {
+		return false
+	}
+
+	if !m.Conditions.IsTrue(api.ConditionTypeServing) {
+		a.log.Debug("Member not yet serving")
 		return false
 	}
 
@@ -189,8 +197,12 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) bool {
 		}
 	}
 
-	if !m.Conditions.IsTrue(api.ConditionTypeActive) {
-		a.log.Debug("Member not yet active")
+	if m.Phase.IsPending() {
+		return false
+	}
+
+	if !m.Conditions.IsTrue(api.ConditionTypeServing) {
+		a.log.Debug("Member not yet serving")
 		return false
 	}
 
