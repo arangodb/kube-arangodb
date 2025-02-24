@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,4 +86,17 @@ func Test_Action_Equal(t *testing.T) {
 	require.False(t, a.Equal(b))
 	require.False(t, b.Equal(a))
 	require.True(t, b.Equal(b))
+}
+
+func Test_Plan_AfterFirst(t *testing.T) {
+	var p Plan
+
+	require.Len(t, p, 0)
+
+	p = p.AfterFirst(func(a Action) bool {
+		return false
+	}, Action{ID: "1", Type: ActionTypeAddMember})
+
+	require.Len(t, p, 1)
+	require.Equal(t, "1", p[0].ID)
 }

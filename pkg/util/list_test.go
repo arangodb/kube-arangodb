@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,4 +66,28 @@ func Test_MapList(t *testing.T) {
 	require.Equal(t, expected, MapList(l, func(o *obj) string {
 		return o.name
 	}))
+}
+
+func Test_AppendAfter(t *testing.T) {
+	var elements []int
+
+	elements = AppendAfter(elements, func(v int) bool {
+		return false
+	}, 1)
+	require.Equal(t, []int{1}, elements)
+
+	elements = AppendAfter(elements, func(v int) bool {
+		return false
+	}, 2)
+	require.Equal(t, []int{1, 2}, elements)
+
+	elements = AppendAfter(elements, func(v int) bool {
+		return v == 1
+	}, 3)
+	require.Equal(t, []int{1, 3, 2}, elements)
+
+	elements = AppendAfter(elements, func(v int) bool {
+		return v == 2
+	}, 4)
+	require.Equal(t, []int{1, 3, 2, 4}, elements)
 }

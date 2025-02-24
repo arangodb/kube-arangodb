@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -175,14 +175,14 @@ func (r *Reconciler) pvcResizePlan(group api.ServerGroup, member api.MemberStatu
 			actions.NewAction(api.ActionTypePVCResize, group, member),
 		}
 	case api.PVCResizeModeRotate:
-		return withWaitForMember(api.Plan{
+		return util.FlattenLists(api.Plan{
 			actions.NewAction(getResignLeadershipActionType(), group, member),
 			actions.NewAction(api.ActionTypeKillMemberPod, group, member),
 			actions.NewAction(api.ActionTypeRotateStartMember, group, member),
 			actions.NewAction(api.ActionTypePVCResize, group, member),
 			actions.NewAction(api.ActionTypePVCResized, group, member),
 			actions.NewAction(api.ActionTypeRotateStopMember, group, member),
-		}, group, member)
+		}, waitForMemberActions(group, member))
 	default:
 		r.planLogger.Str("server-group", group.AsRole()).Str("mode", mode.String()).
 			Error("Requested mode is not supported")
