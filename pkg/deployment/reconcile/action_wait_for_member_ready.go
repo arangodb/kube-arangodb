@@ -64,6 +64,10 @@ func (a *actionWaitForMemberReady) CheckProgress(ctx context.Context) (bool, boo
 		return true, false, nil
 	}
 
+	if member.Phase.IsPending() {
+		return false, false, nil
+	}
+
 	if a.actionCtx.GetMode() == api.DeploymentModeActiveFailover {
 		return true, false, nil
 	}
