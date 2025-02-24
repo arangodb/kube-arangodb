@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.46](https://github.com/arangodb/kube-arangodb/tree/1.2.46) (2025-02-24)
 - (Bugfix) Clean Phase change properly during upgrade
 
 ## [1.2.45](https://github.com/arangodb/kube-arangodb/tree/1.2.45) (2025-02-21)
