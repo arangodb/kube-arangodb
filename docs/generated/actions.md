@@ -25,6 +25,7 @@ nav_order: 11
 | CleanTLSCACertificate | no | 30m0s | no | Enterprise Only | Remove Certificate from CA TrustStore |
 | CleanTLSKeyfileCertificate | no | 30m0s | no | Enterprise Only | Remove old TLS certificate from server |
 | ClusterMemberCleanup | no | 10m0s | no | Community & Enterprise | Remove member from Cluster if it is gone already (Coordinators) |
+| Delay | no | 10m0s | yes | Community & Enterprise | Define delay operation |
 | ~~DisableClusterScaling~~ | no | 10m0s | no | Community & Enterprise | Disable Cluster Scaling integration |
 | DisableMaintenance | no | 10m0s | no | Community & Enterprise | Disable ArangoDB maintenance mode |
 | DisableMemberMaintenance | no | 10m0s | no | Enterprise Only | Disable ArangoDB DBServer maintenance mode |
@@ -50,6 +51,7 @@ nav_order: 11
 | MemberPhaseUpdate | no | 10m0s | no | Community & Enterprise | Change member phase |
 | ~~MemberRIDUpdate~~ | no | 10m0s | no | Community & Enterprise | Update Run ID of member |
 | MemberStatusSync | no | 10m0s | no | Community & Enterprise | Sync ArangoMember Status with ArangoDeployment Status, to keep Member information up to date |
+| MigrateMember | no | 48h0m0s | yes | Community & Enterprise | Run the data movement actions on the member (migration) |
 | PVCResize | no | 30m0s | no | Community & Enterprise | Start the resize procedure. Updates PVC Requests field |
 | PVCResized | no | 15m0s | no | Community & Enterprise | Waits for PVC resize to be completed |
 | PlaceHolder | no | 10m0s | no | Community & Enterprise | Empty placeholder action |
@@ -121,6 +123,7 @@ spec:
       CleanTLSCACertificate: 30m0s
       CleanTLSKeyfileCertificate: 30m0s
       ClusterMemberCleanup: 10m0s
+      Delay: 10m0s
       DisableClusterScaling: 10m0s
       DisableMaintenance: 10m0s
       DisableMemberMaintenance: 10m0s
@@ -146,6 +149,7 @@ spec:
       MemberPhaseUpdate: 10m0s
       MemberRIDUpdate: 10m0s
       MemberStatusSync: 10m0s
+      MigrateMember: 48h0m0s
       PVCResize: 30m0s
       PVCResized: 15m0s
       PlaceHolder: 10m0s
