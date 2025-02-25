@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc"
@@ -35,12 +36,13 @@ type ServiceStarter interface {
 	Wait() error
 
 	Address() string
+	HTTPAddress() string
 }
 
 type serviceStarter struct {
 	service *service
 
-	address string
+	address, httpAddress string
 
 	error error
 	done  chan struct{}
@@ -50,37 +52,74 @@ func (s *serviceStarter) Address() string {
 	return s.address
 }
 
+func (s *serviceStarter) HTTPAddress() string {
+	return s.httpAddress
+}
+
 func (s *serviceStarter) Wait() error {
 	<-s.done
 
 	return s.error
 }
 
-func (s *serviceStarter) run(ctx context.Context, health Health, ln net.Listener) {
+func (s *serviceStarter) run(ctx context.Context, health Health, ln, http net.Listener) {
 	defer close(s.done)
 
-	s.error = s.runE(ctx, health, ln)
+	s.error = s.runE(ctx, health, ln, http)
 }
 
-func (s *serviceStarter) runE(ctx context.Context, health Health, ln net.Listener) error {
-	pr := ln.Addr().(*net.TCPAddr)
-	s.address = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
+func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.Listener) error {
+	ctx, c := context.WithCancel(ctx)
+	defer c()
 
 	var serveError error
 
-	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
-		defer close(done)
+		defer wg.Done()
+		defer c()
+
+		go func() {
+			<-ctx.Done()
+
+			s.service.server.GracefulStop()
+		}()
 
 		if err := s.service.server.Serve(ln); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			serveError = err
 		}
 	}()
 
+	wg.Add(1)
 	go func() {
-		<-ctx.Done()
+		defer wg.Done()
 
-		s.service.server.GracefulStop()
+		if s.service.cfg.Gateway == nil {
+			return
+		}
+
+		defer c()
+
+		go func() {
+			<-ctx.Done()
+
+			s.service.http.Close()
+		}()
+
+		if err := s.service.http.Serve(http); err != nil {
+			if !errors.Is(err, grpc.ErrServerStopped) {
+				serveError = err
+			}
+		}
+	}()
+
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+
+		wg.Wait()
 	}()
 
 	ticker := time.NewTicker(125 * time.Millisecond)
@@ -121,7 +160,21 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 	pr := ln.Addr().(*net.TCPAddr)
 	st.address = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
 
-	go st.run(ctx, health, ln)
+	var hln net.Listener
+
+	if service.cfg.Gateway != nil {
+		httpln, err := net.Listen("tcp", service.cfg.Gateway.Address)
+		if err != nil {
+			return serviceError{err}
+		}
+
+		pr := httpln.Addr().(*net.TCPAddr)
+		st.httpAddress = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
+
+		hln = httpln
+	}
+
+	go st.run(ctx, health, ln, hln)
 
 	return st
 }

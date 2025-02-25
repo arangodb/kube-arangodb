@@ -66,9 +66,10 @@ func Handler(t *testing.T, mods ...Mod) svc.Handler {
 }
 
 func Client(t *testing.T, ctx context.Context, mods ...Mod) pbStorageV2.StorageV2Client {
-	local := svc.NewService(svc.Configuration{
+	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
 	}, Handler(t, mods...))
+	require.NoError(t, err)
 
 	start := local.Start(ctx)
 

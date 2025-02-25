@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,12 @@ package svc
 
 import (
 	"context"
+	"net/http"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 type Service interface {
@@ -34,6 +38,7 @@ type Service interface {
 
 type service struct {
 	server *grpc.Server
+	http   *http.Server
 
 	cfg Configuration
 
@@ -48,11 +53,11 @@ func (p *service) Start(ctx context.Context) ServiceStarter {
 	return newServiceStarter(ctx, p, emptyHealth{})
 }
 
-func NewService(cfg Configuration, handlers ...Handler) Service {
+func NewService(cfg Configuration, handlers ...Handler) (Service, error) {
 	return newService(cfg, handlers...)
 }
 
-func newService(cfg Configuration, handlers ...Handler) *service {
+func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	var q service
 
 	q.cfg = cfg
@@ -63,5 +68,20 @@ func newService(cfg Configuration, handlers ...Handler) *service {
 		handler.Register(q.server)
 	}
 
-	return &q
+	if gateway := cfg.Gateway; gateway != nil {
+		mux := runtime.NewServeMux()
+
+		for _, handler := range q.handlers {
+			if err := handler.Gateway(shutdown.Context(), mux); err != nil {
+				return nil, err
+			}
+		}
+
+		q.http = &http.Server{
+			Handler:   mux,
+			TLSConfig: cfg.TLSOptions,
+		}
+	}
+
+	return &q, nil
 }
