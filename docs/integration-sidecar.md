@@ -62,7 +62,7 @@ In order to inject specific profiles to the pod use label (split by `,`):
 
 ```yaml
 metadata:
-  labels:
+  annotations:
     profiles.arangodb.com/profiles: "gpu"
 ```
 
@@ -70,7 +70,7 @@ or
 
 ```yaml
 metadata:
-  labels:
+  annotations:
     profiles.arangodb.com/profiles: "gpu,internal"
 ```
 

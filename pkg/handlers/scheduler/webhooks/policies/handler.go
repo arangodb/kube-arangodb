@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,6 +75,7 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 	}
 
 	labels := new.GetLabels()
+	annotations := new.GetAnnotations()
 
 	v := labels[constants.ProfilesDeployment]
 	depl, err := h.client.Arango().DatabaseV1().ArangoDeployments(request.Namespace).Get(ctx, v, meta.GetOptions{})
@@ -89,7 +90,8 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		}, nil
 	}
 
-	profiles := util.FilterList(util.FormatList(strings.Split(labels[constants.ProfilesList], ","), func(s string) string {
+	allProfiles := util.FlattenLists(strings.Split(labels[constants.ProfilesList], ","), strings.Split(annotations[constants.ProfilesList], ","))
+	profiles := util.FilterList(util.FormatList(allProfiles, func(s string) string {
 		return strings.TrimSpace(s)
 	}), func(s string) bool {
 		return s != ""
