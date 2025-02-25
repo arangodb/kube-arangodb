@@ -23,9 +23,7 @@ kind: ArangoProfile
 metadata:
   name: example
 spec:
-  selectors:
-    label:
-      matchLabels: {}
+  selectors: {}
   template: ...
 ```
 
@@ -119,7 +117,7 @@ metadata:
     integration.profiles.arangodb.com/<< integration name >>: << integration version >>
 ```
 
-#### [Authentication V1](/docs/integration/authentication.v1.md)
+#### [Authentication V1](./integration/authentication.v1.md)
 
 Authentication Integration Sidecar
 
@@ -131,7 +129,7 @@ metadata:
     integration.profiles.arangodb.com/authn: v1
 ```
 
-#### [Authorization V0](/docs/integration/authorization.v0.md)
+#### [Authorization V0](./integration/authorization.v0.md)
 
 Authorization Integration Sidecar
 
@@ -143,7 +141,7 @@ metadata:
     integration.profiles.arangodb.com/authz: v0
 ```
 
-#### [Scheduler V2](/docs/integration/scheduler.v2.md)
+#### [Scheduler V2](./integration/scheduler.v2.md)
 
 Scheduler Integration Sidecar
 
@@ -155,7 +153,19 @@ metadata:
     integration.profiles.arangodb.com/sched: v2
 ```
 
-#### [Storage V2](/docs/integration/storage.v2.md)
+#### [Storage V1](./integration/storage.v1.md)
+
+Storage Integration Sidecar (legacy)
+
+To enable:
+
+```yaml
+metadata:
+  labels:
+    integration.profiles.arangodb.com/storage: v1
+```
+
+#### [Storage V2](./integration/storage.v2.md)
 
 Storage Integration Sidecar
 
@@ -167,7 +177,7 @@ metadata:
     integration.profiles.arangodb.com/storage: v2
 ```
 
-#### [Shutdown V1](/docs/integration/shutdown.v1.md)
+#### [Shutdown V1](./integration/shutdown.v1.md)
 
 Shutdown Integration Sidecar
 
