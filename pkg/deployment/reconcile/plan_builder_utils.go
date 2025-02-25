@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ func createRotateMemberPlanWithAction(member api.MemberStatus,
 		actions.NewAction(api.ActionTypeCleanMemberService, group, member, "Remove server service and enforce renewal/recreation"),
 	)
 
-	plan = withWaitForMember(plan, group, member)
+	plan = append(plan, waitForMemberActions(group, member)...)
 
 	plan = withMemberMaintenance(group, member, "Enable member maintenance", plan)
 

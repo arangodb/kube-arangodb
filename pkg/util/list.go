@@ -195,3 +195,35 @@ func FlattenList[A any](in [][]A) []A {
 func FlattenLists[A any](in ...[]A) []A {
 	return FlattenList(in)
 }
+
+func AppendAfter[T any](in []T, condition func(v T) bool, elements ...T) []T {
+	for id := range in {
+		if condition(in[id]) {
+			if id == len(in)-1 {
+				break
+			}
+
+			// We need to merge results
+
+			z := make([]T, len(in)+len(elements))
+
+			q := z
+
+			copy(q, in[:id+1])
+			q = q[id+1:]
+
+			copy(q, elements)
+
+			q = q[len(elements):]
+
+			copy(q, in[id+1:])
+
+			return z
+		}
+	}
+
+	z := make([]T, len(in)+len(elements))
+	copy(z, in)
+	copy(z[len(in):], elements)
+	return z
+}

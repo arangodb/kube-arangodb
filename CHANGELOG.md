@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) Use Profile Annotations
+- (Bugfix) Improve Wait Procedure on AF
 
 ## [1.2.46](https://github.com/arangodb/kube-arangodb/tree/1.2.46) (2025-02-24)
 - (Bugfix) Clean Phase change properly during upgrade

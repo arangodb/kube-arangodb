@@ -232,7 +232,7 @@ func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec 
 				sharedReconcile.UpdateMemberConditionActionV2(reason, api.ConditionTypeUpdating, m.Group, m.Member.ID, true, reason, "", ""),
 			}, false
 		} else {
-			p = withWaitForMember(p, m.Group, m.Member)
+			p = append(p, waitForMemberActions(m.Group, m.Member)...)
 
 			p = append(p, actions.NewAction(api.ActionTypeArangoMemberUpdatePodStatus, m.Group, m.Member, "Propagating status of pod").AddParam(ActionTypeArangoMemberUpdatePodStatusChecksum, checksum))
 			p = p.WrapWithPlan(api.Plan{
@@ -622,7 +622,7 @@ func skipResignLeadership(mode api.DeploymentMode, v driver.Version) bool {
 
 func withWaitForMember(plan api.Plan, group api.ServerGroup, member api.MemberStatus) api.Plan {
 	return plan.AfterFirst(func(a api.Action) bool {
-		return a.Type == api.ActionTypeAddMember
+		return a.Type != api.ActionTypeAddMember
 	}, waitForMemberActions(group, member)...)
 
 }

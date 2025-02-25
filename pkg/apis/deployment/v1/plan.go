@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -314,31 +314,7 @@ func (p Plan) Wrap(before, after Action) Plan {
 
 // AfterFirst adds actions when condition will return false
 func (p Plan) AfterFirst(condition func(a Action) bool, actions ...Action) Plan {
-	var r Plan
-	c := p
-	for {
-		if len(c) == 0 {
-			break
-		}
-
-		if !condition(c[0]) {
-			r = append(r, actions...)
-
-			r = append(r, c...)
-
-			break
-		}
-
-		r = append(r, c[0])
-
-		if len(c) == 1 {
-			break
-		}
-
-		c = c[1:]
-	}
-
-	return r
+	return util.AppendAfter(p, condition, actions...)
 }
 
 // Filter filter list of the actions
