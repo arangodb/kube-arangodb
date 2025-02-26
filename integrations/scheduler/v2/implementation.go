@@ -23,6 +23,7 @@ package v2
 import (
 	"context"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
@@ -66,6 +67,10 @@ func (i *implementation) Name() string {
 
 func (i *implementation) Register(registrar *grpc.Server) {
 	pbSchedulerV2.RegisterSchedulerV2Server(registrar, i)
+}
+
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+	return nil
 }
 
 func (i *implementation) Health() svc.HealthState {

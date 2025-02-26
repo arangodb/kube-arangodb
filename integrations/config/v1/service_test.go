@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,9 +34,10 @@ import (
 func Client(t *testing.T, ctx context.Context, config Config) pbConfigV1.ConfigV1Client {
 	h, err := New(config)
 	require.NoError(t, err)
-	local := svc.NewService(svc.Configuration{
+	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
 	}, h)
+	require.NoError(t, err)
 
 	start := local.Start(ctx)
 

@@ -98,6 +98,23 @@ func WithMessagef(err error, format string, args ...interface{}) error {
 	return errors.WithMessagef(err, format, args...)
 }
 
+func AnyOf(err error, targets ...error) bool {
+	if err == nil {
+		return false
+	}
+	for _, target := range targets {
+		if target == nil {
+			continue
+		}
+
+		if Is(err, target) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func Is(err, target error) bool { return errors.Is(err, target) }
 
 func As(err error, target interface{}) bool { return errors.As(err, target) }
