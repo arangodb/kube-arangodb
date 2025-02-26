@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	goHttp "net/http"
 	"sync"
 	"time"
 
@@ -86,7 +87,7 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 			s.service.server.GracefulStop()
 		}()
 
-		if err := s.service.server.Serve(ln); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+		if err := s.service.server.Serve(ln); !errors.AnyOf(err, grpc.ErrServerStopped) {
 			serveError = err
 		}
 	}()
@@ -107,10 +108,8 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 			s.service.http.Close()
 		}()
 
-		if err := s.service.http.Serve(http); err != nil {
-			if !errors.Is(err, grpc.ErrServerStopped) {
-				serveError = err
-			}
+		if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+			serveError = err
 		}
 	}()
 
