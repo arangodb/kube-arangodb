@@ -203,6 +203,12 @@ Integration Service API Address
 
 Example: `localhost:1234`
 
+#### INTEGRATION_HTTP_ADDRESS
+
+Integration Service HTTP Address
+
+Example: `localhost:1234`
+
 #### ARANGO_DEPLOYMENT_NAME
 
 ArangoDeployment name.

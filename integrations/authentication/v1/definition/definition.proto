@@ -33,10 +33,20 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/authenticati
 // AuthenticationV1 define ServiceInterface for Authentication V1
 service AuthenticationV1 {
   // Validate and ensure that Authentication details are valid returns information about the user
-  rpc Validate (ValidateRequest) returns (ValidateResponse) {}
+  rpc Validate (ValidateRequest) returns (ValidateResponse) {
+    option (google.api.http) = {
+      post: "/_integration/authn/v1/validate"
+      body: "*"
+    };
+  }
 
   // CreateToken creates a token for the specified user
-  rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse) {}
+  rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse) {
+    option (google.api.http) = {
+      post: "/_integration/authn/v1/createToken"
+      body: "*"
+    };
+  }
 
   // Identity extracts the identity from the request
   rpc Identity (shared.Empty) returns (IdentityResponse) {

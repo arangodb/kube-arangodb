@@ -147,6 +147,10 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 			Name:  "INTEGRATION_SERVICE_ADDRESS",
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
 		},
+		{
+			Name:  "INTEGRATION_HTTP_ADDRESS",
+			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetHTTPListenPort()),
+		},
 	}
 
 	c := schedulerContainerApi.Container{

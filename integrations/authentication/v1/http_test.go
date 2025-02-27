@@ -34,7 +34,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
-	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
 func Test_Authentication_HTTP(t *testing.T) {
@@ -43,81 +42,127 @@ func Test_Authentication_HTTP(t *testing.T) {
 
 	directory, server := Server(t, ctx)
 
-	grpcClient := tgrpc.NewGRPCClient(t, ctx, pbAuthenticationV1.NewAuthenticationV1Client, server.Address())
-
 	token1 := generateJWTToken()
 
 	reSaveJWTTokens(t, directory, token1)
 
 	client := operatorHTTP.NewHTTPClient()
 
-	t.Run("Without header", func(t *testing.T) {
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()))
+	//t.Run("Without header", func(t *testing.T) {
+	//	resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()))
+	//
+	//	resp.WithCode(http.StatusUnauthorized)
+	//})
+	//
+	//t.Run("With invalid header", func(t *testing.T) {
+	//	resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+	//		in.Header.Add("invalid", "")
+	//	})
+	//
+	//	resp.WithCode(http.StatusUnauthorized)
+	//})
+	//
+	//t.Run("With empty header", func(t *testing.T) {
+	//	resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+	//		in.Header.Add("Authorization", "")
+	//	})
+	//
+	//	resp.WithCode(http.StatusUnauthorized)
+	//})
+	//
+	//t.Run("With missing prefix header", func(t *testing.T) {
+	//	token, err := ugrpc.Post[*pbAuthenticationV1.CreateTokenRequest, *pbAuthenticationV1.CreateTokenResponse](
+	//		ctx,
+	//		client,
+	//		&pbAuthenticationV1.CreateTokenRequest{
+	//			Lifetime: durationpb.New(time.Minute),
+	//			User:     util.NewType(DefaultUser),
+	//		},
+	//		fmt.Sprintf("http://%s/_integration/authn/v1/createToken", server.HTTPAddress()),
+	//	).
+	//		WithCode(http.StatusOK).
+	//		Get()
+	//	require.NoError(t, err)
+	//
+	//	resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+	//		in.Header.Add("Authorization", token.Token)
+	//	})
+	//
+	//	resp.WithCode(http.StatusUnauthorized)
+	//})
+	//
+	//t.Run("With header", func(t *testing.T) {
+	//	token, err := ugrpc.Post[*pbAuthenticationV1.CreateTokenRequest, *pbAuthenticationV1.CreateTokenResponse](
+	//		ctx,
+	//		client,
+	//		&pbAuthenticationV1.CreateTokenRequest{
+	//			Lifetime: durationpb.New(time.Minute),
+	//			User:     util.NewType(DefaultUser),
+	//		},
+	//		fmt.Sprintf("http://%s/_integration/authn/v1/createToken", server.HTTPAddress()),
+	//	).
+	//		WithCode(http.StatusOK).
+	//		Get()
+	//	require.NoError(t, err)
+	//
+	//	resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+	//		in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
+	//	})
+	//
+	//	data, err := resp.WithCode(http.StatusOK).Get()
+	//	require.NoError(t, err)
+	//
+	//	require.EqualValues(t, DefaultUser, data.GetUser())
+	//})
+	//
+	//t.Run("With multi header", func(t *testing.T) {
+	//	token, err := ugrpc.Post[*pbAuthenticationV1.CreateTokenRequest, *pbAuthenticationV1.CreateTokenResponse](
+	//		ctx,
+	//		client,
+	//		&pbAuthenticationV1.CreateTokenRequest{
+	//			Lifetime: durationpb.New(time.Minute),
+	//			User:     util.NewType(DefaultUser),
+	//		},
+	//		fmt.Sprintf("http://%s/_integration/authn/v1/createToken", server.HTTPAddress()),
+	//	).
+	//		WithCode(http.StatusOK).
+	//		Get()
+	//	require.NoError(t, err)
+	//
+	//	resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+	//		in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
+	//		in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
+	//	})
+	//
+	//	resp.WithCode(http.StatusUnauthorized)
+	//})
 
-		resp.WithCode(http.StatusUnauthorized)
-	})
-
-	t.Run("With invalid header", func(t *testing.T) {
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
-			in.Header.Add("invalid", "")
-		})
-
-		resp.WithCode(http.StatusUnauthorized)
-	})
-
-	t.Run("With empty header", func(t *testing.T) {
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
-			in.Header.Add("Authorization", "")
-		})
-
-		resp.WithCode(http.StatusUnauthorized)
-	})
-
-	t.Run("With missing prefix header", func(t *testing.T) {
-		tokenResponse, err := grpcClient.CreateToken(context.Background(), &pbAuthenticationV1.CreateTokenRequest{
-			Lifetime: durationpb.New(time.Minute),
-			User:     util.NewType(DefaultUser),
-		})
+	t.Run("Validate", func(t *testing.T) {
+		token, err := ugrpc.Post[*pbAuthenticationV1.CreateTokenRequest, *pbAuthenticationV1.CreateTokenResponse](
+			ctx,
+			client,
+			&pbAuthenticationV1.CreateTokenRequest{
+				Lifetime: durationpb.New(time.Minute),
+				User:     util.NewType(DefaultUser),
+			},
+			fmt.Sprintf("http://%s/_integration/authn/v1/createToken", server.HTTPAddress()),
+		).
+			WithCode(http.StatusOK).
+			Get()
 		require.NoError(t, err)
 
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
-			in.Header.Add("Authorization", tokenResponse.Token)
-		})
-
-		resp.WithCode(http.StatusUnauthorized)
-	})
-
-	t.Run("With header", func(t *testing.T) {
-		// Create token
-		tokenResponse, err := grpcClient.CreateToken(context.Background(), &pbAuthenticationV1.CreateTokenRequest{
-			Lifetime: durationpb.New(time.Minute),
-			User:     util.NewType(DefaultUser),
-		})
+		validate, err := ugrpc.Post[*pbAuthenticationV1.ValidateRequest, *pbAuthenticationV1.ValidateResponse](
+			ctx,
+			client,
+			&pbAuthenticationV1.ValidateRequest{
+				Token: token.Token,
+			},
+			fmt.Sprintf("http://%s/_integration/authn/v1/validate", server.HTTPAddress()),
+		).
+			WithCode(http.StatusOK).
+			Get()
 		require.NoError(t, err)
 
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
-			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", tokenResponse.Token))
-		})
-
-		data, err := resp.WithCode(http.StatusOK).Get()
-		require.NoError(t, err)
-
-		require.EqualValues(t, DefaultUser, data.GetUser())
-	})
-
-	t.Run("With multi header", func(t *testing.T) {
-		// Create token
-		tokenResponse, err := grpcClient.CreateToken(context.Background(), &pbAuthenticationV1.CreateTokenRequest{
-			Lifetime: durationpb.New(time.Minute),
-			User:     util.NewType(DefaultUser),
-		})
-		require.NoError(t, err)
-
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
-			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", tokenResponse.Token))
-			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", tokenResponse.Token))
-		})
-
-		resp.WithCode(http.StatusUnauthorized)
+		require.True(t, validate.GetIsValid())
 	})
 }

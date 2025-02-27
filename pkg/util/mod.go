@@ -34,7 +34,9 @@ func (m Mod[T]) Optional() Mod[T] {
 
 func ApplyMods[T any](in *T, mods ...Mod[T]) {
 	for _, mod := range mods {
-		mod(in)
+		if mod != nil {
+			mod(in)
+		}
 	}
 }
 
@@ -54,8 +56,10 @@ func (m ModE[T]) Optional() ModE[T] {
 
 func ApplyModsE[T any](in *T, mods ...ModE[T]) error {
 	for _, mod := range mods {
-		if err := mod(in); err != nil {
-			return err
+		if mod != nil {
+			if err := mod(in); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -78,8 +82,10 @@ func (m ModEP1[T, P1]) Optional() ModEP1[T, P1] {
 
 func ApplyModsEP1[T, P1 any](in *T, p1 P1, mods ...ModEP1[T, P1]) error {
 	for _, mod := range mods {
-		if err := mod(in, p1); err != nil {
-			return err
+		if mod != nil {
+			if err := mod(in, p1); err != nil {
+				return err
+			}
 		}
 	}
 
