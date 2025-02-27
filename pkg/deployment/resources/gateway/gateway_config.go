@@ -200,11 +200,11 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 			return nil, err
 		}
 		cluster := &clusterAPI.Cluster{
-			Name:           "integration_sidecar",
+			Name:           constants.EnvoyIntegrationSidecarCluster,
 			ConnectTimeout: durationpb.New(time.Second),
 			LbPolicy:       clusterAPI.Cluster_ROUND_ROBIN,
 			LoadAssignment: &endpointAPI.ClusterLoadAssignment{
-				ClusterName: "integration_sidecar",
+				ClusterName: constants.EnvoyIntegrationSidecarCluster,
 				Endpoints: []*endpointAPI.LocalityLbEndpoints{
 					{
 						LbEndpoints: []*endpointAPI.LbEndpoint{

@@ -41,7 +41,7 @@ func Handler(t *testing.T, ctx context.Context, mods ...Mod) svc.Handler {
 	return handler
 }
 
-func Client(t *testing.T, ctx context.Context, mods ...Mod) (pbAuthenticationV1.AuthenticationV1Client, string) {
+func Server(t *testing.T, ctx context.Context, mods ...Mod) (string, svc.ServiceStarter) {
 	directory := t.TempDir()
 
 	var currentMods []Mod
@@ -55,10 +55,17 @@ func Client(t *testing.T, ctx context.Context, mods ...Mod) (pbAuthenticationV1.
 
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
+		Gateway: &svc.ConfigurationGateway{
+			Address: "127.0.0.1:0",
+		},
 	}, Handler(t, ctx, currentMods...))
 	require.NoError(t, err)
 
-	start := local.Start(ctx)
+	return directory, local.Start(ctx)
+}
+
+func Client(t *testing.T, ctx context.Context, mods ...Mod) (pbAuthenticationV1.AuthenticationV1Client, string) {
+	directory, start := Server(t, ctx, mods...)
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbAuthenticationV1.NewAuthenticationV1Client, start.Address())
 

@@ -482,6 +482,16 @@ Links:
 
 ***
 
+### .spec.integrationSidecar.httpListenPort
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/scheduler/v1beta1/integration/integration.go#L40)</sup>
+
+HTTPListenPort defines on which port the sidecar container will be listening for connections on http
+
+Default Value: `9203`
+
+***
+
 ### .spec.integrationSidecar.image
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/scheduler/v1beta1/container/resources/image.go#L35)</sup>

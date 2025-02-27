@@ -22,7 +22,11 @@ syntax = "proto3";
 
 package authentication;
 
+import "google/api/annotations.proto";
+
 import "google/protobuf/duration.proto";
+
+import "integrations/shared/v1/definition/empty.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition";
 
@@ -33,6 +37,13 @@ service AuthenticationV1 {
 
   // CreateToken creates a token for the specified user
   rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse) {}
+
+  // Identity extracts the identity from the request
+  rpc Identity (shared.Empty) returns (IdentityResponse) {
+    option (google.api.http) = {
+      get: "/_integration/authn/v1/identity"
+    };
+  }
 }
 
 // ValidateRequest defines request for AuthenticationV1 Validate Request
@@ -51,6 +62,12 @@ message ValidateResponse {
 
   // details returns token details if the token is valid
   optional ValidateResponseDetails details = 3;
+}
+
+// IdentityResponse defines response for AuthenticationV1 Identity Request
+message IdentityResponse {
+  // user returns the User used in the Token. If a user is not specified, `root` is returned
+  string user = 1;
 }
 
 // ValidateResponseDetails defines optional response for AuthenticationV1 Validate Request.
