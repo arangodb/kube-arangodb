@@ -9576,6 +9576,9 @@ v1:
                           type: object
                       type: object
                     type: array
+                  httpListenPort:
+                    format: int32
+                    type: integer
                   image:
                     type: string
                   imagePullPolicy:
@@ -26627,6 +26630,9 @@ v2alpha1:
                           type: object
                       type: object
                     type: array
+                  httpListenPort:
+                    format: int32
+                    type: integer
                   image:
                     type: string
                   imagePullPolicy:

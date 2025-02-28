@@ -42,6 +42,11 @@ func (in *Sidecar) DeepCopyInto(out *Sidecar) {
 		*out = new(uint16)
 		**out = **in
 	}
+	if in.HTTPListenPort != nil {
+		in, out := &in.HTTPListenPort, &out.HTTPListenPort
+		*out = new(uint16)
+		**out = **in
+	}
 	if in.Container != nil {
 		in, out := &in.Container, &out.Container
 		*out = new(container.Container)

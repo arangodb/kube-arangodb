@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 
 package sidecar
 
@@ -133,6 +133,8 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 
 	options.Addf("--services.address", "127.0.0.1:%d", integration.GetListenPort())
 	options.Addf("--health.address", "0.0.0.0:%d", integration.GetControllerListenPort())
+	options.Addf("--services.gateway.address", "127.0.0.1:%d", integration.GetHTTPListenPort())
+	options.Add("--services.gateway.enabled", true)
 
 	// Envs
 
@@ -144,6 +146,10 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 		{
 			Name:  "INTEGRATION_SERVICE_ADDRESS",
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
+		},
+		{
+			Name:  "INTEGRATION_HTTP_ADDRESS",
+			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetHTTPListenPort()),
 		},
 	}
 

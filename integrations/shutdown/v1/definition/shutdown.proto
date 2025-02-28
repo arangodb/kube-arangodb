@@ -22,6 +22,8 @@ syntax = "proto3";
 
 package shutdown;
 
+import "google/api/annotations.proto";
+
 import "integrations/shared/v1/definition/empty.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition";
@@ -29,5 +31,9 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/
 // ShutdownV1 Service implementation
 service ShutdownV1 {
   // ShutdownServer sends the shutdown request
-  rpc Shutdown (shared.Empty) returns (shared.Empty) {}
+  rpc Shutdown (shared.Empty) returns (shared.Empty) {
+    option (google.api.http) = {
+      get: "/_integration/shutdown/v1/shutdown"
+    };
+  }
 }

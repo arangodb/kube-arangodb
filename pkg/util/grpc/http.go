@@ -21,6 +21,7 @@
 package grpc
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net/http"
@@ -69,17 +70,15 @@ func (h httpResponse[T]) Get() (T, error) {
 	return Unmarshal[T](h.data)
 }
 
-func Get[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, url string, mods ...util.Mod[http.Request]) HTTPResponse[T] {
+func request[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, method, url string, body io.Reader, mods ...util.Mod[http.Request]) HTTPResponse[T] {
 	if client == nil {
 		client = http.DefaultClient
 	}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return httpErrorResponse[T]{err: err}
 	}
-
-	req = req.WithContext(ctx)
 
 	util.ApplyMods(req, mods...)
 
@@ -99,4 +98,17 @@ func Get[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, u
 		code: resp.StatusCode,
 		data: nData,
 	}
+}
+
+func Get[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, url string, mods ...util.Mod[http.Request]) HTTPResponse[T] {
+	return request[T](ctx, client, http.MethodGet, url, nil, mods...)
+}
+
+func Post[IN, T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, in IN, url string, mods ...util.Mod[http.Request]) HTTPResponse[T] {
+	data, err := Marshal(in)
+	if err != nil {
+		return httpErrorResponse[T]{err: err}
+	}
+
+	return request[T](ctx, client, http.MethodPost, url, bytes.NewReader(data), mods...)
 }

@@ -58,8 +58,7 @@ func (i *impl) Register(registrar *grpc.Server) {
 }
 
 func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
-	//TODO implement me
-	panic("implement me")
+	return pbShutdownV1.RegisterShutdownV1HandlerServer(ctx, mux, i)
 }
 
 func (i *impl) Shutdown(ctx context.Context, empty *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {

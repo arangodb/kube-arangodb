@@ -18,17 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package constants
+package v1
 
-const (
-	EnvoyRouteHeader = "arangodb-platform-route"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-	EnvoyInventoryConfigDestination = "/_inventory"
-	EnvoyIdentityDestination        = "/_identity"
-
-	EnvoyIntegrationSidecarFilterName = "envoy.filters.http.ext_authz"
-
-	EnvoyIntegrationSidecarCluster = "integration_sidecar"
-
-	EnvoyIntegrationSidecarClusterHTTP = "integration_sidecar_http"
-)
+var logger = logging.Global().RegisterAndGetLogger("integration-authn-v1", logging.Info)

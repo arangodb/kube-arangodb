@@ -8,6 +8,7 @@ package definition
 
 import (
 	context "context"
+	definition "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -26,6 +27,8 @@ type AuthenticationV1Client interface {
 	Validate(ctx context.Context, in *ValidateRequest, opts ...grpc.CallOption) (*ValidateResponse, error)
 	// CreateToken creates a token for the specified user
 	CreateToken(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*CreateTokenResponse, error)
+	// Identity extracts the identity from the request
+	Identity(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*IdentityResponse, error)
 }
 
 type authenticationV1Client struct {
@@ -54,6 +57,15 @@ func (c *authenticationV1Client) CreateToken(ctx context.Context, in *CreateToke
 	return out, nil
 }
 
+func (c *authenticationV1Client) Identity(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*IdentityResponse, error) {
+	out := new(IdentityResponse)
+	err := c.cc.Invoke(ctx, "/authentication.AuthenticationV1/Identity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthenticationV1Server is the server API for AuthenticationV1 service.
 // All implementations must embed UnimplementedAuthenticationV1Server
 // for forward compatibility
@@ -62,6 +74,8 @@ type AuthenticationV1Server interface {
 	Validate(context.Context, *ValidateRequest) (*ValidateResponse, error)
 	// CreateToken creates a token for the specified user
 	CreateToken(context.Context, *CreateTokenRequest) (*CreateTokenResponse, error)
+	// Identity extracts the identity from the request
+	Identity(context.Context, *definition.Empty) (*IdentityResponse, error)
 	mustEmbedUnimplementedAuthenticationV1Server()
 }
 
@@ -74,6 +88,9 @@ func (UnimplementedAuthenticationV1Server) Validate(context.Context, *ValidateRe
 }
 func (UnimplementedAuthenticationV1Server) CreateToken(context.Context, *CreateTokenRequest) (*CreateTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateToken not implemented")
+}
+func (UnimplementedAuthenticationV1Server) Identity(context.Context, *definition.Empty) (*IdentityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Identity not implemented")
 }
 func (UnimplementedAuthenticationV1Server) mustEmbedUnimplementedAuthenticationV1Server() {}
 
@@ -124,6 +141,24 @@ func _AuthenticationV1_CreateToken_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthenticationV1_Identity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(definition.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationV1Server).Identity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/authentication.AuthenticationV1/Identity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationV1Server).Identity(ctx, req.(*definition.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthenticationV1_ServiceDesc is the grpc.ServiceDesc for AuthenticationV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -138,6 +173,10 @@ var AuthenticationV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateToken",
 			Handler:    _AuthenticationV1_CreateToken_Handler,
+		},
+		{
+			MethodName: "Identity",
+			Handler:    _AuthenticationV1_Identity_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

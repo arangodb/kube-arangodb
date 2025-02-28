@@ -77,6 +77,22 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
+	cfg.Destinations[constants.EnvoyIdentityDestination] = gateway.ConfigDestination{
+		Type: util.NewType(gateway.ConfigDestinationTypeHTTP),
+		AuthExtension: &gateway.ConfigAuthZExtension{
+			AuthZExtension: map[string]string{
+				pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordFalse,
+				pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
+			},
+		},
+		Targets: gateway.ConfigDestinationTargets{
+			{
+				Host: "127.0.0.1",
+				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			},
+		},
+	}
+
 	gatewayCfgYaml, _, _, err := cfg.RenderYAML()
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
