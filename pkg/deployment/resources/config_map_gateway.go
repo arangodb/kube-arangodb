@@ -78,7 +78,9 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 	}
 
 	cfg.Destinations[constants.EnvoyIdentityDestination] = gateway.ConfigDestination{
-		Type: util.NewType(gateway.ConfigDestinationTypeHTTP),
+		Type:  util.NewType(gateway.ConfigDestinationTypeHTTP),
+		Match: util.NewType(gateway.ConfigMatchPath),
+		Path:  util.NewType("/_integration/authn/v1/identity"),
 		AuthExtension: &gateway.ConfigAuthZExtension{
 			AuthZExtension: map[string]string{
 				pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordFalse,

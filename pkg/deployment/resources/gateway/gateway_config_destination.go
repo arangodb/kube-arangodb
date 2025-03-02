@@ -66,6 +66,8 @@ type ConfigDestination struct {
 
 	Protocol *ConfigDestinationProtocol `json:"protocol,omitempty"`
 
+	Match *ConfigMatch `json:"match,omitempty"`
+
 	Path *string `json:"path,omitempty"`
 
 	AuthExtension *ConfigAuthZExtension `json:"authExtension,omitempty"`
@@ -91,6 +93,7 @@ func (c *ConfigDestination) Validate() error {
 		return shared.WithErrors(
 			shared.PrefixResourceError("type", c.Type.Validate()),
 			shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
+			shared.PrefixResourceError("pathType", shared.ValidateOptionalInterface(c.Match)),
 			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
 			shared.PrefixResourceError("static", shared.ValidateRequiredInterface(c.Static)),
 		)
@@ -101,6 +104,7 @@ func (c *ConfigDestination) Validate() error {
 			shared.PrefixResourceError("protocol", c.Protocol.Validate()),
 			shared.PrefixResourceError("tls", c.TLS.Validate()),
 			shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
+			shared.PrefixResourceError("pathType", shared.ValidateOptionalInterface(c.Match)),
 			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
 			shared.PrefixResourceError("upgradeConfigs", c.UpgradeConfigs.Validate()),
 			shared.PrefixResourceErrorFunc("timeout", func() error {
@@ -159,11 +163,7 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 	}
 
 	r := &routeAPI.Route{
-		Match: &routeAPI.RouteMatch{
-			PathSpecifier: &routeAPI.RouteMatch_Prefix{
-				Prefix: prefix,
-			},
-		},
+		Match:                c.Match.Match(prefix),
 		ResponseHeadersToAdd: headers,
 
 		TypedPerFilterConfig: tc,
