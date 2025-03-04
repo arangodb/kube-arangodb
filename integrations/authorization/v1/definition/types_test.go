@@ -24,31 +24,31 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
-func Test_State_Marshal(t *testing.T) {
-	s := Inventory{
-		Configuration: &InventoryConfiguration{
-			Hash: "xyz",
-		},
-		Arangodb: &ArangoDBConfiguration{
-			Mode:    ArangoDBMode_Cluster,
-			Edition: ArangoDBEdition_Enterprise,
-			Version: "1.2.3",
-		},
+func Test_ValidateActionName(t *testing.T) {
+	validate := func(valid bool, name string) {
+		t.Run(name, func(t *testing.T) {
+			if err := validateActionName(name); valid {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+			}
+		})
 	}
 
-	data, err := ugrpc.Marshal(&s)
-	require.NoError(t, err)
+	valid := func(name string) {
+		validate(true, name)
+	}
 
-	t.Log(string(data))
+	invalid := func(name string) {
+		validate(false, name)
+	}
 
-	res, err := ugrpc.Unmarshal[*Inventory](data)
-	require.NoError(t, err)
-
-	require.NotNil(t, res)
-
-	require.EqualValues(t, &s, res)
+	invalid("")
+	valid("test")
+	invalid("test.")
+	invalid(".test")
+	invalid(".test.")
+	invalid("x6z")
 }

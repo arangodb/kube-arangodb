@@ -1,6 +1,10 @@
 lint:
   rules:
     all_default: true
+    remove:
+      - ENUM_FIELD_NAMES_PREFIX
+      - ENUM_FIELD_NAMES_UPPER_SNAKE_CASE
+      - ENUM_FIELD_NAMES_ZERO_VALUE_END_WITH
   rules_option:
     max_line_length:
       max_chars: 128
