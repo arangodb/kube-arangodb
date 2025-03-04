@@ -58,7 +58,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 	}
 
 	cfg.Destinations[constants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
-		Type: util.NewType(gateway.ConfigDestinationTypeStatic),
+		Type:  util.NewType(gateway.ConfigDestinationTypeStatic),
+		Match: util.NewType(gateway.ConfigMatchPath),
 		AuthExtension: &gateway.ConfigAuthZExtension{
 			AuthZExtension: map[string]string{
 				pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordTrue,
@@ -74,6 +75,24 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 				Arangodb: pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus()),
 			},
 			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
+		},
+	}
+
+	cfg.Destinations[constants.EnvoyIdentityDestination] = gateway.ConfigDestination{
+		Type:  util.NewType(gateway.ConfigDestinationTypeHTTP),
+		Match: util.NewType(gateway.ConfigMatchPath),
+		Path:  util.NewType("/_integration/authn/v1/identity"),
+		AuthExtension: &gateway.ConfigAuthZExtension{
+			AuthZExtension: map[string]string{
+				pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordFalse,
+				pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
+			},
+		},
+		Targets: gateway.ConfigDestinationTargets{
+			{
+				Host: "127.0.0.1",
+				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			},
 		},
 	}
 

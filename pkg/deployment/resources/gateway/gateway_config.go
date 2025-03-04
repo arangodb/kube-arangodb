@@ -200,11 +200,11 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 			return nil, err
 		}
 		cluster := &clusterAPI.Cluster{
-			Name:           "integration_sidecar",
+			Name:           constants.EnvoyIntegrationSidecarCluster,
 			ConnectTimeout: durationpb.New(time.Second),
 			LbPolicy:       clusterAPI.Cluster_ROUND_ROBIN,
 			LoadAssignment: &endpointAPI.ClusterLoadAssignment{
-				ClusterName: "integration_sidecar",
+				ClusterName: constants.EnvoyIntegrationSidecarCluster,
 				Endpoints: []*endpointAPI.LocalityLbEndpoints{
 					{
 						LbEndpoints: []*endpointAPI.LbEndpoint{
@@ -260,8 +260,22 @@ func (c Config) RenderRoutes() ([]*routeAPI.Route, error) {
 		routes = append(routes, c)
 	}
 
-	sort.Slice(routes, func(i, j int) bool {
-		return routes[i].GetMatch().GetPrefix() > routes[j].GetMatch().GetPrefix()
+	sort.SliceStable(routes, func(i, j int) bool {
+		iPath := routes[i].GetMatch().GetPath()
+		iPrefix := routes[i].GetMatch().GetPrefix()
+
+		jPath := routes[j].GetMatch().GetPath()
+		jPrefix := routes[j].GetMatch().GetPrefix()
+
+		if iPath != "" && jPath != "" {
+			return iPath > jPath
+		} else if iPath == "" && jPath != "" {
+			return false
+		} else if iPath != "" && jPath == "" {
+			return true
+		} else {
+			return iPrefix > jPrefix
+		}
 	})
 
 	return routes, nil

@@ -16738,6 +16738,9 @@ v1beta1:
                       type: object
                   type: object
                 type: array
+              httpListenPort:
+                format: int32
+                type: integer
               image:
                 type: string
               imagePullPolicy:
