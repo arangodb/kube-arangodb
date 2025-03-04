@@ -24,6 +24,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"google.golang.org/protobuf/encoding/protojson"
+
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -32,7 +34,7 @@ type ConfigDestinationStaticInterface interface {
 	StaticResponse() ([]byte, uint32, error)
 }
 
-type ConfigDestinationStaticMarshaller[T any] func(in T) ([]byte, error)
+type ConfigDestinationStaticMarshaller[T any] func(in T, opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error)
 
 type ConfigDestinationStatic[T any] struct {
 	Code *uint32 `json:"insecure,omitempty"`

@@ -28,10 +28,14 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func Marshal[T proto.Message](in T) ([]byte, error) {
-	data, err := protojson.MarshalOptions{
+func Marshal[T proto.Message](in T, opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error) {
+	options := protojson.MarshalOptions{
 		UseProtoNames: true,
-	}.Marshal(in)
+	}
+
+	util.ApplyMods(&options, opts...)
+
+	data, err := options.Marshal(in)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +43,8 @@ func Marshal[T proto.Message](in T) ([]byte, error) {
 	return data, err
 }
 
-func MarshalYAML[T proto.Message](in T) ([]byte, error) {
-	data, err := Marshal[T](in)
+func MarshalYAML[T proto.Message](in T, opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error) {
+	data, err := Marshal[T](in, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,13 +53,17 @@ func MarshalYAML[T proto.Message](in T) ([]byte, error) {
 	return data, err
 }
 
-func Unmarshal[T proto.Message](data []byte) (T, error) {
+func Unmarshal[T proto.Message](data []byte, opts ...util.Mod[protojson.UnmarshalOptions]) (T, error) {
 	v, err := util.DeepType[T]()
 	if err != nil {
 		return util.Default[T](), err
 	}
 
-	if err := (protojson.UnmarshalOptions{}).Unmarshal(data, v); err != nil {
+	options := protojson.UnmarshalOptions{}
+
+	util.ApplyMods(&options, opts...)
+
+	if err := options.Unmarshal(data, v); err != nil {
 		return util.Default[T](), err
 	}
 
