@@ -137,6 +137,25 @@ func ValidateOptional[T any](in *T, validator func(T) error) error {
 	return nil
 }
 
+// ValidateOptionalNotEmpty Validates object that is not empty and required not nil value
+func ValidateOptionalNotEmpty[T any](in *T) error {
+	if in != nil {
+		v := reflect.ValueOf(*in)
+		if !v.IsValid() || v.IsZero() {
+			return errors.Errorf("should be not empty")
+		}
+
+		return nil
+	}
+
+	return nil
+}
+
+// ValidateOptionalNotEmptyPath Validates object that is not empty and required not nil value with path
+func ValidateOptionalNotEmptyPath[T any](path string, in *T) error {
+	return PrefixResourceError(path, ValidateOptionalNotEmpty(in))
+}
+
 // ValidateOptionalPath Validates object if is not nil
 func ValidateOptionalPath[T any](path string, in *T, validator func(T) error) error {
 	return PrefixResourceErrors(path, ValidateOptional(in, validator))
@@ -160,6 +179,25 @@ func ValidateRequired[T any](in *T, validator func(T) error) error {
 	}
 
 	return errors.Errorf("should be not nil")
+}
+
+// ValidateRequiredNotEmpty Validates object that is not empty and required not nil value
+func ValidateRequiredNotEmpty[T any](in *T) error {
+	if in != nil {
+		v := reflect.ValueOf(*in)
+		if !v.IsValid() || v.IsZero() {
+			return errors.Errorf("should be not empty")
+		}
+
+		return nil
+	}
+
+	return errors.Errorf("should be not nil")
+}
+
+// ValidateRequiredNotEmptyPath Validates object that is not empty and required not nil value with path
+func ValidateRequiredNotEmptyPath[T any](path string, in *T) error {
+	return PrefixResourceError(path, ValidateRequiredNotEmpty(in))
 }
 
 // ValidateRequiredPath Validates object and required not nil value
