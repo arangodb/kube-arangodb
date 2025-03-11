@@ -208,6 +208,7 @@ func (c *ConfigDestination) appendRouteAction(route *routeAPI.Route, name string
 			UpgradeConfigs: c.getUpgradeConfigs().render(),
 			PrefixRewrite:  c.GetPath(),
 			Timeout:        durationpb.New(c.GetTimeout()),
+			IdleTimeout:    durationpb.New(c.GetTimeout()),
 		},
 	}
 	return nil
