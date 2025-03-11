@@ -79,7 +79,10 @@ message AuthorizationV1Role {
 
   // Role Description
   string description = 2;
+}
 
-  // List of Role policies
-  repeated string policies = 3;
+// AuthorizationV1User defines the User
+message AuthorizationV1User {
+  // User Name
+  string name = 1;
 }
