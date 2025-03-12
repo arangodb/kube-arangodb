@@ -9,6 +9,7 @@
 - (Maintenance) Allow GRPC Marshal Opts
 - (Bugfix) Propagate Gateway Idle Timeout
 - (Feature) Update Authz V1 Definitions
+- (Feature) (Platform) Add Sharding to the Inventory Endpoint
 
 ## [1.2.46](https://github.com/arangodb/kube-arangodb/tree/1.2.46) (2025-02-24)
 - (Bugfix) Clean Phase change properly during upgrade
