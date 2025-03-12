@@ -25,14 +25,14 @@ require (
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb-helper/go-helper v0.4.2
 	github.com/arangodb/arangosync-client v0.9.0
-	github.com/arangodb/go-driver v1.6.1
-	github.com/arangodb/go-driver/v2 v2.0.3
+	github.com/arangodb/go-driver v1.6.6
+	github.com/arangodb/go-driver/v2 v2.1.3
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	//github.com/arangodb/rebalancer v0.1.1
 	//github.com/arangodb/go-agency-helper v0.3.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-semver v0.3.1
-	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
+	github.com/dchest/uniuri v1.2.0
 	github.com/envoyproxy/go-control-plane v0.13.1
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.9.1
@@ -50,7 +50,7 @@ require (
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/prom2json v1.3.3
 	github.com/robfig/cron v1.2.0
-	github.com/rs/zerolog v1.19.0
+	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.10.0
@@ -107,7 +107,7 @@ require (
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/dchest/siphash v1.2.2 // indirect
+	github.com/dchest/siphash v1.2.3 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/docker/cli v25.0.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
@@ -137,6 +137,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
@@ -166,7 +167,7 @@ require (
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
