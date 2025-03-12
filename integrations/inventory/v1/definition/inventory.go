@@ -21,8 +21,15 @@
 package definition
 
 import (
+	"strconv"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
+)
+
+const (
+	forceOneShardFlag = "--cluster.force-one-shard"
 )
 
 func (s *Inventory) JSON() ([]byte, error) {
@@ -55,5 +62,29 @@ func NewArangoDBConfiguration(spec api.DeploymentSpec, status api.DeploymentStat
 		cfg.Version = string(i.ArangoDBVersion)
 	}
 
+	if spec.GetMode() != api.DeploymentModeCluster {
+		cfg.Sharding = ArangoDBSharding_Sharded
+	} else {
+		cfg.Sharding = getShardingFromArgs(spec.Coordinators.Args...)
+	}
+
 	return &cfg
+}
+
+func getShardingFromArgs(args ...string) ArangoDBSharding {
+	for _, arg := range args {
+		if arg == forceOneShardFlag {
+			return ArangoDBSharding_OneShardEnforced
+		}
+
+		if v := strings.SplitN(arg, "=", 2); v[0] == forceOneShardFlag && len(v) == 2 {
+			if q, err := strconv.ParseBool(v[1]); err != nil {
+				continue
+			} else if q {
+				return ArangoDBSharding_OneShardEnforced
+			}
+		}
+	}
+
+	return ArangoDBSharding_Sharded
 }

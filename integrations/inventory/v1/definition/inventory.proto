@@ -56,6 +56,14 @@ enum ArangoDBEdition {
   Enterprise = 1;
 }
 
+// ArangoDB Sharding Mode
+enum ArangoDBSharding {
+  // Sharded Sharding Mode
+  Sharded = 0;
+  // OneShardEnforced Sharding Mode
+  OneShardEnforced = 1;
+}
+
 // ArangoDB Deployment Configuration
 message ArangoDBConfiguration {
   // ArangoDB Deployment Mode
@@ -64,4 +72,6 @@ message ArangoDBConfiguration {
   ArangoDBEdition edition = 2;
   // ArangoDB Deployment Version
   string version = 3;
+  // ArangoDB Sharding Mode
+  ArangoDBSharding sharding = 4;
 }

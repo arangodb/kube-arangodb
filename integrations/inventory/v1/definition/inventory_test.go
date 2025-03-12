@@ -21,6 +21,7 @@
 package definition
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,4 +52,14 @@ func Test_State_Marshal(t *testing.T) {
 	require.NotNil(t, res)
 
 	require.EqualValues(t, &s, res)
+}
+
+func Test_getShardingFromArgs(t *testing.T) {
+	require.EqualValues(t, ArangoDBSharding_Sharded, getShardingFromArgs())
+	require.EqualValues(t, ArangoDBSharding_OneShardEnforced, getShardingFromArgs(forceOneShardFlag))
+	require.EqualValues(t, ArangoDBSharding_OneShardEnforced, getShardingFromArgs("--test=el", forceOneShardFlag))
+	require.EqualValues(t, ArangoDBSharding_OneShardEnforced, getShardingFromArgs(fmt.Sprintf("%s=true", forceOneShardFlag)))
+	require.EqualValues(t, ArangoDBSharding_Sharded, getShardingFromArgs(fmt.Sprintf("%s=false", forceOneShardFlag)))
+	require.EqualValues(t, ArangoDBSharding_OneShardEnforced, getShardingFromArgs(fmt.Sprintf("%s=True", forceOneShardFlag)))
+	require.EqualValues(t, ArangoDBSharding_Sharded, getShardingFromArgs(fmt.Sprintf("%s=Unknown", forceOneShardFlag)))
 }
