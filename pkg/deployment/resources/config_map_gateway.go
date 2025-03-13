@@ -23,10 +23,10 @@ package resources
 import (
 	"context"
 	"fmt"
-	"google.golang.org/protobuf/encoding/protojson"
 	"path"
 	"path/filepath"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	core "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"

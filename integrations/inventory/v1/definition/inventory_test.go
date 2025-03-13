@@ -22,10 +22,10 @@ package definition
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/encoding/protojson"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
