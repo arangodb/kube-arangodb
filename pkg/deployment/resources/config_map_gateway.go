@@ -26,6 +26,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	core "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -75,6 +76,11 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 				Arangodb: pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus()),
 			},
 			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
+			Options: []util.Mod[protojson.MarshalOptions]{
+				func(in *protojson.MarshalOptions) {
+					in.EmitDefaultValues = true
+				},
+			},
 		},
 	}
 

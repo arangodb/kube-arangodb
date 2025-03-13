@@ -42,6 +42,8 @@ type ConfigDestinationStatic[T any] struct {
 	Response T `json:"response,omitempty"`
 
 	Marshaller ConfigDestinationStaticMarshaller[T] `json:"-"`
+
+	Options []util.Mod[protojson.MarshalOptions]
 }
 
 func (c *ConfigDestinationStatic[T]) Validate() error {
