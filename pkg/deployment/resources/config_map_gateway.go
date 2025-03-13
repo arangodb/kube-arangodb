@@ -23,6 +23,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"path"
 	"path/filepath"
 
@@ -75,6 +76,11 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 				Arangodb: pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus()),
 			},
 			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
+			Options: []util.Mod[protojson.MarshalOptions]{
+				func(in *protojson.MarshalOptions) {
+					in.EmitDefaultValues = true
+				},
+			},
 		},
 	}
 

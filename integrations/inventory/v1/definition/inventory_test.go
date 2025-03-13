@@ -22,6 +22,7 @@ package definition
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -35,13 +36,16 @@ func Test_State_Marshal(t *testing.T) {
 			Hash: "xyz",
 		},
 		Arangodb: &ArangoDBConfiguration{
-			Mode:    ArangoDBMode_Cluster,
-			Edition: ArangoDBEdition_Enterprise,
-			Version: "1.2.3",
+			Mode:     ArangoDBMode_Cluster,
+			Edition:  ArangoDBEdition_Enterprise,
+			Version:  "1.2.3",
+			Sharding: ArangoDBSharding_Sharded,
 		},
 	}
 
-	data, err := ugrpc.Marshal(&s)
+	data, err := ugrpc.Marshal(&s, func(in *protojson.MarshalOptions) {
+		in.EmitDefaultValues = true
+	})
 	require.NoError(t, err)
 
 	t.Log(string(data))
