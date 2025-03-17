@@ -23,28 +23,39 @@ package shared
 import (
 	"context"
 
-	"github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 )
 
+type Evaluator interface {
+	Evaluate(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error)
+}
+
 type Storage interface {
+	Evaluator
+
 	Init(ctx context.Context) error
 	Clean(ctx context.Context) error
 
-	GetRole(ctx context.Context, name string) (*definition.AuthorizationV1Role, error)
-	GetRoles(ctx context.Context) ([]*definition.AuthorizationV1Role, error)
+	GetRole(ctx context.Context, name string) (*pbAuthorizationV1.AuthorizationV1Role, error)
+	GetRoles(ctx context.Context) ([]*pbAuthorizationV1.AuthorizationV1Role, error)
 	DeleteRole(ctx context.Context, name string) error
 
-	RolePolicies(ctx context.Context, name string) ([]*definition.AuthorizationV1Policy, error)
+	RolePolicies(ctx context.Context, name string) ([]*pbAuthorizationV1.AuthorizationV1Policy, error)
 	AssignRoleToPolicy(ctx context.Context, role, policy string) error
+	DetachRoleFromPolicy(ctx context.Context, role, policy string) error
 
-	GetPolicy(ctx context.Context, name string) (*definition.AuthorizationV1Policy, error)
-	GetPolicies(ctx context.Context) ([]*definition.AuthorizationV1Policy, error)
+	UserPolicies(ctx context.Context, name string) ([]*pbAuthorizationV1.AuthorizationV1Policy, error)
+	AssignUserToPolicy(ctx context.Context, user, policy string) error
+	DetachUserFromPolicy(ctx context.Context, user, policy string) error
+
+	GetPolicy(ctx context.Context, name string) (*pbAuthorizationV1.AuthorizationV1Policy, error)
+	GetPolicies(ctx context.Context) ([]*pbAuthorizationV1.AuthorizationV1Policy, error)
 	DeletePolicy(ctx context.Context, name string) error
 
-	GetActions(ctx context.Context) ([]*definition.AuthorizationV1Action, error)
-	GetAction(ctx context.Context, name string) (*definition.AuthorizationV1Action, error)
+	GetActions(ctx context.Context) ([]*pbAuthorizationV1.AuthorizationV1Action, error)
+	GetAction(ctx context.Context, name string) (*pbAuthorizationV1.AuthorizationV1Action, error)
 
-	EnsurePolicies(ctx context.Context, actions ...*definition.AuthorizationV1Policy) error
-	EnsureActions(ctx context.Context, actions ...*definition.AuthorizationV1Action) error
-	EnsureRoles(ctx context.Context, roles ...*definition.AuthorizationV1Role) error
+	EnsurePolicies(ctx context.Context, actions ...*pbAuthorizationV1.AuthorizationV1Policy) error
+	EnsureActions(ctx context.Context, actions ...*pbAuthorizationV1.AuthorizationV1Action) error
+	EnsureRoles(ctx context.Context, roles ...*pbAuthorizationV1.AuthorizationV1Role) error
 }

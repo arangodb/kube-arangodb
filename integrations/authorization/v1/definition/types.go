@@ -70,7 +70,7 @@ func (x *AuthorizationV1Statement) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.ValidateRequiredInterfacePath("effect", x.Effect),
+		shared.ValidateOptionalInterfacePath("effect", x.Effect),
 		shared.ValidateRequiredNotEmptyPath("description", &x.Description),
 		shared.PrefixResourceError("actions", shared.ValidateList(x.Actions, func(s string) error {
 			return validateActionName(s)
