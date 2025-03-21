@@ -43,7 +43,7 @@ type ConfigDestinationStatic[T any] struct {
 
 	Marshaller ConfigDestinationStaticMarshaller[T] `json:"-"`
 
-	Options []util.Mod[protojson.MarshalOptions]
+	Options []util.Mod[protojson.MarshalOptions] `json:"-"`
 }
 
 func (c *ConfigDestinationStatic[T]) Validate() error {
@@ -67,7 +67,7 @@ func (c *ConfigDestinationStatic[T]) Marshall() ([]byte, error) {
 	if m := c.Marshaller; m == nil {
 		return json.Marshal(c.Response)
 	} else {
-		return m(c.Response)
+		return m(c.Response, c.Options...)
 	}
 }
 
