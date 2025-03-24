@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 
 package v2alpha1
 
+import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+
 type DeploymentUpgradeSpec struct {
 	// AutoUpgrade flag specifies if upgrade should be auto-injected, even if is not required (in case of stuck)
 	// +doc/default: false
@@ -28,6 +30,10 @@ type DeploymentUpgradeSpec struct {
 	// This applies only to init containers.
 	// +doc/default: false
 	DebugLog bool `json:"debugLog"`
+	// Order defines the Rotation order
+	// +doc/enum: coordinatorFirst|Runs restart of coordinators before DBServers.
+	// +doc/enum: standard|Default restart order.
+	Order *DeploymentSpecOrder `json:"order,omitempty"`
 }
 
 func (d *DeploymentUpgradeSpec) Get() DeploymentUpgradeSpec {
@@ -36,4 +42,26 @@ func (d *DeploymentUpgradeSpec) Get() DeploymentUpgradeSpec {
 	}
 
 	return *d
+}
+
+func (d *DeploymentUpgradeSpec) GetOrder(def *DeploymentSpecOrder) DeploymentSpecOrder {
+	if d == nil || d.Order == nil {
+		if def == nil {
+			return DeploymentSpecOrderStandard
+		}
+
+		return *def
+	}
+
+	return *d.Order
+}
+
+func (d *DeploymentUpgradeSpec) Validate() error {
+	if d == nil {
+		return nil
+	}
+
+	return shared.WithErrors(
+		shared.PrefixResourceError("order", shared.ValidateOptionalInterface(d.Order)),
+	)
 }

@@ -22,7 +22,6 @@ package reconcile
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -123,10 +122,7 @@ func (r *Reconciler) createRotateOrUpgradeDecision(spec api.DeploymentSpec, stat
 	d := updateUpgradeDecisionMap{}
 
 	// Init phase
-
-	upgradeOrder := util.BoolSwitch(features.UpgradeAlternativeOrder().Enabled(), alternativeUpgradeOrder, api.AllServerGroups)
-
-	for _, m := range status.Members.AsListInGroups(upgradeOrder...) {
+	for _, m := range status.Members.AsListInGroups(api.AllServerGroups...) {
 		d[newUpdateUpgradeDecisionItem(m.Group, m.Member.ID)] = r.createRotateOrUpgradeDecisionMember(spec.Mode.Get(), spec, status, context, m)
 	}
 

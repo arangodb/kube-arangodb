@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,36 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package v2alpha1
 
 import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
-type DeploymentUpgradeSpec struct {
-	// AutoUpgrade flag specifies if upgrade should be auto-injected, even if is not required (in case of stuck)
-	// +doc/default: false
-	AutoUpgrade bool `json:"autoUpgrade"`
-	// DebugLog flag specifies if containers running upgrade process should print more debugging information.
-	// This applies only to init containers.
-	// +doc/default: false
-	DebugLog bool `json:"debugLog"`
+type DeploymentRotateSpec struct {
 	// Order defines the Rotation order
 	// +doc/enum: coordinatorFirst|Runs restart of coordinators before DBServers.
 	// +doc/enum: standard|Default restart order.
 	Order *DeploymentSpecOrder `json:"order,omitempty"`
 }
 
-func (d *DeploymentUpgradeSpec) Get() DeploymentUpgradeSpec {
+func (d *DeploymentRotateSpec) Get() DeploymentRotateSpec {
 	if d == nil {
-		return DeploymentUpgradeSpec{}
+		return DeploymentRotateSpec{}
 	}
 
 	return *d
 }
 
-func (d *DeploymentUpgradeSpec) GetOrder(def *DeploymentSpecOrder) DeploymentSpecOrder {
+func (d *DeploymentRotateSpec) GetOrder(def *DeploymentSpecOrder) DeploymentSpecOrder {
 	if d == nil || d.Order == nil {
 		if def == nil {
-			return DeploymentSpecOrderStandard
+			return DeploymentSpecOrderCoordinatorFirst
 		}
 
 		return *def
@@ -56,7 +49,7 @@ func (d *DeploymentUpgradeSpec) GetOrder(def *DeploymentSpecOrder) DeploymentSpe
 	return *d.Order
 }
 
-func (d *DeploymentUpgradeSpec) Validate() error {
+func (d *DeploymentRotateSpec) Validate() error {
 	if d == nil {
 		return nil
 	}

@@ -35,7 +35,7 @@ func Test_EnsureGroupsContainsAll(t *testing.T) {
 	ensure := func(t *testing.T, groups ...api.ServerGroup) {
 		require.Equal(t, groups, util.UniqueList(groups))
 
-		for _, expected := range api.AllServerGroups {
+		for _, expected := range api.allServerGroups {
 			t.Run(expected.AsRole(), func(t *testing.T) {
 				require.Contains(t, groups, expected)
 			})

@@ -10209,6 +10209,16 @@ v1:
                     type: string
                 type: object
             type: object
+          rotate:
+            description: Rotate allows to configure rotate-related options
+            properties:
+              order:
+                description: Order defines the Rotation order
+                enum:
+                  - coordinatorFirst
+                  - standard
+                type: string
+            type: object
           single:
             description: Single contains specification for servers running in deployment mode `Single` or `ActiveFailover`.
             properties:
@@ -17045,6 +17055,12 @@ v1:
                   DebugLog flag specifies if containers running upgrade process should print more debugging information.
                   This applies only to init containers.
                 type: boolean
+              order:
+                description: Order defines the Rotation order
+                enum:
+                  - coordinatorFirst
+                  - standard
+                type: string
             type: object
         type: object
       status:
@@ -27263,6 +27279,16 @@ v2alpha1:
                     type: string
                 type: object
             type: object
+          rotate:
+            description: Rotate allows to configure rotate-related options
+            properties:
+              order:
+                description: Order defines the Rotation order
+                enum:
+                  - coordinatorFirst
+                  - standard
+                type: string
+            type: object
           single:
             description: Single contains specification for servers running in deployment mode `Single` or `ActiveFailover`.
             properties:
@@ -34099,6 +34125,12 @@ v2alpha1:
                   DebugLog flag specifies if containers running upgrade process should print more debugging information.
                   This applies only to init containers.
                 type: boolean
+              order:
+                description: Order defines the Rotation order
+                enum:
+                  - coordinatorFirst
+                  - standard
+                type: string
             type: object
         type: object
       status:
