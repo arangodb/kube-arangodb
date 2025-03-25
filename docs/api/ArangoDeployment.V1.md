@@ -8039,9 +8039,9 @@ Default Value: `false`
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L36)</sup>
 
-Order defines the Rotation order
+Order defines the Upgrade order
 
 Possible Values: 
-* `"coordinatorFirst"` (default) - Runs restart of coordinators before DBServers.
-* `"standard"` - Default restart order.
+* `"standard"` (default) - Default restart order.
+* `"coordinatorFirst"` - Runs restart of coordinators before DBServers.
 

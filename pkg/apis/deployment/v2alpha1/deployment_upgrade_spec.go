@@ -30,9 +30,9 @@ type DeploymentUpgradeSpec struct {
 	// This applies only to init containers.
 	// +doc/default: false
 	DebugLog bool `json:"debugLog"`
-	// Order defines the Rotation order
-	// +doc/enum: coordinatorFirst|Runs restart of coordinators before DBServers.
+	// Order defines the Upgrade order
 	// +doc/enum: standard|Default restart order.
+	// +doc/enum: coordinatorFirst|Runs restart of coordinators before DBServers.
 	Order *DeploymentSpecOrder `json:"order,omitempty"`
 }
 
