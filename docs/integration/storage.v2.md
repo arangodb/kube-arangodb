@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Storage V2
-parent: Integration Sidecars
+title: Integration Sidecar Storage V2
+parent: ArangoDBPlatform
 ---
 
 # Storage V2

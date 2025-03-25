@@ -21,6 +21,8 @@
 package reconcile
 
 import (
+	"github.com/arangodb/go-driver"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -43,6 +45,24 @@ type updateUpgradeDecisionItem struct {
 }
 
 type updateUpgradeDecisionMap map[updateUpgradeDecisionItem]updateUpgradeDecision
+
+func (u updateUpgradeDecisionMap) GetFromToVersion() (from driver.Version, to driver.Version) {
+	for _, el := range u {
+		if !el.upgradeDecision.UpgradeNeeded {
+			continue
+		}
+
+		if from == "" || from.CompareTo(el.upgradeDecision.FromVersion) > 0 {
+			from = el.upgradeDecision.FromVersion
+		}
+
+		if to == "" || to.CompareTo(el.upgradeDecision.ToVersion) < 0 {
+			to = el.upgradeDecision.ToVersion
+		}
+	}
+
+	return
+}
 
 func (u updateUpgradeDecisionMap) AreGroupsPendingUpgrade(groups ...api.ServerGroup) bool {
 	for _, group := range groups {
