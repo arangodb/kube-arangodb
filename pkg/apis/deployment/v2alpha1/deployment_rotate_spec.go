@@ -20,7 +20,7 @@
 
 package v2alpha1
 
-import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
 type DeploymentRotateSpec struct {
 	// Order defines the Rotation order

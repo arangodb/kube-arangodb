@@ -20,7 +20,7 @@
 
 package v2alpha1
 
-import "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
 type DeploymentUpgradeSpec struct {
 	// AutoUpgrade flag specifies if upgrade should be auto-injected, even if is not required (in case of stuck)
