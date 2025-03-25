@@ -13,6 +13,7 @@
 - (Feature) Emit Default values in Inventory
 - (Maintenance) Bump github.com/containerd/containerd to v1.7.27
 - (Feature) Rotation Order
+- (Maintenance) Coordinator Health issue upgrade procedure
 
 ## [1.2.46](https://github.com/arangodb/kube-arangodb/tree/1.2.46) (2025-02-24)
 - (Bugfix) Clean Phase change properly during upgrade

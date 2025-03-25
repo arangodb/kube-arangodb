@@ -238,7 +238,8 @@ func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObj
 }
 
 func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap, agencyCache state.State) (api.Plan, bool) {
-	upgradeOrder := getUpgradeOrder(spec).Groups()
+	from, to := decision.GetFromToVersion()
+	upgradeOrder := getUpgradeOrder(spec, from, to).Groups()
 
 	for _, group := range upgradeOrder {
 		for _, m := range status.Members.AsListInGroup(group) {
@@ -610,7 +611,13 @@ func waitForMemberActions(group api.ServerGroup, member api.MemberStatus) api.Pl
 	}
 }
 
-func getUpgradeOrder(spec api.DeploymentSpec) api.DeploymentSpecOrder {
+func getUpgradeOrder(spec api.DeploymentSpec, from, to driver.Version) api.DeploymentSpecOrder {
+	if upgrade := spec.Upgrade; upgrade == nil || upgrade.Order == nil {
+		if to.CompareTo("3.12.4") >= 0 && from.CompareTo("3.12.4") < 0 && from.CompareTo("3.12.0") >= 0 && from != "" && to != "" {
+			return api.DeploymentSpecOrderCoordinatorFirst
+		}
+	}
+
 	return util.BoolSwitch(features.UpgradeAlternativeOrder().Enabled(), api.DeploymentSpecOrderCoordinatorFirst, spec.Upgrade.GetOrder(util.NewType(api.DeploymentSpecOrderStandard)))
 }
 

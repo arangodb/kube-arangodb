@@ -1,9 +1,8 @@
 ---
 layout: page
-has_children: true
 title: Integration Sidecars
 parent: ArangoDBPlatform
-has_toc: false
+nav_order: 1
 ---
 
 # Integration 

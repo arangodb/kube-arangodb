@@ -23,6 +23,7 @@ package reconcile
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/go-driver"
@@ -108,4 +109,15 @@ func Test_RotateUpgrade_Condition(t *testing.T) {
 			c.verify(t, r.podNeedsUpgrading(c.spec.Mode.Get(), c.status, c.spec, c.images))
 		})
 	}
+}
+
+func Test_getUpgradeOrder(t *testing.T) {
+	assert.EqualValues(t, api.DeploymentSpecOrderStandard, getUpgradeOrder(api.DeploymentSpec{}, "", ""))
+	assert.EqualValues(t, api.DeploymentSpecOrderStandard, getUpgradeOrder(api.DeploymentSpec{}, "3.11.0", "3.12.4"))
+	assert.EqualValues(t, api.DeploymentSpecOrderCoordinatorFirst, getUpgradeOrder(api.DeploymentSpec{}, "3.12.0", "3.12.4"))
+	assert.EqualValues(t, api.DeploymentSpecOrderCoordinatorFirst, getUpgradeOrder(api.DeploymentSpec{}, "3.12.1", "3.12.4"))
+	assert.EqualValues(t, api.DeploymentSpecOrderCoordinatorFirst, getUpgradeOrder(api.DeploymentSpec{}, "3.12.2", "3.12.4"))
+	assert.EqualValues(t, api.DeploymentSpecOrderCoordinatorFirst, getUpgradeOrder(api.DeploymentSpec{}, "3.12.3", "3.12.4"))
+	assert.EqualValues(t, api.DeploymentSpecOrderStandard, getUpgradeOrder(api.DeploymentSpec{}, "3.12.4", "3.12.4"))
+	assert.EqualValues(t, api.DeploymentSpecOrderStandard, getUpgradeOrder(api.DeploymentSpec{}, "3.12.4", "3.12.5"))
 }
