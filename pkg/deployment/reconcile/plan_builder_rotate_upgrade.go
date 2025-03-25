@@ -40,30 +40,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-var (
-	// rotationByAnnotationOrder - Change order of execution - Coordinators and Agents should be executed before DBServer to save time
-	rotationByAnnotationOrder = []api.ServerGroup{
-		api.ServerGroupAgents,
-		api.ServerGroupSingle,
-		api.ServerGroupCoordinators,
-		api.ServerGroupDBServers,
-		api.ServerGroupSyncMasters,
-		api.ServerGroupSyncWorkers,
-		api.ServerGroupGateways,
-	}
-
-	// alternativeUpgradeOrder contains execution order which enforce upgrade of Coordinators before DBServers
-	alternativeUpgradeOrder = []api.ServerGroup{
-		api.ServerGroupAgents,
-		api.ServerGroupSingle,
-		api.ServerGroupCoordinators,
-		api.ServerGroupDBServers,
-		api.ServerGroupSyncMasters,
-		api.ServerGroupSyncWorkers,
-		api.ServerGroupGateways,
-	}
-)
-
 // upgradeDecision is the result of an upgrade check.
 type upgradeDecision struct {
 	FromVersion       driver.Version
@@ -98,7 +74,7 @@ func (r *Reconciler) createMarkToRemovePlan(ctx context.Context, apiObject k8sut
 	context PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
-	for _, e := range status.Members.AsListInGroups(rotationByAnnotationOrder...) {
+	for _, e := range status.Members.AsListInGroups(spec.Rotate.GetOrder(nil).Groups()...) {
 		m := e.Member
 		group := e.Group
 		if m.Phase != api.MemberPhaseCreated || m.Pod.GetName() == "" {
@@ -179,8 +155,7 @@ func (r *Reconciler) createUpdatePlanInternalCondition(apiObject k8sutil.APIObje
 
 func (r *Reconciler) createUpdatePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, decision updateUpgradeDecisionMap, context PlanBuilderContext, agencyCache state.State) (api.Plan, bool) {
 	// Update phase
-
-	for _, m := range status.Members.AsList() {
+	for _, m := range status.Members.AsListInGroups(getRotateOrder(spec).Groups()...) {
 		d := decision[newUpdateUpgradeDecisionItemFromElement(m)]
 		if !d.update {
 			continue
@@ -263,7 +238,7 @@ func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObj
 }
 
 func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap, agencyCache state.State) (api.Plan, bool) {
-	upgradeOrder := util.BoolSwitch(features.UpgradeAlternativeOrder().Enabled(), alternativeUpgradeOrder, api.AllServerGroups)
+	upgradeOrder := getUpgradeOrder(spec).Groups()
 
 	for _, group := range upgradeOrder {
 		for _, m := range status.Members.AsListInGroup(group) {
@@ -633,4 +608,12 @@ func waitForMemberActions(group api.ServerGroup, member api.MemberStatus) api.Pl
 		actions.NewAction(api.ActionTypeWaitForMemberReady, group, member, "Wait for member pod to be ready after creation"),
 		actions.NewAction(api.ActionTypeWaitForMemberInSync, group, member, "Wait for member to be in sync after creation"),
 	}
+}
+
+func getUpgradeOrder(spec api.DeploymentSpec) api.DeploymentSpecOrder {
+	return util.BoolSwitch(features.UpgradeAlternativeOrder().Enabled(), api.DeploymentSpecOrderCoordinatorFirst, spec.Upgrade.GetOrder(util.NewType(api.DeploymentSpecOrderStandard)))
+}
+
+func getRotateOrder(spec api.DeploymentSpec) api.DeploymentSpecOrder {
+	return spec.Rotate.GetOrder(nil)
 }

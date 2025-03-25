@@ -31,24 +31,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func Test_EnsureGroupsContainsAll(t *testing.T) {
-	ensure := func(t *testing.T, groups ...api.ServerGroup) {
-		require.Equal(t, groups, util.UniqueList(groups))
-
-		for _, expected := range api.AllServerGroups {
-			t.Run(expected.AsRole(), func(t *testing.T) {
-				require.Contains(t, groups, expected)
-			})
-		}
-	}
-	t.Run("rotationByAnnotationOrder", func(t *testing.T) {
-		ensure(t, rotationByAnnotationOrder...)
-	})
-	t.Run("alternativeUpgradeOrder", func(t *testing.T) {
-		ensure(t, alternativeUpgradeOrder...)
-	})
-}
-
 func Test_RotateUpgrade_Condition(t *testing.T) {
 	type testCase struct {
 		status api.MemberStatus

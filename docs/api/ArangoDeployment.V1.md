@@ -952,7 +952,7 @@ Links:
 
 ### .spec.allowUnsafeUpgrade
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L152)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L155)</sup>
 
 AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
 
@@ -960,7 +960,7 @@ AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync s
 
 ### .spec.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L115)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L118)</sup>
 
 Annotations specifies the annotations added to all ArangoDeployment owned resources (pods, services, PVC’s, PDB’s).
 
@@ -968,7 +968,7 @@ Annotations specifies the annotations added to all ArangoDeployment owned resour
 
 ### .spec.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L118)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L121)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -976,7 +976,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L124)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L127)</sup>
 
 AnnotationsMode defines annotations mode which should be use while overriding annotations.
 
@@ -989,7 +989,7 @@ Possible Values:
 
 ### .spec.architecture
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L257)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L260)</sup>
 
 Architecture defines the list of supported architectures.
 First element on the list is marked as default architecture.
@@ -1066,7 +1066,7 @@ KillPodProbability is the chance of a pod being killed during an event
 
 ### .spec.ClusterDomain
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L229)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L232)</sup>
 
 ClusterDomain define domain used in the kubernetes cluster.
 Required only of domain is not set to default (cluster.local)
@@ -1077,7 +1077,7 @@ Default Value: `cluster.local`
 
 ### .spec.communicationMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L237)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L240)</sup>
 
 CommunicationMethod define communication method used in deployment
 
@@ -4565,7 +4565,7 @@ might be configured in the container image.
 
 ### .spec.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L127)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L130)</sup>
 
 Labels specifies the labels added to Pods in this group.
 
@@ -4573,7 +4573,7 @@ Labels specifies the labels added to Pods in this group.
 
 ### .spec.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L130)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L133)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -4581,7 +4581,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L136)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L139)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -4615,7 +4615,7 @@ Links:
 
 ### .spec.memberPropagationMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L212)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L215)</sup>
 
 MemberPropagationMode defines how changes to pod spec should be propogated.
 Changes to a pod’s configuration require a restart of that pod in almost all cases.
@@ -4751,7 +4751,7 @@ This field is **immutable**: Change of the ArangoDeployment Mode is not possible
 
 ### .spec.networkAttachedVolumes
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L112)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L115)</sup>
 
 NetworkAttachedVolumes
 If set to `true`, a ResignLeadership operation will be triggered when a DB-Server pod is evicted (rather than a CleanOutServer operation).
@@ -4802,7 +4802,7 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .spec.restoreEncryptionSecret
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L149)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L152)</sup>
 
 RestoreEncryptionSecret specifies optional name of secret which contains encryption key used for restore
 
@@ -4810,7 +4810,7 @@ RestoreEncryptionSecret specifies optional name of secret which contains encrypt
 
 ### .spec.restoreFrom
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L146)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L149)</sup>
 
 RestoreFrom setting specifies a `ArangoBackup` resource name the cluster should be restored from.
 After a restore or failure to do so, the status of the deployment contains information about the restore operation in the restore key.
@@ -4833,6 +4833,18 @@ The default value is empty.
 This requires the Enterprise Edition.
 The encryption key cannot be changed after the cluster has been created.
 The secret specified by this setting, must have a data field named 'key' containing an encryption key that is exactly 32 bytes long.
+
+***
+
+### .spec.rotate.order
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_rotate_spec.go#L29)</sup>
+
+Order defines the Rotation order
+
+Possible Values: 
+* `"coordinatorFirst"` (default) - Runs restart of coordinators before DBServers.
+* `"standard"` - Default restart order.
 
 ***
 
@@ -7912,7 +7924,7 @@ MaintenanceGracePeriod action timeout
 
 ### .spec.timezone
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L261)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_spec.go#L264)</sup>
 
 Timezone if specified, will set a timezone for deployment.
 Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/London`
@@ -8004,7 +8016,7 @@ Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .spec.upgrade.autoUpgrade
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L26)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L28)</sup>
 
 AutoUpgrade flag specifies if upgrade should be auto-injected, even if is not required (in case of stuck)
 
@@ -8014,10 +8026,22 @@ Default Value: `false`
 
 ### .spec.upgrade.debugLog
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L30)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L32)</sup>
 
 DebugLog flag specifies if containers running upgrade process should print more debugging information.
 This applies only to init containers.
 
 Default Value: `false`
+
+***
+
+### .spec.upgrade.order
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.46/pkg/apis/deployment/v1/deployment_upgrade_spec.go#L36)</sup>
+
+Order defines the Upgrade order
+
+Possible Values: 
+* `"standard"` (default) - Default restart order.
+* `"coordinatorFirst"` - Runs restart of coordinators before DBServers.
 
