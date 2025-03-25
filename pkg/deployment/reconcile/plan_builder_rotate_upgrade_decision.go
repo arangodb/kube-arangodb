@@ -48,7 +48,7 @@ type updateUpgradeDecisionMap map[updateUpgradeDecisionItem]updateUpgradeDecisio
 
 func (u updateUpgradeDecisionMap) GetFromToVersion() (from driver.Version, to driver.Version) {
 	for _, el := range u {
-		if !el.upgradeDecision.UpgradeNeeded {
+		if !el.upgrade || !el.upgradeDecision.UpgradeNeeded {
 			continue
 		}
 
