@@ -34126,10 +34126,10 @@ v2alpha1:
                   This applies only to init containers.
                 type: boolean
               order:
-                description: Order defines the Rotation order
+                description: Order defines the Upgrade order
                 enum:
-                  - coordinatorFirst
                   - standard
+                  - coordinatorFirst
                 type: string
             type: object
         type: object
