@@ -267,6 +267,10 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 			}
 
 			if target := at.Status.Target; target != nil {
+				if target.Route.Path == "" {
+					log.Warn("ArangoRoute Route Path not defined")
+					return nil
+				}
 				var dest gateway.ConfigDestination
 				if destinations := target.Destinations; len(destinations) > 0 {
 					for _, destination := range destinations {
@@ -307,7 +311,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				dest.ResponseHeaders = map[string]string{
 					constants.EnvoyRouteHeader: at.GetName(),
 				}
-				cfg.Destinations[at.Spec.GetRoute().GetPath()] = dest
+				cfg.Destinations[target.Route.Path] = dest
 			}
 
 			return nil
