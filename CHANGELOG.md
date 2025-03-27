@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.2.47](https://github.com/arangodb/kube-arangodb/tree/1.2.47) (2025-03-28)
 - (Bugfix) Use Profile Annotations
 - (Bugfix) Improve Wait Procedure on AF
 - (Feature) (Platform) Generate GRPC Gateway Code
