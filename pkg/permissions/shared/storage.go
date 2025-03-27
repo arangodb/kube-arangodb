@@ -48,6 +48,10 @@ type Storage interface {
 	AssignUserToPolicy(ctx context.Context, user, policy string) error
 	DetachUserFromPolicy(ctx context.Context, user, policy string) error
 
+	UserRoles(ctx context.Context, name string) ([]*pbAuthorizationV1.AuthorizationV1Role, error)
+	AssignUserToRole(ctx context.Context, user, role string) error
+	DetachUserFromRole(ctx context.Context, user, role string) error
+
 	GetPolicy(ctx context.Context, name string) (*pbAuthorizationV1.AuthorizationV1Policy, error)
 	GetPolicies(ctx context.Context) ([]*pbAuthorizationV1.AuthorizationV1Policy, error)
 	DeletePolicy(ctx context.Context, name string) error

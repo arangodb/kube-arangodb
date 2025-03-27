@@ -28,12 +28,13 @@ import (
 )
 
 var (
-	actionNameRE = regexp.MustCompile(`^[a-z]+(\.[a-z]+)*$`)
+	actionName   = `^[a-z_]+(\.[a-z_]+)*$`
+	actionNameRE = regexp.MustCompile(actionName)
 )
 
 func validateActionName(name string) error {
 	if !actionNameRE.MatchString(name) {
-		return errors.Errorf("Action `%s` does not match the regex", name)
+		return errors.Errorf("Action `%s` does not match the regex `%s`", name, actionName)
 	}
 
 	return nil
