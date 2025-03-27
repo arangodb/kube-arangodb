@@ -14,6 +14,7 @@
 - (Maintenance) Bump github.com/containerd/containerd to v1.7.27
 - (Feature) Rotation Order
 - (Maintenance) Coordinator Health issue upgrade procedure
+- (Maintenance) Bump github.com/golang-jwt/jwt/v5 to v5.2.2
 
 ## [1.2.46](https://github.com/arangodb/kube-arangodb/tree/1.2.46) (2025-02-24)
 - (Bugfix) Clean Phase change properly during upgrade
