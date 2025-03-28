@@ -40,6 +40,16 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ***
 
+### .spec.overrides.args
+
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L43)</sup>
+
+Args setting specifies additional command-line arguments passed to specific member added at the end.
+
+Default Value: `[]`
+
+***
+
 ### .spec.overrides.resources
 
 Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/arango_member_spec_overrides.go#L38)</sup>

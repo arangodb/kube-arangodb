@@ -21,6 +21,11 @@ v1:
           overrides:
             description: Overrides define Member Overrides (Override values from ServerGroup).
             properties:
+              args:
+                description: Args setting specifies additional command-line arguments passed to specific member added at the end.
+                items:
+                  type: string
+                type: array
               resources:
                 description: Resources holds resource requests & limits. Overrides template provided on the group level.
                 properties:
@@ -3241,6 +3246,11 @@ v2alpha1:
           overrides:
             description: Overrides define Member Overrides (Override values from ServerGroup).
             properties:
+              args:
+                description: Args setting specifies additional command-line arguments passed to specific member added at the end.
+                items:
+                  type: string
+                type: array
               resources:
                 description: Resources holds resource requests & limits. Overrides template provided on the group level.
                 properties:

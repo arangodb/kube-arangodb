@@ -32,7 +32,6 @@ import (
 	"sync"
 
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -139,11 +138,7 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 		options.Add("--cluster.my-role", "PRIMARY")
 		options.Add("--foxx.queues", false)
 		options.Add("--server.statistics", "true")
-		imageInfo := api.ImageInfo{
-			ArangoDBVersion: input.Version,
-			Enterprise:      input.Enterprise,
-		}
-		if IsServerProgressAvailable(input.Group, imageInfo) {
+		if IsServerProgressAvailable(input.Group, input.Image) {
 			options.Add("--server.early-connections", "true")
 		}
 	case api.ServerGroupCoordinators:
@@ -183,8 +178,12 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 	}
 
 	args := options.Copy().Sort().AsArgs()
-	if len(input.GroupSpec.Args) > 0 {
-		args = append(args, input.GroupSpec.Args...)
+
+	if a := input.GroupSpec.Args; len(a) > 0 {
+		args = append(args, a...)
+	}
+	if a := input.ArangoMember.Spec.Overrides.GetArgs(); len(a) > 0 {
+		args = append(args, a...)
 	}
 
 	return args, nil
@@ -229,49 +228,50 @@ func withArangodNumactl(spec api.ServerGroupSpec, args ...string) []string {
 }
 
 // createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group api.ServerGroup,
-	groupSpec api.ServerGroupSpec, member api.MemberStatus) []string {
+func createArangoSyncArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	var runCmd string
-	port := groupSpec.GetPort()
+	port := input.GroupSpec.GetPort()
 
-	if spec.Sync.Monitoring.GetTokenSecretName() != "" {
+	if input.Deployment.Sync.Monitoring.GetTokenSecretName() != "" {
 		options.Addf("--monitoring.token", "$(%s)", constants.EnvArangoSyncMonitoringToken)
 	}
 	masterSecretPath := filepath.Join(shared.MasterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 	options.Add("--master.jwt-secret", masterSecretPath)
 
 	var masterEndpoint []string
-	switch group {
+	switch input.Group {
 	case api.ServerGroupSyncMasters:
 		runCmd = "master"
-		masterEndpoint = spec.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain), int(port))
+		masterEndpoint = input.Deployment.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain), int(port))
 		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
 		clientCAPath := filepath.Join(shared.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
 		options.Add("--server.keyfile", keyPath)
 		options.Add("--server.client-cafile", clientCAPath)
 		options.Add("--mq.type", "direct")
-		if spec.IsAuthenticated() {
+		if input.Deployment.IsAuthenticated() {
 			clusterSecretPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
 			options.Add("--cluster.jwt-secret", clusterSecretPath)
 		}
-		dbServiceName := k8sutil.CreateDatabaseClientServiceName(apiObject.GetName())
+		dbServiceName := k8sutil.CreateDatabaseClientServiceName(input.ApiObject.GetName())
 		scheme := "http"
-		if spec.IsSecure() {
+		if input.Deployment.IsSecure() {
 			scheme = "https"
 		}
 		options.Addf("--cluster.endpoint", "%s://%s:%d", scheme, dbServiceName, shared.ArangoPort)
 	case api.ServerGroupSyncWorkers:
 		runCmd = "worker"
-		masterEndpointHost := k8sutil.CreateSyncMasterClientServiceName(apiObject.GetName())
+		masterEndpointHost := k8sutil.CreateSyncMasterClientServiceName(input.ApiObject.GetName())
 		masterEndpoint = []string{"https://" + net.JoinHostPort(masterEndpointHost, strconv.Itoa(shared.ArangoSyncMasterPort))}
 	}
 	for _, ep := range masterEndpoint {
 		options.Add("--master.endpoint", ep)
 	}
-	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(apiObject, spec.ClusterDomain, group.AsRole(), member.ID), strconv.Itoa(int(port)))
+	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, input.Group.AsRole(), input.Member.ID), strconv.Itoa(int(port)))
 	options.Add("--server.endpoint", serverEndpoint)
 	options.Add("--server.port", strconv.Itoa(int(port)))
+
+	options.Append(additionalOptions...)
 
 	args := []string{
 		"run",
@@ -280,8 +280,11 @@ func createArangoSyncArgs(apiObject meta.Object, spec api.DeploymentSpec, group 
 
 	args = append(args, options.Copy().Sort().AsArgs()...)
 
-	if len(groupSpec.Args) > 0 {
-		args = append(args, groupSpec.Args...)
+	if a := input.GroupSpec.Args; len(a) > 0 {
+		args = append(args, a...)
+	}
+	if a := input.ArangoMember.Spec.Overrides.GetArgs(); len(a) > 0 {
+		args = append(args, a...)
 	}
 
 	return args
@@ -298,8 +301,12 @@ func createArangoGatewayArgs(input pod.Input, additionalOptions ...k8sutil.Optio
 	options.Append(additionalOptions...)
 
 	args := options.Sort().AsSplittedArgs()
-	if len(input.GroupSpec.Args) > 0 {
-		args = append(args, input.GroupSpec.Args...)
+
+	if a := input.GroupSpec.Args; len(a) > 0 {
+		args = append(args, a...)
+	}
+	if a := input.ArangoMember.Spec.Overrides.GetArgs(); len(a) > 0 {
+		args = append(args, a...)
 	}
 
 	return args
@@ -358,25 +365,28 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 
 	podName := k8sutil.CreatePodName(apiObject.GetName(), roleAbbr, m.ID, CreatePodSuffix(spec))
 
+	input := pod.Input{
+		ApiObject:    r.context.GetAPIObject(),
+		Deployment:   spec,
+		Status:       status,
+		GroupSpec:    groupSpec,
+		Group:        group,
+		Image:        imageInfo,
+		Member:       m,
+		ArangoMember: *member,
+		AutoUpgrade:  m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade,
+	}
+
 	var podCreator interfaces.PodCreator
 	switch group.Type() {
 	case api.ServerGroupTypeArangoD:
 		// Prepare arguments
-		autoUpgrade := m.Conditions.IsTrue(api.ConditionTypeAutoUpgrade) || spec.Upgrade.Get().AutoUpgrade
-
 		podCreator = &MemberArangoDPod{
-			podName:          podName,
-			status:           m,
-			groupSpec:        groupSpec,
-			spec:             spec,
-			group:            group,
-			resources:        r,
-			imageInfo:        imageInfo,
-			context:          r.context,
-			autoUpgrade:      autoUpgrade,
-			deploymentStatus: status,
-			arangoMember:     *member,
-			cachedStatus:     cache,
+			Input:        input,
+			podName:      podName,
+			resources:    r,
+			context:      r.context,
+			cachedStatus: cache,
 		}
 	case api.ServerGroupTypeArangoSync:
 		// Check image
@@ -391,15 +401,10 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 		}
 
 		podCreator = &MemberSyncPod{
+			Input: input,
+
 			podName:      podName,
-			groupSpec:    groupSpec,
-			spec:         spec,
-			group:        group,
 			resources:    r,
-			imageInfo:    imageInfo,
-			arangoMember: *member,
-			apiObject:    apiObject,
-			memberStatus: m,
 			cachedStatus: cache,
 		}
 	case api.ServerGroupTypeGateway:
@@ -409,17 +414,11 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 		}
 
 		podCreator = &MemberGatewayPod{
-			podName:          podName,
-			status:           m,
-			groupSpec:        groupSpec,
-			spec:             spec,
-			group:            group,
-			resources:        r,
-			imageInfo:        imageInfo,
-			context:          r.context,
-			deploymentStatus: status,
-			arangoMember:     *member,
-			cachedStatus:     cache,
+			Input:        input,
+			podName:      podName,
+			resources:    r,
+			context:      r.context,
+			cachedStatus: cache,
 		}
 	default:
 		return nil, assertion.InvalidGroupKey.Assert(true, "Unable to render pod for an unknown group: %s", group.AsRole())
