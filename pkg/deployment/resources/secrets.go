@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -105,7 +105,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 
 	if spec.IsAuthenticated() {
 		if imageFound {
-			if pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
+			if features.JWTRotation().ImageSupported(image) {
 				if err := r.ensureTokenSecretFolder(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
 					return errors.Section(err, "JWT Folder")
 				}
@@ -113,7 +113,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 		}
 
 		if spec.Metrics.IsEnabled() {
-			if imageFound && pod.VersionHasJWTSecretKeyfolder(image.ArangoDBVersion, image.Enterprise) {
+			if imageFound && features.JWTRotation().ImageSupported(image) {
 				if err := reconcileRequired.WithError(r.ensureExporterTokenSecret(ctx, cachedStatus, secrets, spec.Metrics.GetJWTTokenSecretName(), pod.JWTSecretFolder(deploymentName))); err != nil {
 					return errors.Section(err, "Metrics JWT")
 				}

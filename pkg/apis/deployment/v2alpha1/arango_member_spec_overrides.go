@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,11 @@ type ArangoMemberSpecOverrides struct {
 	// +doc/type: core.ResourceRequirements
 	// +doc/link: Documentation of core.ResourceRequirements|https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core
 	Resources core.ResourceRequirements `json:"resources,omitempty"`
+
+	// Args setting specifies additional command-line arguments passed to specific member added at the end.
+	// +doc/type: []string
+	// +doc/default: []
+	Args Arguments `json:"args,omitempty"`
 }
 
 func (a *ArangoMemberSpecOverrides) HasVolumeClaimTemplate(g *ServerGroupSpec) bool {
@@ -66,6 +71,14 @@ func (a *ArangoMemberSpecOverrides) GetVolumeClaimTemplate(g *ServerGroupSpec) *
 	}
 
 	return nil
+}
+
+func (a *ArangoMemberSpecOverrides) GetArgs() []string {
+	if a == nil {
+		return nil
+	}
+
+	return a.Args
 }
 
 func (a *ArangoMemberSpecOverrides) GetResources(g *ServerGroupSpec) core.ResourceRequirements {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import (
 	"os"
 
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
@@ -51,44 +50,30 @@ const (
 )
 
 type ArangoSyncContainer struct {
-	groupSpec              api.ServerGroupSpec
-	spec                   api.DeploymentSpec
-	group                  api.ServerGroup
-	resources              *Resources
-	imageInfo              api.ImageInfo
-	apiObject              meta.Object
-	memberStatus           api.MemberStatus
-	arangoMember           api.ArangoMember
-	tlsKeyfileSecretName   string
-	clientAuthCASecretName string
-	masterJWTSecretName    string
-	clusterJWTSecretName   string
+	*MemberSyncPod
 }
 
 var _ interfaces.PodCreator = &MemberSyncPod{}
 var _ interfaces.ContainerCreator = &ArangoSyncContainer{}
 
 type MemberSyncPod struct {
+	pod.Input
+
 	podName                string
 	tlsKeyfileSecretName   string
 	clientAuthCASecretName string
 	masterJWTSecretName    string
 	clusterJWTSecretName   string
-	groupSpec              api.ServerGroupSpec
-	spec                   api.DeploymentSpec
-	group                  api.ServerGroup
-	arangoMember           api.ArangoMember
-	resources              *Resources
-	imageInfo              api.ImageInfo
-	apiObject              meta.Object
-	memberStatus           api.MemberStatus
-	cachedStatus           interfaces.Inspector
+
+	cachedStatus interfaces.Inspector
+
+	resources *Resources
 }
 
 func (a *ArangoSyncContainer) GetCommand() ([]string, error) {
 	cmd := make([]string, 0, 128)
 	cmd = append(cmd, a.GetExecutor())
-	cmd = append(cmd, createArangoSyncArgs(a.apiObject, a.spec, a.group, a.groupSpec, a.memberStatus)...)
+	cmd = append(cmd, createArangoSyncArgs(a.Input)...)
 	return cmd, nil
 }
 
@@ -99,7 +84,7 @@ func (a *ArangoSyncContainer) GetName() string {
 func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
 	port := shared.ArangoSyncMasterPort
 
-	if a.group == api.ServerGroupSyncWorkers {
+	if a.Group == api.ServerGroupSyncWorkers {
 		port = shared.ArangoSyncWorkerPort
 	}
 
@@ -113,27 +98,27 @@ func (a *ArangoSyncContainer) GetPorts() []core.ContainerPort {
 }
 
 func (a *ArangoSyncContainer) GetExecutor() string {
-	return a.groupSpec.GetEntrypoint(ArangoSyncExecutor)
+	return a.GroupSpec.GetEntrypoint(ArangoSyncExecutor)
 }
 
 func (a *ArangoSyncContainer) GetSecurityContext() *core.SecurityContext {
-	return k8sutil.CreateSecurityContext(a.groupSpec.SecurityContext)
+	return k8sutil.CreateSecurityContext(a.GroupSpec.SecurityContext)
 }
 
 func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	var liveness, readiness, startup *core.Probe
 
-	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo)
+	probeLivenessConfig, err := a.resources.getLivenessProbe(a.Deployment, a.Group, a.Image)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo)
+	probeReadinessConfig, err := a.resources.getReadinessProbe(a.Deployment, a.Group, a.Image)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeStartupConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo)
+	probeStartupConfig, err := a.resources.getReadinessProbe(a.Deployment, a.Group, a.Image)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -154,7 +139,7 @@ func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe
 }
 
 func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirements {
-	return kresources.ExtractPodAcceptedResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
+	return kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec))
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -162,25 +147,25 @@ func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
 }
 
 func (a *ArangoSyncContainer) GetImagePullPolicy() core.PullPolicy {
-	return a.spec.GetImagePullPolicy()
+	return a.Deployment.GetImagePullPolicy()
 }
 
 func (a *ArangoSyncContainer) GetImage() string {
-	return a.imageInfo.Image
+	return a.Image.Image
 }
 
 func (a *ArangoSyncContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
-	if a.spec.Sync.Monitoring.GetTokenSecretName() != "" {
+	if a.Deployment.Sync.Monitoring.GetTokenSecretName() != "" {
 		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
-			a.spec.Sync.Monitoring.GetTokenSecretName(), constants.SecretKeyToken)
+			a.Deployment.Sync.Monitoring.GetTokenSecretName(), constants.SecretKeyToken)
 
 		envs.Add(true, env)
 	}
 
-	if a.spec.License.HasSecretName() {
-		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.spec.License.GetSecretName(),
+	if a.Deployment.License.HasSecretName() {
+		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.Deployment.License.GetSecretName(),
 			constants.SecretKeyToken)
 
 		envs.Add(true, env)
@@ -188,15 +173,15 @@ func (a *ArangoSyncContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 
 	envs.Add(true, k8sutil.GetLifecycleEnv()...)
 
-	if p := a.groupSpec.Port; p != nil {
+	if p := a.GroupSpec.Port; p != nil {
 		envs.Add(true, core.EnvVar{
 			Name:  ArangoDBServerPortEnv,
 			Value: fmt.Sprintf("%d", *p),
 		})
 	}
 
-	if len(a.groupSpec.Envs) > 0 {
-		for _, env := range a.groupSpec.Envs {
+	if len(a.GroupSpec.Envs) > 0 {
+		for _, env := range a.GroupSpec.Envs {
 			// Do not override preset envs
 			envs.Add(false, core.EnvVar{
 				Name:  env.Name,
@@ -220,11 +205,11 @@ func (m *MemberSyncPod) GetName() string {
 }
 
 func (m *MemberSyncPod) GetRole() string {
-	return m.group.AsRole()
+	return m.Group.AsRole()
 }
 
 func (m *MemberSyncPod) GetImagePullSecrets() []string {
-	return m.spec.ImagePullSecrets
+	return m.Deployment.ImagePullSecrets
 }
 
 func (m *MemberSyncPod) GetPodAntiAffinity() *core.PodAntiAffinity {
@@ -232,7 +217,7 @@ func (m *MemberSyncPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, a)
 
-	a = kresources.MergePodAntiAffinity(a, m.groupSpec.AntiAffinity)
+	a = kresources.MergePodAntiAffinity(a, m.GroupSpec.AntiAffinity)
 
 	return kresources.OptionalPodAntiAffinity(a)
 }
@@ -240,11 +225,11 @@ func (m *MemberSyncPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 func (m *MemberSyncPod) GetPodAffinity() *core.PodAffinity {
 	a := &core.PodAffinity{}
 
-	if m.group == api.ServerGroupSyncWorkers {
+	if m.Group == api.ServerGroupSyncWorkers {
 		pod.AppendAffinityWithRole(m, a, api.ServerGroupDBServers.AsRole())
 	}
 
-	a = kresources.MergePodAffinity(a, m.groupSpec.Affinity)
+	a = kresources.MergePodAffinity(a, m.GroupSpec.Affinity)
 
 	return kresources.OptionalPodAffinity(a)
 }
@@ -252,26 +237,26 @@ func (m *MemberSyncPod) GetPodAffinity() *core.PodAffinity {
 func (m *MemberSyncPod) GetNodeAffinity() *core.NodeAffinity {
 	a := &core.NodeAffinity{}
 
-	pod.AppendArchSelector(a, m.memberStatus.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
+	pod.AppendArchSelector(a, m.Member.Architecture.Default(m.Deployment.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
-	a = kresources.MergeNodeAffinity(a, m.groupSpec.NodeAffinity)
+	a = kresources.MergeNodeAffinity(a, m.GroupSpec.NodeAffinity)
 
 	return kresources.OptionalNodeAffinity(a)
 }
 
 func (m *MemberSyncPod) GetNodeSelector() map[string]string {
-	return m.groupSpec.GetNodeSelector()
+	return m.GroupSpec.GetNodeSelector()
 }
 
 func (m *MemberSyncPod) GetServiceAccountName() string {
-	return m.groupSpec.GetServiceAccountName()
+	return m.GroupSpec.GetServiceAccountName()
 }
 
 func (m *MemberSyncPod) GetSidecars(pod *core.PodTemplateSpec) error {
 	// A sidecar provided by the user
-	sidecars := m.groupSpec.GetSidecars()
+	sidecars := m.GroupSpec.GetSidecars()
 	if len(sidecars) > 0 {
-		addLifecycleSidecar(m.groupSpec.SidecarCoreNames, sidecars)
+		addLifecycleSidecar(m.GroupSpec.SidecarCoreNames, sidecars)
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
 
@@ -287,7 +272,7 @@ func (m *MemberSyncPod) GetVolumes() []core.Volume {
 }
 
 func (m *MemberSyncPod) IsDeploymentMode() bool {
-	return m.spec.IsDevelopment()
+	return m.Deployment.IsDevelopment()
 }
 
 func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]core.Container, error) {
@@ -297,13 +282,13 @@ func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]
 	}
 
 	var initContainers []core.Container
-	if c := m.groupSpec.InitContainers.GetContainers(); len(c) > 0 {
+	if c := m.GroupSpec.InitContainers.GetContainers(); len(c) > 0 {
 		initContainers = append(initContainers, c...)
 	}
 
 	{
-		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
-		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), binaryPath, &m.spec.Lifecycle.Resources, sc)
+		sc := k8sutil.CreateSecurityContext(m.GroupSpec.SecurityContext)
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), binaryPath, &m.Deployment.Lifecycle.Resources, sc)
 		if err != nil {
 			return nil, err
 		}
@@ -323,23 +308,12 @@ func (m *MemberSyncPod) GetFinalizers() []string {
 }
 
 func (m *MemberSyncPod) GetTolerations() []core.Toleration {
-	return m.resources.CreatePodTolerations(m.group, m.groupSpec)
+	return m.resources.CreatePodTolerations(m.Group, m.GroupSpec)
 }
 
 func (m *MemberSyncPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoSyncContainer{
-		groupSpec:              m.groupSpec,
-		spec:                   m.spec,
-		group:                  m.group,
-		resources:              m.resources,
-		imageInfo:              m.imageInfo,
-		apiObject:              m.apiObject,
-		memberStatus:           m.memberStatus,
-		arangoMember:           m.arangoMember,
-		tlsKeyfileSecretName:   m.tlsKeyfileSecretName,
-		clientAuthCASecretName: m.clientAuthCASecretName,
-		masterJWTSecretName:    m.masterJWTSecretName,
-		clusterJWTSecretName:   m.clusterJWTSecretName,
+		MemberSyncPod: m,
 	}
 }
 
@@ -352,15 +326,15 @@ func (m *MemberSyncPod) GetRestartPolicy() core.RestartPolicy {
 
 // Init initializes the arangosync pod.
 func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, pod *core.PodTemplateSpec) error {
-	terminationGracePeriodSeconds := int64(math.Ceil(m.groupSpec.GetTerminationGracePeriod(m.group).Seconds()))
+	terminationGracePeriodSeconds := int64(math.Ceil(m.GroupSpec.GetTerminationGracePeriod(m.Group).Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
-	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+	pod.Spec.PriorityClassName = m.GroupSpec.PriorityClassName
 
 	if alias := m.syncHostAlias(); alias != nil {
 		pod.Spec.HostAliases = append(pod.Spec.HostAliases, *alias)
 	}
 
-	m.masterJWTSecretName = m.spec.Sync.Authentication.GetJWTSecretName()
+	m.masterJWTSecretName = m.Deployment.Sync.Authentication.GetJWTSecretName()
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.Secret().V1().Read(), m.masterJWTSecretName)
 	})
@@ -368,7 +342,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 		return errors.Wrapf(err, "Master JWT secret validation failed")
 	}
 
-	monitoringTokenSecretName := m.spec.Sync.Monitoring.GetTokenSecretName()
+	monitoringTokenSecretName := m.Deployment.Sync.Monitoring.GetTokenSecretName()
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 		return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.Secret().V1().Read(), monitoringTokenSecretName)
 	})
@@ -376,12 +350,12 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 		return errors.Wrapf(err, "Monitoring token secret validation failed")
 	}
 
-	if m.group == api.ServerGroupSyncMasters {
+	if m.Group == api.ServerGroupSyncMasters {
 		// Create TLS secret
-		m.tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(m.apiObject.GetName(), m.group.AsRole(), m.memberStatus.ID)
+		m.tlsKeyfileSecretName = k8sutil.CreateTLSKeyfileSecretName(m.ApiObject.GetName(), m.Group.AsRole(), m.Member.ID)
 		// Check cluster JWT secret
-		if m.spec.IsAuthenticated() {
-			m.clusterJWTSecretName = m.spec.Authentication.GetJWTSecretName()
+		if m.Deployment.IsAuthenticated() {
+			m.clusterJWTSecretName = m.Deployment.Authentication.GetJWTSecretName()
 			err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				return k8sutil.ValidateTokenSecret(ctxChild, cachedStatus.Secret().V1().Read(), m.clusterJWTSecretName)
 			})
@@ -390,7 +364,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 			}
 		}
 		// Check client-auth CA certificate secret
-		m.clientAuthCASecretName = m.spec.Sync.Authentication.GetClientCASecretName()
+		m.clientAuthCASecretName = m.Deployment.Sync.Authentication.GetClientCASecretName()
 		err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 			return k8sutil.ValidateCACertificateSecret(ctxChild, cachedStatus.Secret().V1().Read(), m.clientAuthCASecretName)
 		})
@@ -403,7 +377,7 @@ func (m *MemberSyncPod) Init(ctx context.Context, cachedStatus interfaces.Inspec
 }
 
 func (m *MemberSyncPod) Validate(_ interfaces.Inspector) error {
-	if err := validateSidecars(m.groupSpec.SidecarCoreNames, m.groupSpec.GetSidecars()); err != nil {
+	if err := validateSidecars(m.GroupSpec.SidecarCoreNames, m.GroupSpec.GetSidecars()); err != nil {
 		return err
 	}
 
@@ -411,21 +385,21 @@ func (m *MemberSyncPod) Validate(_ interfaces.Inspector) error {
 }
 
 func (m *MemberSyncPod) ApplyPodSpec(spec *core.PodSpec) error {
-	if s := m.groupSpec.SchedulerName; s != nil {
+	if s := m.GroupSpec.SchedulerName; s != nil {
 		spec.SchedulerName = *s
 	}
 
-	m.groupSpec.PodModes.Apply(spec)
+	m.GroupSpec.PodModes.Apply(spec)
 
 	return nil
 }
 
 func (m *MemberSyncPod) Annotations() map[string]string {
-	return collection.MergeAnnotations(m.spec.Annotations, m.groupSpec.Annotations)
+	return collection.MergeAnnotations(m.Deployment.Annotations, m.GroupSpec.Annotations)
 }
 
 func (m *MemberSyncPod) Labels() map[string]string {
-	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
+	return collection.ReservedLabels().Filter(collection.MergeAnnotations(m.Deployment.Labels, m.GroupSpec.Labels))
 }
 
 func createArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, masterJWTSecretName,
@@ -463,13 +437,13 @@ func createArangoSyncVolumes(tlsKeyfileSecretName, clientAuthCASecretName, maste
 }
 
 func (m *MemberSyncPod) syncHostAlias() *core.HostAlias {
-	svcName := k8sutil.CreateSyncMasterClientServiceName(m.apiObject.GetName())
+	svcName := k8sutil.CreateSyncMasterClientServiceName(m.ApiObject.GetName())
 	svc, ok := m.cachedStatus.Service().V1().GetSimple(svcName)
 	if !ok {
 		return nil
 	}
 
-	endpoint := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(m.apiObject, m.spec.ClusterDomain)
+	endpoint := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(m.ApiObject, m.Deployment.ClusterDomain)
 
 	if svc.Spec.ClusterIP == "" || svc.Spec.ClusterIP == core.ClusterIPNone {
 		return nil
@@ -481,7 +455,7 @@ func (m *MemberSyncPod) syncHostAlias() *core.HostAlias {
 
 	var aliases utils.StringList
 
-	for _, u := range m.spec.Sync.ExternalAccess.ResolveMasterEndpoint(svcName, shared.ArangoSyncMasterPort) {
+	for _, u := range m.Deployment.Sync.ExternalAccess.ResolveMasterEndpoint(svcName, shared.ArangoSyncMasterPort) {
 		url, err := url.Parse(u)
 		if err != nil {
 			continue

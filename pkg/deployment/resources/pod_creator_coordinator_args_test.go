@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,13 +58,15 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupCoordinators,
-			GroupSpec:   apiObject.Spec.Coordinators,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupCoordinators,
+			GroupSpec:  apiObject.Spec.Coordinators,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "id1"},
 		}
@@ -117,13 +119,15 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupCoordinators,
-			GroupSpec:   apiObject.Spec.Coordinators,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupCoordinators,
+			GroupSpec:  apiObject.Spec.Coordinators,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: true,
 			Member:      api.MemberStatus{ID: "id1"},
 		}
@@ -177,13 +181,15 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupCoordinators,
-			GroupSpec:   apiObject.Spec.Coordinators,
-			Version:     "3.6.0",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupCoordinators,
+			GroupSpec:  apiObject.Spec.Coordinators,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "3.6.0",
+				Enterprise:      false,
+			},
 			AutoUpgrade: true,
 			Member:      api.MemberStatus{ID: "id1"},
 		}
@@ -240,13 +246,15 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupCoordinators,
-			GroupSpec:   apiObject.Spec.Coordinators,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupCoordinators,
+			GroupSpec:  apiObject.Spec.Coordinators,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "id1"},
 		}
@@ -298,13 +306,15 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupCoordinators,
-			GroupSpec:   apiObject.Spec.Coordinators,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupCoordinators,
+			GroupSpec:  apiObject.Spec.Coordinators,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "id1"},
 		}
@@ -358,13 +368,15 @@ func TestCreateArangodArgsCoordinator(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupCoordinators,
-			GroupSpec:   apiObject.Spec.Coordinators,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupCoordinators,
+			GroupSpec:  apiObject.Spec.Coordinators,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "id1"},
 		}

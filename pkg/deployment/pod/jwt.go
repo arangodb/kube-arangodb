@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/go-driver"
-
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -44,10 +42,6 @@ func IsAuthenticated(i Input) bool {
 
 func JWTSecretFolder(name string) string {
 	return fmt.Sprintf("%s-jwt-folder", name)
-}
-
-func VersionHasJWTSecretKeyfolder(v driver.Version, enterprise bool) bool {
-	return features.JWTRotation().Supported(v, enterprise)
 }
 
 func JWT() Builder {
@@ -70,7 +64,7 @@ func (e jwt) Args(i Input) k8sutil.OptionPairs {
 
 	options.Add("--server.authentication", "true")
 
-	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
+	if features.JWTRotation().ImageSupported(&i.Image) {
 		options.Add("--server.jwt-secret-folder", shared.ClusterJWTSecretVolumeMountDir)
 	} else {
 		keyPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
@@ -86,7 +80,7 @@ func (e jwt) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	}
 
 	var vol core.Volume
-	if VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
+	if features.JWTRotation().ImageSupported(&i.Image) {
 		vol = k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, JWTSecretFolder(i.ApiObject.GetName()))
 	} else {
 		vol = k8sutil.CreateVolumeWithSecret(shared.ClusterJWTSecretVolumeName, i.Deployment.Authentication.GetJWTSecretName())
@@ -99,7 +93,7 @@ func (e jwt) Verify(i Input, cachedStatus interfaces.Inspector) error {
 		return nil
 	}
 
-	if !VersionHasJWTSecretKeyfolder(i.Version, i.Enterprise) {
+	if !features.JWTRotation().ImageSupported(&i.Image) {
 		secret, exists := cachedStatus.Secret().V1().GetSimple(i.Deployment.Authentication.GetJWTSecretName())
 		if !exists {
 			return errors.Errorf("Secret for JWT token is missing %s", i.Deployment.Authentication.GetJWTSecretName())
