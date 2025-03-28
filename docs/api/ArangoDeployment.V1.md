@@ -10,7 +10,7 @@ title: ArangoDeployment V1
 
 ### .spec.agents.affinity
 
-Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L156)</sup>
+Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
@@ -21,7 +21,7 @@ Links:
 
 ### .spec.agents.allowMemberRecreation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L198)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L195)</sup>
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -32,7 +32,7 @@ This setting changes the member recreation logic based on group:
 
 ### .spec.agents.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L99)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
@@ -41,7 +41,7 @@ Annotations are merged with `spec.annotations`.
 
 ### .spec.agents.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L101)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L98)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -49,7 +49,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.agents.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L103)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L100)</sup>
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
@@ -57,7 +57,7 @@ AnnotationsMode Define annotations mode which should be use while overriding ann
 
 ### .spec.agents.antiAffinity
 
-Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L152)</sup>
+Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L149)</sup>
 
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
@@ -68,7 +68,7 @@ Links:
 
 ### .spec.agents.args
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L57)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L54)</sup>
 
 Args setting specifies additional command-line arguments passed to all servers of this group.
 
@@ -78,7 +78,7 @@ Default Value: `[]`
 
 ### .spec.agents.count
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L49)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L46)</sup>
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -91,7 +91,7 @@ as for the `dbservers` group.
 
 ### .spec.agents.entrypoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L59)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L56)</sup>
 
 Entrypoint overrides container executable
 
@@ -133,7 +133,7 @@ Links:
 
 ### .spec.agents.exporterPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L211)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L208)</sup>
 
 ExporterPort define Port used by exporter
 
@@ -141,7 +141,7 @@ ExporterPort define Port used by exporter
 
 ### .spec.agents.extendedRotationCheck
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L181)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L178)</sup>
 
 ExtendedRotationCheck extend checks for rotation
 
@@ -149,7 +149,7 @@ ExtendedRotationCheck extend checks for rotation
 
 ### .spec.agents.externalPortEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L193)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L190)</sup>
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -157,7 +157,7 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 ### .spec.agents.indexMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L204)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L201)</sup>
 
 IndexMethod define group Indexing method
 
@@ -192,7 +192,7 @@ Possible Values:
 
 ### .spec.agents.internalPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L189)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L186)</sup>
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -200,7 +200,7 @@ InternalPort define port used in internal communication, can be accessed over lo
 
 ### .spec.agents.internalPortProtocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L191)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L188)</sup>
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -208,7 +208,7 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 ### .spec.agents.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L105)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L102)</sup>
 
 Labels specified the labels added to Pods in this group.
 
@@ -216,7 +216,7 @@ Labels specified the labels added to Pods in this group.
 
 ### .spec.agents.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L107)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L104)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -224,7 +224,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.agents.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L109)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -232,7 +232,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ### .spec.agents.maxCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L53)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
@@ -240,7 +240,7 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.agents.memoryReservation
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L81)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L78)</sup>
 
 MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
@@ -255,7 +255,7 @@ Default Value: `0`
 
 ### .spec.agents.minCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L51)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L48)</sup>
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -263,7 +263,7 @@ MinCount specifies a minimum for the count of servers. If set, a specification i
 
 ### .spec.agents.nodeAffinity
 
-Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
+Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L157)</sup>
 
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
@@ -274,7 +274,7 @@ Links:
 
 ### .spec.agents.nodeSelector
 
-Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L124)</sup>
+Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L121)</sup>
 
 NodeSelector setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
 
@@ -315,7 +315,7 @@ Default Value: `/usr/bin/numactl`
 
 ### .spec.agents.overrideDetectedNumberOfCores
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L87)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L84)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable**
@@ -332,7 +332,7 @@ Default Value: `true`
 
 ### .spec.agents.overrideDetectedTotalMemory
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L75)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L72)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable**
@@ -361,7 +361,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .spec.agents.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L209)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L206)</sup>
 
 Port define Port used by member
 
@@ -369,7 +369,7 @@ Port define Port used by member
 
 ### .spec.agents.priorityClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L130)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L127)</sup>
 
 PriorityClassName specifies a priority class name
 Will be forwarded to the pod spec.
@@ -588,7 +588,7 @@ Default Value: `2`
 
 ### .spec.agents.pvcResizeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L144)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L141)</sup>
 
 VolumeResizeMode specified resize mode for PVCs and PVs
 
@@ -600,7 +600,7 @@ Possible Values:
 
 ### .spec.agents.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L69)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L66)</sup>
 
 Resources holds resource requests & limits
 
@@ -611,7 +611,7 @@ Links:
 
 ### .spec.agents.schedulerName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
 
 SchedulerName define scheduler name used for group
 
@@ -749,7 +749,7 @@ sysctls:
 
 ### .spec.agents.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L120)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L117)</sup>
 
 ServiceAccountName setting specifies the `serviceAccountName` for the `Pods` created
 for each server of this group. If empty, it defaults to using the
@@ -764,7 +764,7 @@ to that service account.
 
 ### .spec.agents.shutdownDelay
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L187)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L184)</sup>
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -772,7 +772,7 @@ ShutdownDelay define how long operator should delay finalizer removal after shut
 
 ### .spec.agents.shutdownMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L185)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L182)</sup>
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
@@ -780,7 +780,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 ### .spec.agents.sidecarCoreNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L163)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -789,7 +789,7 @@ Some names (e.g.: "server", "worker") are reserved, and they don't have any impa
 
 ### .spec.agents.sidecars
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L167)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L164)</sup>
 
 Sidecars specifies a list of additional containers to be started
 
@@ -800,7 +800,7 @@ Links:
 
 ### .spec.agents.storageClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L65)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L62)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -813,7 +813,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 ### .spec.agents.terminationGracePeriodSeconds
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L200)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L197)</sup>
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -821,7 +821,7 @@ TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for
 
 ### .spec.agents.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L93)</sup>
 
 Tolerations specifies the tolerations added to Pods in this group.
 By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
@@ -837,7 +837,7 @@ Links:
 
 ### .spec.agents.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
@@ -849,7 +849,7 @@ Possible Values:
 
 ### .spec.agents.volumeAllowShrink
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L145)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -862,7 +862,7 @@ VolumeAllowShrink allows shrinking of the volume
 
 ### .spec.agents.volumeClaimTemplate
 
-Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L139)</sup>
+Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L136)</sup>
 
 VolumeClaimTemplate specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
@@ -878,7 +878,7 @@ Links:
 
 ### .spec.agents.volumeMounts
 
-Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L177)</sup>
+Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L174)</sup>
 
 VolumeMounts define list of volume mounts mounted into server container
 
@@ -1092,7 +1092,7 @@ Possible Values:
 
 ### .spec.coordinators.affinity
 
-Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L156)</sup>
+Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
@@ -1103,7 +1103,7 @@ Links:
 
 ### .spec.coordinators.allowMemberRecreation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L198)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L195)</sup>
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -1114,7 +1114,7 @@ This setting changes the member recreation logic based on group:
 
 ### .spec.coordinators.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L99)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
@@ -1123,7 +1123,7 @@ Annotations are merged with `spec.annotations`.
 
 ### .spec.coordinators.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L101)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L98)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -1131,7 +1131,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.coordinators.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L103)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L100)</sup>
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
@@ -1139,7 +1139,7 @@ AnnotationsMode Define annotations mode which should be use while overriding ann
 
 ### .spec.coordinators.antiAffinity
 
-Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L152)</sup>
+Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L149)</sup>
 
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
@@ -1150,7 +1150,7 @@ Links:
 
 ### .spec.coordinators.args
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L57)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L54)</sup>
 
 Args setting specifies additional command-line arguments passed to all servers of this group.
 
@@ -1160,7 +1160,7 @@ Default Value: `[]`
 
 ### .spec.coordinators.count
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L49)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L46)</sup>
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -1173,7 +1173,7 @@ as for the `dbservers` group.
 
 ### .spec.coordinators.entrypoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L59)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L56)</sup>
 
 Entrypoint overrides container executable
 
@@ -1215,7 +1215,7 @@ Links:
 
 ### .spec.coordinators.exporterPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L211)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L208)</sup>
 
 ExporterPort define Port used by exporter
 
@@ -1223,7 +1223,7 @@ ExporterPort define Port used by exporter
 
 ### .spec.coordinators.extendedRotationCheck
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L181)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L178)</sup>
 
 ExtendedRotationCheck extend checks for rotation
 
@@ -1231,7 +1231,7 @@ ExtendedRotationCheck extend checks for rotation
 
 ### .spec.coordinators.externalPortEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L193)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L190)</sup>
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -1239,7 +1239,7 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 ### .spec.coordinators.indexMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L204)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L201)</sup>
 
 IndexMethod define group Indexing method
 
@@ -1274,7 +1274,7 @@ Possible Values:
 
 ### .spec.coordinators.internalPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L189)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L186)</sup>
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -1282,7 +1282,7 @@ InternalPort define port used in internal communication, can be accessed over lo
 
 ### .spec.coordinators.internalPortProtocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L191)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L188)</sup>
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -1290,7 +1290,7 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 ### .spec.coordinators.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L105)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L102)</sup>
 
 Labels specified the labels added to Pods in this group.
 
@@ -1298,7 +1298,7 @@ Labels specified the labels added to Pods in this group.
 
 ### .spec.coordinators.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L107)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L104)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -1306,7 +1306,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.coordinators.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L109)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -1314,7 +1314,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ### .spec.coordinators.maxCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L53)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
@@ -1322,7 +1322,7 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.coordinators.memoryReservation
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L81)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L78)</sup>
 
 MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
@@ -1337,7 +1337,7 @@ Default Value: `0`
 
 ### .spec.coordinators.minCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L51)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L48)</sup>
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -1345,7 +1345,7 @@ MinCount specifies a minimum for the count of servers. If set, a specification i
 
 ### .spec.coordinators.nodeAffinity
 
-Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
+Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L157)</sup>
 
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
@@ -1356,7 +1356,7 @@ Links:
 
 ### .spec.coordinators.nodeSelector
 
-Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L124)</sup>
+Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L121)</sup>
 
 NodeSelector setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
 
@@ -1397,7 +1397,7 @@ Default Value: `/usr/bin/numactl`
 
 ### .spec.coordinators.overrideDetectedNumberOfCores
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L87)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L84)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable**
@@ -1414,7 +1414,7 @@ Default Value: `true`
 
 ### .spec.coordinators.overrideDetectedTotalMemory
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L75)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L72)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable**
@@ -1443,7 +1443,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .spec.coordinators.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L209)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L206)</sup>
 
 Port define Port used by member
 
@@ -1451,7 +1451,7 @@ Port define Port used by member
 
 ### .spec.coordinators.priorityClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L130)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L127)</sup>
 
 PriorityClassName specifies a priority class name
 Will be forwarded to the pod spec.
@@ -1670,7 +1670,7 @@ Default Value: `2`
 
 ### .spec.coordinators.pvcResizeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L144)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L141)</sup>
 
 VolumeResizeMode specified resize mode for PVCs and PVs
 
@@ -1682,7 +1682,7 @@ Possible Values:
 
 ### .spec.coordinators.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L69)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L66)</sup>
 
 Resources holds resource requests & limits
 
@@ -1693,7 +1693,7 @@ Links:
 
 ### .spec.coordinators.schedulerName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
 
 SchedulerName define scheduler name used for group
 
@@ -1831,7 +1831,7 @@ sysctls:
 
 ### .spec.coordinators.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L120)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L117)</sup>
 
 ServiceAccountName setting specifies the `serviceAccountName` for the `Pods` created
 for each server of this group. If empty, it defaults to using the
@@ -1846,7 +1846,7 @@ to that service account.
 
 ### .spec.coordinators.shutdownDelay
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L187)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L184)</sup>
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -1854,7 +1854,7 @@ ShutdownDelay define how long operator should delay finalizer removal after shut
 
 ### .spec.coordinators.shutdownMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L185)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L182)</sup>
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
@@ -1862,7 +1862,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 ### .spec.coordinators.sidecarCoreNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L163)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -1871,7 +1871,7 @@ Some names (e.g.: "server", "worker") are reserved, and they don't have any impa
 
 ### .spec.coordinators.sidecars
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L167)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L164)</sup>
 
 Sidecars specifies a list of additional containers to be started
 
@@ -1882,7 +1882,7 @@ Links:
 
 ### .spec.coordinators.storageClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L65)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L62)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -1895,7 +1895,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 ### .spec.coordinators.terminationGracePeriodSeconds
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L200)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L197)</sup>
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -1903,7 +1903,7 @@ TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for
 
 ### .spec.coordinators.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L93)</sup>
 
 Tolerations specifies the tolerations added to Pods in this group.
 By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
@@ -1919,7 +1919,7 @@ Links:
 
 ### .spec.coordinators.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
@@ -1931,7 +1931,7 @@ Possible Values:
 
 ### .spec.coordinators.volumeAllowShrink
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L145)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -1944,7 +1944,7 @@ VolumeAllowShrink allows shrinking of the volume
 
 ### .spec.coordinators.volumeClaimTemplate
 
-Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L139)</sup>
+Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L136)</sup>
 
 VolumeClaimTemplate specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
@@ -1960,7 +1960,7 @@ Links:
 
 ### .spec.coordinators.volumeMounts
 
-Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L177)</sup>
+Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L174)</sup>
 
 VolumeMounts define list of volume mounts mounted into server container
 
@@ -2042,7 +2042,7 @@ Maintenance manage maintenance mode on Cluster side. Requires maintenance featur
 
 ### .spec.dbservers.affinity
 
-Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L156)</sup>
+Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
@@ -2053,7 +2053,7 @@ Links:
 
 ### .spec.dbservers.allowMemberRecreation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L198)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L195)</sup>
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -2064,7 +2064,7 @@ This setting changes the member recreation logic based on group:
 
 ### .spec.dbservers.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L99)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
@@ -2073,7 +2073,7 @@ Annotations are merged with `spec.annotations`.
 
 ### .spec.dbservers.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L101)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L98)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -2081,7 +2081,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.dbservers.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L103)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L100)</sup>
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
@@ -2089,7 +2089,7 @@ AnnotationsMode Define annotations mode which should be use while overriding ann
 
 ### .spec.dbservers.antiAffinity
 
-Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L152)</sup>
+Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L149)</sup>
 
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
@@ -2100,7 +2100,7 @@ Links:
 
 ### .spec.dbservers.args
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L57)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L54)</sup>
 
 Args setting specifies additional command-line arguments passed to all servers of this group.
 
@@ -2110,7 +2110,7 @@ Default Value: `[]`
 
 ### .spec.dbservers.count
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L49)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L46)</sup>
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -2123,7 +2123,7 @@ as for the `dbservers` group.
 
 ### .spec.dbservers.entrypoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L59)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L56)</sup>
 
 Entrypoint overrides container executable
 
@@ -2165,7 +2165,7 @@ Links:
 
 ### .spec.dbservers.exporterPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L211)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L208)</sup>
 
 ExporterPort define Port used by exporter
 
@@ -2173,7 +2173,7 @@ ExporterPort define Port used by exporter
 
 ### .spec.dbservers.extendedRotationCheck
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L181)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L178)</sup>
 
 ExtendedRotationCheck extend checks for rotation
 
@@ -2181,7 +2181,7 @@ ExtendedRotationCheck extend checks for rotation
 
 ### .spec.dbservers.externalPortEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L193)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L190)</sup>
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -2189,7 +2189,7 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 ### .spec.dbservers.indexMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L204)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L201)</sup>
 
 IndexMethod define group Indexing method
 
@@ -2224,7 +2224,7 @@ Possible Values:
 
 ### .spec.dbservers.internalPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L189)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L186)</sup>
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -2232,7 +2232,7 @@ InternalPort define port used in internal communication, can be accessed over lo
 
 ### .spec.dbservers.internalPortProtocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L191)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L188)</sup>
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -2240,7 +2240,7 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 ### .spec.dbservers.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L105)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L102)</sup>
 
 Labels specified the labels added to Pods in this group.
 
@@ -2248,7 +2248,7 @@ Labels specified the labels added to Pods in this group.
 
 ### .spec.dbservers.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L107)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L104)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -2256,7 +2256,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.dbservers.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L109)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -2264,7 +2264,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ### .spec.dbservers.maxCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L53)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
@@ -2272,7 +2272,7 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.dbservers.memoryReservation
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L81)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L78)</sup>
 
 MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
@@ -2287,7 +2287,7 @@ Default Value: `0`
 
 ### .spec.dbservers.minCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L51)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L48)</sup>
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -2295,7 +2295,7 @@ MinCount specifies a minimum for the count of servers. If set, a specification i
 
 ### .spec.dbservers.nodeAffinity
 
-Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
+Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L157)</sup>
 
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
@@ -2306,7 +2306,7 @@ Links:
 
 ### .spec.dbservers.nodeSelector
 
-Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L124)</sup>
+Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L121)</sup>
 
 NodeSelector setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
 
@@ -2347,7 +2347,7 @@ Default Value: `/usr/bin/numactl`
 
 ### .spec.dbservers.overrideDetectedNumberOfCores
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L87)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L84)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable**
@@ -2364,7 +2364,7 @@ Default Value: `true`
 
 ### .spec.dbservers.overrideDetectedTotalMemory
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L75)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L72)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable**
@@ -2393,7 +2393,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .spec.dbservers.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L209)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L206)</sup>
 
 Port define Port used by member
 
@@ -2401,7 +2401,7 @@ Port define Port used by member
 
 ### .spec.dbservers.priorityClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L130)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L127)</sup>
 
 PriorityClassName specifies a priority class name
 Will be forwarded to the pod spec.
@@ -2620,7 +2620,7 @@ Default Value: `2`
 
 ### .spec.dbservers.pvcResizeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L144)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L141)</sup>
 
 VolumeResizeMode specified resize mode for PVCs and PVs
 
@@ -2632,7 +2632,7 @@ Possible Values:
 
 ### .spec.dbservers.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L69)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L66)</sup>
 
 Resources holds resource requests & limits
 
@@ -2643,7 +2643,7 @@ Links:
 
 ### .spec.dbservers.schedulerName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
 
 SchedulerName define scheduler name used for group
 
@@ -2781,7 +2781,7 @@ sysctls:
 
 ### .spec.dbservers.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L120)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L117)</sup>
 
 ServiceAccountName setting specifies the `serviceAccountName` for the `Pods` created
 for each server of this group. If empty, it defaults to using the
@@ -2796,7 +2796,7 @@ to that service account.
 
 ### .spec.dbservers.shutdownDelay
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L187)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L184)</sup>
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -2804,7 +2804,7 @@ ShutdownDelay define how long operator should delay finalizer removal after shut
 
 ### .spec.dbservers.shutdownMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L185)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L182)</sup>
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
@@ -2812,7 +2812,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 ### .spec.dbservers.sidecarCoreNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L163)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -2821,7 +2821,7 @@ Some names (e.g.: "server", "worker") are reserved, and they don't have any impa
 
 ### .spec.dbservers.sidecars
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L167)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L164)</sup>
 
 Sidecars specifies a list of additional containers to be started
 
@@ -2832,7 +2832,7 @@ Links:
 
 ### .spec.dbservers.storageClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L65)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L62)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -2845,7 +2845,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 ### .spec.dbservers.terminationGracePeriodSeconds
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L200)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L197)</sup>
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -2853,7 +2853,7 @@ TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for
 
 ### .spec.dbservers.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L93)</sup>
 
 Tolerations specifies the tolerations added to Pods in this group.
 By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
@@ -2869,7 +2869,7 @@ Links:
 
 ### .spec.dbservers.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
@@ -2881,7 +2881,7 @@ Possible Values:
 
 ### .spec.dbservers.volumeAllowShrink
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L145)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -2894,7 +2894,7 @@ VolumeAllowShrink allows shrinking of the volume
 
 ### .spec.dbservers.volumeClaimTemplate
 
-Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L139)</sup>
+Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L136)</sup>
 
 VolumeClaimTemplate specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
@@ -2910,7 +2910,7 @@ Links:
 
 ### .spec.dbservers.volumeMounts
 
-Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L177)</sup>
+Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L174)</sup>
 
 VolumeMounts define list of volume mounts mounted into server container
 
@@ -3135,7 +3135,7 @@ Default Value: `1m0s`
 
 ### .spec.gateways.affinity
 
-Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L156)</sup>
+Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
@@ -3146,7 +3146,7 @@ Links:
 
 ### .spec.gateways.allowMemberRecreation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L198)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L195)</sup>
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -3157,7 +3157,7 @@ This setting changes the member recreation logic based on group:
 
 ### .spec.gateways.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L99)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
@@ -3166,7 +3166,7 @@ Annotations are merged with `spec.annotations`.
 
 ### .spec.gateways.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L101)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L98)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -3174,7 +3174,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.gateways.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L103)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L100)</sup>
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
@@ -3182,7 +3182,7 @@ AnnotationsMode Define annotations mode which should be use while overriding ann
 
 ### .spec.gateways.antiAffinity
 
-Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L152)</sup>
+Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L149)</sup>
 
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
@@ -3193,7 +3193,7 @@ Links:
 
 ### .spec.gateways.args
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L57)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L54)</sup>
 
 Args setting specifies additional command-line arguments passed to all servers of this group.
 
@@ -3203,7 +3203,7 @@ Default Value: `[]`
 
 ### .spec.gateways.count
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L49)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L46)</sup>
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -3216,7 +3216,7 @@ as for the `dbservers` group.
 
 ### .spec.gateways.entrypoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L59)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L56)</sup>
 
 Entrypoint overrides container executable
 
@@ -3258,7 +3258,7 @@ Links:
 
 ### .spec.gateways.exporterPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L211)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L208)</sup>
 
 ExporterPort define Port used by exporter
 
@@ -3266,7 +3266,7 @@ ExporterPort define Port used by exporter
 
 ### .spec.gateways.extendedRotationCheck
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L181)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L178)</sup>
 
 ExtendedRotationCheck extend checks for rotation
 
@@ -3274,7 +3274,7 @@ ExtendedRotationCheck extend checks for rotation
 
 ### .spec.gateways.externalPortEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L193)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L190)</sup>
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -3282,7 +3282,7 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 ### .spec.gateways.indexMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L204)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L201)</sup>
 
 IndexMethod define group Indexing method
 
@@ -3317,7 +3317,7 @@ Possible Values:
 
 ### .spec.gateways.internalPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L189)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L186)</sup>
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -3325,7 +3325,7 @@ InternalPort define port used in internal communication, can be accessed over lo
 
 ### .spec.gateways.internalPortProtocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L191)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L188)</sup>
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -3333,7 +3333,7 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 ### .spec.gateways.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L105)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L102)</sup>
 
 Labels specified the labels added to Pods in this group.
 
@@ -3341,7 +3341,7 @@ Labels specified the labels added to Pods in this group.
 
 ### .spec.gateways.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L107)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L104)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -3349,7 +3349,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.gateways.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L109)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -3357,7 +3357,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ### .spec.gateways.maxCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L53)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
@@ -3365,7 +3365,7 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.gateways.memoryReservation
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L81)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L78)</sup>
 
 MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
@@ -3380,7 +3380,7 @@ Default Value: `0`
 
 ### .spec.gateways.minCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L51)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L48)</sup>
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -3388,7 +3388,7 @@ MinCount specifies a minimum for the count of servers. If set, a specification i
 
 ### .spec.gateways.nodeAffinity
 
-Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
+Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L157)</sup>
 
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
@@ -3399,7 +3399,7 @@ Links:
 
 ### .spec.gateways.nodeSelector
 
-Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L124)</sup>
+Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L121)</sup>
 
 NodeSelector setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
 
@@ -3440,7 +3440,7 @@ Default Value: `/usr/bin/numactl`
 
 ### .spec.gateways.overrideDetectedNumberOfCores
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L87)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L84)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable**
@@ -3457,7 +3457,7 @@ Default Value: `true`
 
 ### .spec.gateways.overrideDetectedTotalMemory
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L75)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L72)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable**
@@ -3486,7 +3486,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .spec.gateways.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L209)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L206)</sup>
 
 Port define Port used by member
 
@@ -3494,7 +3494,7 @@ Port define Port used by member
 
 ### .spec.gateways.priorityClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L130)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L127)</sup>
 
 PriorityClassName specifies a priority class name
 Will be forwarded to the pod spec.
@@ -3713,7 +3713,7 @@ Default Value: `2`
 
 ### .spec.gateways.pvcResizeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L144)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L141)</sup>
 
 VolumeResizeMode specified resize mode for PVCs and PVs
 
@@ -3725,7 +3725,7 @@ Possible Values:
 
 ### .spec.gateways.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L69)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L66)</sup>
 
 Resources holds resource requests & limits
 
@@ -3736,7 +3736,7 @@ Links:
 
 ### .spec.gateways.schedulerName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
 
 SchedulerName define scheduler name used for group
 
@@ -3874,7 +3874,7 @@ sysctls:
 
 ### .spec.gateways.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L120)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L117)</sup>
 
 ServiceAccountName setting specifies the `serviceAccountName` for the `Pods` created
 for each server of this group. If empty, it defaults to using the
@@ -3889,7 +3889,7 @@ to that service account.
 
 ### .spec.gateways.shutdownDelay
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L187)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L184)</sup>
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -3897,7 +3897,7 @@ ShutdownDelay define how long operator should delay finalizer removal after shut
 
 ### .spec.gateways.shutdownMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L185)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L182)</sup>
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
@@ -3905,7 +3905,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 ### .spec.gateways.sidecarCoreNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L163)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -3914,7 +3914,7 @@ Some names (e.g.: "server", "worker") are reserved, and they don't have any impa
 
 ### .spec.gateways.sidecars
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L167)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L164)</sup>
 
 Sidecars specifies a list of additional containers to be started
 
@@ -3925,7 +3925,7 @@ Links:
 
 ### .spec.gateways.storageClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L65)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L62)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -3938,7 +3938,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 ### .spec.gateways.terminationGracePeriodSeconds
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L200)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L197)</sup>
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -3946,7 +3946,7 @@ TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for
 
 ### .spec.gateways.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L93)</sup>
 
 Tolerations specifies the tolerations added to Pods in this group.
 By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
@@ -3962,7 +3962,7 @@ Links:
 
 ### .spec.gateways.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
@@ -3974,7 +3974,7 @@ Possible Values:
 
 ### .spec.gateways.volumeAllowShrink
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L145)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -3987,7 +3987,7 @@ VolumeAllowShrink allows shrinking of the volume
 
 ### .spec.gateways.volumeClaimTemplate
 
-Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L139)</sup>
+Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L136)</sup>
 
 VolumeClaimTemplate specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
@@ -4003,7 +4003,7 @@ Links:
 
 ### .spec.gateways.volumeMounts
 
-Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L177)</sup>
+Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L174)</sup>
 
 VolumeMounts define list of volume mounts mounted into server container
 
@@ -4850,7 +4850,7 @@ Possible Values:
 
 ### .spec.single.affinity
 
-Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L156)</sup>
+Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
@@ -4861,7 +4861,7 @@ Links:
 
 ### .spec.single.allowMemberRecreation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L198)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L195)</sup>
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -4872,7 +4872,7 @@ This setting changes the member recreation logic based on group:
 
 ### .spec.single.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L99)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
@@ -4881,7 +4881,7 @@ Annotations are merged with `spec.annotations`.
 
 ### .spec.single.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L101)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L98)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -4889,7 +4889,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.single.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L103)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L100)</sup>
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
@@ -4897,7 +4897,7 @@ AnnotationsMode Define annotations mode which should be use while overriding ann
 
 ### .spec.single.antiAffinity
 
-Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L152)</sup>
+Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L149)</sup>
 
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
@@ -4908,7 +4908,7 @@ Links:
 
 ### .spec.single.args
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L57)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L54)</sup>
 
 Args setting specifies additional command-line arguments passed to all servers of this group.
 
@@ -4918,7 +4918,7 @@ Default Value: `[]`
 
 ### .spec.single.count
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L49)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L46)</sup>
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -4931,7 +4931,7 @@ as for the `dbservers` group.
 
 ### .spec.single.entrypoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L59)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L56)</sup>
 
 Entrypoint overrides container executable
 
@@ -4973,7 +4973,7 @@ Links:
 
 ### .spec.single.exporterPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L211)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L208)</sup>
 
 ExporterPort define Port used by exporter
 
@@ -4981,7 +4981,7 @@ ExporterPort define Port used by exporter
 
 ### .spec.single.extendedRotationCheck
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L181)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L178)</sup>
 
 ExtendedRotationCheck extend checks for rotation
 
@@ -4989,7 +4989,7 @@ ExtendedRotationCheck extend checks for rotation
 
 ### .spec.single.externalPortEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L193)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L190)</sup>
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -4997,7 +4997,7 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 ### .spec.single.indexMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L204)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L201)</sup>
 
 IndexMethod define group Indexing method
 
@@ -5032,7 +5032,7 @@ Possible Values:
 
 ### .spec.single.internalPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L189)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L186)</sup>
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -5040,7 +5040,7 @@ InternalPort define port used in internal communication, can be accessed over lo
 
 ### .spec.single.internalPortProtocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L191)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L188)</sup>
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -5048,7 +5048,7 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 ### .spec.single.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L105)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L102)</sup>
 
 Labels specified the labels added to Pods in this group.
 
@@ -5056,7 +5056,7 @@ Labels specified the labels added to Pods in this group.
 
 ### .spec.single.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L107)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L104)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -5064,7 +5064,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.single.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L109)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -5072,7 +5072,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ### .spec.single.maxCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L53)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
@@ -5080,7 +5080,7 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.single.memoryReservation
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L81)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L78)</sup>
 
 MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
@@ -5095,7 +5095,7 @@ Default Value: `0`
 
 ### .spec.single.minCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L51)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L48)</sup>
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -5103,7 +5103,7 @@ MinCount specifies a minimum for the count of servers. If set, a specification i
 
 ### .spec.single.nodeAffinity
 
-Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
+Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L157)</sup>
 
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
@@ -5114,7 +5114,7 @@ Links:
 
 ### .spec.single.nodeSelector
 
-Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L124)</sup>
+Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L121)</sup>
 
 NodeSelector setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
 
@@ -5155,7 +5155,7 @@ Default Value: `/usr/bin/numactl`
 
 ### .spec.single.overrideDetectedNumberOfCores
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L87)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L84)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable**
@@ -5172,7 +5172,7 @@ Default Value: `true`
 
 ### .spec.single.overrideDetectedTotalMemory
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L75)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L72)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable**
@@ -5201,7 +5201,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .spec.single.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L209)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L206)</sup>
 
 Port define Port used by member
 
@@ -5209,7 +5209,7 @@ Port define Port used by member
 
 ### .spec.single.priorityClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L130)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L127)</sup>
 
 PriorityClassName specifies a priority class name
 Will be forwarded to the pod spec.
@@ -5428,7 +5428,7 @@ Default Value: `2`
 
 ### .spec.single.pvcResizeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L144)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L141)</sup>
 
 VolumeResizeMode specified resize mode for PVCs and PVs
 
@@ -5440,7 +5440,7 @@ Possible Values:
 
 ### .spec.single.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L69)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L66)</sup>
 
 Resources holds resource requests & limits
 
@@ -5451,7 +5451,7 @@ Links:
 
 ### .spec.single.schedulerName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
 
 SchedulerName define scheduler name used for group
 
@@ -5589,7 +5589,7 @@ sysctls:
 
 ### .spec.single.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L120)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L117)</sup>
 
 ServiceAccountName setting specifies the `serviceAccountName` for the `Pods` created
 for each server of this group. If empty, it defaults to using the
@@ -5604,7 +5604,7 @@ to that service account.
 
 ### .spec.single.shutdownDelay
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L187)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L184)</sup>
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -5612,7 +5612,7 @@ ShutdownDelay define how long operator should delay finalizer removal after shut
 
 ### .spec.single.shutdownMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L185)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L182)</sup>
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
@@ -5620,7 +5620,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 ### .spec.single.sidecarCoreNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L163)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -5629,7 +5629,7 @@ Some names (e.g.: "server", "worker") are reserved, and they don't have any impa
 
 ### .spec.single.sidecars
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L167)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L164)</sup>
 
 Sidecars specifies a list of additional containers to be started
 
@@ -5640,7 +5640,7 @@ Links:
 
 ### .spec.single.storageClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L65)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L62)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -5653,7 +5653,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 ### .spec.single.terminationGracePeriodSeconds
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L200)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L197)</sup>
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -5661,7 +5661,7 @@ TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for
 
 ### .spec.single.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L93)</sup>
 
 Tolerations specifies the tolerations added to Pods in this group.
 By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
@@ -5677,7 +5677,7 @@ Links:
 
 ### .spec.single.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
@@ -5689,7 +5689,7 @@ Possible Values:
 
 ### .spec.single.volumeAllowShrink
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L145)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -5702,7 +5702,7 @@ VolumeAllowShrink allows shrinking of the volume
 
 ### .spec.single.volumeClaimTemplate
 
-Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L139)</sup>
+Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L136)</sup>
 
 VolumeClaimTemplate specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
@@ -5718,7 +5718,7 @@ Links:
 
 ### .spec.single.volumeMounts
 
-Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L177)</sup>
+Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L174)</sup>
 
 VolumeMounts define list of volume mounts mounted into server container
 
@@ -6014,7 +6014,7 @@ Default Value: `"2160h" (about 3 months)`
 
 ### .spec.syncmasters.affinity
 
-Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L156)</sup>
+Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
@@ -6025,7 +6025,7 @@ Links:
 
 ### .spec.syncmasters.allowMemberRecreation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L198)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L195)</sup>
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -6036,7 +6036,7 @@ This setting changes the member recreation logic based on group:
 
 ### .spec.syncmasters.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L99)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
@@ -6045,7 +6045,7 @@ Annotations are merged with `spec.annotations`.
 
 ### .spec.syncmasters.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L101)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L98)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -6053,7 +6053,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.syncmasters.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L103)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L100)</sup>
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
@@ -6061,7 +6061,7 @@ AnnotationsMode Define annotations mode which should be use while overriding ann
 
 ### .spec.syncmasters.antiAffinity
 
-Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L152)</sup>
+Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L149)</sup>
 
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
@@ -6072,7 +6072,7 @@ Links:
 
 ### .spec.syncmasters.args
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L57)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L54)</sup>
 
 Args setting specifies additional command-line arguments passed to all servers of this group.
 
@@ -6082,7 +6082,7 @@ Default Value: `[]`
 
 ### .spec.syncmasters.count
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L49)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L46)</sup>
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -6095,7 +6095,7 @@ as for the `dbservers` group.
 
 ### .spec.syncmasters.entrypoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L59)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L56)</sup>
 
 Entrypoint overrides container executable
 
@@ -6137,7 +6137,7 @@ Links:
 
 ### .spec.syncmasters.exporterPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L211)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L208)</sup>
 
 ExporterPort define Port used by exporter
 
@@ -6145,7 +6145,7 @@ ExporterPort define Port used by exporter
 
 ### .spec.syncmasters.extendedRotationCheck
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L181)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L178)</sup>
 
 ExtendedRotationCheck extend checks for rotation
 
@@ -6153,7 +6153,7 @@ ExtendedRotationCheck extend checks for rotation
 
 ### .spec.syncmasters.externalPortEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L193)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L190)</sup>
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -6161,7 +6161,7 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 ### .spec.syncmasters.indexMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L204)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L201)</sup>
 
 IndexMethod define group Indexing method
 
@@ -6196,7 +6196,7 @@ Possible Values:
 
 ### .spec.syncmasters.internalPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L189)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L186)</sup>
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -6204,7 +6204,7 @@ InternalPort define port used in internal communication, can be accessed over lo
 
 ### .spec.syncmasters.internalPortProtocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L191)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L188)</sup>
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -6212,7 +6212,7 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 ### .spec.syncmasters.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L105)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L102)</sup>
 
 Labels specified the labels added to Pods in this group.
 
@@ -6220,7 +6220,7 @@ Labels specified the labels added to Pods in this group.
 
 ### .spec.syncmasters.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L107)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L104)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -6228,7 +6228,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.syncmasters.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L109)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -6236,7 +6236,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ### .spec.syncmasters.maxCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L53)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
@@ -6244,7 +6244,7 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.syncmasters.memoryReservation
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L81)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L78)</sup>
 
 MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
@@ -6259,7 +6259,7 @@ Default Value: `0`
 
 ### .spec.syncmasters.minCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L51)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L48)</sup>
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -6267,7 +6267,7 @@ MinCount specifies a minimum for the count of servers. If set, a specification i
 
 ### .spec.syncmasters.nodeAffinity
 
-Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
+Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L157)</sup>
 
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
@@ -6278,7 +6278,7 @@ Links:
 
 ### .spec.syncmasters.nodeSelector
 
-Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L124)</sup>
+Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L121)</sup>
 
 NodeSelector setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
 
@@ -6319,7 +6319,7 @@ Default Value: `/usr/bin/numactl`
 
 ### .spec.syncmasters.overrideDetectedNumberOfCores
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L87)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L84)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable**
@@ -6336,7 +6336,7 @@ Default Value: `true`
 
 ### .spec.syncmasters.overrideDetectedTotalMemory
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L75)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L72)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable**
@@ -6365,7 +6365,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .spec.syncmasters.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L209)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L206)</sup>
 
 Port define Port used by member
 
@@ -6373,7 +6373,7 @@ Port define Port used by member
 
 ### .spec.syncmasters.priorityClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L130)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L127)</sup>
 
 PriorityClassName specifies a priority class name
 Will be forwarded to the pod spec.
@@ -6592,7 +6592,7 @@ Default Value: `2`
 
 ### .spec.syncmasters.pvcResizeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L144)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L141)</sup>
 
 VolumeResizeMode specified resize mode for PVCs and PVs
 
@@ -6604,7 +6604,7 @@ Possible Values:
 
 ### .spec.syncmasters.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L69)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L66)</sup>
 
 Resources holds resource requests & limits
 
@@ -6615,7 +6615,7 @@ Links:
 
 ### .spec.syncmasters.schedulerName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
 
 SchedulerName define scheduler name used for group
 
@@ -6753,7 +6753,7 @@ sysctls:
 
 ### .spec.syncmasters.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L120)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L117)</sup>
 
 ServiceAccountName setting specifies the `serviceAccountName` for the `Pods` created
 for each server of this group. If empty, it defaults to using the
@@ -6768,7 +6768,7 @@ to that service account.
 
 ### .spec.syncmasters.shutdownDelay
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L187)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L184)</sup>
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -6776,7 +6776,7 @@ ShutdownDelay define how long operator should delay finalizer removal after shut
 
 ### .spec.syncmasters.shutdownMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L185)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L182)</sup>
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
@@ -6784,7 +6784,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 ### .spec.syncmasters.sidecarCoreNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L163)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -6793,7 +6793,7 @@ Some names (e.g.: "server", "worker") are reserved, and they don't have any impa
 
 ### .spec.syncmasters.sidecars
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L167)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L164)</sup>
 
 Sidecars specifies a list of additional containers to be started
 
@@ -6804,7 +6804,7 @@ Links:
 
 ### .spec.syncmasters.storageClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L65)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L62)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -6817,7 +6817,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 ### .spec.syncmasters.terminationGracePeriodSeconds
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L200)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L197)</sup>
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -6825,7 +6825,7 @@ TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for
 
 ### .spec.syncmasters.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L93)</sup>
 
 Tolerations specifies the tolerations added to Pods in this group.
 By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
@@ -6841,7 +6841,7 @@ Links:
 
 ### .spec.syncmasters.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
@@ -6853,7 +6853,7 @@ Possible Values:
 
 ### .spec.syncmasters.volumeAllowShrink
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L145)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -6866,7 +6866,7 @@ VolumeAllowShrink allows shrinking of the volume
 
 ### .spec.syncmasters.volumeClaimTemplate
 
-Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L139)</sup>
+Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L136)</sup>
 
 VolumeClaimTemplate specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
@@ -6882,7 +6882,7 @@ Links:
 
 ### .spec.syncmasters.volumeMounts
 
-Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L177)</sup>
+Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L174)</sup>
 
 VolumeMounts define list of volume mounts mounted into server container
 
@@ -6956,7 +6956,7 @@ Links:
 
 ### .spec.syncworkers.affinity
 
-Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L156)</sup>
+Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>
 
 Affinity specified additional affinity settings in ArangoDB Pod definitions
 
@@ -6967,7 +6967,7 @@ Links:
 
 ### .spec.syncworkers.allowMemberRecreation
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L198)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L195)</sup>
 
 AllowMemberRecreation allows to recreate member.
 This setting changes the member recreation logic based on group:
@@ -6978,7 +6978,7 @@ This setting changes the member recreation logic based on group:
 
 ### .spec.syncworkers.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L99)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
 
 Annotations specified the annotations added to Pods in this group.
 Annotations are merged with `spec.annotations`.
@@ -6987,7 +6987,7 @@ Annotations are merged with `spec.annotations`.
 
 ### .spec.syncworkers.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L101)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L98)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -6995,7 +6995,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.syncworkers.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L103)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L100)</sup>
 
 AnnotationsMode Define annotations mode which should be use while overriding annotations
 
@@ -7003,7 +7003,7 @@ AnnotationsMode Define annotations mode which should be use while overriding ann
 
 ### .spec.syncworkers.antiAffinity
 
-Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L152)</sup>
+Type: `core.PodAntiAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L149)</sup>
 
 AntiAffinity specified additional antiAffinity settings in ArangoDB Pod definitions
 
@@ -7014,7 +7014,7 @@ Links:
 
 ### .spec.syncworkers.args
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L57)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L54)</sup>
 
 Args setting specifies additional command-line arguments passed to all servers of this group.
 
@@ -7024,7 +7024,7 @@ Default Value: `[]`
 
 ### .spec.syncworkers.count
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L49)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L46)</sup>
 
 Count setting specifies the number of servers to start for the given group.
 For the Agent group, this value must be a positive, odd number.
@@ -7037,7 +7037,7 @@ as for the `dbservers` group.
 
 ### .spec.syncworkers.entrypoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L59)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L56)</sup>
 
 Entrypoint overrides container executable
 
@@ -7079,7 +7079,7 @@ Links:
 
 ### .spec.syncworkers.exporterPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L211)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L208)</sup>
 
 ExporterPort define Port used by exporter
 
@@ -7087,7 +7087,7 @@ ExporterPort define Port used by exporter
 
 ### .spec.syncworkers.extendedRotationCheck
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L181)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L178)</sup>
 
 ExtendedRotationCheck extend checks for rotation
 
@@ -7095,7 +7095,7 @@ ExtendedRotationCheck extend checks for rotation
 
 ### .spec.syncworkers.externalPortEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L193)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L190)</sup>
 
 ExternalPortEnabled if external port should be enabled. If is set to false, ports needs to be exposed via sidecar. Only for ArangoD members
 
@@ -7103,7 +7103,7 @@ ExternalPortEnabled if external port should be enabled. If is set to false, port
 
 ### .spec.syncworkers.indexMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L204)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L201)</sup>
 
 IndexMethod define group Indexing method
 
@@ -7138,7 +7138,7 @@ Possible Values:
 
 ### .spec.syncworkers.internalPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L189)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L186)</sup>
 
 InternalPort define port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -7146,7 +7146,7 @@ InternalPort define port used in internal communication, can be accessed over lo
 
 ### .spec.syncworkers.internalPortProtocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L191)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L188)</sup>
 
 InternalPortProtocol define protocol of port used in internal communication, can be accessed over localhost via sidecar. Only for ArangoD members
 
@@ -7154,7 +7154,7 @@ InternalPortProtocol define protocol of port used in internal communication, can
 
 ### .spec.syncworkers.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L105)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L102)</sup>
 
 Labels specified the labels added to Pods in this group.
 
@@ -7162,7 +7162,7 @@ Labels specified the labels added to Pods in this group.
 
 ### .spec.syncworkers.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L107)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L104)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -7170,7 +7170,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.syncworkers.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L109)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -7178,7 +7178,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ### .spec.syncworkers.maxCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L53)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
 
 MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
 
@@ -7186,7 +7186,7 @@ MaxCount specifies a maximum for the count of servers. If set, a specification i
 
 ### .spec.syncworkers.memoryReservation
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L81)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L78)</sup>
 
 MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
@@ -7201,7 +7201,7 @@ Default Value: `0`
 
 ### .spec.syncworkers.minCount
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L51)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L48)</sup>
 
 MinCount specifies a minimum for the count of servers. If set, a specification is invalid if `count < minCount`.
 
@@ -7209,7 +7209,7 @@ MinCount specifies a minimum for the count of servers. If set, a specification i
 
 ### .spec.syncworkers.nodeAffinity
 
-Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
+Type: `core.NodeAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L157)</sup>
 
 NodeAffinity specified additional nodeAffinity settings in ArangoDB Pod definitions
 
@@ -7220,7 +7220,7 @@ Links:
 
 ### .spec.syncworkers.nodeSelector
 
-Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L124)</sup>
+Type: `map[string]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L121)</sup>
 
 NodeSelector setting specifies a set of labels to be used as `nodeSelector` for Pods of this node.
 
@@ -7261,7 +7261,7 @@ Default Value: `/usr/bin/numactl`
 
 ### .spec.syncworkers.overrideDetectedNumberOfCores
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L87)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L84)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable**
@@ -7278,7 +7278,7 @@ Default Value: `true`
 
 ### .spec.syncworkers.overrideDetectedTotalMemory
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L75)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L72)</sup>
 
 > [!IMPORTANT]
 > **Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable**
@@ -7307,7 +7307,7 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 ### .spec.syncworkers.port
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L209)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L206)</sup>
 
 Port define Port used by member
 
@@ -7315,7 +7315,7 @@ Port define Port used by member
 
 ### .spec.syncworkers.priorityClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L130)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L127)</sup>
 
 PriorityClassName specifies a priority class name
 Will be forwarded to the pod spec.
@@ -7534,7 +7534,7 @@ Default Value: `2`
 
 ### .spec.syncworkers.pvcResizeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L144)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L141)</sup>
 
 VolumeResizeMode specified resize mode for PVCs and PVs
 
@@ -7546,7 +7546,7 @@ Possible Values:
 
 ### .spec.syncworkers.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L69)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L66)</sup>
 
 Resources holds resource requests & limits
 
@@ -7557,7 +7557,7 @@ Links:
 
 ### .spec.syncworkers.schedulerName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
 
 SchedulerName define scheduler name used for group
 
@@ -7695,7 +7695,7 @@ sysctls:
 
 ### .spec.syncworkers.serviceAccountName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L120)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L117)</sup>
 
 ServiceAccountName setting specifies the `serviceAccountName` for the `Pods` created
 for each server of this group. If empty, it defaults to using the
@@ -7710,7 +7710,7 @@ to that service account.
 
 ### .spec.syncworkers.shutdownDelay
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L187)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L184)</sup>
 
 ShutdownDelay define how long operator should delay finalizer removal after shutdown
 
@@ -7718,7 +7718,7 @@ ShutdownDelay define how long operator should delay finalizer removal after shut
 
 ### .spec.syncworkers.shutdownMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L185)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L182)</sup>
 
 ShutdownMethod describe procedure of member shutdown taken by Operator
 
@@ -7726,7 +7726,7 @@ ShutdownMethod describe procedure of member shutdown taken by Operator
 
 ### .spec.syncworkers.sidecarCoreNames
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L163)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L160)</sup>
 
 SidecarCoreNames is a list of sidecar containers which must run in the pod.
 Some names (e.g.: "server", "worker") are reserved, and they don't have any impact.
@@ -7735,7 +7735,7 @@ Some names (e.g.: "server", "worker") are reserved, and they don't have any impa
 
 ### .spec.syncworkers.sidecars
 
-Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L167)</sup>
+Type: `[]core.Container` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L164)</sup>
 
 Sidecars specifies a list of additional containers to be started
 
@@ -7746,7 +7746,7 @@ Links:
 
 ### .spec.syncworkers.storageClassName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L65)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L62)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -7759,7 +7759,7 @@ StorageClassName specifies the classname for storage of the servers.
 
 ### .spec.syncworkers.terminationGracePeriodSeconds
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L200)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L197)</sup>
 
 TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 
@@ -7767,7 +7767,7 @@ TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for
 
 ### .spec.syncworkers.tolerations
 
-Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L96)</sup>
+Type: `[]core.Toleration` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L93)</sup>
 
 Tolerations specifies the tolerations added to Pods in this group.
 By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
@@ -7783,7 +7783,7 @@ Links:
 
 ### .spec.syncworkers.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L220)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
@@ -7795,7 +7795,7 @@ Possible Values:
 
 ### .spec.syncworkers.volumeAllowShrink
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L148)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L145)</sup>
 
 > [!WARNING]
 > ***DEPRECATED***
@@ -7808,7 +7808,7 @@ VolumeAllowShrink allows shrinking of the volume
 
 ### .spec.syncworkers.volumeClaimTemplate
 
-Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L139)</sup>
+Type: `core.PersistentVolumeClaim` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L136)</sup>
 
 VolumeClaimTemplate specifies a volumeClaimTemplate used by operator to create to volume claims for pods of this group.
 This setting is not available for group `coordinators`, `syncmasters` & `syncworkers`.
@@ -7824,7 +7824,7 @@ Links:
 
 ### .spec.syncworkers.volumeMounts
 
-Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L177)</sup>
+Type: `[]ServerGroupSpecVolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L174)</sup>
 
 VolumeMounts define list of volume mounts mounted into server container
 

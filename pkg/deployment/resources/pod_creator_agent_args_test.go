@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,13 +88,15 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupAgents,
-			GroupSpec:   apiObject.Spec.Agents,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupAgents,
+			GroupSpec:  apiObject.Spec.Agents,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
@@ -149,13 +151,15 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		}
 
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupAgents,
-			GroupSpec:   apiObject.Spec.Agents,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupAgents,
+			GroupSpec:  apiObject.Spec.Agents,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: true,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
@@ -214,13 +218,15 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 		}
 
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupAgents,
-			GroupSpec:   apiObject.Spec.Agents,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupAgents,
+			GroupSpec:  apiObject.Spec.Agents,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
@@ -274,13 +280,15 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupAgents,
-			GroupSpec:   apiObject.Spec.Agents,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupAgents,
+			GroupSpec:  apiObject.Spec.Agents,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
@@ -334,13 +342,15 @@ func TestCreateArangodArgsAgent(t *testing.T) {
 			api.MemberStatus{ID: "a3"},
 		}
 		input := pod.Input{
-			ApiObject:   apiObject,
-			Deployment:  apiObject.Spec,
-			Status:      api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
-			Group:       api.ServerGroupAgents,
-			GroupSpec:   apiObject.Spec.Agents,
-			Version:     "",
-			Enterprise:  false,
+			ApiObject:  apiObject,
+			Deployment: apiObject.Spec,
+			Status:     api.DeploymentStatus{Members: api.DeploymentStatusMembers{Agents: agents}},
+			Group:      api.ServerGroupAgents,
+			GroupSpec:  apiObject.Spec.Agents,
+			Image: api.ImageInfo{
+				ArangoDBVersion: "",
+				Enterprise:      false,
+			},
 			AutoUpgrade: false,
 			Member:      api.MemberStatus{ID: "a1"},
 		}
