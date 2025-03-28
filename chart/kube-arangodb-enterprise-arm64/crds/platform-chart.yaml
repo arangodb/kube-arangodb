@@ -18,8 +18,23 @@ spec:
           x-kubernetes-preserve-unknown-fields: true
       served: true
       storage: true
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if Chart is valid
+          name: Ready
+          type: string
+        - jsonPath: .status.info.details.name
+          description: Defines the name of Chart
+          name: ChartName
+          type: string
+        - jsonPath: .status.info.details.version
+          description: Defines the version of Chart
+          name: ChartVersion
+          type: string
+        - jsonPath: .status.info.checksum
+          description: Defines the checksum of Chart
+          name: ChartChecksum
+          type: string
+          priority: 1
       subresources:
         status: {}
-        scale:
-          specReplicasPath: .spec.replicas
-          statusReplicasPath: .status.replicas

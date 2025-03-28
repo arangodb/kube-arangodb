@@ -117,6 +117,7 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 	var target networkingApi.ArangoRouteStatusTarget
 
 	target.Path = dest.GetPath()
+	target.Route = extension.Spec.Route.AsStatus()
 	if t := dest.Timeout; t != nil {
 		target.Timeout = dest.GetTimeout()
 	} else {

@@ -297,9 +297,17 @@ Protocol defines http protocol used for the route
 
 ***
 
+### .status.target.route.path
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_status_target_route.go#L29)</sup>
+
+Path specifies the Path route
+
+***
+
 ### .status.target.timeout
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_status_target.go#L54)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_status_target.go#L57)</sup>
 
 Timeout specify the upstream request timeout
 
