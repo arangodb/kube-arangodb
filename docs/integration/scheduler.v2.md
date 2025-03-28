@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Scheduler V2
-parent: Integration Sidecars
+title: Integration Sidecar Scheduler V2
+parent: ArangoDBPlatform
 ---
 
 # Scheduler V2

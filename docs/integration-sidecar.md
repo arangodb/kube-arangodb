@@ -1,9 +1,8 @@
 ---
 layout: page
-has_children: true
 title: Integration Sidecars
 parent: ArangoDBPlatform
-has_toc: false
+nav_order: 1
 ---
 
 # Integration 
@@ -62,7 +61,7 @@ In order to inject specific profiles to the pod use label (split by `,`):
 
 ```yaml
 metadata:
-  labels:
+  annotations:
     profiles.arangodb.com/profiles: "gpu"
 ```
 
@@ -70,7 +69,7 @@ or
 
 ```yaml
 metadata:
-  labels:
+  annotations:
     profiles.arangodb.com/profiles: "gpu,internal"
 ```
 
@@ -200,6 +199,12 @@ Example: `localhost:1234`
 #### INTEGRATION_SERVICE_ADDRESS
 
 Integration Service API Address
+
+Example: `localhost:1234`
+
+#### INTEGRATION_HTTP_ADDRESS
+
+Integration Service HTTP Address
 
 Example: `localhost:1234`
 
