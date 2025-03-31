@@ -50,6 +50,9 @@ type ArangoRouteStatusTarget struct {
 	// Path specifies request path override
 	Path string `json:"path,omitempty"`
 
+	// Route defines the route status
+	Route ArangoRouteStatusTargetRoute `json:"route,omitempty"`
+
 	// Timeout specify the upstream request timeout
 	Timeout meta.Duration `json:"timeout,omitempty"`
 }
@@ -78,5 +81,5 @@ func (a *ArangoRouteStatusTarget) Hash() string {
 	if a == nil {
 		return ""
 	}
-	return util.SHA256FromStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Protocol.String(), a.Path, a.Authentication.Hash(), a.Options.Hash(), a.Timeout.String())
+	return util.SHA256FromStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Protocol.String(), a.Path, a.Authentication.Hash(), a.Options.Hash(), a.Timeout.String(), a.Route.Hash())
 }

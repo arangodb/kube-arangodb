@@ -20,6 +20,16 @@ spec:
           x-kubernetes-preserve-unknown-fields: true
       served: true
       storage: true
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if Member is ready
+          name: Ready
+          type: string
+        - jsonPath: '.status.conditions[?(@.type=="PendingRestart")].status'
+          description: Defines if Member is pending restart
+          name: PendingRestart
+          priority: 1
+          type: string
       subresources:
         status: {}
     - name: v2alpha1
@@ -29,5 +39,15 @@ spec:
           x-kubernetes-preserve-unknown-fields: true
       served: true
       storage: false
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if Member is ready
+          name: Ready
+          type: string
+        - jsonPath: '.status.conditions[?(@.type=="PendingRestart")].status'
+          description: Defines if Member is pending restart
+          name: PendingRestart
+          priority: 1
+          type: string
       subresources:
         status: {}

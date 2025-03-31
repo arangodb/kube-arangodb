@@ -18,5 +18,10 @@ spec:
           x-kubernetes-preserve-unknown-fields: true
       served: true
       storage: true
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if Storage is valid
+          name: Ready
+          type: string
       subresources:
         status: {}
