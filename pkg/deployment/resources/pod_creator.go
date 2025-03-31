@@ -395,9 +395,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			return nil, errors.WithStack(errors.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
 		}
 		// Check if the sync image is overwritten by the SyncSpec
-		imageInfo := imageInfo
 		if spec.Sync.HasSyncImage() {
-			imageInfo.Image = spec.Sync.GetSyncImage()
+			input.Image.Image = spec.Sync.GetSyncImage()
 		}
 
 		podCreator = &MemberSyncPod{
@@ -408,9 +407,9 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			cachedStatus: cache,
 		}
 	case api.ServerGroupTypeGateway:
-		imageInfo.Image = r.context.GetOperatorImage()
+		input.Image.Image = r.context.GetOperatorImage()
 		if spec.Gateway.GetImage() != "" {
-			imageInfo.Image = spec.Gateway.GetImage()
+			input.Image.Image = spec.Gateway.GetImage()
 		}
 
 		podCreator = &MemberGatewayPod{

@@ -143,7 +143,7 @@ func (m *MemberGatewayPod) GetTolerations() []core.Toleration {
 }
 
 func (m *MemberGatewayPod) GetContainerCreator() interfaces.ContainerCreator {
-	return &ArangoGatewayContainer{
+	return &MemberGatewayContainer{
 		MemberGatewayPod: m,
 		resources:        m.resources,
 	}

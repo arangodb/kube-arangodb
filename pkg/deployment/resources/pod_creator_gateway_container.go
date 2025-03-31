@@ -30,25 +30,25 @@ import (
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
-var _ interfaces.ContainerCreator = &ArangoGatewayContainer{}
+var _ interfaces.ContainerCreator = &MemberGatewayContainer{}
 
-type ArangoGatewayContainer struct {
+type MemberGatewayContainer struct {
 	*MemberGatewayPod
 	resources *Resources
 }
 
-func (a *ArangoGatewayContainer) GetCommand() ([]string, error) {
+func (a *MemberGatewayContainer) GetCommand() ([]string, error) {
 	cmd := make([]string, 0, 128)
 	cmd = append(cmd, a.GetExecutor())
 	cmd = append(cmd, createArangoGatewayArgs(a.Input)...)
 	return cmd, nil
 }
 
-func (a *ArangoGatewayContainer) GetName() string {
+func (a *MemberGatewayContainer) GetName() string {
 	return shared.ServerContainerName
 }
 
-func (a *ArangoGatewayContainer) GetPorts() []core.ContainerPort {
+func (a *MemberGatewayContainer) GetPorts() []core.ContainerPort {
 	port := shared.ArangoPort
 
 	return []core.ContainerPort{
@@ -60,15 +60,15 @@ func (a *ArangoGatewayContainer) GetPorts() []core.ContainerPort {
 	}
 }
 
-func (a *ArangoGatewayContainer) GetExecutor() string {
+func (a *MemberGatewayContainer) GetExecutor() string {
 	return a.GroupSpec.GetEntrypoint(constants.ArangoGatewayExecutor)
 }
 
-func (a *ArangoGatewayContainer) GetSecurityContext() *core.SecurityContext {
+func (a *MemberGatewayContainer) GetSecurityContext() *core.SecurityContext {
 	return k8sutil.CreateSecurityContext(a.GroupSpec.SecurityContext)
 }
 
-func (a *ArangoGatewayContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
+func (a *MemberGatewayContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	var liveness, readiness, startup *core.Probe
 
 	probeLivenessConfig, err := a.resources.getLivenessProbe(a.Deployment, a.Group, a.Image)
@@ -101,23 +101,23 @@ func (a *ArangoGatewayContainer) GetProbes() (*core.Probe, *core.Probe, *core.Pr
 	return liveness, readiness, startup, nil
 }
 
-func (a *ArangoGatewayContainer) GetResourceRequirements() core.ResourceRequirements {
+func (a *MemberGatewayContainer) GetResourceRequirements() core.ResourceRequirements {
 	return kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec))
 }
 
-func (a *ArangoGatewayContainer) GetLifecycle() (*core.Lifecycle, error) {
+func (a *MemberGatewayContainer) GetLifecycle() (*core.Lifecycle, error) {
 	return k8sutil.NewLifecycleFinalizers()
 }
 
-func (a *ArangoGatewayContainer) GetImagePullPolicy() core.PullPolicy {
+func (a *MemberGatewayContainer) GetImagePullPolicy() core.PullPolicy {
 	return a.Deployment.GetImagePullPolicy()
 }
 
-func (a *ArangoGatewayContainer) GetImage() string {
+func (a *MemberGatewayContainer) GetImage() string {
 	return a.Image.Image
 }
 
-func (a *ArangoGatewayContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
+func (a *MemberGatewayContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
 	envs.Add(true, k8sutil.GetLifecycleEnv()...)
@@ -147,6 +147,6 @@ func (a *ArangoGatewayContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource)
 	return envs.GetEnvList(), nil
 }
 
-func (a *ArangoGatewayContainer) GetVolumeMounts() []core.VolumeMount {
+func (a *MemberGatewayContainer) GetVolumeMounts() []core.VolumeMount {
 	return createGatewayVolumes(a.Input).VolumeMounts()
 }
