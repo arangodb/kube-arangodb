@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ func (u autoUpgrade) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 
 func (u autoUpgrade) Args(i Input) k8sutil.OptionPairs {
 	// Always add upgrade flag due to fact it is now only in initContainers
-	if i.Version.CompareTo("3.6.0") >= 0 {
+	if i.Image.ArangoDBVersion.CompareTo("3.6.0") >= 0 {
 		switch i.Group {
 		case deploymentApi.ServerGroupCoordinators:
 			return k8sutil.NewOptionPair(k8sutil.OptionPair{Key: "--cluster.upgrade", Value: "online"})

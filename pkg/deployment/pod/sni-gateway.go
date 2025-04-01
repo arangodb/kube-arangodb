@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ func (s sniGateway) isSupported(i Input) bool {
 		return false
 	}
 
-	if !features.Gateway().Supported(i.Version, i.Enterprise) {
+	if !features.Gateway().ImageSupported(&i.Image) {
 		// We need 3.7.0+ and Enterprise to support this
 		return false
 	}

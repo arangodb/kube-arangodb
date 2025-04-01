@@ -95,10 +95,38 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 		}
 	case api.ServerGroupTypeArangoSync:
 		return a.checkProgressArangoSync(ctxChild), false, nil
+	case api.ServerGroupTypeGateway:
+		return a.checkProgressGateway(), false, nil
 	default:
 		assertion.InvalidGroupKey.Assert(true, "Unable to execute action WaitForMemberUp for an unknown group: %s", a.action.Group.AsRole())
 		return true, false, nil
 	}
+}
+
+// checkProgressGateway checks the progress of the action in the case
+// of a gateway server.
+func (a *actionWaitForMemberUp) checkProgressGateway() bool {
+	m, found := a.actionCtx.GetMemberStatusByID(a.MemberID())
+	if !found {
+		a.log.Error("No such member")
+		return false
+	}
+
+	if m.Phase.IsPending() {
+		return false
+	}
+
+	if !m.Conditions.IsTrue(api.ConditionTypeServing) {
+		a.log.Debug("Member not yet serving")
+		return false
+	}
+
+	if !m.Conditions.IsTrue(api.ConditionTypeReady) {
+		a.log.Debug("Member not yet ready")
+		return false
+	}
+
+	return true
 }
 
 // checkProgressSingle checks the progress of the action in the case

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,31 +58,16 @@ var _ interfaces.PodCreator = &MemberArangoDPod{}
 var _ interfaces.ContainerCreator = &ArangoDContainer{}
 
 type MemberArangoDPod struct {
-	podName          string
-	status           api.MemberStatus
-	groupSpec        api.ServerGroupSpec
-	spec             api.DeploymentSpec
-	deploymentStatus api.DeploymentStatus
-	group            api.ServerGroup
-	arangoMember     api.ArangoMember
-	context          Context
-	resources        *Resources
-	imageInfo        api.ImageInfo
-	autoUpgrade      bool
-	cachedStatus     interfaces.Inspector
+	pod.Input
+
+	podName      string
+	context      Context
+	resources    *Resources
+	cachedStatus interfaces.Inspector
 }
 
 type ArangoDContainer struct {
-	member       *MemberArangoDPod
-	resources    *Resources
-	groupSpec    api.ServerGroupSpec
-	spec         api.DeploymentSpec
-	group        api.ServerGroup
-	arangoMember api.ArangoMember
-	imageInfo    api.ImageInfo
-	cachedStatus interfaces.Inspector
-	input        pod.Input
-	status       api.MemberStatus
+	*MemberArangoDPod
 }
 
 // ArangoUpgradeContainer can construct ArangoD upgrade container.
@@ -104,18 +89,18 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 	ports := []core.ContainerPort{
 		{
 			Name:          shared.ServerPortName,
-			ContainerPort: int32(a.groupSpec.GetPort()),
+			ContainerPort: int32(a.GroupSpec.GetPort()),
 			Protocol:      core.ProtocolTCP,
 		},
 	}
 
-	if a.spec.Metrics.IsEnabled() {
+	if a.Deployment.Metrics.IsEnabled() {
 		//nolint:staticcheck
-		switch a.spec.Metrics.Mode.Get() {
+		switch a.Deployment.Metrics.Mode.Get() {
 		case api.MetricsModeInternal:
 			ports = append(ports, core.ContainerPort{
 				Name:          shared.ExporterPortName,
-				ContainerPort: int32(a.groupSpec.GetPort()),
+				ContainerPort: int32(a.GroupSpec.GetPort()),
 				Protocol:      core.ProtocolTCP,
 			})
 		}
@@ -127,13 +112,13 @@ func (a *ArangoDContainer) GetPorts() []core.ContainerPort {
 func (a *ArangoDContainer) GetCommand() ([]string, error) {
 	cmd := make([]string, 0, 128)
 
-	if args := createArangodNumactl(a.groupSpec); len(args) > 0 {
+	if args := createArangodNumactl(a.GroupSpec); len(args) > 0 {
 		cmd = append(cmd, args...)
 	}
 
 	cmd = append(cmd, a.GetExecutor())
 
-	args, err := createArangodArgs(a.cachedStatus, a.input)
+	args, err := createArangodArgs(a.cachedStatus, a.Input)
 	if err != nil {
 		return nil, err
 	}
@@ -148,27 +133,27 @@ func (a *ArangoDContainer) GetName() string {
 }
 
 func (a *ArangoDContainer) GetExecutor() string {
-	return a.groupSpec.GetEntrypoint(ArangoDExecutor)
+	return a.GroupSpec.GetEntrypoint(ArangoDExecutor)
 }
 
 func (a *ArangoDContainer) GetSecurityContext() *core.SecurityContext {
-	return k8sutil.CreateSecurityContext(a.groupSpec.SecurityContext)
+	return k8sutil.CreateSecurityContext(a.GroupSpec.SecurityContext)
 }
 
 func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, error) {
 	var liveness, readiness, startup *core.Probe
 
-	probeLivenessConfig, err := a.resources.getLivenessProbe(a.spec, a.group, a.imageInfo)
+	probeLivenessConfig, err := a.resources.getLivenessProbe(a.Deployment, a.Group, a.Image)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeReadinessConfig, err := a.resources.getReadinessProbe(a.spec, a.group, a.imageInfo)
+	probeReadinessConfig, err := a.resources.getReadinessProbe(a.Deployment, a.Group, a.Image)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	probeStartupConfig, err := a.resources.getStartupProbe(a.spec, a.group, a.imageInfo)
+	probeStartupConfig, err := a.resources.getStartupProbe(a.Deployment, a.Group, a.Image)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -189,12 +174,12 @@ func (a *ArangoDContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe, e
 }
 
 func (a *ArangoDContainer) GetImage() string {
-	switch a.spec.ImageDiscoveryMode.Get() {
+	switch a.Deployment.ImageDiscoveryMode.Get() {
 	case api.DeploymentImageDiscoveryDirectMode:
 		// In case of direct mode ignore discovery
-		return util.TypeOrDefault[string](a.spec.Image, a.imageInfo.ImageID)
+		return util.TypeOrDefault[string](a.Deployment.Image, a.Image.ImageID)
 	default:
-		return a.imageInfo.ImageID
+		return a.Image.ImageID
 	}
 }
 
@@ -202,8 +187,8 @@ func (a *ArangoDContainer) GetImage() string {
 func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
-	if a.spec.License.HasSecretName() && a.imageInfo.ArangoDBVersion.CompareTo("3.9.0") < 0 {
-		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.spec.License.GetSecretName(),
+	if a.Deployment.License.HasSecretName() && a.Image.ArangoDBVersion.CompareTo("3.9.0") < 0 {
+		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.Deployment.License.GetSecretName(),
 			constants.SecretKeyToken)
 
 		envs.Add(true, env)
@@ -211,12 +196,12 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 
 	envs.Add(true, k8sutil.GetLifecycleEnv()...)
 
-	resources := a.member.arangoMember.Spec.Overrides.GetResources(&a.groupSpec)
+	resources := a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec)
 
 	if resources.Limits != nil {
-		if a.groupSpec.GetOverrideDetectedTotalMemory() {
+		if a.GroupSpec.GetOverrideDetectedTotalMemory() {
 			if limits, ok := resources.Limits[core.ResourceMemory]; ok {
-				value := a.groupSpec.CalculateMemoryReservation(limits.Value())
+				value := a.GroupSpec.CalculateMemoryReservation(limits.Value())
 
 				envs.Add(true, core.EnvVar{
 					Name:  ArangoDBOverrideDetectedTotalMemoryEnv,
@@ -225,7 +210,7 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 			}
 		}
 
-		if a.groupSpec.GetOverrideDetectedNumberOfCores() {
+		if a.GroupSpec.GetOverrideDetectedNumberOfCores() {
 			if limits, ok := resources.Limits[core.ResourceCPU]; ok {
 				envs.Add(true, core.EnvVar{
 					Name:  ArangoDBOverrideDetectedNumberOfCoresEnv,
@@ -235,8 +220,8 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 		}
 	}
 
-	if len(a.groupSpec.Envs) > 0 {
-		for _, env := range a.groupSpec.Envs {
+	if len(a.GroupSpec.Envs) > 0 {
+		for _, env := range a.GroupSpec.Envs {
 			// Do not override preset envs
 			envs.Add(false, core.EnvVar{
 				Name:  env.Name,
@@ -245,26 +230,26 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 		}
 	}
 
-	envs.Add(true, pod.Topology().Envs(a.member.AsInput())...)
+	envs.Add(true, pod.Topology().Envs(a.Input)...)
 
 	envs.Add(true, core.EnvVar{
 		Name:  ArangoDBOverrideServerGroupEnv,
-		Value: a.input.Group.AsRole(),
+		Value: a.Group.AsRole(),
 	})
 	envs.Add(true, core.EnvVar{
 		Name:  ArangoDBOverrideDeploymentModeEnv,
-		Value: string(a.input.Deployment.GetMode()),
+		Value: string(a.Deployment.GetMode()),
 	})
 	envs.Add(true, core.EnvVar{
 		Name:  ArangoDBOverrideVersionEnv,
-		Value: string(a.input.Version),
+		Value: string(a.Image.ArangoDBVersion),
 	})
 	envs.Add(true, core.EnvVar{
 		Name:  ArangoDBOverrideEnterpriseEnv,
-		Value: strconv.FormatBool(a.input.Enterprise),
+		Value: strconv.FormatBool(a.Image.Enterprise),
 	})
 
-	if p := a.groupSpec.Port; p != nil {
+	if p := a.GroupSpec.Port; p != nil {
 		envs.Add(true, core.EnvVar{
 			Name:  ArangoDBServerPortEnv,
 			Value: fmt.Sprintf("%d", *p),
@@ -287,7 +272,7 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 }
 
 func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {
-	return kresources.ExtractPodAcceptedResourceRequirement(a.arangoMember.Spec.Overrides.GetResources(&a.groupSpec))
+	return kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec))
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -298,58 +283,41 @@ func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
 }
 
 func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
-	return a.spec.GetImagePullPolicy()
+	return a.Deployment.GetImagePullPolicy()
 }
 
 func (a *ArangoDContainer) GetVolumeMounts() []core.VolumeMount {
-	volumes := CreateArangoDVolumes(a.status, a.input, a.spec, a.groupSpec)
+	volumes := CreateArangoDVolumes(a.Member, a.Input, a.Deployment, a.GroupSpec)
 
 	return volumes.VolumeMounts()
 }
 
-func (m *MemberArangoDPod) AsInput() pod.Input {
-	return pod.Input{
-		ApiObject:    m.context.GetAPIObject(),
-		Deployment:   m.spec,
-		Status:       m.deploymentStatus,
-		Group:        m.group,
-		GroupSpec:    m.groupSpec,
-		Version:      m.imageInfo.ArangoDBVersion,
-		Enterprise:   m.imageInfo.Enterprise,
-		AutoUpgrade:  m.autoUpgrade,
-		Member:       m.status,
-		ArangoMember: m.arangoMember,
-	}
-}
-
 func (m *MemberArangoDPod) Init(_ context.Context, _ interfaces.Inspector, pod *core.PodTemplateSpec) error {
-	terminationGracePeriodSeconds := int64(math.Ceil(m.groupSpec.GetTerminationGracePeriod(m.group).Seconds()))
+	terminationGracePeriodSeconds := int64(math.Ceil(m.GroupSpec.GetTerminationGracePeriod(m.Group).Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
-	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+	pod.Spec.PriorityClassName = m.GroupSpec.PriorityClassName
 
 	return nil
 }
 
 func (m *MemberArangoDPod) Validate(cachedStatus interfaces.Inspector) error {
-	i := m.AsInput()
-
-	if err := pod.SNI().Verify(i, cachedStatus); err != nil {
+	if err := pod.SNI().Verify(m.Input, cachedStatus); err != nil {
 		return err
 	}
 
-	if err := pod.Encryption().Verify(i, cachedStatus); err != nil {
+	if err := pod.Encryption().Verify(m.Input, cachedStatus); err != nil {
 		return err
 	}
 
-	if err := pod.JWT().Verify(i, cachedStatus); err != nil {
+	if err := pod.JWT().Verify(m.Input, cachedStatus); err != nil {
 		return err
 	}
 
-	if err := pod.TLS().Verify(i, cachedStatus); err != nil {
+	if err := pod.TLS().Verify(m.Input, cachedStatus); err != nil {
 		return err
 	}
 
-	if err := validateSidecars(m.groupSpec.SidecarCoreNames, m.groupSpec.GetSidecars()); err != nil {
+	if err := validateSidecars(m.GroupSpec.SidecarCoreNames, m.GroupSpec.GetSidecars()); err != nil {
 		return err
 	}
 
@@ -361,11 +329,11 @@ func (m *MemberArangoDPod) GetName() string {
 }
 
 func (m *MemberArangoDPod) GetRole() string {
-	return m.group.AsRole()
+	return m.Group.AsRole()
 }
 
 func (m *MemberArangoDPod) GetImagePullSecrets() []string {
-	return m.spec.ImagePullSecrets
+	return m.Deployment.ImagePullSecrets
 }
 
 func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
@@ -373,9 +341,9 @@ func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, a)
 
-	a = kresources.MergePodAntiAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAntiAffinity)
+	a = kresources.MergePodAntiAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.Status, m.Group, m.Member).PodAntiAffinity)
 
-	a = kresources.MergePodAntiAffinity(a, m.groupSpec.AntiAffinity)
+	a = kresources.MergePodAntiAffinity(a, m.GroupSpec.AntiAffinity)
 
 	return kresources.OptionalPodAntiAffinity(a)
 }
@@ -383,9 +351,9 @@ func (m *MemberArangoDPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
 	a := &core.PodAffinity{}
 
-	a = kresources.MergePodAffinity(a, m.groupSpec.Affinity)
+	a = kresources.MergePodAffinity(a, m.GroupSpec.Affinity)
 
-	a = kresources.MergePodAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).PodAffinity)
+	a = kresources.MergePodAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.Status, m.Group, m.Member).PodAffinity)
 
 	return kresources.OptionalPodAffinity(a)
 }
@@ -393,26 +361,26 @@ func (m *MemberArangoDPod) GetPodAffinity() *core.PodAffinity {
 func (m *MemberArangoDPod) GetNodeAffinity() *core.NodeAffinity {
 	a := &core.NodeAffinity{}
 
-	pod.AppendArchSelector(a, m.status.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
+	pod.AppendArchSelector(a, m.Member.Architecture.Default(m.Deployment.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
-	a = kresources.MergeNodeAffinity(a, m.groupSpec.NodeAffinity)
+	a = kresources.MergeNodeAffinity(a, m.GroupSpec.NodeAffinity)
 
-	a = kresources.MergeNodeAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.deploymentStatus, m.group, m.status).NodeAffinity)
+	a = kresources.MergeNodeAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.Status, m.Group, m.Member).NodeAffinity)
 
 	return kresources.OptionalNodeAffinity(a)
 }
 
 func (m *MemberArangoDPod) GetNodeSelector() map[string]string {
-	return m.groupSpec.GetNodeSelector()
+	return m.GroupSpec.GetNodeSelector()
 }
 
 func (m *MemberArangoDPod) GetServiceAccountName() string {
-	return m.groupSpec.GetServiceAccountName()
+	return m.GroupSpec.GetServiceAccountName()
 }
 
 func (m *MemberArangoDPod) GetSidecars(pod *core.PodTemplateSpec) error {
 	//nolint:staticcheck
-	if m.spec.Metrics.IsEnabled() && m.spec.Metrics.Mode.Get() != api.MetricsModeInternal {
+	if m.Deployment.Metrics.IsEnabled() && m.Deployment.Metrics.Mode.Get() != api.MetricsModeInternal {
 		var c *core.Container
 
 		pod.Labels[k8sutil.LabelKeyArangoExporter] = "yes"
@@ -427,9 +395,9 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.PodTemplateSpec) error {
 	}
 
 	// A sidecar provided by the user
-	sidecars := m.groupSpec.GetSidecars()
+	sidecars := m.GroupSpec.GetSidecars()
 	if len(sidecars) > 0 {
-		addLifecycleSidecar(m.groupSpec.SidecarCoreNames, sidecars)
+		addLifecycleSidecar(m.GroupSpec.SidecarCoreNames, sidecars)
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
 
@@ -437,19 +405,19 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.PodTemplateSpec) error {
 }
 
 func (m *MemberArangoDPod) GetVolumes() []core.Volume {
-	volumes := CreateArangoDVolumes(m.status, m.AsInput(), m.spec, m.groupSpec)
+	volumes := CreateArangoDVolumes(m.Member, m.Input, m.Deployment, m.GroupSpec)
 
 	return volumes.Volumes()
 }
 
 func (m *MemberArangoDPod) IsDeploymentMode() bool {
-	return m.spec.IsDevelopment()
+	return m.Deployment.IsDevelopment()
 }
 
 func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]core.Container, error) {
 	var initContainers []core.Container
 
-	if c := m.groupSpec.InitContainers.GetContainers(); len(c) > 0 {
+	if c := m.GroupSpec.InitContainers.GetContainers(); len(c) > 0 {
 		initContainers = append(initContainers, c...)
 	}
 
@@ -459,8 +427,8 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 	}
 
 	{
-		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
-		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), executable, &m.spec.Lifecycle.Resources, sc)
+		sc := k8sutil.CreateSecurityContext(m.GroupSpec.SecurityContext)
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), executable, &m.Deployment.Lifecycle.Resources, sc)
 		if err != nil {
 			return nil, err
 		}
@@ -468,22 +436,22 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 	}
 
 	{
-		engine := m.spec.GetStorageEngine().AsArangoArgument()
-		requireUUID := m.group == api.ServerGroupDBServers && m.status.IsInitialized
+		engine := m.Deployment.GetStorageEngine().AsArangoArgument()
+		requireUUID := m.Group == api.ServerGroupDBServers && m.Member.IsInitialized
 
-		sc := k8sutil.CreateSecurityContext(m.groupSpec.SecurityContext)
-		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.status.ID, engine, executable,
+		sc := k8sutil.CreateSecurityContext(m.GroupSpec.SecurityContext)
+		c := k8sutil.ArangodInitContainer(api.ServerGroupReservedInitContainerNameUUID, m.Member.ID, engine, executable,
 			m.resources.context.GetOperatorImage(), requireUUID, sc)
 		initContainers = append(initContainers, c)
 	}
 
 	{
 		// Upgrade container - run in background
-		if m.autoUpgrade || m.status.Upgrade {
+		if m.AutoUpgrade || m.Member.Upgrade {
 			upgradeContainer := &ArangoUpgradeContainer{
 				m.GetContainerCreator(),
 				cachedStatus,
-				m.AsInput(),
+				m.Input,
 			}
 			c, err := k8sutil.NewContainer(upgradeContainer)
 			if err != nil {
@@ -495,18 +463,18 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 
 		// VersionCheck Container
 		{
-			switch m.group {
+			switch m.Group {
 			case api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupSingle:
 				if features.UpgradeVersionCheckV2().Enabled() {
 					c := k8sutil.ArangodVersionCheckInitContainer(api.ServerGroupReservedInitContainerNameVersionCheck, executable, m.resources.context.GetOperatorImage(),
-						m.imageInfo.ArangoDBVersion, m.groupSpec.SecurityContext.NewSecurityContext())
+						m.Image.ArangoDBVersion, m.GroupSpec.SecurityContext.NewSecurityContext())
 					initContainers = append(initContainers, c)
 				} else if features.UpgradeVersionCheck().Enabled() {
 					upgradeContainer := &ArangoVersionCheckContainer{
 						m.GetContainerCreator(),
 						cachedStatus,
-						m.AsInput(),
-						pod.UpgradeVersionCheck().Args(m.AsInput()),
+						m.Input,
+						pod.UpgradeVersionCheck().Args(m.Input),
 					}
 
 					c, err := k8sutil.NewContainer(upgradeContainer)
@@ -529,25 +497,16 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 }
 
 func (m *MemberArangoDPod) GetFinalizers() []string {
-	return k8sutil.GetFinalizers(m.spec.GetServerGroupSpec(m.group), m.group)
+	return k8sutil.GetFinalizers(m.Deployment.GetServerGroupSpec(m.Group), m.Group)
 }
 
 func (m *MemberArangoDPod) GetTolerations() []core.Toleration {
-	return m.resources.CreatePodTolerations(m.group, m.groupSpec)
+	return m.resources.CreatePodTolerations(m.Group, m.GroupSpec)
 }
 
 func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 	return &ArangoDContainer{
-		member:       m,
-		spec:         m.spec,
-		group:        m.group,
-		resources:    m.resources,
-		imageInfo:    m.imageInfo,
-		groupSpec:    m.groupSpec,
-		arangoMember: m.arangoMember,
-		cachedStatus: m.cachedStatus,
-		input:        m.AsInput(),
-		status:       m.status,
+		MemberArangoDPod: m,
 	}
 }
 
@@ -561,20 +520,20 @@ func (m *MemberArangoDPod) GetRestartPolicy() core.RestartPolicy {
 func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core.Container, error) {
 	image := m.GetContainerCreator().GetImage()
 
-	args := createInternalExporterArgs(m.spec, m.group, m.groupSpec, m.imageInfo.ArangoDBVersion)
+	args := createInternalExporterArgs(m.Deployment, m.Group, m.GroupSpec, m.Image.ArangoDBVersion)
 
 	c, err := ArangodbInternalExporterContainer(image, args,
-		createExporterLivenessProbe(m.spec.IsSecure() && m.spec.Metrics.IsTLS()), m.spec.Metrics.Resources,
-		m.spec, m.groupSpec)
+		createExporterLivenessProbe(m.Deployment.IsSecure() && m.Deployment.Metrics.IsTLS()), m.Deployment.Metrics.Resources,
+		m.Deployment, m.GroupSpec)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.spec.Authentication.IsAuthenticated() && m.spec.Metrics.GetJWTTokenSecretName() != "" {
+	if m.Deployment.Authentication.IsAuthenticated() && m.Deployment.Metrics.GetJWTTokenSecretName() != "" {
 		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
 	}
 
-	if pod.IsTLSEnabled(m.AsInput()) {
+	if pod.IsTLSEnabled(m.Input) {
 		c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 	}
 
@@ -582,18 +541,18 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 }
 
 func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
-	p.SecurityContext = k8sutil.CreatePodSecurityContext(m.groupSpec.SecurityContext)
-	if s := m.groupSpec.SchedulerName; s != nil {
+	p.SecurityContext = k8sutil.CreatePodSecurityContext(m.GroupSpec.SecurityContext)
+	if s := m.GroupSpec.SchedulerName; s != nil {
 		p.SchedulerName = *s
 	}
 
-	m.groupSpec.PodModes.Apply(p)
+	m.GroupSpec.PodModes.Apply(p)
 
 	return nil
 }
 
 func (m *MemberArangoDPod) Annotations() map[string]string {
-	return collection.MergeAnnotations(m.spec.Annotations, m.groupSpec.Annotations)
+	return collection.MergeAnnotations(m.Deployment.Annotations, m.GroupSpec.Annotations)
 }
 
 func (m *MemberArangoDPod) Profiles() (schedulerApi.ProfileTemplates, error) {
@@ -601,15 +560,15 @@ func (m *MemberArangoDPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 }
 
 func (m *MemberArangoDPod) Labels() map[string]string {
-	l := collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
+	l := collection.ReservedLabels().Filter(collection.MergeAnnotations(m.Deployment.Labels, m.GroupSpec.Labels))
 
-	if m.status.Topology != nil && m.deploymentStatus.Topology.Enabled() && m.deploymentStatus.Topology.ID == m.status.Topology.ID {
+	if m.Member.Topology != nil && m.Status.Topology.Enabled() && m.Status.Topology.ID == m.Member.Topology.ID {
 		if l == nil {
 			l = map[string]string{}
 		}
 
-		l[k8sutil.LabelKeyArangoZone] = fmt.Sprintf("%d", m.status.Topology.Zone)
-		l[k8sutil.LabelKeyArangoTopology] = string(m.status.Topology.ID)
+		l[k8sutil.LabelKeyArangoZone] = fmt.Sprintf("%d", m.Member.Topology.Zone)
+		l[k8sutil.LabelKeyArangoTopology] = string(m.Member.Topology.ID)
 	}
 
 	return l

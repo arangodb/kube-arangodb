@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,17 +43,12 @@ import (
 var _ interfaces.PodCreator = &MemberGatewayPod{}
 
 type MemberGatewayPod struct {
-	podName          string
-	status           api.MemberStatus
-	groupSpec        api.ServerGroupSpec
-	spec             api.DeploymentSpec
-	deploymentStatus api.DeploymentStatus
-	group            api.ServerGroup
-	arangoMember     api.ArangoMember
-	context          Context
-	resources        *Resources
-	imageInfo        api.ImageInfo
-	cachedStatus     interfaces.Inspector
+	pod.Input
+
+	podName      string
+	context      Context
+	resources    *Resources
+	cachedStatus interfaces.Inspector
 }
 
 func (m *MemberGatewayPod) GetName() string {
@@ -61,11 +56,11 @@ func (m *MemberGatewayPod) GetName() string {
 }
 
 func (m *MemberGatewayPod) GetRole() string {
-	return m.group.AsRole()
+	return m.Group.AsRole()
 }
 
 func (m *MemberGatewayPod) GetImagePullSecrets() []string {
-	return m.spec.ImagePullSecrets
+	return m.Deployment.ImagePullSecrets
 }
 
 func (m *MemberGatewayPod) GetPodAntiAffinity() *core.PodAntiAffinity {
@@ -73,23 +68,9 @@ func (m *MemberGatewayPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, a)
 
-	a = kresources.MergePodAntiAffinity(a, m.groupSpec.AntiAffinity)
+	a = kresources.MergePodAntiAffinity(a, m.GroupSpec.AntiAffinity)
 
 	return kresources.OptionalPodAntiAffinity(a)
-}
-
-func (m *MemberGatewayPod) AsInput() pod.Input {
-	return pod.Input{
-		ApiObject:    m.context.GetAPIObject(),
-		Deployment:   m.spec,
-		Status:       m.deploymentStatus,
-		Group:        m.group,
-		GroupSpec:    m.groupSpec,
-		Version:      m.imageInfo.ArangoDBVersion,
-		Enterprise:   m.imageInfo.Enterprise,
-		Member:       m.status,
-		ArangoMember: m.arangoMember,
-	}
 }
 
 func (m *MemberGatewayPod) GetPodAffinity() *core.PodAffinity {
@@ -97,7 +78,7 @@ func (m *MemberGatewayPod) GetPodAffinity() *core.PodAffinity {
 
 	pod.AppendAffinityWithRole(m, a, api.ServerGroupDBServers.AsRole())
 
-	a = kresources.MergePodAffinity(a, m.groupSpec.Affinity)
+	a = kresources.MergePodAffinity(a, m.GroupSpec.Affinity)
 
 	return kresources.OptionalPodAffinity(a)
 }
@@ -105,26 +86,26 @@ func (m *MemberGatewayPod) GetPodAffinity() *core.PodAffinity {
 func (m *MemberGatewayPod) GetNodeAffinity() *core.NodeAffinity {
 	a := &core.NodeAffinity{}
 
-	pod.AppendArchSelector(a, m.status.Architecture.Default(m.spec.Architecture.GetDefault()).AsNodeSelectorRequirement())
+	pod.AppendArchSelector(a, m.Member.Architecture.Default(m.Deployment.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
-	a = kresources.MergeNodeAffinity(a, m.groupSpec.NodeAffinity)
+	a = kresources.MergeNodeAffinity(a, m.GroupSpec.NodeAffinity)
 
 	return kresources.OptionalNodeAffinity(a)
 }
 
 func (m *MemberGatewayPod) GetNodeSelector() map[string]string {
-	return m.groupSpec.GetNodeSelector()
+	return m.GroupSpec.GetNodeSelector()
 }
 
 func (m *MemberGatewayPod) GetServiceAccountName() string {
-	return m.groupSpec.GetServiceAccountName()
+	return m.GroupSpec.GetServiceAccountName()
 }
 
 func (m *MemberGatewayPod) GetSidecars(pod *core.PodTemplateSpec) error {
 	// A sidecar provided by the user
-	sidecars := m.groupSpec.GetSidecars()
+	sidecars := m.GroupSpec.GetSidecars()
 	if len(sidecars) > 0 {
-		addLifecycleSidecar(m.groupSpec.SidecarCoreNames, sidecars)
+		addLifecycleSidecar(m.GroupSpec.SidecarCoreNames, sidecars)
 		pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	}
 
@@ -132,16 +113,16 @@ func (m *MemberGatewayPod) GetSidecars(pod *core.PodTemplateSpec) error {
 }
 
 func (m *MemberGatewayPod) GetVolumes() []core.Volume {
-	return createGatewayVolumes(m.AsInput()).Volumes()
+	return createGatewayVolumes(m.Input).Volumes()
 }
 
 func (m *MemberGatewayPod) IsDeploymentMode() bool {
-	return m.spec.IsDevelopment()
+	return m.Deployment.IsDevelopment()
 }
 
 func (m *MemberGatewayPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]core.Container, error) {
 	var initContainers []core.Container
-	if c := m.groupSpec.InitContainers.GetContainers(); len(c) > 0 {
+	if c := m.GroupSpec.InitContainers.GetContainers(); len(c) > 0 {
 		initContainers = append(initContainers, c...)
 	}
 
@@ -158,21 +139,13 @@ func (m *MemberGatewayPod) GetFinalizers() []string {
 }
 
 func (m *MemberGatewayPod) GetTolerations() []core.Toleration {
-	return m.resources.CreatePodTolerations(m.group, m.groupSpec)
+	return m.resources.CreatePodTolerations(m.Group, m.GroupSpec)
 }
 
 func (m *MemberGatewayPod) GetContainerCreator() interfaces.ContainerCreator {
-	return &ArangoGatewayContainer{
-		member:       m,
-		spec:         m.spec,
-		group:        m.group,
-		resources:    m.resources,
-		imageInfo:    m.imageInfo,
-		groupSpec:    m.groupSpec,
-		arangoMember: m.arangoMember,
-		cachedStatus: m.cachedStatus,
-		input:        m.AsInput(),
-		status:       m.status,
+	return &MemberGatewayContainer{
+		MemberGatewayPod: m,
+		resources:        m.resources,
 	}
 }
 
@@ -184,21 +157,19 @@ func (m *MemberGatewayPod) GetRestartPolicy() core.RestartPolicy {
 }
 
 func (m *MemberGatewayPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, pod *core.PodTemplateSpec) error {
-	terminationGracePeriodSeconds := int64(math.Ceil(m.groupSpec.GetTerminationGracePeriod(m.group).Seconds()))
+	terminationGracePeriodSeconds := int64(math.Ceil(m.GroupSpec.GetTerminationGracePeriod(m.Group).Seconds()))
 	pod.Spec.TerminationGracePeriodSeconds = &terminationGracePeriodSeconds
-	pod.Spec.PriorityClassName = m.groupSpec.PriorityClassName
+	pod.Spec.PriorityClassName = m.GroupSpec.PriorityClassName
 
 	return nil
 }
 
 func (m *MemberGatewayPod) Validate(cachedStatus interfaces.Inspector) error {
-	i := m.AsInput()
-
-	if err := pod.SNI().Verify(i, cachedStatus); err != nil {
+	if err := pod.SNI().Verify(m.Input, cachedStatus); err != nil {
 		return err
 	}
 
-	if err := validateSidecars(m.groupSpec.SidecarCoreNames, m.groupSpec.GetSidecars()); err != nil {
+	if err := validateSidecars(m.GroupSpec.SidecarCoreNames, m.GroupSpec.GetSidecars()); err != nil {
 		return err
 	}
 
@@ -214,29 +185,29 @@ func (m *MemberGatewayPod) Validate(cachedStatus interfaces.Inspector) error {
 }
 
 func (m *MemberGatewayPod) ApplyPodSpec(spec *core.PodSpec) error {
-	if s := m.groupSpec.SchedulerName; s != nil {
+	if s := m.GroupSpec.SchedulerName; s != nil {
 		spec.SchedulerName = *s
 	}
 
-	m.groupSpec.PodModes.Apply(spec)
+	m.GroupSpec.PodModes.Apply(spec)
 
 	return nil
 }
 
 func (m *MemberGatewayPod) Annotations() map[string]string {
-	return collection.MergeAnnotations(m.spec.Annotations, m.groupSpec.Annotations)
+	return collection.MergeAnnotations(m.Deployment.Annotations, m.GroupSpec.Annotations)
 }
 
 func (m *MemberGatewayPod) Labels() map[string]string {
-	l := collection.ReservedLabels().Filter(collection.MergeAnnotations(m.spec.Labels, m.groupSpec.Labels))
+	l := collection.ReservedLabels().Filter(collection.MergeAnnotations(m.Deployment.Labels, m.GroupSpec.Labels))
 
-	if m.status.Topology != nil && m.deploymentStatus.Topology.Enabled() && m.deploymentStatus.Topology.ID == m.status.Topology.ID {
+	if m.Member.Topology != nil && m.Status.Topology.Enabled() && m.Status.Topology.ID == m.Member.Topology.ID {
 		if l == nil {
 			l = map[string]string{}
 		}
 
-		l[k8sutil.LabelKeyArangoZone] = fmt.Sprintf("%d", m.status.Topology.Zone)
-		l[k8sutil.LabelKeyArangoTopology] = string(m.status.Topology.ID)
+		l[k8sutil.LabelKeyArangoZone] = fmt.Sprintf("%d", m.Member.Topology.Zone)
+		l[k8sutil.LabelKeyArangoTopology] = string(m.Member.Topology.ID)
 	}
 
 	return l
@@ -259,10 +230,10 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 
 	integrations, err := sidecar.NewIntegrationEnablement(
 		sidecar.IntegrationEnvoyV3{
-			Spec: m.spec,
+			Spec: m.Deployment,
 		}, sidecar.IntegrationAuthenticationV1{
 			DeploymentName: m.context.GetName(),
-			Spec:           m.spec,
+			Spec:           m.Deployment,
 		})
 
 	if err != nil {
