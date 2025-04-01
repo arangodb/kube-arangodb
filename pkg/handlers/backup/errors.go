@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package backup
 
 import (
-	"strings"
+	goStrings "strings"
 
 	"github.com/arangodb/go-driver"
 
@@ -99,11 +99,11 @@ func isTemporaryError(err error) bool {
 	}
 
 	// Check error string
-	if strings.Contains(err.Error(), "context deadline exceeded") {
+	if goStrings.Contains(err.Error(), "context deadline exceeded") {
 		return true
 	}
 
-	if strings.Contains(err.Error(), "connection refused") {
+	if goStrings.Contains(err.Error(), "connection refused") {
 		return true
 	}
 

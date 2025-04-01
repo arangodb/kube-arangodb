@@ -26,7 +26,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type TimeoutFunc[T any] func() (T, error)

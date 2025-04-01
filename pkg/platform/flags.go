@@ -23,10 +23,9 @@ package platform
 import (
 	"os"
 
-	"github.com/pkg/errors"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (

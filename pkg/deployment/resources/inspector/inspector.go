@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package inspector
 
 import (
 	"context"
-	"strings"
+	goStrings "strings"
 	"sync"
 	"time"
 
@@ -194,7 +194,7 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 }
 
 func extractGVKFromOwnerReference(o meta.OwnerReference) schema.GroupVersionKind {
-	z := strings.SplitN(o.APIVersion, "/", 2)
+	z := goStrings.SplitN(o.APIVersion, "/", 2)
 
 	switch len(z) {
 	case 1:
@@ -388,7 +388,7 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 	if v, err := n.client.Kubernetes().Discovery().ServerVersion(); err != nil {
 		n.versionInfo = ""
 	} else {
-		n.versionInfo = driver.Version(strings.TrimPrefix(v.GitVersion, "v"))
+		n.versionInfo = driver.Version(goStrings.TrimPrefix(v.GitVersion, "v"))
 	}
 
 	logger := logger.Str("namespace", i.namespace).Str("name", i.deploymentName)

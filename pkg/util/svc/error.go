@@ -22,9 +22,10 @@ package svc
 
 import (
 	"context"
-	"errors"
 
 	"google.golang.org/grpc/status"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type serviceError struct {

@@ -23,7 +23,7 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -378,7 +378,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			// Pod is not ready
 			if util.Or(
 				memberStatus.Conditions.Update(api.ConditionTypeReady, false, "Pod Not Ready", ""),
-				memberStatus.Conditions.Update(api.ConditionTypeServing, false, "Pod Core containers are not ready", strings.Join(coreContainers, ", ")),
+				memberStatus.Conditions.Update(api.ConditionTypeServing, false, "Pod Core containers are not ready", goStrings.Join(coreContainers, ", ")),
 			) {
 				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Ready & Serving to false")
 				updateMemberStatusNeeded = true

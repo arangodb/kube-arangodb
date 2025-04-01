@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package shared
 import (
 	"crypto/sha1"
 	"fmt"
-	"strings"
+	goStrings "strings"
 	"unicode"
 )
 
@@ -38,7 +38,7 @@ const (
 // StripArangodPrefix removes well know arangod ID prefixes from the given id.
 func StripArangodPrefix(id string) string {
 	for _, prefix := range arangodPrefixes {
-		if strings.HasPrefix(id, prefix) {
+		if goStrings.HasPrefix(id, prefix) {
 			return id[len(prefix):]
 		}
 	}
@@ -50,7 +50,7 @@ func StripArangodPrefix(id string) string {
 // If the name is too long or contains invalid characters,
 // it will be adjusted and a hash will be added.
 func FixupResourceName(name string) string {
-	sb := strings.Builder{}
+	sb := goStrings.Builder{}
 	needHash := len(name) > qualifiedNameMaxLength
 	for _, ch := range name {
 		if unicode.IsDigit(ch) || unicode.IsLower(ch) || ch == '-' {
@@ -94,7 +94,7 @@ func CreatePersistentVolumeClaimName(deploymentName, role, id string) string {
 
 func RenderResourceName(in string, keys map[string]string) string {
 	for k, v := range keys {
-		in = strings.ReplaceAll(in, fmt.Sprintf("${%s}", k), v)
+		in = goStrings.ReplaceAll(in, fmt.Sprintf("${%s}", k), v)
 	}
 
 	return in

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package storage
 import (
 	"context"
 	"fmt"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -40,9 +40,9 @@ import (
 func generateDaemonSet(t *testing.T, podSpec core.PodSpec, lsSpec api.LocalStorageSpec) (*LocalStorage, *apps.DaemonSet) {
 	client := kclient.NewFakeClient()
 
-	name := fmt.Sprintf("pod-%s", strings.ToLower(uniuri.NewLen(6)))
-	nameLS := fmt.Sprintf("pod-%s", strings.ToLower(uniuri.NewLen(6)))
-	ns := fmt.Sprintf("ns-%s", strings.ToLower(uniuri.NewLen(6)))
+	name := fmt.Sprintf("pod-%s", goStrings.ToLower(uniuri.NewLen(6)))
+	nameLS := fmt.Sprintf("pod-%s", goStrings.ToLower(uniuri.NewLen(6)))
+	ns := fmt.Sprintf("ns-%s", goStrings.ToLower(uniuri.NewLen(6)))
 
 	pod := core.Pod{
 		ObjectMeta: meta.ObjectMeta{

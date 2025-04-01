@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package aws
 
 import (
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"
@@ -55,13 +55,13 @@ func (c Config) GetProvider() (credentials.Provider, error) {
 	return c.Provider.Provider()
 }
 
-func (c Config) GetHttpClient() (*http.Client, error) {
+func (c Config) GetHttpClient() (*goHttp.Client, error) {
 	tls, err := c.TLS.configuration()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to create TLS")
 	}
 
-	return &http.Client{
+	return &goHttp.Client{
 		Transport: c.HTTP.configuration(tls),
 	}, nil
 }

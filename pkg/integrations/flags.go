@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	flag "github.com/spf13/pflag"
@@ -264,10 +264,10 @@ func (f flagEnvHandler) varDesc(name string, dest string) string {
 func (f flagEnvHandler) getEnv(n string) string {
 	z := f.name(n)
 
-	z = strings.ReplaceAll(z, ".", "_")
-	z = strings.ReplaceAll(z, "-", "_")
+	z = goStrings.ReplaceAll(z, ".", "_")
+	z = goStrings.ReplaceAll(z, "-", "_")
 
-	return strings.ToUpper(z)
+	return goStrings.ToUpper(z)
 }
 func (f flagEnvHandler) name(n string) string {
 	if f.prefix == "" {
@@ -312,7 +312,7 @@ func parseEnvToBool(env string, def bool) (bool, error) {
 
 func parseEnvToStringArray(env string, def []string) ([]string, error) {
 	return parseEnvToType(env, def, func(in string) ([]string, error) {
-		return strings.Split(in, ","), nil
+		return goStrings.Split(in, ","), nil
 	})
 }
 

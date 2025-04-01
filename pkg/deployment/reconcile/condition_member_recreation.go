@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"strings"
+	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -86,7 +86,7 @@ func EvaluateMemberRecreationCondition(ctx context.Context,
 		}
 	}
 
-	return strings.Join(args, ", "), len(args) > 0
+	return goStrings.Join(args, ", "), len(args) > 0
 }
 
 // isStorageClassChanged returns true and reason when the member should be replaced.

@@ -23,7 +23,7 @@ package v1
 import (
 	"context"
 	"fmt"
-	"net/http"
+	goHttp "net/http"
 	"testing"
 	"time"
 
@@ -51,23 +51,23 @@ func Test_Authentication_HTTP(t *testing.T) {
 	t.Run("Without header", func(t *testing.T) {
 		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()))
 
-		resp.WithCode(http.StatusUnauthorized)
+		resp.WithCode(goHttp.StatusUnauthorized)
 	})
 
 	t.Run("With invalid header", func(t *testing.T) {
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *goHttp.Request) {
 			in.Header.Add("invalid", "")
 		})
 
-		resp.WithCode(http.StatusUnauthorized)
+		resp.WithCode(goHttp.StatusUnauthorized)
 	})
 
 	t.Run("With empty header", func(t *testing.T) {
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *goHttp.Request) {
 			in.Header.Add("Authorization", "")
 		})
 
-		resp.WithCode(http.StatusUnauthorized)
+		resp.WithCode(goHttp.StatusUnauthorized)
 	})
 
 	t.Run("With missing prefix header", func(t *testing.T) {
@@ -80,15 +80,15 @@ func Test_Authentication_HTTP(t *testing.T) {
 			},
 			fmt.Sprintf("http://%s/_integration/authn/v1/createToken", server.HTTPAddress()),
 		).
-			WithCode(http.StatusOK).
+			WithCode(goHttp.StatusOK).
 			Get()
 		require.NoError(t, err)
 
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *goHttp.Request) {
 			in.Header.Add("Authorization", token.Token)
 		})
 
-		resp.WithCode(http.StatusUnauthorized)
+		resp.WithCode(goHttp.StatusUnauthorized)
 	})
 
 	t.Run("With header", func(t *testing.T) {
@@ -101,15 +101,15 @@ func Test_Authentication_HTTP(t *testing.T) {
 			},
 			fmt.Sprintf("http://%s/_integration/authn/v1/createToken", server.HTTPAddress()),
 		).
-			WithCode(http.StatusOK).
+			WithCode(goHttp.StatusOK).
 			Get()
 		require.NoError(t, err)
 
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *goHttp.Request) {
 			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
 		})
 
-		data, err := resp.WithCode(http.StatusOK).Get()
+		data, err := resp.WithCode(goHttp.StatusOK).Get()
 		require.NoError(t, err)
 
 		require.EqualValues(t, DefaultUser, data.GetUser())
@@ -125,16 +125,16 @@ func Test_Authentication_HTTP(t *testing.T) {
 			},
 			fmt.Sprintf("http://%s/_integration/authn/v1/createToken", server.HTTPAddress()),
 		).
-			WithCode(http.StatusOK).
+			WithCode(goHttp.StatusOK).
 			Get()
 		require.NoError(t, err)
 
-		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *http.Request) {
+		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *goHttp.Request) {
 			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
 			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
 		})
 
-		resp.WithCode(http.StatusUnauthorized)
+		resp.WithCode(goHttp.StatusUnauthorized)
 	})
 
 	t.Run("Validate", func(t *testing.T) {
@@ -147,7 +147,7 @@ func Test_Authentication_HTTP(t *testing.T) {
 			},
 			fmt.Sprintf("http://%s/_integration/authn/v1/createToken", server.HTTPAddress()),
 		).
-			WithCode(http.StatusOK).
+			WithCode(goHttp.StatusOK).
 			Get()
 		require.NoError(t, err)
 
@@ -159,7 +159,7 @@ func Test_Authentication_HTTP(t *testing.T) {
 			},
 			fmt.Sprintf("http://%s/_integration/authn/v1/validate", server.HTTPAddress()),
 		).
-			WithCode(http.StatusOK).
+			WithCode(goHttp.StatusOK).
 			Get()
 		require.NoError(t, err)
 

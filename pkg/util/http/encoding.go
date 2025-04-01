@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package http
 
 import (
 	"compress/gzip"
-	"net/http"
+	goHttp "net/http"
 )
 
 const (
@@ -30,8 +30,8 @@ const (
 	EncodingResponseHeader = "Content-Encoding"
 )
 
-func WithEncoding(in http.HandlerFunc) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
+func WithEncoding(in goHttp.HandlerFunc) goHttp.HandlerFunc {
+	return func(writer goHttp.ResponseWriter, request *goHttp.Request) {
 		encoding := request.Header.Values(EncodingAcceptHeader)
 		request.Header.Del(EncodingAcceptHeader)
 
@@ -48,14 +48,14 @@ func WithEncoding(in http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func WithIdentityEncoding(in http.HandlerFunc) http.HandlerFunc {
-	return func(responseWriter http.ResponseWriter, request *http.Request) {
+func WithIdentityEncoding(in goHttp.HandlerFunc) goHttp.HandlerFunc {
+	return func(responseWriter goHttp.ResponseWriter, request *goHttp.Request) {
 		in(responseWriter, request)
 	}
 }
 
-func WithGZipEncoding(in http.HandlerFunc) http.HandlerFunc {
-	return func(responseWriter http.ResponseWriter, request *http.Request) {
+func WithGZipEncoding(in goHttp.HandlerFunc) goHttp.HandlerFunc {
+	return func(responseWriter goHttp.ResponseWriter, request *goHttp.Request) {
 		responseWriter.Header().Add(EncodingResponseHeader, "gzip")
 
 		stream := gzip.NewWriter(responseWriter)

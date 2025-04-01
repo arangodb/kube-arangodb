@@ -22,7 +22,7 @@ package v3
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 	"testing"
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -58,7 +58,7 @@ func Test_DenyHeader(t *testing.T) {
 	require.NotNil(t, resp.Status)
 	require.NotNil(t, resp.HttpResponse)
 	require.NotNil(t, tests.CastAs[*pbEnvoyAuthV3.CheckResponse_DeniedResponse](t, resp.GetHttpResponse()).DeniedResponse)
-	require.EqualValues(t, http.StatusBadRequest, tests.CastAs[*pbEnvoyAuthV3.CheckResponse_DeniedResponse](t, resp.GetHttpResponse()).DeniedResponse.GetStatus().GetCode())
+	require.EqualValues(t, goHttp.StatusBadRequest, tests.CastAs[*pbEnvoyAuthV3.CheckResponse_DeniedResponse](t, resp.GetHttpResponse()).DeniedResponse.GetStatus().GetCode())
 }
 
 func Test_AllowAll(t *testing.T) {

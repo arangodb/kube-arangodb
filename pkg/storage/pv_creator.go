@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	"github.com/dchest/uniuri"
@@ -180,7 +180,7 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 				continue
 			}
 			// Ok, prepare a directory
-			name := strings.ToLower(uniuri.New())
+			name := goStrings.ToLower(uniuri.New())
 			localPath := filepath.Join(localPathRoot, name)
 			log = ls.log.Str("local-path", localPath)
 			if err := client.Prepare(ctx, localPath); err != nil {
@@ -195,7 +195,7 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 			}
 
 			// Create a volume
-			pvName := strings.ToLower(apiObject.GetName() + "-" + shortHash(info.NodeName) + "-" + name)
+			pvName := goStrings.ToLower(apiObject.GetName() + "-" + shortHash(info.NodeName) + "-" + name)
 			volumeMode := core.PersistentVolumeFilesystem
 			nodeSel := createNodeSelector(info.NodeName)
 			pv := &core.PersistentVolume{

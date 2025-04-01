@@ -20,7 +20,7 @@
 
 package s3
 
-import "strings"
+import goStrings "strings"
 
 // BucketFolderCounter is able to count "folder"s within buckets.
 type BucketFolderCounter struct {
@@ -38,11 +38,11 @@ func NewBucketFolderCounter(basePath string) BucketFolderCounter {
 
 // AddObject extracts the folder names in the passed object name and adds them into the folders map.
 func (b BucketFolderCounter) AddObject(obj string) {
-	parts := strings.Split(obj, "/")
+	parts := goStrings.Split(obj, "/")
 	for i := 0; i < len(parts)-1; i++ { // `parts-1` to not include actual file name
 		// "folder1/folder2/file1" and "folder3/folder2/file2" are 4 different folders:
 		// ["folder1", "folder1/folder2", "folder3", "folder3/folder2"]
-		b.folders[strings.Join(parts[:i+1], "/")] = nil
+		b.folders[goStrings.Join(parts[:i+1], "/")] = nil
 	}
 }
 
@@ -51,7 +51,7 @@ func (b BucketFolderCounter) GetFolderCount() int32 {
 	result := len(b.folders)
 
 	if len(b.basePath) > 0 {
-		rootFolders := strings.Split(b.basePath, "/")
+		rootFolders := goStrings.Split(b.basePath, "/")
 		result -= len(rootFolders)
 	}
 

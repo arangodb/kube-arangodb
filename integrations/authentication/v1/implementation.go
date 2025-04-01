@@ -22,7 +22,7 @@ package v1
 
 import (
 	"context"
-	strings2 "strings"
+	goStrings "strings"
 	"sync"
 	"time"
 
@@ -208,11 +208,11 @@ func (i *implementation) Identity(ctx context.Context, _ *pbSharedV1.Empty) (*pb
 	}
 
 	for _, a := range auth {
-		if !strings2.HasPrefix(a, "bearer ") {
+		if !goStrings.HasPrefix(a, "bearer ") {
 			continue
 		}
 
-		a = strings2.TrimSpace(strings2.TrimPrefix(a, "bearer "))
+		a = goStrings.TrimSpace(goStrings.TrimPrefix(a, "bearer "))
 
 		resp, err := i.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
 			Token: a,

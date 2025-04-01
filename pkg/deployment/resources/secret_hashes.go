@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sort"
-	"strings"
+	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 
@@ -239,7 +239,7 @@ func (r *Resources) getSecretHash(cachedStatus inspectorInterface.Inspector, sec
 	}
 	// Sort so we're not detecting order differences
 	sort.Strings(rows)
-	data := strings.Join(rows, "\n")
+	data := goStrings.Join(rows, "\n")
 	rawHash := sha256.Sum256([]byte(data))
 	hash := fmt.Sprintf("%0x", rawHash)
 	return s, hash, true

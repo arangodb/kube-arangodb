@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"net"
 	"strconv"
-	"strings"
+	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -313,7 +313,7 @@ func CreateServiceURL(svc core.Service, scheme string, portPredicate func(core.S
 	if host == "" {
 		return "", errors.WithStack(errors.Errorf("Cannot find host for service '%s.%s'", svc.GetName(), svc.GetNamespace()))
 	}
-	if !strings.HasSuffix(scheme, "://") {
+	if !goStrings.HasSuffix(scheme, "://") {
 		scheme = scheme + "://"
 	}
 	return scheme + net.JoinHostPort(host, strconv.Itoa(int(port))), nil

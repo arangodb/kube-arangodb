@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"net/http"
+	goHttp "net/http"
 	"testing"
 
 	dto "github.com/prometheus/client_model/go"
@@ -35,10 +35,10 @@ import (
 )
 
 func Test_Handler(t *testing.T) {
-	m := http.NewServeMux()
+	m := goHttp.NewServeMux()
 
 	m.HandleFunc("/metrics", Handler())
-	m.HandleFunc("/empty", operatorHTTP.WithNoContent(func(writer http.ResponseWriter, request *http.Request) {
+	m.HandleFunc("/empty", operatorHTTP.WithNoContent(func(writer goHttp.ResponseWriter, request *goHttp.Request) {
 
 	}))
 
@@ -49,15 +49,15 @@ func Test_Handler(t *testing.T) {
 	emptyEndpoint := fmt.Sprintf("%s/empty", endpoint)
 
 	t.Run("Get metrics in plain", func(t *testing.T) {
-		r, err := http.NewRequest("GET", metricsEndpoint, nil)
+		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
 		r.Header.Add("Accept-Encoding", "identity")
 
-		resp, err := http.DefaultClient.Do(r)
+		resp, err := goHttp.DefaultClient.Do(r)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equal(t, goHttp.StatusOK, resp.StatusCode)
 
 		data, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
@@ -66,15 +66,15 @@ func Test_Handler(t *testing.T) {
 	})
 
 	t.Run("Get metrics in gzip", func(t *testing.T) {
-		r, err := http.NewRequest("GET", metricsEndpoint, nil)
+		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
 		r.Header.Add("Accept-Encoding", "gzip")
 
-		resp, err := http.DefaultClient.Do(r)
+		resp, err := goHttp.DefaultClient.Do(r)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equal(t, goHttp.StatusOK, resp.StatusCode)
 
 		data, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
@@ -83,13 +83,13 @@ func Test_Handler(t *testing.T) {
 	})
 
 	t.Run("Get metrics in default", func(t *testing.T) {
-		r, err := http.NewRequest("GET", metricsEndpoint, nil)
+		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
-		resp, err := http.DefaultClient.Do(r)
+		resp, err := goHttp.DefaultClient.Do(r)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equal(t, goHttp.StatusOK, resp.StatusCode)
 
 		data, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
@@ -98,13 +98,13 @@ func Test_Handler(t *testing.T) {
 	})
 
 	t.Run("Get empty", func(t *testing.T) {
-		r, err := http.NewRequest("GET", emptyEndpoint, nil)
+		r, err := goHttp.NewRequest("GET", emptyEndpoint, nil)
 		require.NoError(t, err)
 
-		resp, err := http.DefaultClient.Do(r)
+		resp, err := goHttp.DefaultClient.Do(r)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusNoContent, resp.StatusCode)
+		require.Equal(t, goHttp.StatusNoContent, resp.StatusCode)
 
 		data, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
@@ -115,15 +115,15 @@ func Test_Handler(t *testing.T) {
 	t.Run("Read metrics - plain", func(t *testing.T) {
 		mfChan := make(chan *dto.MetricFamily, 1024*1024)
 
-		r, err := http.NewRequest("GET", metricsEndpoint, nil)
+		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
 		r.Header.Add("Accept-Encoding", "identity")
 
-		resp, err := http.DefaultClient.Do(r)
+		resp, err := goHttp.DefaultClient.Do(r)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equal(t, goHttp.StatusOK, resp.StatusCode)
 
 		require.NoError(t, prom2json.ParseReader(resp.Body, mfChan))
 
@@ -140,15 +140,15 @@ func Test_Handler(t *testing.T) {
 	t.Run("Read metrics - gzip", func(t *testing.T) {
 		mfChan := make(chan *dto.MetricFamily, 1024*1024)
 
-		r, err := http.NewRequest("GET", metricsEndpoint, nil)
+		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
 		r.Header.Add("Accept-Encoding", "gzip")
 
-		resp, err := http.DefaultClient.Do(r)
+		resp, err := goHttp.DefaultClient.Do(r)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equal(t, goHttp.StatusOK, resp.StatusCode)
 
 		reader, err := gzip.NewReader(resp.Body)
 		require.NoError(t, err)
@@ -168,13 +168,13 @@ func Test_Handler(t *testing.T) {
 	t.Run("Read metrics - default", func(t *testing.T) {
 		mfChan := make(chan *dto.MetricFamily, 1024*1024)
 
-		r, err := http.NewRequest("GET", metricsEndpoint, nil)
+		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
-		resp, err := http.DefaultClient.Do(r)
+		resp, err := goHttp.DefaultClient.Do(r)
 		require.NoError(t, err)
 
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		require.Equal(t, goHttp.StatusOK, resp.StatusCode)
 
 		require.NoError(t, prom2json.ParseReader(resp.Body, mfChan))
 

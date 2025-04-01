@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -35,7 +35,7 @@ func withFile(t *testing.T, ns string) func(in func(file string)) {
 	return func(in func(key string)) {
 		p := t.TempDir()
 
-		ret := path.Join(p, strings.ToLower(uniuri.NewLen(32)))
+		ret := path.Join(p, goStrings.ToLower(uniuri.NewLen(32)))
 
 		require.NoError(t, os.WriteFile(ret, []byte(ns), 0644))
 
@@ -45,7 +45,7 @@ func withFile(t *testing.T, ns string) func(in func(file string)) {
 
 func withEnv(t *testing.T, ns string) func(in func(env string)) {
 	return func(in func(key string)) {
-		key := fmt.Sprintf("MY_NS_ENV_%s", strings.ToUpper(uniuri.NewLen(8)))
+		key := fmt.Sprintf("MY_NS_ENV_%s", goStrings.ToUpper(uniuri.NewLen(8)))
 
 		require.NoError(t, os.Setenv(key, ns))
 		defer func() {

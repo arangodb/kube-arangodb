@@ -22,7 +22,7 @@ package gateway
 
 import (
 	"encoding/json"
-	"net/http"
+	goHttp "net/http"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -73,7 +73,7 @@ func (c *ConfigDestinationStatic[T]) Marshall() ([]byte, error) {
 
 func (c *ConfigDestinationStatic[T]) GetCode() uint32 {
 	if c == nil || c.Code == nil {
-		return http.StatusOK
+		return goHttp.StatusOK
 	}
 
 	return *c.Code

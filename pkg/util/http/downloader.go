@@ -24,19 +24,19 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func Download(ctx context.Context, client *http.Client, format string, args ...interface{}) ([]byte, error) {
+func Download(ctx context.Context, client *goHttp.Client, format string, args ...interface{}) ([]byte, error) {
 	if client == nil {
-		client = http.DefaultClient
+		client = goHttp.DefaultClient
 	}
 
 	url := fmt.Sprintf(format, args...)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := goHttp.NewRequestWithContext(ctx, goHttp.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ package http
 
 import (
 	"io"
-	"net/http"
+	goHttp "net/http"
 )
 
-func NewWriter(w http.ResponseWriter, stream io.Writer) http.ResponseWriter {
+func NewWriter(w goHttp.ResponseWriter, stream io.Writer) goHttp.ResponseWriter {
 	return &writer{
 		writer: w,
 		stream: stream,
@@ -33,7 +33,7 @@ func NewWriter(w http.ResponseWriter, stream io.Writer) http.ResponseWriter {
 }
 
 type writer struct {
-	writer http.ResponseWriter
+	writer goHttp.ResponseWriter
 	stream io.Writer
 }
 
@@ -45,6 +45,6 @@ func (w *writer) WriteHeader(statusCode int) {
 	w.writer.WriteHeader(statusCode)
 }
 
-func (w *writer) Header() http.Header {
+func (w *writer) Header() goHttp.Header {
 	return w.writer.Header()
 }

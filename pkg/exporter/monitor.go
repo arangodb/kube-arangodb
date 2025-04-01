@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"strings"
+	goStrings "strings"
 	"sync/atomic"
 	"time"
 
@@ -81,7 +81,7 @@ func (m monitor) UpdateMonitorStatus(ctx context.Context) {
 			logger.Err(err).Info("GetClusterHealth error")
 			sleep = failRefreshInterval
 		} else {
-			var output strings.Builder
+			var output goStrings.Builder
 			for key, value := range health.Health {
 				entry, err := m.GetMemberStatus(key, value)
 				if err != nil {

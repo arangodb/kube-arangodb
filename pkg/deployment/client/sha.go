@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package client
 
 import (
-	"strings"
+	goStrings "strings"
 )
 
 type Sha string
@@ -31,7 +31,7 @@ func (s Sha) String() string {
 }
 
 func (s Sha) Type() string {
-	z := strings.Split(s.String(), ":")
+	z := goStrings.Split(s.String(), ":")
 	if len(z) < 2 {
 		return "sha256"
 	}
@@ -39,7 +39,7 @@ func (s Sha) Type() string {
 }
 
 func (s Sha) Checksum() string {
-	z := strings.Split(s.String(), ":")
+	z := goStrings.Split(s.String(), ":")
 	if len(z) < 2 {
 		return z[0]
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ package exporter
 
 import (
 	"io"
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 	"sync"
 	"time"
 
@@ -32,22 +32,22 @@ import (
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
-var _ http.Handler = &passthru{}
+var _ goHttp.Handler = &passthru{}
 
-func NewPassthru(auth Authentication, sslVerify bool, timeout time.Duration, endpoints ...string) (http.Handler, error) {
+func NewPassthru(auth Authentication, sslVerify bool, timeout time.Duration, endpoints ...string) (goHttp.Handler, error) {
 	return &passthru{
 		factory:   newHttpClientFactory(auth, sslVerify, timeout),
 		endpoints: endpoints,
 	}, nil
 }
 
-type httpClientFactory func(endpoint string) (*http.Client, *http.Request, error)
+type httpClientFactory func(endpoint string) (*goHttp.Client, *goHttp.Request, error)
 
 func newHttpClientFactory(auth Authentication, sslVerify bool, timeout time.Duration) httpClientFactory {
-	return func(endpoint string) (*http.Client, *http.Request, error) {
+	return func(endpoint string) (*goHttp.Client, *goHttp.Request, error) {
 		transport := operatorHTTP.Transport(operatorHTTP.WithTransportTLS(util.BoolSwitch(sslVerify, nil, operatorHTTP.Insecure)))
 
-		req, err := http.NewRequest("GET", endpoint, nil)
+		req, err := goHttp.NewRequest("GET", endpoint, nil)
 		if err != nil {
 			return nil, nil, errors.WithStack(err)
 		}
@@ -67,7 +67,7 @@ func newHttpClientFactory(auth Authentication, sslVerify bool, timeout time.Dura
 
 		req.Header.Add("x-arango-allow-dirty-read", "true") // Allow read from follower in AF mode
 
-		client := &http.Client{
+		client := &goHttp.Client{
 			Transport: transport,
 			Timeout:   timeout,
 		}
@@ -81,7 +81,7 @@ type passthru struct {
 	factory   httpClientFactory
 }
 
-func (p passthru) get(endpoint string) (*http.Response, error) {
+func (p passthru) get(endpoint string) (*goHttp.Response, error) {
 	c, req, err := p.factory(endpoint)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (p passthru) read(endpoint string) (string, error) {
 	responseStr := string(response)
 
 	// Fix Header response
-	return strings.ReplaceAll(responseStr, "guage", "gauge"), nil
+	return goStrings.ReplaceAll(responseStr, "guage", "gauge"), nil
 }
 
 func (p passthru) getAll() (string, error) {
@@ -136,7 +136,7 @@ func (p passthru) getAll() (string, error) {
 		}
 	}
 
-	response := strings.Join(responses, "\n")
+	response := goStrings.Join(responses, "\n")
 
 	// Attach monitor data
 	monitorData := currentMembersStatus.Load()
@@ -147,21 +147,21 @@ func (p passthru) getAll() (string, error) {
 	return response, nil
 }
 
-func (p passthru) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (p passthru) ServeHTTP(resp goHttp.ResponseWriter, req *goHttp.Request) {
 	response, err := p.getAll()
 
 	if err != nil {
 		// Ignore error
-		resp.WriteHeader(http.StatusInternalServerError)
+		resp.WriteHeader(goHttp.StatusInternalServerError)
 		resp.Write([]byte(err.Error()))
 		return
 	}
 
-	resp.WriteHeader(http.StatusOK)
+	resp.WriteHeader(goHttp.StatusOK)
 	_, err = resp.Write([]byte(response))
 	if err != nil {
 		// Ignore error
-		resp.WriteHeader(http.StatusInternalServerError)
+		resp.WriteHeader(goHttp.StatusInternalServerError)
 		resp.Write([]byte("Unable to write body"))
 		return
 	}

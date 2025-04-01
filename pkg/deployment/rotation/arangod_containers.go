@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package rotation
 
 import (
-	"strings"
+	goStrings "strings"
 
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
@@ -145,7 +145,7 @@ func cleanServerContainerArgs(args []string) []string {
 
 	for _, arg := range args {
 		// Remove --server.early-connections from args (to calculate)
-		if arg == "--server.early-connections" || strings.HasPrefix(arg, "--server.early-connections=") {
+		if arg == "--server.early-connections" || goStrings.HasPrefix(arg, "--server.early-connections=") {
 			continue
 		}
 
@@ -244,7 +244,7 @@ func splitLogLevelPrefixItems(args []string) ([]string, []string) {
 	var logLevel []string
 
 	for _, arg := range args {
-		if !strings.HasPrefix(arg, "--log.level") {
+		if !goStrings.HasPrefix(arg, "--log.level") {
 			nonLogLevel = append(nonLogLevel, arg)
 		} else {
 			logLevel = append(logLevel, arg)

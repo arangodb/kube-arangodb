@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package client
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 )
 
 const AdminLicenseUrl = "/_admin/license"
@@ -37,7 +37,7 @@ type License struct {
 }
 
 func (c *client) GetLicense(ctx context.Context) (License, error) {
-	req, err := c.c.NewRequest(http.MethodGet, AdminLicenseUrl)
+	req, err := c.c.NewRequest(goHttp.MethodGet, AdminLicenseUrl)
 	if err != nil {
 		return License{}, err
 	}
@@ -47,7 +47,7 @@ func (c *client) GetLicense(ctx context.Context) (License, error) {
 		return License{}, err
 	}
 
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
+	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
 		return License{}, err
 	}
 
@@ -61,7 +61,7 @@ func (c *client) GetLicense(ctx context.Context) (License, error) {
 }
 
 func (c *client) SetLicense(ctx context.Context, license string, force bool) error {
-	req, err := c.c.NewRequest(http.MethodPut, AdminLicenseUrl)
+	req, err := c.c.NewRequest(goHttp.MethodPut, AdminLicenseUrl)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (c *client) SetLicense(ctx context.Context, license string, force bool) err
 		return err
 	}
 
-	if err := resp.CheckStatus(http.StatusCreated); err != nil {
+	if err := resp.CheckStatus(goHttp.StatusCreated); err != nil {
 		return err
 	}
 

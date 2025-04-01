@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package client
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 )
 
 const (
@@ -60,7 +60,7 @@ type ServerStatus struct {
 // GetProgress returns human-readable progress status of the server, and true if server is ready.
 func (s ServerStatus) GetProgress() (string, bool) {
 	p := s.ServerInfo.ServerProgress
-	var result strings.Builder
+	var result goStrings.Builder
 
 	if len(p.Feature) > 0 {
 		result.WriteString("feature: " + p.Feature + ", ")

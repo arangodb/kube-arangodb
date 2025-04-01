@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ package http
 
 import (
 	"encoding/json"
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 )
 
 // NewSimpleJSONResponse returns handler which server static json on GET request
-func NewSimpleJSONResponse(obj interface{}) (http.Handler, error) {
+func NewSimpleJSONResponse(obj interface{}) (goHttp.Handler, error) {
 	data, err := json.Marshal(obj)
 	if err != nil {
 		return nil, err
@@ -40,12 +40,12 @@ type simpleJSONResponse struct {
 	data []byte
 }
 
-func (s simpleJSONResponse) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	if strings.ToUpper(request.Method) != http.MethodGet {
-		writer.WriteHeader(http.StatusMethodNotAllowed)
+func (s simpleJSONResponse) ServeHTTP(writer goHttp.ResponseWriter, request *goHttp.Request) {
+	if goStrings.ToUpper(request.Method) != goHttp.MethodGet {
+		writer.WriteHeader(goHttp.StatusMethodNotAllowed)
 		return
 	}
 
-	writer.WriteHeader(http.StatusOK)
+	writer.WriteHeader(goHttp.StatusOK)
 	writer.Write(s.data)
 }

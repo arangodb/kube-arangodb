@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package sidecar
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 
@@ -51,8 +51,8 @@ func (c *Core) GetExternal() bool {
 }
 
 func (c *Core) Envs(int Integration, envs ...core.EnvVar) []core.EnvVar {
-	cmd := strings.Join(util.FormatList(int.Name(), func(a string) string {
-		return strings.ToUpper(a)
+	cmd := goStrings.Join(util.FormatList(int.Name(), func(a string) string {
+		return goStrings.ToUpper(a)
 	}), "_")
 	var r = []core.EnvVar{
 		{

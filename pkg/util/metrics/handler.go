@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package metrics
 
 import (
-	"net/http"
+	goHttp "net/http"
 
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -30,6 +30,6 @@ import (
 
 const MaxMetricsBufferedSize = 1024 * 1024
 
-func Handler() http.HandlerFunc {
+func Handler() goHttp.HandlerFunc {
 	return operatorHTTP.WithTextContentType(operatorHTTP.WithNoContent(operatorHTTP.WithBuffer(MaxMetricsBufferedSize, operatorHTTP.WithEncoding(prometheus.Handler().ServeHTTP))))
 }

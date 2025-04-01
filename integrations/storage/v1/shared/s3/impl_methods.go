@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
+	goStrings "strings"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -602,7 +602,7 @@ func (s *s3impl) write(ctx context.Context, path string, chunk []byte, hasMore b
 		if _, err := s.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
 			Bucket: util.NewType(s.bucket),
 			Key:    prefix,
-			Body:   aws.ReadSeekCloser(strings.NewReader(string(chunk))),
+			Body:   aws.ReadSeekCloser(goStrings.NewReader(string(chunk))),
 		}); err != nil {
 			log.Err(err).Debug("PutObjectWithContext failed")
 			return false, err
@@ -652,7 +652,7 @@ func (s *s3impl) write(ctx context.Context, path string, chunk []byte, hasMore b
 		}
 		obj.Body.Close()
 		// Add the new data
-		if _, err := io.Copy(w, strings.NewReader(string(chunk))); err != nil {
+		if _, err := io.Copy(w, goStrings.NewReader(string(chunk))); err != nil {
 			w.CloseWithError(err)
 			return
 		}

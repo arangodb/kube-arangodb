@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package util
 
 import (
 	"os"
-	"strings"
+	goStrings "strings"
 )
 
 // EnvironmentVariable is a wrapper to get environment variables
@@ -61,6 +61,6 @@ func (e EnvironmentVariable) GetOrDefault(d string) string {
 
 // NormalizeEnv normalizes environment variables.
 func NormalizeEnv(env string) string {
-	r := strings.NewReplacer(".", "_", "-", "_")
-	return strings.ToUpper(r.Replace(env))
+	r := goStrings.NewReplacer(".", "_", "-", "_")
+	return goStrings.ToUpper(r.Replace(env))
 }

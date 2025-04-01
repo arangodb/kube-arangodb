@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package logging
 
 import (
-	"strings"
+	goStrings "strings"
 
 	"github.com/rs/zerolog"
 )
@@ -30,7 +30,7 @@ func ParseLogLevelsFromArgs(in []string) (map[string]Level, error) {
 	r := make(map[string]Level)
 
 	for _, level := range in {
-		z := strings.SplitN(level, "=", 2)
+		z := goStrings.SplitN(level, "=", 2)
 
 		switch len(z) {
 		case 1:
@@ -54,7 +54,7 @@ func ParseLogLevelsFromArgs(in []string) (map[string]Level, error) {
 }
 
 func ParseLogLevel(in string) (Level, error) {
-	l, err := zerolog.ParseLevel(strings.ToLower(in))
+	l, err := zerolog.ParseLevel(goStrings.ToLower(in))
 	if err != nil {
 		return Debug, err
 	}

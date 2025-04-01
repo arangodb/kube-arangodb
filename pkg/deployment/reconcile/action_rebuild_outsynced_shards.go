@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package reconcile
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 	"path"
 	"time"
 
@@ -211,7 +211,7 @@ func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Con
 	// cleanup batch
 	_ = a.deleteBatch(ctx, clientSync, batchID)
 
-	if resp.StatusCode() == http.StatusNoContent {
+	if resp.StatusCode() == goHttp.StatusNoContent {
 		return false, nil
 	} else {
 		return false, errors.Wrapf(err, "rebuild progress failed with status code %d", resp.StatusCode())

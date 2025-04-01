@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package deployment
 
 import (
 	"context"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -143,7 +143,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		log.Err(err).Debug("Failed to create client-auth keyfile")
 		return errors.WithStack(err)
 	}
-	keyfile := strings.TrimSpace(cert) + "\n" + strings.TrimSpace(key)
+	keyfile := goStrings.TrimSpace(cert) + "\n" + goStrings.TrimSpace(key)
 
 	// Create secrets (in memory)
 	keyfileSecret := core.Secret{
@@ -190,7 +190,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 		log.Err(err).Debug("Failed to encode TLS CA Secret")
 		return errors.WithStack(err)
 	}
-	allYaml := strings.TrimSpace(string(keyfileYaml)) + "\n---\n" + strings.TrimSpace(string(tlsCAYaml))
+	allYaml := goStrings.TrimSpace(string(keyfileYaml)) + "\n---\n" + goStrings.TrimSpace(string(tlsCAYaml))
 
 	// Create secret containing access package
 	secret := &core.Secret{

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package api
 import (
 	"context"
 	"net"
-	"net/http"
+	goHttp "net/http"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -39,7 +39,7 @@ import (
 var apiLogger = logging.Global().RegisterAndGetLogger("api-server", logging.Info)
 
 type Server struct {
-	httpServer  *http.Server
+	httpServer  *goHttp.Server
 	grpcServer  *grpc.Server
 	grpcAddress string
 
@@ -82,7 +82,7 @@ func NewServer(cli typedCore.CoreV1Interface, cfg ServerConfig) (*Server, error)
 	auth := &authorization{jwtSigningKey: jwtSigningKey}
 
 	s := &Server{
-		httpServer: &http.Server{
+		httpServer: &goHttp.Server{
 			Addr:              cfg.HTTPAddress,
 			ReadTimeout:       time.Second * 30,
 			ReadHeaderTimeout: time.Second * 15,
@@ -109,7 +109,7 @@ func (s *Server) Run() error {
 	g := errgroup.Group{}
 	g.Go(func() error {
 		apiLogger.Info("Serving HTTP API on %s", s.httpServer.Addr)
-		if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+		if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != goHttp.ErrServerClosed {
 			return err
 		}
 		return nil

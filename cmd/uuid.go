@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
+	goStrings "strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -156,7 +156,7 @@ func checkFileContent(path, expected string) (bool, string, error) {
 		return false, "", err
 	}
 
-	contentString := strings.TrimSuffix(string(content), "\n")
+	contentString := goStrings.TrimSuffix(string(content), "\n")
 
 	return contentString == expected, contentString, nil
 }

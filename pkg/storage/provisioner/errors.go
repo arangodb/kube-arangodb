@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // The Programs (which include both the software and documentation) contain
 // proprietary information of ArangoDB GmbH; they are provided under a license
@@ -29,16 +29,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (
 	// BadRequestError indicates invalid arguments.
-	BadRequestError = StatusError{StatusCode: http.StatusBadRequest, message: "bad request"}
+	BadRequestError = StatusError{StatusCode: goHttp.StatusBadRequest, message: "bad request"}
 	// InternalServerError indicates an unspecified error inside the server, perhaps a bug.
-	InternalServerError = StatusError{StatusCode: http.StatusInternalServerError, message: "internal server error"}
+	InternalServerError = StatusError{StatusCode: goHttp.StatusInternalServerError, message: "internal server error"}
 )
 
 type StatusError struct {
@@ -79,18 +79,18 @@ type ErrorResponse struct {
 
 // IsBadRequest returns true if the given error is caused by a BadRequestError.
 func IsBadRequest(err error) bool {
-	return IsStatusErrorWithCode(err, http.StatusBadRequest)
+	return IsStatusErrorWithCode(err, goHttp.StatusBadRequest)
 }
 
 // IsInternalServer returns true if the given error is caused by a InternalServerError.
 func IsInternalServer(err error) bool {
-	return IsStatusErrorWithCode(err, http.StatusInternalServerError)
+	return IsStatusErrorWithCode(err, goHttp.StatusInternalServerError)
 }
 
 // ParseResponseError returns an error from given response.
 // It tries to parse the body (if given body is nil, will be read from response)
 // for ErrorResponse.
-func ParseResponseError(r *http.Response, body []byte) error {
+func ParseResponseError(r *goHttp.Response, body []byte) error {
 	// Read body (if needed)
 	if body == nil {
 		defer r.Body.Close()

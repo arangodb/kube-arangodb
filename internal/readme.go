@@ -27,7 +27,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
-	"strings"
+	goStrings "strings"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -154,15 +154,15 @@ func GenerateHelp(cmd *cobra.Command, args ...string) (string, error) {
 		return "", err
 	}
 
-	for _, line := range strings.Split(help, "\n") {
-		if strings.HasPrefix(line, "      --") {
+	for _, line := range goStrings.Split(help, "\n") {
+		if goStrings.HasPrefix(line, "      --") {
 			lines = append(lines, line)
 		}
 	}
 
 	lines = append(lines, "```")
 
-	return pretty.WrapWithNewLines(pretty.WrapWithNewLines(strings.Join(lines, "\n"))), nil
+	return pretty.WrapWithNewLines(pretty.WrapWithNewLines(goStrings.Join(lines, "\n"))), nil
 }
 
 func GenerateHelpQuoted(cmd *cobra.Command, args ...string) (string, error) {
@@ -244,7 +244,7 @@ func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) 
 	for _, f := range d.Features {
 		r := f.Releases[len(f.Releases)-1]
 
-		if community := strings.Contains(util.TypeOrDefault(util.First(r.OperatorEdition, f.OperatorEdition), "Community, Enterprise"), "Community"); community == eeOnly {
+		if community := goStrings.Contains(util.TypeOrDefault(util.First(r.OperatorEdition, f.OperatorEdition), "Community, Enterprise"), "Community"); community == eeOnly {
 			continue
 		}
 

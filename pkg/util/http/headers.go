@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package http
 import (
 	"sort"
 	"strconv"
-	"strings"
+	goStrings "strings"
 )
 
 type Headers map[string]float64
@@ -83,17 +83,17 @@ func (h Headers) Accept(headers ...string) string {
 func ParseHeaders(in ...string) Headers {
 	h := Headers{}
 	for _, v := range in {
-		for _, el := range strings.Split(v, ",") {
-			el = strings.TrimSpace(el)
+		for _, el := range goStrings.Split(v, ",") {
+			el = goStrings.TrimSpace(el)
 
-			els := strings.Split(el, ";")
+			els := goStrings.Split(el, ";")
 
 			if len(els) == 1 {
 				h[els[0]] = 1
 			} else {
 				q := 1.0
 				for _, part := range els[1:] {
-					parts := strings.Split(part, "=")
+					parts := goStrings.Split(part, "=")
 					if len(parts) <= 1 {
 						continue
 					}

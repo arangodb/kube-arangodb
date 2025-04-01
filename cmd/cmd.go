@@ -25,11 +25,11 @@ import (
 	goflag "flag"
 	"fmt"
 	"net"
-	"net/http"
+	goHttp "net/http"
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -335,7 +335,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 		logger.Err(err).Fatal("Unable to enable logger")
 	}
 
-	podNameParts := strings.Split(name, "-")
+	podNameParts := goStrings.Split(name, "-")
 	operatorID := podNameParts[len(podNameParts)-1]
 
 	if operatorID != "" {
@@ -565,7 +565,7 @@ func startVersionProcess() error {
 	r.GET("/_api/version", gin.WrapF(versionV1Responser.ServeHTTP))
 	r.GET("/api/v1/version", gin.WrapF(versionV1Responser.ServeHTTP))
 
-	s := http.Server{
+	s := goHttp.Server{
 		Addr:    listenAddr,
 		Handler: r,
 	}

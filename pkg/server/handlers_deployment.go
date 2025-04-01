@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package server
 
 import (
-	"net/http"
+	goHttp "net/http"
 	"sort"
 
 	"github.com/gin-gonic/gin"
@@ -187,7 +187,7 @@ func (s *Server) handleGetDeployments(c *gin.Context) {
 			for i, d := range depls {
 				result[i] = newDeploymentInfo(d)
 			}
-			c.JSON(http.StatusOK, gin.H{
+			c.JSON(goHttp.StatusOK, gin.H{
 				"deployments": result,
 			})
 		}
@@ -203,7 +203,7 @@ func (s *Server) handleGetDeploymentDetails(c *gin.Context) {
 			sendError(c, err)
 		} else {
 			result := newDeploymentInfoDetails(depl)
-			c.JSON(http.StatusOK, result)
+			c.JSON(goHttp.StatusOK, result)
 		}
 	}
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package tls
 
 import (
-	"strings"
+	goStrings "strings"
 	"time"
 
 	"github.com/arangodb-helper/go-certificates"
@@ -89,6 +89,6 @@ func CreateTLSServerKeyfile(caCert, caKey string, names KeyfileInput) (string, e
 }
 
 func AsKeyfile(cert, priv string) string {
-	return strings.TrimSpace(cert) + "\n" +
-		strings.TrimSpace(priv)
+	return goStrings.TrimSpace(cert) + "\n" +
+		goStrings.TrimSpace(priv)
 }

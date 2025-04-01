@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package helpers
 import (
 	"context"
 	"fmt"
-	"strings"
+	goStrings "strings"
 
 	"github.com/dchest/uniuri"
 	core "k8s.io/api/core/v1"
@@ -78,7 +78,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 			ObjectMeta: meta.ObjectMeta{
 				OwnerReferences: []meta.OwnerReference{owner},
 
-				Name:      fmt.Sprintf("%s-%s", name, strings.ToLower(uniuri.NewLen(6))),
+				Name:      fmt.Sprintf("%s-%s", name, goStrings.ToLower(uniuri.NewLen(6))),
 				Namespace: namespace,
 			},
 		}, meta.CreateOptions{}); err != nil {
@@ -132,7 +132,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				ObjectMeta: meta.ObjectMeta{
 					OwnerReferences: []meta.OwnerReference{owner},
 
-					Name:      fmt.Sprintf("%s-%s", name, strings.ToLower(uniuri.NewLen(6))),
+					Name:      fmt.Sprintf("%s-%s", name, goStrings.ToLower(uniuri.NewLen(6))),
 					Namespace: namespace,
 				},
 				Rules: role,
@@ -152,7 +152,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				ObjectMeta: meta.ObjectMeta{
 					OwnerReferences: []meta.OwnerReference{owner},
 
-					Name:      fmt.Sprintf("%s-%s", name, strings.ToLower(uniuri.NewLen(6))),
+					Name:      fmt.Sprintf("%s-%s", name, goStrings.ToLower(uniuri.NewLen(6))),
 					Namespace: namespace,
 				},
 				RoleRef: rbac.RoleRef{
@@ -279,7 +279,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				ObjectMeta: meta.ObjectMeta{
 					OwnerReferences: []meta.OwnerReference{owner},
 
-					Name: fmt.Sprintf("%s-%s", name, strings.ToLower(uniuri.NewLen(6))),
+					Name: fmt.Sprintf("%s-%s", name, goStrings.ToLower(uniuri.NewLen(6))),
 				},
 				Rules: clusterRole,
 			}, meta.CreateOptions{}); err != nil {
@@ -298,7 +298,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 				ObjectMeta: meta.ObjectMeta{
 					OwnerReferences: []meta.OwnerReference{owner},
 
-					Name: fmt.Sprintf("%s-%s", name, strings.ToLower(uniuri.NewLen(6))),
+					Name: fmt.Sprintf("%s-%s", name, goStrings.ToLower(uniuri.NewLen(6))),
 				},
 				RoleRef: rbac.RoleRef{
 					APIGroup: "rbac.authorization.k8s.io",

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import (
 	"path"
 	"reflect"
 	"sort"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/coreos/go-semver/semver"
@@ -95,7 +95,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 			write(t, out, "Links:\n")
 
 			for _, link := range el.Links {
-				z := strings.Split(link, "|")
+				z := goStrings.Split(link, "|")
 				if len(z) == 1 {
 					write(t, out, "* [Documentation](%s)\n", z[0])
 				} else if len(z) == 2 {
@@ -120,7 +120,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 		if len(el.Enum) > 0 {
 			write(t, out, "Possible Values: \n")
 			for id, enum := range el.Enum {
-				z := strings.Split(enum, "|")
+				z := goStrings.Split(enum, "|")
 
 				snip := fmt.Sprintf("`\"%s\"`", z[0])
 				if id == 0 {
@@ -418,7 +418,7 @@ func extractVersionFile(t *testing.T, root string) *semver.Version {
 	data, err := os.ReadFile(path.Join(root, "VERSION"))
 	require.NoError(t, err)
 
-	v := strings.TrimSpace(string(data))
+	v := goStrings.TrimSpace(string(data))
 	sm, err := semver.NewVersion(v)
 	require.NoError(t, err)
 
@@ -443,7 +443,7 @@ func extractVersionGit(t *testing.T, root string) *semver.Version {
 	scanner := bufio.NewScanner(out)
 	// optionally, resize scanner's capacity for lines over 64K, see next example
 	for scanner.Scan() {
-		v := strings.TrimSpace(scanner.Text())
+		v := goStrings.TrimSpace(scanner.Text())
 		sm, err := semver.NewVersion(v)
 		if err != nil {
 			t.Logf("Unable to parse: %s", v)
@@ -488,7 +488,7 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 			for section, fieldInstance := range sections {
 				t.Run(section, func(t *testing.T) {
 
-					sectionParsed := iterateOverObject(t, fields, strings.ToLower(section), reflect.TypeOf(fieldInstance), "")
+					sectionParsed := iterateOverObject(t, fields, goStrings.ToLower(section), reflect.TypeOf(fieldInstance), "")
 
 					defs := make(DocDefinitions, 0, len(sectionParsed))
 					for k, f := range sectionParsed {
@@ -510,7 +510,7 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 				require.NoError(t, out.Close())
 			}()
 
-			objName := strings.ReplaceAll(objectName, ".", " ")
+			objName := goStrings.ReplaceAll(objectName, ".", " ")
 			writeFrontMatter(t, out, map[string]string{
 				"layout": "page",
 				"title":  objName,

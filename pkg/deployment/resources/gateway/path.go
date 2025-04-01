@@ -22,7 +22,8 @@ package gateway
 
 import (
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	"github.com/pkg/errors"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ConfigMatch int

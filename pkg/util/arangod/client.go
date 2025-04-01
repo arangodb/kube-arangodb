@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package arangod
 import (
 	"context"
 	"net"
-	nhttp "net/http"
+	goHttp "net/http"
 	"strconv"
 
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -60,19 +60,19 @@ func WithRequireAuthentication(ctx context.Context) context.Context {
 	return context.WithValue(ctx, requireAuthenticationKey{}, true)
 }
 
-func sharedHTTPTransport() nhttp.RoundTripper {
+func sharedHTTPTransport() goHttp.RoundTripper {
 	return operatorHTTP.Transport()
 }
 
-func sharedHTTPSTransport() nhttp.RoundTripper {
+func sharedHTTPSTransport() goHttp.RoundTripper {
 	return operatorHTTP.Transport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure))
 }
 
-func sharedHTTPTransportShortTimeout() nhttp.RoundTripper {
+func sharedHTTPTransportShortTimeout() goHttp.RoundTripper {
 	return operatorHTTP.RoundTripperWithShortTransport()
 }
 
-func sharedHTTPSTransportShortTimeout() nhttp.RoundTripper {
+func sharedHTTPSTransportShortTimeout() goHttp.RoundTripper {
 	return operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure))
 }
 

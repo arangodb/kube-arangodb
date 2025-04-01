@@ -22,7 +22,7 @@ package client
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -56,7 +56,7 @@ type RebalancePlanMove struct {
 }
 
 func (c *client) RebalancePlan(ctx context.Context, request *RebalancePlanRequest) (RebalancePlanResponse, error) {
-	req, err := c.c.NewRequest(http.MethodPost, "/_admin/cluster/rebalance")
+	req, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/cluster/rebalance")
 	if err != nil {
 		return RebalancePlanResponse{}, err
 	}
@@ -77,7 +77,7 @@ func (c *client) RebalancePlan(ctx context.Context, request *RebalancePlanReques
 		return RebalancePlanResponse{}, err
 	}
 
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
+	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
 		return RebalancePlanResponse{}, err
 	}
 

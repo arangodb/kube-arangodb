@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -139,23 +139,23 @@ func AreContainersReady(pod *core.Pod, coreContainers utils.StringList) bool {
 }
 
 func extractContainerNamesFromConditionMessage(msg string) (utils.StringList, bool) {
-	if !strings.HasPrefix(msg, ServerContainerConditionPrefix) {
+	if !goStrings.HasPrefix(msg, ServerContainerConditionPrefix) {
 		return nil, false
 	}
 
-	unreadyContainers := strings.TrimPrefix(msg, ServerContainerConditionPrefix)
+	unreadyContainers := goStrings.TrimPrefix(msg, ServerContainerConditionPrefix)
 
-	if !strings.HasPrefix(unreadyContainers, "[") {
+	if !goStrings.HasPrefix(unreadyContainers, "[") {
 		return nil, false
 	}
 
-	if !strings.HasSuffix(unreadyContainers, "]") {
+	if !goStrings.HasSuffix(unreadyContainers, "]") {
 		return nil, false
 	}
 
-	unreadyContainers = strings.TrimPrefix(strings.TrimSuffix(unreadyContainers, "]"), "[")
+	unreadyContainers = goStrings.TrimPrefix(goStrings.TrimSuffix(unreadyContainers, "]"), "[")
 
-	unreadyContainersList := utils.StringList(strings.Split(unreadyContainers, " "))
+	unreadyContainersList := utils.StringList(goStrings.Split(unreadyContainers, " "))
 
 	return unreadyContainersList, true
 }

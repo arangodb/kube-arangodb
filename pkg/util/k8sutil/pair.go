@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package k8sutil
 import (
 	"fmt"
 	"sort"
-	"strings"
+	goStrings "strings"
 )
 
 func CreateOptionPairs(lens ...int) OptionPairs {
@@ -171,13 +171,13 @@ func (o OptionPair) String() string {
 
 // CompareTo returns -1 if o < other, 0 if o == other, 1 otherwise
 func (o OptionPair) CompareTo(other OptionPair) int {
-	rc := strings.Compare(o.Key, other.Key)
+	rc := goStrings.Compare(o.Key, other.Key)
 	if rc < 0 {
 		return -1
 	} else if rc > 0 {
 		return 1
 	}
-	return strings.Compare(o.Value, other.Value)
+	return goStrings.Compare(o.Value, other.Value)
 }
 
 func NewOptionPair(pairs ...OptionPair) OptionPairs {
@@ -186,14 +186,14 @@ func NewOptionPair(pairs ...OptionPair) OptionPairs {
 
 // ExtractStringToOptionPair extracts command line argument into the OptionPair.
 func ExtractStringToOptionPair(arg string) OptionPair {
-	trimmed := strings.TrimLeft(arg, " ")
-	index := strings.Index(trimmed, "=")
+	trimmed := goStrings.TrimLeft(arg, " ")
+	index := goStrings.Index(trimmed, "=")
 	if index < 0 {
-		return OptionPair{Key: strings.TrimRight(trimmed, " ")}
+		return OptionPair{Key: goStrings.TrimRight(trimmed, " ")}
 	}
 
 	return OptionPair{
-		Key:   strings.Trim(trimmed[0:index], " "),
+		Key:   goStrings.Trim(trimmed[0:index], " "),
 		Value: trimmed[index+1:],
 	}
 }

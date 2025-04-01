@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"net/http"
+	goHttp "net/http"
 	"net/url"
 	"time"
 
@@ -43,7 +43,7 @@ func New(endpoint string) (provisioner.API, error) {
 	u.Path = ""
 	return &client{
 		endpoint: *u,
-		client: &http.Client{
+		client: &goHttp.Client{
 			Transport: operatorHTTP.RoundTripper(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
 			Timeout:   defaultHTTPTimeout,
 		},
@@ -53,7 +53,7 @@ func New(endpoint string) (provisioner.API, error) {
 type client struct {
 	endpoint url.URL
 
-	client *http.Client
+	client *goHttp.Client
 }
 
 const (
@@ -122,7 +122,7 @@ func (c *client) Remove(ctx context.Context, localPath string) error {
 
 // newRequest creates a new request with optional body and context
 // Returns: request, cancel, error
-func (c *client) newRequest(method string, localPath string, body interface{}) (*http.Request, error) {
+func (c *client) newRequest(method string, localPath string, body interface{}) (*goHttp.Request, error) {
 	var encoded []byte
 	if body != nil {
 		var err error
@@ -138,7 +138,7 @@ func (c *client) newRequest(method string, localPath string, body interface{}) (
 	}
 	url := c.endpoint
 	url.Path = localPath
-	req, err := http.NewRequest(method, url.String(), bodyRd)
+	req, err := goHttp.NewRequest(method, url.String(), bodyRd)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -146,7 +146,7 @@ func (c *client) newRequest(method string, localPath string, body interface{}) (
 }
 
 // do performs the given request and parses the result.
-func (c *client) do(ctx context.Context, req *http.Request, result interface{}) error {
+func (c *client) do(ctx context.Context, req *goHttp.Request, result interface{}) error {
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
 	if err != nil {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -91,18 +91,18 @@ type Operators interface {
 type Server struct {
 	cfg        Config
 	deps       Dependencies
-	httpServer *http.Server
+	httpServer *goHttp.Server
 	auth       *serverAuthentication
 }
 
 // NewServer creates a new server, fetching/preparing a TLS certificate.
 func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*Server, error) {
-	httpServer := &http.Server{
+	httpServer := &goHttp.Server{
 		Addr:              cfg.Address,
 		ReadTimeout:       time.Second * 30,
 		ReadHeaderTimeout: time.Second * 15,
 		WriteTimeout:      time.Second * 30,
-		TLSNextProto:      make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
+		TLSNextProto:      make(map[string]func(*goHttp.Server, *tls.Conn, goHttp.Handler)),
 	}
 
 	var fetcher util.TLSConfigFetcher
@@ -204,7 +204,7 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 	// Dashboard
 	r.GET("/", createAssetFileHandler(dashboard.Assets.Files["index.html"]))
 	for path, file := range dashboard.Assets.Files {
-		localPath := "/" + strings.TrimPrefix(path, "/")
+		localPath := "/" + goStrings.TrimPrefix(path, "/")
 		r.GET(localPath, createAssetFileHandler(file))
 	}
 	httpServer.Handler = r
@@ -216,28 +216,28 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 // of the given asset file.
 func createAssetFileHandler(file *assets.File) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		http.ServeContent(c.Writer, c.Request, file.Name(), file.ModTime(), file)
+		goHttp.ServeContent(c.Writer, c.Request, file.Name(), file.ModTime(), file)
 	}
 }
 
 // Run the server until the program stops.
 func (s *Server) Run() error {
 	serverLogger.Info("Serving on %s", s.httpServer.Addr)
-	if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+	if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != goHttp.ErrServerClosed {
 		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func ready(probes ...*probe.ReadyProbe) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func ready(probes ...*probe.ReadyProbe) func(w goHttp.ResponseWriter, r *goHttp.Request) {
+	return func(w goHttp.ResponseWriter, r *goHttp.Request) {
 		for _, probe := range probes {
 			if !probe.IsReady() {
-				w.WriteHeader(http.StatusInternalServerError)
+				w.WriteHeader(goHttp.StatusInternalServerError)
 				return
 			}
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(goHttp.StatusOK)
 	}
 }

@@ -22,7 +22,7 @@ package resources
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 
@@ -36,7 +36,7 @@ func GetGatewayConfigMapName(name string, parts ...string) string {
 		return fmt.Sprintf("%s-gateway", name)
 	}
 
-	return fmt.Sprintf("%s-gateway-%s", name, strings.Join(parts, "-"))
+	return fmt.Sprintf("%s-gateway-%s", name, goStrings.Join(parts, "-"))
 }
 
 func createGatewayVolumes(input pod.Input) pod.Volumes {

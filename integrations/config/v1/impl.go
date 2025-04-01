@@ -28,7 +28,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
-	"strings"
+	goStrings "strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -135,11 +135,11 @@ func (i *impl) ModuleDetails(ctx context.Context, request *pbConfigV1.ConfigV1Mo
 			return nil
 		}
 
-		if !strings.HasPrefix(p, fmt.Sprintf("%s/", module.Path)) {
+		if !goStrings.HasPrefix(p, fmt.Sprintf("%s/", module.Path)) {
 			return nil
 		}
 
-		f, err := i.fileDetails(module, strings.TrimPrefix(p, fmt.Sprintf("%s/", module.Path)), request.GetChecksum())
+		f, err := i.fileDetails(module, goStrings.TrimPrefix(p, fmt.Sprintf("%s/", module.Path)), request.GetChecksum())
 		if err != nil {
 			return err
 		}

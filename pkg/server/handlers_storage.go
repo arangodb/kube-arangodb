@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package server
 
 import (
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -121,7 +121,7 @@ func (s *Server) handleGetLocalStorages(c *gin.Context) {
 			for i, ls := range stgs {
 				result[i] = newLocalStorageInfo(ls)
 			}
-			c.JSON(http.StatusOK, gin.H{
+			c.JSON(goHttp.StatusOK, gin.H{
 				"storages": result,
 			})
 		}
@@ -137,7 +137,7 @@ func (s *Server) handleGetLocalStorageDetails(c *gin.Context) {
 			sendError(c, err)
 		} else {
 			result := newLocalStorageInfoDetails(ls)
-			c.JSON(http.StatusOK, result)
+			c.JSON(goHttp.StatusOK, result)
 		}
 	}
 }

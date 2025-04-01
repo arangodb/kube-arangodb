@@ -22,7 +22,7 @@ package reconcile
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 
 	driver "github.com/arangodb/go-driver"
 
@@ -275,7 +275,7 @@ func (a actionWaitForMemberUp) getServerStatus(ctx context.Context) (client.Serv
 		return client.ServerStatus{}, err
 	}
 
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
+	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
 		return client.ServerStatus{}, err
 	}
 

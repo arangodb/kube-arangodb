@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,28 +24,28 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
-	"net/http"
+	goHttp "net/http"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func DefaultHTTPServerSettings(in *http.Server, _ context.Context) error {
+func DefaultHTTPServerSettings(in *goHttp.Server, _ context.Context) error {
 	in.ReadTimeout = time.Second * 30
 	in.ReadHeaderTimeout = time.Second * 15
 	in.WriteTimeout = time.Second * 30
-	in.TLSNextProto = make(map[string]func(*http.Server, *tls.Conn, http.Handler))
+	in.TLSNextProto = make(map[string]func(*goHttp.Server, *tls.Conn, goHttp.Handler))
 
 	return nil
 }
 
-func WithTLSConfigFetcherGen(gen func() util.TLSConfigFetcher) util.ModEP1[http.Server, context.Context] {
+func WithTLSConfigFetcherGen(gen func() util.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
 	return WithTLSConfigFetcher(gen())
 }
 
-func WithTLSConfigFetcher(fetcher util.TLSConfigFetcher) util.ModEP1[http.Server, context.Context] {
-	return func(in *http.Server, p1 context.Context) error {
+func WithTLSConfigFetcher(fetcher util.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
+	return func(in *goHttp.Server, p1 context.Context) error {
 		v, err := fetcher.Eval(p1)
 		if err != nil {
 			return err
@@ -57,9 +57,9 @@ func WithTLSConfigFetcher(fetcher util.TLSConfigFetcher) util.ModEP1[http.Server
 	}
 }
 
-func WithServeMux(mods ...util.Mod[http.ServeMux]) util.ModEP1[http.Server, context.Context] {
-	return func(in *http.Server, p1 context.Context) error {
-		mux := http.NewServeMux()
+func WithServeMux(mods ...util.Mod[goHttp.ServeMux]) util.ModEP1[goHttp.Server, context.Context] {
+	return func(in *goHttp.Server, p1 context.Context) error {
+		mux := goHttp.NewServeMux()
 
 		util.ApplyMods(mux, mods...)
 
@@ -69,8 +69,8 @@ func WithServeMux(mods ...util.Mod[http.ServeMux]) util.ModEP1[http.Server, cont
 	}
 }
 
-func NewServer(ctx context.Context, mods ...util.ModEP1[http.Server, context.Context]) (Server, error) {
-	var sv http.Server
+func NewServer(ctx context.Context, mods ...util.ModEP1[goHttp.Server, context.Context]) (Server, error) {
+	var sv goHttp.Server
 
 	if err := util.ApplyModsEP1(&sv, ctx, mods...); err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ type Server interface {
 }
 
 type server struct {
-	server *http.Server
+	server *goHttp.Server
 }
 
 func (s *server) AsyncAddr(ctx context.Context, addr string) func() error {
@@ -143,7 +143,7 @@ func (s *server) Start(ctx context.Context, ln net.Listener) error {
 		<-ctx.Done()
 
 		if err := s.server.Close(); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
+			if !errors.Is(err, goHttp.ErrServerClosed) {
 				logger.Err(err).Warn("Unable to close server")
 			}
 		}
@@ -151,13 +151,13 @@ func (s *server) Start(ctx context.Context, ln net.Listener) error {
 
 	if s.server.TLSConfig == nil {
 		if err := s.server.Serve(ln); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
+			if !errors.Is(err, goHttp.ErrServerClosed) {
 				return err
 			}
 		}
 	} else {
 		if err := s.server.ServeTLS(ln, "", ""); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
+			if !errors.Is(err, goHttp.ErrServerClosed) {
 				return err
 			}
 		}

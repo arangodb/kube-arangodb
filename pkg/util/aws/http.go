@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,16 +22,16 @@ package aws
 
 import (
 	"crypto/tls"
-	"net/http"
+	goHttp "net/http"
 	"time"
 )
 
 type HTTP struct {
 }
 
-func (s HTTP) configuration(t *tls.Config) http.RoundTripper {
-	var c = http.Transport{
-		Proxy:                 http.ProxyFromEnvironment,
+func (s HTTP) configuration(t *tls.Config) goHttp.RoundTripper {
+	var c = goHttp.Transport{
+		Proxy:                 goHttp.ProxyFromEnvironment,
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,

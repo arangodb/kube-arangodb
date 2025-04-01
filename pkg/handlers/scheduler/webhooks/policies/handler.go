@@ -22,7 +22,7 @@ package policies
 
 import (
 	"context"
-	"strings"
+	goStrings "strings"
 
 	admission "k8s.io/api/admission/v1"
 	core "k8s.io/api/core/v1"
@@ -90,9 +90,9 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		}, nil
 	}
 
-	allProfiles := util.FlattenLists(strings.Split(labels[constants.ProfilesList], ","), strings.Split(annotations[constants.ProfilesList], ","))
+	allProfiles := util.FlattenLists(goStrings.Split(labels[constants.ProfilesList], ","), goStrings.Split(annotations[constants.ProfilesList], ","))
 	profiles := util.FilterList(util.FormatList(allProfiles, func(s string) string {
-		return strings.TrimSpace(s)
+		return goStrings.TrimSpace(s)
 	}), func(s string) bool {
 		return s != ""
 	})
@@ -116,7 +116,7 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 
 	template.Annotations[constants.ProfilesAnnotationApplied] = "true"
 	template.Annotations[constants.ProfilesAnnotationChecksum] = profilesChecksum
-	template.Annotations[constants.ProfilesAnnotationProfiles] = strings.Join(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) string {
+	template.Annotations[constants.ProfilesAnnotationProfiles] = goStrings.Join(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) string {
 		return a.K
 	}), ",")
 

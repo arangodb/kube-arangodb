@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package v2alpha1
 
 import (
-	"strings"
+	goStrings "strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -51,7 +51,7 @@ func (se StorageEngine) Validate() error {
 // AsArangoArgument returns the value for the given storage engine as it is to be used
 // for arangod's --server.storage-engine option.
 func (se StorageEngine) AsArangoArgument() string {
-	return strings.ToLower(string(se))
+	return goStrings.ToLower(string(se))
 }
 
 // NewStorageEngine returns a reference to a string with given value.
