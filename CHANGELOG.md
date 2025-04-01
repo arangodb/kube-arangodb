@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Extend Documentation
+- (Bugfix) (Platform) Cover NoAuth Case for Identity Service
 
 ## [1.2.47](https://github.com/arangodb/kube-arangodb/tree/1.2.47) (2025-03-28)
 - (Bugfix) Use Profile Annotations
