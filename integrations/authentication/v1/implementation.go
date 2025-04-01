@@ -188,6 +188,11 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 }
 
 func (i *implementation) Identity(ctx context.Context, _ *pbSharedV1.Empty) (*pbAuthenticationV1.IdentityResponse, error) {
+	if !i.cfg.Enabled {
+		// Auth is disabled, return static response
+		return &pbAuthenticationV1.IdentityResponse{User: "root"}, nil
+	}
+
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
