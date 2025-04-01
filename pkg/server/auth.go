@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ package server
 
 import (
 	"context"
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 	"sync"
 	"time"
 
@@ -148,13 +148,13 @@ func (s *serverAuthentication) checkAuthentication(c *gin.Context) {
 		return
 	}
 	// Fetch authorization token
-	authHdr := strings.ToLower(c.Request.Header.Get("Authorization"))
-	if !strings.HasPrefix(authHdr, bearerPrefix) {
+	authHdr := goStrings.ToLower(c.Request.Header.Get("Authorization"))
+	if !goStrings.HasPrefix(authHdr, bearerPrefix) {
 		sendError(c, errors.WithStack(errors.Wrap(UnauthorizedError, "missing bearer token")))
 		c.Abort()
 		return
 	}
-	token := strings.TrimSpace(authHdr[len(bearerPrefix):])
+	token := goStrings.TrimSpace(authHdr[len(bearerPrefix):])
 	// Lookup token
 	s.tokens.mutex.Lock()
 	defer s.tokens.mutex.Unlock()
@@ -186,7 +186,7 @@ func (s *serverAuthentication) handleLogin(c *gin.Context) {
 		return
 	}
 	// Create new token
-	token := strings.ToLower(uniuri.New())
+	token := goStrings.ToLower(uniuri.New())
 	s.tokens.mutex.Lock()
 	defer s.tokens.mutex.Unlock()
 	s.tokens.tokens[token] = &tokenEntry{
@@ -194,7 +194,7 @@ func (s *serverAuthentication) handleLogin(c *gin.Context) {
 		ExpiresAt: time.Now().Add(tokenExpirationTime),
 	}
 	// Send response
-	c.JSON(http.StatusOK, loginResponse{
+	c.JSON(goHttp.StatusOK, loginResponse{
 		Token: token,
 	})
 }

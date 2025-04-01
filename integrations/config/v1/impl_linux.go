@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
+	goStrings "strings"
 	"syscall"
 	"time"
 
@@ -40,7 +40,7 @@ import (
 func (i *impl) fileDetails(module ModuleDefinition, file string, checksum bool) (*pbConfigV1.ConfigV1File, error) {
 	expectedPath := path.Clean(path.Join(module.Path, file))
 
-	if !strings.HasPrefix(expectedPath, fmt.Sprintf("%s/", module.Path)) {
+	if !goStrings.HasPrefix(expectedPath, fmt.Sprintf("%s/", module.Path)) {
 		return nil, status.Errorf(codes.InvalidArgument, "File name cannot be empty")
 	}
 
@@ -62,7 +62,7 @@ func (i *impl) fileDetails(module ModuleDefinition, file string, checksum bool) 
 
 	var f pbConfigV1.ConfigV1File
 
-	f.Path = strings.TrimPrefix(expectedPath, fmt.Sprintf("%s/", module.Path))
+	f.Path = goStrings.TrimPrefix(expectedPath, fmt.Sprintf("%s/", module.Path))
 	f.Size = finfo.Size
 	f.Created = timestamppb.New(time.Unix(finfo.Ctim.Sec, finfo.Ctim.Nsec))
 	f.Updated = timestamppb.New(time.Unix(finfo.Mtim.Sec, finfo.Mtim.Nsec))

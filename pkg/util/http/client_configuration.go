@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package http
 
 import (
 	"net"
-	"net/http"
+	goHttp "net/http"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -111,11 +111,11 @@ func (c *configurationObject) Init(cmd *cobra.Command) error {
 	return nil
 }
 
-func (c *configurationObject) DefaultTransport(in *http.Transport) {
+func (c *configurationObject) DefaultTransport(in *goHttp.Transport) {
 	if c == nil {
 		return
 	}
-	in.Proxy = http.ProxyFromEnvironment
+	in.Proxy = goHttp.ProxyFromEnvironment
 	in.ForceAttemptHTTP2 = c.TransportForceAttemptHTTP2
 	in.DialContext = (&net.Dialer{
 		Timeout:   c.TransportDialTimeout,
@@ -130,7 +130,7 @@ func (c *configurationObject) DefaultTransport(in *http.Transport) {
 	in.DisableKeepAlives = !c.TransportKeepAlive
 }
 
-func (c *configurationObject) ShortTransport(in *http.Transport) {
+func (c *configurationObject) ShortTransport(in *goHttp.Transport) {
 	if c == nil {
 		return
 	}

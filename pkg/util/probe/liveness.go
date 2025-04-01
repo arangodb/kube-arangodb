@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package probe
 
 import (
-	"net/http"
+	goHttp "net/http"
 	"sync"
 	"time"
 
@@ -93,10 +93,10 @@ func (p *LivenessProbe) waitUntilNotLocked(timeout time.Duration) bool {
 }
 
 // LivenessHandler writes back the HTTP status code 200 if the operator is ready, and 500 otherwise.
-func (p *LivenessProbe) LivenessHandler(w http.ResponseWriter, r *http.Request) {
+func (p *LivenessProbe) LivenessHandler(w goHttp.ResponseWriter, r *goHttp.Request) {
 	if p.waitUntilNotLocked(livenessHandlerTimeout) {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(goHttp.StatusOK)
 	} else {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(goHttp.StatusInternalServerError)
 	}
 }

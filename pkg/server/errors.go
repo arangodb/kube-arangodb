@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package server
 
 import (
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -44,11 +44,11 @@ func isUnauthorized(err error) bool {
 // sendError sends an error on the given context
 func sendError(c *gin.Context, err error) {
 	// TODO proper status handling
-	code := http.StatusInternalServerError
+	code := goHttp.StatusInternalServerError
 	if isNotFound(err) {
-		code = http.StatusNotFound
+		code = goHttp.StatusNotFound
 	} else if isUnauthorized(err) {
-		code = http.StatusUnauthorized
+		code = goHttp.StatusUnauthorized
 	}
 	c.JSON(code, gin.H{
 		"error": err.Error(),

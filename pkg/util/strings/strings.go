@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package strings
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -111,7 +111,7 @@ func Title(in string) string {
 // Join concatenates the elements of its first argument to create a single string. The separator
 // string sep is placed between elements in the resulting string.
 func Join(elems []string, sep string) string {
-	return strings.Join(elems, sep)
+	return goStrings.Join(elems, sep)
 }
 
 // Split slices s into all substrings separated by sep and returns a slice of
@@ -127,7 +127,7 @@ func Join(elems []string, sep string) string {
 //
 // To split around the first instance of a separator, see Cut.
 func Split(s, sep string) []string {
-	return strings.Split(s, sep)
+	return goStrings.Split(s, sep)
 }
 
 // SplitN slices s into substrings separated by sep and returns a slice of
@@ -144,10 +144,10 @@ func Split(s, sep string) []string {
 //
 // To split around the first instance of a separator, see Cut.
 func SplitN(s, sep string, n int) []string {
-	return strings.SplitN(s, sep, n)
+	return goStrings.SplitN(s, sep, n)
 }
 
 // ToLower returns s with all Unicode letters mapped to their lower case.
 func ToLower(s string) string {
-	return strings.ToLower(s)
+	return goStrings.ToLower(s)
 }

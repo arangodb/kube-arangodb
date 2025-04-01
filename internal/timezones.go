@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
-	"strings"
+	goStrings "strings"
 	"text/template"
 	"time"
 )
@@ -127,17 +127,17 @@ func ListTimezones() ([]Timezone, []TimezoneData) {
 					if err == nil {
 						real, err := filepath.Abs(path.Join(zoneDir, target))
 						if err == nil {
-							dataMaps[fn] = strings.TrimLeft(real, zoneDir)
+							dataMaps[fn] = goStrings.TrimLeft(real, zoneDir)
 						}
 					}
 				}
 				zones[fn] = now.In(loc)
 			} else {
-				if fn[0] != strings.ToUpper(fn)[0] {
+				if fn[0] != goStrings.ToUpper(fn)[0] {
 					continue
 				}
 
-				if fn[1:] != strings.ToLower(fn)[1:] {
+				if fn[1:] != goStrings.ToLower(fn)[1:] {
 					continue
 				}
 
@@ -164,7 +164,7 @@ func ListTimezones() ([]Timezone, []TimezoneData) {
 						if err == nil {
 							real, err := filepath.Abs(path.Join(zoneDir, fn, target))
 							if err == nil {
-								dataMaps[zn] = strings.TrimLeft(real, zoneDir)
+								dataMaps[zn] = goStrings.TrimLeft(real, zoneDir)
 							}
 						}
 					}

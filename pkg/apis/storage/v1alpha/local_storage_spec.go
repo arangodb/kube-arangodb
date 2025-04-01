@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package v1alpha
 
 import (
-	"strings"
+	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 
@@ -77,7 +77,7 @@ func (s LocalStorageSpec) ResetImmutableFields(target *LocalStorageSpec) []strin
 	if list := s.StorageClass.ResetImmutableFields("storageClass.", &target.StorageClass); len(list) > 0 {
 		result = append(result, list...)
 	}
-	if strings.Join(s.LocalPath, ",") != strings.Join(target.LocalPath, ",") {
+	if goStrings.Join(s.LocalPath, ",") != goStrings.Join(target.LocalPath, ",") {
 		target.LocalPath = s.LocalPath
 		result = append(result, "localPath")
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"strings"
+	goStrings "strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -61,7 +61,7 @@ func ReplaceSection(in, replace, section string) (string, error) {
 	b := bytes.NewBuffer(nil)
 
 	for len(in) > 0 {
-		startID := strings.Index(in, start)
+		startID := goStrings.Index(in, start)
 		if startID == -1 {
 			b.WriteString(in)
 			in = ""
@@ -76,7 +76,7 @@ func ReplaceSection(in, replace, section string) (string, error) {
 
 		b.WriteString(replace)
 
-		endID := strings.Index(in, end)
+		endID := goStrings.Index(in, end)
 		if endID == -1 {
 			return "", errors.Errorf("END_INJECT sections is missing for section %s. Note that newline is required at the end and before tag", section)
 		}

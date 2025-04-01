@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
+	goHttp "net/http"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -42,14 +42,14 @@ func cmdLifecycleStartupFunc(cmd *cobra.Command, args []string) error {
 
 	port := ProbePort.GetOrDefault(fmt.Sprintf("%d", shared.ArangoPort))
 
-	server := &http.Server{
+	server := &goHttp.Server{
 		Addr: fmt.Sprintf(":%s", port),
 	}
 
-	handlers := http.NewServeMux()
+	handlers := goHttp.NewServeMux()
 
-	handlers.HandleFunc("/stop", func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusOK)
+	handlers.HandleFunc("/stop", func(writer goHttp.ResponseWriter, request *goHttp.Request) {
+		writer.WriteHeader(goHttp.StatusOK)
 		close = true
 	})
 
@@ -66,7 +66,7 @@ func cmdLifecycleStartupFunc(cmd *cobra.Command, args []string) error {
 	}()
 
 	if err := server.ListenAndServe(); err != nil {
-		if errors.Is(err, http.ErrServerClosed) {
+		if errors.Is(err, goHttp.ErrServerClosed) {
 			return nil
 		}
 

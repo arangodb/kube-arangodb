@@ -23,7 +23,7 @@ package helm
 import (
 	"context"
 	"fmt"
-	"net/http"
+	goHttp "net/http"
 	"sort"
 	"sync"
 
@@ -33,9 +33,9 @@ import (
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
-func NewChartManager(ctx context.Context, client *http.Client, format string, args ...interface{}) (ChartManager, error) {
+func NewChartManager(ctx context.Context, client *goHttp.Client, format string, args ...interface{}) (ChartManager, error) {
 	if client == nil {
-		client = http.DefaultClient
+		client = goHttp.DefaultClient
 	}
 
 	m := manager{
@@ -61,7 +61,7 @@ type ChartManager interface {
 type manager struct {
 	lock sync.Mutex
 
-	client *http.Client
+	client *goHttp.Client
 
 	url string
 

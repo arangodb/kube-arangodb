@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
@@ -789,12 +789,12 @@ func podDataSort() func(t *testing.T, p *core.Pod) {
 	return func(t *testing.T, p *core.Pod) {
 		sort.Slice(p.Spec.Volumes, func(i, j int) bool {
 			av, ak := sortVolumes[p.Spec.Volumes[i].Name]
-			if strings.HasPrefix(p.Spec.Volumes[i].Name, "sni-") {
+			if goStrings.HasPrefix(p.Spec.Volumes[i].Name, "sni-") {
 				av = 100
 				ak = true
 			}
 			bv, bk := sortVolumes[p.Spec.Volumes[j].Name]
-			if strings.HasPrefix(p.Spec.Volumes[j].Name, "sni-") {
+			if goStrings.HasPrefix(p.Spec.Volumes[j].Name, "sni-") {
 				bv = 100
 				bk = true
 			}
@@ -817,12 +817,12 @@ func podDataSort() func(t *testing.T, p *core.Pod) {
 		if len(p.Spec.Containers) > 0 {
 			sort.Slice(p.Spec.Containers[0].VolumeMounts, func(i, j int) bool {
 				av, ak := sortVolumeMounts[p.Spec.Containers[0].VolumeMounts[i].Name]
-				if strings.HasPrefix(p.Spec.Containers[0].VolumeMounts[i].Name, "sni-") {
+				if goStrings.HasPrefix(p.Spec.Containers[0].VolumeMounts[i].Name, "sni-") {
 					av = 100
 					ak = true
 				}
 				bv, bk := sortVolumeMounts[p.Spec.Containers[0].VolumeMounts[j].Name]
-				if strings.HasPrefix(p.Spec.Containers[0].VolumeMounts[j].Name, "sni-") {
+				if goStrings.HasPrefix(p.Spec.Containers[0].VolumeMounts[j].Name, "sni-") {
 					bv = 100
 					bk = true
 				}

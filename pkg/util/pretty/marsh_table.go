@@ -24,14 +24,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"strings"
+	goStrings "strings"
 	"sync"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/pkg/errors"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Table[T any] interface {
@@ -166,7 +166,7 @@ func (t TableTags) asColumnConfig() (table.ColumnConfig, error) {
 	r.Name = *t.Enabled
 
 	if a := t.Align; a != nil {
-		switch v := strings.ToLower(*a); v {
+		switch v := goStrings.ToLower(*a); v {
 		case "left":
 			r.Align = text.AlignLeft
 		case "right":
@@ -179,7 +179,7 @@ func (t TableTags) asColumnConfig() (table.ColumnConfig, error) {
 	}
 
 	if a := t.HeaderAlign; a != nil {
-		switch v := strings.ToLower(*a); v {
+		switch v := goStrings.ToLower(*a); v {
 		case "left":
 			r.AlignHeader = text.AlignLeft
 		case "right":

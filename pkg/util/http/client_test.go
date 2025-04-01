@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package http
 
 import (
-	"net/http"
+	goHttp "net/http"
 	"testing"
 	"time"
 
@@ -86,7 +86,7 @@ func Test_ClientSettings(t *testing.T) {
 
 		transport := Transport(evaluated.DefaultTransport)
 
-		c, ok := transport.(*http.Transport)
+		c, ok := transport.(*goHttp.Transport)
 		require.True(t, ok)
 
 		require.Equal(t, c.DisableKeepAlives, !evaluated.TransportKeepAlive)
@@ -98,7 +98,7 @@ func Test_ClientSettings(t *testing.T) {
 
 		transport := Transport(evaluated.ShortTransport)
 
-		c, ok := transport.(*http.Transport)
+		c, ok := transport.(*goHttp.Transport)
 		require.True(t, ok)
 
 		require.Equal(t, c.DisableKeepAlives, !evaluated.TransportKeepAlive)
@@ -110,7 +110,7 @@ func Test_ClientSettings(t *testing.T) {
 
 		transport := Transport(evaluated.DefaultTransport)
 
-		c, ok := transport.(*http.Transport)
+		c, ok := transport.(*goHttp.Transport)
 		require.True(t, ok)
 
 		require.Equal(t, c.DisableKeepAlives, !evaluated.TransportKeepAlive)
@@ -123,7 +123,7 @@ func Test_ClientSettings(t *testing.T) {
 
 		transport := Transport(evaluated.ShortTransport)
 
-		c, ok := transport.(*http.Transport)
+		c, ok := transport.(*goHttp.Transport)
 		require.True(t, ok)
 
 		require.Equal(t, c.DisableKeepAlives, !evaluated.TransportKeepAlive)

@@ -23,7 +23,7 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -358,7 +358,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 				deleteExternalAccessService = true // Remove the current and replace with proper one
 				createExternalAccessService = true
 			}
-			if strings.Join(existing.Spec.LoadBalancerSourceRanges, ",") != strings.Join(loadBalancerSourceRanges, ",") {
+			if goStrings.Join(existing.Spec.LoadBalancerSourceRanges, ",") != goStrings.Join(loadBalancerSourceRanges, ",") {
 				updateExternalAccessService = true
 				existing.Spec.LoadBalancerSourceRanges = loadBalancerSourceRanges
 			}

@@ -22,9 +22,8 @@ package helm
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net/http"
+	goHttp "net/http"
 	"sync"
 
 	"helm.sh/helm/v3/pkg/action"
@@ -38,6 +37,7 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kconfig"
 )
 
@@ -391,7 +391,7 @@ func (c *client) NativeGet(ctx context.Context, reqs ...Resource) ([]ResourceObj
 		if err != nil {
 			var e *apiErrors.StatusError
 			if errors.As(err, &e) {
-				if e.Status().Code == http.StatusNotFound {
+				if e.Status().Code == goHttp.StatusNotFound {
 					continue
 				}
 			}

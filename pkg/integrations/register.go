@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
+	goStrings "strings"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -95,7 +95,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 
 	cfg.Address = s.address
 
-	switch strings.ToLower(s.auth.t) {
+	switch goStrings.ToLower(s.auth.t) {
 	case "none":
 		break
 	case "token":
@@ -233,13 +233,13 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 				Bool("external", externalEnabled).
 				Info("Service discovered")
 
-			ps := strings.Split(handler.Name(), ".")
+			ps := goStrings.Split(handler.Name(), ".")
 			if len(ps) < 2 {
 				return errors.Errorf("Expected atleast 2 elements")
 			}
 
 			services = append(services, pbImplPongV1.Service{
-				Name:    strings.Join(ps[:len(ps)-1], "."),
+				Name:    goStrings.Join(ps[:len(ps)-1], "."),
 				Version: ps[len(ps)-1],
 				Enabled: ok,
 			})

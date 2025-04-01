@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package client
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 	"time"
 
 	"github.com/arangodb/go-driver"
@@ -62,7 +62,7 @@ type client struct {
 }
 
 func (c *client) parseTLSResponse(response driver.Response) (TLSDetails, error) {
-	if err := response.CheckStatus(http.StatusOK); err != nil {
+	if err := response.CheckStatus(goHttp.StatusOK); err != nil {
 		return TLSDetails{}, err
 	}
 
@@ -76,7 +76,7 @@ func (c *client) parseTLSResponse(response driver.Response) (TLSDetails, error) 
 }
 
 func (c *client) parseEncryptionResponse(response driver.Response) (EncryptionDetails, error) {
-	if err := response.CheckStatus(http.StatusOK); err != nil {
+	if err := response.CheckStatus(goHttp.StatusOK); err != nil {
 		return EncryptionDetails{}, err
 	}
 
@@ -90,7 +90,7 @@ func (c *client) parseEncryptionResponse(response driver.Response) (EncryptionDe
 }
 
 func (c *client) parseJWTResponse(response driver.Response) (JWTDetails, error) {
-	if err := response.CheckStatus(http.StatusOK); err != nil {
+	if err := response.CheckStatus(goHttp.StatusOK); err != nil {
 		return JWTDetails{}, err
 	}
 
@@ -104,7 +104,7 @@ func (c *client) parseJWTResponse(response driver.Response) (JWTDetails, error) 
 }
 
 func (c *client) GetTLS(ctx context.Context) (TLSDetails, error) {
-	r, err := c.c.NewRequest(http.MethodGet, "/_admin/server/tls")
+	r, err := c.c.NewRequest(goHttp.MethodGet, "/_admin/server/tls")
 	if err != nil {
 		return TLSDetails{}, err
 	}
@@ -123,7 +123,7 @@ func (c *client) GetTLS(ctx context.Context) (TLSDetails, error) {
 }
 
 func (c *client) RefreshTLS(ctx context.Context) (TLSDetails, error) {
-	r, err := c.c.NewRequest(http.MethodPost, "/_admin/server/tls")
+	r, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/server/tls")
 	if err != nil {
 		return TLSDetails{}, err
 	}
@@ -142,7 +142,7 @@ func (c *client) RefreshTLS(ctx context.Context) (TLSDetails, error) {
 }
 
 func (c *client) GetEncryption(ctx context.Context) (EncryptionDetails, error) {
-	r, err := c.c.NewRequest(http.MethodGet, "/_admin/server/encryption")
+	r, err := c.c.NewRequest(goHttp.MethodGet, "/_admin/server/encryption")
 	if err != nil {
 		return EncryptionDetails{}, err
 	}
@@ -161,7 +161,7 @@ func (c *client) GetEncryption(ctx context.Context) (EncryptionDetails, error) {
 }
 
 func (c *client) RefreshEncryption(ctx context.Context) (EncryptionDetails, error) {
-	r, err := c.c.NewRequest(http.MethodPost, "/_admin/server/encryption")
+	r, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/server/encryption")
 	if err != nil {
 		return EncryptionDetails{}, err
 	}
@@ -180,7 +180,7 @@ func (c *client) RefreshEncryption(ctx context.Context) (EncryptionDetails, erro
 }
 
 func (c *client) GetJWT(ctx context.Context) (JWTDetails, error) {
-	r, err := c.c.NewRequest(http.MethodGet, "/_admin/server/jwt")
+	r, err := c.c.NewRequest(goHttp.MethodGet, "/_admin/server/jwt")
 	if err != nil {
 		return JWTDetails{}, err
 	}
@@ -199,7 +199,7 @@ func (c *client) GetJWT(ctx context.Context) (JWTDetails, error) {
 }
 
 func (c *client) RefreshJWT(ctx context.Context) (JWTDetails, error) {
-	r, err := c.c.NewRequest(http.MethodPost, "/_admin/server/jwt")
+	r, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/server/jwt")
 	if err != nil {
 		return JWTDetails{}, err
 	}

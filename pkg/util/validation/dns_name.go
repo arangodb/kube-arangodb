@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package validation
 
 import (
 	"regexp"
-	"strings"
+	goStrings "strings"
 )
 
 var (
@@ -32,7 +32,7 @@ var (
 // IsValidDNSName returns true when the given input is a valid DNS name
 func IsValidDNSName(input string) bool {
 	// IsDNSName will validate the given string as a DNS name
-	if input == "" || len(strings.Replace(input, ".", "", -1)) > 255 {
+	if input == "" || len(goStrings.Replace(input, ".", "", -1)) > 255 {
 		// constraints already violated
 		return false
 	}

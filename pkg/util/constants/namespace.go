@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package constants
 
 import (
 	"os"
-	"strings"
+	goStrings "strings"
 )
 
 func NamespaceWithDefault(def string) string {
@@ -40,14 +40,14 @@ func Namespace() (string, bool) {
 func namespaceWithSAAndEnv(sa, env string) (string, bool) {
 	// Extract from env
 	if e, ok := os.LookupEnv(env); ok && e != "" {
-		if v := strings.TrimSpace(e); v != "" {
+		if v := goStrings.TrimSpace(e); v != "" {
 			return v, true
 		}
 	}
 
 	// Extract from file
 	if data, err := os.ReadFile(sa); err == nil && len(data) > 0 {
-		if v := strings.TrimSpace(string(data)); v != "" {
+		if v := goStrings.TrimSpace(string(data)); v != "" {
 			return v, true
 		}
 	}

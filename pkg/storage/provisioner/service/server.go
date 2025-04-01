@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/julienschmidt/httprouter"
 
@@ -45,7 +45,7 @@ func runServer(ctx context.Context, log logging.Logger, addr string, api provisi
 	mux.POST("/prepare", getPrepareHandler(api))
 	mux.POST("/remove", getRemoveHandler(api))
 
-	httpServer := &http.Server{
+	httpServer := &goHttp.Server{
 		Addr:    addr,
 		Handler: mux,
 	}
@@ -54,7 +54,7 @@ func runServer(ctx context.Context, log logging.Logger, addr string, api provisi
 	go func() {
 		defer close(serverErrors)
 		log.Info("Listening on %s", addr)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := httpServer.ListenAndServe(); err != nil && err != goHttp.ErrServerClosed {
 			serverErrors <- errors.WithStack(err)
 		}
 	}()
@@ -70,8 +70,8 @@ func runServer(ctx context.Context, log logging.Logger, addr string, api provisi
 	}
 }
 
-func getNodeInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func getNodeInfoHandler(api provisioner.API) func(w goHttp.ResponseWriter, r *goHttp.Request, ps httprouter.Params) {
+	return func(w goHttp.ResponseWriter, r *goHttp.Request, ps httprouter.Params) {
 		ctx := r.Context()
 		result, err := api.GetNodeInfo(ctx)
 		if err != nil {
@@ -82,8 +82,8 @@ func getNodeInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http
 	}
 }
 
-func getInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func getInfoHandler(api provisioner.API) func(w goHttp.ResponseWriter, r *goHttp.Request, ps httprouter.Params) {
+	return func(w goHttp.ResponseWriter, r *goHttp.Request, ps httprouter.Params) {
 		ctx := r.Context()
 		var input provisioner.Request
 		if err := parseBody(r, &input); err != nil {
@@ -99,8 +99,8 @@ func getInfoHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func getPrepareHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func getPrepareHandler(api provisioner.API) func(w goHttp.ResponseWriter, r *goHttp.Request, ps httprouter.Params) {
+	return func(w goHttp.ResponseWriter, r *goHttp.Request, ps httprouter.Params) {
 		ctx := r.Context()
 		var input provisioner.Request
 		if err := parseBody(r, &input); err != nil {
@@ -115,8 +115,8 @@ func getPrepareHandler(api provisioner.API) func(w http.ResponseWriter, r *http.
 	}
 }
 
-func getRemoveHandler(api provisioner.API) func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func getRemoveHandler(api provisioner.API) func(w goHttp.ResponseWriter, r *goHttp.Request, ps httprouter.Params) {
+	return func(w goHttp.ResponseWriter, r *goHttp.Request, ps httprouter.Params) {
 		ctx := r.Context()
 		var input provisioner.Request
 		if err := parseBody(r, &input); err != nil {
@@ -132,9 +132,9 @@ func getRemoveHandler(api provisioner.API) func(w http.ResponseWriter, r *http.R
 }
 
 // sendJSON encodes given body as JSON and sends it to the given writer with given HTTP status.
-func sendJSON(w http.ResponseWriter, body interface{}) error {
+func sendJSON(w goHttp.ResponseWriter, body interface{}) error {
 	w.Header().Set("Content-Type", contentTypeJSON)
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(goHttp.StatusOK)
 	if body == nil {
 		w.Write([]byte("{}"))
 	} else {
@@ -146,7 +146,7 @@ func sendJSON(w http.ResponseWriter, body interface{}) error {
 	return nil
 }
 
-func parseBody(r *http.Request, data interface{}) error {
+func parseBody(r *goHttp.Request, data interface{}) error {
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -158,15 +158,15 @@ func parseBody(r *http.Request, data interface{}) error {
 	return nil
 }
 
-func handleError(w http.ResponseWriter, err error) {
+func handleError(w goHttp.ResponseWriter, err error) {
 	if provisioner.IsBadRequest(err) {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, goHttp.StatusBadRequest, err.Error())
 	} else {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		writeError(w, goHttp.StatusInternalServerError, err.Error())
 	}
 }
 
-func writeError(w http.ResponseWriter, status int, message string) {
+func writeError(w goHttp.ResponseWriter, status int, message string) {
 	if message == "" {
 		message = "Unknown error"
 	}

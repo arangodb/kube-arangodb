@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package cmd
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 	"os"
 	"time"
 
@@ -111,10 +111,10 @@ func cmdExporterCheckE() error {
 
 	server, err := operatorHTTP.NewServer(ctx,
 		operatorHTTP.DefaultHTTPServerSettings,
-		operatorHTTP.WithServeMux(func(in *http.ServeMux) {
+		operatorHTTP.WithServeMux(func(in *goHttp.ServeMux) {
 			in.Handle("/metrics", p)
-		}, func(in *http.ServeMux) {
-			in.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		}, func(in *goHttp.ServeMux) {
+			in.HandleFunc("/", func(w goHttp.ResponseWriter, r *goHttp.Request) {
 				w.Write([]byte(`<html>
              <head><title>ArangoDB Exporter</title></head>
              <body>

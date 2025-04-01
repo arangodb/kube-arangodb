@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 package options
 
-import "strings"
+import goStrings "strings"
 
 var (
 	criticalOptionKeys = map[string]struct{}{
@@ -50,7 +50,7 @@ var (
 // IsCriticalOption returns true if the given string is the key of
 // an option of arangod that cannot be overwritten.
 func IsCriticalOption(optionKey string) bool {
-	optionKey = strings.TrimPrefix(optionKey, "--")
+	optionKey = goStrings.TrimPrefix(optionKey, "--")
 	_, found := criticalOptionKeys[optionKey]
 	return found
 }

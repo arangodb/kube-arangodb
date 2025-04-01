@@ -23,7 +23,7 @@ package features
 import (
 	"fmt"
 	"os"
-	"strings"
+	goStrings "strings"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -141,7 +141,7 @@ func cmdRun(_ *cobra.Command, _ []string) {
 			for id := range names {
 				names[id] = deps[id].Name()
 			}
-			println(fmt.Sprintf("Dependencies: %s", strings.Join(names, ", ")))
+			println(fmt.Sprintf("Dependencies: %s", goStrings.Join(names, ", ")))
 		}
 		if feature.EnabledByDefault() {
 			println("Enabled: true")

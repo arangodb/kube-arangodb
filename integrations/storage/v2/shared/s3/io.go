@@ -23,7 +23,7 @@ package s3
 import (
 	"context"
 	"path"
-	"strings"
+	goStrings "strings"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
@@ -41,11 +41,11 @@ type ios struct {
 }
 
 func (i *ios) key(keys ...string) string {
-	return path.Join(strings.TrimPrefix(i.config.BucketPrefix, "/"), path.Join(keys...))
+	return path.Join(goStrings.TrimPrefix(i.config.BucketPrefix, "/"), path.Join(keys...))
 }
 
 func (i *ios) clean(key string) string {
-	return strings.TrimPrefix(strings.TrimPrefix(key, i.key()), "/")
+	return goStrings.TrimPrefix(goStrings.TrimPrefix(key, i.key()), "/")
 }
 
 func (i *ios) Write(ctx context.Context, key string) (pbImplStorageV2Shared.Writer, error) {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package v1
 
 import (
 	"sort"
-	"strings"
+	goStrings "strings"
 )
 
 type DeploymentStatusAgencySize int
@@ -43,7 +43,7 @@ type DeploymentStatusAgencyIDs []string
 
 func (d DeploymentStatusAgencyIDs) Sort() {
 	sort.Slice(d, func(i, j int) bool {
-		return strings.Compare(d[i], d[j]) > 0
+		return goStrings.Compare(d[i], d[j]) > 0
 	})
 }
 

@@ -22,7 +22,7 @@ package client
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -54,7 +54,7 @@ func (c *client) RebalanceExecuteMoves(ctx context.Context, moves ...RebalanceEx
 }
 
 func (c *client) RebalanceExecute(ctx context.Context, request *RebalanceExecuteRequest) error {
-	req, err := c.c.NewRequest(http.MethodPost, "/_admin/cluster/rebalance/execute")
+	req, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/cluster/rebalance/execute")
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (c *client) RebalanceExecute(ctx context.Context, request *RebalanceExecute
 		return err
 	}
 
-	if err := resp.CheckStatus(http.StatusAccepted); err != nil {
+	if err := resp.CheckStatus(goHttp.StatusAccepted); err != nil {
 		return err
 	}
 

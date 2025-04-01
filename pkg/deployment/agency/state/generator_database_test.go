@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package state
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/dchest/uniuri"
@@ -32,7 +32,7 @@ import (
 )
 
 func NewDatabaseRandomGenerator() DatabaseGeneratorInterface {
-	return NewDatabaseGenerator(fmt.Sprintf("d%s", strings.ToLower(uniuri.NewLen(16))))
+	return NewDatabaseGenerator(fmt.Sprintf("d%s", goStrings.ToLower(uniuri.NewLen(16))))
 }
 
 func NewDatabaseGenerator(name string) DatabaseGeneratorInterface {
@@ -54,7 +54,7 @@ type databaseGenerator struct {
 }
 
 func (d databaseGenerator) RandomCollection() CollectionGeneratorInterface {
-	return d.Collection(fmt.Sprintf("c%s", strings.ToLower(uniuri.NewLen(16))))
+	return d.Collection(fmt.Sprintf("c%s", goStrings.ToLower(uniuri.NewLen(16))))
 }
 
 func (d databaseGenerator) Collection(name string) CollectionGeneratorInterface {

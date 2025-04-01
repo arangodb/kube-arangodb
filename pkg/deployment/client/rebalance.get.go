@@ -22,7 +22,7 @@ package client
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 )
 
 type RebalanceGetResponse struct {
@@ -35,7 +35,7 @@ type RebalanceGetResponseResult struct {
 }
 
 func (c *client) RebalanceGet(ctx context.Context) (RebalanceGetResponse, error) {
-	req, err := c.c.NewRequest(http.MethodGet, "/_admin/cluster/rebalance")
+	req, err := c.c.NewRequest(goHttp.MethodGet, "/_admin/cluster/rebalance")
 	if err != nil {
 		return RebalanceGetResponse{}, err
 	}
@@ -45,7 +45,7 @@ func (c *client) RebalanceGet(ctx context.Context) (RebalanceGetResponse, error)
 		return RebalanceGetResponse{}, err
 	}
 
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
+	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
 		return RebalanceGetResponse{}, err
 	}
 

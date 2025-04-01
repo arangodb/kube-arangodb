@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"reflect"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -242,8 +242,8 @@ func extract(n *ast.Field, tag string) ([]string, bool) {
 	var ret []string
 
 	for _, c := range n.Doc.List {
-		if strings.HasPrefix(c.Text, fmt.Sprintf("// +doc/%s: ", tag)) {
-			ret = append(ret, strings.TrimPrefix(c.Text, fmt.Sprintf("// +doc/%s: ", tag)))
+		if goStrings.HasPrefix(c.Text, fmt.Sprintf("// +doc/%s: ", tag)) {
+			ret = append(ret, goStrings.TrimPrefix(c.Text, fmt.Sprintf("// +doc/%s: ", tag)))
 		}
 	}
 
@@ -260,20 +260,20 @@ func extractNotTags(n *ast.Field) ([]string, []string, bool, error) {
 	var deprecated bool
 
 	for _, c := range n.Doc.List {
-		if strings.HasPrefix(c.Text, "// ") {
-			if strings.HasPrefix(c.Text, "// Deprecated") {
-				if !strings.HasPrefix(c.Text, "// Deprecated: ") {
+		if goStrings.HasPrefix(c.Text, "// ") {
+			if goStrings.HasPrefix(c.Text, "// Deprecated") {
+				if !goStrings.HasPrefix(c.Text, "// Deprecated: ") {
 					return nil, nil, false, errors.Errorf("Invalid deprecated field")
 				}
 			}
-			if strings.HasPrefix(c.Text, "// Deprecated:") {
+			if goStrings.HasPrefix(c.Text, "// Deprecated:") {
 				deprecated = true
-				dep = append(dep, strings.TrimSpace(strings.TrimPrefix(c.Text, "// Deprecated:")))
+				dep = append(dep, goStrings.TrimSpace(goStrings.TrimPrefix(c.Text, "// Deprecated:")))
 				continue
 			}
 
-			if !strings.HasPrefix(c.Text, "// +doc/") {
-				v := strings.TrimSpace(strings.TrimPrefix(c.Text, "// "))
+			if !goStrings.HasPrefix(c.Text, "// +doc/") {
+				v := goStrings.TrimSpace(goStrings.TrimPrefix(c.Text, "// "))
 				if deprecated {
 					dep = append(dep, v)
 				} else {
@@ -293,7 +293,7 @@ func isSimpleType(obj reflect.Type) (string, string, bool) {
 }
 
 func extractTag(tag string) (string, bool) {
-	parts := strings.Split(tag, ",")
+	parts := goStrings.Split(tag, ",")
 
 	if len(parts) == 1 {
 		return parts[0], false
@@ -380,13 +380,13 @@ func parseMultipleDirs(t *testing.T, root string, fset *token.FileSet, mode pars
 
 	for _, dir := range dirs {
 		d, err := parser.ParseDir(fset, dir, func(info fs.FileInfo) bool {
-			return !strings.HasSuffix(info.Name(), "_test.go") &&
+			return !goStrings.HasSuffix(info.Name(), "_test.go") &&
 				info.Name() != "zz_generated.deepcopy.go"
 		}, mode)
 		require.NoError(t, err)
 
 		require.Len(t, d, 1)
-		k := strings.ReplaceAll(dir, root, rootPackageName)
+		k := goStrings.ReplaceAll(dir, root, rootPackageName)
 
 		for _, v := range d {
 			require.NotContains(t, r, k)

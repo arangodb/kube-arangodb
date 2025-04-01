@@ -22,8 +22,8 @@ package deployment
 
 import (
 	"context"
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -228,7 +228,7 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 	}
 
 	conn := client.Connection()
-	r, err := conn.NewRequest(http.MethodPut, "/_admin/cluster/maintenance")
+	r, err := conn.NewRequest(goHttp.MethodPut, "/_admin/cluster/maintenance")
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 		return err
 	}
 
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
+	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
 		return err
 	}
 
@@ -478,7 +478,7 @@ func (d *Deployment) acceptNewSpec(ctx context.Context, depl *api.ArangoDeployme
 		if fields := accepted.ResetImmutableFields(spec); len(fields) > 0 {
 			d.metrics.Errors.DeploymentImmutableErrors += uint64(len(fields))
 			if features.DeploymentSpecDefaultsRestore().Enabled() {
-				d.log.Error("Restoring immutable fields: %s", strings.Join(fields, ", "))
+				d.log.Error("Restoring immutable fields: %s", goStrings.Join(fields, ", "))
 
 				// In case of enabled, do restore
 				if err := d.updateCRSpec(ctx, *spec); err != nil {
@@ -489,7 +489,7 @@ func (d *Deployment) acceptNewSpec(ctx context.Context, depl *api.ArangoDeployme
 			}
 
 			// We have immutable fields, throw an error and proceed
-			return true, false, errors.Errorf("Immutable fields cannot be changed: %s", strings.Join(fields, ", "))
+			return true, false, errors.Errorf("Immutable fields cannot be changed: %s", goStrings.Join(fields, ", "))
 		}
 
 		// Update accepted spec

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@
 package logging
 
 import (
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/rs/zerolog"
 )
 
-func HTTPRequestWrap(request *http.Request) Wrap {
+func HTTPRequestWrap(request *goHttp.Request) Wrap {
 	return func(in *zerolog.Event) *zerolog.Event {
 		if request == nil {
 			return in

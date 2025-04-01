@@ -21,12 +21,12 @@
 package s3
 
 import (
-	"strings"
+	goStrings "strings"
 
 	"github.com/dchest/uniuri"
 )
 
 // newID creates a new unique ID.
 func newID() string {
-	return strings.ToLower(uniuri.NewLen(uniuri.UUIDLen))
+	return goStrings.ToLower(uniuri.NewLen(uniuri.UUIDLen))
 }

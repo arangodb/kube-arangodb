@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package internal
 
 import (
 	"sort"
-	"strings"
+	goStrings "strings"
 )
 
 type DocDefinitions []DocDefinition
@@ -52,7 +52,7 @@ type DocDefinition struct {
 
 func (d DocDefinitions) Sort() {
 	sort.Slice(d, func(i, j int) bool {
-		a, b := strings.ToLower(d[i].Path), strings.ToLower(d[j].Path)
+		a, b := goStrings.ToLower(d[i].Path), goStrings.ToLower(d[j].Path)
 		if a == b {
 			return d[i].Path < d[j].Path
 		}

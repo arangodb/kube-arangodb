@@ -23,7 +23,7 @@ package v1
 import (
 	"context"
 	"fmt"
-	"net/http"
+	goHttp "net/http"
 	"testing"
 	"time"
 
@@ -87,7 +87,7 @@ func Test_Ping_HTTP(t *testing.T) {
 
 	resp := ugrpc.Get[*pbPongV1.PongV1PingResponse](ctx, client, fmt.Sprintf("http://%s/_integration/pong/v1/ping", server.HTTPAddress()))
 
-	_, err := resp.WithCode(http.StatusOK).Get()
+	_, err := resp.WithCode(goHttp.StatusOK).Get()
 	require.NoError(t, err)
 }
 

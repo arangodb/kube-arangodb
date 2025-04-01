@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package names
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 
 	"github.com/dchest/uniuri"
 
@@ -30,7 +30,7 @@ import (
 )
 
 func GetArangodID(group api.ServerGroup) string {
-	return GetArangodIDPredefined(group, strings.ToLower(uniuri.NewLen(8)))
+	return GetArangodIDPredefined(group, goStrings.ToLower(uniuri.NewLen(8)))
 }
 
 func GetArangodIDInt(group api.ServerGroup, id int) string {

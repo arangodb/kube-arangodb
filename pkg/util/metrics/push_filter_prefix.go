@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package metrics
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 )
 
 func NewPrefixMetricPushFilter(prefixes ...string) MetricPushFilter {
@@ -30,7 +30,7 @@ func NewPrefixMetricPushFilter(prefixes ...string) MetricPushFilter {
 		for id := range prefixes {
 			prefix := fmt.Sprintf(`Desc{fqName: "%s`, prefixes[id])
 
-			if strings.HasPrefix(m.Desc().String(), prefix) {
+			if goStrings.HasPrefix(m.Desc().String(), prefix) {
 				return true
 			}
 		}

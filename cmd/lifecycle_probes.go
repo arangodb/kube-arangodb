@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
+	goHttp "net/http"
 	"os"
 	"path"
 	"strconv"
@@ -103,14 +103,14 @@ func init() {
 	f.BoolVar(&probeInput.Enterprise, "enterprise", enterprise, "Determines if ArangoDB is enterprise")
 }
 
-func probeClient() *http.Client {
-	tr := &http.Transport{}
+func probeClient() *goHttp.Client {
+	tr := &goHttp.Transport{}
 
 	if probeInput.SSL {
 		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
-	client := &http.Client{
+	client := &goHttp.Client{
 		Transport: tr,
 	}
 
@@ -171,7 +171,7 @@ func getJWTToken() ([]byte, error) {
 	return nil, errors.Errorf("Unable to find any token")
 }
 
-func addAuthHeader(req *http.Request) error {
+func addAuthHeader(req *goHttp.Request) error {
 	if !probeInput.Auth {
 		return nil
 	}
@@ -190,10 +190,10 @@ func addAuthHeader(req *http.Request) error {
 	return nil
 }
 
-func doRequest(endpoint string) (*http.Response, error) {
+func doRequest(endpoint string) (*goHttp.Response, error) {
 	client := probeClient()
 
-	req, err := http.NewRequest(http.MethodGet, probeEndpoint(endpoint), nil)
+	req, err := goHttp.NewRequest(goHttp.MethodGet, probeEndpoint(endpoint), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func cmdLifecycleProbeRunE(cmd *cobra.Command) error {
 		defer resp.Body.Close()
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != goHttp.StatusOK {
 		if resp.Body != nil {
 			if data, err := io.ReadAll(resp.Body); err == nil {
 				return errors.Errorf("Unexpected code: %d - %s", resp.StatusCode, string(data))

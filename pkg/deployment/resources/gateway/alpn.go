@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 package gateway
 
-import "strings"
+import goStrings "strings"
 
 type ALPNProtocol int
 
@@ -40,5 +40,5 @@ func (a ALPNProtocol) String() string {
 		elements = append(elements, "http/1.1")
 	}
 
-	return strings.Join(elements, ",")
+	return goStrings.Join(elements, ",")
 }

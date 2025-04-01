@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,16 +20,16 @@
 
 package http
 
-import "net/http"
+import goHttp "net/http"
 
 const ContentTypeHeader = "Content-Type"
 
-func WithTextContentType(in http.HandlerFunc) http.HandlerFunc {
+func WithTextContentType(in goHttp.HandlerFunc) goHttp.HandlerFunc {
 	return WithContentType("plain/text", in)
 }
 
-func WithContentType(content string, in http.HandlerFunc) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
+func WithContentType(content string, in goHttp.HandlerFunc) goHttp.HandlerFunc {
+	return func(writer goHttp.ResponseWriter, request *goHttp.Request) {
 		writer.Header().Set(ContentTypeHeader, content)
 
 		in(writer, request)

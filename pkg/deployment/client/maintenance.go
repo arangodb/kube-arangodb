@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package client
 import (
 	"context"
 	"fmt"
-	"net/http"
+	goHttp "net/http"
 	"time"
 )
 
@@ -62,7 +62,7 @@ func (c *client) DisableMaintenance(ctx context.Context, id string) error {
 }
 
 func (c *client) setMaintenance(ctx context.Context, id string, mode MemberMaintenanceMode, timeout *Seconds) error {
-	req, err := c.c.NewRequest(http.MethodPut, fmt.Sprintf(MemberMaintenanceUrl, id))
+	req, err := c.c.NewRequest(goHttp.MethodPut, fmt.Sprintf(MemberMaintenanceUrl, id))
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (c *client) setMaintenance(ctx context.Context, id string, mode MemberMaint
 		return err
 	}
 
-	if err := resp.CheckStatus(http.StatusOK); err != nil {
+	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
 		return err
 	}
 

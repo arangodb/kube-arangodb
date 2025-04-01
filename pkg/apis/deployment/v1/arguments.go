@@ -21,7 +21,7 @@
 package v1
 
 import (
-	"strings"
+	goStrings "strings"
 
 	arangodOptions "github.com/arangodb/kube-arangodb/pkg/util/arangod/options"
 	arangosyncOptions "github.com/arangodb/kube-arangodb/pkg/util/arangosync/options"
@@ -32,8 +32,8 @@ type Arguments []string
 
 func (a Arguments) Validate(group ServerGroup) error {
 	for _, arg := range a {
-		parts := strings.Split(arg, "=")
-		optionKey := strings.TrimSpace(parts[0])
+		parts := goStrings.Split(arg, "=")
+		optionKey := goStrings.TrimSpace(parts[0])
 		switch group.Type() {
 		case ServerGroupTypeArangoD:
 			if arangodOptions.IsCriticalOption(optionKey) {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net/http"
+	goHttp "net/http"
 	"sync"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -34,8 +34,8 @@ const (
 	ContentLengthHeader = "Content-Length"
 )
 
-func WithBuffer(maxSize int, in http.HandlerFunc) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
+func WithBuffer(maxSize int, in goHttp.HandlerFunc) goHttp.HandlerFunc {
+	return func(writer goHttp.ResponseWriter, request *goHttp.Request) {
 		data := NewBuffer(maxSize, writer)
 
 		wr := NewWriter(writer, data)

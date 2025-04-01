@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@
 
 package http
 
-import "net/http"
+import goHttp "net/http"
 
-func WithNoContent(in http.HandlerFunc) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
+func WithNoContent(in goHttp.HandlerFunc) goHttp.HandlerFunc {
+	return func(writer goHttp.ResponseWriter, request *goHttp.Request) {
 		data := NewBuffer(1, writer)
 
 		wr := NewWriter(writer, data)
@@ -32,7 +32,7 @@ func WithNoContent(in http.HandlerFunc) http.HandlerFunc {
 
 		if !data.Truncated() {
 			// We did not truncate - so did not send even one byte
-			writer.WriteHeader(http.StatusNoContent)
+			writer.WriteHeader(goHttp.StatusNoContent)
 		}
 	}
 }

@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
+	goStrings "strings"
 
 	"github.com/google/uuid"
 	core "k8s.io/api/core/v1"
@@ -341,7 +341,7 @@ func ValidateExclusiveFields(in any, expected int, fields ...string) error {
 
 			n := field
 			if tg, ok := tf.Tag.Lookup("json"); ok {
-				p := strings.Split(tg, ",")[0]
+				p := goStrings.Split(tg, ",")[0]
 				if p != "" {
 					n = p
 				}
@@ -387,22 +387,22 @@ func ValidateExclusiveFields(in any, expected int, fields ...string) error {
 			if len(existing) == 0 {
 				return errors.Errorf("Elements not provided. Expected %d. Possible: %s",
 					expected,
-					strings.Join(all, ", "),
+					goStrings.Join(all, ", "),
 				)
 			}
 			if len(existing) < expected {
 				return errors.Errorf("Not enough elements provided. Expected %d, got %d. Defined: %s, Additionally Possible: %s",
 					expected,
 					len(existing),
-					strings.Join(existing, ", "),
-					strings.Join(missing, ", "),
+					goStrings.Join(existing, ", "),
+					goStrings.Join(missing, ", "),
 				)
 			}
 			if len(existing) > expected {
 				return errors.Errorf("Too many elements provided. Expected %d, got %d. Defined: %s",
 					expected,
 					len(existing),
-					strings.Join(existing, ", "),
+					goStrings.Join(existing, ", "),
 				)
 			}
 		}

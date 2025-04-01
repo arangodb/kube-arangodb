@@ -22,7 +22,7 @@ package platform
 
 import (
 	"io"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -108,7 +108,7 @@ func registryInstallRun(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, repo := range args {
-		p := strings.SplitN(repo, "=", 2)
+		p := goStrings.SplitN(repo, "=", 2)
 
 		chart, ok := hm.Get(p[0])
 		if !ok {

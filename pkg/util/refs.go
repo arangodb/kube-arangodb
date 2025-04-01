@@ -23,7 +23,7 @@ package util
 import (
 	"reflect"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 // NewPointer returns a reference to a copy of the pointer value

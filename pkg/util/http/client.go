@@ -23,35 +23,35 @@ package http
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func NewHTTPClient(mods ...util.Mod[http.Client]) HTTPClient {
-	var c http.Client
+func NewHTTPClient(mods ...util.Mod[goHttp.Client]) HTTPClient {
+	var c goHttp.Client
 
 	util.ApplyMods(&c, mods...)
 
 	return &c
 }
 
-type HTTPClient Client[*http.Request, *http.Response]
+type HTTPClient Client[*goHttp.Request, *goHttp.Response]
 
 type Client[Req, Resp any] interface {
 	Do(req Req) (Resp, error)
 }
 
-func RoundTripper(mods ...util.Mod[http.Transport]) http.RoundTripper {
-	df := append([]util.Mod[http.Transport]{
+func RoundTripper(mods ...util.Mod[goHttp.Transport]) goHttp.RoundTripper {
+	df := append([]util.Mod[goHttp.Transport]{
 		configuration.DefaultTransport,
 	}, mods...)
 
 	return Transport(df...)
 }
 
-func RoundTripperWithShortTransport(mods ...util.Mod[http.Transport]) http.RoundTripper {
-	df := append([]util.Mod[http.Transport]{
+func RoundTripperWithShortTransport(mods ...util.Mod[goHttp.Transport]) goHttp.RoundTripper {
+	df := append([]util.Mod[goHttp.Transport]{
 		configuration.ShortTransport,
 	}, mods...)
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package metrics
 import (
 	"fmt"
 	"net"
-	"net/http"
+	goHttp "net/http"
 	"testing"
 	"time"
 
@@ -32,13 +32,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func StartHTTP(t *testing.T, mux *http.ServeMux) (string, func()) {
+func StartHTTP(t *testing.T, mux *goHttp.ServeMux) (string, func()) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 
 	port := listener.Addr().(*net.TCPAddr).Port
 
-	server := &http.Server{}
+	server := &goHttp.Server{}
 	server.Handler = mux
 
 	closed := make(chan struct{})
@@ -46,7 +46,7 @@ func StartHTTP(t *testing.T, mux *http.ServeMux) (string, func()) {
 		defer close(closed)
 
 		if err := server.Serve(listener); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
+			if !errors.Is(err, goHttp.ErrServerClosed) {
 				require.NoError(t, err)
 			}
 		}

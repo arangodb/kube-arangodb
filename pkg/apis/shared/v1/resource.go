@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package v1
 
 import (
-	"strings"
+	goStrings "strings"
 
 	"k8s.io/apimachinery/pkg/util/validation"
 
@@ -104,7 +104,7 @@ func (n *KubernetesResourceName) Immutable(o *KubernetesResourceName) error {
 // More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 func IsValidName(name string) error {
 	if res := validation.IsDNS1123Label(name); len(res) > 0 {
-		return errors.Errorf("Validation of label failed: %s", strings.Join(res, ", "))
+		return errors.Errorf("Validation of label failed: %s", goStrings.Join(res, ", "))
 	}
 
 	return nil
@@ -112,7 +112,7 @@ func IsValidName(name string) error {
 
 func IsValidDomain(name string) error {
 	if res := validation.IsDNS1123Subdomain(name); len(res) > 0 {
-		return errors.Errorf("validation of domain failed: %s", strings.Join(res, ", "))
+		return errors.Errorf("validation of domain failed: %s", goStrings.Join(res, ", "))
 	}
 
 	return nil

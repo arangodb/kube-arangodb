@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package k8sutil
 
 import (
-	"strings"
+	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 
@@ -37,7 +37,7 @@ const (
 // ConvertImageID2Image converts a ImageID from a ContainerStatus to an Image that can be used
 // in a Container specification.
 func ConvertImageID2Image(imageID string) string {
-	if strings.HasPrefix(imageID, dockerPullableImageIDPrefix) {
+	if goStrings.HasPrefix(imageID, dockerPullableImageIDPrefix) {
 		return imageID[len(dockerPullableImageIDPrefix):]
 	}
 	return imageID

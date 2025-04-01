@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package operation
 
 import (
-	"strings"
+	goStrings "strings"
 
 	"github.com/rs/zerolog"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,7 +49,7 @@ const (
 
 // NewItemFromString creates new item from String
 func NewItemFromString(itemString string) (Item, error) {
-	parts := strings.Split(itemString, "/")
+	parts := goStrings.Split(itemString, "/")
 
 	if len(parts) != 6 {
 		return Item{}, errors.Errorf("expected 6 parts in %s, got %d", itemString, len(parts))
@@ -109,7 +109,7 @@ func validateField(name, value string, allowEmpty bool) error {
 		return errors.Errorf(emptyError, name)
 	}
 
-	if index := strings.Index(value, separator); index != -1 {
+	if index := goStrings.Index(value, separator); index != -1 {
 		return errors.Errorf(invalidCharacterError, separator, name)
 	}
 
@@ -143,7 +143,7 @@ func (i Item) Validate() error {
 }
 
 func (i Item) String() string {
-	return strings.Join([]string{string(i.Operation), i.Group, i.Version, i.Kind, i.Namespace, i.Name}, separator)
+	return goStrings.Join([]string{string(i.Operation), i.Group, i.Version, i.Kind, i.Namespace, i.Name}, separator)
 }
 
 func (i Item) WrapLogger(in *zerolog.Event) *zerolog.Event {

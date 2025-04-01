@@ -23,8 +23,8 @@ package v3
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -90,7 +90,7 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 
 	if v, ok := ext[AuthConfigTypeKey]; !ok || v != AuthConfigTypeValue {
 		return nil, DeniedResponse{
-			Code: http.StatusBadRequest,
+			Code: goHttp.StatusBadRequest,
 			Message: &DeniedMessage{
 				Message: "Auth plugin is not enabled for this request",
 			},
@@ -104,7 +104,7 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 
 	if util.Optional(ext, AuthConfigAuthRequiredKey, AuthConfigKeywordFalse) == AuthConfigKeywordTrue && authenticated == nil {
 		return nil, DeniedResponse{
-			Code: http.StatusUnauthorized,
+			Code: goHttp.StatusUnauthorized,
 			Message: &DeniedMessage{
 				Message: "Unauthorized",
 			},
@@ -129,7 +129,7 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 			},
 		}
 
-		switch networkingApi.ArangoRouteSpecAuthenticationPassMode(strings.ToLower(util.Optional(ext, AuthConfigAuthPassModeKey, ""))) {
+		switch networkingApi.ArangoRouteSpecAuthenticationPassMode(goStrings.ToLower(util.Optional(ext, AuthConfigAuthPassModeKey, ""))) {
 		case networkingApi.ArangoRouteSpecAuthenticationPassModeOverride:
 			token, ok, err := i.helper.Token(ctx, authenticated)
 			if err != nil {
@@ -138,7 +138,7 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 
 			if !ok {
 				return nil, DeniedResponse{
-					Code: http.StatusUnauthorized,
+					Code: goHttp.StatusUnauthorized,
 					Message: &DeniedMessage{
 						Message: "Unable to render token",
 					},

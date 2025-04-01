@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net/http"
+	goHttp "net/http"
 	"net/url"
 	"reflect"
 	"sort"
@@ -453,14 +453,14 @@ func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext
 	}
 
 	transport := operatorHTTP.RoundTripper(operatorHTTP.WithTransportTLS(operatorHTTP.WithRootCA(ca.AsCertPool())))
-	client := &http.Client{Transport: transport, Timeout: time.Second}
+	client := &goHttp.Client{Transport: transport, Timeout: time.Second}
 
 	auth, err := context.GetAuthentication()()
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+	req, err := goHttp.NewRequest(goHttp.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}

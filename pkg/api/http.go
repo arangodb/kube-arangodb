@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package api
 
 import (
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/gin-gonic/gin"
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
@@ -33,7 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
-func buildHTTPHandler(s *Server, cfg ServerConfig, auth *authorization) (http.Handler, error) {
+func buildHTTPHandler(s *Server, cfg ServerConfig, auth *authorization) (goHttp.Handler, error) {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -68,16 +68,16 @@ func buildHTTPHandler(s *Server, cfg ServerConfig, auth *authorization) (http.Ha
 	return r, nil
 }
 
-func handleGetReady(probes ...*probe.ReadyProbe) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func handleGetReady(probes ...*probe.ReadyProbe) func(w goHttp.ResponseWriter, r *goHttp.Request) {
+	return func(w goHttp.ResponseWriter, r *goHttp.Request) {
 		for _, probe := range probes {
 			if !probe.IsReady() {
-				w.WriteHeader(http.StatusInternalServerError)
+				w.WriteHeader(goHttp.StatusInternalServerError)
 				return
 			}
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(goHttp.StatusOK)
 	}
 }
 
@@ -87,7 +87,7 @@ func (s *Server) handleGetLogLevel(c *gin.Context) {
 	for topic, level := range logLevels {
 		topics[topic] = level.String()
 	}
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(goHttp.StatusOK, gin.H{
 		"topics": topics,
 	})
 }
@@ -99,7 +99,7 @@ func (s *Server) handlePostLogLevel(c *gin.Context) {
 
 	err := c.BindJSON(&req)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+		c.AbortWithStatusJSON(goHttp.StatusBadRequest, gin.H{
 			"msg": err.Error(),
 		})
 		return
@@ -109,7 +109,7 @@ func (s *Server) handlePostLogLevel(c *gin.Context) {
 	for topic, levelStr := range req.Topics {
 		l, err := logging.ParseLogLevel(levelStr)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			c.AbortWithStatusJSON(goHttp.StatusBadRequest, gin.H{
 				"msg": err.Error(),
 			})
 			return
@@ -118,5 +118,5 @@ func (s *Server) handlePostLogLevel(c *gin.Context) {
 	}
 
 	s.setLogLevelsByTopics(logLevels)
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(goHttp.StatusOK, gin.H{})
 }

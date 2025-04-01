@@ -26,7 +26,7 @@ import (
 	"os"
 	"path"
 	"reflect"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,13 +51,13 @@ import (
 
 func (def DocDefinition) ApplyToSchema(s *apiextensions.JSONSchemaProps) {
 	for _, e := range def.Enum {
-		z := strings.Split(e, "|")
+		z := goStrings.Split(e, "|")
 		s.Enum = append(s.Enum, apiextensions.JSON{
 			Raw: []byte("\"" + z[0] + "\""),
 		})
 	}
 
-	s.Description = strings.Join(def.Docs, "\n")
+	s.Description = goStrings.Join(def.Docs, "\n")
 }
 
 // Test_GenerateCRValidationSchemas generates validation schema JSONs for each CRD referenced in `input` (see impl)

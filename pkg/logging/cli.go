@@ -23,7 +23,7 @@ package logging
 import (
 	"fmt"
 	"os"
-	"strings"
+	goStrings "strings"
 	"sync"
 	"time"
 
@@ -53,7 +53,7 @@ func Init(cmd *cobra.Command) error {
 	f := cmd.PersistentFlags()
 
 	f.StringVar(&cli.format, "log.format", "pretty", "Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used")
-	f.StringArrayVar(&cli.levels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", strings.Join(Global().Names(), ", ")))
+	f.StringArrayVar(&cli.levels, "log.level", []string{defaultLogLevel}, fmt.Sprintf("Set log levels in format <level> or <logger>=<level>. Possible loggers: %s", goStrings.Join(Global().Names(), ", ")))
 	f.BoolVar(&cli.sampling, "log.sampling", true, "If true, operator will try to minimize duplication of logging events")
 	f.BoolVar(&cli.stdout, "log.stdout", true, "If true, operator will log to the stdout")
 
@@ -79,7 +79,7 @@ func Enable() error {
 		out = os.Stdout
 	}
 
-	switch strings.ToUpper(cli.format) {
+	switch goStrings.ToUpper(cli.format) {
 	case "JSON":
 		Global().SetRoot(zerolog.New(out).With().Timestamp().Logger())
 	case "PRETTY", "":

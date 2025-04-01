@@ -22,7 +22,7 @@ package agency
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 )
 
 type ReadRequest [][]string
@@ -65,7 +65,7 @@ const (
 )
 
 func GetAgencyKey(parts ...string) string {
-	return fmt.Sprintf("/%s", strings.Join(parts, "/"))
+	return fmt.Sprintf("/%s", goStrings.Join(parts, "/"))
 }
 
 func GetAgencyReadRequest(elements ...[]string) ReadRequest {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -69,7 +69,7 @@ func executeSync(t *testing.T, ctx context.Context, args ...string) error {
 	cmd.SetOut(os.Stdout)
 
 	cmd.SetArgs(append([]string{"test"}, args...))
-	logger.Info("Command: %s", strings.Join(args, " "))
+	logger.Info("Command: %s", goStrings.Join(args, " "))
 
 	return cmd.Execute()
 }

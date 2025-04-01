@@ -7,7 +7,7 @@ package sidecar
 
 import (
 	"fmt"
-	"strings"
+	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 
@@ -52,7 +52,7 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	var annotations = map[string]string{}
 
 	for _, integration := range integrations {
-		name := strings.Join(integration.Name(), "/")
+		name := goStrings.Join(integration.Name(), "/")
 
 		if err := integration.Validate(); err != nil {
 			return nil, errors.Wrapf(err, "Failure in %s", name)

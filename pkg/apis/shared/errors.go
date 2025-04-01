@@ -23,7 +23,7 @@ package shared
 import (
 	"fmt"
 	"io"
-	"strings"
+	goStrings "strings"
 )
 
 type ResourceError struct {
@@ -111,7 +111,7 @@ func (m MergedErrors) Error() string {
 		errStrings = append(errStrings, err.Error())
 	}
 
-	return fmt.Sprintf("Received %d errors: %s", len(errStrings), strings.Join(errStrings, ", "))
+	return fmt.Sprintf("Received %d errors: %s", len(errStrings), goStrings.Join(errStrings, ", "))
 }
 
 func (m MergedErrors) Errors() []error {

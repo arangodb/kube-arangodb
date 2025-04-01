@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/http"
+	goHttp "net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -169,11 +169,11 @@ func cmdGetAgencyDump(cmd *cobra.Command, _ []string) {
 func getAgencyState(ctx context.Context, conn connection.Connection) (io.ReadCloser, error) {
 	url := connection.NewUrl("_api", "agency", "read")
 	data := []byte(`[["/"]]`)
-	resp, body, err := connection.CallStream(ctx, conn, http.MethodPost, url, connection.WithBody(data))
+	resp, body, err := connection.CallStream(ctx, conn, goHttp.MethodPost, url, connection.WithBody(data))
 	if err != nil {
 		return nil, err
 	}
-	if resp.Code() != http.StatusOK {
+	if resp.Code() != goHttp.StatusOK {
 		return nil, errors.New(fmt.Sprintf("unexpected HTTP status from \"%s\" endpoint", url))
 	}
 
@@ -241,7 +241,7 @@ func getAgencyLeader(ctx context.Context, conn connection.Connection) (string, e
 	if err != nil {
 		return "", err
 	}
-	if resp.Code() != http.StatusOK {
+	if resp.Code() != goHttp.StatusOK {
 		return "", errors.New("unexpected HTTP status from agency-dump endpoint")
 	}
 
@@ -257,11 +257,11 @@ func getAgencyLeader(ctx context.Context, conn connection.Connection) (string, e
 // getAgencyDump returns dump of the agency.
 func getAgencyDump(ctx context.Context, conn connection.Connection) (io.ReadCloser, error) {
 	url := connection.NewUrl("_api", "cluster", "agency-dump")
-	resp, body, err := connection.CallStream(ctx, conn, http.MethodGet, url)
+	resp, body, err := connection.CallStream(ctx, conn, goHttp.MethodGet, url)
 	if err != nil {
 		return nil, err
 	}
-	if resp.Code() != http.StatusOK {
+	if resp.Code() != goHttp.StatusOK {
 		return nil, errors.New("unexpected HTTP status from agency-dump endpoint")
 	}
 
@@ -285,7 +285,7 @@ func createClient(endpoints []string, certCA *x509.CertPool, auth connection.Aut
 		Authentication: auth,
 		ContentType:    contentType,
 		Endpoint:       connection.NewRoundRobinEndpoints(endpoints),
-		Transport: &http.Transport{
+		Transport: &goHttp.Transport{
 			TLSClientConfig: &tls.Config{
 				RootCAs: certCA,
 			},

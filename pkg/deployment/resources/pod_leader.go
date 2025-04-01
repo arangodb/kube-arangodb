@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package resources
 
 import (
 	"context"
-	"strings"
+	goStrings "strings"
 	"sync"
 
 	core "k8s.io/api/core/v1"
@@ -219,7 +219,7 @@ func (r *Resources) ensureSingleServerLeader(ctx context.Context, cachedStatus i
 		if len(leaderIDs) == 1 {
 			leaderID = leaderIDs[0]
 		} else if len(leaderIDs) > 1 {
-			r.log.Error("multiple leaders found: %s. Blocking traffic to the deployment services", strings.Join(leaderIDs, ", "))
+			r.log.Error("multiple leaders found: %s. Blocking traffic to the deployment services", goStrings.Join(leaderIDs, ", "))
 		}
 	}
 

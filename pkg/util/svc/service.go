@@ -22,7 +22,7 @@ package svc
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -38,7 +38,7 @@ type Service interface {
 
 type service struct {
 	server *grpc.Server
-	http   *http.Server
+	http   *goHttp.Server
 
 	cfg Configuration
 
@@ -77,7 +77,7 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 			}
 		}
 
-		q.http = &http.Server{
+		q.http = &goHttp.Server{
 			Handler:   mux,
 			TLSConfig: cfg.TLSOptions,
 		}

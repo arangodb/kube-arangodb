@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ package agency
 
 import (
 	"context"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 
@@ -32,12 +32,12 @@ import (
 func GetAgencyState[T interface{}](ctx context.Context, connection conn.Connection) (T, error) {
 	var def T
 
-	resp, code, err := conn.NewExecutor[ReadRequest, []T](connection).Execute(ctx, http.MethodPost, "/_api/agency/read", GetAgencyReadRequestFields())
+	resp, code, err := conn.NewExecutor[ReadRequest, []T](connection).Execute(ctx, goHttp.MethodPost, "/_api/agency/read", GetAgencyReadRequestFields())
 	if err != nil {
 		return def, err
 	}
 
-	if code != http.StatusOK {
+	if code != goHttp.StatusOK {
 		return def, errors.Errorf("Unknown response code %d", code)
 	}
 
