@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ProfileContainerTemplate struct {
@@ -33,6 +34,9 @@ type ProfileContainerTemplate struct {
 
 	// All applies generic values to all Containers
 	All *schedulerContainerApi.Generic `json:"all,omitempty"`
+
+	// Default applies generic values to default Container (first one on the list)
+	Default *schedulerContainerApi.Container `json:"default,omitempty"`
 }
 
 func (p *ProfileContainerTemplate) ApplyContainers(template *core.PodTemplateSpec) error {
@@ -51,6 +55,32 @@ func (p *ProfileContainerTemplate) ApplyGeneric(template *core.PodTemplateSpec) 
 	return p.All.Apply(template)
 }
 
+func (p *ProfileContainerTemplate) ApplyDefault(template *core.PodTemplateSpec) error {
+	if p == nil {
+		return nil
+	}
+
+	if template == nil {
+		return errors.Errorf("Template is nil")
+	}
+
+	if len(template.Spec.Containers) == 0 {
+		return errors.Errorf("Default container is missing")
+	}
+
+	var cont core.Container
+
+	template.Spec.Containers[0].DeepCopyInto(&cont)
+
+	if err := p.Default.Apply(template, &cont); err != nil {
+		return err
+	}
+
+	template.Spec.Containers[0] = cont
+
+	return nil
+}
+
 func (p *ProfileContainerTemplate) With(other *ProfileContainerTemplate) *ProfileContainerTemplate {
 	if p == nil && other == nil {
 		return nil
@@ -67,6 +97,7 @@ func (p *ProfileContainerTemplate) With(other *ProfileContainerTemplate) *Profil
 	return &ProfileContainerTemplate{
 		Containers: p.Containers.With(other.Containers),
 		All:        p.All.With(other.All),
+		Default:    p.Default.With(other.Default),
 	}
 }
 
