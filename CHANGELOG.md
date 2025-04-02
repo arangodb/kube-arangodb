@@ -6,6 +6,7 @@
 - (Feature) Add ArangoMember Args
 - (Maintenance) Unify References via golangci-linter
 - (Feature) Add Default Container Mods
+- (Documentation) Improve Charts and Upgrade Documentation
 
 ## [1.2.47](https://github.com/arangodb/kube-arangodb/tree/1.2.47) (2025-03-28)
 - (Bugfix) Use Profile Annotations

@@ -10,11 +10,12 @@ that you deploy in your Kubernetes cluster to:
 - Configure ArangoDB Datacenter-to-Datacenter Replication
 
 Each of these uses involves a different custom resource:
-- Use an [ArangoDeployment resource](docs/deployment-resource-reference.md) to create an ArangoDB database deployment.
-- Use an [ArangoMember resource](docs/api/ArangoMember.V1.md) to observe and adjust individual deployment members.
+- Use an [ArangoDeployment](docs/deployment-resource-reference.md) resource to create an ArangoDB database deployment.
+- Use an [ArangoMember](docs/api/ArangoMember.V1.md) resource to observe and adjust individual deployment members.
 - Use an [ArangoBackup](docs/backup-resource.md) and [ArangoBackupPolicy](docs/backuppolicy-resource.md) resources to create ArangoDB backups.
-- Use an [ArangoLocalStorage resource](docs/storage-resource.md) to provide local `PersistentVolumes` for optimal I/O performance.
-- Use an [ArangoDeploymentReplication resource](docs/deployment-replication-resource-reference.md) to configure ArangoDB Datacenter-to-Datacenter Replication.
+- Use an [ArangoLocalStorage](docs/storage-resource.md) resource to provide local `PersistentVolumes` for optimal I/O performance.
+- Use an [ArangoDeploymentReplication](docs/deployment-replication-resource-reference.md) resource to configure ArangoDB Datacenter-to-Datacenter Replication.
+- Use an [ArangoPlatformChart](docs/arango-platform-chart-resource.md) and [ArangoProfile](docs/arango-profile-resource.md) resources to customize [ArangoDB Platform](docs/platform.md) deployments.
 
 Continue with [Using the ArangoDB Kubernetes Operator](docs/using-the-operator.md)
 to learn how to install the ArangoDB Kubernetes operator and create your first deployment.
@@ -350,14 +351,7 @@ helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/
 
 ### Upgrading the operator using Helm
 
-To upgrade the operator to the latest version with Helm, you have to
-delete the previous operator deployment and then install the latest. **HOWEVER**:
-You *must not delete* the custom resource definitions (CRDs),
-or your ArangoDB deployments will be deleted!
-
-Therefore, you have to use `helm list` to find the deployments for the
-operator (`kube-arangodb`) and use `helm delete` to delete them using the
-automatically generated deployment names. Here is an example of a `helm list` output:
+To upgrade the operator to the latest version with Helm, you have to run `helm upgrade` with the `--install` flag to enable CRD installation.
 
 ```
 NAME                      	NAMESPACE	REVISION	UPDATED                                 	STATUS  	CHART               	APP VERSION
@@ -366,25 +360,23 @@ kube-arangodb-1-1696919877	default  	1       	2023-10-10 08:37:57.884783199 +020
 
 So here, you would have to do
 ```bash
-helm delete kube-arangodb-1-1696919877
+helm upgrade --install kube-arangodb-1-1696919877 https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-1.2.47.tgz
 ```
-
-Then you can install the new version with `helm install` as normal:
 
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-1.2.47.tgz
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-1.2.47.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-1.2.47.tgz --set "operator.features.storage=true"
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-1.2.47.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-enterprise-1.2.47.tgz
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-enterprise-1.2.47.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-enterprise-1.2.47.tgz --set "operator.features.storage=true"
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.2.47/kube-arangodb-enterprise-1.2.47.tgz --set "operator.features.storage=true"
 ```
 
 ## Building
