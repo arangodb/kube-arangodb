@@ -151,6 +151,7 @@ func (a admissionImpl[T]) request(t AdmissionRequestType, writer goHttp.Response
 
 	code, data := a.requestWriterJSON(ctx, log, t, request)
 	writer.WriteHeader(code)
+	log.Int("code", code).Str("data", string(data)).Info("Request Response send")
 	if len(data) > 0 {
 		if _, err := util.WriteAll(writer, data); err != nil {
 			log.Err(err).Warn("Unable to send response")

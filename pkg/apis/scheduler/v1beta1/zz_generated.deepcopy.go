@@ -561,6 +561,11 @@ func (in *ProfileContainerTemplate) DeepCopyInto(out *ProfileContainerTemplate) 
 		*out = new(container.Generic)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Default != nil {
+		in, out := &in.Default, &out.Default
+		*out = new(container.Container)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

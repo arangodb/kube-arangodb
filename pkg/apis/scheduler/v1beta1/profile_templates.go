@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,6 +62,11 @@ func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
 
 	// Apply Generic Containers Spec
 	if err := t.GetContainer().ApplyGeneric(pod); err != nil {
+		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
+	}
+
+	// Apply Default Containers Spec
+	if err := t.GetContainer().ApplyDefault(pod); err != nil {
 		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
 	}
 
