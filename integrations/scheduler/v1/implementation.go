@@ -25,10 +25,11 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	authorization "k8s.io/api/authorization/v1"
 
 	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -43,121 +44,121 @@ func New(ctx context.Context, client kclient.Client, cfg Configuration) (svc.Han
 func newInternal(ctx context.Context, client kclient.Client, cfg Configuration) (*implementation, error) {
 	if cfg.VerifyAccess {
 		// Lets Verify Access
-		if err := kresources.VerifyAll(ctx, client.Kubernetes(),
-			kresources.AccessRequest{
+		if !access.VerifyAllAccess(ctx, client,
+			authorization.ResourceAttributes{
 				Verb:      "create",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerbatchjobs",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "list",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerbatchjobs",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "delete",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerbatchjobs",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "get",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerbatchjobs",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "create",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulercronjobs",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "list",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulercronjobs",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "delete",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulercronjobs",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "get",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulercronjobs",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "create",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerpods",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "list",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerpods",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "delete",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerpods",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "get",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerpods",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "create",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerdeployments",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "list",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerdeployments",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "delete",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerdeployments",
 				Namespace: cfg.Namespace,
 			},
-			kresources.AccessRequest{
+			authorization.ResourceAttributes{
 				Verb:      "get",
 				Group:     "scheduler.arangodb.com",
 				Version:   "v1",
 				Resource:  "arangoschedulerdeployments",
 				Namespace: cfg.Namespace,
 			},
-		); err != nil {
-			return nil, errors.WithMessagef(err, "Unable to access API")
+		) {
+			return nil, errors.Errorf("Unable to access API")
 		}
 	}
 

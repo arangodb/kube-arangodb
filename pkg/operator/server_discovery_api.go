@@ -31,6 +31,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 const (
@@ -44,7 +47,7 @@ const (
 
 // FindOtherOperators looks up references to other operators in the same Kubernetes cluster.
 func (o *Operator) FindOtherOperators() []server.OperatorReference {
-	if o.Scope.IsNamespaced() {
+	if !access.VerifyAccess(shutdown.Context(), o.Dependencies.Client, access.GVR(constants.NamespaceGRv1(), "", access.List)) {
 		// In namespaced scope nothing to do
 		return []server.OperatorReference{}
 	}
@@ -99,7 +102,7 @@ func (o *Operator) findOtherOperatorsInNamespace(log logging.Logger, namespace s
 		return nil
 	}
 	nodeFetcher := func() ([]*core.Node, error) {
-		if o.Scope.IsNamespaced() {
+		if !access.VerifyAccess(shutdown.Context(), o.Dependencies.Client, access.GVR(constants.NamespaceGRv1(), "", access.List)) {
 			return nil, nil
 		}
 		result, err := o.Dependencies.Client.Kubernetes().CoreV1().Nodes().List(context.Background(), meta.ListOptions{})

@@ -131,7 +131,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 // It returns nil if the finalizer can be removed.
 func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.Str("section", "agency")
-	if err := r.prepareAgencyPodTermination(p, memberStatus, func(update api.MemberStatus) error {
+	if err := r.prepareAgencyPodTermination(ctx, p, memberStatus, func(update api.MemberStatus) error {
 		if err := updateMember(update); err != nil {
 			return errors.WithStack(err)
 		}

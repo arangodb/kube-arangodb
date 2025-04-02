@@ -50,7 +50,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -82,10 +81,6 @@ func (d *Deployment) GetAPIObject() k8sutil.APIObject {
 // GetServerGroupIterator returns the deployment as ServerGroupIterator.
 func (d *Deployment) GetServerGroupIterator() reconciler.ServerGroupIterator {
 	return d.currentObject
-}
-
-func (d *Deployment) GetScope() scope.Scope {
-	return d.config.Scope
 }
 
 func (d *Deployment) GetOperatorImage() string {

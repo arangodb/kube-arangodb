@@ -34,13 +34,15 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 // prepareAgencyPodTermination checks if the given agency pod is allowed to terminate
 // and if so, prepares it for termination.
 // It returns nil if the pod is allowed to terminate, an error otherwise.
-func (r *Resources) prepareAgencyPodTermination(p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
+func (r *Resources) prepareAgencyPodTermination(ctx context.Context, p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.Str("section", "pod")
 
 	// Inspect member phase
@@ -57,13 +59,15 @@ func (r *Resources) prepareAgencyPodTermination(p *core.Pod, memberStatus api.Me
 
 	// Check node the pod is scheduled on. Only if not in namespaced scope
 	agentDataWillBeGone := false
-	if nodes, err := r.context.ACS().CurrentClusterCache().Node().V1(); err == nil {
-		if !r.context.GetScope().IsNamespaced() && p.Spec.NodeName != "" {
-			node, ok := nodes.GetSimple(p.Spec.NodeName)
-			if !ok {
-				log.Warn("Node not found")
-			} else if node.Spec.Unschedulable {
-				agentDataWillBeGone = true
+	if p.Spec.NodeName != "" {
+		if access.VerifyAccess(ctx, r.context.ACS().CurrentClusterCache().Client(), access.GVR(constants.NodeGRv1(), p.Spec.NodeName, access.Get)) {
+			if nodes, err := r.context.ACS().CurrentClusterCache().Node().V1(); err == nil {
+				node, ok := nodes.GetSimple(p.Spec.NodeName)
+				if !ok {
+					log.Warn("Node not found")
+				} else if node.Spec.Unschedulable {
+					agentDataWillBeGone = true
+				}
 			}
 		}
 	}

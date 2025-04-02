@@ -55,7 +55,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
@@ -130,7 +129,6 @@ var (
 		reconciliationDelay time.Duration
 
 		singleMode bool
-		scope      string
 	}
 	shutdownOptions struct {
 		delay   time.Duration
@@ -228,7 +226,9 @@ func init() {
 	f.MarkDeprecated("operator.arango-image", "Value is not used anymore")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 	f.BoolVar(&operatorOptions.singleMode, "mode.single", false, "Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions")
-	f.StringVar(&operatorOptions.scope, "scope", scope.DefaultScope.String(), "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
+	f.String("scope", "", "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
+	f.MarkDeprecated("scope", "Value is not used anymore")
+	f.MarkHidden("scope")
 	f.DurationVar(&operatorTimeouts.k8s, "timeout.k8s", globals.DefaultKubernetesTimeout, "The request timeout to the kubernetes")
 	f.DurationVar(&operatorTimeouts.arangoD, "timeout.arangod", globals.DefaultArangoDTimeout, "The request timeout to the ArangoDB")
 	f.DurationVar(&operatorTimeouts.arangoDCheck, "timeout.arangod-check", globals.DefaultArangoDCheckTimeout, "The version check request timeout to the ArangoDB")
@@ -587,11 +587,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 
 	eventRecorder := createRecorder(client.Kubernetes(), name, namespace)
 
-	scope, ok := scope.AsScope(operatorOptions.scope)
-	if !ok {
-		return operator.Config{}, operator.Dependencies{}, errors.WithStack(fmt.Errorf("Scope %s is not known by Operator", operatorOptions.scope))
-	}
-
 	cfg := operator.Config{
 		ID:                          id,
 		Namespace:                   namespace,
@@ -612,7 +607,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		AllowChaos:                  chaosOptions.allowed,
 		ScalingIntegrationEnabled:   operatorOptions.scalingIntegrationEnabled,
 		SingleMode:                  operatorOptions.singleMode,
-		Scope:                       scope,
 		ReconciliationDelay:         operatorOptions.reconciliationDelay,
 		ShutdownDelay:               shutdownOptions.delay,
 		ShutdownTimeout:             shutdownOptions.timeout,

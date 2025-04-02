@@ -52,14 +52,16 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
 	"github.com/arangodb/kube-arangodb/pkg/util/trigger"
 )
@@ -71,7 +73,6 @@ type Config struct {
 	ScalingIntegrationEnabled bool
 	OperatorImage             string
 	ReconciliationDelay       time.Duration
-	Scope                     scope.Scope
 }
 
 // Dependencies holds dependent services for a Deployment
@@ -549,7 +550,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	}
 
 	var err error
-	if d.GetScope().IsNamespaced() {
+	if !access.VerifyAccess(shutdown.Context(), d.deps.Client, access.GVR(constants.CustomResourceDefinitionGRv1(), "servicemonitors.monitoring.coreos.com", access.Get)) {
 		_, err = d.acs.CurrentClusterCache().ServiceMonitor().V1()
 		if kerrors.IsForbiddenOrNotFound(err) {
 			return

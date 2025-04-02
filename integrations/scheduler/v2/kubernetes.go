@@ -25,12 +25,13 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	authorization "k8s.io/api/authorization/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
-	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 func (i *implementation) DiscoverAPIResources(ctx context.Context, in *pbSchedulerV2.SchedulerV2DiscoverAPIResourcesRequest) (*pbSchedulerV2.SchedulerV2DiscoverAPIResourcesResponse, error) {
@@ -104,15 +105,15 @@ func (i *implementation) KubernetesGet(ctx context.Context, in *pbSchedulerV2.Sc
 }
 
 func (i *implementation) KubernetesPermissionCheck(ctx context.Context, in *pbSchedulerV2.SchedulerV2KubernetesPermissionCheckRequest) (*pbSchedulerV2.SchedulerV2KubernetesPermissionCheckResponse, error) {
-	resp := kresources.AccessRequest{
+	resp := access.VerifyAccessRequest(ctx, i.kclient, authorization.ResourceAttributes{
 		Verb:        in.GetVerb(),
 		Group:       in.GetGroup(),
 		Version:     in.GetVersion(),
 		Resource:    in.GetResource(),
-		SubResource: in.GetSubResource(),
+		Subresource: in.GetSubResource(),
 		Name:        in.GetName(),
 		Namespace:   util.OptionalType(in.Namespace, i.client.Namespace()),
-	}.Verify(ctx, i.kclient.Kubernetes())
+	})
 
 	var res pbSchedulerV2.SchedulerV2KubernetesPermissionCheckResponse
 

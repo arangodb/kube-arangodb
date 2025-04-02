@@ -103,7 +103,6 @@ Flags:
       --operator.storage                                       Enable to run the ArangoLocalStorage operator
       --operator.version                                       Enable only version endpoint in Operator
       --reconciliation.delay duration                          Delay between reconciliation loops (<= 0 -> Disabled)
-      --scope string                                           Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access (default "legacy")
       --server.admin-secret-name string                        Name of secret containing username + password for login to the dashboard (default "arangodb-operator-dashboard")
       --server.allow-anonymous-access                          Allow anonymous access to the dashboard
       --server.host string                                     Host to listen on (default "0.0.0.0")

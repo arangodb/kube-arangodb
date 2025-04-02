@@ -201,7 +201,6 @@ func (o *Operator) makeDeploymentConfigAndDeps() (deployment.Config, deployment.
 		AllowChaos:                o.Config.AllowChaos,
 		ScalingIntegrationEnabled: o.Config.ScalingIntegrationEnabled,
 		ReconciliationDelay:       o.Config.ReconciliationDelay,
-		Scope:                     o.Scope,
 	}
 	deps := deployment.Dependencies{
 		Client:        o.Client,
