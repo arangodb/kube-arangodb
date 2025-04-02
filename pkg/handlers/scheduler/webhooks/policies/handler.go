@@ -65,8 +65,15 @@ func (h handler) CanHandle(ctx context.Context, log logging.Logger, t webhook.Ad
 		return false
 	}
 
-	_, ok := new.GetLabels()[constants.ProfilesDeployment]
-	return ok
+	if _, ok := new.GetLabels()[constants.ProfilesDeployment]; ok {
+		return true
+	}
+
+	if _, ok := new.GetLabels()[constants.ProfilesApplyLabel]; ok {
+		return true
+	}
+
+	return false
 }
 
 func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.AdmissionRequestType, request *admission.AdmissionRequest, old, new *core.Pod) (webhook.MutationResponse, error) {
@@ -77,17 +84,17 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 	labels := new.GetLabels()
 	annotations := new.GetAnnotations()
 
-	v := labels[constants.ProfilesDeployment]
-	depl, err := h.client.Arango().DatabaseV1().ArangoDeployments(request.Namespace).Get(ctx, v, meta.GetOptions{})
-	if err != nil {
-		if kerrors.IsNotFound(err) {
+	if v, ok := labels[constants.ProfilesDeployment]; ok {
+		if _, err := h.client.Arango().DatabaseV1().ArangoDeployments(request.Namespace).Get(ctx, v, meta.GetOptions{}); err != nil {
+			if kerrors.IsNotFound(err) {
+				return webhook.MutationResponse{
+					ValidationResponse: webhook.NewValidationResponse(false, "ArangoDeployment %s/%s not found", request.Namespace, v),
+				}, nil
+			}
 			return webhook.MutationResponse{
-				ValidationResponse: webhook.NewValidationResponse(false, "ArangoDeployment %s/%s not found", request.Namespace, v),
+				ValidationResponse: webhook.NewValidationResponse(false, "Unable to get ArangoDeployment %s/%s: %s", request.Namespace, v, err.Error()),
 			}, nil
 		}
-		return webhook.MutationResponse{
-			ValidationResponse: webhook.NewValidationResponse(false, "Unable to get ArangoDeployment %s/%s: %s", request.Namespace, v, err.Error()),
-		}, nil
 	}
 
 	allProfiles := util.FlattenLists(goStrings.Split(labels[constants.ProfilesList], ","), goStrings.Split(annotations[constants.ProfilesList], ","))
@@ -97,7 +104,7 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		return s != ""
 	})
 
-	calculatedProfiles, profilesChecksum, err := scheduler.Profiles(ctx, h.client.Arango().SchedulerV1beta1().ArangoProfiles(depl.GetNamespace()), labels, profiles...)
+	calculatedProfiles, profilesChecksum, err := scheduler.Profiles(ctx, h.client.Arango().SchedulerV1beta1().ArangoProfiles(new.GetNamespace()), labels, profiles...)
 	if err != nil {
 		return webhook.MutationResponse{
 			ValidationResponse: webhook.NewValidationResponse(false, "Unable to get ArangoProfiles: %s", err.Error()),
