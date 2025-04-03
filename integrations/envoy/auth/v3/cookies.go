@@ -21,14 +21,14 @@
 package v3
 
 import (
-	"net/http"
+	goHttp "net/http"
 
 	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func filterCookiesHeader(cookies []*http.Cookie, filter ...func(cookie *http.Cookie) bool) []*pbEnvoyCoreV3.HeaderValueOption {
+func filterCookiesHeader(cookies []*goHttp.Cookie, filter ...func(cookie *goHttp.Cookie) bool) []*pbEnvoyCoreV3.HeaderValueOption {
 	if len(cookies) == 0 {
 		return nil
 	}
@@ -39,7 +39,7 @@ func filterCookiesHeader(cookies []*http.Cookie, filter ...func(cookie *http.Coo
 		return nil
 	}
 
-	cookieStrings := util.FormatList(filteredCookies, func(a *http.Cookie) string {
+	cookieStrings := util.FormatList(filteredCookies, func(a *goHttp.Cookie) string {
 		return a.String()
 	})
 
