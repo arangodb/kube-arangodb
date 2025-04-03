@@ -17,7 +17,7 @@ rules:
 # analytics.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "graphanalyticsengines.analytics.arangodb.com"
 {{- end }}
@@ -25,7 +25,7 @@ rules:
 # apps.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "arangojobs.apps.arangodb.com"
 {{- end }}
@@ -33,7 +33,7 @@ rules:
 # backup.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "arangobackuppolicies.backup.arangodb.com"
       - "arangobackups.backup.arangodb.com"
@@ -42,7 +42,7 @@ rules:
 # database.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "arangoclustersynchronizations.database.arangodb.com"
       - "arangodeployments.database.arangodb.com"
@@ -53,7 +53,7 @@ rules:
 # ml.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "arangomlbatchjobs.ml.arangodb.com"
       - "arangomlcronjobs.ml.arangodb.com"
@@ -64,7 +64,7 @@ rules:
 # networking.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "arangoroutes.networking.arangodb.com"
 {{- end }}
@@ -72,7 +72,7 @@ rules:
 # replication.database.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "arangodeploymentreplications.replication.database.arangodb.com"
 {{- end }}
@@ -80,7 +80,7 @@ rules:
 # scheduler.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "arangoprofiles.scheduler.arangodb.com"
       - "arangoschedulerpods.scheduler.arangodb.com"
@@ -92,7 +92,7 @@ rules:
 # platform.arangodb.com
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
     resourceNames:
       - "arangoplatformcharts.platform.arangodb.com"
       - "arangoplatformstorages.platform.arangodb.com"
