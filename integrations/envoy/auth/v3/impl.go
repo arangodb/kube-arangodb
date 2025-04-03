@@ -26,7 +26,7 @@ import (
 	goHttp "net/http"
 	goStrings "strings"
 
-	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -97,9 +97,15 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 		}
 	}
 
-	authenticated, err := MergeAuthRequest(ctx, request, i.checkADBJWT)
+	authenticated, err := MergeAuthRequest(ctx, request, i.checkADBJWT, i.checkADBJWTCookie)
 	if err != nil {
 		return nil, err
+	}
+
+	if authenticated != nil {
+		if authenticated.CustomResponse != nil {
+			return authenticated.CustomResponse, nil
+		}
 	}
 
 	if util.Optional(ext, AuthConfigAuthRequiredKey, AuthConfigKeywordFalse) == AuthConfigKeywordTrue && authenticated == nil {
@@ -112,24 +118,60 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 	}
 
 	if authenticated != nil {
-		var headers = []*corev3.HeaderValueOption{
+		var headers = []*pbEnvoyCoreV3.HeaderValueOption{
 			{
-				Header: &corev3.HeaderValue{
+				Header: &pbEnvoyCoreV3.HeaderValue{
 					Key:   AuthUsernameHeader,
 					Value: authenticated.Username,
 				},
-				AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+				AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 			},
 			{
-				Header: &corev3.HeaderValue{
+				Header: &pbEnvoyCoreV3.HeaderValue{
 					Key:   AuthAuthenticatedHeader,
 					Value: "true",
 				},
-				AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+				AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 			},
 		}
 
+		headers = append(headers, authenticated.Headers...)
+
 		switch networkingApi.ArangoRouteSpecAuthenticationPassMode(goStrings.ToLower(util.Optional(ext, AuthConfigAuthPassModeKey, ""))) {
+		case networkingApi.ArangoRouteSpecAuthenticationPassModePass:
+			if authenticated.Token != nil {
+				headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+					Header: &pbEnvoyCoreV3.HeaderValue{
+						Key:   AuthorizationHeader,
+						Value: fmt.Sprintf("bearer %s", *authenticated.Token),
+					},
+					AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+				},
+				)
+			} else {
+				token, ok, err := i.helper.Token(ctx, authenticated)
+				if err != nil {
+					return nil, err
+				}
+
+				if !ok {
+					return nil, DeniedResponse{
+						Code: goHttp.StatusUnauthorized,
+						Message: &DeniedMessage{
+							Message: "Unable to render token",
+						},
+					}
+				}
+
+				headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+					Header: &pbEnvoyCoreV3.HeaderValue{
+						Key:   AuthorizationHeader,
+						Value: fmt.Sprintf("bearer %s", token),
+					},
+					AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+				},
+				)
+			}
 		case networkingApi.ArangoRouteSpecAuthenticationPassModeOverride:
 			token, ok, err := i.helper.Token(ctx, authenticated)
 			if err != nil {
@@ -145,20 +187,20 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 				}
 			}
 
-			headers = append(headers, &corev3.HeaderValueOption{
-				Header: &corev3.HeaderValue{
-					Key:   "authorization",
+			headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+				Header: &pbEnvoyCoreV3.HeaderValue{
+					Key:   AuthorizationHeader,
 					Value: fmt.Sprintf("bearer %s", token),
 				},
-				AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+				AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 			},
 			)
 		case networkingApi.ArangoRouteSpecAuthenticationPassModeRemove:
-			headers = append(headers, &corev3.HeaderValueOption{
-				Header: &corev3.HeaderValue{
-					Key: "authorization",
+			headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+				Header: &pbEnvoyCoreV3.HeaderValue{
+					Key: AuthorizationHeader,
 				},
-				AppendAction:   corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+				AppendAction:   pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 				KeepEmptyValue: false,
 			},
 			)
@@ -176,13 +218,13 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 	return &pbEnvoyAuthV3.CheckResponse{
 		HttpResponse: &pbEnvoyAuthV3.CheckResponse_OkResponse{
 			OkResponse: &pbEnvoyAuthV3.OkHttpResponse{
-				Headers: []*corev3.HeaderValueOption{
+				Headers: []*pbEnvoyCoreV3.HeaderValueOption{
 					{
-						Header: &corev3.HeaderValue{
+						Header: &pbEnvoyCoreV3.HeaderValue{
 							Key:   AuthAuthenticatedHeader,
 							Value: "false",
 						},
-						AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+						AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 					},
 				},
 			},

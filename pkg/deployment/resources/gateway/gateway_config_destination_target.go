@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package gateway
 
 import (
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -81,12 +81,12 @@ func (c *ConfigDestinationTarget) RenderEndpoint() *endpointAPI.LbEndpoint {
 	return &endpointAPI.LbEndpoint{
 		HostIdentifier: &endpointAPI.LbEndpoint_Endpoint{
 			Endpoint: &endpointAPI.Endpoint{
-				Address: &coreAPI.Address{
-					Address: &coreAPI.Address_SocketAddress{
-						SocketAddress: &coreAPI.SocketAddress{
-							Protocol: coreAPI.SocketAddress_TCP,
+				Address: &pbEnvoyCoreV3.Address{
+					Address: &pbEnvoyCoreV3.Address_SocketAddress{
+						SocketAddress: &pbEnvoyCoreV3.SocketAddress{
+							Protocol: pbEnvoyCoreV3.SocketAddress_TCP,
 							Address:  c.Host,
-							PortSpecifier: &coreAPI.SocketAddress_PortValue{
+							PortSpecifier: &pbEnvoyCoreV3.SocketAddress_PortValue{
 								PortValue: uint32(c.Port),
 							},
 						},

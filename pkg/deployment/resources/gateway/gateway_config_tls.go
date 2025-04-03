@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package gateway
 
 import (
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tlsApi "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -33,7 +33,7 @@ type ConfigTLS struct {
 	PrivateKeyPath  string `json:"privateKeyPath,omitempty"`
 }
 
-func (c *ConfigTLS) RenderListenerTransportSocket() (*coreAPI.TransportSocket, error) {
+func (c *ConfigTLS) RenderListenerTransportSocket() (*pbEnvoyCoreV3.TransportSocket, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -42,13 +42,13 @@ func (c *ConfigTLS) RenderListenerTransportSocket() (*coreAPI.TransportSocket, e
 		CommonTlsContext: &tlsApi.CommonTlsContext{
 			TlsCertificates: []*tlsApi.TlsCertificate{
 				{
-					CertificateChain: &coreAPI.DataSource{
-						Specifier: &coreAPI.DataSource_Filename{
+					CertificateChain: &pbEnvoyCoreV3.DataSource{
+						Specifier: &pbEnvoyCoreV3.DataSource_Filename{
 							Filename: c.CertificatePath,
 						},
 					},
-					PrivateKey: &coreAPI.DataSource{
-						Specifier: &coreAPI.DataSource_Filename{
+					PrivateKey: &pbEnvoyCoreV3.DataSource{
+						Specifier: &pbEnvoyCoreV3.DataSource_Filename{
 							Filename: c.PrivateKeyPath,
 						},
 					},
@@ -61,9 +61,9 @@ func (c *ConfigTLS) RenderListenerTransportSocket() (*coreAPI.TransportSocket, e
 		return nil, errors.Wrapf(err, "Unable to render tls context")
 	}
 
-	return &coreAPI.TransportSocket{
+	return &pbEnvoyCoreV3.TransportSocket{
 		Name: "envoy.transport_sockets.tls",
-		ConfigType: &coreAPI.TransportSocket_TypedConfig{
+		ConfigType: &pbEnvoyCoreV3.TransportSocket_TypedConfig{
 			TypedConfig: tlsContext,
 		},
 	}, nil

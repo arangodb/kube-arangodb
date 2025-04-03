@@ -27,7 +27,7 @@ import (
 
 	bootstrapAPI "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	listenerAPI "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -153,11 +153,11 @@ func (c Config) Render() (*bootstrapAPI.Bootstrap, error) {
 
 	return &bootstrapAPI.Bootstrap{
 		Admin: &bootstrapAPI.Admin{
-			Address: &coreAPI.Address{
-				Address: &coreAPI.Address_SocketAddress{
-					SocketAddress: &coreAPI.SocketAddress{
+			Address: &pbEnvoyCoreV3.Address{
+				Address: &pbEnvoyCoreV3.Address_SocketAddress{
+					SocketAddress: &pbEnvoyCoreV3.SocketAddress{
 						Address:       "127.0.0.1",
-						PortSpecifier: &coreAPI.SocketAddress_PortValue{PortValue: 9901},
+						PortSpecifier: &pbEnvoyCoreV3.SocketAddress_PortValue{PortValue: 9901},
 					},
 				},
 			},
@@ -185,8 +185,8 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 			UpstreamProtocolOptions: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_{
 				ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
 					ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
-						Http2ProtocolOptions: &coreAPI.Http2ProtocolOptions{
-							ConnectionKeepalive: &coreAPI.KeepaliveSettings{
+						Http2ProtocolOptions: &pbEnvoyCoreV3.Http2ProtocolOptions{
+							ConnectionKeepalive: &pbEnvoyCoreV3.KeepaliveSettings{
 								Interval:               durationpb.New(15 * time.Second),
 								Timeout:                durationpb.New(30 * time.Second),
 								ConnectionIdleInterval: durationpb.New(60 * time.Second),
@@ -284,9 +284,9 @@ func (c Config) RenderRoutes() ([]*routeAPI.Route, error) {
 func (c Config) RenderIntegrationSidecarFilter() (*httpConnectionManagerAPI.HttpFilter, error) {
 	e, err := anypb.New(&httpFilterAuthzApi.ExtAuthz{
 		Services: &httpFilterAuthzApi.ExtAuthz_GrpcService{
-			GrpcService: &coreAPI.GrpcService{
-				TargetSpecifier: &coreAPI.GrpcService_EnvoyGrpc_{
-					EnvoyGrpc: &coreAPI.GrpcService_EnvoyGrpc{
+			GrpcService: &pbEnvoyCoreV3.GrpcService{
+				TargetSpecifier: &pbEnvoyCoreV3.GrpcService_EnvoyGrpc_{
+					EnvoyGrpc: &pbEnvoyCoreV3.GrpcService_EnvoyGrpc{
 						ClusterName: "integration_sidecar",
 					},
 				},
@@ -432,11 +432,11 @@ func (c Config) RenderListener() (*listenerAPI.Listener, error) {
 
 	return &listenerAPI.Listener{
 		Name: "default",
-		Address: &coreAPI.Address{
-			Address: &coreAPI.Address_SocketAddress{
-				SocketAddress: &coreAPI.SocketAddress{
+		Address: &pbEnvoyCoreV3.Address{
+			Address: &pbEnvoyCoreV3.Address_SocketAddress{
+				SocketAddress: &pbEnvoyCoreV3.SocketAddress{
 					Address:       "0.0.0.0",
-					PortSpecifier: &coreAPI.SocketAddress_PortValue{PortValue: shared.ArangoPort},
+					PortSpecifier: &pbEnvoyCoreV3.SocketAddress_PortValue{PortValue: shared.ArangoPort},
 				},
 			},
 		},

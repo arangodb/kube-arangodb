@@ -122,6 +122,18 @@ func FormatList[A, B any](in []A, format func(A) B) []B {
 	return r
 }
 
+func MultiFilterList[A any](filters ...func(A) bool) func(A) bool {
+	return func(a A) bool {
+		for _, f := range filters {
+			if !f(a) {
+				return false
+			}
+		}
+
+		return true
+	}
+}
+
 func FilterList[A any](in []A, filter func(A) bool) []A {
 	r := make([]A, 0, len(in))
 
