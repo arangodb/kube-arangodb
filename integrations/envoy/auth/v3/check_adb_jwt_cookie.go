@@ -57,7 +57,7 @@ func (i *impl) checkADBJWTCookie(ctx context.Context, request *pbEnvoyAuthV3.Che
 				resp.Headers = filterCookiesHeader(cookies, func(cookie *goHttp.Cookie) bool {
 					return cookie.Valid() != nil
 				}, func(cookie *goHttp.Cookie) bool {
-					return cookie.Name != JWTAuthorizationCookieName
+					return cookie.Name == JWTAuthorizationCookieName
 				})
 
 				return resp, nil
