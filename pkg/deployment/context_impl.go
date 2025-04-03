@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -82,10 +81,6 @@ func (d *Deployment) GetAPIObject() k8sutil.APIObject {
 // GetServerGroupIterator returns the deployment as ServerGroupIterator.
 func (d *Deployment) GetServerGroupIterator() reconciler.ServerGroupIterator {
 	return d.currentObject
-}
-
-func (d *Deployment) GetScope() scope.Scope {
-	return d.config.Scope
 }
 
 func (d *Deployment) GetOperatorImage() string {

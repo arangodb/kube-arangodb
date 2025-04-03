@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,6 @@ import (
 	schedulerPodHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/pod"
 	schedulerProfileHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/profile"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/operator/scope"
 	operatorV2 "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
@@ -126,7 +125,6 @@ type Config struct {
 	AllowChaos                  bool
 	ScalingIntegrationEnabled   bool
 	SingleMode                  bool
-	Scope                       scope.Scope
 	ReconciliationDelay         time.Duration
 	ShutdownDelay               time.Duration
 	ShutdownTimeout             time.Duration

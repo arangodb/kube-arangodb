@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 // It returns nil if the finalizer can be removed.
 func (r *Resources) inspectFinalizerPodAgencyServing(ctx context.Context, p *core.Pod, memberStatus api.MemberStatus, updateMember func(api.MemberStatus) error) error {
 	log := r.log.Str("section", "agency")
-	if err := r.prepareAgencyPodTermination(p, memberStatus, func(update api.MemberStatus) error {
+	if err := r.prepareAgencyPodTermination(ctx, p, memberStatus, func(update api.MemberStatus) error {
 		if err := updateMember(update); err != nil {
 			return errors.WithStack(err)
 		}

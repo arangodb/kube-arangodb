@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,32 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package scope
+package access
 
-func AsScope(s string) (Scope, bool) {
-	switch s {
-	case LegacyScope.String():
-		return LegacyScope, true
-	case NamespacedScope.String():
-		return NamespacedScope, true
-	}
-
-	return "", false
-}
-
-type Scope string
-
-func (s Scope) String() string {
-	return string(s)
-}
-
-func (s Scope) IsNamespaced() bool {
-	return s == NamespacedScope
-}
-
-const (
-	LegacyScope     Scope = "legacy"
-	NamespacedScope Scope = "namespaced"
-
-	DefaultScope = LegacyScope
+import (
+	authorization "k8s.io/api/authorization/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+func GVR(gvr schema.GroupVersionResource, name string, verb Verb) authorization.ResourceAttributes {
+	return authorization.ResourceAttributes{
+		Verb:     string(verb),
+		Group:    gvr.Group,
+		Version:  gvr.Version,
+		Resource: gvr.Resource,
+		Name:     name,
+	}
+}

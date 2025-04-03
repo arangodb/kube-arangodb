@@ -25,6 +25,7 @@ operator:
   allowChaos: false
   nodeSelector: {}
   enableCRDManagement: true
+  enableCRDCreation: true
   features:
     deployment: true
     deploymentReplications: true

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,30 +24,36 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/crd"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 // waitForCRD waits for the CustomResourceDefinition (created externally) to be ready.
 func (o *Operator) waitForCRD(crdName string, checkFn func() error) {
-	o.log.Debug("Waiting for %s CRD to be ready - ", crdName)
+	log := o.log.Str("crd", crdName)
+	log.Debug("Waiting for CRD to be ready")
 
 	for {
 		var err error = nil
-		if o.Scope.IsNamespaced() {
+		if !access.VerifyAccess(shutdown.Context(), o.Dependencies.Client, access.GVR(constants.CustomResourceDefinitionGRv1(), crdName, access.Get)) {
+			log.Debug("Check by the CheckFun")
 			if checkFn != nil {
 				err = crd.WaitReady(checkFn)
 			}
 		} else {
+			log.Debug("Check by tue Cluster Access")
 			err = crd.WaitCRDReady(o.Client.KubernetesExtensions(), crdName)
 		}
 
 		if err == nil {
 			break
 		} else {
-			o.log.Err(err).Error("Resource initialization failed")
-			o.log.Info("Retrying in %s...", initRetryWaitTime)
+			log.Err(err).Error("Resource initialization failed")
+			log.Info("Retrying in %s...", initRetryWaitTime)
 			time.Sleep(initRetryWaitTime)
 		}
 	}
 
-	o.log.Debug("CRDs ready")
+	log.Debug("CRD ready")
 }

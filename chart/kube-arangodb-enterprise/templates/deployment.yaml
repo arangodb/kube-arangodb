@@ -92,7 +92,6 @@ spec:
                   imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
                   image: {{ .Values.operator.image }}
                   args:
-                    - --scope={{ .Values.operator.scope }}
 {{- if .Values.certificate.enabled }}
                     - --server.tls-secret-name={{ template "kube-arangodb.operatorName" . }}-cert
                     - --api.tls-secret-name={{ template "kube-arangodb.operatorName" . }}-cert

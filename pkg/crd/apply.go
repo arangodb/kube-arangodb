@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -63,7 +64,7 @@ func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts Ensur
 
 	for crdName, crdReg := range registeredCRDs {
 
-		getAccess := verifyCRDAccess(ctx, client, crdName, "get")
+		getAccess := verifyCRDAccess(ctx, client, crdName, access.Get)
 		if !getAccess.Allowed {
 			logger.Str("crd", crdName).Info("Get Operations is not allowed. Continue")
 			continue
@@ -192,7 +193,7 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 			return err
 		}
 
-		createAccess := verifyCRDAccess(ctx, client, crdName, "create")
+		createAccess := verifyCRDAccess(ctx, client, crdName, access.Create)
 
 		if !createAccess.Allowed {
 			logger.Str("crd", crdName).Info("Create Operations is not allowed but CRD is missing. Continue")
@@ -210,7 +211,7 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 		return nil
 	}
 
-	updateAccess := verifyCRDAccess(ctx, client, crdName, "update")
+	updateAccess := verifyCRDAccess(ctx, client, crdName, access.Update)
 	if !updateAccess.Allowed {
 		logger.Str("crd", crdName).Info("Update Operations is not allowed. Continue")
 		return nil
@@ -247,12 +248,12 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 	return nil
 }
 
-func verifyCRDAccess(ctx context.Context, client kclient.Client, crd string, verb string) authorization.SubjectAccessReviewStatus {
+func verifyCRDAccess(ctx context.Context, client kclient.Client, crd string, verb access.Verb) authorization.SubjectAccessReviewStatus {
 	if c := verifyCRDAccessForTests; c != nil {
 		return *c
 	}
 
-	return kresources.VerifyAccessRequestStatus(ctx, client.Kubernetes(), verb, "apiextensions.k8s.io", "v1", "customresourcedefinitions", "", crd, "")
+	return access.VerifyAccessRequest(ctx, client, access.GVR(constants.CustomResourceDefinitionGRv1(), crd, verb))
 }
 
 var verifyCRDAccessForTests *authorization.SubjectAccessReviewStatus
