@@ -55,6 +55,17 @@ func AccessCache(name string) cache.Cache[authorization.ResourceAttributes, auth
 
 func accessCacheFuncGen(name string) func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, error) {
 	return func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, error) {
+		log := logger.
+			Str("Namespace", in.Namespace).
+			Str("Verb", in.Verb).
+			Str("Group", in.Group).
+			Str("Version", in.Version).
+			Str("Resource", in.Resource).
+			Str("Subresource", in.Subresource).
+			Str("Name", in.Name)
+
+		log.Debug("Evaluating access")
+
 		ctx, c := context.WithTimeout(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get())
 		defer c()
 
@@ -72,8 +83,14 @@ func accessCacheFuncGen(name string) func(ctx context.Context, in authorization.
 		}
 
 		if resp, err := client.Kubernetes().AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, &review, meta.CreateOptions{}); err != nil {
+			log.Err(err).Info("Access check failed")
 			return authorization.SubjectAccessReviewStatus{}, err
 		} else {
+			if IsAllowed(resp.Status) {
+				log.Debug("Access allowed")
+			} else {
+				log.Debug("Access denied")
+			}
 			return resp.Status, nil
 		}
 	}
