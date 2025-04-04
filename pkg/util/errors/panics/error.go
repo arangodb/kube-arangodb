@@ -21,6 +21,8 @@
 package panics
 
 import (
+	"fmt"
+	"io"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -85,4 +87,19 @@ func (p panicError) Stack() StackEntries {
 
 func (p panicError) Error() string {
 	return "Panic Received"
+}
+
+func (w panicError) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			w.stack.Format(s, verb)
+			return
+		}
+		fallthrough
+	case 's':
+		io.WriteString(s, w.Error())
+	case 'q':
+		fmt.Fprintf(s, "%q", w.Error())
+	}
 }

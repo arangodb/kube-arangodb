@@ -64,6 +64,18 @@ func (s StackEntries) String() []string {
 	return r
 }
 
+func (s StackEntries) Format(st fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		switch {
+		case st.Flag('+'):
+			for _, pc := range s {
+				fmt.Fprintf(st, "\n%+v", pc)
+			}
+		}
+	}
+}
+
 type StackEntry struct {
 	File, Function string
 	Line           int
@@ -71,4 +83,8 @@ type StackEntry struct {
 
 func (s StackEntry) String() string {
 	return fmt.Sprintf("%s:%d - %s()", s.File, s.Line, s.Function)
+}
+
+func (s StackEntry) Format(st fmt.State, verb rune) {
+	fmt.Fprintf(st, s.String())
 }
