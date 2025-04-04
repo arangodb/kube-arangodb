@@ -1246,6 +1246,16 @@ func (in *DeploymentSpecGateway) DeepCopyInto(out *DeploymentSpecGateway) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.CookiesSupport != nil {
+		in, out := &in.CookiesSupport, &out.CookiesSupport
+		*out = new(bool)
+		**out = **in
+	}
+	if in.DefaultTargetAuthentication != nil {
+		in, out := &in.DefaultTargetAuthentication, &out.DefaultTargetAuthentication
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
 		*out = new(metav1.Duration)

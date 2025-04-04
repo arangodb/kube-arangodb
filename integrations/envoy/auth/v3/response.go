@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	typev3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	status "google.golang.org/genproto/googleapis/rpc/status"
@@ -48,12 +48,12 @@ func (d DeniedResponse) GetCheckResponse() (*pbEnvoyAuthV3.CheckResponse, error)
 	var resp pbEnvoyAuthV3.DeniedHttpResponse
 
 	for k, v := range d.Headers {
-		resp.Headers = append(resp.Headers, &corev3.HeaderValueOption{
-			Header: &corev3.HeaderValue{
+		resp.Headers = append(resp.Headers, &pbEnvoyCoreV3.HeaderValueOption{
+			Header: &pbEnvoyCoreV3.HeaderValue{
 				Key:   k,
 				Value: v,
 			},
-			AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 		})
 	}
 
@@ -64,12 +64,12 @@ func (d DeniedResponse) GetCheckResponse() (*pbEnvoyAuthV3.CheckResponse, error)
 		}
 
 		resp.Body = string(z)
-		resp.Headers = append(resp.Headers, &corev3.HeaderValueOption{
-			Header: &corev3.HeaderValue{
+		resp.Headers = append(resp.Headers, &pbEnvoyCoreV3.HeaderValueOption{
+			Header: &pbEnvoyCoreV3.HeaderValue{
 				Key:   "content-type",
 				Value: "application/json",
 			},
-			AppendAction: corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 		})
 	}
 

@@ -24,7 +24,7 @@ import (
 	"time"
 
 	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -139,15 +139,15 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 	if c == nil {
 		return nil, errors.Errorf("Route cannot be nil")
 	}
-	var headers []*coreAPI.HeaderValueOption
+	var headers []*pbEnvoyCoreV3.HeaderValueOption
 
 	for k, v := range c.ResponseHeaders {
-		headers = append(headers, &coreAPI.HeaderValueOption{
-			Header: &coreAPI.HeaderValue{
+		headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+			Header: &pbEnvoyCoreV3.HeaderValue{
 				Key:   k,
 				Value: v,
 			},
-			AppendAction:   coreAPI.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			AppendAction:   pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 			KeepEmptyValue: false,
 		})
 	}
@@ -190,8 +190,8 @@ func (c *ConfigDestination) appendRouteAction(route *routeAPI.Route, name string
 		route.Action = &routeAPI.Route_DirectResponse{
 			DirectResponse: &routeAPI.DirectResponseAction{
 				Status: code,
-				Body: &coreAPI.DataSource{
-					Specifier: &coreAPI.DataSource_InlineBytes{
+				Body: &pbEnvoyCoreV3.DataSource{
+					Specifier: &pbEnvoyCoreV3.DataSource_InlineBytes{
 						InlineBytes: data,
 					},
 				},

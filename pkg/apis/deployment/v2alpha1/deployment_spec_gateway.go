@@ -37,12 +37,20 @@ type DeploymentSpecGateway struct {
 
 	// Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
 	// When enabled, gateway config will be reloaded by ConfigMap live updates.
-	// +doc/default: false
+	// +doc/default: true
 	Dynamic *bool `json:"dynamic,omitempty"`
 
 	// Image is the image to use for the gateway.
 	// By default, the image is determined by the operator.
 	Image *string `json:"image,omitempty"`
+
+	// CookiesSupport defines if Cookie based authentication via `X-ArangoDB-Token-JWT`
+	// +doc/default: true
+	CookiesSupport *bool `json:"cookiesSupport,omitempty"`
+
+	// DefaultTargetAuthentication defines if default endpoints check authentication via envoy (Cookie and Header based auth)
+	// +doc/default: true
+	DefaultTargetAuthentication *bool `json:"defaultTargetAuthentication,omitempty"`
 
 	// Timeout defines default timeout for the upstream actions (if not overridden)
 	// +doc/type: string
@@ -59,10 +67,28 @@ func (d *DeploymentSpecGateway) IsEnabled() bool {
 	return *d.Enabled
 }
 
+// IsCookiesSupportEnabled returns whether the gateway cookie support is enabled.
+func (d *DeploymentSpecGateway) IsCookiesSupportEnabled() bool {
+	if d == nil || d.CookiesSupport == nil {
+		return true
+	}
+
+	return *d.CookiesSupport
+}
+
+// IsDefaultTargetAuthenticationEnabled returns whether the default target should have verified authentication.
+func (d *DeploymentSpecGateway) IsDefaultTargetAuthenticationEnabled() bool {
+	if d == nil || d.DefaultTargetAuthentication == nil {
+		return true
+	}
+
+	return *d.DefaultTargetAuthentication
+}
+
 // IsDynamic returns whether the gateway dynamic config is enabled.
 func (d *DeploymentSpecGateway) IsDynamic() bool {
 	if d == nil || d.Dynamic == nil {
-		return false
+		return true
 	}
 
 	return *d.Dynamic

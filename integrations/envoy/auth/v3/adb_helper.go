@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 )
 
 const (
@@ -39,7 +40,12 @@ const (
 func NewADBHelper(client pbAuthenticationV1.AuthenticationV1Client) ADBHelper {
 	return &adbHelper{
 		client: client,
-		cache:  map[string]adbHelperToken{},
+		cache: cache.NewCache(func(ctx context.Context, in string) (*pbAuthenticationV1.CreateTokenResponse, error) {
+			return client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
+				Lifetime: durationpb.New(DefaultLifetime),
+				User:     util.NewType(in),
+			})
+		}, DefaultTTL),
 	}
 }
 
@@ -48,14 +54,9 @@ type ADBHelper interface {
 	Token(ctx context.Context, resp *AuthResponse) (string, bool, error)
 }
 
-type adbHelperToken struct {
-	TTL   time.Time
-	Token string
-}
-
 type adbHelper struct {
 	lock  sync.Mutex
-	cache map[string]adbHelperToken
+	cache cache.Cache[string, *pbAuthenticationV1.CreateTokenResponse]
 
 	client pbAuthenticationV1.AuthenticationV1Client
 }
@@ -69,31 +70,12 @@ func (a *adbHelper) Token(ctx context.Context, resp *AuthResponse) (string, bool
 		return "", false, nil
 	}
 
-	v, ok := a.cache[resp.Username]
-	if ok {
-		// We received token
-		if time.Now().Before(v.TTL) {
-			return v.Token, true, nil
-		}
-		// Token has been expired
-		delete(a.cache, resp.Username)
-	}
-
-	// We did not receive token, create one
-	auth, err := a.client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
-		Lifetime: durationpb.New(DefaultLifetime),
-		User:     util.NewType(resp.Username),
-	})
+	token, err := a.cache.Get(ctx, resp.Username)
 	if err != nil {
 		return "", false, err
 	}
 
-	a.cache[resp.Username] = adbHelperToken{
-		TTL:   time.Now().Add(DefaultTTL),
-		Token: auth.GetToken(),
-	}
-
-	return auth.GetToken(), true, nil
+	return token.GetToken(), true, nil
 }
 
 func (a *adbHelper) Validate(ctx context.Context, token string) (*AuthResponse, error) {
@@ -112,6 +94,7 @@ func (a *adbHelper) Validate(ctx context.Context, token string) (*AuthResponse, 
 		if det := resp.GetDetails(); det != nil {
 			return &AuthResponse{
 				Username: det.GetUser(),
+				Token:    util.NewType(token),
 			}, nil
 		}
 	}

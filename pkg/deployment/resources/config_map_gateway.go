@@ -222,6 +222,13 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 		},
 	}
 
+	if spec.Gateway.IsDefaultTargetAuthenticationEnabled() {
+		cfg.DefaultDestination.AuthExtension.AuthZExtension = map[string]string{
+			pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordFalse,
+			pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
+		}
+	}
+
 	if spec.TLS.IsSecure() {
 		// Enabled TLS, add config
 		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)

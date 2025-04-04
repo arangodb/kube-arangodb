@@ -21,7 +21,7 @@
 package gateway
 
 import (
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tlsApi "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -50,7 +50,7 @@ func (c *ConfigDestinationType) Get() ConfigDestinationType {
 	}
 }
 
-func (c *ConfigDestinationType) RenderUpstreamTransportSocket(protocol *ConfigDestinationProtocol, config ConfigDestinationTLS) (*coreAPI.TransportSocket, error) {
+func (c *ConfigDestinationType) RenderUpstreamTransportSocket(protocol *ConfigDestinationProtocol, config ConfigDestinationTLS) (*pbEnvoyCoreV3.TransportSocket, error) {
 	if c.Get() == ConfigDestinationTypeHTTPS {
 		tlsConfig, err := anypb.New(&tlsApi.UpstreamTlsContext{
 			CommonTlsContext: &tlsApi.CommonTlsContext{
@@ -66,9 +66,9 @@ func (c *ConfigDestinationType) RenderUpstreamTransportSocket(protocol *ConfigDe
 			return nil, err
 		}
 
-		return &coreAPI.TransportSocket{
+		return &pbEnvoyCoreV3.TransportSocket{
 			Name: "envoy.transport_sockets.tls",
-			ConfigType: &coreAPI.TransportSocket_TypedConfig{
+			ConfigType: &pbEnvoyCoreV3.TransportSocket_TypedConfig{
 				TypedConfig: tlsConfig,
 			},
 		}, nil

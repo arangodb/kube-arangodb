@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package gateway
 import (
 	"time"
 
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	upstreamHttpApi "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	"google.golang.org/protobuf/types/known/durationpb"
 
@@ -68,7 +68,7 @@ func (c *ConfigDestinationProtocol) Options() *upstreamHttpApi.HttpProtocolOptio
 			UpstreamProtocolOptions: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_{
 				ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
 					ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{
-						HttpProtocolOptions: &coreAPI.Http1ProtocolOptions{},
+						HttpProtocolOptions: &pbEnvoyCoreV3.Http1ProtocolOptions{},
 					},
 				},
 			},
@@ -78,8 +78,8 @@ func (c *ConfigDestinationProtocol) Options() *upstreamHttpApi.HttpProtocolOptio
 			UpstreamProtocolOptions: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_{
 				ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
 					ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
-						Http2ProtocolOptions: &coreAPI.Http2ProtocolOptions{
-							ConnectionKeepalive: &coreAPI.KeepaliveSettings{
+						Http2ProtocolOptions: &pbEnvoyCoreV3.Http2ProtocolOptions{
+							ConnectionKeepalive: &pbEnvoyCoreV3.KeepaliveSettings{
 								Interval:               durationpb.New(15 * time.Second),
 								Timeout:                durationpb.New(30 * time.Second),
 								ConnectionIdleInterval: durationpb.New(60 * time.Second),
@@ -94,7 +94,7 @@ func (c *ConfigDestinationProtocol) Options() *upstreamHttpApi.HttpProtocolOptio
 			UpstreamProtocolOptions: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_{
 				ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
 					ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{
-						HttpProtocolOptions: &coreAPI.Http1ProtocolOptions{},
+						HttpProtocolOptions: &pbEnvoyCoreV3.Http1ProtocolOptions{},
 					},
 				},
 			},
