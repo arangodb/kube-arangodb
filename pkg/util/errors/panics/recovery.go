@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 
 package panics
 
+import "fmt"
+
 func recoverPanic(skipFrames int, in func() error) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -35,7 +37,7 @@ func recoverPanicO1[O1 any](skipFrames int, in func() (O1, error)) (o1 O1, err e
 		if r := recover(); r != nil {
 			err = newPanicError(r, GetStack(skipFrames))
 
-			logger.Err(err).Error("Panic: %+v", err)
+			logger.Err(err).Str("stack", fmt.Sprintf("Panic: %+v", err)).Error("Panic Received")
 		}
 	}()
 
