@@ -34,6 +34,8 @@ func recoverPanicO1[O1 any](skipFrames int, in func() (O1, error)) (o1 O1, err e
 	defer func() {
 		if r := recover(); r != nil {
 			err = newPanicError(r, GetStack(skipFrames))
+
+			logger.Err(err).Info("Panic received")
 		}
 	}()
 
