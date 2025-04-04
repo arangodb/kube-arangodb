@@ -31,7 +31,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
-	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -39,9 +38,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(authClient pbAuthenticationV1.AuthenticationV1Client) svc.Handler {
+func New(config Configuration) svc.Handler {
 	return &impl{
-		helper: NewADBHelper(authClient),
+		config: config,
+		helper: NewADBHelper(config.AuthClient),
 	}
 }
 
@@ -50,6 +50,8 @@ var _ svc.Handler = &impl{}
 
 type impl struct {
 	pbEnvoyAuthV3.UnimplementedAuthorizationServer
+
+	config Configuration
 
 	helper ADBHelper
 }
@@ -85,6 +87,20 @@ func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 	return resp, nil
 }
 
+func (i *impl) extensions() []AuthRequestFunc {
+	ret := make([]AuthRequestFunc, 0, 2)
+
+	if i.config.Extensions.JWT {
+		ret = append(ret, i.checkADBJWT)
+	}
+
+	if i.config.Extensions.CookieJWT {
+		ret = append(ret, i.checkADBJWTCookie)
+	}
+
+	return ret
+}
+
 func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (*pbEnvoyAuthV3.CheckResponse, error) {
 	ext := request.GetAttributes().GetContextExtensions()
 
@@ -97,7 +113,7 @@ func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 		}
 	}
 
-	authenticated, err := MergeAuthRequest(ctx, request, i.checkADBJWT, i.checkADBJWTCookie)
+	authenticated, err := MergeAuthRequest(ctx, request, i.extensions()...)
 	if err != nil {
 		return nil, err
 	}

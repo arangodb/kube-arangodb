@@ -27,6 +27,7 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -38,6 +39,7 @@ func init() {
 }
 
 type envoyAuthV3 struct {
+	config pbImplEnvoyAuthV3.Configuration
 }
 
 func (a envoyAuthV3) Name() string {
@@ -49,7 +51,10 @@ func (a *envoyAuthV3) Description() string {
 }
 
 func (a *envoyAuthV3) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
-	return nil
+	return errors.Errors(
+		fs.BoolVar(&a.config.Extensions.JWT, "extensions.jwt", true, "Defines if JWT extension is enabled"),
+		fs.BoolVar(&a.config.Extensions.CookieJWT, "extensions.cookie.jwt", true, "Defines if Cookie JWT extension is enabled"),
+	)
 }
 
 func (a *envoyAuthV3) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
@@ -65,5 +70,9 @@ func (a *envoyAuthV3) Handler(ctx context.Context, cmd *cobra.Command) (svc.Hand
 		return nil, err
 	}
 
-	return pbImplEnvoyAuthV3.New(c), nil
+	cfg := a.config
+
+	cfg.AuthClient = c
+
+	return pbImplEnvoyAuthV3.New(cfg), nil
 }
