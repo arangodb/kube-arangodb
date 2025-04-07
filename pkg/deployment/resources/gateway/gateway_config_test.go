@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"testing"
 
-	bootstrapAPI "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	pbEnvoyBootstrapV3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	httpConnectionManagerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/stretchr/testify/require"
 
@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *testing.T, b *bootstrapAPI.Bootstrap)) {
+func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap)) {
 	require.NoError(t, cfg.Validate())
 
 	data, checksum, obj, err := cfg.RenderYAML()
@@ -59,7 +59,7 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 				},
 			},
-		}, func(t *testing.T, b *bootstrapAPI.Bootstrap) {
+		}, func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap) {
 			require.NotNil(t, b)
 			require.NotNil(t, b.StaticResources)
 			require.NotNil(t, b.StaticResources.Clusters)
@@ -89,7 +89,7 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 				},
 			},
-		}, func(t *testing.T, b *bootstrapAPI.Bootstrap) {
+		}, func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap) {
 			require.NotNil(t, b)
 			require.NotNil(t, b.StaticResources)
 			require.NotNil(t, b.StaticResources.Listeners)
@@ -129,7 +129,7 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 				},
 			},
-		}, func(t *testing.T, b *bootstrapAPI.Bootstrap) {
+		}, func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap) {
 			require.NotNil(t, b)
 			require.NotNil(t, b.StaticResources)
 			require.NotNil(t, b.StaticResources.Listeners)
@@ -177,7 +177,7 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 				},
 			},
-		}, func(t *testing.T, b *bootstrapAPI.Bootstrap) {
+		}, func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap) {
 			require.NotNil(t, b)
 			require.NotNil(t, b.StaticResources)
 			require.NotNil(t, b.StaticResources.Listeners)

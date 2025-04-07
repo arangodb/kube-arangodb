@@ -21,7 +21,7 @@
 package gateway
 
 import (
-	listenerAPI "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	pbEnvoyListenerV3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
@@ -31,8 +31,8 @@ import (
 
 type ConfigSNIList []ConfigSNI
 
-func (c ConfigSNIList) RenderFilterChain(filters []*listenerAPI.Filter) ([]*listenerAPI.FilterChain, error) {
-	var r = make([]*listenerAPI.FilterChain, len(c))
+func (c ConfigSNIList) RenderFilterChain(filters []*pbEnvoyListenerV3.Filter) ([]*pbEnvoyListenerV3.FilterChain, error) {
+	var r = make([]*pbEnvoyListenerV3.FilterChain, len(c))
 	for id := range c {
 		if f, err := c[id].RenderFilterChain(filters); err != nil {
 			return nil, err
@@ -55,15 +55,15 @@ type ConfigSNI struct {
 	ServerNames []string `json:"serverNames,omitempty"`
 }
 
-func (c ConfigSNI) RenderFilterChain(filters []*listenerAPI.Filter) (*listenerAPI.FilterChain, error) {
+func (c ConfigSNI) RenderFilterChain(filters []*pbEnvoyListenerV3.Filter) (*pbEnvoyListenerV3.FilterChain, error) {
 	transport, err := c.RenderListenerTransportSocket()
 	if err != nil {
 		return nil, err
 	}
 
-	return &listenerAPI.FilterChain{
+	return &pbEnvoyListenerV3.FilterChain{
 		TransportSocket: transport,
-		FilterChainMatch: &listenerAPI.FilterChainMatch{
+		FilterChainMatch: &pbEnvoyListenerV3.FilterChainMatch{
 			ServerNames: util.CopyList(c.ServerNames),
 		},
 		Filters: filters,

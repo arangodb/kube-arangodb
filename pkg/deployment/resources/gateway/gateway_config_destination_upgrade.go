@@ -21,7 +21,7 @@
 package gateway
 
 import (
-	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	pbEnvoyRouteV3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -31,12 +31,12 @@ import (
 
 type ConfigDestinationsUpgrade []ConfigDestinationUpgrade
 
-func (c ConfigDestinationsUpgrade) render() []*routeAPI.RouteAction_UpgradeConfig {
+func (c ConfigDestinationsUpgrade) render() []*pbEnvoyRouteV3.RouteAction_UpgradeConfig {
 	if len(c) == 0 {
 		return nil
 	}
 
-	var r = make([]*routeAPI.RouteAction_UpgradeConfig, len(c))
+	var r = make([]*pbEnvoyRouteV3.RouteAction_UpgradeConfig, len(c))
 
 	for id := range c {
 		r[id] = c[id].render()
@@ -55,8 +55,8 @@ type ConfigDestinationUpgrade struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
 
-func (c ConfigDestinationUpgrade) render() *routeAPI.RouteAction_UpgradeConfig {
-	return &routeAPI.RouteAction_UpgradeConfig{
+func (c ConfigDestinationUpgrade) render() *pbEnvoyRouteV3.RouteAction_UpgradeConfig {
+	return &pbEnvoyRouteV3.RouteAction_UpgradeConfig{
 		UpgradeType: c.Type,
 		Enabled:     wrapperspb.Bool(util.OptionalType(c.Enabled, true)),
 	}

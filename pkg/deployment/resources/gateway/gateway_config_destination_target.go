@@ -22,7 +22,7 @@ package gateway
 
 import (
 	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	pbEnvoyEndpointV3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -30,8 +30,8 @@ import (
 
 type ConfigDestinationTargets []ConfigDestinationTarget
 
-func (c ConfigDestinationTargets) RenderEndpoints() []*endpointAPI.LbEndpoint {
-	var endpoints = make([]*endpointAPI.LbEndpoint, len(c))
+func (c ConfigDestinationTargets) RenderEndpoints() []*pbEnvoyEndpointV3.LbEndpoint {
+	var endpoints = make([]*pbEnvoyEndpointV3.LbEndpoint, len(c))
 
 	for id := range c {
 		endpoints[id] = c[id].RenderEndpoint()
@@ -74,13 +74,13 @@ func (c *ConfigDestinationTarget) Validate() error {
 	)
 }
 
-func (c *ConfigDestinationTarget) RenderEndpoint() *endpointAPI.LbEndpoint {
+func (c *ConfigDestinationTarget) RenderEndpoint() *pbEnvoyEndpointV3.LbEndpoint {
 	if c == nil {
 		return nil
 	}
-	return &endpointAPI.LbEndpoint{
-		HostIdentifier: &endpointAPI.LbEndpoint_Endpoint{
-			Endpoint: &endpointAPI.Endpoint{
+	return &pbEnvoyEndpointV3.LbEndpoint{
+		HostIdentifier: &pbEnvoyEndpointV3.LbEndpoint_Endpoint{
+			Endpoint: &pbEnvoyEndpointV3.Endpoint{
 				Address: &pbEnvoyCoreV3.Address{
 					Address: &pbEnvoyCoreV3.Address_SocketAddress{
 						SocketAddress: &pbEnvoyCoreV3.SocketAddress{
