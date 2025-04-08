@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type IntegrationEnvoyV3 struct {
@@ -44,6 +45,10 @@ func (i IntegrationEnvoyV3) Envs() ([]core.EnvVar, error) {
 		{
 			Name:  "INTEGRATION_ENVOY_AUTH_V3",
 			Value: "true",
+		},
+		{
+			Name:  "INTEGRATION_ENVOY_AUTH_V3_EXTENSIONS_COOKIE_JWT",
+			Value: util.BoolSwitch(i.Spec.Gateway.IsCookiesSupportEnabled(), "true", "false"),
 		},
 	}
 

@@ -21,7 +21,7 @@
 package gateway
 
 import (
-	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	pbEnvoyRouteV3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -55,17 +55,17 @@ func (c *ConfigMatch) Validate() error {
 	}
 }
 
-func (c *ConfigMatch) Match(path string) *routeAPI.RouteMatch {
+func (c *ConfigMatch) Match(path string) *pbEnvoyRouteV3.RouteMatch {
 	switch c.Get() {
 	case ConfigMatchPath:
-		return &routeAPI.RouteMatch{
-			PathSpecifier: &routeAPI.RouteMatch_Path{
+		return &pbEnvoyRouteV3.RouteMatch{
+			PathSpecifier: &pbEnvoyRouteV3.RouteMatch_Path{
 				Path: path,
 			},
 		}
 	default:
-		return &routeAPI.RouteMatch{
-			PathSpecifier: &routeAPI.RouteMatch_Prefix{
+		return &pbEnvoyRouteV3.RouteMatch{
+			PathSpecifier: &pbEnvoyRouteV3.RouteMatch_Prefix{
 				Prefix: path,
 			},
 		}

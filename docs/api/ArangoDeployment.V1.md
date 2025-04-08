@@ -3092,6 +3092,26 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ***
 
+### .spec.gateway.cookiesSupport
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/deployment_spec_gateway.go#L49)</sup>
+
+CookiesSupport defines if Cookie based authentication via `X-ArangoDB-Token-JWT`
+
+Default Value: `true`
+
+***
+
+### .spec.gateway.defaultTargetAuthentication
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/deployment_spec_gateway.go#L53)</sup>
+
+DefaultTargetAuthentication defines if default endpoints check authentication via envoy (Cookie and Header based auth)
+
+Default Value: `true`
+
+***
+
 ### .spec.gateway.dynamic
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/deployment_spec_gateway.go#L41)</sup>
@@ -3099,7 +3119,7 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
 When enabled, gateway config will be reloaded by ConfigMap live updates.
 
-Default Value: `false`
+Default Value: `true`
 
 ***
 
@@ -3125,7 +3145,7 @@ By default, the image is determined by the operator.
 
 ### .spec.gateway.timeout
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/deployment_spec_gateway.go#L50)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/deployment_spec_gateway.go#L58)</sup>
 
 Timeout defines default timeout for the upstream actions (if not overridden)
 

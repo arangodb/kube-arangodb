@@ -23,10 +23,10 @@ package gateway
 import (
 	"time"
 
-	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
-	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	pbEnvoyClusterV3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyEndpointV3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	pbEnvoyRouteV3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -135,19 +135,19 @@ func (c *ConfigDestination) GetPath() string {
 	return *c.Path
 }
 
-func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, error) {
+func (c *ConfigDestination) RenderRoute(name, prefix string) (*pbEnvoyRouteV3.Route, error) {
 	if c == nil {
 		return nil, errors.Errorf("Route cannot be nil")
 	}
-	var headers []*coreAPI.HeaderValueOption
+	var headers []*pbEnvoyCoreV3.HeaderValueOption
 
 	for k, v := range c.ResponseHeaders {
-		headers = append(headers, &coreAPI.HeaderValueOption{
-			Header: &coreAPI.HeaderValue{
+		headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+			Header: &pbEnvoyCoreV3.HeaderValue{
 				Key:   k,
 				Value: v,
 			},
-			AppendAction:   coreAPI.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			AppendAction:   pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
 			KeepEmptyValue: false,
 		})
 	}
@@ -162,7 +162,7 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 		return nil, err
 	}
 
-	r := &routeAPI.Route{
+	r := &pbEnvoyRouteV3.Route{
 		Match:                c.Match.Match(prefix),
 		ResponseHeadersToAdd: headers,
 
@@ -176,7 +176,7 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*routeAPI.Route, e
 	return r, nil
 }
 
-func (c *ConfigDestination) appendRouteAction(route *routeAPI.Route, name string) error {
+func (c *ConfigDestination) appendRouteAction(route *pbEnvoyRouteV3.Route, name string) error {
 	if c.Type.Get() == ConfigDestinationTypeStatic {
 		if c.Static == nil {
 			return errors.Errorf("Static response is not defined!")
@@ -187,11 +187,11 @@ func (c *ConfigDestination) appendRouteAction(route *routeAPI.Route, name string
 		}
 
 		// Return static response
-		route.Action = &routeAPI.Route_DirectResponse{
-			DirectResponse: &routeAPI.DirectResponseAction{
+		route.Action = &pbEnvoyRouteV3.Route_DirectResponse{
+			DirectResponse: &pbEnvoyRouteV3.DirectResponseAction{
 				Status: code,
-				Body: &coreAPI.DataSource{
-					Specifier: &coreAPI.DataSource_InlineBytes{
+				Body: &pbEnvoyCoreV3.DataSource{
+					Specifier: &pbEnvoyCoreV3.DataSource_InlineBytes{
 						InlineBytes: data,
 					},
 				},
@@ -200,9 +200,9 @@ func (c *ConfigDestination) appendRouteAction(route *routeAPI.Route, name string
 		return nil
 	}
 
-	route.Action = &routeAPI.Route_Route{
-		Route: &routeAPI.RouteAction{
-			ClusterSpecifier: &routeAPI.RouteAction_Cluster{
+	route.Action = &pbEnvoyRouteV3.Route_Route{
+		Route: &pbEnvoyRouteV3.RouteAction{
+			ClusterSpecifier: &pbEnvoyRouteV3.RouteAction_Cluster{
 				Cluster: name,
 			},
 			UpgradeConfigs: c.getUpgradeConfigs().render(),
@@ -222,7 +222,7 @@ func (c *ConfigDestination) getUpgradeConfigs() ConfigDestinationsUpgrade {
 	return c.UpgradeConfigs
 }
 
-func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, error) {
+func (c *ConfigDestination) RenderCluster(name string) (*pbEnvoyClusterV3.Cluster, error) {
 	if c.Type.Get() == ConfigDestinationTypeStatic {
 		return nil, nil
 	}
@@ -232,13 +232,13 @@ func (c *ConfigDestination) RenderCluster(name string) (*clusterAPI.Cluster, err
 		return nil, err
 	}
 
-	cluster := &clusterAPI.Cluster{
+	cluster := &pbEnvoyClusterV3.Cluster{
 		Name:           name,
 		ConnectTimeout: durationpb.New(time.Second),
-		LbPolicy:       clusterAPI.Cluster_ROUND_ROBIN,
-		LoadAssignment: &endpointAPI.ClusterLoadAssignment{
+		LbPolicy:       pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
+		LoadAssignment: &pbEnvoyEndpointV3.ClusterLoadAssignment{
 			ClusterName: name,
-			Endpoints: []*endpointAPI.LocalityLbEndpoints{
+			Endpoints: []*pbEnvoyEndpointV3.LocalityLbEndpoints{
 				{
 					LbEndpoints: c.Targets.RenderEndpoints(),
 				},

@@ -25,12 +25,12 @@ import (
 	"sort"
 	"time"
 
-	bootstrapAPI "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
-	clusterAPI "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	endpointAPI "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
-	listenerAPI "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
-	routeAPI "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	pbEnvoyBootstrapV3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	pbEnvoyClusterV3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyEndpointV3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	pbEnvoyListenerV3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	pbEnvoyRouteV3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	httpFilterAuthzApi "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	routerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	tlsInspectorApi "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/listener/tls_inspector/v3"
@@ -71,7 +71,7 @@ func (c Config) Validate() error {
 	)
 }
 
-func (c Config) RenderYAML() ([]byte, string, *bootstrapAPI.Bootstrap, error) {
+func (c Config) RenderYAML() ([]byte, string, *pbEnvoyBootstrapV3.Bootstrap, error) {
 	cfg, err := c.Render()
 	if err != nil {
 		return nil, "", nil, err
@@ -136,7 +136,7 @@ func (c Config) RenderLDS() (*discoveryApi.DiscoveryResponse, error) {
 	return DynamicConfigResponse(listener)
 }
 
-func (c Config) Render() (*bootstrapAPI.Bootstrap, error) {
+func (c Config) Render() (*pbEnvoyBootstrapV3.Bootstrap, error) {
 	if err := c.Validate(); err != nil {
 		return nil, errors.Wrapf(err, "Validation failed")
 	}
@@ -151,19 +151,19 @@ func (c Config) Render() (*bootstrapAPI.Bootstrap, error) {
 		return nil, errors.Wrapf(err, "Unable to render listener")
 	}
 
-	return &bootstrapAPI.Bootstrap{
-		Admin: &bootstrapAPI.Admin{
-			Address: &coreAPI.Address{
-				Address: &coreAPI.Address_SocketAddress{
-					SocketAddress: &coreAPI.SocketAddress{
+	return &pbEnvoyBootstrapV3.Bootstrap{
+		Admin: &pbEnvoyBootstrapV3.Admin{
+			Address: &pbEnvoyCoreV3.Address{
+				Address: &pbEnvoyCoreV3.Address_SocketAddress{
+					SocketAddress: &pbEnvoyCoreV3.SocketAddress{
 						Address:       "127.0.0.1",
-						PortSpecifier: &coreAPI.SocketAddress_PortValue{PortValue: 9901},
+						PortSpecifier: &pbEnvoyCoreV3.SocketAddress_PortValue{PortValue: 9901},
 					},
 				},
 			},
 		},
-		StaticResources: &bootstrapAPI.Bootstrap_StaticResources{
-			Listeners: []*listenerAPI.Listener{
+		StaticResources: &pbEnvoyBootstrapV3.Bootstrap_StaticResources{
+			Listeners: []*pbEnvoyListenerV3.Listener{
 				listener,
 			},
 			Clusters: clusters,
@@ -171,12 +171,12 @@ func (c Config) Render() (*bootstrapAPI.Bootstrap, error) {
 	}, nil
 }
 
-func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
+func (c Config) RenderClusters() ([]*pbEnvoyClusterV3.Cluster, error) {
 	def, err := c.DefaultDestination.RenderCluster("default")
 	if err != nil {
 		return nil, err
 	}
-	clusters := []*clusterAPI.Cluster{
+	clusters := []*pbEnvoyClusterV3.Cluster{
 		def,
 	}
 
@@ -185,8 +185,8 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 			UpstreamProtocolOptions: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_{
 				ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
 					ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
-						Http2ProtocolOptions: &coreAPI.Http2ProtocolOptions{
-							ConnectionKeepalive: &coreAPI.KeepaliveSettings{
+						Http2ProtocolOptions: &pbEnvoyCoreV3.Http2ProtocolOptions{
+							ConnectionKeepalive: &pbEnvoyCoreV3.KeepaliveSettings{
 								Interval:               durationpb.New(15 * time.Second),
 								Timeout:                durationpb.New(30 * time.Second),
 								ConnectionIdleInterval: durationpb.New(60 * time.Second),
@@ -199,15 +199,15 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 		if err != nil {
 			return nil, err
 		}
-		cluster := &clusterAPI.Cluster{
+		cluster := &pbEnvoyClusterV3.Cluster{
 			Name:           constants.EnvoyIntegrationSidecarCluster,
 			ConnectTimeout: durationpb.New(time.Second),
-			LbPolicy:       clusterAPI.Cluster_ROUND_ROBIN,
-			LoadAssignment: &endpointAPI.ClusterLoadAssignment{
+			LbPolicy:       pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
+			LoadAssignment: &pbEnvoyEndpointV3.ClusterLoadAssignment{
 				ClusterName: constants.EnvoyIntegrationSidecarCluster,
-				Endpoints: []*endpointAPI.LocalityLbEndpoints{
+				Endpoints: []*pbEnvoyEndpointV3.LocalityLbEndpoints{
 					{
-						LbEndpoints: []*endpointAPI.LbEndpoint{
+						LbEndpoints: []*pbEnvoyEndpointV3.LbEndpoint{
 							i.RenderEndpoint(),
 						},
 					},
@@ -241,12 +241,12 @@ func (c Config) RenderClusters() ([]*clusterAPI.Cluster, error) {
 	return clusters, nil
 }
 
-func (c Config) RenderRoutes() ([]*routeAPI.Route, error) {
+func (c Config) RenderRoutes() ([]*pbEnvoyRouteV3.Route, error) {
 	def, err := c.DefaultDestination.RenderRoute("default", "/")
 	if err != nil {
 		return nil, err
 	}
-	routes := []*routeAPI.Route{
+	routes := []*pbEnvoyRouteV3.Route{
 		def,
 	}
 
@@ -284,9 +284,9 @@ func (c Config) RenderRoutes() ([]*routeAPI.Route, error) {
 func (c Config) RenderIntegrationSidecarFilter() (*httpConnectionManagerAPI.HttpFilter, error) {
 	e, err := anypb.New(&httpFilterAuthzApi.ExtAuthz{
 		Services: &httpFilterAuthzApi.ExtAuthz_GrpcService{
-			GrpcService: &coreAPI.GrpcService{
-				TargetSpecifier: &coreAPI.GrpcService_EnvoyGrpc_{
-					EnvoyGrpc: &coreAPI.GrpcService_EnvoyGrpc{
+			GrpcService: &pbEnvoyCoreV3.GrpcService{
+				TargetSpecifier: &pbEnvoyCoreV3.GrpcService_EnvoyGrpc_{
+					EnvoyGrpc: &pbEnvoyCoreV3.GrpcService_EnvoyGrpc{
 						ClusterName: "integration_sidecar",
 					},
 				},
@@ -308,7 +308,7 @@ func (c Config) RenderIntegrationSidecarFilter() (*httpConnectionManagerAPI.Http
 	}, nil
 }
 
-func (c Config) RenderFilters() ([]*listenerAPI.Filter, error) {
+func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 	httpFilterConfigType, err := anypb.New(&routerAPI.Router{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render route config")
@@ -335,9 +335,9 @@ func (c Config) RenderFilters() ([]*listenerAPI.Filter, error) {
 		ServerHeaderTransformation: httpConnectionManagerAPI.HttpConnectionManager_PASS_THROUGH,
 		MergeSlashes:               c.Options.GetMergeSlashes(),
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
-			RouteConfig: &routeAPI.RouteConfiguration{
+			RouteConfig: &pbEnvoyRouteV3.RouteConfiguration{
 				Name: "default",
-				VirtualHosts: []*routeAPI.VirtualHost{
+				VirtualHosts: []*pbEnvoyRouteV3.VirtualHost{
 					{
 						Name:    "default",
 						Domains: []string{"*"},
@@ -361,23 +361,23 @@ func (c Config) RenderFilters() ([]*listenerAPI.Filter, error) {
 		return nil, errors.Wrapf(err, "Unable to render http connection manager")
 	}
 
-	return []*listenerAPI.Filter{
+	return []*pbEnvoyListenerV3.Filter{
 		{
 			Name: "envoy.filters.network.httpConnectionManagerAPI",
-			ConfigType: &listenerAPI.Filter_TypedConfig{
+			ConfigType: &pbEnvoyListenerV3.Filter_TypedConfig{
 				TypedConfig: filterConfigType,
 			},
 		},
 	}, nil
 }
 
-func (c Config) RenderDefaultFilterChain() (*listenerAPI.FilterChain, error) {
+func (c Config) RenderDefaultFilterChain() (*pbEnvoyListenerV3.FilterChain, error) {
 	filters, err := c.RenderFilters()
 	if err != nil {
 		return nil, err
 	}
 
-	ret := &listenerAPI.FilterChain{
+	ret := &pbEnvoyListenerV3.FilterChain{
 		Filters: filters,
 	}
 
@@ -390,7 +390,7 @@ func (c Config) RenderDefaultFilterChain() (*listenerAPI.FilterChain, error) {
 	return ret, nil
 }
 
-func (c Config) RenderSecondaryFilterChains() ([]*listenerAPI.FilterChain, error) {
+func (c Config) RenderSecondaryFilterChains() ([]*pbEnvoyListenerV3.FilterChain, error) {
 	if len(c.SNI) == 0 {
 		return nil, nil
 	}
@@ -403,7 +403,7 @@ func (c Config) RenderSecondaryFilterChains() ([]*listenerAPI.FilterChain, error
 	return c.SNI.RenderFilterChain(filters)
 }
 
-func (c Config) RenderListener() (*listenerAPI.Listener, error) {
+func (c Config) RenderListener() (*pbEnvoyListenerV3.Listener, error) {
 	filterChains, err := c.RenderSecondaryFilterChains()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render secondary filter chains")
@@ -414,7 +414,7 @@ func (c Config) RenderListener() (*listenerAPI.Listener, error) {
 		return nil, errors.Wrapf(err, "Unable to render default filter")
 	}
 
-	var listenerFilters []*listenerAPI.ListenerFilter
+	var listenerFilters []*pbEnvoyListenerV3.ListenerFilter
 
 	if c.DefaultTLS != nil {
 		w, err := anypb.New(&tlsInspectorApi.TlsInspector{})
@@ -422,21 +422,21 @@ func (c Config) RenderListener() (*listenerAPI.Listener, error) {
 			return nil, errors.Wrapf(err, "Unable to render TLS Inspector")
 		}
 
-		listenerFilters = append(listenerFilters, &listenerAPI.ListenerFilter{
+		listenerFilters = append(listenerFilters, &pbEnvoyListenerV3.ListenerFilter{
 			Name: "envoy.filters.listener.tls_inspector",
-			ConfigType: &listenerAPI.ListenerFilter_TypedConfig{
+			ConfigType: &pbEnvoyListenerV3.ListenerFilter_TypedConfig{
 				TypedConfig: w,
 			},
 		})
 	}
 
-	return &listenerAPI.Listener{
+	return &pbEnvoyListenerV3.Listener{
 		Name: "default",
-		Address: &coreAPI.Address{
-			Address: &coreAPI.Address_SocketAddress{
-				SocketAddress: &coreAPI.SocketAddress{
+		Address: &pbEnvoyCoreV3.Address{
+			Address: &pbEnvoyCoreV3.Address_SocketAddress{
+				SocketAddress: &pbEnvoyCoreV3.SocketAddress{
 					Address:       "0.0.0.0",
-					PortSpecifier: &coreAPI.SocketAddress_PortValue{PortValue: shared.ArangoPort},
+					PortSpecifier: &pbEnvoyCoreV3.SocketAddress_PortValue{PortValue: shared.ArangoPort},
 				},
 			},
 		},
