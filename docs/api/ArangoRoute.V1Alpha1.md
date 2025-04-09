@@ -83,7 +83,7 @@ UID keeps the information about object UID
 
 ### .spec.destination.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_spec_destination.go#L51)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_spec_destination.go#L52)</sup>
 
 Path defines service path used for overrides
 
@@ -91,7 +91,7 @@ Path defines service path used for overrides
 
 ### .spec.destination.protocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_spec_destination.go#L45)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_spec_destination.go#L46)</sup>
 
 Protocol defines http protocol used for the route
 
@@ -103,7 +103,7 @@ Possible Values:
 
 ### .spec.destination.schema
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_spec_destination.go#L40)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_spec_destination.go#L41)</sup>
 
 Schema defines HTTP/S schema used for connection
 
@@ -155,7 +155,7 @@ UID keeps the information about object UID
 
 ### .spec.destination.timeout
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_spec_destination.go#L59)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/networking/v1alpha1/route_spec_destination.go#L60)</sup>
 
 Timeout specify the upstream request timeout
 
