@@ -20,12 +20,14 @@
 
 package constants
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	DefaultEnvoyUpstreamTimeout = time.Minute
-	MaxEnvoyUpstreamTimeout     = 15 * time.Minute
-	MinEnvoyUpstreamTimeout     = 15 * time.Second
+	MaxEnvoyUpstreamTimeout     = time.Hour
+	MinEnvoyUpstreamTimeout     = time.Duration(0)
 
 	ConfigMapChecksumKey = "CHECKSUM"
 

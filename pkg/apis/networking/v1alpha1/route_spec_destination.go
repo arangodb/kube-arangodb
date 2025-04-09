@@ -25,6 +25,7 @@ import (
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ArangoRouteSpecDestination struct {
@@ -139,6 +140,14 @@ func (a *ArangoRouteSpecDestination) Validate() error {
 		shared.ValidateOptionalInterfacePath("tls", a.TLS),
 		shared.ValidateOptionalInterfacePath("authentication", a.Authentication),
 		shared.PrefixResourceError("path", shared.ValidateAPIPath(a.GetPath())),
+		shared.PrefixResourceErrorFunc("timeout", func() error {
+			if t := a.GetTimeout(); t.Duration < constants.MinEnvoyUpstreamTimeout {
+				return errors.Errorf("Timeout lower than %s not allowed", constants.MinEnvoyUpstreamTimeout.String())
+			} else if t.Duration > constants.MaxEnvoyUpstreamTimeout {
+				return errors.Errorf("Timeout greater than %s not allowed", constants.MaxEnvoyUpstreamTimeout.String())
+			}
+			return nil
+		}),
 	); err != nil {
 		return err
 	}
