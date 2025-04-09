@@ -179,6 +179,8 @@ linters-settings:
         pkg: strings
       - alias: goHttp
         pkg: net/http
+      - alias: jwt
+        pkg: github.com/golang-jwt/jwt
   gci:
     sections:
       - standard

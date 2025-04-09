@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,21 +26,27 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func IsSignatureInvalidError(err error) bool {
-	return isJQError(err, jwt.ErrSignatureInvalid)
+func EmptySecret() Secret {
+	return emptySecret{}
 }
 
-func isJQError(err, expected error) bool {
-	if err == nil || expected == nil {
-		return false
-	}
+type emptySecret struct{}
 
-	var v *jwt.ValidationError
-	if errors.As(err, &v) {
-		if errors.Is(v.Inner, expected) {
-			return true
-		}
-	}
+func (e emptySecret) Hash() string {
+	return ""
+}
 
+func (e emptySecret) Sign(method jwt.SigningMethod, claims Claims) (string, error) {
+	return "", errors.Errorf("no token found")
+}
+
+func (e emptySecret) Validate(token string) (Token, error) {
+	return nil, &jwt.ValidationError{
+		Inner:  jwt.ErrSignatureInvalid,
+		Errors: 1,
+	}
+}
+
+func (e emptySecret) Exists() bool {
 	return false
 }

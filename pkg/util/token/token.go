@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,49 +21,39 @@
 package token
 
 import (
-	jg "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-const (
-	ClaimISS               = "iss"
-	ClaimISSValue          = "arangodb"
-	ClaimEXP               = "exp"
-	ClaimIAT               = "iat"
-	ClaimPreferredUsername = "preferred_username"
-)
+func newToken(in *jwt.Token) (Token, error) {
+	tokenClaims, ok := in.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.Errorf("Invalid token provided")
+	}
 
-type Mod func(in Claims) Claims
+	if !in.Valid {
+		return nil, &jwt.ValidationError{
+			Inner:  jwt.ErrSignatureInvalid,
+			Errors: 1,
+		}
+	}
 
-func NewClaims() Claims {
-	return Claims{}
+	return token{
+		claims: Claims(tokenClaims),
+		valid:  in.Valid,
+	}, nil
 }
 
-type Claims jg.MapClaims
-
-func (t Claims) With(mods ...Mod) Claims {
-	q := t
-
-	if q == nil {
-		q = Claims{}
-	}
-
-	for _, mod := range mods {
-		q = mod(q)
-	}
-
-	return q
+type token struct {
+	claims Claims
+	valid  bool
 }
 
-func New(secret []byte, claims map[string]interface{}) (string, error) {
-	token := jg.NewWithClaims(jg.SigningMethodHS256, jg.MapClaims(claims))
+func (t token) Valid() bool {
+	return t.valid
+}
 
-	// Sign and get the complete encoded token as a string using the secret
-	signedToken, err := token.SignedString(secret)
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return signedToken, nil
+func (t token) Claims() Claims {
+	return t.claims
 }
