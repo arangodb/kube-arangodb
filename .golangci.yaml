@@ -143,6 +143,18 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls
       - alias: pbEnvoyAuthV3
         pkg: github.com/envoyproxy/go-control-plane/envoy/service/auth/v3
+      - alias: pbEnvoyBootstrapV3
+        pkg: github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3
+      - alias: pbEnvoyClusterV3
+        pkg: github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3
+      - alias: pbEnvoyCoreV3
+        pkg: github.com/envoyproxy/go-control-plane/envoy/config/core/v3
+      - alias: pbEnvoyEndpointV3
+        pkg: github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3
+      - alias: pbEnvoyListenerV3
+        pkg: github.com/envoyproxy/go-control-plane/envoy/config/listener/v3
+      - alias: pbEnvoyRouteV3
+        pkg: github.com/envoyproxy/go-control-plane/envoy/config/route/v3
       - alias: apps
         pkg: k8s.io/api/apps/v1
       - alias: batch

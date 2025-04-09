@@ -23,8 +23,8 @@ package gateway
 import (
 	"path"
 
-	bootstrapAPI "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
-	coreAPI "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyBootstrapV3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	discoveryApi "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -37,16 +37,16 @@ type DynamicConfig struct {
 	Path, File string
 }
 
-func (d *DynamicConfig) AsConfigSource() *coreAPI.ConfigSource {
+func (d *DynamicConfig) AsConfigSource() *pbEnvoyCoreV3.ConfigSource {
 	if d == nil {
 		return nil
 	}
 
-	return &coreAPI.ConfigSource{
-		ConfigSourceSpecifier: &coreAPI.ConfigSource_PathConfigSource{
-			PathConfigSource: &coreAPI.PathConfigSource{
+	return &pbEnvoyCoreV3.ConfigSource{
+		ConfigSourceSpecifier: &pbEnvoyCoreV3.ConfigSource_PathConfigSource{
+			PathConfigSource: &pbEnvoyCoreV3.PathConfigSource{
 				Path: path.Join(d.Path, d.File),
-				WatchedDirectory: &coreAPI.WatchedDirectory{
+				WatchedDirectory: &pbEnvoyCoreV3.WatchedDirectory{
 					Path: d.Path,
 				},
 			},
@@ -54,9 +54,9 @@ func (d *DynamicConfig) AsConfigSource() *coreAPI.ConfigSource {
 	}
 }
 
-func NodeDynamicConfig(cluster, id string, cds, lds *DynamicConfig) ([]byte, string, *bootstrapAPI.Bootstrap, error) {
-	var b = bootstrapAPI.Bootstrap{
-		Node: &coreAPI.Node{
+func NodeDynamicConfig(cluster, id string, cds, lds *DynamicConfig) ([]byte, string, *pbEnvoyBootstrapV3.Bootstrap, error) {
+	var b = pbEnvoyBootstrapV3.Bootstrap{
+		Node: &pbEnvoyCoreV3.Node{
 			Id:      id,
 			Cluster: cluster,
 		},
@@ -64,7 +64,7 @@ func NodeDynamicConfig(cluster, id string, cds, lds *DynamicConfig) ([]byte, str
 
 	if v := cds; v != nil {
 		if b.DynamicResources == nil {
-			b.DynamicResources = &bootstrapAPI.Bootstrap_DynamicResources{}
+			b.DynamicResources = &pbEnvoyBootstrapV3.Bootstrap_DynamicResources{}
 		}
 
 		b.DynamicResources.CdsConfig = v.AsConfigSource()
@@ -72,7 +72,7 @@ func NodeDynamicConfig(cluster, id string, cds, lds *DynamicConfig) ([]byte, str
 
 	if v := lds; v != nil {
 		if b.DynamicResources == nil {
-			b.DynamicResources = &bootstrapAPI.Bootstrap_DynamicResources{}
+			b.DynamicResources = &pbEnvoyBootstrapV3.Bootstrap_DynamicResources{}
 		}
 
 		b.DynamicResources.LdsConfig = v.AsConfigSource()

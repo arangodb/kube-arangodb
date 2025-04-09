@@ -6778,6 +6778,12 @@ v1:
           gateway:
             description: Gateway defined main Gateway configuration.
             properties:
+              cookiesSupport:
+                description: CookiesSupport defines if Cookie based authentication via `X-ArangoDB-Token-JWT`
+                type: boolean
+              defaultTargetAuthentication:
+                description: DefaultTargetAuthentication defines if default endpoints check authentication via envoy (Cookie and Header based auth)
+                type: boolean
               dynamic:
                 description: |-
                   Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
@@ -23848,6 +23854,12 @@ v2alpha1:
           gateway:
             description: Gateway defined main Gateway configuration.
             properties:
+              cookiesSupport:
+                description: CookiesSupport defines if Cookie based authentication via `X-ArangoDB-Token-JWT`
+                type: boolean
+              defaultTargetAuthentication:
+                description: DefaultTargetAuthentication defines if default endpoints check authentication via envoy (Cookie and Header based auth)
+                type: boolean
               dynamic:
                 description: |-
                   Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
