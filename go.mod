@@ -75,10 +75,12 @@ require (
 	github.com/arangodb-managed/apis v0.89.1
 	github.com/arangodb-managed/integration-apis v0.2.1
 	github.com/aws/aws-sdk-go v1.55.6
+	github.com/go-logr/zerologr v1.2.3
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1
 	github.com/jedib0t/go-pretty/v6 v6.6.5
 	google.golang.org/genproto/googleapis/api v0.0.0-20250204164813-702378808489
 	helm.sh/helm/v3 v3.16.2
+	k8s.io/klog/v2 v2.130.1
 )
 
 require (
@@ -221,7 +223,6 @@ require (
 	k8s.io/apiserver v0.31.5 // indirect
 	k8s.io/cli-runtime v0.31.1 // indirect
 	k8s.io/component-base v0.31.5 // indirect
-	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kubectl v0.31.1 // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
 	oras.land/oras-go v1.2.5 // indirect

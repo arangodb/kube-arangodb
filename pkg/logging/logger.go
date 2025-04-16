@@ -28,6 +28,8 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 const TopicAll = "all"
@@ -284,6 +286,8 @@ type Logger interface {
 	WarnIO() LoggerIO
 	ErrorIO() LoggerIO
 	FatalIO() LoggerIO
+
+	Logger() *zerolog.Logger
 }
 
 type logger struct {
@@ -298,6 +302,10 @@ type chain struct {
 	parent  *chain
 	sampler Sampler
 	wrap    Wrap
+}
+
+func (c *chain) Logger() *zerolog.Logger {
+	return util.NewType(c.factory.getLogger(c.name).With().Str("logger", c.name).Logger())
 }
 
 func (c *chain) Stack() Logger {

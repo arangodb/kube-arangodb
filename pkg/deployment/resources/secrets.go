@@ -104,12 +104,8 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 	}
 
 	if spec.IsAuthenticated() {
-		if imageFound {
-			if features.JWTRotation().ImageSupported(image) {
-				if err := r.ensureTokenSecretFolder(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
-					return errors.Section(err, "JWT Folder")
-				}
-			}
+		if err := r.ensureTokenSecretFolder(ctx, cachedStatus, secrets, spec.Authentication.GetJWTSecretName(), pod.JWTSecretFolder(deploymentName)); err != nil {
+			return errors.Section(err, "JWT Folder")
 		}
 
 		if spec.Metrics.IsEnabled() {

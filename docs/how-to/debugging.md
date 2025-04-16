@@ -25,7 +25,6 @@ To collect debug package, which contains things like:
 
 Ensure you have debug mode enabled in the operator deployment:
 ```shell
-```bash
 helm upgrade --install kube-arangodb \
   https://github.com/arangodb/kube-arangodb/releases/download/$VER/kube-arangodb-$VER.tgz \
   --set "rbac.extensions.debug=true"

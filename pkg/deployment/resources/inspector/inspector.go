@@ -68,7 +68,7 @@ const (
 
 var (
 	logger       = logging.Global().RegisterAndGetLogger("inspector", logging.Info, logging.WithSamplingPeriod(time.Second*10))
-	clientLogger = logging.Global().RegisterAndGetLogger("k8s-client", logging.Info, logging.WithSamplingPeriod(time.Second*10))
+	clientLogger = logging.Global().RegisterAndGetLogger("k8s-client", logging.Info)
 )
 
 func (i inspectorLoaders) Get(name string) int {

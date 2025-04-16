@@ -1,0 +1,12 @@
+apiVersion: "database.arangodb.com/v1"
+kind: "ArangoDeployment"
+metadata:
+  name: "platform-simple-single"
+spec:
+  mode: Single
+  image: 'arangodb/enterprise:3.12.2'
+  gateway:
+    enabled: true
+    dynamic: true
+  gateways:
+    count: 1

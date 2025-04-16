@@ -24,43 +24,37 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
-func NewInstaller() (*cobra.Command, error) {
-	return installer()
+type Package struct {
+	Packages map[string]string `json:"packages,omitempty"`
+
+	Releases map[string]Release `json:"releases,omitempty"`
 }
 
-func installer() (*cobra.Command, error) {
+type Release struct {
+	Package string `json:"package"`
+
+	Overrides helm.Values `json:"overrides,omitempty"`
+}
+
+func pkg() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "arangodb_operator_platform"
+	cmd.Use = "package"
+	cmd.Short = "Release Package related operations"
 
-	cmd.SetContext(shutdown.Context())
-
-	if err := cli.RegisterFlags(&cmd, flagNamespace); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformName); err != nil {
 		return nil, err
 	}
 
 	if err := withRegisterCommand(&cmd,
-		service,
-		registry,
-		pkg,
+		packageDump,
+		packageInstall,
 	); err != nil {
 		return nil, err
 	}
 
 	return &cmd, nil
-}
-
-func withRegisterCommand(parent *cobra.Command, calls ...func() (*cobra.Command, error)) error {
-	for _, call := range calls {
-		if c, err := call(); err != nil {
-			return err
-		} else {
-			parent.AddCommand(c)
-		}
-	}
-
-	return nil
 }
