@@ -14,6 +14,7 @@ Usage:
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
+  package     Release Package related operations
   registry    Registry related operations
   service     Service related operations
 
@@ -177,4 +178,65 @@ Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_service_status_cmd)
+
+# ArangoDB Operator Platform Package Command
+
+[START_INJECT]: # (arangodb_operator_platform_package_cmd)
+```
+Release Package related operations
+
+Usage:
+  arangodb_operator_platform package [command]
+
+Available Commands:
+  dump        Dumps the current setup of the platform
+  install     Installs the specified setup of the platform
+
+Flags:
+  -h, --help                   help for package
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+
+Global Flags:
+  -n, --namespace string   Kubernetes Namespace (default "default")
+
+Use "arangodb_operator_platform package [command] --help" for more information about a command.
+```
+[END_INJECT]: # (arangodb_operator_platform_package_cmd)
+
+# ArangoDB Operator Platform Package Dump Command
+
+[START_INJECT]: # (arangodb_operator_platform_package_dump_cmd)
+```
+Dumps the current setup of the platform
+
+Usage:
+  arangodb_operator_platform package dump [flags] deployment
+
+Flags:
+  -h, --help   help for dump
+
+Global Flags:
+  -n, --namespace string       Kubernetes Namespace (default "default")
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+```
+[END_INJECT]: # (arangodb_operator_platform_package_dump_cmd)
+
+# ArangoDB Operator Platform Package Install Command
+
+[START_INJECT]: # (arangodb_operator_platform_package_install_cmd)
+```
+Installs the specified setup of the platform
+
+Usage:
+  arangodb_operator_platform package install [flags] deployment package
+
+Flags:
+  -h, --help                    help for install
+      --platform.stage string   Platform Stage Name (default "dev")
+
+Global Flags:
+  -n, --namespace string       Kubernetes Namespace (default "default")
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+```
+[END_INJECT]: # (arangodb_operator_platform_package_install_cmd)
 

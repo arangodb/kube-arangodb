@@ -1,7 +1,8 @@
 ---
 layout: page
 title: Integration Sidecar Shutdown V1
-parent: ArangoDBPlatform
+grand_parent: ArangoDBPlatform
+parent: Integration Sidecars
 ---
 
 # Shutdown V1

@@ -119,7 +119,7 @@ func (p *inspectorVersion[S]) GetSimple(name string) (S, bool) {
 
 func (p *inspectorVersion[S]) Iterate(action generic.Action[S], filters ...generic.Filter[S]) error {
 	for _, item := range p.items {
-		if err := p.iterateArangoProfile(item, action, filters...); err != nil {
+		if err := p.iterate(item, action, filters...); err != nil {
 			return err
 		}
 	}
@@ -127,7 +127,7 @@ func (p *inspectorVersion[S]) Iterate(action generic.Action[S], filters ...gener
 	return nil
 }
 
-func (p *inspectorVersion[S]) iterateArangoProfile(item S, action generic.Action[S], filters ...generic.Filter[S]) error {
+func (p *inspectorVersion[S]) iterate(item S, action generic.Action[S], filters ...generic.Filter[S]) error {
 	for _, f := range filters {
 		if f == nil {
 			continue

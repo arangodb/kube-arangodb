@@ -127,7 +127,7 @@ func serviceEnableServiceRun(cmd *cobra.Command, args []string) error {
 	logger.Str("uid", string(chartObject.GetUID())).Info("ArangoPlatformChart Found")
 
 	if current, err := hclient.Status(cmd.Context(), chart); err != nil {
-		println(err)
+		return err
 	} else if current == nil {
 		logger.Info("Service not found, installing")
 		if _, err := hclient.Install(cmd.Context(), helm.Chart(chartObject.Spec.Definition), mergedData, func(in *action.Install) {

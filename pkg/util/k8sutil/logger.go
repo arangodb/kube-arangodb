@@ -18,10 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package kclient
+package k8sutil
 
 import (
+	"github.com/go-logr/zerologr"
+	"k8s.io/klog/v2"
+
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-var logger = logging.Global().RegisterAndGetLogger("kubernetes-client", logging.Error)
+var logger = logging.Global().RegisterAndGetLogger("kubernetes", logging.Info)
+
+func init() {
+	klog.SetLogger(zerologr.New(logger.Logger()))
+}
