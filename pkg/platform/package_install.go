@@ -145,12 +145,6 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Refetch
-	charts, err = fetchLocallyInstalledCharts(cmd)
-	if err != nil {
-		return err
-	}
-
 	logger.Info("Fetch ArangoDeployment")
 	deploymentObject, err := client.Arango().DatabaseV1().ArangoDeployments(ns).Get(cmd.Context(), deployment, meta.GetOptions{})
 	if err != nil {
