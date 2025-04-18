@@ -64,7 +64,7 @@ func deployments(logger zerolog.Logger, files chan<- shared.File) error {
 		return err
 	}
 
-	if err := errors.ExecuteWithErrorArrayP2(deployment, k, files, deploymentList...); err != nil {
+	if err := errors.ExecuteWithErrorArrayP3(deployment, logger, k, files, deploymentList...); err != nil {
 		logger.Err(err).Msgf("Error while collecting arango deployments")
 		return err
 	}
@@ -72,19 +72,19 @@ func deployments(logger zerolog.Logger, files chan<- shared.File) error {
 	return nil
 }
 
-func deployment(client kclient.Client, files chan<- shared.File, depl *api.ArangoDeployment) error {
+func deployment(logger zerolog.Logger, client kclient.Client, files chan<- shared.File, depl *api.ArangoDeployment) error {
 	files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/arango/deployments/%s.yaml", depl.GetName()), func() ([]interface{}, error) {
 		return []interface{}{depl}, nil
 	})
 
-	if err := deploymentMembers(client, depl, files); err != nil {
+	if err := deploymentMembers(logger, client, depl, files); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func deploymentMembers(client kclient.Client, depl *api.ArangoDeployment, files chan<- shared.File) error {
+func deploymentMembers(logger zerolog.Logger, client kclient.Client, depl *api.ArangoDeployment, files chan<- shared.File) error {
 	for _, member := range depl.Status.Members.AsList() {
 		mName := member.Member.ArangoMemberName(depl.GetName(), member.Group)
 
@@ -95,6 +95,36 @@ func deploymentMembers(client kclient.Client, depl *api.ArangoDeployment, files 
 		files <- shared.NewYAMLFile(fmt.Sprintf("kubernetes/arango/deployments/%s/members/%s.yaml", depl.GetName(), arangoMember.GetName()), func() ([]interface{}, error) {
 			return []interface{}{arangoMember}, nil
 		})
+
+		files <- shared.NewFile(fmt.Sprintf("kubernetes/arango/deployments/%s/members/%s/async-registry.json", depl.GetName(), arangoMember.GetName()), shared.GenerateDataFuncP2(func(depl, member string) ([]byte, error) {
+			handler, err := discoverExecFunc()
+			if err != nil {
+				return nil, err
+			}
+
+			out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", member, "_admin", "async-registry")
+
+			if err != nil {
+				return nil, err
+			}
+
+			return out, nil
+		}, depl.GetName(), member.Member.ID))
+
+		files <- shared.NewFile(fmt.Sprintf("kubernetes/arango/deployments/%s/members/%s/stack", depl.GetName(), arangoMember.GetName()), shared.GenerateDataFuncP2(func(depl, pod string) ([]byte, error) {
+			handler, err := remoteExecFunc("/usr/bin/eu-stack", pod, "server")
+			if err != nil {
+				return nil, err
+			}
+
+			out, _, err := handler(logger, "-n32", "-p1")
+
+			if err != nil {
+				return nil, err
+			}
+
+			return out, nil
+		}, depl.GetName(), member.Member.PodName))
 	}
 
 	return nil

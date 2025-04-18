@@ -32,6 +32,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
+	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -44,7 +45,7 @@ const (
 var (
 	cmdCRD = &cobra.Command{
 		Use:   "crd",
-		Run:   executeUsage,
+		RunE:  cli.Usage,
 		Short: "CRD operations",
 	}
 	cmdCRDInstall = &cobra.Command{

@@ -43,6 +43,8 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -51,68 +53,140 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-const ArgDeploymentName = "deployment-name"
+const (
+	ArgDeploymentName = "deployment-name"
+	ArgMemberName     = "member-name"
+	ArgAcceptedCode   = "accepted-code"
+)
 
 func init() {
-	var deploymentName string
-
 	cmdMain.AddCommand(cmdAdmin)
-	cmdAdmin.AddCommand(cmdAgency)
+	cmdAdmin.AddCommand(cmdAdminAgency)
+	cmdAdmin.AddCommand(cmdAdminMember)
 
-	cmdAgency.AddCommand(cmdAgencyDump)
-	cmdAgencyDump.Flags().StringVarP(&deploymentName, ArgDeploymentName, "d", "",
+	cmdAdminAgency.AddCommand(cmdAdminAgencyDump)
+	cmdAdminAgencyDump.Flags().StringP(ArgDeploymentName, "d", "",
 		"necessary when more than one deployment exist within on namespace")
 
-	cmdAgency.AddCommand(cmdAgencyState)
-	cmdAgencyState.Flags().StringVarP(&deploymentName, ArgDeploymentName, "d", "",
+	cmdAdminAgency.AddCommand(cmdAdminAgencyState)
+	cmdAdminAgencyState.Flags().StringP(ArgDeploymentName, "d", "",
 		"necessary when more than one deployment exist within on namespace")
+
+	cmdAdminMember.AddCommand(cmdAdminMemberRequest)
+	cmdAdminMemberRequest.AddCommand(cmdAdminMemberRequestGet)
+	cmdAdminMemberRequestGet.Flags().StringP(ArgDeploymentName, "d", "",
+		"necessary when more than one deployment exist within on namespace")
+	cmdAdminMemberRequestGet.Flags().StringP(ArgMemberName, "m", "",
+		"name of the member for the dump")
+	cmdAdminMemberRequestGet.Flags().IntP(ArgAcceptedCode, "c", 200,
+		"accepted command code")
 }
 
 var cmdAdmin = &cobra.Command{
 	Use:   "admin",
 	Short: "Administration operations",
-	Run:   adminShowUsage,
+	RunE:  cli.Usage,
 }
 
-var cmdAgency = &cobra.Command{
+var cmdAdminMember = &cobra.Command{
+	Use:   "member",
+	Short: "Member operations",
+	RunE:  cli.Usage,
+}
+
+var cmdAdminMemberRequest = &cobra.Command{
+	Use:   "request",
+	Short: "Runs http request over member and returns object",
+	RunE:  cli.Usage,
+}
+
+var cmdAdminMemberRequestGet = &cobra.Command{
+	Use:   "get",
+	Short: "GET Request",
+	RunE:  cmdGetAdminMemberRequestGetE,
+}
+
+var cmdAdminAgency = &cobra.Command{
 	Use:   "agency",
 	Short: "Agency operations",
-	Run:   agencyShowUsage,
+	RunE:  cli.Usage,
 }
 
-var cmdAgencyDump = &cobra.Command{
+var cmdAdminAgencyDump = &cobra.Command{
 	Use:   "dump",
 	Short: "Get agency dump",
-	Long:  "It prints the agency history on the stdout",
-	Run:   cmdGetAgencyDump,
+	Long:  "Prints the agency history on the stdout",
+	RunE:  cmdAdminGetAgencyDumpE,
 }
 
-var cmdAgencyState = &cobra.Command{
+var cmdAdminAgencyState = &cobra.Command{
 	Use:   "state",
 	Short: "Get agency state",
-	Long:  "It prints the agency current state on the stdout",
-	Run:   cmdGetAgencyState,
+	Long:  "Prints the agency current state on the stdout",
+	RunE:  cmdAdminGetAgencyStateE,
 }
 
-func agencyShowUsage(cmd *cobra.Command, _ []string) {
-	cmd.Usage()
-}
-
-func adminShowUsage(cmd *cobra.Command, _ []string) {
-	cmd.Usage()
-}
-
-func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
-	deploymentName, _ := cmd.Flags().GetString(ArgDeploymentName)
+func cmdGetAdminMemberRequestGetE(cmd *cobra.Command, args []string) error {
+	deploymentName, err := cmd.Flags().GetString(ArgDeploymentName)
+	if err != nil {
+		return err
+	}
+	memberName, err := cmd.Flags().GetString(ArgMemberName)
+	if err != nil {
+		return err
+	}
+	acceptedCode, err := cmd.Flags().GetInt(ArgAcceptedCode)
+	if err != nil {
+		return err
+	}
 	ctx := getInterruptionContext()
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
-		logger.Err(err).Fatal("failed to create basic data for the connection")
+		logger.Err(err).Error("failed to create basic data for the connection")
+		return err
+	}
+
+	m, g, ok := d.Status.Members.ElementByID(memberName)
+	if !ok {
+		err := errors.Errorf("Unable to find member with id %s", memberName)
+		logger.Err(err).Error("Unable to find member")
+		return err
+	}
+
+	dnsName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), g.AsRole(), m.ID)
+	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), dnsName)
+	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
+	body, err := sendStreamRequest(ctx, conn, goHttp.MethodGet, nil, acceptedCode, args...)
+	if body != nil {
+		defer body.Close()
+	}
+	if err != nil {
+		logger.Err(err).Error("can not get dump")
+		return err
+	}
+
+	// Print and receive parallely.
+	_, err = io.Copy(os.Stdout, body)
+	return err
+}
+
+func cmdAdminGetAgencyStateE(cmd *cobra.Command, _ []string) error {
+	deploymentName, err := cmd.Flags().GetString(ArgDeploymentName)
+	if err != nil {
+		return err
+	}
+	ctx := getInterruptionContext()
+	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
+	if err != nil {
+		logger.Err(err).Error("failed to create basic data for the connection")
+		return err
 	}
 
 	if d.GetAcceptedSpec().GetMode() != api.DeploymentModeCluster {
-		logger.Fatal("agency state does not work for the \"%s\" deployment \"%s\"", d.GetAcceptedSpec().GetMode(),
+		err = errors.Errorf("agency state does not work for the \"%s\" deployment \"%s\"", d.GetAcceptedSpec().GetMode(),
 			d.GetName())
+		logger.Err(err).Error("Invalid deployment type")
+		return err
 	}
 
 	dnsName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), d.Status.Members.Agents[0].ID)
@@ -120,7 +194,8 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
 	leaderID, err := getAgencyLeader(ctx, conn)
 	if err != nil {
-		logger.Err(err).Fatal("failed to get leader ID")
+		logger.Err(err).Error("failed to get leader ID")
+		return err
 	}
 
 	dnsLeaderName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), leaderID)
@@ -131,24 +206,32 @@ func cmdGetAgencyState(cmd *cobra.Command, _ []string) {
 		defer body.Close()
 	}
 	if err != nil {
-		logger.Err(err).Fatal("can not get state of the agency")
+		logger.Err(err).Error("can not get state of the agency")
+		return err
 	}
 
-	// Print and receive parallelly.
-	io.Copy(os.Stdout, body)
+	// Print and receive parallely.
+	_, err = io.Copy(os.Stdout, body)
+	return err
 }
 
-func cmdGetAgencyDump(cmd *cobra.Command, _ []string) {
-	deploymentName, _ := cmd.Flags().GetString(ArgDeploymentName)
+func cmdAdminGetAgencyDumpE(cmd *cobra.Command, _ []string) error {
+	deploymentName, err := cmd.Flags().GetString(ArgDeploymentName)
+	if err != nil {
+		return err
+	}
 	ctx := getInterruptionContext()
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
-		logger.Err(err).Fatal("failed to create basic data for the connection")
+		logger.Err(err).Error("failed to create basic data for the connection")
+		return err
 	}
 
 	if d.GetAcceptedSpec().GetMode() != api.DeploymentModeCluster {
-		logger.Fatal("agency dump does not work for the \"%s\" deployment \"%s\"", d.GetAcceptedSpec().GetMode(),
+		err = errors.Errorf("agency state does not work for the \"%s\" deployment \"%s\"", d.GetAcceptedSpec().GetMode(),
 			d.GetName())
+		logger.Err(err).Error("Invalid deployment type")
+		return err
 	}
 
 	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), k8sutil.CreateDatabaseClientServiceDNSName(d.GetObjectMeta()))
@@ -158,26 +241,62 @@ func cmdGetAgencyDump(cmd *cobra.Command, _ []string) {
 		defer body.Close()
 	}
 	if err != nil {
-		logger.Err(err).Fatal("can not get dump")
+		logger.Err(err).Error("can not get dump")
+		return err
 	}
 
-	// Print and receive parallelly.
-	io.Copy(os.Stdout, body)
+	// Print and receive parallely.
+	_, err = io.Copy(os.Stdout, body)
+	return err
+}
+
+// sendStreamRequest sends the request to a member
+func sendStreamRequest(ctx context.Context, conn connection.Connection, method string, body []byte, code int, parts ...string) (io.ReadCloser, error) {
+	url := connection.NewUrl(parts...)
+
+	var mods []connection.RequestModifier
+
+	if body != nil {
+		mods = append(mods, connection.WithBody(body))
+	}
+
+	resp, output, err := connection.CallStream(ctx, conn, method, url, mods...)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code() != code {
+		return nil, errors.New(fmt.Sprintf("unexpected HTTP status from \"%s\" endpoint. Expected: '%d', got '%d'", url, code, resp.Code()))
+	}
+
+	return output, nil
+}
+
+// sendRequest sends the request to a member and returns object
+func sendRequest[OUT any](ctx context.Context, conn connection.Connection, method string, body []byte, code int, parts ...string) (OUT, error) {
+	url := connection.NewUrl(parts...)
+
+	var mods []connection.RequestModifier
+
+	if body != nil {
+		mods = append(mods, connection.WithBody(body))
+	}
+
+	var out OUT
+
+	resp, err := connection.Call(ctx, conn, method, url, &out, mods...)
+	if err != nil {
+		return util.Default[OUT](), err
+	}
+	if resp.Code() != code {
+		return util.Default[OUT](), errors.New(fmt.Sprintf("unexpected HTTP status from \"%s\" endpoint. Expected: '%d', got '%d'", url, code, resp.Code()))
+	}
+
+	return out, nil
 }
 
 // getAgencyState returns the current state in the agency.
 func getAgencyState(ctx context.Context, conn connection.Connection) (io.ReadCloser, error) {
-	url := connection.NewUrl("_api", "agency", "read")
-	data := []byte(`[["/"]]`)
-	resp, body, err := connection.CallStream(ctx, conn, goHttp.MethodPost, url, connection.WithBody(data))
-	if err != nil {
-		return nil, err
-	}
-	if resp.Code() != goHttp.StatusOK {
-		return nil, errors.New(fmt.Sprintf("unexpected HTTP status from \"%s\" endpoint", url))
-	}
-
-	return body, nil
+	return sendStreamRequest(ctx, conn, goHttp.MethodPost, []byte(`[["/"]]`), goHttp.StatusOK, "_api", "agency", "read")
 }
 
 // getDeploymentAndCredentials returns deployment and necessary credentials to communicate with ArangoDB pods.
@@ -235,14 +354,9 @@ func getArangoEndpoint(secure bool, dnsName string) string {
 
 // getAgencyLeader returns the leader ID of the agency.
 func getAgencyLeader(ctx context.Context, conn connection.Connection) (string, error) {
-	url := connection.NewUrl("_api", "agency", "config")
-	output := make(map[string]interface{})
-	resp, err := connection.CallGet(ctx, conn, url, &output)
+	output, err := sendRequest[map[string]interface{}](ctx, conn, goHttp.MethodGet, nil, goHttp.StatusOK, "_api", "agency", "config")
 	if err != nil {
 		return "", err
-	}
-	if resp.Code() != goHttp.StatusOK {
-		return "", errors.New("unexpected HTTP status from agency-dump endpoint")
 	}
 
 	if leaderID, ok := output["leaderId"]; ok {
@@ -256,16 +370,7 @@ func getAgencyLeader(ctx context.Context, conn connection.Connection) (string, e
 
 // getAgencyDump returns dump of the agency.
 func getAgencyDump(ctx context.Context, conn connection.Connection) (io.ReadCloser, error) {
-	url := connection.NewUrl("_api", "cluster", "agency-dump")
-	resp, body, err := connection.CallStream(ctx, conn, goHttp.MethodGet, url)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Code() != goHttp.StatusOK {
-		return nil, errors.New("unexpected HTTP status from agency-dump endpoint")
-	}
-
-	return body, nil
+	return sendStreamRequest(ctx, conn, goHttp.MethodGet, nil, goHttp.StatusOK, "_api", "cluster", "agency-dump")
 }
 
 type JWTAuthentication struct {
