@@ -293,11 +293,6 @@ func Execute() int {
 	return 0
 }
 
-// Show usage
-func executeUsage(cmd *cobra.Command, args []string) {
-	cmd.Usage()
-}
-
 // Run the operator
 func executeMain(cmd *cobra.Command, args []string) {
 	// Get environment

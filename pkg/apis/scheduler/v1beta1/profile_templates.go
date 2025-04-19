@@ -65,13 +65,13 @@ func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
 		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
 	}
 
-	// Apply Default Containers Spec
-	if err := t.GetContainer().ApplyDefault(pod); err != nil {
+	// Apply Containers Spec
+	if err := t.GetContainer().ApplyContainers(pod); err != nil {
 		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
 	}
 
-	// Apply Containers Spec
-	if err := t.GetContainer().ApplyContainers(pod); err != nil {
+	// Apply Default Containers Spec
+	if err := t.GetContainer().ApplyDefault(pod); err != nil {
 		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
 	}
 
