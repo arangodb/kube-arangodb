@@ -51,6 +51,9 @@ rules:
     - apiGroups: [""]
       resources: ["pods/log"]
       verbs: ["get", "list"]
+    - apiGroups: [""]
+      resources: ["pods/exec"]
+      verbs: ["create"]
 {{- end }}
 {{- if .Values.rbac.extensions.monitoring }}
     - apiGroups: ["monitoring.coreos.com"]
