@@ -38,8 +38,8 @@ func (r *Resources) failedContainerHandler(log logging.Logger, memberStatus api.
 
 	for _, c := range pod.Status.InitContainerStatuses {
 		if t := c.State.Terminated; t != nil {
-			if q := t.FinishedAt.Time; q.After(last) {
-				if q.After(current) {
+			if q := t.FinishedAt.Time; !q.Before(last) {
+				if !q.Before(current) {
 					current = q
 				}
 			} else {
@@ -64,8 +64,8 @@ func (r *Resources) failedContainerHandler(log logging.Logger, memberStatus api.
 
 			r.metrics.IncMemberInitContainerRestarts(memberStatus.ID, c.Name, t.Reason, t.ExitCode)
 		} else if t := c.LastTerminationState.Terminated; t != nil {
-			if q := t.FinishedAt.Time; q.After(last) {
-				if q.After(current) {
+			if q := t.FinishedAt.Time; !q.Before(last) {
+				if !q.Before(current) {
 					current = q
 				}
 			} else {
@@ -94,8 +94,8 @@ func (r *Resources) failedContainerHandler(log logging.Logger, memberStatus api.
 
 	for _, c := range pod.Status.ContainerStatuses {
 		if t := c.State.Terminated; t != nil {
-			if q := t.FinishedAt.Time; q.After(last) {
-				if q.After(current) {
+			if q := t.FinishedAt.Time; !q.Before(last) {
+				if !q.Before(current) {
 					current = q
 				}
 			} else {
@@ -120,8 +120,8 @@ func (r *Resources) failedContainerHandler(log logging.Logger, memberStatus api.
 
 			r.metrics.IncMemberContainerRestarts(memberStatus.ID, c.Name, t.Reason, t.ExitCode)
 		} else if t := c.LastTerminationState.Terminated; t != nil {
-			if q := t.FinishedAt.Time; q.After(last) {
-				if q.After(current) {
+			if q := t.FinishedAt.Time; !q.Before(last) {
+				if !q.Before(current) {
 					current = q
 				}
 			} else {
@@ -150,8 +150,8 @@ func (r *Resources) failedContainerHandler(log logging.Logger, memberStatus api.
 
 	for _, c := range pod.Status.EphemeralContainerStatuses {
 		if t := c.State.Terminated; t != nil {
-			if q := t.FinishedAt.Time; q.After(last) {
-				if q.After(current) {
+			if q := t.FinishedAt.Time; !q.Before(last) {
+				if !q.Before(current) {
 					current = q
 				}
 			} else {
@@ -176,8 +176,8 @@ func (r *Resources) failedContainerHandler(log logging.Logger, memberStatus api.
 
 			r.metrics.IncMemberEphemeralContainerRestarts(memberStatus.ID, c.Name, t.Reason, t.ExitCode)
 		} else if t := c.LastTerminationState.Terminated; t != nil {
-			if q := t.FinishedAt.Time; q.After(last) {
-				if q.After(current) {
+			if q := t.FinishedAt.Time; !q.Before(last) {
+				if !q.Before(current) {
 					current = q
 				}
 			} else {
