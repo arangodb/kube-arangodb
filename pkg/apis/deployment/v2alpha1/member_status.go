@@ -150,7 +150,7 @@ func (s *MemberStatus) AppendLastTermination(termination time.Time) bool {
 	}
 
 	if s.RecentTerminations[0].Time.Before(termination) {
-		s.RecentTerminations = append(s.RecentTerminations, meta.NewTime(termination))
+		s.RecentTerminations = append([]meta.Time{meta.NewTime(termination)}, s.RecentTerminations...)
 
 		return true
 	}
