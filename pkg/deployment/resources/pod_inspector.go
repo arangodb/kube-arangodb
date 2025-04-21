@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -161,6 +162,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		if t := r.failedContainerHandler(log, memberStatus, pod); memberStatus.AppendLastTermination(t) {
+			memberStatus.RemoveTerminationsBefore(time.Now().Add(-1 * constants.RecentTerminationsKeepPeriod))
 			updateMemberStatusNeeded = true
 		}
 
