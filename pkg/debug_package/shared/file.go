@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 )
 
 type GenFunc func(logger zerolog.Logger, files chan<- File) error
+type DataFunc func() ([]byte, error)
 
 type File interface {
 	Path() string
@@ -72,7 +73,7 @@ func NewYAMLFile[T interface{}](path string, write func() ([]T, error)) File {
 	})
 }
 
-func NewFile(path string, write func() ([]byte, error)) File {
+func NewFile(path string, write DataFunc) File {
 	return file{
 		name:  path,
 		write: write,
@@ -81,7 +82,7 @@ func NewFile(path string, write func() ([]byte, error)) File {
 
 type file struct {
 	name  string
-	write func() ([]byte, error)
+	write DataFunc
 }
 
 func (f file) Path() string {
@@ -122,4 +123,16 @@ func (f factory) Name() string {
 
 func (f factory) Generate(logger zerolog.Logger, files chan<- File) error {
 	return f.generate(logger, files)
+}
+
+func GenerateDataFuncP1[P1 any](call func(p1 P1) ([]byte, error), p1 P1) DataFunc {
+	return func() ([]byte, error) {
+		return call(p1)
+	}
+}
+
+func GenerateDataFuncP2[P1, P2 any](call func(p1 P1, p2 P2) ([]byte, error), p1 P1, p2 P2) DataFunc {
+	return func() ([]byte, error) {
+		return call(p1, p2)
+	}
 }

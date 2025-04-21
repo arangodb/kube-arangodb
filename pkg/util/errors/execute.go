@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,11 +22,23 @@ package errors
 
 type WithErrorArrayP2[IN, P1, P2 any] func(p1 P1, p2 P2, in IN) error
 
+type WithErrorArrayP3[IN, P1, P2, P3 any] func(p1 P1, p2 P2, p3 P3, in IN) error
+
 func ExecuteWithErrorArrayP2[IN, P1, P2 any](caller WithErrorArrayP2[IN, P1, P2], p1 P1, p2 P2, elements ...IN) error {
 	errors := make([]error, len(elements))
 
 	for id := range elements {
 		errors[id] = caller(p1, p2, elements[id])
+	}
+
+	return Errors(errors...)
+}
+
+func ExecuteWithErrorArrayP3[IN, P1, P2, P3 any](caller WithErrorArrayP3[IN, P1, P2, P3], p1 P1, p2 P2, p3 P3, elements ...IN) error {
+	errors := make([]error, len(elements))
+
+	for id := range elements {
+		errors[id] = caller(p1, p2, p3, elements[id])
 	}
 
 	return Errors(errors...)

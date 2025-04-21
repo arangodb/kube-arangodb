@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,34 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package cli
 
-import (
-	goflag "flag"
+import "github.com/spf13/cobra"
 
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-)
-
-var (
-	cmdOps = cobra.Command{
-		Use:  "arangodb_operator_ops",
-		RunE: cli.Usage,
-	}
-)
-
-func CommandOps() *cobra.Command {
-	return &cmdOps
-}
-
-func ExecuteOps() int {
-	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-
-	if err := cmdOps.Execute(); err != nil {
-		return 1
-	}
-
-	return 0
+func Usage(cmd *cobra.Command, args []string) error {
+	return cmd.Usage()
 }
