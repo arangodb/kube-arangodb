@@ -148,7 +148,7 @@ func (r *Resources) failedContainerHandler(log logging.Logger, memberStatus api.
 		}
 	}
 
-	for _, c := range pod.Status.ContainerStatuses {
+	for _, c := range pod.Status.EphemeralContainerStatuses {
 		if t := c.State.Terminated; t != nil {
 			if q := t.FinishedAt.Time; q.After(last) {
 				if q.After(current) {
@@ -204,7 +204,7 @@ func (r *Resources) failedContainerHandler(log logging.Logger, memberStatus api.
 		}
 	}
 
-	return last
+	return current
 }
 
 func getDefaultRestartPolicy(spec api.ServerGroupSpec) core.RestartPolicy {
