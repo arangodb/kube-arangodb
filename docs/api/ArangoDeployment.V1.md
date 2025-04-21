@@ -609,6 +609,21 @@ Links:
 
 ***
 
+### .spec.agents.restartPolicy
+
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+RestartPolicy for all pods within the group.
+
+Links:
+* [Documentation of core.RestartPolicy](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-po)
+
+Possible Values: 
+* `"Always"` (default) - Means that containers within the pod are always restarted.
+* `"Never"` - Means that containers within the pod are never restarted.
+
+***
+
 ### .spec.agents.schedulerName
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
@@ -1691,6 +1706,21 @@ Links:
 
 ***
 
+### .spec.coordinators.restartPolicy
+
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+RestartPolicy for all pods within the group.
+
+Links:
+* [Documentation of core.RestartPolicy](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-po)
+
+Possible Values: 
+* `"Always"` (default) - Means that containers within the pod are always restarted.
+* `"Never"` - Means that containers within the pod are never restarted.
+
+***
+
 ### .spec.coordinators.schedulerName
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
@@ -2638,6 +2668,21 @@ Resources holds resource requests & limits
 
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
+
+***
+
+### .spec.dbservers.restartPolicy
+
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+RestartPolicy for all pods within the group.
+
+Links:
+* [Documentation of core.RestartPolicy](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-po)
+
+Possible Values: 
+* `"Always"` (default) - Means that containers within the pod are always restarted.
+* `"Never"` - Means that containers within the pod are never restarted.
 
 ***
 
@@ -3751,6 +3796,21 @@ Resources holds resource requests & limits
 
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
+
+***
+
+### .spec.gateways.restartPolicy
+
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+RestartPolicy for all pods within the group.
+
+Links:
+* [Documentation of core.RestartPolicy](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-po)
+
+Possible Values: 
+* `"Always"` (default) - Means that containers within the pod are always restarted.
+* `"Never"` - Means that containers within the pod are never restarted.
 
 ***
 
@@ -5469,6 +5529,21 @@ Links:
 
 ***
 
+### .spec.single.restartPolicy
+
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+RestartPolicy for all pods within the group.
+
+Links:
+* [Documentation of core.RestartPolicy](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-po)
+
+Possible Values: 
+* `"Always"` (default) - Means that containers within the pod are always restarted.
+* `"Never"` - Means that containers within the pod are never restarted.
+
+***
+
 ### .spec.single.schedulerName
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
@@ -6633,6 +6708,21 @@ Links:
 
 ***
 
+### .spec.syncmasters.restartPolicy
+
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+RestartPolicy for all pods within the group.
+
+Links:
+* [Documentation of core.RestartPolicy](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-po)
+
+Possible Values: 
+* `"Always"` (default) - Means that containers within the pod are always restarted.
+* `"Never"` - Means that containers within the pod are never restarted.
+
+***
+
 ### .spec.syncmasters.schedulerName
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L58)</sup>
@@ -7572,6 +7662,21 @@ Resources holds resource requests & limits
 
 Links:
 * [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
+
+***
+
+### .spec.syncworkers.restartPolicy
+
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+RestartPolicy for all pods within the group.
+
+Links:
+* [Documentation of core.RestartPolicy](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-po)
+
+Possible Values: 
+* `"Always"` (default) - Means that containers within the pod are always restarted.
+* `"Never"` - Means that containers within the pod are never restarted.
 
 ***
 

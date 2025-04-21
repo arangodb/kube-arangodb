@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -134,6 +134,41 @@ func (s MemberStatus) Equal(other MemberStatus) bool {
 // Age returns the duration since the creation timestamp of this member.
 func (s MemberStatus) Age() time.Duration {
 	return time.Since(s.CreatedAt.Time)
+}
+
+// AppendLastTermination appends termination to the list if required
+func (s *MemberStatus) AppendLastTermination(termination time.Time) bool {
+	if s == nil {
+		return false
+	}
+
+	if len(s.RecentTerminations) == 0 {
+		s.RecentTerminations = []meta.Time{
+			meta.NewTime(termination),
+		}
+		return true
+	}
+
+	if s.RecentTerminations[0].Time.Before(termination) {
+		s.RecentTerminations = append(s.RecentTerminations, meta.NewTime(termination))
+
+		return true
+	}
+
+	return false
+}
+
+// LastTermination returns last termination time
+func (s *MemberStatus) LastTermination() time.Time {
+	if s == nil {
+		return time.Time{}
+	}
+
+	if len(s.RecentTerminations) == 0 {
+		return time.Time{}
+	}
+
+	return s.RecentTerminations[0].Time
 }
 
 // RemoveTerminationsBefore removes all recent terminations before the given timestamp.

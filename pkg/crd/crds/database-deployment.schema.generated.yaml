@@ -1202,6 +1202,12 @@ v1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -3491,6 +3497,12 @@ v1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -5698,6 +5710,12 @@ v1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -7997,6 +8015,12 @@ v1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -11419,6 +11443,12 @@ v1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -13771,6 +13801,12 @@ v1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -15971,6 +16007,12 @@ v1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -18278,6 +18320,12 @@ v2alpha1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -20567,6 +20615,12 @@ v2alpha1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -22774,6 +22828,12 @@ v2alpha1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -25073,6 +25133,12 @@ v2alpha1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -28495,6 +28561,12 @@ v2alpha1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -30847,6 +30919,12 @@ v2alpha1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string
@@ -33047,6 +33125,12 @@ v2alpha1:
                       x-kubernetes-int-or-string: true
                     type: object
                 type: object
+              restartPolicy:
+                description: RestartPolicy for all pods within the group.
+                enum:
+                  - Always
+                  - Never
+                type: string
               schedulerName:
                 description: SchedulerName define scheduler name used for group
                 type: string

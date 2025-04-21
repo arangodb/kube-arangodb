@@ -215,6 +215,13 @@ type ServerGroupSpec struct {
 	// +doc/enum: replace|Replaces server instead of upgrading. Takes an effect only on DBServer
 	// +doc/default: inplace
 	UpgradeMode *ServerGroupUpgradeMode `json:"upgradeMode,omitempty"`
+
+	// RestartPolicy for all pods within the group.
+	// +doc/type: core.RestartPolicy
+	// +doc/enum: Always|Means that containers within the pod are always restarted.
+	// +doc/enum: Never|Means that containers within the pod are never restarted.
+	// +doc/link: Documentation of core.RestartPolicy|https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-po
+	RestartPolicy *core.RestartPolicy `json:"restartPolicy,omitempty"`
 }
 
 func (s *ServerGroupSpec) Get() ServerGroupSpec {

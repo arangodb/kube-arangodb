@@ -60,29 +60,6 @@ const (
 	maxPodInspectorInterval         = util.Interval(time.Hour)   // Maximum time between Pod inspection (if nothing else happens)
 )
 
-func (r *Resources) handleRestartedPod(pod *core.Pod, memberStatus *api.MemberStatus, wasTerminated, markAsTerminated *bool) {
-	containerStatus, exist := kresources.GetContainerStatusByName(pod, api.ServerGroupReservedContainerNameServer)
-	if exist && containerStatus.State.Terminated != nil {
-		// do not record termination time again in the code below
-		*wasTerminated = true
-
-		termination := containerStatus.State.Terminated.FinishedAt
-		if memberStatus.RecentTerminationsSince(termination.Time) == 0 {
-			memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, termination)
-		}
-
-		previousTermination := containerStatus.LastTerminationState.Terminated
-		allowedRestartPeriod := time.Now().Add(terminationRestartPeriod)
-		if previousTermination != nil && !previousTermination.FinishedAt.Time.Before(allowedRestartPeriod) {
-			r.log.Str("pod-name", pod.GetName()).Debug("pod is continuously restarting - we will terminate it")
-			*markAsTerminated = true
-		} else {
-			*markAsTerminated = false
-			r.log.Str("pod-name", pod.GetName()).Debug("pod is restarting - we are not marking it as terminated yet..")
-		}
-	}
-}
-
 // InspectPods lists all pods that belong to the given deployment and updates
 // the member status of the deployment accordingly.
 // Returns: Interval_till_next_inspection, error
@@ -148,102 +125,43 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		// Update state
 		updateMemberStatusNeeded := false
-		if k8sutil.IsPodSucceeded(pod, coreContainers) {
-			// Pod has terminated with exit code 0.
-			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
-			markAsTerminated := true
-
-			if pod.Spec.RestartPolicy == core.RestartPolicyAlways && !wasTerminated {
-				r.handleRestartedPod(pod, &memberStatus, &wasTerminated, &markAsTerminated)
-			}
-
-			if markAsTerminated && memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
-				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Terminated to true: Pod Succeeded")
-				updateMemberStatusNeeded = true
-				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
-
-				if !wasTerminated {
-					// Record termination time
-					now := meta.Now()
-					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
+		if pod.Spec.RestartPolicy == core.RestartPolicyNever || pod.DeletionTimestamp != nil {
+			if k8sutil.IsPodSucceeded(pod, coreContainers) {
+				// Pod has terminated with exit code 0.
+				if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Succeeded", "") {
+					log.Str("pod-name", pod.GetName()).Debug("Updating member condition Terminated to true: Pod Succeeded")
+					updateMemberStatusNeeded = true
+					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				}
-			}
-		} else if k8sutil.IsPodFailed(pod, coreContainers) {
-			// Pod has terminated with at least 1 container with a non-zero exit code.
-			wasTerminated := memberStatus.Conditions.IsTrue(api.ConditionTypeTerminated)
-			markAsTerminated := true
+			} else if k8sutil.IsPodFailed(pod, coreContainers) {
+				// Pod has terminated with at least 1 container with a non-zero exit code.
 
-			if pod.Spec.RestartPolicy == core.RestartPolicyAlways && !wasTerminated {
-				r.handleRestartedPod(pod, &memberStatus, &wasTerminated, &markAsTerminated)
-			}
-
-			if markAsTerminated && memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
-				if containers := kresources.GetFailedContainerNames(pod.Status.InitContainerStatuses); len(containers) > 0 {
-					for id := range containers {
-						switch containers[id] {
-						case api.ServerGroupReservedInitContainerNameVersionCheck:
-							if c, ok := kresources.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, containers[id]); ok {
-								if t := c.State.Terminated; t != nil && t.ExitCode == 11 {
-									memberStatus.Upgrade = true
-									updateMemberStatusNeeded = true
+				if memberStatus.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Failed", "") {
+					if containers := kresources.GetFailedContainerNames(pod.Status.InitContainerStatuses); len(containers) > 0 {
+						for id := range containers {
+							switch containers[id] {
+							case api.ServerGroupReservedInitContainerNameVersionCheck:
+								if c, ok := kresources.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, containers[id]); ok {
+									if t := c.State.Terminated; t != nil && t.ExitCode == 11 {
+										memberStatus.Upgrade = true
+										updateMemberStatusNeeded = true
+									}
 								}
-							}
-						case api.ServerGroupReservedInitContainerNameUpgrade:
-							memberStatus.Conditions.Update(api.ConditionTypeUpgradeFailed, true, "Upgrade Failed", "")
-						}
-
-						if c, ok := kresources.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, containers[id]); ok {
-							if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
-								log.Str("member", memberStatus.ID).
-									Str("pod", pod.GetName()).
-									Str("container", containers[id]).
-									Str("uid", string(pod.GetUID())).
-									Int32("exit-code", t.ExitCode).
-									Str("reason", t.Reason).
-									Str("message", t.Message).
-									Int32("signal", t.Signal).
-									Time("started", t.StartedAt.Time).
-									Time("finished", t.FinishedAt.Time).
-									Warn("Pod failed in unexpected way: Init Container failed")
-
-								r.metrics.IncMemberInitContainerRestarts(memberStatus.ID, containers[id], t.Reason, t.ExitCode)
+							case api.ServerGroupReservedInitContainerNameUpgrade:
+								memberStatus.Conditions.Update(api.ConditionTypeUpgradeFailed, true, "Upgrade Failed", "")
 							}
 						}
 					}
-				}
 
-				if containers := kresources.GetFailedContainerNames(pod.Status.ContainerStatuses); len(containers) > 0 {
-					for id := range containers {
-						if c, ok := kresources.GetAnyContainerStatusByName(pod.Status.ContainerStatuses, containers[id]); ok {
-							if t := c.State.Terminated; t != nil && t.ExitCode != 0 {
-								log.Str("member", memberStatus.ID).
-									Str("pod", pod.GetName()).
-									Str("container", containers[id]).
-									Str("uid", string(pod.GetUID())).
-									Int32("exit-code", t.ExitCode).
-									Str("reason", t.Reason).
-									Str("message", t.Message).
-									Int32("signal", t.Signal).
-									Time("started", t.StartedAt.Time).
-									Time("finished", t.FinishedAt.Time).
-									Warn("Pod failed in unexpected way: Core Container failed")
-
-								r.metrics.IncMemberContainerRestarts(memberStatus.ID, containers[id], t.Reason, t.ExitCode)
-							}
-						}
-					}
-				}
-
-				log.Str("pod-name", pod.GetName()).Debug("Updating member condition Terminated to true: Pod Failed")
-				updateMemberStatusNeeded = true
-				nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
-
-				if !wasTerminated {
-					// Record termination time
-					now := meta.Now()
-					memberStatus.RecentTerminations = append(memberStatus.RecentTerminations, now)
+					log.Str("pod-name", pod.GetName()).Debug("Updating member condition Terminated to true: Pod Failed")
+					updateMemberStatusNeeded = true
+					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 				}
 			}
+		}
+
+		if t := r.failedContainerHandler(log, memberStatus, pod); memberStatus.AppendLastTermination(t) {
+			updateMemberStatusNeeded = true
 		}
 
 		if k8sutil.IsPodScheduled(pod) {
@@ -529,18 +447,12 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:
 					// Shutdown was intended, so not need to do anything here.
 					// Just mark terminated
-					wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
-					if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "") {
-						if !wasTerminated {
-							// Record termination time
-							now := meta.Now()
-							m.RecentTerminations = append(m.RecentTerminations, now)
-						}
-						// Save it
-						if err := status.Members.Update(m, group); err != nil {
-							return 0, errors.WithStack(err)
-						}
+					m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "")
+					// Save it
+					if err := status.Members.Update(m, group); err != nil {
+						return 0, errors.WithStack(err)
 					}
+
 				default:
 					log.Str("pod-name", podName).Debug("Pod is gone")
 					m.Phase = api.MemberPhaseNone // This is trigger a recreate of the pod.
@@ -548,14 +460,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 					nextInterval = nextInterval.ReduceTo(recheckSoonPodInspectorInterval)
 					events = append(events, k8sutil.NewPodGoneEvent(podName, group.AsRole(), apiObject))
 					m.Conditions.Update(api.ConditionTypeReady, false, "Pod Does Not Exist", "")
-					wasTerminated := m.Conditions.IsTrue(api.ConditionTypeTerminated)
-					if m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Does Not Exist", "") {
-						if !wasTerminated {
-							// Record termination time
-							now := meta.Now()
-							m.RecentTerminations = append(m.RecentTerminations, now)
-						}
-					}
+					m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Does Not Exist", "")
 
 					// Save it
 					if err := status.Members.Update(m, group); err != nil {

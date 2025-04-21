@@ -30,7 +30,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
@@ -150,10 +149,7 @@ func (m *MemberGatewayPod) GetContainerCreator() interfaces.ContainerCreator {
 }
 
 func (m *MemberGatewayPod) GetRestartPolicy() core.RestartPolicy {
-	if features.RestartPolicyAlways().Enabled() {
-		return core.RestartPolicyAlways
-	}
-	return core.RestartPolicyNever
+	return getDefaultRestartPolicy(m.GroupSpec)
 }
 
 func (m *MemberGatewayPod) Init(ctx context.Context, cachedStatus interfaces.Inspector, pod *core.PodTemplateSpec) error {
