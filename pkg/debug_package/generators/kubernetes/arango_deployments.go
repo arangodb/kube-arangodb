@@ -96,35 +96,37 @@ func deploymentMembers(logger zerolog.Logger, client kclient.Client, depl *api.A
 			return []interface{}{arangoMember}, nil
 		})
 
-		files <- shared.NewFile(fmt.Sprintf("kubernetes/arango/deployments/%s/members/%s/async-registry.json", depl.GetName(), arangoMember.GetName()), shared.GenerateDataFuncP2(func(depl, member string) ([]byte, error) {
-			handler, err := discoverExecFunc()
-			if err != nil {
-				return nil, err
-			}
+		if member.Group.IsArangod() {
+			files <- shared.NewFile(fmt.Sprintf("kubernetes/arango/deployments/%s/members/%s/async-registry.json", depl.GetName(), arangoMember.GetName()), shared.GenerateDataFuncP2(func(depl, member string) ([]byte, error) {
+				handler, err := discoverExecFunc()
+				if err != nil {
+					return nil, err
+				}
 
-			out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", member, "_admin", "async-registry")
+				out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", member, "_admin", "async-registry")
 
-			if err != nil {
-				return nil, err
-			}
+				if err != nil {
+					return nil, err
+				}
 
-			return out, nil
-		}, depl.GetName(), member.Member.ID))
+				return out, nil
+			}, depl.GetName(), member.Member.ID))
 
-		files <- shared.NewFile(fmt.Sprintf("kubernetes/arango/deployments/%s/members/%s/stack", depl.GetName(), arangoMember.GetName()), shared.GenerateDataFuncP2(func(depl, pod string) ([]byte, error) {
-			handler, err := remoteExecFunc("/usr/bin/eu-stack", pod, "server")
-			if err != nil {
-				return nil, err
-			}
+			files <- shared.NewFile(fmt.Sprintf("kubernetes/arango/deployments/%s/members/%s/stack", depl.GetName(), arangoMember.GetName()), shared.GenerateDataFuncP2(func(depl, pod string) ([]byte, error) {
+				handler, err := remoteExecFunc("/usr/bin/eu-stack", pod, "server")
+				if err != nil {
+					return nil, err
+				}
 
-			out, _, err := handler(logger, "-n32", "-p1")
+				out, _, err := handler(logger, "-n32", "-p1")
 
-			if err != nil {
-				return nil, err
-			}
+				if err != nil {
+					return nil, err
+				}
 
-			return out, nil
-		}, depl.GetName(), member.Member.PodName))
+				return out, nil
+			}, depl.GetName(), member.Member.PodName))
+		}
 	}
 
 	return nil
