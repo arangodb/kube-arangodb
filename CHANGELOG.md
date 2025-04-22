@@ -10,6 +10,7 @@
 - (Feature) AutoDiscover Operator Access
 - (Feature) (Platform) Adjust Gateway timeouts
 - (Feature) (Platform) Docs and Installer improvements
+- (Feature) Promote RestartPolicy Always Feature
 
 ## [1.2.47](https://github.com/arangodb/kube-arangodb/tree/1.2.47) (2025-03-28)
 - (Bugfix) Use Profile Annotations

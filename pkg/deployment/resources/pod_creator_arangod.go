@@ -511,10 +511,7 @@ func (m *MemberArangoDPod) GetContainerCreator() interfaces.ContainerCreator {
 }
 
 func (m *MemberArangoDPod) GetRestartPolicy() core.RestartPolicy {
-	if features.RestartPolicyAlways().Enabled() {
-		return core.RestartPolicyAlways
-	}
-	return core.RestartPolicyNever
+	return getDefaultRestartPolicy(m.GroupSpec)
 }
 
 func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core.Container, error) {
