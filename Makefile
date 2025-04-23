@@ -161,6 +161,7 @@ endif
 
 ifeq ($(RELEASE_MODE),community)
 MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
+MANIFESTPATHCRDBASIC := manifests/arango-crd-basic$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDALL := manifests/arango-crd-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
@@ -171,6 +172,7 @@ MANIFESTPATHK2KCLUSTERSYNC := manifests/arango-k2kclustersync$(MANIFESTSUFFIX).y
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRD := manifests/kustomize/crd/arango-crd$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHCRDBASIC := manifests/kustomize/crd/arango-crd-basic$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRDALL := manifests/kustomize/crd/arango-crd-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
@@ -182,6 +184,7 @@ KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFF
 KUSTOMIZEPATHALL := manifests/kustomize/all/arango-all$(MANIFESTSUFFIX).yaml
 else
 MANIFESTPATHCRD := manifests/enterprise-crd$(MANIFESTSUFFIX).yaml
+MANIFESTPATHCRDBASIC := manifests/enterprise-crd-basic$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDALL := manifests/enterprise-crd-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/enterprise-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
@@ -192,6 +195,7 @@ MANIFESTPATHK2KCLUSTERSYNC := manifests/enterprise-k2kclustersync$(MANIFESTSUFFI
 MANIFESTPATHSTORAGE := manifests/enterprise-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/enterprise-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRD := manifests/kustomize-enterprise/crd/enterprise-crd$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHCRDBASIC := manifests/kustomize-enterprise/crd/enterprise-crd-basic$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRDALL := manifests/kustomize-enterprise/crd/enterprise-crd-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize-enterprise/deployment/enterprise-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize-enterprise/deployment-replication/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
@@ -526,7 +530,7 @@ manifests:
 .PHONY: manifests-crd-file
 manifests-crd-file:
 	@echo Building manifests for CRD - $(MANIFESTPATHCRD)
-	@go run ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" '$(ROOT)/cmd/main-ops/' crd generate > $(MANIFESTPATHCRD)
+	@go run ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" '$(ROOT)/cmd/main-ops/' crd generate --crd.validation-schema 'all=false' > $(MANIFESTPATHCRD)
 manifests-crd: manifests-crd-file
 
 .PHONY: manifests-crd-all-file
@@ -535,11 +539,23 @@ manifests-crd-all-file:
 	@go run ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" '$(ROOT)/cmd/main-ops/' crd generate --crd.validation-schema 'all=true' > $(MANIFESTPATHCRDALL)
 manifests-crd: manifests-crd-all-file
 
+.PHONY: manifests-crd-basic-file
+manifests-crd-basic-file:
+	@echo Building manifests for CRD with basic schemas - $(MANIFESTPATHCRDBASIC)
+	@go run ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" '$(ROOT)/cmd/main-ops/' crd generate > $(MANIFESTPATHCRDBASIC)
+manifests-crd: manifests-crd-basic-file
+
 .PHONY: manifests-crd-kustomize
 manifests-crd-kustomize: manifests-crd-file
 	@echo Building manifests for CRD - $(KUSTOMIZEPATHCRD)
 	@cp "$(MANIFESTPATHCRD)" "$(KUSTOMIZEPATHCRD)"
 manifests-crd: manifests-crd-kustomize
+
+.PHONY: manifests-crd-basic-kustomize
+manifests-crd-basic-kustomize: manifests-crd-basic-file
+	@echo Building manifests for CRD with schemas - $(KUSTOMIZEPATHCRDBASIC)
+	@cp "$(MANIFESTPATHCRDBASIC)" "$(KUSTOMIZEPATHCRDBASIC)"
+manifests-crd: manifests-crd-basic-kustomize
 
 .PHONY: manifests-crd-all-kustomize
 manifests-crd-all-kustomize: manifests-crd-all-file
@@ -709,7 +725,7 @@ manifest-verify-plain-ce: manifests-verify-env-reset
 	kubectl apply -f ./manifests/arango-all.yaml
 	kubectl apply -f ./manifests/arango-apps.yaml
 	kubectl apply -f ./manifests/arango-backup.yaml
-	kubectl replace -f ./manifests/arango-crd.yaml
+	kubectl apply -f ./manifests/arango-crd.yaml
 	kubectl apply -f ./manifests/arango-deployment.yaml
 	kubectl apply -f ./manifests/arango-deployment-replication.yaml
 	kubectl apply -f ./manifests/arango-k2kclustersync.yaml
@@ -719,7 +735,7 @@ manifest-verify-plain-ee: manifests-verify-env-reset
 	kubectl apply -f ./manifests/enterprise-all.yaml
 	kubectl apply -f ./manifests/enterprise-apps.yaml
 	kubectl apply -f ./manifests/enterprise-backup.yaml
-	kubectl replace -f ./manifests/enterprise-crd.yaml
+	kubectl apply -f ./manifests/enterprise-crd.yaml
 	kubectl apply -f ./manifests/enterprise-deployment.yaml
 	kubectl apply -f ./manifests/enterprise-deployment-replication.yaml
 	kubectl apply -f ./manifests/enterprise-k2kclustersync.yaml
