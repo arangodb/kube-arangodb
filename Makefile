@@ -530,7 +530,7 @@ manifests:
 .PHONY: manifests-crd-file
 manifests-crd-file:
 	@echo Building manifests for CRD - $(MANIFESTPATHCRD)
-	@go run ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" '$(ROOT)/cmd/main-ops/' crd generate --crd.validation-schema 'all=false' > $(MANIFESTPATHCRD)
+	@go run ${GOBUILDARGS} --tags "$(GOBUILDTAGS)" '$(ROOT)/cmd/main-ops/' crd generate --crd.validation-schema 'all=false' --crd.skip arangolocalstorages.storage.arangodb.com > $(MANIFESTPATHCRD)
 manifests-crd: manifests-crd-file
 
 .PHONY: manifests-crd-all-file
