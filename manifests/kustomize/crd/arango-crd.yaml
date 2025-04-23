@@ -12,61 +12,58 @@ spec:
     listKind: ArangoBackupPolicyList
     plural: arangobackuppolicies
     shortNames:
-    - arangobackuppolicy
-    - arangobp
+      - arangobackuppolicy
+      - arangobp
     singular: arangobackuppolicy
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - description: Schedule
-      jsonPath: .spec.schedule
-      name: Schedule
-      type: string
-    - description: Scheduled
-      jsonPath: .status.scheduled
-      name: Scheduled
-      type: string
-    - description: Message of the ArangoBackupPolicy object
-      jsonPath: .status.message
-      name: Message
-      priority: 1
-      type: string
-    name: v1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-  - additionalPrinterColumns:
-    - description: Schedule
-      jsonPath: .spec.schedule
-      name: Schedule
-      type: string
-    - description: Scheduled
-      jsonPath: .status.scheduled
-      name: Scheduled
-      type: string
-    - description: Message of the ArangoBackupPolicy object
-      jsonPath: .status.message
-      name: Message
-      priority: 1
-      type: string
-    name: v1alpha
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: false
-    storage: false
-    subresources:
-      status: {}
-
-
+    - additionalPrinterColumns:
+        - description: Schedule
+          jsonPath: .spec.schedule
+          name: Schedule
+          type: string
+        - description: Scheduled
+          jsonPath: .status.scheduled
+          name: Scheduled
+          type: string
+        - description: Message of the ArangoBackupPolicy object
+          jsonPath: .status.message
+          name: Message
+          priority: 1
+          type: string
+      name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+    - additionalPrinterColumns:
+        - description: Schedule
+          jsonPath: .spec.schedule
+          name: Schedule
+          type: string
+        - description: Scheduled
+          jsonPath: .status.scheduled
+          name: Scheduled
+          type: string
+        - description: Message of the ArangoBackupPolicy object
+          jsonPath: .status.message
+          name: Message
+          priority: 1
+          type: string
+      name: v1alpha
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: false
+      storage: false
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -81,102 +78,99 @@ spec:
     listKind: ArangoBackupList
     plural: arangobackups
     shortNames:
-    - arangobackup
+      - arangobackup
     singular: arangobackup
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - description: Policy name
-      jsonPath: .spec.policyName
-      name: Policy
-      type: string
-    - description: Deployment name
-      jsonPath: .spec.deployment.name
-      name: Deployment
-      type: string
-    - description: Backup Version
-      jsonPath: .status.backup.version
-      name: Version
-      type: string
-    - description: Backup Creation Timestamp
-      jsonPath: .status.backup.createdAt
-      name: Created
-      type: string
-    - description: Backup Size in Bytes
-      format: byte
-      jsonPath: .status.backup.sizeInBytes
-      name: Size
-      type: integer
-    - description: Backup Number of the DB Servers
-      jsonPath: .status.backup.numberOfDBServers
-      name: DBServers
-      type: integer
-    - description: The actual state of the ArangoBackup
-      jsonPath: .status.state
-      name: State
-      type: string
-    - description: Message of the ArangoBackup object
-      jsonPath: .status.message
-      name: Message
-      priority: 1
-      type: string
-    name: v1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-  - additionalPrinterColumns:
-    - description: Policy name
-      jsonPath: .spec.policyName
-      name: Policy
-      type: string
-    - description: Deployment name
-      jsonPath: .spec.deployment.name
-      name: Deployment
-      type: string
-    - description: Backup Version
-      jsonPath: .status.backup.version
-      name: Version
-      type: string
-    - description: Backup Creation Timestamp
-      jsonPath: .status.backup.createdAt
-      name: Created
-      type: string
-    - description: Backup Size in Bytes
-      format: byte
-      jsonPath: .status.backup.sizeInBytes
-      name: Size
-      type: integer
-    - description: Backup Number of the DB Servers
-      jsonPath: .status.backup.numberOfDBServers
-      name: DBServers
-      type: integer
-    - description: The actual state of the ArangoBackup
-      jsonPath: .status.state
-      name: State
-      type: string
-    - description: Message of the ArangoBackup object
-      jsonPath: .status.message
-      name: Message
-      priority: 1
-      type: string
-    name: v1alpha
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: false
-    storage: false
-    subresources:
-      status: {}
-
-
+    - additionalPrinterColumns:
+        - description: Policy name
+          jsonPath: .spec.policyName
+          name: Policy
+          type: string
+        - description: Deployment name
+          jsonPath: .spec.deployment.name
+          name: Deployment
+          type: string
+        - description: Backup Version
+          jsonPath: .status.backup.version
+          name: Version
+          type: string
+        - description: Backup Creation Timestamp
+          jsonPath: .status.backup.createdAt
+          name: Created
+          type: string
+        - description: Backup Size in Bytes
+          format: byte
+          jsonPath: .status.backup.sizeInBytes
+          name: Size
+          type: integer
+        - description: Backup Number of the DB Servers
+          jsonPath: .status.backup.numberOfDBServers
+          name: DBServers
+          type: integer
+        - description: The actual state of the ArangoBackup
+          jsonPath: .status.state
+          name: State
+          type: string
+        - description: Message of the ArangoBackup object
+          jsonPath: .status.message
+          name: Message
+          priority: 1
+          type: string
+      name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+    - additionalPrinterColumns:
+        - description: Policy name
+          jsonPath: .spec.policyName
+          name: Policy
+          type: string
+        - description: Deployment name
+          jsonPath: .spec.deployment.name
+          name: Deployment
+          type: string
+        - description: Backup Version
+          jsonPath: .status.backup.version
+          name: Version
+          type: string
+        - description: Backup Creation Timestamp
+          jsonPath: .status.backup.createdAt
+          name: Created
+          type: string
+        - description: Backup Size in Bytes
+          format: byte
+          jsonPath: .status.backup.sizeInBytes
+          name: Size
+          type: integer
+        - description: Backup Number of the DB Servers
+          jsonPath: .status.backup.numberOfDBServers
+          name: DBServers
+          type: integer
+        - description: The actual state of the ArangoBackup
+          jsonPath: .status.state
+          name: State
+          type: string
+        - description: Message of the ArangoBackup object
+          jsonPath: .status.message
+          name: Message
+          priority: 1
+          type: string
+      name: v1alpha
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: false
+      storage: false
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -191,32 +185,29 @@ spec:
     listKind: ArangoClusterSynchronizationList
     plural: arangoclustersynchronizations
     shortNames:
-    - arangoclustersync
+      - arangoclustersync
     singular: arangoclustersynchronization
   scope: Namespaced
   versions:
-  - name: v1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-  - name: v2alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: false
-    subresources:
-      status: {}
-
-
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+    - name: v2alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -231,37 +222,34 @@ spec:
     listKind: ArangoDeploymentReplicationList
     plural: arangodeploymentreplications
     shortNames:
-    - arangorepl
+      - arangorepl
     singular: arangodeploymentreplication
   scope: Namespaced
   versions:
-  - name: v1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-  - name: v1alpha
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: false
-    storage: false
-  - name: v2alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: false
-    subresources:
-      status: {}
-
-
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+    - name: v1alpha
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: false
+      storage: false
+    - name: v2alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -276,65 +264,62 @@ spec:
     listKind: ArangoDeploymentList
     plural: arangodeployments
     shortNames:
-    - arangodb
-    - arango
+      - arangodb
+      - arango
     singular: arangodeployment
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - description: Defines if ArangoDeployment is UpToDate
-      jsonPath: .status.conditions[?(@.type=="UpToDate")].status
-      name: Ready
-      type: string
-    - description: ArangoDeployment Mode
-      jsonPath: .status.accepted-spec.mode
-      name: Mode
-      type: string
-    name: v1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-  - additionalPrinterColumns:
-    - description: Defines if ArangoDeployment is UpToDate
-      jsonPath: .status.conditions[?(@.type=="UpToDate")].status
-      name: Ready
-      type: string
-    - description: ArangoDeployment Mode
-      jsonPath: .status.accepted-spec.mode
-      name: Mode
-      type: string
-    name: v1alpha
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: false
-    storage: false
-  - additionalPrinterColumns:
-    - description: Defines if ArangoDeployment is UpToDate
-      jsonPath: .status.conditions[?(@.type=="UpToDate")].status
-      name: Ready
-      type: string
-    - description: ArangoDeployment Mode
-      jsonPath: .status.accepted-spec.mode
-      name: Mode
-      type: string
-    name: v2alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: false
-    subresources:
-      status: {}
-
-
+    - additionalPrinterColumns:
+        - description: Defines if ArangoDeployment is UpToDate
+          jsonPath: .status.conditions[?(@.type=="UpToDate")].status
+          name: Ready
+          type: string
+        - description: ArangoDeployment Mode
+          jsonPath: .status.accepted-spec.mode
+          name: Mode
+          type: string
+      name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+    - additionalPrinterColumns:
+        - description: Defines if ArangoDeployment is UpToDate
+          jsonPath: .status.conditions[?(@.type=="UpToDate")].status
+          name: Ready
+          type: string
+        - description: ArangoDeployment Mode
+          jsonPath: .status.accepted-spec.mode
+          name: Mode
+          type: string
+      name: v1alpha
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: false
+      storage: false
+    - additionalPrinterColumns:
+        - description: Defines if ArangoDeployment is UpToDate
+          jsonPath: .status.conditions[?(@.type=="UpToDate")].status
+          name: Ready
+          type: string
+        - description: ArangoDeployment Mode
+          jsonPath: .status.accepted-spec.mode
+          name: Mode
+          type: string
+      name: v2alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -349,28 +334,25 @@ spec:
     listKind: ArangoJobList
     plural: arangojobs
     shortNames:
-    - arangojob
+      - arangojob
     singular: arangojob
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - description: Deployment name
-      jsonPath: .spec.arangoDeploymentName
-      name: ArangoDeploymentName
-      type: string
-    name: v1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - additionalPrinterColumns:
+        - description: Deployment name
+          jsonPath: .spec.arangoDeploymentName
+          name: ArangoDeploymentName
+          type: string
+      name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -385,52 +367,49 @@ spec:
     listKind: ArangoMemberList
     plural: arangomembers
     shortNames:
-    - arangomembers
+      - arangomembers
     singular: arangomember
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - description: Defines if Member is ready
-      jsonPath: .status.conditions[?(@.type=="Ready")].status
-      name: Ready
-      type: string
-    - description: Defines if Member is pending restart
-      jsonPath: .status.conditions[?(@.type=="PendingRestart")].status
-      name: PendingRestart
-      priority: 1
-      type: string
-    name: v1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-  - additionalPrinterColumns:
-    - description: Defines if Member is ready
-      jsonPath: .status.conditions[?(@.type=="Ready")].status
-      name: Ready
-      type: string
-    - description: Defines if Member is pending restart
-      jsonPath: .status.conditions[?(@.type=="PendingRestart")].status
-      name: PendingRestart
-      priority: 1
-      type: string
-    name: v2alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: false
-    subresources:
-      status: {}
-
-
+    - additionalPrinterColumns:
+        - description: Defines if Member is ready
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+        - description: Defines if Member is pending restart
+          jsonPath: .status.conditions[?(@.type=="PendingRestart")].status
+          name: PendingRestart
+          priority: 1
+          type: string
+      name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+    - additionalPrinterColumns:
+        - description: Defines if Member is ready
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+        - description: Defines if Member is pending restart
+          jsonPath: .status.conditions[?(@.type=="PendingRestart")].status
+          name: PendingRestart
+          priority: 1
+          type: string
+      name: v2alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -447,19 +426,16 @@ spec:
     singular: arangomlbatchjob
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -476,19 +452,16 @@ spec:
     singular: arangomlcronjob
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -505,28 +478,25 @@ spec:
     singular: arangomlextension
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: false
-    subresources:
-      status: {}
-  - name: v1beta1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -543,28 +513,25 @@ spec:
     singular: arangomlstorage
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: false
-    subresources:
-      status: {}
-  - name: v1beta1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -581,37 +548,34 @@ spec:
     singular: arangoplatformchart
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - description: Defines if Chart is valid
-      jsonPath: .status.conditions[?(@.type=="Ready")].status
-      name: Ready
-      type: string
-    - description: Defines the name of Chart
-      jsonPath: .status.info.details.name
-      name: ChartName
-      type: string
-    - description: Defines the version of Chart
-      jsonPath: .status.info.details.version
-      name: ChartVersion
-      type: string
-    - description: Defines the checksum of Chart
-      jsonPath: .status.info.checksum
-      name: ChartChecksum
-      priority: 1
-      type: string
-    name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - additionalPrinterColumns:
+        - description: Defines if Chart is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+        - description: Defines the name of Chart
+          jsonPath: .status.info.details.name
+          name: ChartName
+          type: string
+        - description: Defines the version of Chart
+          jsonPath: .status.info.details.version
+          name: ChartVersion
+          type: string
+        - description: Defines the checksum of Chart
+          jsonPath: .status.info.checksum
+          name: ChartChecksum
+          priority: 1
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -628,24 +592,21 @@ spec:
     singular: arangoplatformstorage
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - description: Defines if Storage is valid
-      jsonPath: .status.conditions[?(@.type=="Ready")].status
-      name: Ready
-      type: string
-    name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - additionalPrinterColumns:
+        - description: Defines if Storage is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -662,28 +623,25 @@ spec:
     singular: arangoprofile
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: false
-    subresources:
-      status: {}
-  - name: v1beta1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -700,32 +658,29 @@ spec:
     singular: arangoroute
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - description: Defines if Route is valid
-      jsonPath: .status.conditions[?(@.type=="Ready")].status
-      name: Ready
-      type: string
-    - description: ArangoDeployment Name
-      jsonPath: .status.deployment.name
-      name: Deployment
-      type: string
-    - description: Route Path
-      jsonPath: .status.target.route.path
-      name: Route
-      type: string
-    name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - additionalPrinterColumns:
+        - description: Defines if Route is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+        - description: ArangoDeployment Name
+          jsonPath: .status.deployment.name
+          name: Deployment
+          type: string
+        - description: Route Path
+          jsonPath: .status.target.route.path
+          name: Route
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -742,19 +697,16 @@ spec:
     singular: arangoschedulerbatchjob
   scope: Namespaced
   versions:
-  - name: v1beta1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -771,19 +723,16 @@ spec:
     singular: arangoschedulercronjob
   scope: Namespaced
   versions:
-  - name: v1beta1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -800,22 +749,19 @@ spec:
     singular: arangoschedulerdeployment
   scope: Namespaced
   versions:
-  - name: v1beta1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      scale:
-        specReplicasPath: .spec.replicas
-        statusReplicasPath: .status.replicas
-      status: {}
-
-
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        scale:
+          specReplicasPath: .spec.replicas
+          statusReplicasPath: .status.replicas
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -832,19 +778,16 @@ spec:
     singular: arangoschedulerpod
   scope: Namespaced
   versions:
-  - name: v1beta1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
-
-
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -861,33 +804,30 @@ spec:
     singular: arangotask
   scope: Namespaced
   versions:
-  - name: v1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-  - name: v1alpha
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: false
-    storage: false
-  - name: v2alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: false
-    subresources:
-      status: {}
-
-
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+    - name: v1alpha
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: false
+      storage: false
+    - name: v2alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
 ---
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -904,12 +844,12 @@ spec:
     singular: graphanalyticsengine
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        type: object
-        x-kubernetes-preserve-unknown-fields: true
-    served: true
-    storage: true
-    subresources:
-      status: {}
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
