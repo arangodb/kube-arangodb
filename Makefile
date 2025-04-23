@@ -706,24 +706,24 @@ manifests-verify-env-reset:
 
 manifest-verify-plain-ce: manifests-verify-env-reset
 	@echo "Trying to install via plain manifests"
-	kubectl apply -f ./manifests/arango-all.yaml
-	kubectl apply -f ./manifests/arango-apps.yaml
-	kubectl apply -f ./manifests/arango-backup.yaml
-	kubectl apply -f ./manifests/arango-crd.yaml
-	kubectl apply -f ./manifests/arango-deployment.yaml
-	kubectl apply -f ./manifests/arango-deployment-replication.yaml
-	kubectl apply -f ./manifests/arango-k2kclustersync.yaml
-	kubectl apply -f ./manifests/arango-storage.yaml
+	kubectl replace -f ./manifests/arango-all.yaml
+	kubectl replace -f ./manifests/arango-apps.yaml
+	kubectl replace -f ./manifests/arango-backup.yaml
+	kubectl replace -f ./manifests/arango-crd.yaml
+	kubectl replace -f ./manifests/arango-deployment.yaml
+	kubectl replace -f ./manifests/arango-deployment-replication.yaml
+	kubectl replace -f ./manifests/arango-k2kclustersync.yaml
+	kubectl replace -f ./manifests/arango-storage.yaml
 
 manifest-verify-plain-ee: manifests-verify-env-reset
-	kubectl apply -f ./manifests/enterprise-all.yaml
-	kubectl apply -f ./manifests/enterprise-apps.yaml
-	kubectl apply -f ./manifests/enterprise-backup.yaml
-	kubectl apply -f ./manifests/enterprise-crd.yaml
-	kubectl apply -f ./manifests/enterprise-deployment.yaml
-	kubectl apply -f ./manifests/enterprise-deployment-replication.yaml
-	kubectl apply -f ./manifests/enterprise-k2kclustersync.yaml
-	kubectl apply -f ./manifests/enterprise-storage.yaml
+	kubectl replace -f ./manifests/enterprise-all.yaml
+	kubectl replace -f ./manifests/enterprise-apps.yaml
+	kubectl replace -f ./manifests/enterprise-backup.yaml
+	kubectl replace -f ./manifests/enterprise-crd.yaml
+	kubectl replace -f ./manifests/enterprise-deployment.yaml
+	kubectl replace -f ./manifests/enterprise-deployment-replication.yaml
+	kubectl replace -f ./manifests/enterprise-k2kclustersync.yaml
+	kubectl replace -f ./manifests/enterprise-storage.yaml
 
 define KUSTOMIZE_YAML =
 apiVersion: kustomize.config.k8s.io/v1beta1
