@@ -325,6 +325,10 @@ func (in *ArangoBackupSpecBackOff) DeepCopyInto(out *ArangoBackupSpecBackOff) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.Until != nil {
+		in, out := &in.Until, &out.Until
+		*out = (*in).DeepCopy()
+	}
 	return
 }
 

@@ -272,3 +272,13 @@ func enableDependencyByName(name string) bool {
 
 	return false
 }
+
+// Reset resets the values of the features
+func Reset() {
+	featuresLock.Lock()
+	defer featuresLock.Unlock()
+
+	for _, f := range features {
+		f.Reset()
+	}
+}
