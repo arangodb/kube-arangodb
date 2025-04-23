@@ -43,6 +43,7 @@ Available Commands:
 Flags:
       --crd.force-update                          Enforce CRD Schema update
       --crd.preserve-unknown-fields stringArray   Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>.
+      --crd.skip stringArray                      Controls which CRD should be skipped.
       --crd.validation-schema stringArray         Controls which CRD should have validation schema <crd-name>=<true/false>.
   -h, --help                                      help for crd
 
@@ -65,6 +66,7 @@ Flags:
 Global Flags:
       --crd.force-update                          Enforce CRD Schema update
       --crd.preserve-unknown-fields stringArray   Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>.
+      --crd.skip stringArray                      Controls which CRD should be skipped.
       --crd.validation-schema stringArray         Controls which CRD should have validation schema <crd-name>=<true/false>.
 ```
 [END_INJECT]: # (arangodb_operator_ops_cmd_crd_install)
@@ -84,6 +86,7 @@ Flags:
 Global Flags:
       --crd.force-update                          Enforce CRD Schema update
       --crd.preserve-unknown-fields stringArray   Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>.
+      --crd.skip stringArray                      Controls which CRD should be skipped.
       --crd.validation-schema stringArray         Controls which CRD should have validation schema <crd-name>=<true/false>.
 ```
 [END_INJECT]: # (arangodb_operator_ops_cmd_crd_generate)
