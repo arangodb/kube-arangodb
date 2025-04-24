@@ -10,7 +10,7 @@ ifeq ($(shell uname),Darwin)
 endif
 
 KUBERNETES_VERSION_MINOR:=31
-KUBERNETES_VERSION_PATCH:=5
+KUBERNETES_VERSION_PATCH:=8
 
 ENVOY_IMAGE=envoyproxy/envoy:v1.32.5
 

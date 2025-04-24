@@ -33,6 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -156,6 +157,8 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 		}
 	}
 
+	next := expr.Next(time.Now())
+
 	needToListBackups := !policy.Spec.GetAllowConcurrent() || policy.Spec.MaxBackups > 0
 	for _, deployment := range deployments.Items {
 		depl := deployment.DeepCopy()
@@ -188,6 +191,19 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 		}
 
 		b := policy.NewBackup(depl)
+
+		if features.BackupPolicyUntilPropagation().Enabled() {
+			if b.Spec.Backoff == nil || b.Spec.Backoff.MaxIterations == nil {
+				if b.Spec.Backoff == nil {
+					b.Spec.Backoff = &backupApi.ArangoBackupSpecBackOff{}
+				}
+
+				b.Spec.Backoff.Until = &meta.Time{
+					Time: next,
+				}
+			}
+		}
+
 		if _, err := h.client.BackupV1().ArangoBackups(b.Namespace).Create(ctx, b, meta.CreateOptions{}); err != nil {
 			h.eventRecorder.Warning(policy, policyError, "Policy Error: %s", err.Error())
 
@@ -199,8 +215,6 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 
 		h.eventRecorder.Normal(policy, backupCreated, "Created ArangoBackup: %s/%s", b.Namespace, b.Name)
 	}
-
-	next := expr.Next(time.Now())
 
 	h.eventRecorder.Normal(policy, rescheduled, "Rescheduled for: %s", next.String())
 
