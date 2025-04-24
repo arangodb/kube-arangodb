@@ -1,5 +1,5 @@
 ARG IMAGE=registry.access.redhat.com/ubi8/ubi-minimal:8.4
-ARG ENVOY_IMAGE=envoyproxy/envoy:v1.31.0
+ARG ENVOY_IMAGE
 
 # Build Steps
 

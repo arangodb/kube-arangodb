@@ -59,6 +59,10 @@ v1:
                     description: MinDelay defines minimum delay in seconds. Default to 30
                     format: int32
                     type: integer
+                  until:
+                    description: Until defines the deadline of the retry mechanism in UTC
+                    format: date-time
+                    type: string
                 type: object
               lifetime:
                 description: 'Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".'

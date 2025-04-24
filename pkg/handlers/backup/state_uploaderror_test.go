@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -138,6 +138,179 @@ func Test_State_UploadError_BackToReady(t *testing.T) {
 	// Assert
 	newObj := refreshArangoBackup(t, handler, obj)
 	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
+
+	require.NotNil(t, newObj.Status.Backup)
+	require.Equal(t, obj.Status.Backup, newObj.Status.Backup)
+}
+
+func Test_State_UploadError_BackToReady_Until(t *testing.T) {
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploadError)
+
+	backupMeta, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
+		ID:                string(backupMeta.ID),
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
+		Uploaded:          util.NewType[bool](true),
+	}
+
+	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)
+	obj.Spec.Backoff = &backupApi.ArangoBackupSpecBackOff{
+		Until: util.NewType(meta.NewTime(time.Now().Add(time.Hour))),
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
+
+	require.NotNil(t, newObj.Status.Backup)
+	require.Equal(t, obj.Status.Backup, newObj.Status.Backup)
+}
+
+func Test_State_UploadError_BackToReady_UntilExpired(t *testing.T) {
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploadError)
+
+	backupMeta, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
+		ID:                string(backupMeta.ID),
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
+		Uploaded:          util.NewType[bool](true),
+	}
+
+	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)
+	obj.Spec.Backoff = &backupApi.ArangoBackupSpecBackOff{
+		Until: util.NewType(meta.NewTime(time.Now().Add(-time.Hour))),
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateFailed, false)
+
+	require.NotNil(t, newObj.Status.Backup)
+	require.Equal(t, obj.Status.Backup, newObj.Status.Backup)
+}
+
+func Test_State_UploadError_BackToReady_Until_WithIterations(t *testing.T) {
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploadError)
+
+	backupMeta, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
+		ID:                string(backupMeta.ID),
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
+		Uploaded:          util.NewType[bool](true),
+	}
+
+	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)
+	obj.Spec.Backoff = &backupApi.ArangoBackupSpecBackOff{
+		MaxIterations: util.NewType(1),
+		Until:         util.NewType(meta.NewTime(time.Now().Add(time.Hour))),
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateReady, true)
+
+	require.NotNil(t, newObj.Status.Backup)
+	require.Equal(t, obj.Status.Backup, newObj.Status.Backup)
+}
+
+func Test_State_UploadError_BackToReady_Until_WithIterationsExceeded(t *testing.T) {
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploadError)
+
+	backupMeta, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
+		ID:                string(backupMeta.ID),
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
+		Uploaded:          util.NewType[bool](true),
+	}
+
+	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)
+	obj.Spec.Backoff = &backupApi.ArangoBackupSpecBackOff{
+		MaxIterations: util.NewType(0),
+		Until:         util.NewType(meta.NewTime(time.Now().Add(time.Hour))),
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateFailed, false)
+
+	require.NotNil(t, newObj.Status.Backup)
+	require.Equal(t, obj.Status.Backup, newObj.Status.Backup)
+}
+
+func Test_State_UploadError_BackToReady_UntilExpired_WithIterations(t *testing.T) {
+	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
+
+	obj, deployment := newObjectSet(t, backupApi.ArangoBackupStateUploadError)
+
+	backupMeta, err := mock.Create()
+	require.NoError(t, err)
+
+	obj.Status.Backup = &backupApi.ArangoBackupDetails{
+		ID:                string(backupMeta.ID),
+		Version:           backupMeta.Version,
+		CreationTimestamp: meta.Now(),
+		Uploaded:          util.NewType[bool](true),
+	}
+
+	obj.Status.Time.Time = time.Now().Add(2 * downloadDelay)
+	obj.Spec.Backoff = &backupApi.ArangoBackupSpecBackOff{
+		MaxIterations: util.NewType(1),
+		Until:         util.NewType(meta.NewTime(time.Now().Add(-time.Hour))),
+	}
+
+	// Act
+	createArangoDeployment(t, handler, deployment)
+	createArangoBackup(t, handler, obj)
+
+	require.NoError(t, handler.Handle(context.Background(), tests.NewItem(t, operation.Update, obj)))
+
+	// Assert
+	newObj := refreshArangoBackup(t, handler, obj)
+	checkBackup(t, newObj, backupApi.ArangoBackupStateFailed, false)
 
 	require.NotNil(t, newObj.Status.Backup)
 	require.Equal(t, obj.Status.Backup, newObj.Status.Backup)

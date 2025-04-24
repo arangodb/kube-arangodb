@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,21 @@ func (a *ArangoBackupStatusBackOff) GetNext() meta.Time {
 }
 
 func (a *ArangoBackupStatusBackOff) ShouldBackoff(spec *ArangoBackupSpecBackOff) bool {
-	return spec == nil || spec.MaxIterations == nil || a.GetIterations() < *spec.MaxIterations
+	if spec != nil {
+		if u := spec.Until; u != nil && !u.IsZero() {
+			if time.Now().After(u.Time) {
+				return false
+			}
+		}
+
+		if u := spec.MaxIterations; u != nil {
+			if a.GetIterations() >= *u {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (a *ArangoBackupStatusBackOff) Backoff(spec *ArangoBackupSpecBackOff) *ArangoBackupStatusBackOff {
@@ -64,8 +78,18 @@ func (a *ArangoBackupStatusBackOff) Backoff(spec *ArangoBackupSpecBackOff) *Aran
 		}
 	}
 
+	next := time.Now().Add(spec.Backoff(a.GetIterations()))
+
+	if spec != nil {
+		if u := spec.Until; u != nil && !u.IsZero() {
+			if next.After(u.Time) {
+				next = u.Time
+			}
+		}
+	}
+
 	return &ArangoBackupStatusBackOff{
 		Iterations: a.GetIterations() + 1,
-		Next:       meta.Time{Time: time.Now().Add(spec.Backoff(a.GetIterations()))},
+		Next:       meta.Time{Time: next},
 	}
 }

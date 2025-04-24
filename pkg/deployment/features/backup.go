@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ package features
 func init() {
 	registerFeature(asyncBackupCreation)
 	registerFeature(backupCleanup)
+	registerFeature(backupPolicyUntilPropagation)
 }
 
 var asyncBackupCreation = &feature{
@@ -39,6 +40,13 @@ var backupCleanup = &feature{
 	enabledByDefault:   false,
 }
 
+var backupPolicyUntilPropagation = &feature{
+	name:               "backup-policy-until-propagation",
+	description:        "Sets Until field in the Backup based on next schedule time",
+	enterpriseRequired: false,
+	enabledByDefault:   true,
+}
+
 // AsyncBackupCreation returns mode for backup creation (sync/async).
 func AsyncBackupCreation() Feature {
 	return asyncBackupCreation
@@ -47,4 +55,9 @@ func AsyncBackupCreation() Feature {
 // BackupCleanup returns mode for Imported backups cleanup.
 func BackupCleanup() Feature {
 	return backupCleanup
+}
+
+// BackupPolicyUntilPropagation returns mode for backup propagation.
+func BackupPolicyUntilPropagation() Feature {
+	return backupPolicyUntilPropagation
 }

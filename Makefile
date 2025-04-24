@@ -10,7 +10,9 @@ ifeq ($(shell uname),Darwin)
 endif
 
 KUBERNETES_VERSION_MINOR:=31
-KUBERNETES_VERSION_PATCH:=5
+KUBERNETES_VERSION_PATCH:=8
+
+ENVOY_IMAGE=envoyproxy/envoy:v1.32.5
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -479,11 +481,11 @@ $(BIN): $(VBIN_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64) $(VB
 .PHONY: docker
 docker: clean check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
 ifdef PUSHIMAGES
-	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
 		--platform linux/amd64,linux/arm64 --push -t $(OPERATORIMAGE) .
 else
-	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
 		--platform linux/amd64,linux/arm64 -t $(OPERATORIMAGE) .
 endif
@@ -491,12 +493,12 @@ endif
 .PHONY: docker-ubi
 docker-ubi: check-vars $(VBIN_LINUX_AMD64)
 ifdef PUSHIMAGES
-	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
 		--build-arg "IMAGE=$(BASEUBIIMAGE)" \
 		--platform linux/amd64 --push -t $(OPERATORUBIIMAGE) .
 else
-	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
 		--build-arg "IMAGE=$(BASEUBIIMAGE)" \
 		--platform linux/amd64 -t $(OPERATORUBIIMAGE) .
