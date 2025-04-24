@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,9 +74,9 @@ func (s *Scheduling) Apply(template *core.PodTemplateSpec) error {
 		}
 	}
 
-	template.Spec.Tolerations = tolerations.AddTolerationsIfNotFound(nil, s.Tolerations.DeepCopy()...)
+	template.Spec.Tolerations = tolerations.AddTolerationsIfNotFound(template.Spec.Tolerations, s.Tolerations.DeepCopy()...)
 
-	template.Spec.SchedulerName = util.WithDefault(s.SchedulerName)
+	template.Spec.SchedulerName = util.TypeOrDefault(s.SchedulerName, template.Spec.SchedulerName)
 
 	return nil
 }
@@ -134,7 +134,11 @@ func (s *Scheduling) With(other *Scheduling) *Scheduling {
 		current.NodeSelector = new.NodeSelector
 	} else if len(new.NodeSelector) > 0 {
 		for k, v := range new.NodeSelector {
-			current.NodeSelector[k] = v
+			if v == "-" {
+				delete(current.NodeSelector, k)
+			} else {
+				current.NodeSelector[k] = v
+			}
 		}
 	}
 
@@ -144,7 +148,7 @@ func (s *Scheduling) With(other *Scheduling) *Scheduling {
 	}
 
 	// Tolerations
-	current.Tolerations = tolerations.AddTolerationsIfNotFound(new.Tolerations, other.Tolerations...)
+	current.Tolerations = tolerations.AddTolerationsIfNotFound(current.Tolerations, new.Tolerations...)
 
 	// Affinity
 	current.Affinity = kresources.Merge(current.Affinity, new.Affinity)

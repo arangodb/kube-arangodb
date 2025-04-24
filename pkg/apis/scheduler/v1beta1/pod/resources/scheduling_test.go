@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -720,6 +720,31 @@ func Test_Scheduling_Tolerations(t *testing.T) {
 			require.EqualValues(t, 5, *pod.Spec.Tolerations[0].TolerationSeconds)
 		})
 	})
+	t.Run("Multi - Join", func(t *testing.T) {
+		applyScheduling(t, nil, &Scheduling{
+			Tolerations: Tolerations{
+				{
+					Key:      "A",
+					Operator: core.TolerationOpExists,
+				},
+			},
+		}, &Scheduling{
+			Tolerations: Tolerations{
+				{
+					Key:      "B",
+					Operator: core.TolerationOpExists,
+				},
+			},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Len(t, pod.Spec.Tolerations, 2)
+
+			require.EqualValues(t, core.TolerationOpExists, pod.Spec.Tolerations[0].Operator)
+			require.EqualValues(t, "A", pod.Spec.Tolerations[0].Key)
+
+			require.EqualValues(t, core.TolerationOpExists, pod.Spec.Tolerations[1].Operator)
+			require.EqualValues(t, "B", pod.Spec.Tolerations[1].Key)
+		})
+	})
 	t.Run("Multi - Update", func(t *testing.T) {
 		applyScheduling(t, nil, &Scheduling{
 			Tolerations: Tolerations{
@@ -805,6 +830,23 @@ func Test_Scheduling_NodeSelector(t *testing.T) {
 
 			require.Contains(t, pod.Spec.NodeSelector, "1")
 			require.EqualValues(t, pod.Spec.NodeSelector["1"], "2")
+
+			require.Contains(t, pod.Spec.NodeSelector, "2")
+			require.EqualValues(t, pod.Spec.NodeSelector["2"], "1")
+		})
+	})
+	t.Run("Remove", func(t *testing.T) {
+		applyScheduling(t, nil, &Scheduling{
+			NodeSelector: map[string]string{
+				"1": "1",
+			},
+		}, &Scheduling{
+			NodeSelector: map[string]string{
+				"2": "1",
+				"1": "-",
+			},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Len(t, pod.Spec.NodeSelector, 1)
 
 			require.Contains(t, pod.Spec.NodeSelector, "2")
 			require.EqualValues(t, pod.Spec.NodeSelector["2"], "1")
