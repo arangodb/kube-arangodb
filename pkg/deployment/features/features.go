@@ -71,6 +71,7 @@ type Feature interface {
 	Supported(v driver.Version, enterprise bool) bool
 	ImageSupported(i *api.ImageInfo) bool
 	GetDependencies() []string
+	Reset()
 }
 
 type feature struct {
@@ -193,4 +194,8 @@ func (f feature) Description() string {
 // Deprecated returns true if the feature is deprecated and the reason why it is deprecated.
 func (f feature) Deprecated() (bool, string) {
 	return len(f.deprecated) > 0, f.deprecated
+}
+
+func (f *feature) Reset() {
+	f.enabled = f.enabledByDefault
 }

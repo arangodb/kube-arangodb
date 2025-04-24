@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,8 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_Scheduler_Schedule(t *testing.T) {
@@ -362,4 +364,92 @@ func Test_Concurrent(t *testing.T) {
 	t.Run("Explicit Disallow", func(t *testing.T) {
 		testCase(t, util.NewType(false))
 	})
+}
+
+func Test_Scheduler_Schedule_WithUntilFeatureEnabled(t *testing.T) {
+	// Arrange
+	defer tests.NewFeatureSet().
+		With(features.BackupPolicyUntilPropagation(), true).
+		Done()
+
+	// Arrange
+	handler := newFakeHandler()
+
+	name := string(uuid.NewUUID())
+	namespace := string(uuid.NewUUID())
+
+	policy := newArangoBackupPolicy(namespace, name, newSimpleArangoBackupPolicySpec("* * * */2 *"))
+	policy.Status.Scheduled = meta.Time{
+		Time: time.Now().Add(-1 * time.Hour),
+	}
+
+	database := newArangoDeployment(namespace, map[string]string{
+		"test": "me",
+	})
+
+	// Act
+	createArangoBackupPolicy(t, handler, policy)
+	createArangoDeployment(t, handler, database)
+
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
+
+	// Assert
+	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
+	require.Empty(t, newPolicy.Status.Message)
+	require.True(t, newPolicy.Status.Scheduled.Unix() > time.Now().Unix())
+
+	backups := listArangoBackups(t, handler, namespace)
+	require.Len(t, backups, 1)
+	backup := backups[0]
+
+	isInList(t, backups, database)
+	require.NotNil(t, backup.Spec.PolicyName)
+	require.Equal(t, policy.Name, *backup.Spec.PolicyName)
+
+	require.NotNil(t, backup.Spec.Backoff)
+	require.NotNil(t, backup.Spec.Backoff.Until)
+	require.True(t, newPolicy.Status.Scheduled.Equal(backup.Spec.Backoff.Until))
+}
+
+func Test_Scheduler_Schedule_WithUntilFeatureDisabled(t *testing.T) {
+	// Arrange
+	defer tests.NewFeatureSet().
+		With(features.BackupPolicyUntilPropagation(), false).
+		Done()
+
+	// Arrange
+	handler := newFakeHandler()
+
+	name := string(uuid.NewUUID())
+	namespace := string(uuid.NewUUID())
+
+	policy := newArangoBackupPolicy(namespace, name, newSimpleArangoBackupPolicySpec("* * * */2 *"))
+	policy.Status.Scheduled = meta.Time{
+		Time: time.Now().Add(-1 * time.Hour),
+	}
+
+	database := newArangoDeployment(namespace, map[string]string{
+		"test": "me",
+	})
+
+	// Act
+	createArangoBackupPolicy(t, handler, policy)
+	createArangoDeployment(t, handler, database)
+
+	require.NoError(t, handler.Handle(context.Background(), newItemFromBackupPolicy(operation.Update, policy)))
+
+	// Assert
+	newPolicy := refreshArangoBackupPolicy(t, handler, policy)
+	require.Empty(t, newPolicy.Status.Message)
+	require.True(t, newPolicy.Status.Scheduled.Unix() > time.Now().Unix())
+
+	backups := listArangoBackups(t, handler, namespace)
+	require.Len(t, backups, 1)
+	backup := backups[0]
+
+	isInList(t, backups, database)
+	require.NotNil(t, backup.Spec.PolicyName)
+	require.Equal(t, policy.Name, *backup.Spec.PolicyName)
+
+	require.Nil(t, backup.Spec.Backoff)
 }

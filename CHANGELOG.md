@@ -12,6 +12,7 @@
 - (Feature) (Platform) Docs and Installer improvements
 - (Feature) Promote RestartPolicy Always Feature
 - (Maintenance) Update Dependencies
+- (Feature) Backup Retry Until and BackupPolicy Until Propagation feature
 
 ## [1.2.47](https://github.com/arangodb/kube-arangodb/tree/1.2.47) (2025-03-28)
 - (Bugfix) Use Profile Annotations

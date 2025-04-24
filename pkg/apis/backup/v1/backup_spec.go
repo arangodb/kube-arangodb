@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ type ArangoBackupSpec struct {
 	// +doc/immutable: can't be changed after backup creation
 	PolicyName *string `json:"policyName,omitempty"`
 
+	// Backoff define the operation backoff policy
 	Backoff *ArangoBackupSpecBackOff `json:"backoff,omitempty"`
 
 	// Lifetime is the time after which the backup will be deleted. Format: "1.5h" or "2h45m".

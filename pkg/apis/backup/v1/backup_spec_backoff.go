@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,17 +20,26 @@
 
 package v1
 
-import "time"
+import (
+	"time"
+
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 type ArangoBackupSpecBackOff struct {
 	// MinDelay defines minimum delay in seconds. Default to 30
+	// +doc/default: 30
 	MinDelay *int `json:"min_delay,omitempty"`
 	// MaxDelay defines maximum delay in seconds. Default to 600
+	// +doc/default: 600
 	MaxDelay *int `json:"max_delay,omitempty"`
 	// Iterations defines number of iterations before reaching MaxDelay. Default to 5
+	// +doc/default: 5
 	Iterations *int `json:"iterations,omitempty"`
 	// MaxIterations defines maximum number of iterations after backoff will be disabled. Default to nil (no limit)
 	MaxIterations *int `json:"max_iterations,omitempty"`
+	// Until defines the deadline of the retry mechanism in UTC
+	Until *meta.Time `json:"until,omitempty"`
 }
 
 func (a *ArangoBackupSpecBackOff) GetMaxDelay() int {
