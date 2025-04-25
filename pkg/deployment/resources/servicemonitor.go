@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2019-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2019-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package resources
 import (
 	"context"
 
-	coreosv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,20 +59,20 @@ func LabelsForExporterServiceMonitorSelector(name string) map[string]string {
 	}
 }
 
-func (r *Resources) makeEndpoint(isSecure bool) coreosv1.Endpoint {
+func (r *Resources) makeEndpoint(isSecure bool) monitoringApi.Endpoint {
 	if isSecure {
-		return coreosv1.Endpoint{
+		return monitoringApi.Endpoint{
 			Port:     "exporter",
 			Interval: "10s",
 			Scheme:   "https",
-			TLSConfig: &coreosv1.TLSConfig{
-				SafeTLSConfig: coreosv1.SafeTLSConfig{
+			TLSConfig: &monitoringApi.TLSConfig{
+				SafeTLSConfig: monitoringApi.SafeTLSConfig{
 					InsecureSkipVerify: true,
 				},
 			},
 		}
 	} else {
-		return coreosv1.Endpoint{
+		return monitoringApi.Endpoint{
 			Port:     "exporter",
 			Interval: "10s",
 			Scheme:   "http",
@@ -80,7 +80,7 @@ func (r *Resources) makeEndpoint(isSecure bool) coreosv1.Endpoint {
 	}
 }
 
-func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
+func (r *Resources) serviceMonitorSpec() (monitoringApi.ServiceMonitorSpec, error) {
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 	spec := r.context.GetSpec()
@@ -89,7 +89,7 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 	switch spec.Metrics.Mode.Get() {
 	case deploymentApi.MetricsModeInternal:
 		if spec.Metrics.Authentication.JWTTokenSecretName == nil {
-			return coreosv1.ServiceMonitorSpec{}, apiErrors.NewNotFound(schema.GroupResource{Group: "v1/secret"}, "metrics-secret")
+			return monitoringApi.ServiceMonitorSpec{}, apiErrors.NewNotFound(schema.GroupResource{Group: "v1/secret"}, "metrics-secret")
 		}
 
 		endpoint := r.makeEndpoint(spec.IsSecure())
@@ -100,9 +100,9 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 		version := r.context.GetMembersState().State().Version.Version
 		endpoint.Path = getArangoExporterInternalEndpoint(version)
 
-		return coreosv1.ServiceMonitorSpec{
+		return monitoringApi.ServiceMonitorSpec{
 			JobLabel: "k8s-app",
-			Endpoints: []coreosv1.Endpoint{
+			Endpoints: []monitoringApi.Endpoint{
 				endpoint,
 			},
 			Selector: meta.LabelSelector{
@@ -110,9 +110,9 @@ func (r *Resources) serviceMonitorSpec() (coreosv1.ServiceMonitorSpec, error) {
 			},
 		}, nil
 	default:
-		return coreosv1.ServiceMonitorSpec{
+		return monitoringApi.ServiceMonitorSpec{
 			JobLabel: "k8s-app",
-			Endpoints: []coreosv1.Endpoint{
+			Endpoints: []monitoringApi.Endpoint{
 				r.makeEndpoint(spec.IsSecure()),
 			},
 			Selector: meta.LabelSelector{
@@ -168,7 +168,7 @@ func (r *Resources) EnsureServiceMonitor(ctx context.Context, enabled bool) erro
 			}
 
 			// Need to create one:
-			smon := &coreosv1.ServiceMonitor{
+			smon := &monitoringApi.ServiceMonitor{
 				ObjectMeta: meta.ObjectMeta{
 					Name:            serviceMonitorName,
 					Labels:          LabelsForExporterServiceMonitor(r.context.GetName(), r.context.GetSpec()),

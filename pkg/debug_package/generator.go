@@ -30,25 +30,24 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/arango"
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/helm"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
+	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/prometheus"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-var rootFactories = []shared.Factory{
-	kubernetes.Events(),
-	kubernetes.Pods(),
-	kubernetes.Secrets(),
-	kubernetes.ConfigMaps(),
-	kubernetes.Services(),
-	kubernetes.Deployments(),
-	kubernetes.AgencyDump(),
-	kubernetes.ML(),
-	kubernetes.Analytics(),
-	kubernetes.Backup(),
-	kubernetes.Scheduler(),
-	kubernetes.Networking(),
-	kubernetes.Platform(),
+var rootFactories []shared.Factory
+
+func init() {
+	// Collect all factories
+	rootFactories = shared.NewFactoryGen().
+		Extend(kubernetes.Register).
+		Extend(arango.Register).
+		Extend(helm.Register).
+		Extend(prometheus.Register).
+		Get()
 }
 
 func InitCommand(cmd *cobra.Command) {

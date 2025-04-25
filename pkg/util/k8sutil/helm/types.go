@@ -83,6 +83,7 @@ func fromHelmReleaseChartMetadata(in *chart.Metadata) *ReleaseChartMetadata {
 	var r ReleaseChartMetadata
 
 	r.Version = in.Version
+	r.Name = in.Name
 
 	return &r
 }
@@ -136,16 +137,16 @@ func fromHelmReleaseInfoResources(in map[string][]runtime.Object) (Resources, er
 }
 
 type Release struct {
-	Name string
+	Name string `json:"name,omitempty"`
 
-	Info  ReleaseInfo
-	Chart *ReleaseChart
+	Info  ReleaseInfo   `json:"info"`
+	Chart *ReleaseChart `json:"chart,omitempty"`
 
-	Values Values
+	Values Values `json:"values,omitempty"`
 
-	Version   int
-	Namespace string
-	Labels    map[string]string
+	Version   int               `json:"version,omitempty"`
+	Namespace string            `json:"namespace,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
 }
 
 func (r *Release) GetChart() *ReleaseChart {
@@ -157,7 +158,7 @@ func (r *Release) GetChart() *ReleaseChart {
 }
 
 type ReleaseChart struct {
-	Metadata *ReleaseChartMetadata
+	Metadata *ReleaseChartMetadata `json:"metadata,omitempty"`
 }
 
 func (r *ReleaseChart) GetMetadata() *ReleaseChartMetadata {
@@ -169,7 +170,16 @@ func (r *ReleaseChart) GetMetadata() *ReleaseChartMetadata {
 }
 
 type ReleaseChartMetadata struct {
-	Version string
+	Version string `json:"version,omitempty"`
+	Name    string `json:"name,omitempty"`
+}
+
+func (r *ReleaseChartMetadata) GetName() string {
+	if r == nil {
+		return ""
+	}
+
+	return r.Name
 }
 
 func (r *ReleaseChartMetadata) GetVersion() string {
@@ -181,13 +191,13 @@ func (r *ReleaseChartMetadata) GetVersion() string {
 }
 
 type ReleaseInfo struct {
-	FirstDeployed time.Time
-	LastDeployed  time.Time
-	Deleted       time.Time
-	Description   string
-	Status        release.Status
-	Notes         string
-	Resources     Resources
+	FirstDeployed time.Time      `json:"first_deployed,omitempty"`
+	LastDeployed  time.Time      `json:"last_deployed,omitempty"`
+	Deleted       time.Time      `json:"deleted,omitempty"`
+	Description   string         `json:"description,omitempty"`
+	Status        release.Status `json:"status,omitempty"`
+	Notes         string         `json:"notes,omitempty"`
+	Resources     Resources      `json:"resources,omitempty"`
 }
 
 type Resources []Resource

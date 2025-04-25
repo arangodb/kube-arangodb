@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,14 +21,14 @@
 package servicemonitor
 
 import (
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
-func List(filter ...generic.Filter[*monitoring.ServiceMonitor]) generic.ExtractorList[*monitoring.ServiceMonitorList, *monitoring.ServiceMonitor] {
-	return func(in *monitoring.ServiceMonitorList) []*monitoring.ServiceMonitor {
-		ret := make([]*monitoring.ServiceMonitor, 0, len(in.Items))
+func List(filter ...generic.Filter[*monitoringApi.ServiceMonitor]) generic.ExtractorList[*monitoringApi.ServiceMonitorList, *monitoringApi.ServiceMonitor] {
+	return func(in *monitoringApi.ServiceMonitorList) []*monitoringApi.ServiceMonitor {
+		ret := make([]*monitoringApi.ServiceMonitor, 0, len(in.Items))
 
 		for _, el := range in.Items {
 			z := el.DeepCopy()

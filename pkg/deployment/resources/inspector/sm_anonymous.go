@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package inspector
 
 import (
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
@@ -38,7 +38,7 @@ func (p *serviceMonitorsInspector) Anonymous(gvk schema.GroupVersionKind) (anony
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return anonymous.NewAnonymous[*monitoring.ServiceMonitor](g, p.state.serviceMonitors.v1, generic.WithModStatus[*monitoring.ServiceMonitor](g, p.state.ServiceMonitorsModInterface().V1())), true
+			return anonymous.NewAnonymous[*monitoringApi.ServiceMonitor](g, p.state.serviceMonitors.v1, generic.WithModStatus[*monitoringApi.ServiceMonitor](g, p.state.ServiceMonitorsModInterface().V1())), true
 		}
 	}
 

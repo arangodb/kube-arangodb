@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,8 +51,8 @@ func (p arangoRoutesInspectorLoader) Load(ctx context.Context, i *inspectorState
 	var q arangoRoutesInspector
 
 	q.v1alpha1 = newInspectorVersion[*networkingApi.ArangoRouteList, *networkingApi.ArangoRoute](ctx,
-		constants.ArangoRouteGRv1(),
-		constants.ArangoRouteGKv1(),
+		constants.ArangoRouteGRv1Alpha1(),
+		constants.ArangoRouteGKv1Alpha1(),
 		i.client.Arango().NetworkingV1alpha1().ArangoRoutes(i.namespace),
 		arangoroute.List())
 

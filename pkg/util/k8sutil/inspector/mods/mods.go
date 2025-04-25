@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package mods
 
 import (
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1"
 
@@ -61,7 +61,7 @@ type EndpointsMods interface {
 }
 
 type ServiceMonitorsMods interface {
-	V1() generic.ModClient[*monitoring.ServiceMonitor]
+	V1() generic.ModClient[*monitoringApi.ServiceMonitor]
 }
 
 type PodDisruptionBudgetsMods interface {

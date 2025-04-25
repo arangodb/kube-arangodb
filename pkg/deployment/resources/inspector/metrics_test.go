@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"testing"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -301,8 +301,8 @@ func Test_Metrics(t *testing.T) {
 	})
 
 	t.Run(string(definitions.ServiceMonitor), func(t *testing.T) {
-		testModClientMetrics[*monitoring.ServiceMonitor](t, definitions.ServiceMonitor, q.ServiceMonitorsModInterface().V1(), func(name string) *monitoring.ServiceMonitor {
-			return &monitoring.ServiceMonitor{
+		testModClientMetrics[*monitoringApi.ServiceMonitor](t, definitions.ServiceMonitor, q.ServiceMonitorsModInterface().V1(), func(name string) *monitoringApi.ServiceMonitor {
+			return &monitoringApi.ServiceMonitor{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      name,
 					Namespace: "test",

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import (
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
@@ -51,7 +52,8 @@ func runUpdate[T Object](t *testing.T, iterations int, factory ClientFactory[T],
 
 	var obj T
 
-	o := tests.GVK(t, obj)
+	o, ok := constants.ExtractGVKFromObject(obj)
+	require.True(t, ok)
 
 	update := NewUpdator[T](Config[T]{
 		Events:  nil,

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,22 +34,19 @@ func NewResourceError(cause error, obj interface{}) error {
 		return nil
 	}
 
-	if gvk, ok := constants.ExtractGVKFromObject(obj); !ok {
-		return cause
-	} else {
-		if meta, ok := obj.(meta.Object); ok {
+	if meta, ok := obj.(meta.Object); ok {
+		if gvk, ok := constants.ExtractGVKFromObject(meta); !ok {
+			return cause
+		} else {
 			return ResourceError{
 				GVK:       gvk,
 				Namespace: meta.GetNamespace(),
 				Name:      meta.GetName(),
 				cause:     cause,
 			}
-		} else {
-			return ResourceError{
-				GVK:   gvk,
-				cause: cause,
-			}
 		}
+	} else {
+		return cause
 	}
 }
 

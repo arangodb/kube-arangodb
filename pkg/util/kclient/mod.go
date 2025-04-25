@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package kclient
 
 import (
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1"
 
@@ -43,7 +43,7 @@ type ModInterface interface {
 	ServiceAccounts() generic.ModClient[*core.ServiceAccount]
 	PersistentVolumeClaims() generic.ModClient[*core.PersistentVolumeClaim]
 	PodDisruptionBudgets() generic.ModClient[*policy.PodDisruptionBudget]
-	ServiceMonitors() generic.ModClient[*monitoring.ServiceMonitor]
+	ServiceMonitors() generic.ModClient[*monitoringApi.ServiceMonitor]
 	ArangoMembers() generic.ModStatusClient[*api.ArangoMember]
 }
 
@@ -60,7 +60,7 @@ func (m modInterface) PodDisruptionBudgets() generic.ModClient[*policy.PodDisrup
 	return m.client.Kubernetes().PolicyV1().PodDisruptionBudgets(m.namespace)
 }
 
-func (m modInterface) ServiceMonitors() generic.ModClient[*monitoring.ServiceMonitor] {
+func (m modInterface) ServiceMonitors() generic.ModClient[*monitoringApi.ServiceMonitor] {
 	return m.client.Monitoring().MonitoringV1().ServiceMonitors(m.namespace)
 }
 

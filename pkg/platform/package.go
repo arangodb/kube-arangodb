@@ -24,20 +24,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
-
-type Package struct {
-	Packages map[string]string `json:"packages,omitempty"`
-
-	Releases map[string]Release `json:"releases,omitempty"`
-}
-
-type Release struct {
-	Package string `json:"package"`
-
-	Overrides helm.Values `json:"overrides,omitempty"`
-}
 
 func pkg() (*cobra.Command, error) {
 	var cmd cobra.Command
