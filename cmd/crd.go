@@ -64,6 +64,7 @@ var (
 	crdInstallOptions struct {
 		validationSchema      []string
 		preserveUnknownFields []string
+		skip                  []string
 		force                 bool
 	}
 )
@@ -79,6 +80,7 @@ func init() {
 	f := cmdCRD.PersistentFlags()
 	f.StringArrayVar(&crdInstallOptions.validationSchema, "crd.validation-schema", defaultValidationSchemaEnabled, "Controls which CRD should have validation schema <crd-name>=<true/false>.")
 	f.StringArrayVar(&crdInstallOptions.preserveUnknownFields, "crd.preserve-unknown-fields", nil, "Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>.")
+	f.StringArrayVar(&crdInstallOptions.skip, "crd.skip", nil, "Controls which CRD should be skipped.")
 	f.BoolVar(&crdInstallOptions.force, "crd.force-update", false, "Enforce CRD Schema update")
 
 	cmdCRD.AddCommand(cmdCRDInstall)
@@ -191,7 +193,7 @@ func cmdCRDInstallRun(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(shutdown.Context(), time.Minute)
 	defer cancel()
 
-	err = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts, ForceUpdate: crdInstallOptions.force})
+	err = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts, ForceUpdate: crdInstallOptions.force, Skip: crdInstallOptions.skip})
 	if err != nil {
 		os.Exit(1)
 	}
@@ -204,7 +206,7 @@ func cmdCRDGenerateRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	err = crd.GenerateCRDYAMLWithOptions(crd.EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts, ForceUpdate: crdInstallOptions.force}, cmd.OutOrStdout())
+	err = crd.GenerateCRDYAMLWithOptions(crd.EnsureCRDOptions{IgnoreErrors: false, CRDOptions: crdOpts, ForceUpdate: crdInstallOptions.force, Skip: crdInstallOptions.skip}, cmd.OutOrStdout())
 	if err != nil {
 		os.Exit(1)
 	}

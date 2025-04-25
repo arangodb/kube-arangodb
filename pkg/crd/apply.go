@@ -56,6 +56,8 @@ type EnsureCRDOptions struct {
 	ForceUpdate bool
 	// CRDOptions defines options per each CRD
 	CRDOptions map[string]crds.CRDOptions
+	// CRDOptions defines skip options
+	Skip []string
 }
 
 func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts EnsureCRDOptions) error {
@@ -126,6 +128,10 @@ func GenerateCRDWithOptions(opts EnsureCRDOptions) []apiextensions.CustomResourc
 	ret := make([]apiextensions.CustomResourceDefinition, 0, len(registeredCRDs))
 
 	for crdName, crdReg := range registeredCRDs {
+		if util.ContainsList(opts.Skip, crdName) {
+			continue
+		}
+
 		var opt = &crdReg.defaultOpts
 		if o, ok := opts.CRDOptions[crdName]; ok {
 			opt = &o

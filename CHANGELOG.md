@@ -15,6 +15,7 @@
 - (Feature) Backup Retry Until and BackupPolicy Until Propagation feature
 - (Bugfix) Improve Profile Tolerations Merge
 - (Maintenance) Update Envoy to v1.32.5
+- (Maintenance) Generate CRD with Schemas
 
 ## [1.2.47](https://github.com/arangodb/kube-arangodb/tree/1.2.47) (2025-03-28)
 - (Bugfix) Use Profile Annotations
