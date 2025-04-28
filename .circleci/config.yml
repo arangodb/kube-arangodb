@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  path-filtering: circleci/path-filtering@1.0.0
+  path-filtering: circleci/path-filtering@1.2.0
 
 setup: true
 
@@ -17,6 +17,7 @@ workflows:
           name: check-updated-files
           base-revision: master
           config-path: .circleci/continue_config.yml
+          tag: "3.9"
           mapping: |
             manifests/.* manifests-verify true
             chart/.* manifests-verify true
