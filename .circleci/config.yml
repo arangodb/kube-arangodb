@@ -17,6 +17,7 @@ workflows:
           name: check-updated-files
           base-revision: master
           config-path: .circleci/continue_config.yml
+          executor: python-executor
           mapping: |
             manifests/.* manifests-verify true
             chart/.* manifests-verify true

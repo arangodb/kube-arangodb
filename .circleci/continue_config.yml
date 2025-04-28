@@ -23,6 +23,9 @@ executors:
     machine:
       image: ubuntu-2204:current
       docker_layer_caching: true
+  python-executor:
+    docker:
+      - image: cimg/python:3.13.3
 
 jobs:
   check-code:
