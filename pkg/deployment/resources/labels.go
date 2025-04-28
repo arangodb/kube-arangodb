@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package resources
 import (
 	"context"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -159,7 +159,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(ctx context.Context, cachedStatu
 		}
 		return err
 	}
-	if err := i.Iterate(func(serviceMonitor *monitoring.ServiceMonitor) error {
+	if err := i.Iterate(func(serviceMonitor *monitoringApi.ServiceMonitor) error {
 		if r.ensureLabelsMap(serviceMonitor.Kind, serviceMonitor, r.context.GetSpec(), func(name string, d []byte) error {
 			return globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := cachedStatus.ServiceMonitorsModInterface().V1().Patch(ctxChild, name, types.JSONPatchType, d, meta.PatchOptions{})
@@ -170,7 +170,7 @@ func (r *Resources) EnsureServiceMonitorsLabels(ctx context.Context, cachedStatu
 		}
 
 		return nil
-	}, func(serviceMonitor *monitoring.ServiceMonitor) bool {
+	}, func(serviceMonitor *monitoringApi.ServiceMonitor) bool {
 		return r.isChildResource(serviceMonitor)
 	}); err != nil {
 		return err

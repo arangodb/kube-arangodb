@@ -26,7 +26,7 @@ import (
 	"net"
 	"strconv"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -578,7 +578,7 @@ func (d *Deployment) PodDisruptionBudgetsModInterface() generic.ModClient[*polic
 	return kclient.NewModInterface(d.deps.Client, d.namespace).PodDisruptionBudgets()
 }
 
-func (d *Deployment) ServiceMonitorsModInterface() generic.ModClient[*monitoring.ServiceMonitor] {
+func (d *Deployment) ServiceMonitorsModInterface() generic.ModClient[*monitoringApi.ServiceMonitor] {
 	d.acs.CurrentClusterCache().GetThrottles().ServiceMonitor().Invalidate()
 	return kclient.NewModInterface(d.deps.Client, d.namespace).ServiceMonitors()
 }

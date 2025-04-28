@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"time"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
@@ -51,7 +51,7 @@ func (p serviceMonitorsInspectorLoader) Component() definitions.Component {
 func (p serviceMonitorsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q serviceMonitorsInspector
 
-	q.v1 = newInspectorVersion[*monitoring.ServiceMonitorList, *monitoring.ServiceMonitor](ctx,
+	q.v1 = newInspectorVersion[*monitoringApi.ServiceMonitorList, *monitoringApi.ServiceMonitor](ctx,
 		constants.ServiceMonitorGRv1(),
 		constants.ServiceMonitorGKv1(),
 		i.client.Monitoring().MonitoringV1().ServiceMonitors(i.namespace),
@@ -86,7 +86,7 @@ type serviceMonitorsInspector struct {
 
 	last time.Time
 
-	v1 *inspectorVersion[*monitoring.ServiceMonitor]
+	v1 *inspectorVersion[*monitoringApi.ServiceMonitor]
 }
 
 func (p *serviceMonitorsInspector) LastRefresh() time.Time {
@@ -118,7 +118,7 @@ func (p *serviceMonitorsInspector) validate() error {
 	return p.v1.validate()
 }
 
-func (p *serviceMonitorsInspector) V1() (generic.Inspector[*monitoring.ServiceMonitor], error) {
+func (p *serviceMonitorsInspector) V1() (generic.Inspector[*monitoringApi.ServiceMonitor], error) {
 	if p.v1.err != nil {
 		return nil, p.v1.err
 	}

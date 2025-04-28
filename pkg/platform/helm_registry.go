@@ -24,9 +24,8 @@ import (
 	"github.com/spf13/cobra"
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -41,20 +40,5 @@ func fetchLocallyInstalledCharts(cmd *cobra.Command) (map[string]*platformApi.Ar
 		return nil, err
 	}
 
-	l, err := kubernetes.ListObjects[*platformApi.ArangoPlatformChartList, *platformApi.ArangoPlatformChart](cmd.Context(), client.Arango().PlatformV1alpha1().ArangoPlatformCharts(namespace), func(result *platformApi.ArangoPlatformChartList) []*platformApi.ArangoPlatformChart {
-		q := make([]*platformApi.ArangoPlatformChart, len(result.Items))
-
-		for id, e := range result.Items {
-			q[id] = e.DeepCopy()
-		}
-
-		return q
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return util.ListAsMap(l, func(in *platformApi.ArangoPlatformChart) string {
-		return in.GetName()
-	}), nil
+	return helm.GetLocalCharts(cmd.Context(), client, namespace)
 }

@@ -23,6 +23,8 @@ package shared
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"sigs.k8s.io/yaml"
@@ -99,18 +101,18 @@ type Factory interface {
 	Enabled() bool
 }
 
-func NewFactory(name string, enabled bool, gen GenFunc) Factory {
+func NewFactory(name string, enabled bool, gens ...GenFunc) Factory {
 	return factory{
 		name:     name,
 		enabled:  enabled,
-		generate: gen,
+		generate: gens,
 	}
 }
 
 type factory struct {
 	name     string
 	enabled  bool
-	generate GenFunc
+	generate []GenFunc
 }
 
 func (f factory) Enabled() bool {
@@ -122,7 +124,13 @@ func (f factory) Name() string {
 }
 
 func (f factory) Generate(logger zerolog.Logger, files chan<- File) error {
-	return f.generate(logger, files)
+	for _, gen := range f.generate {
+		if err := gen(logger, files); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func GenerateDataFuncP1[P1 any](call func(p1 P1) ([]byte, error), p1 P1) DataFunc {
@@ -135,4 +143,82 @@ func GenerateDataFuncP2[P1, P2 any](call func(p1 P1, p2 P2) ([]byte, error), p1 
 	return func() ([]byte, error) {
 		return call(p1, p2)
 	}
+}
+
+func NewFactoryGen() FactoryGen {
+	return &rootFactoryGen{}
+}
+
+type FactoryGen interface {
+	AddSection(name string) FactoryGen
+
+	Register(name string, enabled bool, gens GenFunc) FactoryGen
+
+	Extend(in func(f FactoryGen)) FactoryGen
+
+	Get() []Factory
+}
+
+type rootFactoryGen struct {
+	lock sync.Mutex
+
+	factories []Factory
+}
+
+func (r *rootFactoryGen) Extend(in func(f FactoryGen)) FactoryGen {
+	in(r)
+	return r
+}
+
+func (r *rootFactoryGen) Get() []Factory {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	q := make([]Factory, len(r.factories))
+	copy(q, r.factories)
+
+	return q
+}
+
+func (r *rootFactoryGen) AddSection(name string) FactoryGen {
+	return rootFactorySection{
+		parent:  r,
+		section: name,
+	}
+}
+
+func (r *rootFactoryGen) Register(name string, enabled bool, gens GenFunc) FactoryGen {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	r.factories = append(r.factories, NewFactory(name, enabled, gens))
+
+	return r
+}
+
+type rootFactorySection struct {
+	parent FactoryGen
+
+	section string
+}
+
+func (r rootFactorySection) Get() []Factory {
+	return r.parent.Get()
+}
+
+func (r rootFactorySection) AddSection(name string) FactoryGen {
+	return rootFactorySection{
+		parent:  r,
+		section: name,
+	}
+}
+
+func (r rootFactorySection) Register(name string, enabled bool, gens GenFunc) FactoryGen {
+	r.parent.Register(fmt.Sprintf("%s-%s", r.section, name), enabled, gens)
+	return r
+}
+
+func (r rootFactorySection) Extend(in func(f FactoryGen)) FactoryGen {
+	in(r)
+	return r
 }

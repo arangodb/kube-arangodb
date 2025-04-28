@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,8 +51,8 @@ func (p arangoPlatformStoragesInspectorLoader) Load(ctx context.Context, i *insp
 	var q arangoPlatformStoragesInspector
 
 	q.v1alpha1 = newInspectorVersion[*platformApi.ArangoPlatformStorageList, *platformApi.ArangoPlatformStorage](ctx,
-		constants.ArangoPlatformStorageGRv1(),
-		constants.ArangoPlatformStorageGKv1(),
+		constants.ArangoPlatformStorageGRv1Alpha1(),
+		constants.ArangoPlatformStorageGKv1Alpha1(),
 		i.client.Arango().PlatformV1alpha1().ArangoPlatformStorages(i.namespace),
 		arangoplatformstorage.List())
 

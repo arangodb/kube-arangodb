@@ -24,15 +24,12 @@ import (
 	"encoding/json"
 
 	"github.com/spf13/cobra"
-	"helm.sh/helm/v3/pkg/action"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func packageDump() (*cobra.Command, error) {
@@ -51,14 +48,14 @@ func packageDump() (*cobra.Command, error) {
 }
 
 func packageDumpRun(cmd *cobra.Command, args []string) error {
-	charts, err := fetchLocallyInstalledCharts(cmd)
-	if err != nil {
-		return err
+	client, ok := kclient.GetDefaultFactory().Client()
+	if !ok {
+		return errors.Errorf("Unable to get client")
 	}
 
-	hclient, err := getHelmClient(cmd)
+	ns, err := flagNamespace.Get(cmd)
 	if err != nil {
-		return errors.Wrapf(err, "Unable to get helm client")
+		return err
 	}
 
 	if len(args) < 1 {
@@ -67,62 +64,9 @@ func packageDumpRun(cmd *cobra.Command, args []string) error {
 
 	deployment := args[0]
 
-	var out Package
-
-	out.Packages = map[string]string{}
-
-	out.Releases = map[string]Release{}
-
-	for name, c := range charts {
-		if !c.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
-			return errors.Errorf("Chart `%s` is not in ready condition", name)
-		}
-		if info := c.Status.Info; info != nil {
-			if det := info.Details; det != nil {
-				out.Packages[name] = c.Status.Info.Details.GetVersion()
-			}
-		}
-
-		existingReleases, err := hclient.List(cmd.Context(), func(in *action.List) {
-			in.Selector = meta.FormatLabelSelector(&meta.LabelSelector{
-				MatchLabels: map[string]string{
-					constants.HelmLabelArangoDBManaged:    "true",
-					constants.HelmLabelArangoDBDeployment: deployment,
-					constants.HelmLabelArangoDBChart:      name,
-					constants.HelmLabelArangoDBType:       "platform",
-				},
-			})
-		})
-		if err != nil {
-			logger.Err(err).Error("Unable to list releases")
-			return err
-		}
-
-		for _, release := range existingReleases {
-			var r Release
-
-			r.Package = name
-
-			data, err := release.Values.Marshal()
-			if err != nil {
-				logger.Err(err).Error("Unable to unmarshal values")
-				return err
-			}
-
-			delete(data, "arangodb_platform")
-
-			if len(data) != 0 {
-				values, err := helm.NewValues(data)
-				if err != nil {
-					logger.Err(err).Error("Unable to marshal values")
-					return err
-				}
-
-				r.Overrides = values
-			}
-
-			out.Releases[release.Name] = r
-		}
+	out, err := helm.NewPackage(cmd.Context(), client, ns, deployment)
+	if err != nil {
+		return err
 	}
 
 	d, err := json.Marshal(out)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import (
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
 
@@ -57,6 +56,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -1533,212 +1533,6 @@ func IsNamespaced(in meta.Object) bool {
 	}
 }
 
-func GVK(t *testing.T, object meta.Object) schema.GroupVersionKind {
-	switch v := object.(type) {
-	case *batch.CronJob:
-		return schema.GroupVersionKind{
-			Group:   "batch",
-			Version: "v1",
-			Kind:    " ArangoSchedulerCronJob",
-		}
-	case *batch.Job:
-		return schema.GroupVersionKind{
-			Group:   "batch",
-			Version: "v1",
-			Kind:    "Job",
-		}
-	case *core.Pod:
-		return schema.GroupVersionKind{
-			Group:   "",
-			Version: "v1",
-			Kind:    " ArangoSchedulerPod",
-		}
-	case *core.Secret:
-		return schema.GroupVersionKind{
-			Group:   "",
-			Version: "v1",
-			Kind:    "Secret",
-		}
-	case *core.ConfigMap:
-		return schema.GroupVersionKind{
-			Group:   "",
-			Version: "v1",
-			Kind:    "ConfigMap",
-		}
-	case *core.Service:
-		return schema.GroupVersionKind{
-			Group:   "",
-			Version: "v1",
-			Kind:    "Service",
-		}
-	case *core.Endpoints:
-		return schema.GroupVersionKind{
-			Group:   "",
-			Version: "v1",
-			Kind:    "Endpoints",
-		}
-	case *core.ServiceAccount:
-		return schema.GroupVersionKind{
-			Group:   "",
-			Version: "v1",
-			Kind:    "ServiceAccount",
-		}
-	case *apps.StatefulSet:
-		return schema.GroupVersionKind{
-			Group:   "apps",
-			Version: "v1",
-			Kind:    "StatefulSet",
-		}
-	case *apps.Deployment:
-		return schema.GroupVersionKind{
-			Group:   "apps",
-			Version: "v1",
-			Kind:    "Deployment",
-		}
-	case *api.ArangoDeployment:
-		return schema.GroupVersionKind{
-			Group:   deployment.ArangoDeploymentGroupName,
-			Version: api.ArangoDeploymentVersion,
-			Kind:    deployment.ArangoDeploymentResourceKind,
-		}
-	case *api.ArangoClusterSynchronization:
-		return schema.GroupVersionKind{
-			Group:   deployment.ArangoDeploymentGroupName,
-			Version: api.ArangoDeploymentVersion,
-			Kind:    deployment.ArangoClusterSynchronizationResourceKind,
-		}
-	case *backupApi.ArangoBackup:
-		return schema.GroupVersionKind{
-			Group:   backup.ArangoBackupGroupName,
-			Version: backupApi.ArangoBackupVersion,
-			Kind:    backup.ArangoBackupResourceKind,
-		}
-	case *backupApi.ArangoBackupPolicy:
-		return schema.GroupVersionKind{
-			Group:   backup.ArangoBackupGroupName,
-			Version: backupApi.ArangoBackupVersion,
-			Kind:    backup.ArangoBackupPolicyResourceKind,
-		}
-	case *mlApi.ArangoMLExtension:
-		return schema.GroupVersionKind{
-			Group:   ml.ArangoMLGroupName,
-			Version: mlApi.ArangoMLVersion,
-			Kind:    ml.ArangoMLExtensionResourceKind,
-		}
-	case *mlApi.ArangoMLStorage:
-		return schema.GroupVersionKind{
-			Group:   ml.ArangoMLGroupName,
-			Version: mlApi.ArangoMLVersion,
-			Kind:    ml.ArangoMLStorageResourceKind,
-		}
-	case *mlApiv1alpha1.ArangoMLExtension:
-		return schema.GroupVersionKind{
-			Group:   ml.ArangoMLGroupName,
-			Version: mlApiv1alpha1.ArangoMLVersion,
-			Kind:    ml.ArangoMLExtensionResourceKind,
-		}
-	case *mlApiv1alpha1.ArangoMLStorage:
-		return schema.GroupVersionKind{
-			Group:   ml.ArangoMLGroupName,
-			Version: mlApiv1alpha1.ArangoMLVersion,
-			Kind:    ml.ArangoMLStorageResourceKind,
-		}
-	case *mlApiv1alpha1.ArangoMLBatchJob:
-		return schema.GroupVersionKind{
-			Group:   ml.ArangoMLGroupName,
-			Version: mlApiv1alpha1.ArangoMLVersion,
-			Kind:    ml.ArangoMLBatchJobResourceKind,
-		}
-	case *mlApiv1alpha1.ArangoMLCronJob:
-		return schema.GroupVersionKind{
-			Group:   ml.ArangoMLGroupName,
-			Version: mlApiv1alpha1.ArangoMLVersion,
-			Kind:    ml.ArangoMLCronJobResourceKind,
-		}
-	case *rbac.ClusterRole:
-		return schema.GroupVersionKind{
-			Group:   "rbac.authorization.k8s.io",
-			Version: "v1",
-			Kind:    "ClusterRole",
-		}
-	case *rbac.ClusterRoleBinding:
-		return schema.GroupVersionKind{
-			Group:   "rbac.authorization.k8s.io",
-			Version: "v1",
-			Kind:    "ClusterRoleBinding",
-		}
-	case *rbac.Role:
-		return schema.GroupVersionKind{
-			Group:   "rbac.authorization.k8s.io",
-			Version: "v1",
-			Kind:    "Role",
-		}
-	case *rbac.RoleBinding:
-		return schema.GroupVersionKind{
-			Group:   "rbac.authorization.k8s.io",
-			Version: "v1",
-			Kind:    "RoleBinding",
-		}
-	case *schedulerApi.ArangoProfile:
-		return schema.GroupVersionKind{
-			Group:   scheduler.ArangoSchedulerGroupName,
-			Version: schedulerApi.ArangoSchedulerVersion,
-			Kind:    scheduler.ArangoProfileResourceKind,
-		}
-	case *schedulerApi.ArangoSchedulerPod:
-		return schema.GroupVersionKind{
-			Group:   scheduler.ArangoSchedulerGroupName,
-			Version: schedulerApi.ArangoSchedulerVersion,
-			Kind:    scheduler.PodResourceKind,
-		}
-	case *schedulerApi.ArangoSchedulerDeployment:
-		return schema.GroupVersionKind{
-			Group:   scheduler.ArangoSchedulerGroupName,
-			Version: schedulerApi.ArangoSchedulerVersion,
-			Kind:    scheduler.DeploymentResourceKind,
-		}
-	case *schedulerApi.ArangoSchedulerBatchJob:
-		return schema.GroupVersionKind{
-			Group:   scheduler.ArangoSchedulerGroupName,
-			Version: schedulerApi.ArangoSchedulerVersion,
-			Kind:    scheduler.BatchJobResourceKind,
-		}
-	case *schedulerApi.ArangoSchedulerCronJob:
-		return schema.GroupVersionKind{
-			Group:   scheduler.ArangoSchedulerGroupName,
-			Version: schedulerApi.ArangoSchedulerVersion,
-			Kind:    scheduler.CronJobResourceKind,
-		}
-	case *analyticsApi.GraphAnalyticsEngine:
-		return schema.GroupVersionKind{
-			Group:   analytics.ArangoAnalyticsGroupName,
-			Version: analyticsApi.ArangoAnalyticsVersion,
-			Kind:    analytics.GraphAnalyticsEngineResourceKind,
-		}
-	case *networkingApi.ArangoRoute:
-		return schema.GroupVersionKind{
-			Group:   networking.ArangoNetworkingGroupName,
-			Version: networkingApi.ArangoNetworkingVersion,
-			Kind:    networking.ArangoRouteResourceKind,
-		}
-	case *platformApi.ArangoPlatformStorage:
-		return schema.GroupVersionKind{
-			Group:   platform.ArangoPlatformGroupName,
-			Version: platformApi.ArangoPlatformVersion,
-			Kind:    platform.ArangoPlatformStorageResourceKind,
-		}
-	case *platformApi.ArangoPlatformChart:
-		return schema.GroupVersionKind{
-			Group:   platform.ArangoPlatformGroupName,
-			Version: platformApi.ArangoPlatformVersion,
-			Kind:    platform.ArangoPlatformChartResourceKind,
-		}
-	default:
-		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
-		return schema.GroupVersionKind{}
-	}
-}
-
 func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.Item {
 	item := operation.Item{
 		Operation: o,
@@ -1747,7 +1541,8 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		Name:      object.GetName(),
 	}
 
-	gvk := GVK(t, object)
+	gvk, ok := constants.ExtractGVKFromObject(object)
+	require.True(t, ok, reflect.TypeOf(object).String())
 
 	item.Group = gvk.Group
 	item.Version = gvk.Version

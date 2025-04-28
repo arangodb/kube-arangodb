@@ -91,3 +91,24 @@ func ApplyModsEP1[T, P1 any](in *T, p1 P1, mods ...ModEP1[T, P1]) error {
 
 	return nil
 }
+
+func emptyModR[T any](z T) T { return z }
+
+type ModR[T any] func(in T) T
+
+func (m ModR[T]) Optional() ModR[T] {
+	if m == nil {
+		return emptyModR[T]
+	}
+
+	return m
+}
+
+func ApplyModsR[T any](in T, mods ...ModR[T]) T {
+	for _, mod := range mods {
+		if mod != nil {
+			mod(in)
+		}
+	}
+	return in
+}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package kclient
 import (
 	"sync"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringFake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1"
@@ -128,7 +128,7 @@ type FakeDataInput struct {
 	PVCS            map[string]*core.PersistentVolumeClaim
 	ServiceAccounts map[string]*core.ServiceAccount
 	PDBSV1          map[string]*policy.PodDisruptionBudget
-	ServiceMonitors map[string]*monitoring.ServiceMonitor
+	ServiceMonitors map[string]*monitoringApi.ServiceMonitor
 	ArangoMembers   map[string]*api.ArangoMember
 	Nodes           map[string]*core.Node
 	ACS             map[string]*api.ArangoClusterSynchronization

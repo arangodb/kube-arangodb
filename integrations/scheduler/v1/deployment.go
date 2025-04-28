@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@ import (
 
 	pbSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
 	"github.com/arangodb/kube-arangodb/pkg/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/list"
 )
 
 func (i *implementation) CreateDeployment(ctx context.Context, request *pbSchedulerV1.CreateDeploymentRequest) (*pbSchedulerV1.CreateDeploymentResponse, error) {
@@ -159,7 +159,7 @@ func (i *implementation) ListDeployment(ctx context.Context, request *pbSchedule
 		return nil, errors.Errorf("Request is nil")
 	}
 
-	objects, err := kubernetes.ListObjects[*schedulerApi.ArangoSchedulerDeploymentList, *schedulerApi.ArangoSchedulerDeployment](ctx, i.client.Arango().SchedulerV1beta1().ArangoSchedulerDeployments(i.cfg.Namespace), func(result *schedulerApi.ArangoSchedulerDeploymentList) []*schedulerApi.ArangoSchedulerDeployment {
+	objects, err := list.ListObjects[*schedulerApi.ArangoSchedulerDeploymentList, *schedulerApi.ArangoSchedulerDeployment](ctx, i.client.Arango().SchedulerV1beta1().ArangoSchedulerDeployments(i.cfg.Namespace), func(result *schedulerApi.ArangoSchedulerDeploymentList) []*schedulerApi.ArangoSchedulerDeployment {
 		r := make([]*schedulerApi.ArangoSchedulerDeployment, len(result.Items))
 
 		for id := range result.Items {

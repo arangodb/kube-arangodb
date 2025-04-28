@@ -184,6 +184,13 @@ func initDeepType(v reflect.Value) error {
 	return nil
 }
 
+// TypeOf returns type of the generic
+func TypeOf[T any]() reflect.Type {
+	var z [0]T
+
+	return reflect.TypeOf(z).Elem()
+}
+
 type ConditionalFunction[T interface{}] func() (T, bool)
 type ConditionalP1Function[T, P1 interface{}] func(p1 P1) (T, bool)
 

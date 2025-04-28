@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package servicemonitor
 
 import (
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/base"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
@@ -34,5 +34,5 @@ type Inspector interface {
 type Definition interface {
 	base.Inspector
 
-	V1() (generic.Inspector[*monitoring.ServiceMonitor], error)
+	V1() (generic.Inspector[*monitoringApi.ServiceMonitor], error)
 }

@@ -92,7 +92,7 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	r, err := util.JsonOrYamlUnmarshal[Package](data)
+	r, err := util.JsonOrYamlUnmarshal[helm.Package](data)
 	if err != nil {
 		logger.Err(err).Error("Unable to read the file")
 		return err

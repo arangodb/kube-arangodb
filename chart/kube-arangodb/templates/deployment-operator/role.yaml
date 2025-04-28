@@ -44,17 +44,6 @@ rules:
     - apiGroups: ["backup.arangodb.com"]
       resources: ["arangobackuppolicies", "arangobackups"]
       verbs: ["get", "list", "watch"]
-{{- if .Values.rbac.extensions.debug }}
-    - apiGroups: ["events.k8s.io"]
-      resources: ["pods/log"]
-      verbs: ["list"]
-    - apiGroups: [""]
-      resources: ["pods/log"]
-      verbs: ["get", "list"]
-    - apiGroups: [""]
-      resources: ["pods/exec"]
-      verbs: ["create"]
-{{- end }}
 {{- if .Values.rbac.extensions.monitoring }}
     - apiGroups: ["monitoring.coreos.com"]
       resources: ["servicemonitors"]

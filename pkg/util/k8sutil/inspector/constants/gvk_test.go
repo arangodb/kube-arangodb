@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,13 +21,13 @@
 package constants
 
 import (
-	"reflect"
 	"testing"
 
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	policy "k8s.io/api/policy/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -36,33 +36,28 @@ import (
 )
 
 func Test_GVK(t *testing.T) {
-	testGVK(t, ArangoClusterSynchronizationGKv1(), &api.ArangoClusterSynchronization{}, api.ArangoClusterSynchronization{})
-	testGVK(t, ArangoMemberGKv1(), &api.ArangoMember{}, api.ArangoMember{})
-	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{}, api.ArangoTask{})
-	testGVK(t, ArangoRouteGKv1(), &networkingApi.ArangoRoute{}, networkingApi.ArangoRoute{})
-	testGVK(t, ArangoProfileGKv1(), &schedulerApi.ArangoProfile{}, schedulerApi.ArangoProfile{})
-	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{}, api.ArangoTask{})
-	testGVK(t, EndpointsGKv1(), &core.Endpoints{}, core.Endpoints{})
-	testGVK(t, NodeGKv1(), &core.Node{}, core.Node{})
-	testGVK(t, PodDisruptionBudgetGKv1(), &policy.PodDisruptionBudget{}, policy.PodDisruptionBudget{})
-	testGVK(t, PodGKv1(), &core.Pod{}, core.Pod{})
-	testGVK(t, ServiceAccountGKv1(), &core.ServiceAccount{}, core.ServiceAccount{})
-	testGVK(t, ServiceGKv1(), &core.Service{}, core.Service{})
-	testGVK(t, PersistentVolumeClaimGKv1(), &core.PersistentVolumeClaim{}, core.PersistentVolumeClaim{})
-	testGVK(t, SecretGKv1(), &core.Secret{}, core.Secret{})
-	testGVK(t, ServiceMonitorGKv1(), &monitoring.ServiceMonitor{}, monitoring.ServiceMonitor{})
-	testGVK(t, ArangoDeploymentGKv1(), &api.ArangoDeployment{}, api.ArangoDeployment{})
+	testGVK(t, ArangoClusterSynchronizationGKv1(), &api.ArangoClusterSynchronization{})
+	testGVK(t, ArangoMemberGKv1(), &api.ArangoMember{})
+	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{})
+	testGVK(t, ArangoRouteGKv1Alpha1(), &networkingApi.ArangoRoute{})
+	testGVK(t, ArangoProfileGKv1Beta1(), &schedulerApi.ArangoProfile{})
+	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{})
+	testGVK(t, EndpointsGKv1(), &core.Endpoints{})
+	testGVK(t, NodeGKv1(), &core.Node{})
+	testGVK(t, PodDisruptionBudgetGKv1(), &policy.PodDisruptionBudget{})
+	testGVK(t, PodGKv1(), &core.Pod{})
+	testGVK(t, ServiceAccountGKv1(), &core.ServiceAccount{})
+	testGVK(t, ServiceGKv1(), &core.Service{})
+	testGVK(t, PersistentVolumeClaimGKv1(), &core.PersistentVolumeClaim{})
+	testGVK(t, SecretGKv1(), &core.Secret{})
+	testGVK(t, ServiceMonitorGKv1(), &monitoringApi.ServiceMonitor{})
+	testGVK(t, ArangoDeploymentGKv1(), &api.ArangoDeployment{})
 }
 
-func testGVK(t *testing.T, gvk schema.GroupVersionKind, in ...interface{}) {
+func testGVK[T meta.Object](t *testing.T, gvk schema.GroupVersionKind, in T) {
 	t.Run(gvk.String(), func(t *testing.T) {
-		for _, z := range in {
-			zt := reflect.TypeOf(z)
-			t.Run(zt.String(), func(t *testing.T) {
-				g, ok := ExtractGVKFromObject(z)
-				require.True(t, ok)
-				require.Equal(t, gvk, g)
-			})
-		}
+		g, ok := ExtractGVKFromObject(in)
+		require.True(t, ok)
+		require.Equal(t, gvk, g)
 	})
 }
