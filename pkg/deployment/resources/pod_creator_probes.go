@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,11 @@
 package resources
 
 import (
+	"fmt"
 	"math"
 	"time"
 
 	core "k8s.io/api/core/v1"
-
-	"github.com/arangodb/go-driver/jwt"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -35,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 type Probe interface {
@@ -294,10 +294,15 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
+		authz, err := token.NewClaims().With(
+			token.WithDefaultClaims(),
+			token.WithServerID("kube-arangodb"),
+			token.WithAllowedPaths("/_api/version")).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+
+		authorization = fmt.Sprintf("bearer %s", authz)
 	}
 	return &probes.HTTPProbeConfig{
 		LocalPath:     "/_api/version",
@@ -315,10 +320,16 @@ func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.S
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
+		authz, err := token.NewClaims().With(
+			token.WithDefaultClaims(),
+			token.WithServerID("kube-arangodb"),
+			token.WithAllowedPaths("/_api/version"),
+		).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+
+		authorization = fmt.Sprintf("bearer %s", authz)
 	}
 	return &probes.HTTPProbeConfig{
 		LocalPath:           "/_api/version",
@@ -407,10 +418,16 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.Ser
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{localPath})
+		authz, err := token.NewClaims().With(
+			token.WithDefaultClaims(),
+			token.WithServerID("kube-arangodb"),
+			token.WithAllowedPaths(localPath),
+		).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+
+		authorization = fmt.Sprintf("bearer %s", authz)
 	}
 	probeCfg := &probes.HTTPProbeConfig{
 		LocalPath:           localPath,
@@ -439,10 +456,16 @@ func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
+		authz, err := token.NewClaims().With(
+			token.WithDefaultClaims(),
+			token.WithServerID("kube-arangodb"),
+			token.WithAllowedPaths("/_api/version"),
+		).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+
+		authorization = fmt.Sprintf("bearer %s", authz)
 	} else {
 		// Don't have a probe
 		return nil, nil
@@ -470,10 +493,16 @@ func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.S
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authorization, err = jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(secretData, "kube-arangodb", []string{"/_api/version"})
+		authz, err := token.NewClaims().With(
+			token.WithDefaultClaims(),
+			token.WithServerID("kube-arangodb"),
+			token.WithAllowedPaths("/_api/version"),
+		).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
+
+		authorization = fmt.Sprintf("bearer %s", authz)
 	} else {
 		// Don't have a probe
 		return nil, nil

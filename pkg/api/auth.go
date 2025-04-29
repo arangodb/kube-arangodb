@@ -26,26 +26,25 @@ import (
 	goStrings "strings"
 
 	"github.com/gin-gonic/gin"
-	jg "github.com/golang-jwt/jwt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 type authorization struct {
-	jwtSigningKey string
+	secret token.Secret
 }
 
 func (a *authorization) isValid(token string) bool {
-	t, err := jg.Parse(token, func(_ *jg.Token) (interface{}, error) {
-		return []byte(a.jwtSigningKey), nil
-	})
+	t, err := a.secret.Validate(token)
 	if err != nil {
 		apiLogger.Err(err).Info("invalid JWT: %s", token)
 		return false
 	}
-	return t.Valid
+	return t.Valid()
 }
 
 // ensureHTTPAuth ensure a valid token exists within HTTP request header

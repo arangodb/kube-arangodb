@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 const MaxSize = 128
@@ -38,9 +39,7 @@ type cache struct {
 
 	eol time.Time
 
-	signingToken []byte
-
-	validationTokens [][]byte
+	token token.Secret
 }
 
 func (i *implementation) newCache(cfg Configuration) (*cache, error) {
@@ -91,10 +90,11 @@ func (i *implementation) newCache(cfg Configuration) (*cache, error) {
 	}
 
 	cache := cache{
-		parent:           i,
-		eol:              time.Now().Add(i.cfg.TTL),
-		signingToken:     tokens[keys[0]],
-		validationTokens: data,
+		parent: i,
+		eol:    time.Now().Add(i.cfg.TTL),
+		token: token.NewSecretSet(token.NewSecret(tokens[keys[0]]), util.FormatList(data, func(a []byte) token.Secret {
+			return token.NewSecret(a)
+		})...),
 	}
 
 	return &cache, nil
