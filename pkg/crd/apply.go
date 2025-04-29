@@ -68,7 +68,11 @@ func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts Ensur
 
 		getAccess := verifyCRDAccess(ctx, client, crdName, access.Get)
 		if !getAccess.Allowed {
-			logger.Str("crd", crdName).Info("Get Operations is not allowed. Continue")
+			logger.
+				Str("crd", crdName).
+				Str("reason", getAccess.Reason).
+				Str("evaluationError", getAccess.EvaluationError).
+				Info("Get Operations is not allowed. Continue")
 			continue
 		}
 
@@ -195,14 +199,20 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 	c, err := crdDefinitions.Get(ctx, crdName, meta.GetOptions{})
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			logger.Err(err).Str("crd", crdName).Warn("Get Operations is not allowed due to error")
+			logger.Err(err).
+				Str("crd", crdName).
+				Warn("Get Operations is not allowed due to error")
 			return err
 		}
 
 		createAccess := verifyCRDAccess(ctx, client, crdName, access.Create)
 
 		if !createAccess.Allowed {
-			logger.Str("crd", crdName).Info("Create Operations is not allowed but CRD is missing. Continue")
+			logger.
+				Str("crd", crdName).
+				Str("reason", createAccess.Reason).
+				Str("evaluationError", createAccess.EvaluationError).
+				Info("Create Operations is not allowed but CRD is missing. Continue")
 			return nil
 		}
 
@@ -219,7 +229,10 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 
 	updateAccess := verifyCRDAccess(ctx, client, crdName, access.Update)
 	if !updateAccess.Allowed {
-		logger.Str("crd", crdName).Info("Update Operations is not allowed. Continue")
+		logger.Str("crd", crdName).
+			Str("reason", updateAccess.Reason).
+			Str("evaluationError", updateAccess.EvaluationError).
+			Info("Update Operations is not allowed. Continue")
 		return nil
 	}
 
