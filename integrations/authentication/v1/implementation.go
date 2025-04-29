@@ -171,21 +171,12 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 	// Token is validated, we can continue with creation
 	secret := cache.token
 
-<<<<<<< HEAD
-	signedToken, err := token.New(secret,
-		token.NewClaims().With(token.WithDefaultClaims(),
-			token.WithCurrentIAT(),
-			token.WithDuration(duration),
-			token.WithUsername(user),
-			token.WithRoles(request.GetRoles()...)),
-	)
-=======
 	signedToken, err := token.NewClaims().With(
 		token.WithDefaultClaims(),
 		token.WithCurrentIAT(),
 		token.WithDuration(duration),
-		token.WithUsername(user)).Sign(secret)
->>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
+		token.WithUsername(user),
+		token.WithRoles(request.GetRoles()...)).Sign(secret)
 	if err != nil {
 		return nil, err
 	}
@@ -248,14 +239,9 @@ func (i *implementation) Identity(ctx context.Context, _ *pbSharedV1.Empty) (*pb
 	return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 }
 
-<<<<<<< HEAD
 func (i *implementation) extractTokenDetails(cache *cache, t string) (string, []string, time.Duration, error) {
 	// Let's check if token is signed properly
-=======
-func (i *implementation) extractTokenDetails(cache *cache, t string) (string, time.Duration, error) {
-	// Token is validated, we can continue with creation
 	secret := cache.token
->>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 
 	// Let's check if token is signed properly
 	p, err := secret.Validate(t)
@@ -272,7 +258,9 @@ func (i *implementation) extractTokenDetails(cache *cache, t string) (string, ti
 
 	duration := DefaultTokenMaxTTL
 
-	if v, ok := p.Claims()[token.ClaimEXP]; ok {
+	claims := p.Claims()
+
+	if v, ok := claims[token.ClaimEXP]; ok {
 		switch o := v.(type) {
 		case int64:
 			duration = time.Until(time.Unix(o, 0))
@@ -283,7 +271,7 @@ func (i *implementation) extractTokenDetails(cache *cache, t string) (string, ti
 
 	var roles []string
 
-	if v, ok := p[token.ClaimRoles]; ok {
+	if v, ok := claims[token.ClaimRoles]; ok {
 		switch o := v.(type) {
 		case []string:
 			roles = o

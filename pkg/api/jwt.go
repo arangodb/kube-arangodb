@@ -25,10 +25,6 @@ import (
 	"fmt"
 	"time"
 
-<<<<<<< HEAD
-	jwt "github.com/golang-jwt/jwt/v5"
-=======
->>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 	core "k8s.io/api/core/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
@@ -73,11 +69,7 @@ func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (token.Secret, e
 // If it is not present, it creates a new key.
 // The resulting JWT is stored in secrets.
 func generateAndSaveJWT(secrets generic.InspectorInterface[*core.Secret], cfg ServerConfig) error {
-<<<<<<< HEAD
-	claims := jwt.MapClaims{
-=======
 	claims := token.Claims{
->>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 		"iss": fmt.Sprintf("kube-arangodb/%s", cfg.ServerName),
 		"iat": time.Now().Unix(),
 	}

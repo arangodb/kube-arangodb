@@ -27,10 +27,6 @@ import (
 	"fmt"
 	"time"
 
-<<<<<<< HEAD
-	jwt "github.com/golang-jwt/jwt/v5"
-=======
->>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -427,19 +423,12 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 }
 
 var (
-<<<<<<< HEAD
-	exporterTokenClaims = jwt.MapClaims{
-		token.ClaimISS: token.ClaimISSValue,
-		"server_id":    "exporter",
-		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description",
-=======
 	exporterTokenClaimsMods = []util.ModR[token.Claims]{
 		token.WithDefaultClaims(),
 		token.WithServerID("exporter"),
 		token.WithAllowedPaths(
 			"/_admin/statistics",
 			"/_admin/statistics-description",
->>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 			shared.ArangoExporterInternalEndpoint,
 			shared.ArangoExporterInternalEndpointV2,
 			shared.ArangoExporterUsageEndpoint,
@@ -504,21 +493,12 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 			return true, true, errors.WithStack(err)
 		}
 
-<<<<<<< HEAD
-		token, err := token.Parse(string(data), []byte(secret))
-
-=======
 		tokenClaims, err := secret.Validate(string(data))
->>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 		if err != nil {
 			return true, true, nil
 		}
 
-<<<<<<< HEAD
-		tokenClaims := jwt.MapClaims(token)
-=======
 		expectedClaims := token.NewClaims().With(exporterTokenClaimsMods...)
->>>>>>> bbaf385d5 ([Bugfix] Fix JWT Secret Tail characters)
 
 		return !equality.Semantic.DeepDerivative(tokenClaims, expectedClaims), true, nil
 	}
