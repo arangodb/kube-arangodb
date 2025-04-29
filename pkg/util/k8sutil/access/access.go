@@ -144,8 +144,9 @@ func VerifyAccessRequest(ctx context.Context, client kclient.Client, in authoriz
 
 	if err != nil {
 		return authorization.SubjectAccessReviewStatus{
-			Allowed: false,
-			Reason:  fmt.Sprintf("Unable to check access: %s", err.Error()),
+			Allowed:         false,
+			Reason:          fmt.Sprintf("Unable to check access: %s", err.Error()),
+			EvaluationError: err.Error(),
 		}
 	}
 

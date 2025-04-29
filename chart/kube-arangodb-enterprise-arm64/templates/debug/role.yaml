@@ -14,9 +14,13 @@ metadata:
         release: {{ .Release.Name }}
 rules:
   - apiGroups:
+# Core
     - ""
     - "apps"
     - "batch"
+# Arango
+    - "analytics.arangodb.com"
+    - "ml.arangodb.com"
     resources: ["*"]
     verbs: ["get", "list"]
   - apiGroups: [""]

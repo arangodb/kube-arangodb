@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,6 +39,8 @@ func (r *Reconciler) createBootstrapPlan(ctx context.Context, apiObject k8sutil.
 		return nil
 	}
 
+	var plan api.Plan
+
 	for user, secret := range spec.Bootstrap.PasswordSecretNames {
 		if secret.IsNone() {
 			continue
@@ -52,8 +54,11 @@ func (r *Reconciler) createBootstrapPlan(ctx context.Context, apiObject k8sutil.
 			}
 		}
 
-		return api.Plan{actions.NewClusterAction(api.ActionTypeBootstrapSetPassword, "Updating password").AddParam("user", user)}
+		plan = append(plan, actions.NewClusterAction(api.ActionTypeBootstrapSetPassword, "Updating password").AddParam("user", user))
 	}
 
-	return api.Plan{actions.NewClusterAction(api.ActionTypeBootstrapUpdate, "Finalizing bootstrap")}
+	plan = append(plan, r.updateClusterLicense(ctx, apiObject, spec, status, context)...)
+	plan = append(plan, actions.NewClusterAction(api.ActionTypeBootstrapUpdate, "Finalizing bootstrap"))
+
+	return plan
 }

@@ -28,7 +28,7 @@ import (
 // CustomResourceDefinition
 const (
 	CustomResourceDefinitionGroup     = "apiextensions.k8s.io"
-	CustomResourceDefinitionResource  = "customresourcesdefinition"
+	CustomResourceDefinitionResource  = "customresourcedefinitions"
 	CustomResourceDefinitionKind      = "CustomResourceDefinition"
 	CustomResourceDefinitionVersionV1 = "v1"
 )

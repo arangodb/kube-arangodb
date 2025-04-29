@@ -64,7 +64,9 @@ func (s *Scheduling) Apply(template *core.PodTemplateSpec) error {
 	} else {
 		template.Spec.NodeSelector = map[string]string{}
 		for k, v := range s.NodeSelector {
-			template.Spec.NodeSelector[k] = v
+			if v != "-" {
+				template.Spec.NodeSelector[k] = v
+			}
 		}
 	}
 
