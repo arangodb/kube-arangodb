@@ -262,7 +262,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 			}
 			// We need to do graceful rotation
 			if member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
-				return nil, nil
+				return restartMemberConditionAction(group, member.ID, reason), nil
 			}
 
 			switch a := spec.MemberPropagationMode.Get(); a {
