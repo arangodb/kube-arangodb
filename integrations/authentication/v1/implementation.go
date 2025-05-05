@@ -109,7 +109,7 @@ func (i *implementation) Validate(ctx context.Context, request *pbAuthentication
 		return nil, err
 	}
 
-	user, exp, err := i.extractTokenDetails(cache, request.GetToken())
+	user, roles, exp, err := i.extractTokenDetails(cache, request.GetToken())
 	if err != nil {
 		return &pbAuthenticationV1.ValidateResponse{
 			IsValid: false,
@@ -122,6 +122,7 @@ func (i *implementation) Validate(ctx context.Context, request *pbAuthentication
 		Details: &pbAuthenticationV1.ValidateResponseDetails{
 			Lifetime: durationpb.New(exp),
 			User:     user,
+			Roles:    roles,
 		},
 	}, nil
 }
@@ -170,12 +171,18 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 	// Token is validated, we can continue with creation
 	secret := cache.signingToken
 
-	signedToken, err := token.New(secret, token.NewClaims().With(token.WithDefaultClaims(), token.WithCurrentIAT(), token.WithDuration(duration), token.WithUsername(user)))
+	signedToken, err := token.New(secret,
+		token.NewClaims().With(token.WithDefaultClaims(),
+			token.WithCurrentIAT(),
+			token.WithDuration(duration),
+			token.WithUsername(user),
+			token.WithRoles(request.GetRoles()...)),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	user, _, err = i.extractTokenDetails(cache, signedToken)
+	user, roles, _, err := i.extractTokenDetails(cache, signedToken)
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +191,7 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		Lifetime: durationpb.New(duration),
 		User:     user,
 		Token:    signedToken,
+		Roles:    roles,
 	}, nil
 }
 
@@ -222,7 +230,7 @@ func (i *implementation) Identity(ctx context.Context, _ *pbSharedV1.Empty) (*pb
 			continue
 		}
 
-		if !resp.IsValid {
+		if !resp.GetIsValid() {
 			continue
 		}
 
@@ -232,12 +240,12 @@ func (i *implementation) Identity(ctx context.Context, _ *pbSharedV1.Empty) (*pb
 	return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 }
 
-func (i *implementation) extractTokenDetails(cache *cache, t string) (string, time.Duration, error) {
+func (i *implementation) extractTokenDetails(cache *cache, t string) (string, []string, time.Duration, error) {
 	// Let's check if token is signed properly
 
 	p, err := token.ParseWithAny(t, cache.validationTokens...)
 	if err != nil {
-		return "", 0, err
+		return "", nil, 0, err
 	}
 
 	user := DefaultAdminUser
@@ -258,5 +266,14 @@ func (i *implementation) extractTokenDetails(cache *cache, t string) (string, ti
 		}
 	}
 
-	return user, duration, nil
+	var roles []string
+
+	if v, ok := p[token.ClaimRoles]; ok {
+		switch o := v.(type) {
+		case []string:
+			roles = o
+		}
+	}
+
+	return user, roles, duration, nil
 }

@@ -27,23 +27,24 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
+	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func init() {
-	registerer.Register(pbImplEnvoyAuthV3.Name, func() Integration {
+	registerer.Register(pbImplEnvoyAuthV3Shared.Name, func() Integration {
 		return &envoyAuthV3{}
 	})
 }
 
 type envoyAuthV3 struct {
-	config pbImplEnvoyAuthV3.Configuration
+	config pbImplEnvoyAuthV3Shared.Configuration
 }
 
 func (a envoyAuthV3) Name() string {
-	return pbImplEnvoyAuthV3.Name
+	return pbImplEnvoyAuthV3Shared.Name
 }
 
 func (a *envoyAuthV3) Description() string {

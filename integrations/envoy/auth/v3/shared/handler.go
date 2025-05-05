@@ -18,36 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v3
+package shared
 
 import (
 	"context"
 
-	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 )
 
-type AuthResponse struct {
-	Username string
-
-	Token *string
-
-	CustomResponse *pbEnvoyAuthV3.CheckResponse
-
-	Headers []*pbEnvoyCoreV3.HeaderValueOption
-}
-
-type AuthRequestFunc func(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, current *AuthResponse) (*AuthResponse, error)
-
-func MergeAuthRequest(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, requests ...AuthRequestFunc) (*AuthResponse, error) {
-	var resp *AuthResponse
-	for _, r := range requests {
-		if v, err := r(ctx, request, resp); err != nil {
-			return nil, err
-		} else {
-			resp = v
-		}
-	}
-
-	return resp, nil
+type AuthHandler interface {
+	Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, current *Response) error
 }

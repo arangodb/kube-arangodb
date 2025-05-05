@@ -18,7 +18,9 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v3
+package shared
+
+import "time"
 
 const (
 	Name = "envoy.auth.v3"
@@ -40,4 +42,7 @@ const (
 
 	AuthorizationHeader = "Authorization"
 	CookieHeader        = "Cookie"
+
+	DefaultLifetime = time.Minute * 5
+	DefaultTTL      = time.Minute
 )
