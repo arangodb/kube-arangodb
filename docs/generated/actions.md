@@ -33,7 +33,7 @@ nav_order: 11
 | EnableMaintenance | no | 10m0s | no | Community & Enterprise | Enable ArangoDB maintenance mode |
 | EnableMemberMaintenance | no | 10m0s | no | Enterprise Only | Enable ArangoDB DBServer maintenance mode |
 | EncryptionKeyAdd | no | 10m0s | no | Enterprise Only | Add the encryption key to the pool |
-| EncryptionKeyPropagated | no | 10m0s | no | Enterprise Only | Update condition of encryption propagation |
+| EncryptionKeyPropagated | yes | 10m0s | no | Enterprise Only | Update condition of encryption propagation |
 | EncryptionKeyRefresh | no | 10m0s | no | Enterprise Only | Refresh the encryption keys on member |
 | EncryptionKeyRemove | no | 10m0s | no | Enterprise Only | Remove the encryption key to the pool |
 | EncryptionKeyStatusUpdate | no | 10m0s | no | Enterprise Only | Update status of encryption propagation |
@@ -41,7 +41,7 @@ nav_order: 11
 | Idle | no | 10m0s | no | Community & Enterprise | Define idle operation in case if preconditions are not meet |
 | JWTAdd | no | 10m0s | no | Enterprise Only | Adds new JWT to the pool |
 | JWTClean | no | 10m0s | no | Enterprise Only | Remove JWT key from the pool |
-| JWTPropagated | no | 10m0s | no | Enterprise Only | Update condition of JWT propagation |
+| JWTPropagated | yes | 10m0s | no | Enterprise Only | Update condition of JWT propagation |
 | JWTRefresh | no | 10m0s | no | Enterprise Only | Refresh current JWT secrets on the member |
 | JWTSetActive | no | 10m0s | no | Enterprise Only | Change active JWT key on the cluster |
 | JWTStatusUpdate | no | 10m0s | no | Enterprise Only | Update status of JWT propagation |
@@ -78,22 +78,22 @@ nav_order: 11
 | RuntimeContainerImageUpdate | no | 10m0s | no | Community & Enterprise | Update Container Image in runtime |
 | RuntimeContainerSyncTolerations | no | 10m0s | no | Community & Enterprise | Update Pod Tolerations in runtime |
 | ~~SetCondition~~ | no | 10m0s | no | Community & Enterprise | Set deployment condition |
-| SetConditionV2 | no | 10m0s | no | Community & Enterprise | Set deployment condition |
+| SetConditionV2 | yes | 10m0s | no | Community & Enterprise | Set deployment condition |
 | SetCurrentImage | no | 6h0m0s | no | Community & Enterprise | Update deployment current image after image discovery |
 | SetCurrentMemberArch | no | 10m0s | no | Community & Enterprise | Set current member architecture |
-| SetMaintenanceCondition | no | 10m0s | no | Community & Enterprise | Update ArangoDB maintenance condition |
+| SetMaintenanceCondition | yes | 10m0s | no | Community & Enterprise | Update ArangoDB maintenance condition |
 | ~~SetMemberCondition~~ | no | 10m0s | no | Community & Enterprise | Set member condition |
-| SetMemberConditionV2 | no | 10m0s | no | Community & Enterprise | Set member condition |
+| SetMemberConditionV2 | yes | 10m0s | no | Community & Enterprise | Set member condition |
 | SetMemberCurrentImage | no | 10m0s | no | Community & Enterprise | Update Member current image |
 | ShutdownMember | no | 30m0s | no | Community & Enterprise | Sends Shutdown requests and waits for container to be stopped |
 | TLSKeyStatusUpdate | no | 10m0s | no | Enterprise Only | Update Status of TLS propagation process |
-| TLSPropagated | no | 10m0s | no | Enterprise Only | Update TLS propagation condition |
+| TLSPropagated | yes | 10m0s | no | Enterprise Only | Update TLS propagation condition |
 | TimezoneSecretSet | no | 30m0s | no | Community & Enterprise | Set timezone details in cluster |
 | TopologyDisable | no | 10m0s | no | Enterprise Only | Disable TopologyAwareness |
 | TopologyEnable | no | 10m0s | no | Enterprise Only | Enable TopologyAwareness |
 | TopologyMemberAssignment | no | 10m0s | no | Enterprise Only | Update TopologyAwareness Members assignments |
 | TopologyZonesUpdate | no | 10m0s | no | Enterprise Only | Update TopologyAwareness Zones info |
-| UpToDateUpdate | no | 10m0s | no | Community & Enterprise | Update UpToDate condition |
+| UpToDateUpdate | yes | 10m0s | no | Community & Enterprise | Update UpToDate condition |
 | UpdateTLSSNI | no | 10m0s | no | Enterprise Only | Update certificate in SNI |
 | UpgradeMember | no | 6h0m0s | no | Community & Enterprise | Run the Upgrade procedure on member |
 | WaitForMemberInSync | no | 30m0s | no | Community & Enterprise | Wait for member to be in sync. In case of DBServer waits for shards. In case of Agents to catch-up on Agency index |

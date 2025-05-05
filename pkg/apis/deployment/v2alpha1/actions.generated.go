@@ -927,9 +927,23 @@ func (a ActionType) Priority() ActionPriority {
 // Internal returns true if action is considered to be internal
 func (a ActionType) Internal() bool {
 	switch a {
+	case ActionTypeEncryptionKeyPropagated:
+		return true
+	case ActionTypeJWTPropagated:
+		return true
 	case ActionTypeRebalancerGenerate:
 		return true
 	case ActionTypeRebalancerGenerateV2:
+		return true
+	case ActionTypeSetConditionV2:
+		return true
+	case ActionTypeSetMaintenanceCondition:
+		return true
+	case ActionTypeSetMemberConditionV2:
+		return true
+	case ActionTypeTLSPropagated:
+		return true
+	case ActionTypeUpToDateUpdate:
 		return true
 	default:
 		return false
