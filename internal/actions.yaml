@@ -108,6 +108,7 @@ actions:
   TLSPropagated:
     enterprise: true
     description: Update TLS propagation condition
+    isInternal: true
   UpdateTLSSNI:
     enterprise: true
     description: Update certificate in SNI
@@ -135,6 +136,7 @@ actions:
     timeout: 15m
   UpToDateUpdate:
     description: Update UpToDate condition
+    isInternal: true
   BackupRestore:
     enterprise: true
     description: Restore selected Backup
@@ -158,6 +160,7 @@ actions:
   EncryptionKeyPropagated:
     enterprise: true
     description: Update condition of encryption propagation
+    isInternal: true
   JWTStatusUpdate:
     enterprise: true
     description: Update status of JWT propagation
@@ -176,6 +179,7 @@ actions:
   JWTPropagated:
     enterprise: true
     description: Update condition of JWT propagation
+    isInternal: true
   ClusterMemberCleanup:
     description: Remove member from Cluster if it is gone already (Coordinators)
   EnableMaintenance:
@@ -184,6 +188,7 @@ actions:
     description: Disable ArangoDB maintenance mode
   SetMaintenanceCondition:
     description: Update ArangoDB maintenance condition
+    isInternal: true
   EnableMemberMaintenance:
     enterprise: true
     description: Enable ArangoDB DBServer maintenance mode
@@ -211,6 +216,7 @@ actions:
     description: Set member condition
     scopes:
       - High
+    isInternal: true
   SetCondition:
     description: Set deployment condition
     scopes:
@@ -220,6 +226,7 @@ actions:
     description: Set deployment condition
     scopes:
       - High
+    isInternal: true
   MemberRIDUpdate:
     description: Update Run ID of member
     scopes:

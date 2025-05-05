@@ -249,7 +249,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("EncryptionKeyPropagated", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeEncryptionKeyPropagated)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeEncryptionKeyPropagated.Internal())
+			require.True(t, api.ActionTypeEncryptionKeyPropagated.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeEncryptionKeyPropagated.Optional())
@@ -329,7 +329,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("JWTPropagated", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeJWTPropagated)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeJWTPropagated.Internal())
+			require.True(t, api.ActionTypeJWTPropagated.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeJWTPropagated.Optional())
@@ -707,7 +707,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("SetConditionV2", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeSetConditionV2)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeSetConditionV2.Internal())
+			require.True(t, api.ActionTypeSetConditionV2.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeSetConditionV2.Optional())
@@ -737,7 +737,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("SetMaintenanceCondition", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeSetMaintenanceCondition)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeSetMaintenanceCondition.Internal())
+			require.True(t, api.ActionTypeSetMaintenanceCondition.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeSetMaintenanceCondition.Optional())
@@ -760,7 +760,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("SetMemberConditionV2", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeSetMemberConditionV2)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeSetMemberConditionV2.Internal())
+			require.True(t, api.ActionTypeSetMemberConditionV2.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeSetMemberConditionV2.Optional())
@@ -801,7 +801,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("TLSPropagated", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeTLSPropagated)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeTLSPropagated.Internal())
+			require.True(t, api.ActionTypeTLSPropagated.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeTLSPropagated.Optional())
@@ -861,7 +861,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("UpToDateUpdate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeUpToDateUpdate)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeUpToDateUpdate.Internal())
+			require.True(t, api.ActionTypeUpToDateUpdate.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeUpToDateUpdate.Optional())
