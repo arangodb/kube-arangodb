@@ -41,6 +41,12 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v0
       - alias: pbAuthorizationV0
         pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v0/definition
+      - alias: pbImplAuthorizationV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1
+      - alias: pbAuthorizationV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition
+      - alias: pShared
+        pkg: github.com/arangodb/kube-arangodb/pkg/permissions/shared
       - alias: pbImplConfigV1
         pkg: github.com/arangodb/kube-arangodb/integrations/config/v1
       - alias: pbConfigV1
