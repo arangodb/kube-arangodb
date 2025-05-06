@@ -138,7 +138,7 @@ func (s MemberStatus) Age() time.Duration {
 
 // AppendLastTermination appends termination to the list if required
 func (s *MemberStatus) AppendLastTermination(termination time.Time) bool {
-	if s == nil {
+	if s == nil || termination.IsZero() {
 		return false
 	}
 
