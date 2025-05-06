@@ -19,6 +19,7 @@
 - (Feature) DebugPackage Improvements
 - (Feature) Improve Bootstrap time
 - (Feature) Move Condition Actions to Internal
+- (Bugfix) Improve Member Failure discovery
 
 ## [1.2.47](https://github.com/arangodb/kube-arangodb/tree/1.2.47) (2025-03-28)
 - (Bugfix) Use Profile Annotations
