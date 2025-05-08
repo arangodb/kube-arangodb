@@ -40,12 +40,14 @@ type impl struct {
 func (a impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, current *pbImplEnvoyAuthV3Shared.Response) error {
 	ext := request.GetAttributes().GetContextExtensions()
 
-	if util.Optional(ext, pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey, pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse) == pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue && current == nil {
-		return pbImplEnvoyAuthV3Shared.DeniedResponse{
-			Code: goHttp.StatusUnauthorized,
-			Message: &pbImplEnvoyAuthV3Shared.DeniedMessage{
-				Message: "Unauthorized",
-			},
+	if util.Optional(ext, pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey, pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse) == pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue {
+		if !current.Authenticated() {
+			return pbImplEnvoyAuthV3Shared.DeniedResponse{
+				Code: goHttp.StatusUnauthorized,
+				Message: &pbImplEnvoyAuthV3Shared.DeniedMessage{
+					Message: "Unauthorized",
+				},
+			}
 		}
 	}
 
