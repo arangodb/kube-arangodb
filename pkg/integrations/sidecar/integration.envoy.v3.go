@@ -21,10 +21,15 @@
 package sidecar
 
 import (
+	"fmt"
+
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type IntegrationEnvoyV3 struct {
@@ -57,6 +62,27 @@ func (i IntegrationEnvoyV3) Envs() ([]core.EnvVar, error) {
 		},
 	}
 
+	if gw := i.Spec.Gateway; gw != nil {
+		if auth := gw.Authentication; auth != nil {
+			if obj := auth.Secret; obj != nil {
+				envs = append(envs,
+					core.EnvVar{
+						Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_ENABLED",
+						Value: "true",
+					},
+					core.EnvVar{
+						Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_TYPE",
+						Value: string(auth.Type),
+					},
+					core.EnvVar{
+						Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_PATH",
+						Value: fmt.Sprintf("%sconfig", constants.MemberAuthVolumeMountDir),
+					},
+				)
+			}
+		}
+	}
+
 	return i.Core.Envs(i, envs...), nil
 }
 
@@ -65,5 +91,21 @@ func (i IntegrationEnvoyV3) GlobalEnvs() ([]core.EnvVar, error) {
 }
 
 func (i IntegrationEnvoyV3) Volumes() ([]core.Volume, []core.VolumeMount, error) {
-	return nil, nil, nil
+	volumes := pod.NewVolumes()
+
+	if gw := i.Spec.Gateway; gw != nil {
+		if auth := gw.Authentication; auth != nil {
+			if obj := auth.Secret; obj != nil {
+				volumes.AddVolume(k8sutil.CreateVolumeWithSecret(constants.MemberAuthVolumeName, obj.GetName()))
+
+				volumes.AddVolumeMount(core.VolumeMount{
+					Name:      constants.MemberAuthVolumeName,
+					MountPath: constants.MemberAuthVolumeMountDir,
+					ReadOnly:  true,
+				})
+			}
+		}
+	}
+
+	return volumes.Volumes(), volumes.VolumeMounts(), nil
 }

@@ -46,6 +46,7 @@ import (
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication"
 	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
@@ -362,6 +363,13 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"shared/v1",
 				},
 			},
+			"v1alpha1/authentication": {
+				Types: inputPackageTypes{
+					"ArangoPlatform.V1Alpha1.Authentication.OpenID": {
+						"": platformAuthenticationApi.OpenID{},
+					},
+				},
+			},
 		},
 	}
 
@@ -492,7 +500,7 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 
 					defs := make(DocDefinitions, 0, len(sectionParsed))
 					for k, f := range sectionParsed {
-						defs = append(defs, parseDocDefinition(t, root, k.path, k.typ, f, fs))
+						defs = append(defs, parseDocDefinition(t, root, cleanPrefixPath(k.path), k.typ, f, fs))
 					}
 					defs.Sort()
 
@@ -532,4 +540,20 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 func write(t *testing.T, out io.Writer, format string, args ...interface{}) {
 	_, err := out.Write([]byte(fmt.Sprintf(format, args...)))
 	require.NoError(t, err)
+}
+
+func cleanPrefixPath(path string) string {
+	for id := 1; id < len(path); id++ {
+		if path[id-1] == '.' && path[id] == '.' {
+			continue
+		}
+
+		if path[id] == '.' {
+			return path[id:]
+		}
+
+		return path[id-1:]
+	}
+
+	return path
 }

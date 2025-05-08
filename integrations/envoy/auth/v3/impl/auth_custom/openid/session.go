@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,43 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package openid
 
-import (
-	"encoding/json"
+import meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"sigs.k8s.io/yaml"
-)
+type Session struct {
+	Key string `json:"_key"`
 
-func JSONRemarshal[A, B any](in A) (B, error) {
-	d, err := json.Marshal(in)
-	if err != nil {
-		return Default[B](), err
-	}
+	IDToken string `json:"idToken"`
 
-	var o B
+	ExpiresAt        meta.Time `json:"expiresAt"`
+	ExpiresAtSeconds int64     `json:"expiresAtSeconds"`
 
-	if err := json.Unmarshal(d, &o); err != nil {
-		return Default[B](), err
-	}
-
-	return o, nil
+	Username string `json:"username"`
 }
 
-func JsonOrYamlUnmarshal[T any](b []byte) (T, error) {
-	var z T
+func (s *Session) SetKey(k string) {
+	s.Key = k
+}
 
-	if json.Valid(b) {
-		if err := json.Unmarshal(b, &z); err != nil {
-			return Default[T](), err
-		}
-
-		return z, nil
+func (s *Session) GetKey() string {
+	if s == nil {
+		return ""
 	}
 
-	if err := yaml.UnmarshalStrict(b, &z); err != nil {
-		return Default[T](), err
-	}
-
-	return z, nil
+	return s.Key
 }

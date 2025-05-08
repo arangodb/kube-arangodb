@@ -47,4 +47,7 @@ const (
 
 	MemberConfigVolumeMountDir = "/etc/gateway/member/"
 	MemberConfigVolumeName     = "member-config"
+
+	MemberAuthVolumeMountDir = "/etc/gateway/auth/"
+	MemberAuthVolumeName     = "member-auth"
 )

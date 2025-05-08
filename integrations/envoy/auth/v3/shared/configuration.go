@@ -34,12 +34,20 @@ type Configuration struct {
 	Database ConfigurationDatabase
 
 	Extensions ConfigurationExtensions
+
+	Auth ConfigurationAuth
 }
 
 type ConfigurationDatabase struct {
 	Proto    string
 	Endpoint string
 	Port     int
+}
+
+type ConfigurationAuth struct {
+	Enabled bool
+	Type    string
+	Path    string
 }
 
 type ConfigurationExtensions struct {

@@ -14,6 +14,7 @@
 - (Maintenance) Add Common Api Import
 - (Feature) Previous Pod Logs in DebugPackage
 - (Feature) (Platform) Login & Logout Endpoints
+- (Feature) (Platform) OpenID Integration
 
 ## [1.2.48](https://github.com/arangodb/kube-arangodb/tree/1.2.48) (2025-05-08)
 - (Maintenance) Extend Documentation
