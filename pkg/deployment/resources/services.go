@@ -160,7 +160,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			ports := []core.ServicePort{CreateServerServicePort()}
 			// Service should exists
 			if !ok {
-				s := r.createService(name, apiObject.GetNamespace(), spec.CommunicationMethod.ServiceClusterIP(), spec.CommunicationMethod.ServiceType(), false, apiObject.AsOwner(), ports, selector)
+				s := r.createService(name, apiObject.GetNamespace(), "", core.ServiceTypeClusterIP, false, apiObject.AsOwner(), ports, selector)
 
 				err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 					_, err := svcs.Create(ctxChild, s, meta.CreateOptions{})
@@ -175,14 +175,26 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 				reconcileRequired.Required()
 				continue
 			} else {
-				if _, changed, err := patcher.Patcher[*core.Service](ctx, svcs, s, meta.PatchOptions{},
-					patcher.PatchServicePorts(ports),
-					patcher.PatchServiceSelector(selector),
-					patcher.PatchServicePublishNotReadyAddresses(false),
-					patcher.PatchServiceType(spec.CommunicationMethod.ServiceType())); err != nil {
-					return err
-				} else if changed {
-					reconcileRequired.Required()
+				if s.Spec.ClusterIP == core.ClusterIPNone {
+					// Recreation required
+					if err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+						return svcs.Delete(ctxChild, s.GetName(), meta.DeleteOptions{})
+					}); err != nil {
+						if !kerrors.IsNotFound(err) {
+							return err
+						}
+						reconcileRequired.Required()
+					}
+				} else {
+					if _, changed, err := patcher.Patcher[*core.Service](ctx, svcs, s, meta.PatchOptions{},
+						patcher.PatchServicePorts(ports),
+						patcher.PatchServiceSelector(selector),
+						patcher.PatchServicePublishNotReadyAddresses(false),
+						patcher.PatchServiceType(core.ServiceTypeClusterIP)); err != nil {
+						return err
+					} else if changed {
+						reconcileRequired.Required()
+					}
 				}
 			}
 		}
