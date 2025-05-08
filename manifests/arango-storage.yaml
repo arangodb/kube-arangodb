@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -18,7 +18,7 @@ metadata:
   name: arangolocalstorages.storage.arangodb.com
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -48,7 +48,7 @@ metadata:
   name: arango-storage-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -61,7 +61,7 @@ metadata:
   name: arango-storage-operator-rbac-storage
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -89,7 +89,7 @@ metadata:
   name: arango-storage-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -109,7 +109,7 @@ metadata:
   name: arango-storage-operator-rbac-storage
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -130,7 +130,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -156,7 +156,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -177,7 +177,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -212,7 +212,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.2.47
+    helm.sh/chart: kube-arangodb-1.2.48
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -230,7 +230,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.2.47
+        helm.sh/chart: kube-arangodb-1.2.48
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: storage
         release: storage
@@ -269,9 +269,8 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb:1.2.47
+          image: arangodb/kube-arangodb:1.2.48
           args:
-            - --scope=legacy
             - --operator.storage
             - --mode.single
             - --chaos.allowed=false
@@ -389,6 +388,22 @@ spec:
 
 
 # Source: kube-arangodb/templates/certificates/issuer.yaml
+---
+
+
+# Source: kube-arangodb/templates/debug/cluster-role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/debug/cluster-role.yaml
+---
+
+
+# Source: kube-arangodb/templates/debug/role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/debug/role.yaml
 ---
 
 
