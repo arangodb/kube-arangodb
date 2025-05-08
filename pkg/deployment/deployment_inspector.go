@@ -452,7 +452,7 @@ func (d *Deployment) sendCIUpdate() {
 }
 
 func (d *Deployment) isUpToDateStatus(mode api.DeploymentMode, status api.DeploymentStatus) (upToDate bool, reason string) {
-	if !status.IsPlanEmpty() || !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+	if !status.IsPlanEmpty() && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 		return false, "Plan is not empty"
 	}
 
