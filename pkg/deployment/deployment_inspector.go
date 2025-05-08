@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -452,6 +452,10 @@ func (d *Deployment) sendCIUpdate() {
 }
 
 func (d *Deployment) isUpToDateStatus(mode api.DeploymentMode, status api.DeploymentStatus) (upToDate bool, reason string) {
+	if !status.IsPlanEmpty() || !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
+		return false, "Plan is not empty"
+	}
+
 	if status.NonInternalActions() > 0 {
 		return false, "Plan is not empty"
 	}
