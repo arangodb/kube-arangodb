@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Maintenance) Optimize go.mod
 - (Bugfix) Prevent UpToDate Condition changes during Action processing
 
 ## [1.2.48](https://github.com/arangodb/kube-arangodb/tree/1.2.48) (2025-05-08)
