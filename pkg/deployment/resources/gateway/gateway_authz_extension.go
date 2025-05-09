@@ -24,7 +24,7 @@ import (
 	httpFilterAuthzApi "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
+	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
@@ -44,7 +44,7 @@ func (c *ConfigAuthZExtension) RenderTypedFilterConfig() (util.KV[string, *anypb
 		data[k] = v
 	}
 
-	data[pbImplEnvoyAuthV3.AuthConfigTypeKey] = pbImplEnvoyAuthV3.AuthConfigTypeValue
+	data[pbImplEnvoyAuthV3Shared.AuthConfigTypeKey] = pbImplEnvoyAuthV3Shared.AuthConfigTypeValue
 
 	q, err := anypb.New(&httpFilterAuthzApi.ExtAuthzPerRoute{
 		Override: &httpFilterAuthzApi.ExtAuthzPerRoute_CheckSettings{

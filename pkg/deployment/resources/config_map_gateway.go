@@ -31,7 +31,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
+	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	pbInventoryV1 "github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -63,8 +63,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		Match: util.NewType(gateway.ConfigMatchPath),
 		AuthExtension: &gateway.ConfigAuthZExtension{
 			AuthZExtension: map[string]string{
-				pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordTrue,
-				pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue,
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
 			},
 		},
 		Static: &gateway.ConfigDestinationStatic[*pbInventoryV1.Inventory]{
@@ -90,8 +90,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		Path:  util.NewType("/_integration/authn/v1/identity"),
 		AuthExtension: &gateway.ConfigAuthZExtension{
 			AuthZExtension: map[string]string{
-				pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordFalse,
-				pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse,
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
 			},
 		},
 		Targets: gateway.ConfigDestinationTargets{
@@ -224,8 +224,8 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 
 	if spec.Gateway.IsDefaultTargetAuthenticationEnabled() {
 		cfg.DefaultDestination.AuthExtension.AuthZExtension = map[string]string{
-			pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3.AuthConfigKeywordFalse,
-			pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
+			pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse,
+			pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
 		}
 	}
 
@@ -311,8 +311,8 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				dest.Timeout = target.Timeout.DeepCopy()
 				dest.AuthExtension = &gateway.ConfigAuthZExtension{
 					AuthZExtension: map[string]string{
-						pbImplEnvoyAuthV3.AuthConfigAuthRequiredKey: util.BoolSwitch[string](target.Authentication.Type.Get() == networkingApi.ArangoRouteSpecAuthenticationTypeRequired, pbImplEnvoyAuthV3.AuthConfigKeywordTrue, pbImplEnvoyAuthV3.AuthConfigKeywordFalse),
-						pbImplEnvoyAuthV3.AuthConfigAuthPassModeKey: string(target.Authentication.PassMode),
+						pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: util.BoolSwitch[string](target.Authentication.Type.Get() == networkingApi.ArangoRouteSpecAuthenticationTypeRequired, pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue, pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse),
+						pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(target.Authentication.PassMode),
 					},
 				}
 				dest.ResponseHeaders = map[string]string{

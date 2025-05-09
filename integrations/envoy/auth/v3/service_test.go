@@ -28,6 +28,7 @@ import (
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/stretchr/testify/require"
 
+	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
@@ -36,7 +37,7 @@ import (
 func Client(t *testing.T, ctx context.Context) pbEnvoyAuthV3.AuthorizationClient {
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, New(Configuration{}))
+	}, New(pbImplEnvoyAuthV3Shared.Configuration{}))
 	require.NoError(t, err)
 
 	start := local.Start(ctx)
@@ -70,7 +71,7 @@ func Test_AllowAll(t *testing.T) {
 	resp, err := client.Check(ctx, &pbEnvoyAuthV3.CheckRequest{
 		Attributes: &pbEnvoyAuthV3.AttributeContext{
 			ContextExtensions: map[string]string{
-				AuthConfigTypeKey: AuthConfigTypeValue,
+				pbImplEnvoyAuthV3Shared.AuthConfigTypeKey: pbImplEnvoyAuthV3Shared.AuthConfigTypeValue,
 			},
 		},
 	})

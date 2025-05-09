@@ -18,17 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v3
+package pass_mode
 
-import pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-type Configuration struct {
-	AuthClient pbAuthenticationV1.AuthenticationV1Client
-
-	Extensions ConfigurationExtensions
-}
-
-type ConfigurationExtensions struct {
-	JWT       bool
-	CookieJWT bool
-}
+var logger = logging.Global().RegisterAndGetLogger("integration-envoy-auth-v3-impl-pass-mode", logging.Info)

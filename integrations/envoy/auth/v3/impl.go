@@ -22,26 +22,24 @@ package v3
 
 import (
 	"context"
-	"fmt"
-	goHttp "net/http"
-	goStrings "strings"
+	"time"
 
-	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"k8s.io/apimachinery/pkg/util/uuid"
 
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	impl2 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl"
+	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors/panics"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(config Configuration) svc.Handler {
+func New(config pbImplEnvoyAuthV3Shared.Configuration) svc.Handler {
 	return &impl{
-		config: config,
-		helper: NewADBHelper(config.AuthClient),
+		config:  config,
+		handler: impl2.Factory().Render(config),
 	}
 }
 
@@ -51,13 +49,13 @@ var _ svc.Handler = &impl{}
 type impl struct {
 	pbEnvoyAuthV3.UnimplementedAuthorizationServer
 
-	config Configuration
+	config pbImplEnvoyAuthV3Shared.Configuration
 
-	helper ADBHelper
+	handler pbImplEnvoyAuthV3Shared.AuthHandler
 }
 
 func (i *impl) Name() string {
-	return Name
+	return pbImplEnvoyAuthV3Shared.Name
 }
 
 func (i *impl) Health() svc.HealthState {
@@ -72,178 +70,60 @@ func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
 	return nil
 }
 
-func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (*pbEnvoyAuthV3.CheckResponse, error) {
-	resp, err := panics.RecoverO1(func() (*pbEnvoyAuthV3.CheckResponse, error) {
+func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (resp *pbEnvoyAuthV3.CheckResponse, err error) {
+	q := logger
+
+	q = q.Str("id", string(uuid.NewUUID()))
+
+	start := time.Now()
+
+	if request != nil {
+		if attr := request.Attributes; attr != nil {
+			if req := attr.Request; req != nil {
+				if http := req.Http; http != nil {
+					q = q.Str("path", http.Path).Str("method", http.Method)
+				}
+			}
+		}
+	}
+
+	defer func() {
+		if resp != nil {
+			if status := resp.Status; status != nil {
+				q = q.Int32("response_code", status.Code)
+			}
+		}
+
+		if err != nil {
+			q = q.Err(err)
+			q.Dur("duration", time.Since(start)).Warn("Request Completed with error")
+		} else {
+			q.Dur("duration", time.Since(start)).Debug("Request Completed")
+		}
+	}()
+
+	q.Debug("Request Started")
+
+	resp, err = panics.RecoverO1(func() (*pbEnvoyAuthV3.CheckResponse, error) {
 		return i.check(ctx, request)
 	})
 
 	if err != nil {
-		var v DeniedResponse
+		var v pbImplEnvoyAuthV3Shared.CustomResponse
 		if errors.As(err, &v) {
-			return v.GetCheckResponse()
+			return v.Response()
 		}
 		return nil, err
 	}
+
 	return resp, nil
 }
 
-func (i *impl) extensions() []AuthRequestFunc {
-	ret := make([]AuthRequestFunc, 0, 2)
-
-	if i.config.Extensions.JWT {
-		ret = append(ret, i.checkADBJWT)
-	}
-
-	if i.config.Extensions.CookieJWT {
-		ret = append(ret, i.checkADBJWTCookie)
-	}
-
-	return ret
-}
-
 func (i *impl) check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (*pbEnvoyAuthV3.CheckResponse, error) {
-	ext := request.GetAttributes().GetContextExtensions()
-
-	if v, ok := ext[AuthConfigTypeKey]; !ok || v != AuthConfigTypeValue {
-		return nil, DeniedResponse{
-			Code: goHttp.StatusBadRequest,
-			Message: &DeniedMessage{
-				Message: "Auth plugin is not enabled for this request",
-			},
-		}
-	}
-
-	authenticated, err := MergeAuthRequest(ctx, request, i.extensions()...)
-	if err != nil {
+	var auth pbImplEnvoyAuthV3Shared.Response
+	if err := i.handler.Handle(ctx, request, &auth); err != nil {
 		return nil, err
 	}
 
-	if authenticated != nil {
-		if authenticated.CustomResponse != nil {
-			return authenticated.CustomResponse, nil
-		}
-	}
-
-	if util.Optional(ext, AuthConfigAuthRequiredKey, AuthConfigKeywordFalse) == AuthConfigKeywordTrue && authenticated == nil {
-		return nil, DeniedResponse{
-			Code: goHttp.StatusUnauthorized,
-			Message: &DeniedMessage{
-				Message: "Unauthorized",
-			},
-		}
-	}
-
-	if authenticated != nil {
-		var headers = []*pbEnvoyCoreV3.HeaderValueOption{
-			{
-				Header: &pbEnvoyCoreV3.HeaderValue{
-					Key:   AuthUsernameHeader,
-					Value: authenticated.Username,
-				},
-				AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-			},
-			{
-				Header: &pbEnvoyCoreV3.HeaderValue{
-					Key:   AuthAuthenticatedHeader,
-					Value: "true",
-				},
-				AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-			},
-		}
-
-		headers = append(headers, authenticated.Headers...)
-
-		switch networkingApi.ArangoRouteSpecAuthenticationPassMode(goStrings.ToLower(util.Optional(ext, AuthConfigAuthPassModeKey, ""))) {
-		case networkingApi.ArangoRouteSpecAuthenticationPassModePass:
-			if authenticated.Token != nil {
-				headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
-					Header: &pbEnvoyCoreV3.HeaderValue{
-						Key:   AuthorizationHeader,
-						Value: fmt.Sprintf("bearer %s", *authenticated.Token),
-					},
-					AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-				},
-				)
-			} else {
-				token, ok, err := i.helper.Token(ctx, authenticated)
-				if err != nil {
-					return nil, err
-				}
-
-				if !ok {
-					return nil, DeniedResponse{
-						Code: goHttp.StatusUnauthorized,
-						Message: &DeniedMessage{
-							Message: "Unable to render token",
-						},
-					}
-				}
-
-				headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
-					Header: &pbEnvoyCoreV3.HeaderValue{
-						Key:   AuthorizationHeader,
-						Value: fmt.Sprintf("bearer %s", token),
-					},
-					AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-				},
-				)
-			}
-		case networkingApi.ArangoRouteSpecAuthenticationPassModeOverride:
-			token, ok, err := i.helper.Token(ctx, authenticated)
-			if err != nil {
-				return nil, err
-			}
-
-			if !ok {
-				return nil, DeniedResponse{
-					Code: goHttp.StatusUnauthorized,
-					Message: &DeniedMessage{
-						Message: "Unable to render token",
-					},
-				}
-			}
-
-			headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
-				Header: &pbEnvoyCoreV3.HeaderValue{
-					Key:   AuthorizationHeader,
-					Value: fmt.Sprintf("bearer %s", token),
-				},
-				AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-			},
-			)
-		case networkingApi.ArangoRouteSpecAuthenticationPassModeRemove:
-			headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
-				Header: &pbEnvoyCoreV3.HeaderValue{
-					Key: AuthorizationHeader,
-				},
-				AppendAction:   pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-				KeepEmptyValue: false,
-			},
-			)
-		}
-
-		return &pbEnvoyAuthV3.CheckResponse{
-			HttpResponse: &pbEnvoyAuthV3.CheckResponse_OkResponse{
-				OkResponse: &pbEnvoyAuthV3.OkHttpResponse{
-					Headers: headers,
-				},
-			},
-		}, nil
-	}
-
-	return &pbEnvoyAuthV3.CheckResponse{
-		HttpResponse: &pbEnvoyAuthV3.CheckResponse_OkResponse{
-			OkResponse: &pbEnvoyAuthV3.OkHttpResponse{
-				Headers: []*pbEnvoyCoreV3.HeaderValueOption{
-					{
-						Header: &pbEnvoyCoreV3.HeaderValue{
-							Key:   AuthAuthenticatedHeader,
-							Value: "false",
-						},
-						AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
-					},
-				},
-			},
-		},
-	}, nil
+	return auth.AsResponse(), nil
 }
