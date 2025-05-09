@@ -20,6 +20,8 @@
 
 package v3
 
-import "github.com/arangodb/kube-arangodb/pkg/logging"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+)
 
 var logger = logging.Global().RegisterAndGetLogger("integration-envoy-auth-v3", logging.Info)

@@ -22,6 +22,8 @@ package v3
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/util/uuid"
+	"time"
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -68,10 +70,40 @@ func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
 	return nil
 }
 
-func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (*pbEnvoyAuthV3.CheckResponse, error) {
-	logger.Str("type", "Check").Debug("Request Received")
+func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (resp *pbEnvoyAuthV3.CheckResponse, err error) {
+	q := logger
 
-	resp, err := panics.RecoverO1(func() (*pbEnvoyAuthV3.CheckResponse, error) {
+	q = q.Str("id", string(uuid.NewUUID()))
+
+	start := time.Now()
+
+	if request != nil {
+		if attr := request.Attributes; attr != nil {
+			if req := attr.Request; req != nil {
+				if http := req.Http; http != nil {
+					q = q.Str("path", http.Path).Str("method", http.Method)
+				}
+			}
+		}
+	}
+
+	defer func() {
+		if resp != nil {
+			if status := resp.Status; status != nil {
+				q = q.Int32("response_code", status.Code)
+			}
+		}
+
+		if err != nil {
+			q = q.Err(err)
+		}
+
+		q.Dur("duration", time.Since(start)).Info("Request Completed")
+	}()
+
+	q.Info("Request Started")
+
+	resp, err = panics.RecoverO1(func() (*pbEnvoyAuthV3.CheckResponse, error) {
 		return i.check(ctx, request)
 	})
 
@@ -82,6 +114,7 @@ func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 		}
 		return nil, err
 	}
+
 	return resp, nil
 }
 
