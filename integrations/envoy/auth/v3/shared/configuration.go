@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v3
+package shared
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/go-driver/v2/arangodb"
+
+	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 )
 
-var logger = logging.Global().RegisterAndGetLogger("integration-envoy-auth-v3", logging.Info)
+type Configuration struct {
+	AuthClient pbAuthenticationV1.AuthenticationV1Client
+
+	ArangoDBClient arangodb.Client
+
+	Extensions ConfigurationExtensions
+}
+
+type ConfigurationExtensions struct {
+	JWT       bool
+	CookieJWT bool
+}

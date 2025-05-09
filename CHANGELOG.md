@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Optimize go.mod
 - (Bugfix) Prevent UpToDate Condition changes during Action processing
+- (Feature) (Platform) Reorganize Envoy Auth
 - (Feature) Ensure Group Service Type
 
 ## [1.2.48](https://github.com/arangodb/kube-arangodb/tree/1.2.48) (2025-05-08)

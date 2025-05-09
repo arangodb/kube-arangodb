@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v3
+package auth_cookie
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-)
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-var logger = logging.Global().RegisterAndGetLogger("integration-envoy-auth-v3", logging.Info)
+var logger = logging.Global().RegisterAndGetLogger("integration-envoy-auth-v3-impl-auth-cookie", logging.Info)

@@ -47,6 +47,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/config/v1/definition
       - alias: pbImplEnvoyAuthV3
         pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3
+      - alias: pbImplEnvoyAuthV3Shared
+        pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared
       - alias: pbInventoryV1
         pkg: github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition
       - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1

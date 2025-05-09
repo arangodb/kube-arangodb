@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v3
+package shared
 
 import (
 	goHttp "net/http"
@@ -28,7 +28,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func filterCookiesHeader(cookies []*goHttp.Cookie, filter ...func(cookie *goHttp.Cookie) bool) []*pbEnvoyCoreV3.HeaderValueOption {
+func FilterCookiesHeader(cookies []*goHttp.Cookie, filter ...func(cookie *goHttp.Cookie) bool) []*pbEnvoyCoreV3.HeaderValueOption {
 	if len(cookies) == 0 {
 		return nil
 	}

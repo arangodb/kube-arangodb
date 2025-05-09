@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,6 +73,13 @@ func WithDuration(dur time.Duration) Mod {
 func WithExp(time time.Time) Mod {
 	return func(in Claims) Claims {
 		in[ClaimEXP] = time.Unix()
+		return in
+	}
+}
+
+func WithRoles(roles ...string) Mod {
+	return func(in Claims) Claims {
+		in[ClaimRoles] = roles
 		return in
 	}
 }
