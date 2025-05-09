@@ -22,12 +22,12 @@ package v3
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/util/uuid"
 	"time"
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"k8s.io/apimachinery/pkg/util/uuid"
 
 	impl2 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
@@ -96,12 +96,13 @@ func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 
 		if err != nil {
 			q = q.Err(err)
+			q.Dur("duration", time.Since(start)).Warn("Request Completed with error")
+		} else {
+			q.Dur("duration", time.Since(start)).Debug("Request Completed")
 		}
-
-		q.Dur("duration", time.Since(start)).Info("Request Completed")
 	}()
 
-	q.Info("Request Started")
+	q.Debug("Request Started")
 
 	resp, err = panics.RecoverO1(func() (*pbEnvoyAuthV3.CheckResponse, error) {
 		return i.check(ctx, request)
