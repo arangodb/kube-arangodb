@@ -10,5 +10,5 @@ title: ArangoPlatformChart V1Alpha1
 
 ### .spec.definition
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.47/pkg/apis/platform/v1alpha1/chart_spec.go#L30)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/platform/v1alpha1/chart_spec.go#L30)</sup>
 

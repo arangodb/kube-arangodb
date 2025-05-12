@@ -19,10 +19,8 @@ If you don't have one yet, consider checking [kube-arangodb installation guide](
 
 1) Install [CertManager](https://github.com/cert-manager/cert-manager) on your cluster.
  
-2) Enable Gateway Feature. Add `--deployment.feature.gateway=true` option to the Operator arguments.
+2) Enable Webhooks. e.g. if you are using Helm package, add `--set "webhooks.enabled=true"` option to the Helm command.
 
-3) Enable Webhooks. e.g. if you are using Helm package, add `--set "webhooks.enabled=true"` option to the Helm command.
+3) Enable Managed Certificates. e.g. if you are using Helm package, add `--set "certificate.enabled=true"` option to the Helm command.
 
-4) Enable Managed Certificates. e.g. if you are using Helm package, add `--set "certificate.enabled=true"` option to the Helm command.
-
-5) Enable Gateways in the ArangoDeployment. Set `.spec.gateway.enabled` and `.spec.gateway.dynamic` to True
+4) Enable Gateways in the ArangoDeployment. Set `.spec.gateway.enabled` and `.spec.gateway.dynamic` to True

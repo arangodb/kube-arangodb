@@ -1,7 +1,8 @@
 ---
 layout: page
 title: Integration Sidecar Authorization V0
-parent: ArangoDBPlatform
+grand_parent: ArangoDBPlatform
+parent: Integration Sidecars
 ---
 
 # Authorization V0
