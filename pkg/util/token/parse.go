@@ -27,10 +27,12 @@ import (
 )
 
 func Parse(token string, secret []byte) (Claims, error) {
-	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (i interface{}, err error) {
-		return secret, nil
-	})
-
+	parsedToken, err := jwt.Parse(token,
+		func(token *jwt.Token) (i interface{}, err error) {
+			return secret, nil
+		},
+		jwt.WithIssuedAt(),
+	)
 	if err != nil {
 		return nil, err
 	}
