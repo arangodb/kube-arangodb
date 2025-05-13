@@ -26,7 +26,7 @@ import (
 	goStrings "strings"
 
 	"github.com/gin-gonic/gin"
-	jg "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -38,7 +38,7 @@ type authorization struct {
 }
 
 func (a *authorization) isValid(token string) bool {
-	t, err := jg.Parse(token, func(_ *jg.Token) (interface{}, error) {
+	t, err := jwt.Parse(token, func(_ *jwt.Token) (interface{}, error) {
 		return []byte(a.jwtSigningKey), nil
 	})
 	if err != nil {

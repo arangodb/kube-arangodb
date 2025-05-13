@@ -11,6 +11,8 @@ replace (
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
 	k8s.io/api => k8s.io/api v0.31.8
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.31.8
+	k8s.io/kubectl => k8s.io/kubectl v0.31.8
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.31.8
 	k8s.io/apimachinery => k8s.io/apimachinery v0.31.8
 	k8s.io/apiserver => k8s.io/apiserver v0.31.8
@@ -26,7 +28,7 @@ replace (
 require (
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb-helper/go-helper v0.4.2
-	github.com/arangodb/arangosync-client v0.9.0
+	github.com/arangodb/arangosync-client v0.9.1
 	github.com/arangodb/go-driver v1.6.6
 	github.com/arangodb/go-driver/v2 v2.1.3
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
@@ -64,10 +66,10 @@ require (
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.31.8
-	k8s.io/apiextensions-apiserver v0.31.8
-	k8s.io/apimachinery v0.31.8
-	k8s.io/client-go v0.31.8
+	k8s.io/api v0.32.2
+	k8s.io/apiextensions-apiserver v0.32.2
+	k8s.io/apimachinery v0.32.2
+	k8s.io/client-go v0.32.2
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -81,7 +83,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1
 	github.com/jedib0t/go-pretty/v6 v6.6.5
 	google.golang.org/genproto/googleapis/api v0.0.0-20250204164813-702378808489
-	helm.sh/helm/v3 v3.16.4
+	helm.sh/helm/v3 v3.17.3
 	k8s.io/klog/v2 v2.130.1
 )
 
@@ -222,10 +224,10 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apiserver v0.31.8 // indirect
-	k8s.io/cli-runtime v0.31.8 // indirect
-	k8s.io/component-base v0.31.8 // indirect
-	k8s.io/kubectl v0.31.8 // indirect
+	k8s.io/apiserver v0.32.2 // indirect
+	k8s.io/cli-runtime v0.32.2 // indirect
+	k8s.io/component-base v0.32.2 // indirect
+	k8s.io/kubectl v0.32.2 // indirect
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 // indirect
 	oras.land/oras-go v1.2.5 // indirect
 	sigs.k8s.io/controller-runtime v0.16.3 // indirect

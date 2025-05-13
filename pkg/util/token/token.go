@@ -21,7 +21,7 @@
 package token
 
 import (
-	jg "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -41,7 +41,7 @@ func NewClaims() Claims {
 	return Claims{}
 }
 
-type Claims jg.MapClaims
+type Claims jwt.MapClaims
 
 func (t Claims) With(mods ...Mod) Claims {
 	q := t
@@ -58,7 +58,7 @@ func (t Claims) With(mods ...Mod) Claims {
 }
 
 func New(secret []byte, claims map[string]interface{}) (string, error) {
-	token := jg.NewWithClaims(jg.SigningMethodHS256, jg.MapClaims(claims))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims(claims))
 
 	// Sign and get the complete encoded token as a string using the secret
 	signedToken, err := token.SignedString(secret)

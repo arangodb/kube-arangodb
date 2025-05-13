@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"time"
 
-	jg "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v5"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -424,7 +424,7 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 }
 
 var (
-	exporterTokenClaims = jg.MapClaims{
+	exporterTokenClaims = jwt.MapClaims{
 		token.ClaimISS: token.ClaimISSValue,
 		"server_id":    "exporter",
 		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description",
@@ -490,7 +490,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 			return true, true, errors.WithStack(err)
 		}
 
-		token, err := jg.Parse(string(data), func(token *jg.Token) (i interface{}, err error) {
+		token, err := jwt.Parse(string(data), func(token *jwt.Token) (i interface{}, err error) {
 			return []byte(secret), nil
 		})
 
@@ -498,7 +498,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 			return true, true, nil
 		}
 
-		tokenClaims, ok := token.Claims.(jg.MapClaims)
+		tokenClaims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			return true, true, nil
 		}
