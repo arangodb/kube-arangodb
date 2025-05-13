@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"time"
 
-	jg "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v5"
 	core "k8s.io/api/core/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
@@ -69,7 +69,7 @@ func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (string, error) 
 // If it is not present, it creates a new key.
 // The resulting JWT is stored in secrets.
 func generateAndSaveJWT(secrets generic.InspectorInterface[*core.Secret], cfg ServerConfig) error {
-	claims := jg.MapClaims{
+	claims := jwt.MapClaims{
 		"iss": fmt.Sprintf("kube-arangodb/%s", cfg.ServerName),
 		"iat": time.Now().Unix(),
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ func Test_TokenSign(t *testing.T) {
 		token := sign(t, s, WithIAT(time.Now().Add(time.Hour)))
 
 		_, err := Parse(token, s)
-		require.EqualError(t, err, "Token used before issued")
+		require.EqualError(t, err, "token has invalid claims: token used before issued")
 	})
 
 	t.Run("Expired", func(t *testing.T) {
@@ -70,7 +70,7 @@ func Test_TokenSign(t *testing.T) {
 		token := sign(t, s, WithIAT(time.Now().Add(-time.Hour)), WithDuration(-time.Second))
 
 		_, err := Parse(token, s)
-		require.EqualError(t, err, "Token is expired")
+		require.EqualError(t, err, "token has invalid claims: token is expired")
 	})
 
 	t.Run("Invalid secret", func(t *testing.T) {
@@ -80,7 +80,7 @@ func Test_TokenSign(t *testing.T) {
 		token := sign(t, s, WithCurrentIAT())
 
 		_, err := Parse(token, s2)
-		require.EqualError(t, err, "signature is invalid")
+		require.EqualError(t, err, "token signature is invalid: signature is invalid")
 		require.True(t, IsSignatureInvalidError(err))
 	})
 
@@ -124,6 +124,6 @@ func Test_TokenSign(t *testing.T) {
 		token := sign(t, s, WithIAT(time.Now().Add(-time.Hour)), WithDuration(-time.Second))
 
 		_, err := ParseWithAny(token, s2, s)
-		require.EqualError(t, err, "Token is expired")
+		require.EqualError(t, err, "token has invalid claims: token is expired")
 	})
 }

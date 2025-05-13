@@ -23,10 +23,10 @@ package token
 import (
 	"time"
 
-	jg "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-var defaultTokenClaims = jg.MapClaims{
+var defaultTokenClaims = jwt.MapClaims{
 	ClaimISS: ClaimISSValue,
 }
 

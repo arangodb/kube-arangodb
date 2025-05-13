@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,21 +21,29 @@
 package token
 
 import (
-	jg "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func Parse(token string, secret []byte) (Claims, error) {
-	parsedToken, err := jg.Parse(token, func(token *jg.Token) (i interface{}, err error) {
-		return secret, nil
-	})
+var NotValidToken = errors.Errorf("Token is not valid")
 
+func Parse(token string, secret []byte) (Claims, error) {
+	parsedToken, err := jwt.Parse(token,
+		func(token *jwt.Token) (i interface{}, err error) {
+			return secret, nil
+		},
+		jwt.WithIssuedAt(),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenClaims, ok := parsedToken.Claims.(jg.MapClaims)
+	if !parsedToken.Valid {
+		return nil, NotValidToken
+	}
+
+	tokenClaims, ok := parsedToken.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, errors.Errorf("Invalid token provided")
 	}
@@ -56,8 +64,5 @@ func ParseWithAny(token string, secrets ...[]byte) (Claims, error) {
 		}
 	}
 
-	return nil, &jg.ValidationError{
-		Inner:  jg.ErrSignatureInvalid,
-		Errors: 1,
-	}
+	return nil, jwt.ErrSignatureInvalid
 }

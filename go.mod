@@ -14,11 +14,13 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.31.8
 	k8s.io/apimachinery => k8s.io/apimachinery v0.31.8
 	k8s.io/apiserver => k8s.io/apiserver v0.31.8
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.31.8
 	k8s.io/client-go => k8s.io/client-go v0.31.8
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.31.8
 	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.31.8
 	k8s.io/code-generator => ./deps/k8s.io/code-generator
 	k8s.io/component-base => k8s.io/component-base v0.31.8
+	k8s.io/kubectl => k8s.io/kubectl v0.31.8
 	k8s.io/kubernetes => k8s.io/kubernetes v0.31.8
 	k8s.io/metrics => k8s.io/metrics v0.31.8
 )
@@ -26,7 +28,7 @@ replace (
 require (
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
 	github.com/arangodb-helper/go-helper v0.4.2
-	github.com/arangodb/arangosync-client v0.9.0
+	github.com/arangodb/arangosync-client v0.9.1
 	github.com/arangodb/go-driver v1.6.6
 	github.com/arangodb/go-driver/v2 v2.1.3
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
@@ -38,7 +40,6 @@ require (
 	github.com/envoyproxy/go-control-plane v0.13.1
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.9.1
-	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.6.0
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
@@ -64,10 +65,10 @@ require (
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.31.8
-	k8s.io/apiextensions-apiserver v0.31.8
-	k8s.io/apimachinery v0.31.8
-	k8s.io/client-go v0.31.8
+	k8s.io/api v0.32.2
+	k8s.io/apiextensions-apiserver v0.32.2
+	k8s.io/apimachinery v0.32.2
+	k8s.io/client-go v0.32.2
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -78,10 +79,11 @@ require (
 	github.com/arangodb-managed/integration-apis v0.2.1
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/go-logr/zerologr v1.2.3
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1
 	github.com/jedib0t/go-pretty/v6 v6.6.5
 	google.golang.org/genproto/googleapis/api v0.0.0-20250204164813-702378808489
-	helm.sh/helm/v3 v3.16.4
+	helm.sh/helm/v3 v3.17.3
 	k8s.io/klog/v2 v2.130.1
 )
 
@@ -142,7 +144,6 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
@@ -222,10 +223,10 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apiserver v0.31.8 // indirect
-	k8s.io/cli-runtime v0.31.8 // indirect
-	k8s.io/component-base v0.31.8 // indirect
-	k8s.io/kubectl v0.31.8 // indirect
+	k8s.io/apiserver v0.32.2 // indirect
+	k8s.io/cli-runtime v0.32.2 // indirect
+	k8s.io/component-base v0.32.2 // indirect
+	k8s.io/kubectl v0.32.2 // indirect
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 // indirect
 	oras.land/oras-go v1.2.5 // indirect
 	sigs.k8s.io/controller-runtime v0.16.3 // indirect
