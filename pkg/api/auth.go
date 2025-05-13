@@ -22,8 +22,6 @@ package api
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/token"
 	goHttp "net/http"
 	goStrings "strings"
 
@@ -32,6 +30,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 type authorization struct {
