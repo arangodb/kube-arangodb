@@ -32,7 +32,7 @@ func service() (*cobra.Command, error) {
 	cmd.Use = "service"
 	cmd.Short = "Service related operations"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformStage, flagPlatformEndpoint, flagPlatformName); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName); err != nil {
 		return nil, err
 	}
 

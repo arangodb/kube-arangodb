@@ -60,25 +60,10 @@ var (
 		},
 	}
 
-	flagPlatformStage = cli.Flag[string]{
-		Name:        "platform.stage",
-		Description: "Platform Stage Name",
-		Default:     "dev",
-		Persistent:  true,
-		Check: func(in string) error {
-			switch in {
-			case "prd", "dev":
-				return nil
-			}
-
-			return errors.Errorf("Unsupported Platform Stage: %s", in)
-		},
-	}
-
 	flagPlatformEndpoint = cli.Flag[string]{
 		Name:        "platform.endpoint",
 		Description: "Platform Repository URL",
-		Default:     "https://arangodb-platform-%s-chart-registry.s3.amazonaws.com",
+		Default:     "https://arangodb-platform-prd-chart-registry.s3.amazonaws.com",
 		Persistent:  true,
 		Hidden:      true,
 	}

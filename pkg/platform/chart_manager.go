@@ -21,7 +21,6 @@
 package platform
 
 import (
-	"fmt"
 	goHttp "net/http"
 
 	"github.com/spf13/cobra"
@@ -35,10 +34,5 @@ func getChartManager(cmd *cobra.Command) (helm.ChartManager, error) {
 		return nil, err
 	}
 
-	stage, err := flagPlatformStage.Get(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	return helm.NewChartManager(cmd.Context(), goHttp.DefaultClient, "%s/index.yaml", fmt.Sprintf(endpoint, stage))
+	return helm.NewChartManager(cmd.Context(), goHttp.DefaultClient, "%s/index.yaml", endpoint)
 }

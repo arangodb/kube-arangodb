@@ -45,7 +45,7 @@ func registryInstall() (*cobra.Command, error) {
 	cmd.Use = "install [flags] [...charts]"
 	cmd.Short = "Manages the Chart Installation"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformStage, flagPlatformEndpoint, flagPlatformName, flagOutput, flagUpgradeVersions, flagAll); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName, flagOutput, flagUpgradeVersions, flagAll); err != nil {
 		return nil, err
 	}
 

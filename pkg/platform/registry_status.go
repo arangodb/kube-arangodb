@@ -45,7 +45,7 @@ func registryStatus() (*cobra.Command, error) {
 	cmd.Use = "status"
 	cmd.Short = "Describes Charts Status"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformStage, flagPlatformEndpoint, flagPlatformName, flagOutput); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName, flagOutput); err != nil {
 		return nil, err
 	}
 

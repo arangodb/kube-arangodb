@@ -31,7 +31,6 @@ func getRunner() cli.Runner {
 		cli.ValidateFlags(
 			flagNamespace,
 			flagPlatformName,
-			flagPlatformStage,
 			flagPlatformEndpoint,
 			flagOutput,
 			flagUpgradeVersions,
