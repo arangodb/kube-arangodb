@@ -490,18 +490,13 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 			return true, true, errors.WithStack(err)
 		}
 
-		token, err := jwt.Parse(string(data), func(token *jwt.Token) (i interface{}, err error) {
-			return []byte(secret), nil
-		})
+		token, err := token.Parse(string(data), []byte(secret))
 
 		if err != nil {
 			return true, true, nil
 		}
 
-		tokenClaims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			return true, true, nil
-		}
+		tokenClaims := jwt.MapClaims(token)
 
 		return !equality.Semantic.DeepDerivative(tokenClaims, exporterTokenClaims), true, nil
 	}

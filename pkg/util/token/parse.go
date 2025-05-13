@@ -26,6 +26,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
+var NotValidToken = errors.Errorf("Token is not valid")
+
 func Parse(token string, secret []byte) (Claims, error) {
 	parsedToken, err := jwt.Parse(token,
 		func(token *jwt.Token) (i interface{}, err error) {
@@ -35,6 +37,10 @@ func Parse(token string, secret []byte) (Claims, error) {
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if !parsedToken.Valid {
+		return nil, NotValidToken
 	}
 
 	tokenClaims, ok := parsedToken.Claims.(jwt.MapClaims)
