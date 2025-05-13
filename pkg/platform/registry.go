@@ -32,7 +32,7 @@ func registry() (*cobra.Command, error) {
 	cmd.Use = "registry"
 	cmd.Short = "Registry related operations"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformStage, flagPlatformEndpoint, flagPlatformName); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName); err != nil {
 		return nil, err
 	}
 

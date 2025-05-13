@@ -36,6 +36,8 @@ type Package struct {
 	Packages map[string]string `json:"packages,omitempty"`
 
 	Releases map[string]PackageRelease `json:"releases,omitempty"`
+
+	Overrides Values `json:"overrides,omitempty"`
 }
 
 type PackageRelease struct {

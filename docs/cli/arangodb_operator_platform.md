@@ -40,9 +40,8 @@ Available Commands:
   status      Describes Charts Status
 
 Flags:
-  -h, --help                    help for registry
-      --platform.name string    Kubernetes Platform Name (name of the ArangoDeployment)
-      --platform.stage string   Platform Stage Name (default "dev")
+  -h, --help                   help for registry
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -61,12 +60,11 @@ Usage:
   arangodb_operator_platform registry install [flags] [...charts]
 
 Flags:
-  -a, --all                     Runs on all items
-  -h, --help                    help for install
-  -o, --output string           Output format. Allowed table, json, yaml (default "table")
-      --platform.name string    Kubernetes Platform Name (name of the ArangoDeployment)
-      --platform.stage string   Platform Stage Name (default "dev")
-  -u, --upgrade                 Enable upgrade procedure
+  -a, --all                    Runs on all items
+  -h, --help                   help for install
+  -o, --output string          Output format. Allowed table, json, yaml (default "table")
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+  -u, --upgrade                Enable upgrade procedure
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -83,10 +81,9 @@ Usage:
   arangodb_operator_platform registry status [flags]
 
 Flags:
-  -h, --help                    help for status
-  -o, --output string           Output format. Allowed table, json, yaml (default "table")
-      --platform.name string    Kubernetes Platform Name (name of the ArangoDeployment)
-      --platform.stage string   Platform Stage Name (default "dev")
+  -h, --help                   help for status
+  -o, --output string          Output format. Allowed table, json, yaml (default "table")
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -108,9 +105,8 @@ Available Commands:
   status         Shows Service Status
 
 Flags:
-  -h, --help                    help for service
-      --platform.name string    Kubernetes Platform Name (name of the ArangoDeployment)
-      --platform.stage string   Platform Stage Name (default "dev")
+  -h, --help                   help for service
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -129,10 +125,9 @@ Usage:
   arangodb_operator_platform service enable [flags] deployment name chart
 
 Flags:
-  -h, --help                    help for enable
-      --platform.name string    Kubernetes Platform Name (name of the ArangoDeployment)
-      --platform.stage string   Platform Stage Name (default "dev")
-  -f, --values strings          Chart values
+  -h, --help                   help for enable
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+  -f, --values strings         Chart values
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -149,10 +144,9 @@ Usage:
   arangodb_operator_platform service enable-service [flags] deployment chart
 
 Flags:
-  -h, --help                    help for enable-service
-      --platform.name string    Kubernetes Platform Name (name of the ArangoDeployment)
-      --platform.stage string   Platform Stage Name (default "dev")
-  -f, --values strings          Chart values
+  -h, --help                   help for enable-service
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+  -f, --values strings         Chart values
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -169,10 +163,9 @@ Usage:
   arangodb_operator_platform service status [flags] deployment
 
 Flags:
-  -h, --help                    help for status
-  -o, --output string           Output format. Allowed table, json, yaml (default "table")
-      --platform.name string    Kubernetes Platform Name (name of the ArangoDeployment)
-      --platform.stage string   Platform Stage Name (default "dev")
+  -h, --help                   help for status
+  -o, --output string          Output format. Allowed table, json, yaml (default "table")
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -231,8 +224,7 @@ Usage:
   arangodb_operator_platform package install [flags] deployment package
 
 Flags:
-  -h, --help                    help for install
-      --platform.stage string   Platform Stage Name (default "dev")
+  -h, --help   help for install
 
 Global Flags:
   -n, --namespace string       Kubernetes Namespace (default "default")

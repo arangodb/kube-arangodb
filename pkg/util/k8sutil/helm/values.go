@@ -82,6 +82,16 @@ func (v Values) Equals(other Values) bool {
 	return util.SHA256(a) == util.SHA256(b)
 }
 
+func (v *Values) UnmarshalJSON(in []byte) error {
+	q := make(Values, len(in))
+
+	copy(q, in)
+
+	*v = q
+
+	return nil
+}
+
 func (v Values) MarshalJSON() ([]byte, error) {
 	return v, nil
 }

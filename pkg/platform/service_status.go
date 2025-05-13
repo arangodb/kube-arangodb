@@ -44,7 +44,7 @@ func serviceStatus() (*cobra.Command, error) {
 	cmd.Use = "status [flags] deployment"
 	cmd.Short = "Shows Service Status"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformStage, flagPlatformEndpoint, flagPlatformName, flagOutput); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName, flagOutput); err != nil {
 		return nil, err
 	}
 

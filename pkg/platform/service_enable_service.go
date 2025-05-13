@@ -42,7 +42,7 @@ func serviceEnableService() (*cobra.Command, error) {
 	cmd.Use = "enable-service [flags] deployment chart"
 	cmd.Short = "Manages Service Installation/Management"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformStage, flagPlatformEndpoint, flagPlatformName, flagValues); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName, flagValues); err != nil {
 		return nil, err
 	}
 

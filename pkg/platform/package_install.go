@@ -44,7 +44,7 @@ func packageInstall() (*cobra.Command, error) {
 	cmd.Use = "install [flags] deployment package"
 	cmd.Short = "Installs the specified setup of the platform"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformStage, flagPlatformEndpoint); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint); err != nil {
 		return nil, err
 	}
 
@@ -153,6 +153,12 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 	}
 	logger.Str("uid", string(deploymentObject.GetUID())).Info("ArangoDeployment Found")
 
+	gv, err := r.Overrides.Marshal()
+	if err != nil {
+		logger.Err(err).Error("Unable to unmarshal values")
+		return err
+	}
+
 	for name, release := range r.Releases {
 		ov, err := release.Overrides.Marshal()
 		if err != nil {
@@ -166,9 +172,7 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 					"name": deployment,
 				},
 			},
-		},
-
-			ov)
+		}, gv, ov)
 		if err != nil {
 			return errors.Wrapf(err, "Unable to build helm data")
 		}
