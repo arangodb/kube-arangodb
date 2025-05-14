@@ -169,15 +169,14 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 	}
 
 	// Token is validated, we can continue with creation
-	secret := cache.signingToken
+	secret := cache.token
 
-	signedToken, err := token.New(secret,
-		token.NewClaims().With(token.WithDefaultClaims(),
-			token.WithCurrentIAT(),
-			token.WithDuration(duration),
-			token.WithUsername(user),
-			token.WithRoles(request.GetRoles()...)),
-	)
+	signedToken, err := token.NewClaims().With(
+		token.WithDefaultClaims(),
+		token.WithCurrentIAT(),
+		token.WithDuration(duration),
+		token.WithUsername(user),
+		token.WithRoles(request.GetRoles()...)).Sign(secret)
 	if err != nil {
 		return nil, err
 	}
@@ -242,14 +241,16 @@ func (i *implementation) Identity(ctx context.Context, _ *pbSharedV1.Empty) (*pb
 
 func (i *implementation) extractTokenDetails(cache *cache, t string) (string, []string, time.Duration, error) {
 	// Let's check if token is signed properly
+	secret := cache.token
 
-	p, err := token.ParseWithAny(t, cache.validationTokens...)
+	// Let's check if token is signed properly
+	p, err := secret.Validate(t)
 	if err != nil {
 		return "", nil, 0, err
 	}
 
 	user := DefaultAdminUser
-	if v, ok := p[token.ClaimPreferredUsername]; ok {
+	if v, ok := p.Claims()[token.ClaimPreferredUsername]; ok {
 		if s, ok := v.(string); ok {
 			user = s
 		}
@@ -257,7 +258,9 @@ func (i *implementation) extractTokenDetails(cache *cache, t string) (string, []
 
 	duration := DefaultTokenMaxTTL
 
-	if v, ok := p[token.ClaimEXP]; ok {
+	claims := p.Claims()
+
+	if v, ok := claims[token.ClaimEXP]; ok {
 		switch o := v.(type) {
 		case int64:
 			duration = time.Until(time.Unix(o, 0))
@@ -268,7 +271,7 @@ func (i *implementation) extractTokenDetails(cache *cache, t string) (string, []
 
 	var roles []string
 
-	if v, ok := p[token.ClaimRoles]; ok {
+	if v, ok := claims[token.ClaimRoles]; ok {
 		switch o := v.(type) {
 		case []string:
 			roles = o
