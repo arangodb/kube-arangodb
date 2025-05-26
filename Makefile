@@ -248,24 +248,62 @@ BIN_PLATFORM_NAME := $(PROJECT)_platform
 BIN_PLATFORM := $(BINDIR)/$(BIN_PLATFORM_NAME)
 
 define binary
+$(eval $(call binary_operator,$1,$2,$3))
+$(eval $(call binary_ops,$1,$2,$3))
+$(eval $(call binary_int,$1,$2,$3))
+$(eval $(call binary_platform,$1,$2,$3))
+endef
+
+define binary_operator
 $(eval _OS:=$(call UPPER_ENV,$1))
 $(eval _ARCH:=$(call UPPER_ENV,$2))
-VBIN_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BINNAME)
-VBIN_OPS_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_OPS_NAME)
-VBIN_INT_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_INT_NAME)
-VBIN_PLATFORM_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_PLATFORM_NAME)
 
-$$(VBIN_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+VBIN_OPERATOR_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BINNAME)$3
+
+.PHONY: $$(VBIN_OPERATOR_$(_OS)_$(_ARCH))
+
+$$(VBIN_OPERATOR_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main
+
+bin-all: $$(VBIN_OPERATOR_$(_OS)_$(_ARCH))
+endef
+
+define binary_int
+$(eval _OS:=$(call UPPER_ENV,$1))
+$(eval _ARCH:=$(call UPPER_ENV,$2))
+
+VBIN_INT_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_INT_NAME)$3
+
+.PHONY: $$(VBIN_INT_$(_OS)_$(_ARCH))
+
+$$(VBIN_INT_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-int
+
+bin-all: $$(VBIN_INT_$(_OS)_$(_ARCH))
+endef
+
+define binary_ops
+$(eval _OS:=$(call UPPER_ENV,$1))
+$(eval _ARCH:=$(call UPPER_ENV,$2))
+
+VBIN_OPS_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_OPS_NAME)$3
+
+.PHONY: $$(VBIN_OPS_$(_OS)_$(_ARCH))
 
 $$(VBIN_OPS_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-ops
 
-$$(VBIN_INT_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
-	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-int
+bin-all: $$(VBIN_OPS_$(_OS)_$(_ARCH))
+endef
+
+define binary_platform
+$(eval _OS:=$(call UPPER_ENV,$1))
+$(eval _ARCH:=$(call UPPER_ENV,$2))
+
+VBIN_PLATFORM_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_PLATFORM_NAME)$3
 
 .PHONY: $$(VBIN_PLATFORM_$(_OS)_$(_ARCH))
 
@@ -273,14 +311,15 @@ $$(VBIN_PLATFORM_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-platform
 
-bin-all: $$(VBIN_$(_OS)_$(_ARCH)) $$(VBIN_OPS_$(_OS)_$(_ARCH)) $$(VBIN_INT_$(_OS)_$(_ARCH)) $$(VBIN_PLATFORM_$(_OS)_$(_ARCH))
-
+bin-all: $$(VBIN_PLATFORM_$(_OS)_$(_ARCH))
 endef
 
 $(eval $(call binary,linux,amd64))
 $(eval $(call binary,linux,arm64))
 $(eval $(call binary,darwin,amd64))
 $(eval $(call binary,darwin,arm64))
+$(eval $(call binary_platform,windows,amd64,.exe))
+$(eval $(call binary_platform,windows,arm64,.exe))
 
 ifdef VERBOSE
 	TESTVERBOSEOPTIONS := -v
@@ -474,8 +513,8 @@ dashboard/assets.go:
 .PHONY: bin
 bin: $(BIN)
 
-$(BIN): $(VBIN_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64) $(VBIN_PLATFORM_LINUX_AMD64)
-	@cp "$(VBIN_LINUX_AMD64)" "$(BIN)"
+$(BIN): $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64) $(VBIN_PLATFORM_LINUX_AMD64)
+	@cp "$(VBIN_OPERATOR_LINUX_AMD64)" "$(BIN)"
 	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
 
 .PHONY: docker
