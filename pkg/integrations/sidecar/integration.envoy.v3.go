@@ -21,15 +21,20 @@
 package sidecar
 
 import (
+	"fmt"
+
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type IntegrationEnvoyV3 struct {
-	Core *Core
-	Spec api.DeploymentSpec
+	Core           *Core
+	DeploymentName string
+	Spec           api.DeploymentSpec
 }
 
 func (i IntegrationEnvoyV3) Name() []string {
@@ -49,6 +54,22 @@ func (i IntegrationEnvoyV3) Envs() ([]core.EnvVar, error) {
 		{
 			Name:  "INTEGRATION_ENVOY_AUTH_V3_EXTENSIONS_COOKIE_JWT",
 			Value: util.BoolSwitch(i.Spec.Gateway.IsCookiesSupportEnabled(), "true", "false"),
+		},
+		{
+			Name:  "INTEGRATION_ENVOY_AUTH_V3_EXTENSIONS_USERS_CREATE",
+			Value: util.BoolSwitch(i.Spec.Gateway.IsCreateUsersEnabled(), "true", "false"),
+		},
+		{
+			Name:  "INTEGRATION_ENVOY_AUTH_V3_DATABASE_ENDPOINT",
+			Value: k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", i.DeploymentName, i.Spec.GetMode().ServingGroup().AsRole()), i.Spec.ClusterDomain),
+		},
+		{
+			Name:  "INTEGRATION_ENVOY_AUTH_V3_DATABASE_PROTO",
+			Value: util.BoolSwitch(i.Spec.IsSecure(), "https", "http"),
+		},
+		{
+			Name:  "INTEGRATION_ENVOY_AUTH_V3_DATABASE_PORT",
+			Value: fmt.Sprintf("%d", shared.ArangoPort),
 		},
 	}
 

@@ -41,8 +41,15 @@ func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3
 	var z impl
 
 	z.configuration = configuration
+	z.authClient = cache.NewObject[pbAuthenticationV1.AuthenticationV1Client](configuration.GetAuthClientFetcher)
+
 	z.cache = cache.NewCache[pbImplEnvoyAuthV3Shared.Token, pbImplEnvoyAuthV3Shared.ResponseAuth](func(ctx context.Context, in pbImplEnvoyAuthV3Shared.Token) (pbImplEnvoyAuthV3Shared.ResponseAuth, error) {
-		resp, err := z.configuration.AuthClient.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
+		client, err := z.authClient.Get(ctx)
+		if err != nil {
+			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, err
+		}
+
+		resp, err := client.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
 			Token: string(in),
 		})
 		if err != nil {
@@ -70,6 +77,8 @@ type impl struct {
 	configuration pbImplEnvoyAuthV3Shared.Configuration
 
 	cache cache.Cache[pbImplEnvoyAuthV3Shared.Token, pbImplEnvoyAuthV3Shared.ResponseAuth]
+
+	authClient cache.Object[pbAuthenticationV1.AuthenticationV1Client]
 }
 
 func (p impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, current *pbImplEnvoyAuthV3Shared.Response) error {

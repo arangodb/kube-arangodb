@@ -21,20 +21,38 @@
 package shared
 
 import (
-	"github.com/arangodb/go-driver/v2/arangodb"
+	"context"
+	"time"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 type Configuration struct {
-	AuthClient pbAuthenticationV1.AuthenticationV1Client
+	Address string
 
-	ArangoDBClient arangodb.Client
+	Database ConfigurationDatabase
 
 	Extensions ConfigurationExtensions
 }
 
+type ConfigurationDatabase struct {
+	Proto    string
+	Endpoint string
+	Port     int
+}
+
 type ConfigurationExtensions struct {
-	JWT       bool
-	CookieJWT bool
+	JWT         bool
+	CookieJWT   bool
+	UsersCreate bool
+}
+
+func (c Configuration) GetAuthClientFetcher(ctx context.Context) (pbAuthenticationV1.AuthenticationV1Client, time.Duration, error) {
+	client, _, err := ugrpc.NewGRPCClient(ctx, pbAuthenticationV1.NewAuthenticationV1Client, c.Address)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return client, time.Hour, nil
 }

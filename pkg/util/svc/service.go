@@ -50,7 +50,7 @@ func (p *service) StartWithHealth(ctx context.Context, health Health) ServiceSta
 }
 
 func (p *service) Start(ctx context.Context) ServiceStarter {
-	return newServiceStarter(ctx, p, emptyHealth{})
+	return p.StartWithHealth(ctx, emptyHealth{})
 }
 
 func NewService(cfg Configuration, handlers ...Handler) (Service, error) {
