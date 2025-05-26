@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -151,7 +151,7 @@ func TestDeploymentSpec_GetCoreContainers(t *testing.T) {
 			args: args{
 				group: ServerGroupDBServers,
 			},
-			want: utils.StringList{"server", "other"},
+			want: utils.StringList{"server", "exporter", "integration", "other"},
 		},
 		"one predefined container and one sidecar container": {
 			fields: fields{
@@ -162,7 +162,7 @@ func TestDeploymentSpec_GetCoreContainers(t *testing.T) {
 			args: args{
 				group: ServerGroupDBServers,
 			},
-			want: utils.StringList{"server", "other"},
+			want: utils.StringList{"exporter", "integration", "server", "other"},
 		},
 		"zero core containers": {
 			fields: fields{
@@ -184,7 +184,7 @@ func TestDeploymentSpec_GetCoreContainers(t *testing.T) {
 			args: args{
 				group: ServerGroupDBServers,
 			},
-			want: utils.StringList{"server", "other1", "other2"},
+			want: utils.StringList{"server", "exporter", "integration", "other1", "other2"},
 		},
 	}
 	for testName, test := range tests {

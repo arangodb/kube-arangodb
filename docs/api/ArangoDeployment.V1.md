@@ -3137,6 +3137,49 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ***
 
+### .spec.gateway.authentication.secret.checksum
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/shared/v1/object.go#L61)</sup>
+
+UID keeps the information about object Checksum
+
+***
+
+### .spec.gateway.authentication.secret.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/shared/v1/object.go#L52)</sup>
+
+Name of the object
+
+***
+
+### .spec.gateway.authentication.secret.namespace
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/shared/v1/object.go#L55)</sup>
+
+Namespace of the object. Should default to the namespace of the parent object
+
+***
+
+### .spec.gateway.authentication.secret.uid
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/shared/v1/object.go#L58)</sup>
+
+UID keeps the information about object UID
+
+***
+
+### .spec.gateway.authentication.type
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway_authentication.go#L51)</sup>
+
+Type defines the Authentication Type
+
+Possible Values: 
+* `"OpenID"` (default) - Configure OpenID Authentication Type
+
+***
+
 ### .spec.gateway.cookiesSupport
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L49)</sup>
@@ -3147,9 +3190,19 @@ Default Value: `true`
 
 ***
 
-### .spec.gateway.defaultTargetAuthentication
+### .spec.gateway.createUsers
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L53)</sup>
+
+CreateUsers defines if authenticated users will be created in ArangoDB
+
+Default Value: `false`
+
+***
+
+### .spec.gateway.defaultTargetAuthentication
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L57)</sup>
 
 DefaultTargetAuthentication defines if default endpoints check authentication via envoy (Cookie and Header based auth)
 
@@ -3190,7 +3243,7 @@ By default, the image is determined by the operator.
 
 ### .spec.gateway.timeout
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L62)</sup>
 
 Timeout defines default timeout for the upstream actions (if not overridden)
 

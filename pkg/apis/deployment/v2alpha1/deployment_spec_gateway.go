@@ -48,6 +48,10 @@ type DeploymentSpecGateway struct {
 	// +doc/default: true
 	CookiesSupport *bool `json:"cookiesSupport,omitempty"`
 
+	// CreateUsers defines if authenticated users will be created in ArangoDB
+	// +doc/default: false
+	CreateUsers *bool `json:"createUsers,omitempty"`
+
 	// DefaultTargetAuthentication defines if default endpoints check authentication via envoy (Cookie and Header based auth)
 	// +doc/default: true
 	DefaultTargetAuthentication *bool `json:"defaultTargetAuthentication,omitempty"`
@@ -56,6 +60,9 @@ type DeploymentSpecGateway struct {
 	// +doc/type: string
 	// +doc/default: 1m0s
 	Timeout *meta.Duration `json:"timeout,omitempty"`
+
+	// Authentication defines the Authentication spec
+	Authentication *DeploymentSpecGatewayAuthentication `json:"authentication,omitempty"`
 }
 
 // IsEnabled returns whether the gateway is enabled.
@@ -74,6 +81,15 @@ func (d *DeploymentSpecGateway) IsCookiesSupportEnabled() bool {
 	}
 
 	return *d.CookiesSupport
+}
+
+// IsCreateUsersEnabled returns whether the authenticated users will be created in ArangoDB.
+func (d *DeploymentSpecGateway) IsCreateUsersEnabled() bool {
+	if d == nil || d.CreateUsers == nil {
+		return false
+	}
+
+	return *d.CreateUsers
 }
 
 // IsDefaultTargetAuthenticationEnabled returns whether the default target should have verified authentication.

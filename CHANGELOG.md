@@ -8,6 +8,7 @@
 - (Maintenance) Fix Helm & JWT CVE's
 - (Feature) (Platform) Improve CLI Values
 - (Feature) (Platform) Envoy Cache Introduction
+- (Feature) (Platform) OpenID Integration - API Extension
 
 ## [1.2.48](https://github.com/arangodb/kube-arangodb/tree/1.2.48) (2025-05-08)
 - (Maintenance) Extend Documentation

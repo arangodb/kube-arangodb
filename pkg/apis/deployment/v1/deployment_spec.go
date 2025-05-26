@@ -684,9 +684,15 @@ func (s DeploymentSpec) GetCoreContainers(group ServerGroup) utils.StringList {
 		return utils.StringList{shared.ServerContainerName}
 	}
 
-	result := make(utils.StringList, 0, len(groupSpec.SidecarCoreNames)+1)
+	result := make(utils.StringList, 0, len(groupSpec.SidecarCoreNames)+3)
 	if !utils.StringList(groupSpec.SidecarCoreNames).Has(shared.ServerContainerName) {
 		result = append(result, shared.ServerContainerName)
+	}
+	if !utils.StringList(groupSpec.SidecarCoreNames).Has(shared.ExporterContainerName) {
+		result = append(result, shared.ExporterContainerName)
+	}
+	if !utils.StringList(groupSpec.SidecarCoreNames).Has(shared.IntegrationContainerName) {
+		result = append(result, shared.IntegrationContainerName)
 	}
 	result = append(result, groupSpec.SidecarCoreNames...)
 
