@@ -9,6 +9,7 @@
 - (Feature) (Platform) Improve CLI Values
 - (Feature) (Platform) Envoy Cache Introduction
 - (Feature) (Platform) OpenID Integration - API Extension
+- (Feature) Windows Platform CLI
 
 ## [1.2.48](https://github.com/arangodb/kube-arangodb/tree/1.2.48) (2025-05-08)
 - (Maintenance) Extend Documentation
