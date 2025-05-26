@@ -40,6 +40,7 @@ type CacheExtract[K comparable, T any] func(ctx context.Context, in K) (T, error
 
 type Cache[K comparable, T any] interface {
 	Get(ctx context.Context, key K) (T, error)
+	Invalidate(key K)
 }
 
 type cache[K comparable, T any] struct {
@@ -73,6 +74,13 @@ func (c *cache[K, T]) Get(ctx context.Context, key K) (T, error) {
 	}
 
 	return el, nil
+}
+
+func (c *cache[K, T]) Invalidate(key K) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	delete(c.items, key)
 }
 
 type cacheItem[T any] struct {
