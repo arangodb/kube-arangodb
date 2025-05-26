@@ -42,6 +42,7 @@ func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3
 	var z impl
 
 	z.configuration = configuration
+	z.authClient = cache.NewObject(configuration.GetAuthClientFetcher)
 	z.cache = cache.NewHashCache[*pbImplEnvoyAuthV3Shared.ResponseAuth, pbImplEnvoyAuthV3Shared.Token](z.Token, pbImplEnvoyAuthV3Shared.DefaultTTL)
 
 	return z, true
@@ -51,6 +52,8 @@ type impl struct {
 	configuration pbImplEnvoyAuthV3Shared.Configuration
 
 	cache cache.HashCache[*pbImplEnvoyAuthV3Shared.ResponseAuth, pbImplEnvoyAuthV3Shared.Token]
+
+	authClient cache.Object[pbAuthenticationV1.AuthenticationV1Client]
 }
 
 func (p impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, current *pbImplEnvoyAuthV3Shared.Response) error {
@@ -141,7 +144,13 @@ func (p impl) Token(ctx context.Context, in *pbImplEnvoyAuthV3Shared.ResponseAut
 	if in == nil {
 		return "", errors.Errorf("Nil is not allowed")
 	}
-	resp, err := p.configuration.AuthClient.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
+
+	client, err := p.authClient.Get(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
 		Lifetime: durationpb.New(pbImplEnvoyAuthV3Shared.DefaultLifetime),
 		User:     util.NewType(in.User),
 		Roles:    in.Roles,

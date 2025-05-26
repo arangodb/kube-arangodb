@@ -57,6 +57,9 @@ type FlagEnvHandler interface {
 	Uint16Var(p *uint16, name string, value uint16, usage string) error
 	Uint16(name string, value uint16, usage string) error
 
+	IntVar(p *int, name string, value int, usage string) error
+	Int(name string, value int, usage string) error
+
 	DurationVar(p *time.Duration, name string, value time.Duration, usage string) error
 	Duration(name string, value time.Duration, usage string) error
 }
@@ -257,6 +260,44 @@ func (f flagEnvHandler) Uint16(name string, value uint16, usage string) error {
 	return nil
 }
 
+func (f flagEnvHandler) IntVar(p *int, name string, value int, usage string) error {
+	v, err := parseEnvToInt(f.getEnv(name), value)
+	if err != nil {
+		return err
+	}
+
+	fname := f.name(name)
+
+	f.fs.IntVar(p, fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (f flagEnvHandler) Int(name string, value int, usage string) error {
+	v, err := parseEnvToInt(f.getEnv(name), value)
+	if err != nil {
+		return err
+	}
+
+	fname := f.name(name)
+
+	f.fs.Int(fname, v, f.varDesc(name, usage))
+
+	if !f.visible {
+		if err := f.fs.MarkHidden(fname); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (f flagEnvHandler) varDesc(name string, dest string) string {
 	return fmt.Sprintf("%s (Env: %s)", dest, f.getEnv(name))
 }
@@ -303,6 +344,13 @@ func parseEnvToUint16(env string, def uint16) (uint16, error) {
 	return parseEnvToType(env, def, func(in string) (uint16, error) {
 		v, err := strconv.ParseUint(in, 10, 16)
 		return uint16(v), err
+	})
+}
+
+func parseEnvToInt(env string, def int) (int, error) {
+	return parseEnvToType(env, def, func(in string) (int, error) {
+		v, err := strconv.ParseInt(in, 10, 64)
+		return int(v), err
 	})
 }
 

@@ -25,11 +25,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -55,6 +53,10 @@ func (a *envoyAuthV3) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
 		fs.BoolVar(&a.config.Extensions.JWT, "extensions.jwt", true, "Defines if JWT extension is enabled"),
 		fs.BoolVar(&a.config.Extensions.CookieJWT, "extensions.cookie.jwt", true, "Defines if Cookie JWT extension is enabled"),
+		fs.BoolVar(&a.config.Extensions.UsersCreate, "extensions.users.create", false, "Defines if UserCreation extension is enabled"),
+		fs.StringVar(&a.config.Database.Endpoint, "database.endpoint", "", "Endpoint of ArangoDB"),
+		fs.StringVar(&a.config.Database.Proto, "database.proto", "http", "Proto of the ArangoDB endpoint"),
+		fs.IntVar(&a.config.Database.Port, "database.port", 8529, "Port of ArangoDB"),
 	)
 }
 
@@ -66,14 +68,7 @@ func (a *envoyAuthV3) Handler(ctx context.Context, cmd *cobra.Command) (svc.Hand
 		return nil, err
 	}
 
-	c, _, err := ugrpc.NewGRPCClient(ctx, pbAuthenticationV1.NewAuthenticationV1Client, v)
-	if err != nil {
-		return nil, err
-	}
+	a.config.Address = v
 
-	cfg := a.config
-
-	cfg.AuthClient = c
-
-	return pbImplEnvoyAuthV3.New(cfg), nil
+	return pbImplEnvoyAuthV3.New(a.config), nil
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_required"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/pass_mode"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/required"
+	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/users"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 )
 
@@ -36,5 +37,6 @@ func Factory() pbImplEnvoyAuthV3Shared.Factory {
 		auth_cookie.New,
 		auth_required.New,
 		pass_mode.New,
+		users.New,
 	)
 }

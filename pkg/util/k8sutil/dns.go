@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
-func appendDeploymentClusterDomain(dns string, domain *string) string {
+// ExtendDeploymentClusterDomain adds the ClusterDomain to the dns name
+func ExtendDeploymentClusterDomain(dns string, domain *string) string {
 	if domain == nil || *domain == "" {
 		return dns
 	}
@@ -46,7 +47,7 @@ func CreatePodDNSName(deployment meta.Object, role, id string) string {
 // CreatePodDNSName returns the DNS of a pod with a given role & id in
 // a given deployment.
 func CreatePodDNSNameWithDomain(deployment meta.Object, domain *string, role, id string) string {
-	return appendDeploymentClusterDomain(CreatePodDNSName(deployment, role, id), domain)
+	return ExtendDeploymentClusterDomain(CreatePodDNSName(deployment, role, id), domain)
 }
 
 // CreateServiceDNSName returns the DNS of a service.
@@ -56,12 +57,12 @@ func CreateServiceDNSName(svc *core.Service) string {
 
 // CreateServiceDNSNameWithDomain returns the DNS of a service extended with domain.
 func CreateServiceDNSNameWithDomain(svc *core.Service, domain *string) string {
-	return appendDeploymentClusterDomain(CreateServiceDNSName(svc), domain)
+	return ExtendDeploymentClusterDomain(CreateServiceDNSName(svc), domain)
 }
 
 // CreateDatabaseClientServiceDNSNameWithDomain returns the DNS of the database client service.
 func CreateDatabaseClientServiceDNSNameWithDomain(deployment meta.Object, domain *string) string {
-	return appendDeploymentClusterDomain(CreateDatabaseClientServiceDNSName(deployment), domain)
+	return ExtendDeploymentClusterDomain(CreateDatabaseClientServiceDNSName(deployment), domain)
 }
 
 // CreateDatabaseClientServiceDNSName returns the DNS of the database client service.
@@ -71,7 +72,7 @@ func CreateDatabaseClientServiceDNSName(deployment meta.Object) string {
 
 // CreateSyncMasterClientServiceDNSNameWithDomain returns the DNS of the syncmaster client service.
 func CreateSyncMasterClientServiceDNSNameWithDomain(deployment meta.Object, domain *string) string {
-	return appendDeploymentClusterDomain(CreateSyncMasterClientServiceDNSName(deployment), domain)
+	return ExtendDeploymentClusterDomain(CreateSyncMasterClientServiceDNSName(deployment), domain)
 }
 
 // CreateSyncMasterClientServiceDNSName returns the DNS of the syncmaster client service.
