@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -119,9 +119,9 @@ func updateArangoBackupPolicy(t *testing.T, h *handler, policies ...*backupApi.A
 	}
 }
 
-func newArangoDeployment(namespace string, labels map[string]string) *database.ArangoDeployment {
+func newArangoDeployment(namespace string, labels map[string]string) *api.ArangoDeployment {
 	name := string(uuid.NewUUID())
-	return &database.ArangoDeployment{
+	return &api.ArangoDeployment{
 		TypeMeta: meta.TypeMeta{
 			APIVersion: backupApi.SchemeGroupVersion.String(),
 			Kind:       deployment.ArangoDeploymentResourceKind,
@@ -140,7 +140,7 @@ func newArangoDeployment(namespace string, labels map[string]string) *database.A
 	}
 }
 
-func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.ArangoDeployment) {
+func createArangoDeployment(t *testing.T, h *handler, deployments ...*api.ArangoDeployment) {
 	for _, deployment := range deployments {
 		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(context.Background(), deployment, meta.CreateOptions{})
 		require.NoError(t, err)
@@ -154,7 +154,7 @@ func listArangoBackups(t *testing.T, handler *handler, namespace string) []backu
 	return result.Items
 }
 
-func isInList(t *testing.T, backups []backupApi.ArangoBackup, deployment *database.ArangoDeployment) {
+func isInList(t *testing.T, backups []backupApi.ArangoBackup, deployment *api.ArangoDeployment) {
 	for _, backup := range backups {
 		if backup.Spec.Deployment.Name == deployment.Name {
 			return

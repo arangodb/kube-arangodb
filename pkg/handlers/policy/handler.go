@@ -32,7 +32,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -231,7 +231,7 @@ func (*handler) CanBeHandled(item operation.Item) bool {
 		item.Kind == backup.ArangoBackupPolicyResourceKind
 }
 
-func (h *handler) listAllBackupsForPolicy(ctx context.Context, d *deployment.ArangoDeployment, policyName string) (util.List[*backupApi.ArangoBackup], error) {
+func (h *handler) listAllBackupsForPolicy(ctx context.Context, d *api.ArangoDeployment, policyName string) (util.List[*backupApi.ArangoBackup], error) {
 	var r []*backupApi.ArangoBackup
 
 	r, err := list.APIList[*backupApi.ArangoBackupList, *backupApi.ArangoBackup](ctx, h.client.BackupV1().ArangoBackups(d.Namespace), meta.ListOptions{

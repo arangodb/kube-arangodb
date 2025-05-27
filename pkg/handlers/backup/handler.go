@@ -36,7 +36,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -108,7 +108,7 @@ func (h *handler) refresh() error {
 	return nil
 }
 
-func (h *handler) refreshDeployment(deployment *database.ArangoDeployment) error {
+func (h *handler) refreshDeployment(deployment *api.ArangoDeployment) error {
 	m := h.getDeploymentMutex(deployment.Namespace, deployment.Name)
 	m.Lock()
 	defer m.Unlock()
@@ -174,7 +174,7 @@ func (h *handler) cleanupImportedBackups(backups []backupApi.ArangoBackup) error
 	return nil
 }
 
-func (h *handler) refreshDeploymentBackup(deployment *database.ArangoDeployment, backupMeta driver.BackupMeta, backups []backupApi.ArangoBackup) error {
+func (h *handler) refreshDeploymentBackup(deployment *api.ArangoDeployment, backupMeta driver.BackupMeta, backups []backupApi.ArangoBackup) error {
 	for _, backup := range backups {
 		if download := backup.Spec.Download; download != nil {
 			if download.ID == string(backupMeta.ID) {
@@ -398,7 +398,7 @@ func (h *handler) CanBeHandled(item operation.Item) bool {
 		item.Kind == backup.ArangoBackupResourceKind
 }
 
-func (h *handler) getArangoDeploymentObject(backup *backupApi.ArangoBackup) (*database.ArangoDeployment, error) {
+func (h *handler) getArangoDeploymentObject(backup *backupApi.ArangoBackup) (*api.ArangoDeployment, error) {
 	if backup.Spec.Deployment.Name == "" {
 		return nil, newFatalErrorf("deployment ref is not specified for backup %s/%s", backup.Namespace, backup.Name)
 	}

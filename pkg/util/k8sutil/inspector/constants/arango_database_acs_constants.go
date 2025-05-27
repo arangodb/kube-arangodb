@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 // ArangoClusterSynchronization
@@ -32,11 +32,11 @@ const (
 	ArangoClusterSynchronizationGroup     = deployment.ArangoDeploymentGroupName
 	ArangoClusterSynchronizationResource  = deployment.ArangoClusterSynchronizationResourcePlural
 	ArangoClusterSynchronizationKind      = deployment.ArangoClusterSynchronizationResourceKind
-	ArangoClusterSynchronizationVersionV1 = deploymentv1.ArangoDeploymentVersion
+	ArangoClusterSynchronizationVersionV1 = api.ArangoDeploymentVersion
 )
 
 func init() {
-	register[*deploymentv1.ArangoClusterSynchronization](ArangoClusterSynchronizationGKv1(), ArangoClusterSynchronizationGRv1())
+	register[*api.ArangoClusterSynchronization](ArangoClusterSynchronizationGKv1(), ArangoClusterSynchronizationGRv1())
 }
 
 func ArangoClusterSynchronizationGK() schema.GroupKind {

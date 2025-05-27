@@ -36,7 +36,7 @@ import (
 	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	appsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
@@ -106,7 +106,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/deployment", root): {
 				"v1": {
 					objects: map[string]interface{}{
-						"spec": deploymentv1.ArangoDeployment{}.Spec,
+						"spec": api.ArangoDeployment{}.Spec,
 					},
 				},
 				"v2alpha1": {
@@ -120,7 +120,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/deployment", root): {
 				"v1": {
 					objects: map[string]interface{}{
-						"spec": deploymentv1.ArangoMember{}.Spec,
+						"spec": api.ArangoMember{}.Spec,
 					},
 				},
 				"v2alpha1": {
@@ -134,7 +134,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/deployment", root): {
 				"v1": {
 					objects: map[string]interface{}{
-						"spec": deploymentv1.ArangoClusterSynchronization{}.Spec,
+						"spec": api.ArangoClusterSynchronization{}.Spec,
 					},
 				},
 				"v2alpha1": {
@@ -148,7 +148,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/deployment", root): {
 				"v1": {
 					objects: map[string]interface{}{
-						"spec": deploymentv1.ArangoTask{}.Spec,
+						"spec": api.ArangoTask{}.Spec,
 					},
 				},
 				"v2alpha1": {

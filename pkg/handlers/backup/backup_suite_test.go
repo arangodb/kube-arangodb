@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup/state"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -71,12 +71,12 @@ func newErrorsFakeHandler(errors mockErrorsArangoClientBackup) (*handler, *mockA
 	}
 }
 
-func newObjectSet(t *testing.T, state state.State) (*backupApi.ArangoBackup, *database.ArangoDeployment) {
+func newObjectSet(t *testing.T, state state.State) (*backupApi.ArangoBackup, *api.ArangoDeployment) {
 	name := string(uuid.NewUUID())
 	namespace := string(uuid.NewUUID())
 
 	obj := newArangoBackup(name, namespace, name, state)
-	arangoDeployment := tests.NewMetaObject[*database.ArangoDeployment](t, namespace, name)
+	arangoDeployment := tests.NewMetaObject[*api.ArangoDeployment](t, namespace, name)
 
 	return obj, arangoDeployment
 }
@@ -124,7 +124,7 @@ func refreshArangoBackup(t *testing.T, h *handler, backup *backupApi.ArangoBacku
 	return obj
 }
 
-func createArangoDeployment(t *testing.T, h *handler, deployments ...*database.ArangoDeployment) {
+func createArangoDeployment(t *testing.T, h *handler, deployments ...*api.ArangoDeployment) {
 	for _, deployment := range deployments {
 		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(context.Background(), deployment, meta.CreateOptions{})
 		require.NoError(t, err)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import (
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -39,14 +39,14 @@ import (
 )
 
 type arangoClientBackupImpl struct {
-	deployment *database.ArangoDeployment
+	deployment *api.ArangoDeployment
 	backup     *backupApi.ArangoBackup
 	driver     driver.Client
 	kubecli    kubernetes.Interface
 }
 
 func newArangoClientBackupFactory(handler *handler) ArangoClientFactory {
-	return func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error) {
+	return func(deployment *api.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error) {
 		ctx := context.Background()
 		client, err := arangod.CreateArangodDatabaseClient(ctx, handler.kubeClient.CoreV1(), deployment, false, true)
 		if err != nil {

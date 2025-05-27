@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	deployment "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 )
 
@@ -51,7 +51,7 @@ type ArangoBackupPolicy struct {
 	Status ArangoBackupPolicyStatus `json:"status"`
 }
 
-func (a *ArangoBackupPolicy) NewBackup(d *deployment.ArangoDeployment) *ArangoBackup {
+func (a *ArangoBackupPolicy) NewBackup(d *api.ArangoDeployment) *ArangoBackup {
 	policyName := a.Name
 
 	spec := &ArangoBackupSpec{

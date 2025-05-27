@@ -36,7 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	backupdef "github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	depldef "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	deplapi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 	repldef "github.com/arangodb/kube-arangodb/pkg/apis/replication"
@@ -90,7 +90,7 @@ const (
 
 type Event struct {
 	Type                  kwatch.EventType
-	Deployment            *deplapi.ArangoDeployment
+	Deployment            *api.ArangoDeployment
 	DeploymentReplication *replapi.ArangoDeploymentReplication
 	LocalStorage          *lsapi.ArangoLocalStorage
 }
