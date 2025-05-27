@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -93,7 +93,7 @@ func createK8sJob(t *testing.T, h *handler, jobs ...*batch.Job) {
 	}
 }
 
-func createArangoDeployment(t *testing.T, h *handler, deployments ...*deploymentApi.ArangoDeployment) {
+func createArangoDeployment(t *testing.T, h *handler, deployments ...*api.ArangoDeployment) {
 	for _, deployment := range deployments {
 		_, err := h.client.DatabaseV1().ArangoDeployments(deployment.Namespace).Create(context.Background(), deployment, meta.CreateOptions{})
 		require.NoError(t, err)
@@ -131,10 +131,10 @@ func newArangoJob(name, namespace, deployment string) *appsApi.ArangoJob {
 	}
 }
 
-func newArangoDeployment(name, namespace string) *deploymentApi.ArangoDeployment {
-	return &deploymentApi.ArangoDeployment{
+func newArangoDeployment(name, namespace string) *api.ArangoDeployment {
+	return &api.ArangoDeployment{
 		TypeMeta: meta.TypeMeta{
-			APIVersion: deploymentApi.SchemeGroupVersion.String(),
+			APIVersion: api.SchemeGroupVersion.String(),
 			Kind:       deployment.ArangoDeploymentResourceKind,
 		},
 		ObjectMeta: meta.ObjectMeta{

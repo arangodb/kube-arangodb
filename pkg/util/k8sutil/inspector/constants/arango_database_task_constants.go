@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 // ArangoTask
@@ -32,11 +32,11 @@ const (
 	ArangoTaskGroup     = deployment.ArangoDeploymentGroupName
 	ArangoTaskResource  = deployment.ArangoTaskResourcePlural
 	ArangoTaskKind      = deployment.ArangoTaskResourceKind
-	ArangoTaskVersionV1 = deploymentv1.ArangoDeploymentVersion
+	ArangoTaskVersionV1 = api.ArangoDeploymentVersion
 )
 
 func init() {
-	register[*deploymentv1.ArangoTask](ArangoTaskGKv1(), ArangoTaskGRv1())
+	register[*api.ArangoTask](ArangoTaskGKv1(), ArangoTaskGRv1())
 }
 
 func ArangoTaskGK() schema.GroupKind {

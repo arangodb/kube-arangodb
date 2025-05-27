@@ -41,7 +41,7 @@ import (
 	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
@@ -172,10 +172,10 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			"v1": {
 				Types: inputPackageTypes{
 					"ArangoDeployment.V1": {
-						"Spec": deploymentApi.ArangoDeployment{}.Spec,
+						"Spec": api.ArangoDeployment{}.Spec,
 					},
 					"ArangoMember.V1": {
-						"Spec": deploymentApi.ArangoMember{}.Spec,
+						"Spec": api.ArangoMember{}.Spec,
 					},
 				},
 				Shared: []string{

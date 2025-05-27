@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -39,7 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-func LabelsForExporterServiceMonitor(name string, obj deploymentApi.DeploymentSpec) map[string]string {
+func LabelsForExporterServiceMonitor(name string, obj api.DeploymentSpec) map[string]string {
 	base := LabelsForExporterServiceMonitorSelector(name)
 
 	for k, v := range obj.Metrics.ServiceMonitor.GetLabels(map[string]string{
@@ -87,7 +87,7 @@ func (r *Resources) serviceMonitorSpec() (monitoringApi.ServiceMonitorSpec, erro
 
 	//nolint:staticcheck
 	switch spec.Metrics.Mode.Get() {
-	case deploymentApi.MetricsModeInternal:
+	case api.MetricsModeInternal:
 		if spec.Metrics.Authentication.JWTTokenSecretName == nil {
 			return monitoringApi.ServiceMonitorSpec{}, apiErrors.NewNotFound(schema.GroupResource{Group: "v1/secret"}, "metrics-secret")
 		}

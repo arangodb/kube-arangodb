@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
@@ -82,7 +82,7 @@ func cmdLifecycleWaitCheck(cmd *cobra.Command, _ []string) {
 		}
 
 		if isUpToDate {
-			logger.Info(fmt.Sprintf("ArangoDeployment: %s is %s", d.Name, v1.ConditionTypeUpToDate))
+			logger.Info(fmt.Sprintf("ArangoDeployment: %s is %s", d.Name, api.ConditionTypeUpToDate))
 			return
 		}
 
@@ -93,7 +93,7 @@ func cmdLifecycleWaitCheck(cmd *cobra.Command, _ []string) {
 			logger.Info("ArangoDeployment: %s is not ready yet. Waiting...", d.Name)
 			continue
 		case <-time.After(watchTimeout):
-			logger.Error("ArangoDeployment: %s is not %s yet - operation timed out!", d.Name, v1.ConditionTypeUpToDate)
+			logger.Error("ArangoDeployment: %s is not %s yet - operation timed out!", d.Name, api.ConditionTypeUpToDate)
 			return
 		}
 	}

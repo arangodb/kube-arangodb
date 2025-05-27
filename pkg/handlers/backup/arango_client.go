@@ -26,7 +26,7 @@ import (
 	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	database "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 )
 
@@ -41,7 +41,7 @@ var (
 )
 
 // ArangoClientFactory factory type for creating clients
-type ArangoClientFactory func(deployment *database.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error)
+type ArangoClientFactory func(deployment *api.ArangoDeployment, backup *backupApi.ArangoBackup) (ArangoBackupClient, error)
 
 // ArangoBackupProgress progress info
 type ArangoBackupProgress struct {

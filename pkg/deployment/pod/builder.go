@@ -24,20 +24,20 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
 
 type Input struct {
 	ApiObject    meta.Object
-	Deployment   deploymentApi.DeploymentSpec
-	Status       deploymentApi.DeploymentStatus
-	GroupSpec    deploymentApi.ServerGroupSpec
-	Group        deploymentApi.ServerGroup
-	Image        deploymentApi.ImageInfo
-	Member       deploymentApi.MemberStatus
-	ArangoMember deploymentApi.ArangoMember
+	Deployment   api.DeploymentSpec
+	Status       api.DeploymentStatus
+	GroupSpec    api.ServerGroupSpec
+	Group        api.ServerGroup
+	Image        api.ImageInfo
+	Member       api.MemberStatus
+	ArangoMember api.ArangoMember
 	AutoUpgrade  bool
 }
 

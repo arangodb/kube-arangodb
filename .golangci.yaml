@@ -87,6 +87,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3
       - alias: pbStorageV2
         pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/definition
+      - alias: api
+        pkg: github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1
       - alias: analyticsApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1
       - alias: mlApiv1alpha1
@@ -97,6 +99,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
       - alias: platformApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1
+      - alias: platformAuthenticationApi
+        pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication
       - alias: schedulerApiv1alpha1
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1
       - alias: schedulerContainerApiv1alpha1
