@@ -54,6 +54,21 @@ service AuthenticationV1 {
       get: "/_integration/authn/v1/identity"
     };
   }
+
+  // Login calls /_open/auth endpoint to create JWT Token. Optionally, sets the header.
+  rpc Login (LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/_integration/authn/v1/login"
+      body: "*"
+    };
+  }
+
+  // Logout ensures that credentials and cookies are removed
+  rpc Logout (LogoutRequest) returns (shared.Empty) {
+    option (google.api.http) = {
+      get: "/_integration/authn/v1/logout"
+    };
+  }
 }
 
 // ValidateRequest defines request for AuthenticationV1 Validate Request
@@ -119,3 +134,40 @@ message CreateTokenResponse {
   // roles specify list of the roles assigned to the token
   repeated string roles = 4;
 }
+
+// LoginRequest defines response for AuthenticationV1 Login Request
+message LoginRequest {
+  // credentials defines the login credentials
+  LoginRequestCredentials credentials = 1;
+
+  // options define the login request options
+  LoginRequestOptions options = 2;
+}
+
+// LoginResponse defines response for AuthenticationV1 Login Response
+message LoginResponse {
+  // token returns the JWT Token
+  string token = 1;
+}
+
+// LoginRequestCredentials defines response for AuthenticationV1 Login Credentials Request
+message LoginRequestCredentials {
+  // username defines user for the authentication
+  string username = 1;
+
+  // password defines password for the authentication
+  string password = 2;
+}
+
+// LoginRequestCredentials defines response for AuthenticationV1 Login Options Request
+message LoginRequestOptions {
+  // cookies enables the cookie management
+  optional bool cookies = 1;
+}
+
+// LogoutRequest defines request for AuthenticationV1 Logout Request
+message LogoutRequest {
+  // location defines logout location - defaults to /
+  optional string location = 1;
+}
+

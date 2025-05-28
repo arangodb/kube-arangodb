@@ -131,9 +131,12 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			counterMetric.Inc()
 			name := fmt.Sprintf("%s-int", deploymentName)
 
-			integration, err := sidecar.NewIntegration(&schedulerContainerResourcesApi.Image{
-				Image: util.NewType(r.context.GetOperatorImage()),
-			}, spec.Integration.GetSidecar(),
+			integration, err := sidecar.NewIntegration(
+				r.context.GetName(),
+				r.context.GetSpec(),
+				&schedulerContainerResourcesApi.Image{
+					Image: util.NewType(r.context.GetOperatorImage()),
+				}, spec.Integration.GetSidecar(),
 				r.arangoDeploymentProfileTemplate(cachedStatus),
 				r.arangoDeploymentCATemplate(),
 				r.templateKubernetesEnvs(),

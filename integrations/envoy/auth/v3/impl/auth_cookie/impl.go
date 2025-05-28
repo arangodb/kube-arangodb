@@ -23,11 +23,13 @@ package auth_cookie
 import (
 	"context"
 	goHttp "net/http"
+	goStrings "strings"
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -114,12 +116,18 @@ func (p impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, c
 				}
 			}
 
-			current.Headers = append(current.Headers, pbImplEnvoyAuthV3Shared.FilterCookiesHeader(cookies, func(cookie *goHttp.Cookie) bool {
-				return cookie.Valid() != nil
-			}, func(cookie *goHttp.Cookie) bool {
-				return cookie.Name == JWTAuthorizationCookieName
-			})...)
+			ext := request.GetAttributes().GetContextExtensions()
 
+			switch networkingApi.ArangoRouteSpecAuthenticationPassMode(goStrings.ToLower(util.Optional(ext, pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey, ""))) {
+			case networkingApi.ArangoRouteSpecAuthenticationPassModePass:
+				// Keep headers
+			default:
+				current.Headers = append(current.Headers, pbImplEnvoyAuthV3Shared.FilterCookiesHeader(cookies, func(cookie *goHttp.Cookie) bool {
+					return cookie.Valid() != nil
+				}, func(cookie *goHttp.Cookie) bool {
+					return cookie.Name == JWTAuthorizationCookieName
+				})...)
+			}
 			return nil
 		}
 	}

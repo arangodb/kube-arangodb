@@ -11,12 +11,14 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
 	schedulerIntegrationApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration"
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -120,7 +122,7 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	}, nil
 }
 
-func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
+func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
 	// Arguments
 
 	exePath := k8sutil.BinaryPath()
@@ -150,6 +152,18 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 		{
 			Name:  "INTEGRATION_HTTP_ADDRESS",
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetHTTPListenPort()),
+		},
+		{
+			Name:  "INTEGRATION_DATABASE_ENDPOINT",
+			Value: k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", name, spec.GetMode().ServingGroup().AsRole()), spec.ClusterDomain),
+		},
+		{
+			Name:  "INTEGRATION_DATABASE_PROTO",
+			Value: util.BoolSwitch(spec.IsSecure(), "https", "http"),
+		},
+		{
+			Name:  "INTEGRATION_DATABASE_PORT",
+			Value: fmt.Sprintf("%d", shared.ArangoPort),
 		},
 	}
 

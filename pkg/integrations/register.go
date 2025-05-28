@@ -27,6 +27,7 @@ import (
 	goStrings "strings"
 	"sync"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/cobra"
 
 	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
@@ -121,6 +122,11 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 		cfg.Gateway = &svc.ConfigurationGateway{Address: s.gateway.address}
 	}
 
+	cfg.MuxExtensions = []runtime.ServeMuxOption{
+		runtime.WithOutgoingHeaderMatcher(outgoingHeaderMatcher),
+		runtime.WithForwardResponseOption(forwardResponseOption),
+	}
+
 	return cfg, nil
 }
 
@@ -138,6 +144,9 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 	f := NewFlagEnvHandler(cmd.Flags())
 
 	if err := errors.Errors(
+		f.String("database.endpoint", "localhost", "Endpoint of ArangoDB"),
+		f.String("database.proto", "http", "Proto of the ArangoDB endpoint"),
+		f.Int("database.port", 8529, "Port of ArangoDB"),
 		f.StringVar(&c.health.address, "health.address", "0.0.0.0:9091", "Address to expose health service"),
 		f.BoolVar(&c.health.shutdownEnabled, "health.shutdown.enabled", true, "Determines if shutdown service should be enabled and exposed"),
 		f.StringVar(&c.health.auth.t, "health.auth.type", "None", "Auth type for health service"),
@@ -170,8 +179,8 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 
 		if err := errors.Errors(
 			fs.Bool("", false, service.Description()),
-			fs.Bool("internal", internal, fmt.Sprintf("Defones if Internal access to service %s is enabled", service.Name())),
-			fs.Bool("external", external, fmt.Sprintf("Defones if External access to service %s is enabled", service.Name())),
+			fs.Bool("internal", internal, fmt.Sprintf("Defines if Internal access to service %s is enabled", service.Name())),
+			fs.Bool("external", external, fmt.Sprintf("Defines if External access to service %s is enabled", service.Name())),
 		); err != nil {
 			return err
 		}

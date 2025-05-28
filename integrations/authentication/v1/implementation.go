@@ -22,6 +22,8 @@ package v1
 
 import (
 	"context"
+	"fmt"
+	goHttp "net/http"
 	goStrings "strings"
 	"sync"
 	"time"
@@ -33,10 +35,16 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	"github.com/arangodb/go-driver/v2/arangodb"
+	"github.com/arangodb/go-driver/v2/connection"
+
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_cookie"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/token"
@@ -54,6 +62,21 @@ func newInternal(ctx context.Context, cfg Configuration) (*implementation, error
 	obj := &implementation{
 		cfg: cfg,
 		ctx: ctx,
+
+		cache: cache.NewObject(newCache(cfg)),
+
+		userClient: cache.NewObject(func(ctx context.Context) (arangodb.Requests, time.Duration, error) {
+			client := arangodb.NewClient(connection.NewHttpConnection(connection.HttpConfiguration{
+				Endpoint: connection.NewRoundRobinEndpoints([]string{
+					fmt.Sprintf("%s://%s:%d", cfg.Database.Proto, cfg.Database.Endpoint, cfg.Database.Port),
+				}),
+				ContentType:    connection.ApplicationJSON,
+				ArangoDBConfig: connection.ArangoDBConfiguration{},
+				Transport:      operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
+			}))
+
+			return client, 24 * time.Hour, nil
+		}),
 	}
 
 	return obj, nil
@@ -70,7 +93,8 @@ type implementation struct {
 	ctx context.Context
 	cfg Configuration
 
-	cache *cache
+	userClient cache.Object[arangodb.Requests]
+	cache      cache.Object[*tokens]
 }
 
 func (i *implementation) Name() string {
@@ -104,7 +128,7 @@ func (i *implementation) Validate(ctx context.Context, request *pbAuthentication
 		}, nil
 	}
 
-	cache, err := i.withCache()
+	cache, err := i.cache.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +166,7 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		}, nil
 	}
 
-	cache, err := i.withCache()
+	cache, err := i.cache.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +264,92 @@ func (i *implementation) Identity(ctx context.Context, _ *pbSharedV1.Empty) (*pb
 	return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 }
 
-func (i *implementation) extractTokenDetails(cache *cache, t string) (string, []string, time.Duration, error) {
+func (i *implementation) Login(ctx context.Context, login *pbAuthenticationV1.LoginRequest) (*pbAuthenticationV1.LoginResponse, error) {
+	client, err := i.userClient.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if login.Credentials == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "missing credentials")
+	}
+
+	var req authRequest
+	req.Username = login.Credentials.Username
+	req.Password = login.Credentials.Password
+	var resp authResponse
+
+	response, err := client.Post(ctx, &resp, &req, "_open", "auth")
+	if err != nil {
+		logger.Err(err).Warn("Unable to Login via /_open/auth")
+		return nil, status.Errorf(codes.Internal, "Internal error while authenticating")
+	}
+
+	switch response.Code() {
+	case goHttp.StatusUnauthorized:
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid credentials")
+	case goHttp.StatusOK:
+		if login.Options != nil {
+			if login.Options.GetCookies() {
+				// Set the cookie for response
+				cookie := goHttp.Cookie{
+					Name:   auth_cookie.JWTAuthorizationCookieName,
+					Value:  resp.Token,
+					Path:   "/",
+					MaxAge: 3600,
+				}
+				if err := grpc.SetHeader(ctx, metadata.Pairs("Set-Cookie", cookie.String())); err != nil {
+					logger.Err(err).Warn("Unable to set the cookie")
+				}
+			}
+		}
+
+		return &pbAuthenticationV1.LoginResponse{
+			Token: resp.Token,
+		}, nil
+	}
+
+	return nil, status.Errorf(codes.Internal, "Authentication failed")
+}
+
+func (i *implementation) Logout(ctx context.Context, req *pbAuthenticationV1.LogoutRequest) (*pbSharedV1.Empty, error) {
+	in, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "incoming context not passed")
+	}
+
+	for _, value := range in.Get("grpcgateway-cookie") {
+		lines, err := goHttp.ParseCookie(value)
+		if err != nil {
+			continue
+		}
+
+		for _, l := range lines {
+			switch l.Name {
+			case auth_cookie.JWTAuthorizationCookieName:
+				l.MaxAge = -1
+				if err := grpc.SetHeader(ctx, metadata.Pairs("Set-Cookie", l.String())); err != nil {
+					logger.Err(err).Warn("Unable to set the cookie")
+				}
+			default:
+				continue
+			}
+		}
+	}
+
+	location := "/"
+	if req.Location != nil {
+		location = req.GetLocation()
+	}
+
+	if err := grpc.SetHeader(ctx, metadata.Pairs("Location", location)); err != nil {
+		logger.Err(err).Warn("Unable to set the cookie")
+	}
+
+	return &pbSharedV1.Empty{}, nil
+}
+
+func (i *implementation) extractTokenDetails(cache *tokens, t string) (string, []string, time.Duration, error) {
 	// Let's check if token is signed properly
 
 	p, err := token.ParseWithAny(t, cache.validationTokens...)
