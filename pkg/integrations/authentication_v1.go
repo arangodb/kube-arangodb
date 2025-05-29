@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,6 +56,27 @@ func (a *authenticationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error
 }
 
 func (a *authenticationV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
+	f := cmd.Flags()
+
+	dbE, err := f.GetString("database.endpoint")
+	if err != nil {
+		return nil, err
+	}
+
+	dbP, err := f.GetString("database.proto")
+	if err != nil {
+		return nil, err
+	}
+
+	dbPort, err := f.GetInt("database.port")
+	if err != nil {
+		return nil, err
+	}
+
+	a.config.Database.Endpoint = dbE
+	a.config.Database.Proto = dbP
+	a.config.Database.Port = dbPort
+
 	return pbImplAuthenticationV1.New(ctx, a.config)
 }
 

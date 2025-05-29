@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,43 +18,35 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package integrations
 
 import (
-	"crypto/tls"
+	"context"
+	"fmt"
+	goHttp "net/http"
+	goStrings "strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"google.golang.org/protobuf/proto"
 )
 
-type Configuration struct {
-	Address string
-
-	TLSOptions *tls.Config
-
-	Options []grpc.ServerOption
-
-	MuxExtensions []runtime.ServeMuxOption
-
-	Gateway *ConfigurationGateway
+func outgoingHeaderMatcher(key string) (string, bool) {
+	switch goStrings.ToLower(key) {
+	// Pass set-cookie as it is
+	case "set-cookie":
+		return key, true
+	case "location":
+		return "Location", true
+	default:
+		return fmt.Sprintf("%s%s", runtime.MetadataHeaderPrefix, key), true
+	}
 }
 
-type ConfigurationGateway struct {
-	Address string
-}
-
-func (c *Configuration) RenderOptions() []grpc.ServerOption {
-	if c == nil {
-		return nil
+func forwardResponseOption(ctx context.Context, w goHttp.ResponseWriter, message proto.Message) error {
+	headers := w.Header()
+	if _, ok := headers["Location"]; ok {
+		w.WriteHeader(goHttp.StatusFound)
 	}
 
-	ret := make([]grpc.ServerOption, len(c.Options))
-	copy(ret, c.Options)
-
-	if tls := c.TLSOptions; tls != nil {
-		ret = append(ret, grpc.Creds(credentials.NewTLS(tls)))
-	}
-
-	return ret
+	return nil
 }

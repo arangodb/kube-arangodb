@@ -29,6 +29,10 @@ type AuthenticationV1Client interface {
 	CreateToken(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*CreateTokenResponse, error)
 	// Identity extracts the identity from the request
 	Identity(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*IdentityResponse, error)
+	// Login calls /_open/auth endpoint to create JWT Token. Optionally, sets the header.
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	// Logout ensures that credentials and cookies are removed
+	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*definition.Empty, error)
 }
 
 type authenticationV1Client struct {
@@ -66,6 +70,24 @@ func (c *authenticationV1Client) Identity(ctx context.Context, in *definition.Em
 	return out, nil
 }
 
+func (c *authenticationV1Client) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, "/authentication.AuthenticationV1/Login", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authenticationV1Client) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*definition.Empty, error) {
+	out := new(definition.Empty)
+	err := c.cc.Invoke(ctx, "/authentication.AuthenticationV1/Logout", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthenticationV1Server is the server API for AuthenticationV1 service.
 // All implementations must embed UnimplementedAuthenticationV1Server
 // for forward compatibility
@@ -76,6 +98,10 @@ type AuthenticationV1Server interface {
 	CreateToken(context.Context, *CreateTokenRequest) (*CreateTokenResponse, error)
 	// Identity extracts the identity from the request
 	Identity(context.Context, *definition.Empty) (*IdentityResponse, error)
+	// Login calls /_open/auth endpoint to create JWT Token. Optionally, sets the header.
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	// Logout ensures that credentials and cookies are removed
+	Logout(context.Context, *LogoutRequest) (*definition.Empty, error)
 	mustEmbedUnimplementedAuthenticationV1Server()
 }
 
@@ -91,6 +117,12 @@ func (UnimplementedAuthenticationV1Server) CreateToken(context.Context, *CreateT
 }
 func (UnimplementedAuthenticationV1Server) Identity(context.Context, *definition.Empty) (*IdentityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Identity not implemented")
+}
+func (UnimplementedAuthenticationV1Server) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedAuthenticationV1Server) Logout(context.Context, *LogoutRequest) (*definition.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
 }
 func (UnimplementedAuthenticationV1Server) mustEmbedUnimplementedAuthenticationV1Server() {}
 
@@ -159,6 +191,42 @@ func _AuthenticationV1_Identity_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthenticationV1_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationV1Server).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/authentication.AuthenticationV1/Login",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationV1Server).Login(ctx, req.(*LoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthenticationV1_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogoutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationV1Server).Logout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/authentication.AuthenticationV1/Logout",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationV1Server).Logout(ctx, req.(*LogoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthenticationV1_ServiceDesc is the grpc.ServiceDesc for AuthenticationV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -177,6 +245,14 @@ var AuthenticationV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Identity",
 			Handler:    _AuthenticationV1_Identity_Handler,
+		},
+		{
+			MethodName: "Login",
+			Handler:    _AuthenticationV1_Login_Handler,
+		},
+		{
+			MethodName: "Logout",
+			Handler:    _AuthenticationV1_Logout_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

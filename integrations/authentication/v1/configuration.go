@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,6 +67,14 @@ type Configuration struct {
 	Path string
 
 	Create Token
+
+	Database ConfigurationDatabase
+}
+
+type ConfigurationDatabase struct {
+	Proto    string
+	Endpoint string
+	Port     int
 }
 
 func (c Configuration) With(mods ...Mod) Configuration {

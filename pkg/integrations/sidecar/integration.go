@@ -11,12 +11,14 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	schedulerContainerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
 	schedulerIntegrationApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration"
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -120,7 +122,7 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	}, nil
 }
 
-func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
+func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
 	// Arguments
 
 	exePath := k8sutil.BinaryPath()
@@ -134,6 +136,9 @@ func NewIntegration(image *schedulerContainerResourcesApi.Image, integration *sc
 	options.Addf("--services.address", "127.0.0.1:%d", integration.GetListenPort())
 	options.Addf("--health.address", "0.0.0.0:%d", integration.GetControllerListenPort())
 	options.Addf("--services.gateway.address", "127.0.0.1:%d", integration.GetHTTPListenPort())
+	options.Add("--database.endpoint", k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", name, spec.GetMode().ServingGroup().AsRole()), spec.ClusterDomain))
+	options.Addf("--database.port", "%d", shared.ArangoPort)
+	options.Add("--database.proto", util.BoolSwitch(spec.IsSecure(), "https", "http"))
 	options.Add("--services.gateway.enabled", true)
 
 	// Envs

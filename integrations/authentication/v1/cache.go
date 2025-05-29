@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package v1
 
 import (
+	"context"
 	"io"
 	"os"
 	"path"
@@ -28,117 +29,67 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const MaxSize = 128
 
-type cache struct {
-	parent *implementation
-
-	eol time.Time
-
+type tokens struct {
 	signingToken []byte
 
 	validationTokens [][]byte
 }
 
-func (i *implementation) newCache(cfg Configuration) (*cache, error) {
-	files, err := os.ReadDir(i.cfg.Path)
-	if err != nil {
-		return nil, err
-	}
-
-	var keys []string
-	var tokens = make(map[string][]byte)
-
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-
-		data, err := util.OpenWithRead(path.Join(i.cfg.Path, file.Name()), MaxSize)
+func newCache(cfg Configuration) func(ctx context.Context) (*tokens, time.Duration, error) {
+	return func(ctx context.Context) (*tokens, time.Duration, error) {
+		files, err := os.ReadDir(cfg.Path)
 		if err != nil {
-			continue
+			return nil, 0, err
 		}
 
-		if len(data) == 0 {
-			continue
+		var keys []string
+		var ts = make(map[string][]byte)
+
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+
+			data, err := util.OpenWithRead(path.Join(cfg.Path, file.Name()), MaxSize)
+			if err != nil {
+				continue
+			}
+
+			if len(data) == 0 {
+				continue
+			}
+
+			buff := make([]byte, cfg.Create.MaxSize)
+
+			for id := range buff {
+				buff[id] = 0
+			}
+
+			copy(buff, data)
+
+			keys = append(keys, file.Name())
+			ts[file.Name()] = buff
 		}
 
-		buff := make([]byte, cfg.Create.MaxSize)
-
-		for id := range buff {
-			buff[id] = 0
+		if len(keys) == 0 {
+			return nil, 0, io.ErrUnexpectedEOF
 		}
 
-		copy(buff, data)
+		sort.Strings(keys)
 
-		keys = append(keys, file.Name())
-		tokens[file.Name()] = buff
-	}
+		data := make([][]byte, len(keys))
 
-	if len(keys) == 0 {
-		return nil, io.ErrUnexpectedEOF
-	}
+		for id := range data {
+			data[id] = ts[keys[id]]
+		}
 
-	sort.Strings(keys)
-
-	data := make([][]byte, len(keys))
-
-	for id := range data {
-		data[id] = tokens[keys[id]]
-	}
-
-	cache := cache{
-		parent:           i,
-		eol:              time.Now().Add(i.cfg.TTL),
-		signingToken:     tokens[keys[0]],
-		validationTokens: data,
-	}
-
-	return &cache, nil
-}
-
-func (i *implementation) localGetCache() *cache {
-	if c := i.cache; c != nil && c.eol.After(time.Now()) {
-		return c
-	}
-
-	return nil
-}
-
-func (i *implementation) withCache() (*cache, error) {
-	if c := i.getCache(); c != nil {
-		return c, nil
-	}
-
-	return i.refreshCache()
-}
-
-func (i *implementation) getCache() *cache {
-	i.lock.RLock()
-	defer i.lock.RUnlock()
-
-	return i.localGetCache()
-}
-
-func (i *implementation) refreshCache() (*cache, error) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	if c := i.localGetCache(); c != nil {
-		return c, nil
-	}
-
-	// Get was not successful, retry
-
-	if c, err := i.newCache(i.cfg); err != nil {
-		return nil, err
-	} else if c == nil {
-		return nil, errors.Errorf("cache returned is nil")
-	} else {
-		i.cache = c
-		return i.cache, nil
+		return &tokens{
+			signingToken:     ts[keys[0]],
+			validationTokens: data,
+		}, cfg.TTL, nil
 	}
 }

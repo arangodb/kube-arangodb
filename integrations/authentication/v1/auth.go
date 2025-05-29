@@ -18,19 +18,13 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package constants
+package v1
 
-const (
-	EnvoyRouteHeader = "arangodb-platform-route"
+type authRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
-	EnvoyInventoryConfigDestination = "/_inventory"
-	EnvoyIdentityDestination        = "/_identity"
-	EnvoyLoginDestination           = "/_login"
-	EnvoyLogoutDestination          = "/_logout"
-
-	EnvoyIntegrationSidecarFilterName = "envoy.filters.http.ext_authz"
-
-	EnvoyIntegrationSidecarCluster = "integration_sidecar"
-
-	EnvoyIntegrationSidecarClusterHTTP = "integration_sidecar_http"
-)
+type authResponse struct {
+	Token string `json:"jwt"`
+}
