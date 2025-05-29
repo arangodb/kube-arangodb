@@ -23,15 +23,15 @@ package integrations
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/protobuf/proto"
 )
 
 func outgoingHeaderMatcher(key string) (string, bool) {
-	switch strings.ToLower(key) {
+	switch goStrings.ToLower(key) {
 	// Pass set-cookie as it is
 	case "set-cookie":
 		return key, true
@@ -42,10 +42,10 @@ func outgoingHeaderMatcher(key string) (string, bool) {
 	}
 }
 
-func forwardResponseOption(ctx context.Context, w http.ResponseWriter, message proto.Message) error {
+func forwardResponseOption(ctx context.Context, w goHttp.ResponseWriter, message proto.Message) error {
 	headers := w.Header()
 	if _, ok := headers["Location"]; ok {
-		w.WriteHeader(http.StatusFound)
+		w.WriteHeader(goHttp.StatusFound)
 	}
 
 	return nil

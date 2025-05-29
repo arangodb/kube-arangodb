@@ -25,7 +25,6 @@ import (
 	"fmt"
 	goHttp "net/http"
 	goStrings "strings"
-	"sync"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -87,8 +86,6 @@ var _ svc.Handler = &implementation{}
 
 type implementation struct {
 	pbAuthenticationV1.UnimplementedAuthenticationV1Server
-
-	lock sync.RWMutex
 
 	ctx context.Context
 	cfg Configuration
