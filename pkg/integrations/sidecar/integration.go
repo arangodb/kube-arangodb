@@ -136,6 +136,9 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 	options.Addf("--services.address", "127.0.0.1:%d", integration.GetListenPort())
 	options.Addf("--health.address", "0.0.0.0:%d", integration.GetControllerListenPort())
 	options.Addf("--services.gateway.address", "127.0.0.1:%d", integration.GetHTTPListenPort())
+	options.Add("--database.endpoint", k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", name, spec.GetMode().ServingGroup().AsRole()), spec.ClusterDomain))
+	options.Addf("--database.port", "%d", shared.ArangoPort)
+	options.Add("--database.proto", util.BoolSwitch(spec.IsSecure(), "https", "http"))
 	options.Add("--services.gateway.enabled", true)
 
 	// Envs
@@ -152,18 +155,6 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 		{
 			Name:  "INTEGRATION_HTTP_ADDRESS",
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetHTTPListenPort()),
-		},
-		{
-			Name:  "INTEGRATION_DATABASE_ENDPOINT",
-			Value: k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", name, spec.GetMode().ServingGroup().AsRole()), spec.ClusterDomain),
-		},
-		{
-			Name:  "INTEGRATION_DATABASE_PROTO",
-			Value: util.BoolSwitch(spec.IsSecure(), "https", "http"),
-		},
-		{
-			Name:  "INTEGRATION_DATABASE_PORT",
-			Value: fmt.Sprintf("%d", shared.ArangoPort),
 		},
 	}
 
