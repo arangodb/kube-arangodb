@@ -120,6 +120,24 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
+	cfg.Destinations[constants.EnvoyLogoutDestination] = gateway.ConfigDestination{
+		Type:  util.NewType(gateway.ConfigDestinationTypeHTTP),
+		Match: util.NewType(gateway.ConfigMatchPath),
+		Path:  util.NewType("/_integration/authn/v1/logout"),
+		AuthExtension: &gateway.ConfigAuthZExtension{
+			AuthZExtension: map[string]string{
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse,
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
+			},
+		},
+		Targets: gateway.ConfigDestinationTargets{
+			{
+				Host: "127.0.0.1",
+				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			},
+		},
+	}
+
 	gatewayCfgYaml, _, _, err := cfg.RenderYAML()
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
