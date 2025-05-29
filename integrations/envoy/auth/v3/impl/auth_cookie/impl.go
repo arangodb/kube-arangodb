@@ -39,6 +39,7 @@ const JWTAuthorizationCookieName = "X-ArangoDB-Token-JWT"
 
 func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
 	if !configuration.Extensions.CookieJWT {
+		logger.Info("Gateway CookieAuth Disabled")
 		return nil, false
 	}
 
@@ -73,6 +74,7 @@ func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3
 		}, nil
 	}, pbImplEnvoyAuthV3Shared.DefaultTTL)
 
+	logger.Info("Gateway CookieAuth Enabled")
 	return z, true
 }
 
@@ -114,21 +116,21 @@ func (p impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, c
 					Roles: auth.Roles,
 					Token: util.NewType(cookie.Value),
 				}
-			}
 
-			ext := request.GetAttributes().GetContextExtensions()
+				ext := request.GetAttributes().GetContextExtensions()
 
-			switch networkingApi.ArangoRouteSpecAuthenticationPassMode(goStrings.ToLower(util.Optional(ext, pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey, ""))) {
-			case networkingApi.ArangoRouteSpecAuthenticationPassModePass:
-				// Keep headers
-			default:
-				current.Headers = append(current.Headers, pbImplEnvoyAuthV3Shared.FilterCookiesHeader(cookies, func(cookie *goHttp.Cookie) bool {
-					return cookie.Valid() != nil
-				}, func(cookie *goHttp.Cookie) bool {
-					return cookie.Name == JWTAuthorizationCookieName
-				})...)
+				switch networkingApi.ArangoRouteSpecAuthenticationPassMode(goStrings.ToLower(util.Optional(ext, pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey, ""))) {
+				case networkingApi.ArangoRouteSpecAuthenticationPassModePass:
+					// Keep headers
+				default:
+					current.Headers = append(current.Headers, pbImplEnvoyAuthV3Shared.FilterCookiesHeader(cookies, func(cookie *goHttp.Cookie) bool {
+						return cookie.Valid() != nil
+					}, func(cookie *goHttp.Cookie) bool {
+						return cookie.Name == JWTAuthorizationCookieName
+					})...)
+				}
+				return nil
 			}
-			return nil
 		}
 	}
 
