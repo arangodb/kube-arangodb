@@ -45,6 +45,10 @@ func kubernetesCorePodLogs(ctx context.Context, logger zerolog.Logger, client kc
 			}
 
 			files <- kubernetesCorePodLogsExtract(ctx, client, item, s[id].Name)
+
+			if s[id].RestartCount > 0 {
+				files <- kubernetesPreviousCorePodLogsExtract(ctx, client, item, s[id].Name)
+			}
 		}
 	}
 
@@ -55,6 +59,10 @@ func kubernetesCorePodLogs(ctx context.Context, logger zerolog.Logger, client kc
 			}
 
 			files <- kubernetesCorePodLogsExtract(ctx, client, item, s[id].Name)
+
+			if s[id].RestartCount > 0 {
+				files <- kubernetesPreviousCorePodLogsExtract(ctx, client, item, s[id].Name)
+			}
 		}
 	}
 
@@ -65,10 +73,38 @@ func kubernetesCorePodLogs(ctx context.Context, logger zerolog.Logger, client kc
 			}
 
 			files <- kubernetesCorePodLogsExtract(ctx, client, item, s[id].Name)
+
+			if s[id].RestartCount > 0 {
+				files <- kubernetesPreviousCorePodLogsExtract(ctx, client, item, s[id].Name)
+			}
 		}
 	}
 
 	return nil
+}
+
+func kubernetesPreviousCorePodLogsExtract(ctx context.Context, client kclient.Client, item *core.Pod, container string) shared.File {
+	return shared.NewFile(fmt.Sprintf("logs/container/%s.previous", container), func() ([]byte, error) {
+		res := client.Kubernetes().CoreV1().Pods(item.GetNamespace()).GetLogs(item.GetName(), &core.PodLogOptions{
+			Container:  container,
+			Timestamps: true,
+			Previous:   true,
+		})
+
+		q, err := res.Stream(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		defer q.Close()
+
+		d, err := io.ReadAll(q)
+		if err != nil {
+			return nil, err
+		}
+
+		return d, nil
+	})
 }
 
 func kubernetesCorePodLogsExtract(ctx context.Context, client kclient.Client, item *core.Pod, container string) shared.File {
