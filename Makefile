@@ -444,7 +444,7 @@ endif
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_OPS_LINUX_ARM64) $(VBIN_OPS_DARWIN_AMD64) $(VBIN_OPS_DARWIN_ARM64) $(VBIN_OPS_WIN_AMD64)
+	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPERATOR_LINUX_ARM64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_OPS_LINUX_ARM64) $(VBIN_OPS_DARWIN_AMD64) $(VBIN_OPS_DARWIN_ARM64) $(VBIN_OPS_WIN_AMD64)
 
 .PHONY: check-vars
 check-vars:
@@ -518,7 +518,7 @@ $(BIN): $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AM
 	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
 
 .PHONY: docker
-docker: clean check-vars $(VBIN_LINUX_AMD64) $(VBIN_LINUX_ARM64)
+docker: clean check-vars $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPERATOR_LINUX_ARM64)
 ifdef PUSHIMAGES
 	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
@@ -530,7 +530,7 @@ else
 endif
 
 .PHONY: docker-ubi
-docker-ubi: check-vars $(VBIN_LINUX_AMD64)
+docker-ubi: check-vars $(VBIN_OPERATOR_LINUX_AMD64)
 ifdef PUSHIMAGES
 	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
