@@ -21,10 +21,10 @@
 package shared
 
 import (
-	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	goHttp "net/http"
 
 	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
