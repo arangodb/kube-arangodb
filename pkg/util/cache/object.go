@@ -53,7 +53,7 @@ func (o *object[T]) Get(ctx context.Context) (T, error) {
 	o.lock.Lock()
 	defer o.lock.Unlock()
 
-	if time.Now().Before(o.eol) || o.eol.IsZero() {
+	if time.Now().After(o.eol) || o.eol.IsZero() {
 		obj, ttl, err := o.caller(ctx)
 		if err != nil {
 			return util.Default[T](), err

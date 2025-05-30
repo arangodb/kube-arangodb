@@ -78,10 +78,12 @@ require (
 	github.com/arangodb-managed/apis v0.89.1
 	github.com/arangodb-managed/integration-apis v0.2.1
 	github.com/aws/aws-sdk-go v1.55.6
+	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/go-logr/zerologr v1.2.3
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1
 	github.com/jedib0t/go-pretty/v6 v6.6.5
+	golang.org/x/oauth2 v0.28.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250204164813-702378808489
 	helm.sh/helm/v3 v3.17.3
 	k8s.io/klog/v2 v2.130.1
@@ -133,6 +135,7 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
@@ -217,7 +220,6 @@ require (
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/oauth2 v0.26.0 // indirect
 	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/tools v0.27.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect

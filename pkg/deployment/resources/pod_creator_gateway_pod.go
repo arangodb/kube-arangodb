@@ -221,12 +221,13 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 	}
 
 	if integration.Status.Accepted == nil {
-		return nil, errors.Errorf("Unable to find accepted integration integration")
+		return nil, errors.Errorf("Unable to find accepted integration")
 	}
 
 	integrations, err := sidecar.NewIntegrationEnablement(
 		sidecar.IntegrationEnvoyV3{
-			Spec: m.Deployment,
+			DeploymentName: m.context.GetName(),
+			Spec:           m.Deployment,
 		}, sidecar.IntegrationAuthenticationV1{
 			DeploymentName: m.context.GetName(),
 			Spec:           m.Deployment,

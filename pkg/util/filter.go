@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,41 +20,29 @@
 
 package util
 
-import (
-	"encoding/json"
-
-	"sigs.k8s.io/yaml"
-)
-
-func JSONRemarshal[A, B any](in A) (B, error) {
-	d, err := json.Marshal(in)
-	if err != nil {
-		return Default[B](), err
-	}
-
-	var o B
-
-	if err := json.Unmarshal(d, &o); err != nil {
-		return Default[B](), err
-	}
-
-	return o, nil
+func NewFilter[T any](in []T) Filter[T] {
+	return filterList[T](in)
 }
 
-func JsonOrYamlUnmarshal[T any](b []byte) (T, error) {
-	var z T
+type Filter[T any] interface {
+	Filter(predicate func(in T) bool) Filter[T]
+	Get() []T
+}
 
-	if json.Valid(b) {
-		if err := json.Unmarshal(b, &z); err != nil {
-			return Default[T](), err
+type filterList[T any] []T
+
+func (f filterList[T]) Filter(predicate func(in T) bool) Filter[T] {
+	n := make(filterList[T], 0, len(f))
+
+	for _, el := range f {
+		if predicate(el) {
+			n = append(n, el)
 		}
-
-		return z, nil
 	}
 
-	if err := yaml.UnmarshalStrict(b, &z); err != nil {
-		return Default[T](), err
-	}
+	return n
+}
 
-	return z, nil
+func (f filterList[T]) Get() []T {
+	return f
 }

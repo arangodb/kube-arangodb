@@ -20,8 +20,26 @@
 
 package shared
 
-import pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+import (
+	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+)
 
 type CustomResponse interface {
 	Response() (*pbEnvoyAuthV3.CheckResponse, error)
+}
+
+func NewCustomStaticResponse(in *pbEnvoyAuthV3.CheckResponse) error {
+	return CustomStaticResponse{CheckResponse: in}
+}
+
+type CustomStaticResponse struct {
+	CheckResponse *pbEnvoyAuthV3.CheckResponse
+}
+
+func (d CustomStaticResponse) Error() string {
+	return "Request static response"
+}
+
+func (d CustomStaticResponse) Response() (*pbEnvoyAuthV3.CheckResponse, error) {
+	return d.CheckResponse, nil
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,43 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
-
-import (
-	"encoding/json"
-
-	"sigs.k8s.io/yaml"
-)
-
-func JSONRemarshal[A, B any](in A) (B, error) {
-	d, err := json.Marshal(in)
-	if err != nil {
-		return Default[B](), err
-	}
-
-	var o B
-
-	if err := json.Unmarshal(d, &o); err != nil {
-		return Default[B](), err
-	}
-
-	return o, nil
-}
-
-func JsonOrYamlUnmarshal[T any](b []byte) (T, error) {
-	var z T
-
-	if json.Valid(b) {
-		if err := json.Unmarshal(b, &z); err != nil {
-			return Default[T](), err
-		}
-
-		return z, nil
-	}
-
-	if err := yaml.UnmarshalStrict(b, &z); err != nil {
-		return Default[T](), err
-	}
-
-	return z, nil
-}
+// +k8s:deepcopy-gen=package
+// +groupName=auth.arangodb.com
+package authentication

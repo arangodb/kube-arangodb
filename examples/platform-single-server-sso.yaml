@@ -1,0 +1,17 @@
+apiVersion: "database.arangodb.com/v1"
+kind: "ArangoDeployment"
+metadata:
+  name: "platform-simple-single"
+spec:
+  mode: Single
+  image: 'arangodb/enterprise:3.12.2'
+  gateway:
+    enabled: true
+    dynamic: true
+    createUsers: true # Allows user creation by default from the SSO
+    authentication:
+      type: OpenID # Picks the OpenID Type of the authentication
+      secret:
+        name: openid-secret # Created Secret based on the Documentation
+  gateways:
+    count: 1
