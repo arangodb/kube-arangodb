@@ -168,11 +168,6 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 		return err
 	}
 
-	if file.IsDisabledPath(requestUrl.Path) {
-		// Skip Authentication
-		return nil
-	}
-
 	if requestUrl.Path == platformAuthenticationApi.OpenIDRedirectURL {
 		// We got a response, auth flow initiated
 
@@ -320,13 +315,59 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 		}
 	}
 
-	cookie := goHttp.Cookie{
-		Name:     platformAuthenticationApi.OpenIDJWTRedirect,
-		Value:    request.GetAttributes().GetRequest().GetHttp().GetPath(),
-		Secure:   true,
-		SameSite: goHttp.SameSiteNoneMode,
-		MaxAge:   15,
-		Path:     "/",
+	if file.IsDisabledPath(requestUrl.Path) {
+		// Skip Authentication
+		return nil
+	}
+
+	var headers = []*pbEnvoyCoreV3.HeaderValueOption{
+		{
+			Header: &pbEnvoyCoreV3.HeaderValue{
+				Key:   "Location",
+				Value: cfg.AuthCodeURL(""),
+			},
+		},
+		{
+			Header: &pbEnvoyCoreV3.HeaderValue{
+				Key:   "Access-Control-Allow-Origin",
+				Value: request.GetAttributes().GetRequest().GetHttp().GetHeaders()["Origin"],
+			},
+		},
+		{
+			Header: &pbEnvoyCoreV3.HeaderValue{
+				Key:   "Access-Control-Allow-Credentials",
+				Value: "true",
+			},
+		},
+	}
+
+	headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+		Header: &pbEnvoyCoreV3.HeaderValue{
+			Key: "Set-Cookie",
+			Value: (&goHttp.Cookie{
+				Name:     platformAuthenticationApi.OpenIDJWTRedirect,
+				Value:    request.GetAttributes().GetRequest().GetHttp().GetPath(),
+				Secure:   true,
+				SameSite: goHttp.SameSiteNoneMode,
+				MaxAge:   15,
+				Path:     "/",
+			}).String(),
+		},
+	},
+	)
+
+	// Cleanup old cookies
+	for _, cookie := range pbImplEnvoyAuthV3Shared.ExtractRequestCookies(request).Filter(func(in *goHttp.Cookie) bool {
+		return in.Name == platformAuthenticationApi.OpenIDJWTSessionID
+	}).Get() {
+		cookie.MaxAge = 0
+		headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+			Header: &pbEnvoyCoreV3.HeaderValue{
+				Key:   "Set-Cookie",
+				Value: cookie.String(),
+			},
+		},
+		)
 	}
 
 	// Redirect
@@ -340,32 +381,7 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 				Status: &typev3.HttpStatus{
 					Code: typev3.StatusCode_TemporaryRedirect,
 				},
-				Headers: []*pbEnvoyCoreV3.HeaderValueOption{
-					{
-						Header: &pbEnvoyCoreV3.HeaderValue{
-							Key:   "Location",
-							Value: cfg.AuthCodeURL(""),
-						},
-					},
-					{
-						Header: &pbEnvoyCoreV3.HeaderValue{
-							Key:   "Access-Control-Allow-Origin",
-							Value: request.GetAttributes().GetRequest().GetHttp().GetHeaders()["Origin"],
-						},
-					},
-					{
-						Header: &pbEnvoyCoreV3.HeaderValue{
-							Key:   "Access-Control-Allow-Credentials",
-							Value: "true",
-						},
-					},
-					{
-						Header: &pbEnvoyCoreV3.HeaderValue{
-							Key:   "Set-Cookie",
-							Value: cookie.String(),
-						},
-					},
-				},
+				Headers: headers,
 			},
 		},
 	})
