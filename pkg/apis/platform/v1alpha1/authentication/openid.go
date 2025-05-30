@@ -33,9 +33,19 @@ import (
 )
 
 const (
+	OpenIDJWTRedirect  = "X-ArangoDB-OpenID-Redirect"
 	OpenIDJWTSessionID = "X-ArangoDB-OpenID-Session-ID"
 	OpenIDRedirectURL  = "/oauth2/idpresponse"
 )
+
+func OpenIDDefaultDisabledPaths() []string {
+	return []string{
+		"/_login",
+		"/_logout",
+		"/_identity",
+		"/_open/auth",
+	}
+}
 
 type OpenID struct {
 	// HTTP defines the HTTP Client Configuration
@@ -52,6 +62,31 @@ type OpenID struct {
 
 	// Scope defines OpenID Scopes (OpenID is added by default).
 	Scope []string `json:"scope,omitempty"`
+
+	// DisabledPaths keeps the list of SSO disabled paths. By default, "_logout" endpoint is passed through
+	DisabledPaths []string `json:"disabledPaths,omitempty"`
+}
+
+func (c *OpenID) GetDisabledPaths() []string {
+	var r []string
+
+	r = append(r, OpenIDDefaultDisabledPaths()...)
+
+	if c != nil {
+		r = append(r, c.DisabledPaths...)
+	}
+
+	return r
+}
+
+func (c *OpenID) IsDisabledPath(path string) bool {
+	for _, p := range c.GetDisabledPaths() {
+		if p == path {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *OpenID) GetOAuth2Config(ctx context.Context) (oauth2.Config, error) {

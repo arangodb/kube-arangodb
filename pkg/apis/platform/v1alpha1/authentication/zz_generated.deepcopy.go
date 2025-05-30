@@ -67,6 +67,11 @@ func (in *OpenID) DeepCopyInto(out *OpenID) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.DisabledPaths != nil {
+		in, out := &in.DisabledPaths, &out.DisabledPaths
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

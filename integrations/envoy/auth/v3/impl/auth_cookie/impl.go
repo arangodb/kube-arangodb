@@ -22,6 +22,7 @@ package auth_cookie
 
 import (
 	"context"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	goHttp "net/http"
 	goStrings "strings"
 
@@ -92,46 +93,38 @@ func (p impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, c
 		return nil
 	}
 
-	rawCookies := request.GetAttributes().GetRequest().GetHttp().GetHeaders()["cookie"]
-	// Convert raw cookie string into map of http cookies
-	header := goHttp.Header{}
-	header.Add("Cookie", rawCookies)
-	req := goHttp.Request{Header: header}
-	cookies := req.Cookies()
+	for _, cookie := range pbImplEnvoyAuthV3Shared.ExtractRequestCookies(request).Filter(func(in *goHttp.Cookie) bool {
+		return in.Name == JWTAuthorizationCookieName
+	}).Get() {
+		auth, err := p.cache.Get(ctx, pbImplEnvoyAuthV3Shared.Token(cookie.Value))
+		if err != nil {
+			logger.Err(err).Warn("Auth failure")
+			continue
+		}
 
-	for _, cookie := range cookies {
-		if cookie != nil {
-			if cookie.Valid() != nil {
-				continue
-			}
-			if cookie.Name == JWTAuthorizationCookieName {
-				auth, err := p.cache.Get(ctx, pbImplEnvoyAuthV3Shared.Token(cookie.Value))
-				if err != nil {
-					logger.Err(err).Warn("Auth failure")
-					return nil
-				}
+		current.User = &pbImplEnvoyAuthV3Shared.ResponseAuth{
+			User:  auth.User,
+			Roles: auth.Roles,
+			Token: util.NewType(cookie.Value),
+		}
 
-				current.User = &pbImplEnvoyAuthV3Shared.ResponseAuth{
-					User:  auth.User,
-					Roles: auth.Roles,
-					Token: util.NewType(cookie.Value),
-				}
+		ext := request.GetAttributes().GetContextExtensions()
 
-				ext := request.GetAttributes().GetContextExtensions()
-
-				switch networkingApi.ArangoRouteSpecAuthenticationPassMode(goStrings.ToLower(util.Optional(ext, pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey, ""))) {
-				case networkingApi.ArangoRouteSpecAuthenticationPassModePass:
-					// Keep headers
-				default:
-					current.Headers = append(current.Headers, pbImplEnvoyAuthV3Shared.FilterCookiesHeader(cookies, func(cookie *goHttp.Cookie) bool {
-						return cookie.Valid() != nil
-					}, func(cookie *goHttp.Cookie) bool {
-						return cookie.Name == JWTAuthorizationCookieName
-					})...)
-				}
-				return nil
+		switch networkingApi.ArangoRouteSpecAuthenticationPassMode(goStrings.ToLower(util.Optional(ext, pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey, ""))) {
+		case networkingApi.ArangoRouteSpecAuthenticationPassModePass:
+			// Keep headers
+		default:
+			current.Headers = []*pbEnvoyCoreV3.HeaderValueOption{
+				{
+					Header: &pbEnvoyCoreV3.HeaderValue{
+						Key: pbImplEnvoyAuthV3Shared.CookieHeader,
+					},
+					AppendAction:   pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS,
+					KeepEmptyValue: false,
+				},
 			}
 		}
+		return nil
 	}
 
 	return nil

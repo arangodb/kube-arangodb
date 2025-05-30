@@ -21,6 +21,7 @@
 package shared
 
 import (
+	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	goHttp "net/http"
 
 	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -64,4 +65,27 @@ func FilterCookiesHeader(cookies []*goHttp.Cookie, filter ...func(cookie *goHttp
 	}
 
 	return r
+}
+
+func ExtractRequestCookies(request *pbEnvoyAuthV3.CheckRequest) util.Filter[*goHttp.Cookie] {
+	rawCookies := request.GetAttributes().GetRequest().GetHttp().GetHeaders()["cookie"]
+	// Convert raw cookie string into map of http cookies
+	header := goHttp.Header{}
+	header.Add("Cookie", rawCookies)
+	req := goHttp.Request{Header: header}
+	cookies := req.Cookies()
+
+	return util.NewFilter(cookies).Filter(filterOutInvalidCookies)
+}
+
+func filterOutInvalidCookies(c *goHttp.Cookie) bool {
+	if c == nil {
+		return false
+	}
+
+	if c.Valid() != nil {
+		return false
+	}
+
+	return true
 }

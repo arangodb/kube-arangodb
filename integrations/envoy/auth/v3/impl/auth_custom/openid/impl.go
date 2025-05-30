@@ -25,7 +25,6 @@ import (
 	"fmt"
 	goHttp "net/http"
 	"net/url"
-	goStrings "strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -144,6 +143,12 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 		return nil
 	}
 
+	file, _, err := i.fileConfig.Get(ctx)
+	if err != nil {
+		logger.Err(err).Error("Unable to get config")
+		return err
+	}
+
 	cfg, err := i.oauth2Config.Get(ctx)
 	if err != nil {
 		logger.Err(err).Error("Unable to get config")
@@ -157,21 +162,23 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 		ctx = oidc.ClientContext(ctx, client)
 	}
 
-	if goStrings.HasPrefix(request.GetAttributes().GetRequest().GetHttp().GetPath(), platformAuthenticationApi.OpenIDRedirectURL) {
+	requestUrl, err := url.ParseRequestURI(request.GetAttributes().GetRequest().GetHttp().GetPath())
+	if err != nil {
+		logger.Err(err).Error("Unable to parse request path")
+		return err
+	}
+
+	if file.IsDisabledPath(requestUrl.Path) {
+		// Skip Authentication
+		return nil
+	}
+
+	if requestUrl.Path == platformAuthenticationApi.OpenIDRedirectURL {
 		// We got a response, auth flow initiated
 
-		p := goStrings.TrimPrefix(request.GetAttributes().GetRequest().GetHttp().GetPath(), platformAuthenticationApi.OpenIDRedirectURL)
-		p = goStrings.TrimPrefix(p, "?")
-
-		query, err := url.ParseQuery(p)
+		oauth2Token, err := cfg.Exchange(ctx, requestUrl.Query().Get("code"))
 		if err != nil {
-			logger.Err(err).Error("Unable to parse URL Query Values")
-			return err
-		}
-
-		oauth2Token, err := cfg.Exchange(ctx, query.Get("code"))
-		if err != nil {
-			logger.Str("token", query.Get("code")).Err(err).Error("Request failure")
+			logger.Str("token", requestUrl.Query().Get("code")).Err(err).Error("Request failure")
 			return pbImplEnvoyAuthV3Shared.DeniedResponse{
 				Code: goHttp.StatusForbidden,
 			}
@@ -256,6 +263,14 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 			Path:     "/",
 		}
 
+		redirect := "/"
+
+		for _, cookie := range pbImplEnvoyAuthV3Shared.ExtractRequestCookies(request).Filter(func(in *goHttp.Cookie) bool {
+			return in.Name == platformAuthenticationApi.OpenIDJWTRedirect
+		}).Get() {
+			redirect = cookie.Value
+		}
+
 		// We are able to get the session, continue
 		return pbImplEnvoyAuthV3Shared.NewCustomStaticResponse(&pbEnvoyAuthV3.CheckResponse{
 			Status: &status.Status{
@@ -271,7 +286,7 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 						{
 							Header: &pbEnvoyCoreV3.HeaderValue{
 								Key:   "Location",
-								Value: "/",
+								Value: redirect,
 							},
 						},
 						{
@@ -285,37 +300,33 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 			},
 		})
 	} else {
-		rawCookies := request.GetAttributes().GetRequest().GetHttp().GetHeaders()["cookie"]
-		// Convert raw cookie string into map of http cookies
-		header := goHttp.Header{}
-		header.Add("Cookie", rawCookies)
-		req := goHttp.Request{Header: header}
-		cookies := req.Cookies()
-
-		for _, cookie := range cookies {
-			if cookie != nil {
-				if cookie.Valid() != nil {
-					continue
-				}
-				if cookie.Name == platformAuthenticationApi.OpenIDJWTSessionID {
-					// We have found a cookie!
-					session, ok, err := i.session.Get(ctx, util.SHA256FromString(cookie.Value))
-					if err != nil {
-						return err
-					}
-
-					if !ok || session.ExpiresAt.Time.Before(time.Now()) {
-						continue
-					}
-
-					current.User = &pbImplEnvoyAuthV3Shared.ResponseAuth{
-						User: session.Username,
-					}
-
-					return nil
-				}
+		for _, cookie := range pbImplEnvoyAuthV3Shared.ExtractRequestCookies(request).Filter(func(in *goHttp.Cookie) bool {
+			return in.Name == platformAuthenticationApi.OpenIDJWTSessionID
+		}).Get() {
+			session, ok, err := i.session.Get(ctx, util.SHA256FromString(cookie.Value))
+			if err != nil {
+				return err
 			}
+
+			if !ok || session.ExpiresAt.Time.Before(time.Now()) {
+				continue
+			}
+
+			current.User = &pbImplEnvoyAuthV3Shared.ResponseAuth{
+				User: session.Username,
+			}
+
+			return nil
 		}
+	}
+
+	cookie := goHttp.Cookie{
+		Name:     platformAuthenticationApi.OpenIDJWTRedirect,
+		Value:    request.GetAttributes().GetRequest().GetHttp().GetPath(),
+		Secure:   true,
+		SameSite: goHttp.SameSiteNoneMode,
+		MaxAge:   15,
+		Path:     "/",
 	}
 
 	// Redirect
@@ -351,7 +362,7 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 					{
 						Header: &pbEnvoyCoreV3.HeaderValue{
 							Key:   "Set-Cookie",
-							Value: "SameSite=None; Secure",
+							Value: cookie.String(),
 						},
 					},
 				},
