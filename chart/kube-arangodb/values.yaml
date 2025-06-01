@@ -3,6 +3,7 @@ operator:
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   scope: legacy
+  skipLeaderLabels: false
   architectures:
     - amd64
   debug: false
