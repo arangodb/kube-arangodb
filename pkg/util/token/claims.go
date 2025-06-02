@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,39 +23,25 @@ package token
 import (
 	jwt "github.com/golang-jwt/jwt/v5"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func Validate(t string, secret []byte) (Token, error) {
-	token, err := jwt.Parse(t, func(token *jwt.Token) (i interface{}, err error) {
-		return secret, nil
-	}, jwt.WithIssuedAt())
-	if err != nil {
-		return nil, err
-	}
-
-	return newToken(token)
+func NewClaims() Claims {
+	return Claims{}
 }
 
-func newToken(in *jwt.Token) (Token, error) {
-	tokenClaims, ok := in.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, errors.Errorf("Invalid token provided")
+type Claims jwt.MapClaims
+
+func (t Claims) With(mods ...util.ModR[Claims]) Claims {
+	q := t
+
+	if q == nil {
+		q = Claims{}
 	}
 
-	if !in.Valid {
-		return nil, jwt.ErrSignatureInvalid
-	}
-
-	return token{
-		claims: Claims(tokenClaims),
-	}, nil
+	return util.ApplyModsR(q, mods...)
 }
 
-type token struct {
-	claims Claims
-}
-
-func (t token) Claims() Claims {
-	return t.claims
+func (t Claims) Sign(secret Secret) (string, error) {
+	return secret.Sign(DefaultSigningMethod(), t)
 }
