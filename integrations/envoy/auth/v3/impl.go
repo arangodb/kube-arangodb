@@ -98,7 +98,7 @@ func (i *impl) Check(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest) (
 			q = q.Err(err)
 			q.Dur("duration", time.Since(start)).Warn("Request Completed with error")
 		} else {
-			q.Dur("duration", time.Since(start)).Info("Request Completed")
+			q.Dur("duration", time.Since(start)).Debug("Request Completed")
 		}
 	}()
 
