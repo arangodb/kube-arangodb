@@ -32,5 +32,5 @@ helm upgrade --install kube-arangodb \
     
 Then run:
 ```shell
-kubectl exec {POD_kube-arangodb-operator} --namespace {namespace} -- /usr/bin/arangodb_operator debug-package -o - > db.tar.gz
+kubectl exec {POD_kube-arangodb-operator}  --namespace {namespace} -- /usr/bin/arangodb_operator debug-package --namespace {namespace} -o - > db.tar.gz
 ```
