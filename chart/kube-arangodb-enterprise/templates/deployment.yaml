@@ -111,6 +111,9 @@ spec:
 {{- if or .Values.operator.debug (eq ( int .Values.operator.replicaCount)  1)  }}
                     - --mode.single
 {{- end }}
+{{- if .Values.operator.skipLeaderLabels  }}
+                    - --leader.label.skip
+{{- end }}
 {{ if .Values.operator.features.apps }}
                     - --operator.apps
 {{- end }}

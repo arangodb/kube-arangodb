@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -154,6 +154,11 @@ func (o *Operator) getLeaderElectionEventTarget(log logging.Logger) runtime.Obje
 
 // setRoleLabel sets a label with key `role` and given value in the pod metadata.
 func (o *Operator) setRoleLabel(log logging.Logger, label, role string) error {
+	if o.Config.SkipLeaderLabel {
+		log.Str("label", label).Str("role", role).Info("Skipping Leader Node Labeling")
+		return nil
+	}
+
 	ns := o.Config.Namespace
 	kubecli := o.Dependencies.Client.Kubernetes()
 	pods := kubecli.CoreV1().Pods(ns)

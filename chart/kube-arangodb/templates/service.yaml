@@ -32,5 +32,7 @@ spec:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
+{{- if .Values.operator.skipLeaderLabels  }}
     role: leader
+{{- end }}
   type: {{ .Values.operator.service.type }}

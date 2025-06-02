@@ -111,6 +111,7 @@ type Config struct {
 	PodName                     string
 	ServiceAccount              string
 	OperatorImage               string
+	SkipLeaderLabel             bool
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool

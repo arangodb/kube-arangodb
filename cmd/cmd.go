@@ -128,7 +128,7 @@ var (
 
 		reconciliationDelay time.Duration
 
-		singleMode bool
+		singleMode, skipLeaderLabel bool
 	}
 	shutdownOptions struct {
 		delay   time.Duration
@@ -225,6 +225,7 @@ func init() {
 	f.StringVar(&deprecatedStr, "operator.arango-image", "arangodb/arangodb:latest", "Docker image used for arango by default")
 	f.MarkDeprecated("operator.arango-image", "Value is not used anymore")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
+	f.BoolVar(&operatorOptions.skipLeaderLabel, "leader.label.skip", false, "Skips Leader Label for the Pod")
 	f.BoolVar(&operatorOptions.singleMode, "mode.single", false, "Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions")
 	f.String("scope", "", "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
 	f.MarkDeprecated("scope", "Value is not used anymore")
@@ -588,6 +589,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		PodName:                     name,
 		ServiceAccount:              serviceAccount,
 		OperatorImage:               image,
+		SkipLeaderLabel:             operatorOptions.skipLeaderLabel,
 		EnableDeployment:            operatorOptions.enableDeployment,
 		EnableDeploymentReplication: operatorOptions.enableDeploymentReplication,
 		EnableStorage:               operatorOptions.enableStorage,
