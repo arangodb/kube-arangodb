@@ -7,10 +7,8 @@
 - (Documentation) ManualUpgrade Docs
 - (Documentation) Add Required & Skip in Docs
 - (Feature) (Platform) ECS Storage
-- (Bugfix) (Platform) Prevent NPE in case of missing Helm Release 
-- (Feature) Unify Errors
-- (Documentation) Update Service Values Doc Type
-- (Feature) (Platform) Improve Registry Performance
+- (Bugfix) (Platform) Prevent NPE in case of missing Helm Release
+- (Bugfix) Align JWT Discovery
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)
 - (Feature) (Platform) MetaV1 Integration Service

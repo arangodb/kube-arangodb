@@ -40,7 +40,6 @@ import (
 
 	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/jwt"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -57,6 +56,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 const (
@@ -125,7 +125,16 @@ func createTestToken(deployment *Deployment, testCase *testCaseStruct, paths []s
 		return "", err
 	}
 
-	return jwt.CreateArangodJwtAuthorizationHeaderAllowedPaths(s, "kube-arangodb", paths)
+	t, err := token.NewClaims().With(
+		token.WithDefaultClaims(),
+		token.WithServerID("kube-arangodb"),
+		token.WithAllowedPaths(paths...),
+	).Sign(s)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("bearer %s", t), nil
 }
 
 func modTestLivenessProbe(mode string, secure bool, authorization string, port string, mod func(*core.Probe)) *core.Probe {

@@ -29,18 +29,13 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 const MaxSize = 128
 
-type tokens struct {
-	signingToken []byte
-
-	validationTokens [][]byte
-}
-
-func newCache(cfg Configuration) func(ctx context.Context) (*tokens, time.Duration, error) {
-	return func(ctx context.Context) (*tokens, time.Duration, error) {
+func newCache(cfg Configuration) func(ctx context.Context) (token.Secret, time.Duration, error) {
+	return func(ctx context.Context) (token.Secret, time.Duration, error) {
 		files, err := os.ReadDir(cfg.Path)
 		if err != nil {
 			return nil, 0, err
@@ -87,9 +82,8 @@ func newCache(cfg Configuration) func(ctx context.Context) (*tokens, time.Durati
 			data[id] = ts[keys[id]]
 		}
 
-		return &tokens{
-			signingToken:     ts[keys[0]],
-			validationTokens: data,
-		}, cfg.TTL, nil
+		return token.NewSecretSet(token.NewSecret(ts[keys[0]]), util.FormatList(data, func(a []byte) token.Secret {
+			return token.NewSecret(a)
+		})...), cfg.TTL, nil
 	}
 }

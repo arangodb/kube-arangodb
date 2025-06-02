@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,39 +26,24 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func Validate(t string, secret []byte) (Token, error) {
-	token, err := jwt.Parse(t, func(token *jwt.Token) (i interface{}, err error) {
-		return secret, nil
-	},
-		jwt.WithIssuedAt(),
-		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return newToken(token)
+func EmptySecret() Secret {
+	return emptySecret{}
 }
 
-func newToken(in *jwt.Token) (Token, error) {
-	tokenClaims, ok := in.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, errors.Errorf("Invalid token provided")
-	}
+type emptySecret struct{}
 
-	if !in.Valid {
-		return nil, jwt.ErrSignatureInvalid
-	}
-
-	return token{
-		claims: Claims(tokenClaims),
-	}, nil
+func (e emptySecret) Hash() string {
+	return ""
 }
 
-type token struct {
-	claims Claims
+func (e emptySecret) Sign(method jwt.SigningMethod, claims Claims) (string, error) {
+	return "", errors.Errorf("no token found")
 }
 
-func (t token) Claims() Claims {
-	return t.claims
+func (e emptySecret) Validate(token string) (Token, error) {
+	return nil, jwt.ErrSignatureInvalid
+}
+
+func (e emptySecret) Exists() bool {
+	return false
 }
