@@ -81,7 +81,7 @@ func generateAndSaveJWT(secrets generic.InspectorInterface[*core.Secret], cfg Se
 }
 
 func createSigningKey(secrets generic.ModClient[*core.Secret], keySecretName string) (token.Secret, error) {
-	signingKey := make([]byte, 32)
+	signingKey := make([]byte, 64)
 	_, err := util.Rand().Read(signingKey)
 	if err != nil {
 		return token.EmptySecret(), errors.WithStack(err)
@@ -93,5 +93,5 @@ func createSigningKey(secrets generic.ModClient[*core.Secret], keySecretName str
 	if err != nil {
 		return token.EmptySecret(), errors.WithStack(err)
 	}
-	return token.NewSecrets(), nil
+	return token.NewSecret(signingKey), nil
 }
