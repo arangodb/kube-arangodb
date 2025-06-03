@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v5"
 	core "k8s.io/api/core/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
@@ -35,32 +34,33 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 // ensureJWT ensure that JWT signing key exists or creates a new one.
 // It also saves new token into secret if it is not present.
 // Returns JWT signing key.
-func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (string, error) {
+func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (token.Secret, error) {
 	secrets := cli.Secrets(cfg.Namespace)
 
 	signingKey, err := k8sutil.GetTokenSecret(context.Background(), secrets, cfg.JWTKeySecretName)
-	if err != nil && kerrors.IsNotFound(err) || signingKey == "" {
+	if err != nil && kerrors.IsNotFound(err) || !signingKey.Exists() {
 		signingKey, err = createSigningKey(secrets, cfg.JWTKeySecretName)
 		if err != nil {
-			return "", err
+			return token.EmptySecret(), err
 		}
 	} else if err != nil {
-		return "", errors.WithStack(err)
+		return token.EmptySecret(), errors.WithStack(err)
 	}
 
 	_, err = k8sutil.GetTokenSecret(context.Background(), secrets, cfg.JWTSecretName)
 	if err != nil && kerrors.IsNotFound(err) {
 		err = generateAndSaveJWT(secrets, cfg)
 		if err != nil {
-			return "", err
+			return token.EmptySecret(), err
 		}
 	} else if err != nil {
-		return "", errors.WithStack(err)
+		return token.EmptySecret(), errors.WithStack(err)
 	}
 	return signingKey, nil
 }
@@ -69,7 +69,7 @@ func ensureJWT(cli typedCore.CoreV1Interface, cfg ServerConfig) (string, error) 
 // If it is not present, it creates a new key.
 // The resulting JWT is stored in secrets.
 func generateAndSaveJWT(secrets generic.InspectorInterface[*core.Secret], cfg ServerConfig) error {
-	claims := jwt.MapClaims{
+	claims := token.Claims{
 		"iss": fmt.Sprintf("kube-arangodb/%s", cfg.ServerName),
 		"iat": time.Now().Unix(),
 	}
@@ -80,18 +80,18 @@ func generateAndSaveJWT(secrets generic.InspectorInterface[*core.Secret], cfg Se
 	return err
 }
 
-func createSigningKey(secrets generic.ModClient[*core.Secret], keySecretName string) (string, error) {
-	signingKey := make([]byte, 32)
+func createSigningKey(secrets generic.ModClient[*core.Secret], keySecretName string) (token.Secret, error) {
+	signingKey := make([]byte, 64)
 	_, err := util.Rand().Read(signingKey)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return token.EmptySecret(), errors.WithStack(err)
 	}
 
 	err = globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(context.Background(), func(ctxChild context.Context) error {
 		return k8sutil.CreateTokenSecret(ctxChild, secrets, keySecretName, string(signingKey), nil)
 	})
 	if err != nil {
-		return "", errors.WithStack(err)
+		return token.EmptySecret(), errors.WithStack(err)
 	}
-	return string(signingKey), nil
+	return token.NewSecret(signingKey), nil
 }
