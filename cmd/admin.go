@@ -401,7 +401,7 @@ func createClient(endpoints []string, certCA *x509.CertPool, auth connection.Aut
 }
 
 // getJWTTokenFromSecrets returns token from the secret.
-func getJWTTokenFromSecrets(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string) (connection.Authentication, error) {
+func getJWTTokenFromSecrets(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string, paths ...string) (connection.Authentication, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
@@ -410,11 +410,16 @@ func getJWTTokenFromSecrets(ctx context.Context, secrets generic.ReadClient[*cor
 		return nil, errors.WithMessage(err, fmt.Sprintf("failed to get secret \"%s\"", name))
 	}
 
-	authz, err := token.NewClaims().With(
+	claims := token.NewClaims().With(
 		token.WithDefaultClaims(),
 		token.WithServerID("kube-arangodb"),
-		token.WithAllowedPaths("/_api/version"),
-	).Sign(secret)
+	)
+
+	if len(paths) > 0 {
+		claims = claims.With(token.WithAllowedPaths(paths...))
+	}
+
+	authz, err := claims.Sign(secret)
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("failed to create bearer token from secret \"%s\"", name))
 	}
