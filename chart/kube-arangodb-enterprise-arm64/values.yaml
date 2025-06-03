@@ -29,6 +29,7 @@ operator:
     deployment: true
     deploymentReplications: true
     storage: false
+    storageCRD: true
     backup: false
     apps: false
     k8sToK8sClusterSync: false
