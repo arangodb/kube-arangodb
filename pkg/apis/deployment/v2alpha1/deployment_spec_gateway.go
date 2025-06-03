@@ -24,7 +24,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -141,5 +140,8 @@ func (d *DeploymentSpecGateway) Validate() error {
 
 // GetImage returns the image to use for the gateway.
 func (d *DeploymentSpecGateway) GetImage() string {
-	return util.TypeOrDefault[string](d.Image)
+	if d == nil || d.Image == nil {
+		return ""
+	}
+	return *d.Image
 }

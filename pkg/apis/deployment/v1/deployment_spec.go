@@ -656,9 +656,14 @@ func (s DeploymentSpec) ResetImmutableFields(target *DeploymentSpec) []string {
 	if s.Gateways != nil {
 		if target.Gateways == nil {
 			target.Gateways = &ServerGroupSpec{}
-		}
-		if l := s.Gateways.ResetImmutableFields(ServerGroupGateways, "gateways", target.Gateways); l != nil {
-			resetFields = append(resetFields, l...)
+			if l := s.Gateways.ResetImmutableFields(ServerGroupGateways, "gateways", target.Gateways); l != nil {
+				resetFields = append(resetFields, l...)
+			}
+			target.Gateways = nil
+		} else {
+			if l := s.Gateways.ResetImmutableFields(ServerGroupGateways, "gateways", target.Gateways); l != nil {
+				resetFields = append(resetFields, l...)
+			}
 		}
 	}
 	if l := s.Metrics.ResetImmutableFields("metrics", &target.Metrics); l != nil {
