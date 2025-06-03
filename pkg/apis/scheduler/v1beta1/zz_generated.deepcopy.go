@@ -26,7 +26,7 @@
 package v1beta1
 
 import (
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	container "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	pod "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
@@ -631,7 +631,7 @@ func (in *ProfileStatus) DeepCopyInto(out *ProfileStatus) {
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make(deploymentv1.ConditionList, len(*in))
+		*out = make(v2alpha1.ConditionList, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
