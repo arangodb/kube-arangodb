@@ -3182,7 +3182,7 @@ Possible Values:
 
 ### .spec.gateway.cookiesSupport
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L49)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L48)</sup>
 
 CookiesSupport defines if Cookie based authentication via `X-ArangoDB-Token-JWT`
 
@@ -3192,7 +3192,7 @@ Default Value: `true`
 
 ### .spec.gateway.createUsers
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L53)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L52)</sup>
 
 CreateUsers defines if authenticated users will be created in ArangoDB
 
@@ -3202,7 +3202,7 @@ Default Value: `false`
 
 ### .spec.gateway.defaultTargetAuthentication
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L57)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L56)</sup>
 
 DefaultTargetAuthentication defines if default endpoints check authentication via envoy (Cookie and Header based auth)
 
@@ -3212,7 +3212,7 @@ Default Value: `true`
 
 ### .spec.gateway.dynamic
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L41)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L40)</sup>
 
 Dynamic setting enables/disables support dynamic configuration of the gateway in the cluster.
 When enabled, gateway config will be reloaded by ConfigMap live updates.
@@ -3223,7 +3223,7 @@ Default Value: `true`
 
 ### .spec.gateway.enabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L36)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L35)</sup>
 
 Enabled setting enables/disables support for gateway in the cluster.
 When enabled, the cluster will contain a number of `gateway` servers.
@@ -3234,7 +3234,7 @@ Default Value: `false`
 
 ### .spec.gateway.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L45)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L44)</sup>
 
 Image is the image to use for the gateway.
 By default, the image is determined by the operator.
@@ -3243,7 +3243,7 @@ By default, the image is determined by the operator.
 
 ### .spec.gateway.timeout
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L62)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway.go#L61)</sup>
 
 Timeout defines default timeout for the upstream actions (if not overridden)
 

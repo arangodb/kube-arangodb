@@ -26,7 +26,7 @@
 package v1alpha1
 
 import (
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	sharedv1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -377,7 +377,7 @@ func (in *ArangoRouteStatus) DeepCopyInto(out *ArangoRouteStatus) {
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make(v2alpha1.ConditionList, len(*in))
+		*out = make(deploymentv1.ConditionList, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
