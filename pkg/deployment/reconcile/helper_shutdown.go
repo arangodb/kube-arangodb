@@ -180,7 +180,7 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 			return false, errors.WithStack(err)
 		}
 		return false, nil
-	case api.ServerGroupTypeArangoSync:
+	case api.ServerGroupTypeArangoSync, api.ServerGroupTypeGateway:
 		// Terminate pod
 		if err := cache.Client().Kubernetes().CoreV1().Pods(cache.Namespace()).Delete(ctx, podName, meta.DeleteOptions{}); err != nil {
 			return false, errors.WithStack(err)

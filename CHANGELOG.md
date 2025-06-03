@@ -18,6 +18,7 @@
 - (Maintenance) Operator Labeling Skip
 - (Feature) Optional LocalStorage CRD
 - (Bugfix) Fix Checksum Calculation
+- (Bugfix) Implement Missing Group Tolerations
 
 ## [1.2.48](https://github.com/arangodb/kube-arangodb/tree/1.2.48) (2025-05-08)
 - (Maintenance) Extend Documentation
