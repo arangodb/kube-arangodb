@@ -40,6 +40,7 @@ import (
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_cookie"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -323,7 +324,7 @@ func (i *implementation) Logout(ctx context.Context, req *pbAuthenticationV1.Log
 
 		for _, l := range lines {
 			switch l.Name {
-			case auth_cookie.JWTAuthorizationCookieName:
+			case auth_cookie.JWTAuthorizationCookieName, platformAuthenticationApi.OpenIDJWTSessionID, platformAuthenticationApi.OpenIDJWTRedirect:
 				l.MaxAge = -1
 				if err := grpc.SetHeader(ctx, metadata.Pairs("Set-Cookie", l.String())); err != nil {
 					logger.Err(err).Warn("Unable to set the cookie")
@@ -334,13 +335,10 @@ func (i *implementation) Logout(ctx context.Context, req *pbAuthenticationV1.Log
 		}
 	}
 
-	location := "/"
 	if req.Location != nil {
-		location = req.GetLocation()
-	}
-
-	if err := grpc.SetHeader(ctx, metadata.Pairs("Location", location)); err != nil {
-		logger.Err(err).Warn("Unable to set the cookie")
+		if err := grpc.SetHeader(ctx, metadata.Pairs("Location", req.GetLocation())); err != nil {
+			logger.Err(err).Warn("Unable to set the cookie")
+		}
 	}
 
 	return &pbSharedV1.Empty{}, nil
