@@ -53,6 +53,8 @@ func GetArangodIDPrefix(group api.ServerGroup) string {
 		return "PRMR-"
 	case api.ServerGroupAgents:
 		return "AGNT-"
+	case api.ServerGroupGateways:
+		return "GWAY-"
 	default:
 		return ""
 	}

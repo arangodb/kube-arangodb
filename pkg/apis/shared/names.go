@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	arangodPrefixes = []string{"CRDN-", "PRMR-", "AGNT-", "SNGL-"}
+	arangodPrefixes = []string{"CRDN-", "PRMR-", "AGNT-", "SNGL-", "GWAY-"}
 )
 
 const (

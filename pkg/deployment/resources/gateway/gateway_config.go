@@ -290,7 +290,7 @@ func (c Config) RenderIntegrationSidecarFilter() (*httpConnectionManagerAPI.Http
 						ClusterName: "integration_sidecar",
 					},
 				},
-				Timeout: durationpb.New(500 * time.Millisecond),
+				Timeout: durationpb.New(2 * time.Second),
 			},
 		},
 		IncludePeerCertificate: true,

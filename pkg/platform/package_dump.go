@@ -35,7 +35,7 @@ import (
 func packageDump() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "dump [flags] deployment"
+	cmd.Use = "dump [flags]"
 	cmd.Short = "Dumps the current setup of the platform"
 
 	if err := cli.RegisterFlags(&cmd); err != nil {
@@ -58,11 +58,10 @@ func packageDumpRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if len(args) < 1 {
-		return errors.Errorf("Invalid arguments")
+	deployment, err := flagPlatformName.Get(cmd)
+	if err != nil {
+		return err
 	}
-
-	deployment := args[0]
 
 	out, err := helm.NewPackage(cmd.Context(), client, ns, deployment)
 	if err != nil {
