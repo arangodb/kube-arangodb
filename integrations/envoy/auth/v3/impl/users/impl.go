@@ -39,7 +39,7 @@ import (
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
-func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
 	if !configuration.Extensions.UsersCreate {
 		return nil, false
 	}
@@ -67,17 +67,17 @@ func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3
 		return client, 24 * time.Hour, nil
 	})
 
-	i.users = cache.NewCache[string, arangodb.User](func(ctx context.Context, in string) (arangodb.User, error) {
+	i.users = cache.NewCache[string, arangodb.User](func(ctx context.Context, in string) (arangodb.User, time.Time, error) {
 		client, err := i.userClient.Get(ctx)
 		if err != nil {
-			return nil, err
+			return nil, util.Default[time.Time](), err
 		}
 
 		if user, err := client.User(ctx, in); err == nil {
-			return user, nil
+			return user, time.Now().Add(24 * time.Hour), nil
 		} else {
 			if !shared.IsNotFound(err) {
-				return nil, err
+				return nil, util.Default[time.Time](), err
 			}
 		}
 
@@ -85,15 +85,16 @@ func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3
 			Password: string(uuid.NewUUID()),
 			Active:   util.NewType(true),
 		}); err != nil {
-			return user, nil
-		} else {
 			if !shared.IsConflict(err) {
-				return nil, err
+				return nil, util.Default[time.Time](), err
 			}
+		} else {
+			return user, time.Now().Add(24 * time.Hour), nil
 		}
 
-		return client.User(ctx, in)
-	}, 24*time.Hour)
+		v, err := client.User(ctx, in)
+		return v, time.Now().Add(24 * time.Hour), err
+	})
 
 	return i, true
 }

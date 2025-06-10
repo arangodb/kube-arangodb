@@ -22,6 +22,7 @@ package auth_bearer
 
 import (
 	"context"
+	"time"
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 
@@ -33,7 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
-func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
 	if !configuration.Extensions.JWT {
 		return nil, false
 	}
@@ -43,32 +44,32 @@ func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3
 	z.configuration = configuration
 	z.authClient = cache.NewObject[pbAuthenticationV1.AuthenticationV1Client](configuration.GetAuthClientFetcher)
 
-	z.cache = cache.NewCache[pbImplEnvoyAuthV3Shared.Token, pbImplEnvoyAuthV3Shared.ResponseAuth](func(ctx context.Context, in pbImplEnvoyAuthV3Shared.Token) (pbImplEnvoyAuthV3Shared.ResponseAuth, error) {
+	z.cache = cache.NewCache[pbImplEnvoyAuthV3Shared.Token, pbImplEnvoyAuthV3Shared.ResponseAuth](func(ctx context.Context, in pbImplEnvoyAuthV3Shared.Token) (pbImplEnvoyAuthV3Shared.ResponseAuth, time.Time, error) {
 		client, err := z.authClient.Get(ctx)
 		if err != nil {
-			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, err
+			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, util.Default[time.Time](), err
 		}
 
 		resp, err := client.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
 			Token: string(in),
 		})
 		if err != nil {
-			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, err
+			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, util.Default[time.Time](), err
 		}
 
 		if !resp.GetIsValid() {
-			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, errors.Errorf("Invalid Token: %s", resp.GetMessage())
+			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, util.Default[time.Time](), errors.Errorf("Invalid Token: %s", resp.GetMessage())
 		}
 
 		if resp.Details == nil {
-			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, errors.Errorf("Missing Details: %s", resp.GetMessage())
+			return pbImplEnvoyAuthV3Shared.ResponseAuth{}, util.Default[time.Time](), errors.Errorf("Missing Details: %s", resp.GetMessage())
 		}
 
 		return pbImplEnvoyAuthV3Shared.ResponseAuth{
 			User:  resp.GetDetails().GetUser(),
 			Roles: resp.GetDetails().GetRoles(),
-		}, nil
-	}, pbImplEnvoyAuthV3Shared.DefaultTTL)
+		}, time.Now().Add(pbImplEnvoyAuthV3Shared.DefaultTTL), nil
+	})
 
 	return z, true
 }

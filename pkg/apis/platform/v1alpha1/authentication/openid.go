@@ -65,6 +65,12 @@ type OpenID struct {
 
 	// DisabledPaths keeps the list of SSO disabled paths. By default, "_logout" endpoint is passed through
 	DisabledPaths []string `json:"disabledPaths,omitempty"`
+
+	// Features keeps the information about OpenID Features
+	Features *OpenIDFeatures `json:"features,omitempty"`
+
+	// Claims keeps the information about OpenID Claims Spec
+	Claims *OpenIDClaims `json:"claims,omitempty"`
 }
 
 func (c *OpenID) GetDisabledPaths() []string {
@@ -224,4 +230,34 @@ type OpenIDClient struct {
 
 	// Secret defines OpenID Client Secret
 	Secret string `json:"secret,omitempty"`
+}
+
+type OpenIDFeatures struct {
+	// RefreshEnabled defines if the Refresh OpenID Functionality is enabled
+	// +doc/default: false
+	// +doc/grade: Alpha
+	// +doc/grade: Experimental Feature, in development
+	RefreshEnabled *bool `json:"refreshEnabled,omitempty"`
+}
+
+func (o *OpenIDFeatures) GetRefreshEnabled() bool {
+	if o == nil || o.RefreshEnabled == nil {
+		return true
+	}
+
+	return *o.RefreshEnabled
+}
+
+type OpenIDClaims struct {
+	// Username defines the claim key to extract username
+	// +doc/default: username
+	Username *string `json:"username,omitempty"`
+}
+
+func (o *OpenIDClaims) GetUsernameClaim() string {
+	if o == nil || o.Username == nil {
+		return "username"
+	}
+
+	return *o.Username
 }
