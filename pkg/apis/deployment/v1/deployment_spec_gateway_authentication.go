@@ -48,6 +48,8 @@ const (
 type DeploymentSpecGatewayAuthentication struct {
 	// Type defines the Authentication Type
 	// +doc/enum: OpenID|Configure OpenID Authentication Type
+	// +doc/grade: Alpha
+	// +doc/grade: Feature under active development
 	Type DeploymentSpecGatewayAuthenticationType `json:"type"`
 
 	// Secret defines the secret with the integration configuration
