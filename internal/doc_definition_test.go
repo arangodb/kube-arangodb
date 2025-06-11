@@ -23,6 +23,9 @@ package internal
 import (
 	"sort"
 	goStrings "strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 type DocDefinitions []DocDefinition
@@ -36,7 +39,7 @@ type DocDefinition struct {
 
 	Docs []string
 
-	Deprecated []string
+	Grade *DocDefinitionGradeDefinition
 
 	Links []string
 
@@ -58,4 +61,59 @@ func (d DocDefinitions) Sort() {
 		}
 		return a < b
 	})
+}
+
+func NewDocDefinitionGradeDefinition(lines ...string) (*DocDefinitionGradeDefinition, error) {
+	if len(lines) == 0 {
+		return nil, nil
+	}
+
+	start := lines[0]
+
+	var ret DocDefinitionGradeDefinition
+
+	grade, err := DocDefinitionGradeFromString(start)
+	if err != nil {
+		return nil, err
+	}
+
+	ret.Grade = grade
+
+	if len(lines) > 1 {
+		ret.Message = lines[1:]
+	}
+
+	return &ret, nil
+}
+
+type DocDefinitionGradeDefinition struct {
+	Grade   DocDefinitionGrade
+	Message []string
+}
+
+type DocDefinitionGrade int
+
+const (
+	DocDefinitionGradeAlpha DocDefinitionGrade = iota
+	DocDefinitionGradeBeta
+	DocDefinitionGradeProduction
+	DocDefinitionGradeDeprecating
+	DocDefinitionGradeDeprecated
+)
+
+func DocDefinitionGradeFromString(in string) (DocDefinitionGrade, error) {
+	switch strings.ToLower(in) {
+	case "alpha":
+		return DocDefinitionGradeAlpha, nil
+	case "beta":
+		return DocDefinitionGradeBeta, nil
+	case "production":
+		return DocDefinitionGradeProduction, nil
+	case "deprecating":
+		return DocDefinitionGradeDeprecating, nil
+	case "deprecated":
+		return DocDefinitionGradeAlpha, nil
+	default:
+		return 0, errors.Errorf("Unable to parse grade: %s", in)
+	}
 }

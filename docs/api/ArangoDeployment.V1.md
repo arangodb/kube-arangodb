@@ -3171,7 +3171,12 @@ UID keeps the information about object UID
 
 ### .spec.gateway.authentication.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway_authentication.go#L51)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.48/pkg/apis/deployment/v1/deployment_spec_gateway_authentication.go#L53)</sup>
+
+> [!WARNING]
+> ***ALPHA***
+> 
+> **Feature under active development**
 
 Type defines the Authentication Type
 

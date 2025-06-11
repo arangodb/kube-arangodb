@@ -74,13 +74,14 @@ func parseDocDefinition(t *testing.T, root, path, typ string, field *ast.Field, 
 		def.Important = util.NewType[string](important[0])
 	}
 
-	if docs, dep, ok, err := extractNotTags(field); err != nil {
-		require.Fail(t, fmt.Sprintf("Error while getting tags for %s: %s", path, err.Error()))
-	} else if !ok {
-		println(def.Path, " is missing documentation!")
-	} else {
+	if docs := extractDocumentation(field); len(docs) > 0 {
 		def.Docs = docs
-		def.Deprecated = dep
+	}
+
+	if grade, err := extractGrade(field); err != nil {
+		require.Fail(t, fmt.Sprintf("Error while getting grade for %s: %s", path, err.Error()))
+	} else {
+		def.Grade = grade
 	}
 
 	file := fs.File(field.Pos())
@@ -250,40 +251,79 @@ func extract(n *ast.Field, tag string) ([]string, bool) {
 	return ret, len(ret) > 0
 }
 
-func extractNotTags(n *ast.Field) ([]string, []string, bool, error) {
-	if n.Doc == nil {
-		return nil, nil, false, nil
+func extractGrade(n *ast.Field) (*DocDefinitionGradeDefinition, error) {
+	deprecatedGrade, err := extractDeprecated(n)
+	if err != nil {
+		return nil, err
 	}
 
-	var ret, dep []string
+	var grade *DocDefinitionGradeDefinition
 
-	var deprecated bool
+	if v, ok := extract(n, "grade"); ok {
+		grade, err = NewDocDefinitionGradeDefinition(v...)
+		if err != nil {
+			return nil, err
+		}
+	}
 
+	if deprecatedGrade != nil && grade != nil {
+		return nil, errors.Errorf("Only one way of defining grade should be visible")
+	}
+
+	if deprecatedGrade != nil {
+		return deprecatedGrade, nil
+	}
+
+	if grade != nil {
+		return grade, nil
+	}
+
+	return nil, nil
+}
+
+func extractDeprecated(n *ast.Field) (*DocDefinitionGradeDefinition, error) {
+	if n == nil || n.Doc == nil {
+		return nil, nil
+	}
 	for _, c := range n.Doc.List {
 		if goStrings.HasPrefix(c.Text, "// ") {
 			if goStrings.HasPrefix(c.Text, "// Deprecated") {
 				if !goStrings.HasPrefix(c.Text, "// Deprecated: ") {
-					return nil, nil, false, errors.Errorf("Invalid deprecated field")
+					return nil, errors.Errorf("Invalid deprecated field")
 				}
 			}
 			if goStrings.HasPrefix(c.Text, "// Deprecated:") {
-				deprecated = true
-				dep = append(dep, goStrings.TrimSpace(goStrings.TrimPrefix(c.Text, "// Deprecated:")))
-				continue
-			}
-
-			if !goStrings.HasPrefix(c.Text, "// +doc/") {
-				v := goStrings.TrimSpace(goStrings.TrimPrefix(c.Text, "// "))
-				if deprecated {
-					dep = append(dep, v)
-				} else {
-					ret = append(ret, v)
-				}
+				return &DocDefinitionGradeDefinition{
+					Grade:   DocDefinitionGradeDeprecated,
+					Message: []string{goStrings.TrimSpace(goStrings.TrimPrefix(c.Text, "// Deprecated:"))},
+				}, nil
 			}
 		}
 	}
 
-	return ret, dep, len(ret) > 0 || len(dep) > 0, nil
+	return nil, nil
+}
+
+func extractDocumentation(n *ast.Field) []string {
+	if n.Doc == nil {
+		return nil
+	}
+
+	var ret []string
+
+	for _, c := range n.Doc.List {
+		if goStrings.HasPrefix(c.Text, "// ") {
+			if goStrings.HasPrefix(c.Text, "// +doc/") {
+				continue
+			}
+			if goStrings.HasPrefix(c.Text, "// Deprecated") {
+				continue
+			}
+			ret = append(ret, goStrings.TrimSpace(goStrings.TrimPrefix(c.Text, "// ")))
+		}
+	}
+
+	return ret
 }
 
 // isSimpleType returns the OpenAPI-compatible type name, type format and boolean indicating if this is simple type or not
