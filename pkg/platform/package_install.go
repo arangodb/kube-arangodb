@@ -41,7 +41,7 @@ import (
 func packageInstall() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "install [flags] deployment package"
+	cmd.Use = "install [flags] package"
 	cmd.Short = "Installs the specified setup of the platform"
 
 	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint); err != nil {
@@ -74,17 +74,21 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	deployment, err := flagPlatformName.Get(cmd)
+	if err != nil {
+		return err
+	}
+
 	hclient, err := getHelmClient(cmd)
 	if err != nil {
 		return errors.Wrapf(err, "Unable to get helm client")
 	}
 
-	if len(args) < 2 {
+	if len(args) < 1 {
 		return errors.Errorf("Invalid arguments")
 	}
 
-	deployment := args[0]
-	file := args[1]
+	file := args[0]
 
 	data, err := os.ReadFile(file)
 	if err != nil {

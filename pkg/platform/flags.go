@@ -65,7 +65,6 @@ var (
 		Description: "Platform Repository URL",
 		Default:     "https://arangodb-platform-prd-chart-registry.s3.amazonaws.com",
 		Persistent:  true,
-		Hidden:      true,
 	}
 
 	flagUpgradeVersions = cli.Flag[bool]{
