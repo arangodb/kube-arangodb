@@ -41,7 +41,6 @@ func testAnyRepresentation[IN any](t *testing.T, v IN) {
 		var d2 Any
 
 		require.NoError(t, json.Unmarshal(z, &d2))
-		require.NoError(t, err)
 
 		require.EqualValues(t, d, d2)
 	})
