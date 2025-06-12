@@ -22,6 +22,7 @@
 - (Feature) (Platform) OpenID Logout Endpoints
 - (Maintenance) Grade Doc Field
 - (Feature) (Platform) Improve Platform Components names
+- (Feature) Extend Shared Types
 
 ## [1.2.48](https://github.com/arangodb/kube-arangodb/tree/1.2.48) (2025-05-08)
 - (Maintenance) Extend Documentation

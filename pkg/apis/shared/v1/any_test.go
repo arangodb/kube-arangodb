@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,21 +26,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func Test_Data(t *testing.T) {
-	var d Data = make([]byte, 1024)
-
-	z, err := util.JSONRemarshal[Data, Data](d)
-	require.NoError(t, err)
-	require.EqualValues(t, d, z)
-}
-
-func testDataRepresentation[IN any](t *testing.T, v IN) {
+func testAnyRepresentation[IN any](t *testing.T, v IN) {
 	t.Run(reflect.TypeFor[IN]().String(), func(t *testing.T) {
-		d, err := NewData[IN](v)
+		d, err := NewAny[IN](v)
 		require.NoError(t, err)
 
 		z, err := json.Marshal(d)
@@ -48,7 +38,7 @@ func testDataRepresentation[IN any](t *testing.T, v IN) {
 
 		t.Logf("%s", string(z))
 
-		var d2 Data
+		var d2 Any
 
 		require.NoError(t, json.Unmarshal(z, &d2))
 		require.NoError(t, err)
@@ -57,11 +47,11 @@ func testDataRepresentation[IN any](t *testing.T, v IN) {
 	})
 }
 
-func Test_Data_Representation(t *testing.T) {
-	testDataRepresentation(t, "some_Test_data")
-	testDataRepresentation(t, []string{"A", "B"})
-	testDataRepresentation(t, 53)
-	testDataRepresentation(t, Object{
+func Test_Any_Representation(t *testing.T) {
+	testAnyRepresentation(t, "some_Test_Any")
+	testAnyRepresentation(t, []string{"A", "B"})
+	testAnyRepresentation(t, 53)
+	testAnyRepresentation(t, Object{
 		Name: "X",
 	})
 }

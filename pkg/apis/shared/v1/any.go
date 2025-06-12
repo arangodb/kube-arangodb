@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,21 +21,22 @@
 package v1
 
 import (
-	"encoding/base64"
 	"encoding/json"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-var _ json.Marshaler = &Data{}
-var _ json.Unmarshaler = &Data{}
+var _ json.Marshaler = &Any{}
+var _ json.Unmarshaler = &Any{}
 
-func NewData[T any](in T) (Data, error) {
+type Any []byte
+
+func NewAny[T any](in T) (Any, error) {
 	return json.Marshal(in)
 }
 
-func FromData[T any](in Data) (T, error) {
+func FromAny[T any](in Any) (T, error) {
 	var z T
 	if err := json.Unmarshal(in, &z); err != nil {
 		return z, err
@@ -44,34 +45,23 @@ func FromData[T any](in Data) (T, error) {
 	return z, nil
 }
 
-// Data keeps the representation of the object in the base64 encoded string
-type Data []byte
-
-func (d Data) MarshalJSON() ([]byte, error) {
-	s := base64.StdEncoding.EncodeToString(d)
-
-	return json.Marshal(s)
+func (d Any) MarshalJSON() ([]byte, error) {
+	ret := make([]byte, len(d))
+	copy(ret, d)
+	return ret, nil
 }
 
-func (d Data) SHA256() string {
+func (d Any) SHA256() string {
 	return util.SHA256(d)
 }
 
-func (d *Data) UnmarshalJSON(bytes []byte) error {
+func (d *Any) UnmarshalJSON(bytes []byte) error {
 	if d == nil {
 		return errors.Errorf("nil object provided")
 	}
 
-	var s string
-
-	if err := json.Unmarshal(bytes, &s); err != nil {
-		return err
-	}
-
-	ret, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return err
-	}
+	ret := make([]byte, len(bytes))
+	copy(ret, bytes)
 
 	*d = ret
 
