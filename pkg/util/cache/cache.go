@@ -28,15 +28,19 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func NewCache[K comparable, T any](extract CacheExtract[K, T], ttl time.Duration) Cache[K, T] {
+func NewCacheWithTTL[K comparable, T any](extract CacheExtract[K, T], maxTTL time.Duration) Cache[K, T] {
 	return &cache[K, T]{
-		ttl:     ttl,
 		items:   map[K]cacheItem[T]{},
 		extract: extract,
+		maxTTL:  maxTTL,
 	}
 }
 
-type CacheExtract[K comparable, T any] func(ctx context.Context, in K) (T, error)
+func NewCache[K comparable, T any](extract CacheExtract[K, T]) Cache[K, T] {
+	return NewCacheWithTTL[K, T](extract, 0)
+}
+
+type CacheExtract[K comparable, T any] func(ctx context.Context, in K) (T, time.Time, error)
 
 type Cache[K comparable, T any] interface {
 	Get(ctx context.Context, key K) (T, error)
@@ -46,11 +50,11 @@ type Cache[K comparable, T any] interface {
 type cache[K comparable, T any] struct {
 	lock sync.Mutex
 
-	ttl time.Duration
-
 	items map[K]cacheItem[T]
 
 	extract CacheExtract[K, T]
+
+	maxTTL time.Duration
 }
 
 func (c *cache[K, T]) Get(ctx context.Context, key K) (T, error) {
@@ -58,19 +62,27 @@ func (c *cache[K, T]) Get(ctx context.Context, key K) (T, error) {
 	defer c.lock.Unlock()
 
 	if v, ok := c.items[key]; ok {
-		if time.Since(v.created) <= c.ttl {
+		if v.until.After(time.Now()) {
 			return v.Object, nil
 		}
 	}
 
-	el, err := c.extract(ctx, key)
+	el, expires, err := c.extract(ctx, key)
 	if err != nil {
 		return util.Default[T](), err
 	}
 
-	c.items[key] = cacheItem[T]{
-		created: time.Now(),
-		Object:  el,
+	if c.maxTTL > 0 {
+		if time.Until(expires) > c.maxTTL {
+			expires = time.Now().Add(c.maxTTL)
+		}
+	}
+
+	if expires.After(time.Now()) {
+		c.items[key] = cacheItem[T]{
+			until:  expires,
+			Object: el,
+		}
 	}
 
 	return el, nil
@@ -84,7 +96,7 @@ func (c *cache[K, T]) Invalidate(key K) {
 }
 
 type cacheItem[T any] struct {
-	created time.Time
+	until time.Time
 
 	Object T
 }

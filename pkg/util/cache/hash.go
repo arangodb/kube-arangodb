@@ -28,9 +28,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func NewHashCache[K Hash, T any](extract HashCacheExtract[K, T], ttl time.Duration) HashCache[K, T] {
+func NewHashCache[K Hash, T any](extract HashCacheExtract[K, T]) HashCache[K, T] {
 	return &hashCache[K, T]{
-		ttl:     ttl,
 		items:   map[string]cacheItem[T]{},
 		extract: extract,
 	}
@@ -40,7 +39,7 @@ type Hash interface {
 	Hash() string
 }
 
-type HashCacheExtract[K Hash, T any] func(ctx context.Context, in K) (T, error)
+type HashCacheExtract[K Hash, T any] func(ctx context.Context, in K) (T, time.Time, error)
 
 type HashCache[K Hash, T any] interface {
 	Get(ctx context.Context, key K) (T, error)
@@ -48,8 +47,6 @@ type HashCache[K Hash, T any] interface {
 
 type hashCache[K Hash, T any] struct {
 	lock sync.Mutex
-
-	ttl time.Duration
 
 	items map[string]cacheItem[T]
 
@@ -61,19 +58,21 @@ func (c *hashCache[K, T]) Get(ctx context.Context, key K) (T, error) {
 	defer c.lock.Unlock()
 
 	if v, ok := c.items[key.Hash()]; ok {
-		if time.Since(v.created) <= c.ttl {
+		if v.until.After(time.Now()) {
 			return v.Object, nil
 		}
 	}
 
-	el, err := c.extract(ctx, key)
+	el, expires, err := c.extract(ctx, key)
 	if err != nil {
 		return util.Default[T](), err
 	}
 
-	c.items[key.Hash()] = cacheItem[T]{
-		created: time.Now(),
-		Object:  el,
+	if !expires.After(time.Now()) {
+		c.items[key.Hash()] = cacheItem[T]{
+			until:  expires,
+			Object: el,
+		}
 	}
 
 	return el, nil

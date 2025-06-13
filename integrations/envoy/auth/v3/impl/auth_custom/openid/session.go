@@ -20,27 +20,36 @@
 
 package openid
 
-import meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"time"
+
+	"golang.org/x/oauth2"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
+)
 
 type Session struct {
-	Key string `json:"_key"`
-
-	IDToken string `json:"idToken"`
-
-	ExpiresAt        meta.Time `json:"expiresAt"`
-	ExpiresAtSeconds int64     `json:"expiresAtSeconds"`
+	Token     oauth2.Token `json:"token"`
+	ExpiresAt meta.Time    `json:"expiresAt"`
 
 	Username string `json:"username"`
 }
 
-func (s *Session) SetKey(k string) {
-	s.Key = k
-}
-
-func (s *Session) GetKey() string {
+func (s *Session) Expires() time.Time {
 	if s == nil {
-		return ""
+		return time.Time{}
 	}
 
-	return s.Key
+	return s.ExpiresAt.Time
+}
+
+func (s *Session) AsResponse() *pbImplEnvoyAuthV3Shared.ResponseAuth {
+	if s == nil {
+		return nil
+	}
+
+	return &pbImplEnvoyAuthV3Shared.ResponseAuth{
+		User: s.Username,
+	}
 }

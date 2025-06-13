@@ -36,10 +36,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(config pbImplEnvoyAuthV3Shared.Configuration) svc.Handler {
+func New(ctx context.Context, config pbImplEnvoyAuthV3Shared.Configuration) svc.Handler {
 	return &impl{
 		config:  config,
-		handler: impl2.Factory().Render(config),
+		handler: impl2.Factory().Render(ctx, config),
 	}
 }
 

@@ -35,6 +35,8 @@ import (
 type RemoteCacheObject interface {
 	SetKey(string)
 	GetKey() string
+
+	Expires() time.Time
 }
 
 func NewRemoteCache[T RemoteCacheObject](collection Object[arangodb.Collection]) RemoteCache[T] {
@@ -42,7 +44,7 @@ func NewRemoteCache[T RemoteCacheObject](collection Object[arangodb.Collection])
 		collection: collection,
 	}
 
-	r.cache = NewCache[string, T](r.cacheRead, 15*time.Minute)
+	r.cache = NewCacheWithTTL[string, T](r.cacheRead, time.Minute)
 
 	return r
 }
@@ -51,6 +53,8 @@ type RemoteCache[T RemoteCacheObject] interface {
 	Put(ctx context.Context, key string, obj T) error
 
 	Get(ctx context.Context, key string) (T, bool, error)
+
+	Revoke(ctx context.Context, key string) (bool, error)
 }
 
 type remoteCache[T RemoteCacheObject] struct {
@@ -87,18 +91,18 @@ func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {
 	return nil
 }
 
-func (r *remoteCache[T]) cacheRead(ctx context.Context, key string) (T, error) {
+func (r *remoteCache[T]) cacheRead(ctx context.Context, key string) (T, time.Time, error) {
 	client, err := r.collection.Get(ctx)
 	if err != nil {
-		return util.Default[T](), err
+		return util.Default[T](), util.Default[time.Time](), err
 	}
 
 	var z T
 	if _, err := client.ReadDocument(ctx, key, &z); err != nil {
-		return util.Default[T](), err
+		return util.Default[T](), util.Default[time.Time](), err
 	}
 
-	return z, nil
+	return z, z.Expires(), nil
 }
 
 func (r *remoteCache[T]) Get(ctx context.Context, key string) (T, bool, error) {
@@ -115,4 +119,26 @@ func (r *remoteCache[T]) Get(ctx context.Context, key string) (T, bool, error) {
 	}
 
 	return obj, true, nil
+}
+
+func (r *remoteCache[T]) Revoke(ctx context.Context, key string) (bool, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	client, err := r.collection.Get(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	if _, err := client.DeleteDocumentWithOptions(ctx, key, &arangodb.CollectionDocumentDeleteOptions{}); err != nil {
+		if !shared.IsNotFound(err) {
+			return false, err
+		}
+
+		return false, nil
+	}
+
+	r.cache.Invalidate(key)
+
+	return true, nil
 }

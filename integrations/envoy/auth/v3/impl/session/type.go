@@ -18,24 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package auth_custom
+package session
 
-import (
-	"context"
-
-	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_custom/openid"
-	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
-)
-
-func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
-	if !configuration.Auth.Enabled {
-		return nil, false
-	}
-
-	switch configuration.Auth.Type {
-	case "OpenID":
-		return openid.New(ctx, configuration)
-	}
-
-	return nil, false
-}
+type Type string

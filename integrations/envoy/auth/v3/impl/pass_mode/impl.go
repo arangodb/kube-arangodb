@@ -25,6 +25,7 @@ import (
 	"fmt"
 	goHttp "net/http"
 	goStrings "strings"
+	"time"
 
 	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -38,12 +39,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
 	var z impl
 
 	z.configuration = configuration
 	z.authClient = cache.NewObject(configuration.GetAuthClientFetcher)
-	z.cache = cache.NewHashCache[*pbImplEnvoyAuthV3Shared.ResponseAuth, pbImplEnvoyAuthV3Shared.Token](z.Token, pbImplEnvoyAuthV3Shared.DefaultTTL)
+	z.cache = cache.NewHashCache[*pbImplEnvoyAuthV3Shared.ResponseAuth, pbImplEnvoyAuthV3Shared.Token](z.Token)
 
 	return z, true
 }
@@ -140,14 +141,14 @@ func (p impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, c
 	return nil
 }
 
-func (p impl) Token(ctx context.Context, in *pbImplEnvoyAuthV3Shared.ResponseAuth) (pbImplEnvoyAuthV3Shared.Token, error) {
+func (p impl) Token(ctx context.Context, in *pbImplEnvoyAuthV3Shared.ResponseAuth) (pbImplEnvoyAuthV3Shared.Token, time.Time, error) {
 	if in == nil {
-		return "", errors.Errorf("Nil is not allowed")
+		return "", util.Default[time.Time](), errors.Errorf("Nil is not allowed")
 	}
 
 	client, err := p.authClient.Get(ctx)
 	if err != nil {
-		return "", err
+		return "", util.Default[time.Time](), err
 	}
 
 	resp, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
@@ -156,8 +157,8 @@ func (p impl) Token(ctx context.Context, in *pbImplEnvoyAuthV3Shared.ResponseAut
 		Roles:    in.Roles,
 	})
 	if err != nil {
-		return "", err
+		return "", util.Default[time.Time](), err
 	}
 
-	return pbImplEnvoyAuthV3Shared.Token(resp.Token), nil
+	return pbImplEnvoyAuthV3Shared.Token(resp.Token), time.Now().Add(pbImplEnvoyAuthV3Shared.DefaultTTL), nil
 }

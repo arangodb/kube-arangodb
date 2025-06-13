@@ -22,6 +22,7 @@ package shared
 
 import (
 	"context"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 )
@@ -41,5 +42,8 @@ func NewHelperInterface[K comparable](f HelperInterface[K]) Helper[K] {
 }
 
 func NewHelper[K comparable](f HelperFunc[K]) Helper[K] {
-	return cache.NewCache(cache.CacheExtract[K, Token](f), DefaultTTL)
+	return cache.NewCache(cache.CacheExtract[K, Token](func(ctx context.Context, in K) (Token, time.Time, error) {
+		v, err := f(ctx, in)
+		return v, time.Now().Add(DefaultTTL), err
+	}))
 }
