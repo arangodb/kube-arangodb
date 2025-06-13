@@ -265,8 +265,20 @@ features:
     releases:
       - operatorVersion: 1.2.36
         state: Alpha
-  - name: Gateway
-    remarks: Support for ArangoDeployment Gateway Group
+  - name: ArangoPlatform
+    remarks: ArangoPlatform Solution with support for ArangoDeployment Gateway Group
     releases:
       - operatorVersion: 1.2.43
         state: Alpha
+      - operatorVersion: 1.2.48
+        state: Beta
+  - name: ArangoPlatform OpenID SSO
+    remarks: Support for ArangoPlatform SSO with OpenID
+    releases:
+      - operatorVersion: 1.2.48
+        state: Beta
+  - name: Support for ArangoPlatform SSO with OpenID
+    remarks: Support for ArangoDeployment Gateway Group
+    releases:
+      - operatorVersion: 1.2.48
+        state: Beta

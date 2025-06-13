@@ -242,7 +242,7 @@ type OpenIDFeatures struct {
 
 func (o *OpenIDFeatures) GetRefreshEnabled() bool {
 	if o == nil || o.RefreshEnabled == nil {
-		return true
+		return false
 	}
 
 	return *o.RefreshEnabled
