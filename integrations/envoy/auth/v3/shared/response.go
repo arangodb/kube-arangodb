@@ -34,7 +34,7 @@ import (
 type Response struct {
 	User *ResponseAuth
 
-	Headers []*pbEnvoyCoreV3.HeaderValueOption
+	Headers, ResponseHeaders []*pbEnvoyCoreV3.HeaderValueOption
 }
 
 type ResponseAuth struct {
@@ -66,7 +66,8 @@ func (a Response) AsResponse() *pbEnvoyAuthV3.CheckResponse {
 	return &pbEnvoyAuthV3.CheckResponse{
 		HttpResponse: &pbEnvoyAuthV3.CheckResponse_OkResponse{
 			OkResponse: &pbEnvoyAuthV3.OkHttpResponse{
-				Headers: a.Headers,
+				Headers:              a.Headers,
+				ResponseHeadersToAdd: a.ResponseHeaders,
 			},
 		},
 	}

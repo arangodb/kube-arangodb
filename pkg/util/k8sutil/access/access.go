@@ -29,6 +29,7 @@ import (
 	authorization "k8s.io/api/authorization/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -48,13 +49,13 @@ func AccessCache(name string) cache.Cache[authorization.ResourceAttributes, auth
 		return v
 	}
 
-	c := cache.NewCache(accessCacheFuncGen(name), time.Minute)
+	c := cache.NewCache(accessCacheFuncGen(name))
 	accessCache[name] = c
 	return c
 }
 
-func accessCacheFuncGen(name string) func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, error) {
-	return func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, error) {
+func accessCacheFuncGen(name string) func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, time.Time, error) {
+	return func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, time.Time, error) {
 		log := logger.
 			Str("Namespace", in.Namespace).
 			Str("Verb", in.Verb).
@@ -73,7 +74,7 @@ func accessCacheFuncGen(name string) func(ctx context.Context, in authorization.
 
 		client, ok := f.Client()
 		if !ok {
-			return authorization.SubjectAccessReviewStatus{}, errors.Errorf("Unable to create Kubernetes Client")
+			return authorization.SubjectAccessReviewStatus{}, util.Default[time.Time](), errors.Errorf("Unable to create Kubernetes Client")
 		}
 
 		review := authorization.SelfSubjectAccessReview{
@@ -84,14 +85,14 @@ func accessCacheFuncGen(name string) func(ctx context.Context, in authorization.
 
 		if resp, err := client.Kubernetes().AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, &review, meta.CreateOptions{}); err != nil {
 			log.Err(err).Info("Access check failed")
-			return authorization.SubjectAccessReviewStatus{}, err
+			return authorization.SubjectAccessReviewStatus{}, util.Default[time.Time](), err
 		} else {
 			if IsAllowed(resp.Status) {
 				log.Debug("Access allowed")
 			} else {
 				log.Debug("Access denied")
 			}
-			return resp.Status, nil
+			return resp.Status, time.Now().Add(time.Minute), nil
 		}
 	}
 }

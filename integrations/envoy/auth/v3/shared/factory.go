@@ -31,18 +31,18 @@ func NewFactory(gen ...FactoryGen) Factory {
 }
 
 type Factory interface {
-	Render(configuration Configuration) AuthHandler
+	Render(ctx context.Context, configuration Configuration) AuthHandler
 }
 
-type FactoryGen func(configuration Configuration) (AuthHandler, bool)
+type FactoryGen func(ctx context.Context, configuration Configuration) (AuthHandler, bool)
 
 type factories []FactoryGen
 
-func (f factories) Render(configuration Configuration) AuthHandler {
+func (f factories) Render(ctx context.Context, configuration Configuration) AuthHandler {
 	hand := make(handlers, 0, len(f))
 
 	for id := range f {
-		if v, ok := f[id](configuration); ok {
+		if v, ok := f[id](ctx, configuration); ok {
 			hand = append(hand, v)
 		}
 	}

@@ -88,5 +88,5 @@ func (a *envoyAuthV3) Handler(ctx context.Context, cmd *cobra.Command) (svc.Hand
 	a.config.Database.Proto = dbP
 	a.config.Database.Port = dbPort
 
-	return pbImplEnvoyAuthV3.New(a.config), nil
+	return pbImplEnvoyAuthV3.New(ctx, a.config), nil
 }

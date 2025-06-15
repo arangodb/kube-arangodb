@@ -30,7 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func New(configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
 	return impl{}, true
 }
 

@@ -33,12 +33,12 @@ import (
 func Test_Cache_TTL(t *testing.T) {
 	var z int
 
-	c := NewCache[string, int](func(ctx context.Context, in string) (int, error) {
+	c := NewCache[string, int](func(ctx context.Context, in string) (int, time.Time, error) {
 		q := z
 		z++
 
-		return q, nil
-	}, 100*time.Millisecond)
+		return q, time.Now().Add(100 * time.Millisecond), nil
+	})
 
 	require.Equal(t, 0, tests.NoError[int](t)(c.Get(context.Background(), "k1")))
 	require.Equal(t, 1, z)
