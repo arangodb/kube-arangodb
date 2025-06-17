@@ -22,8 +22,6 @@ syntax = "proto3";
 
 package meta;
 
-import "google/api/annotations.proto";
-
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -35,27 +33,14 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/meta/v1/defi
 // MetaV1 define ServiceInterface for Meta V1
 service MetaV1 {
   // Get returns the Object from the Meta Store. If TTL is set to 0, result is not cached
-  rpc Get (ObjectRequest) returns (ObjectResponse) {
-    option (google.api.http) = {
-      get: "/_integration/meta/v1/object/{key}"
-    };
-  }
+  rpc Get (ObjectRequest) returns (ObjectResponse);
 
   // Set saves the object in the Meta Store
   // Optionally, will check Revision for the conflict management
-  rpc Set (SetRequest) returns (ObjectResponse) {
-    option (google.api.http) = {
-      post: "/_integration/meta/v1/object/{key}"
-      body: "*"
-    };
-  }
+  rpc Set (SetRequest) returns (ObjectResponse);
 
   // Delete deletes saves the object from the Meta Store
-  rpc Delete (ObjectRequest) returns (shared.Empty) {
-    option (google.api.http) = {
-      delete: "/_integration/meta/v1/object/{key}"
-    };
-  }
+  rpc Delete (ObjectRequest) returns (shared.Empty);
 }
 
 // ObjectRequest defines request for MetaV1 Object Request

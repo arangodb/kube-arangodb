@@ -86,7 +86,7 @@ func (i *implementation) Register(registrar *grpc.Server) {
 }
 
 func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
-	return pbMetaV1.RegisterMetaV1HandlerServer(ctx, mux, i)
+	return nil
 }
 
 func (i *implementation) Get(ctx context.Context, req *pbMetaV1.ObjectRequest) (*pbMetaV1.ObjectResponse, error) {
