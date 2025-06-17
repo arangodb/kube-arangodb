@@ -31,6 +31,7 @@ type ArangoPlatformChartSpec struct {
 	Definition sharedApi.Data `json:"definition,omitempty"`
 
 	// Overrides keeps the Chart overrides
+	// +doc/type Object
 	Overrides sharedApi.Any `json:"overrides,omitempty"`
 }
 
