@@ -4,8 +4,13 @@ v1alpha1:
       spec:
         properties:
           definition:
+            description: Definition keeps the Chart base64 encoded definition
             format: byte
             type: string
+          overrides:
+            description: Overrides keeps the Chart overrides
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
         type: object
       status:
         description: Object with preserved fields for backward compatibility

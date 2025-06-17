@@ -72,9 +72,19 @@ func (b *schemaBuilder) tryGetKubeOpenAPIV2Definitions(t *testing.T, obj interfa
 	type openAPISchemaFormatGetter interface {
 		OpenAPISchemaFormat() string
 	}
+	type openAPIPreserveUnknownFields interface {
+		OpenAPIXPreserveUnknownFields() bool
+	}
 	type openApiSchemaV3OneOfTypes interface {
 		OpenAPIV3OneOfTypes() []string
 	}
+
+	var xPreserveUnknownFields *bool
+
+	if v, ok := obj.(openAPIPreserveUnknownFields); ok {
+		xPreserveUnknownFields = util.NewType(v.OpenAPIXPreserveUnknownFields())
+	}
+
 	var typ, frmt string
 	if o, ok := obj.(openAPISchemaTypeGetter); ok {
 		strs := o.OpenAPISchemaType()
@@ -88,23 +98,26 @@ func (b *schemaBuilder) tryGetKubeOpenAPIV2Definitions(t *testing.T, obj interfa
 		if frmt == "int-or-string" && typ == "string" {
 
 			return &apiextensions.JSONSchemaProps{
-				Type:         typ,
-				XIntOrString: true,
+				Type:                   typ,
+				XIntOrString:           true,
+				XPreserveUnknownFields: xPreserveUnknownFields,
 			}
 		}
 
 		if o, ok := obj.(openApiSchemaV3OneOfTypes); ok {
 			if b.isV3IntOrString(o.OpenAPIV3OneOfTypes()) {
 				return &apiextensions.JSONSchemaProps{
-					Type:         typ,
-					XIntOrString: true,
+					Type:                   typ,
+					XIntOrString:           true,
+					XPreserveUnknownFields: xPreserveUnknownFields,
 				}
 			}
 		}
 
 		return &apiextensions.JSONSchemaProps{
-			Type:   typ,
-			Format: frmt,
+			Type:                   typ,
+			Format:                 frmt,
+			XPreserveUnknownFields: xPreserveUnknownFields,
 		}
 	}
 	return nil

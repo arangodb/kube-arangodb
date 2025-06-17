@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -116,6 +116,11 @@ func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, e
 }
 
 func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformChart, status *platformApi.ArangoPlatformChartStatus) (bool, error) {
+	if !extension.Spec.Overrides.Equals(status.Overrides) {
+		status.Overrides = extension.Spec.Overrides
+		return true, operator.Reconcile("Spec Overrides changed")
+	}
+
 	if status.Info != nil {
 		if status.Info.Checksum != extension.Spec.Definition.SHA256() {
 			status.Info = nil

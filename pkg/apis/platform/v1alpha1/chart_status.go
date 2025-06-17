@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package v1alpha1
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
 type ArangoPlatformChartStatus struct {
@@ -30,4 +31,7 @@ type ArangoPlatformChartStatus struct {
 	// Conditions specific to the entire storage
 	// +doc/type: api.Conditions
 	Conditions api.ConditionList `json:"conditions,omitempty"`
+
+	// Overrides keeps the Chart overrides
+	Overrides sharedApi.Any `json:"overrides,omitempty"`
 }

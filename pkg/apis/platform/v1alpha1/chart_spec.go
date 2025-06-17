@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,11 @@ import (
 )
 
 type ArangoPlatformChartSpec struct {
+	// Definition keeps the Chart base64 encoded definition
 	Definition sharedApi.Data `json:"definition,omitempty"`
+
+	// Overrides keeps the Chart overrides
+	Overrides sharedApi.Any `json:"overrides,omitempty"`
 }
 
 func (c *ArangoPlatformChartSpec) Validate() error {
