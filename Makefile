@@ -1060,4 +1060,4 @@ ci-check:
 
 .PHONY: reset
 reset:
-	@git checkout origin/master -- go.mod
+	@git checkout origin/master -- go.mod go.sum
