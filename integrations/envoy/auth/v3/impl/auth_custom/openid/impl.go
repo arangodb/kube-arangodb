@@ -35,7 +35,6 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/status"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/session"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication"
@@ -60,8 +59,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		}),
 	}
 
-	i.authClient = session.NewAuthClientFetcherObject(configuration)
-	i.session = session.NewManager[*Session](ctx, "Auth_Custom_OpenID", session.NewConnectionObject(configuration, i.authClient))
+	i.session = session.NewManager[*Session](ctx, "Auth_Custom_OpenID", configuration.KVCollection(configuration.Endpoint, "_system", "_gateway_session"))
 
 	i.id = cache.NewCache(func(ctx context.Context, in string) (*oidc.IDToken, time.Time, error) {
 		verifier, err := i.verifier.Get(ctx)
@@ -89,8 +87,6 @@ type impl struct {
 	id cache.Cache[string, *oidc.IDToken]
 
 	session session.Manager[*Session]
-
-	authClient cache.Object[pbAuthenticationV1.AuthenticationV1Client]
 }
 
 func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, current *pbImplEnvoyAuthV3Shared.Response) error {

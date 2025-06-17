@@ -18,29 +18,48 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shared
+package v1
 
 import (
+	"fmt"
+	"time"
+
 	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
+
+func NewConfiguration() Configuration {
+	return Configuration{}
+}
 
 type Configuration struct {
 	integrationsShared.Endpoint
 	integrationsShared.Database
 
-	Extensions ConfigurationExtensions
-
-	Auth ConfigurationAuth
+	Prefix string
+	TTL    time.Duration
 }
 
-type ConfigurationAuth struct {
-	Enabled bool
-	Type    string
-	Path    string
+func (c Configuration) With(mods ...util.ModR[Configuration]) Configuration {
+	n := c
+
+	for _, mod := range mods {
+		n = mod(n)
+	}
+
+	return n
 }
 
-type ConfigurationExtensions struct {
-	JWT         bool
-	CookieJWT   bool
-	UsersCreate bool
+func (c Configuration) Key(parts ...string) string {
+	key := strings.Join(parts, "_")
+	if c.Prefix == "" {
+		return key
+	}
+
+	return fmt.Sprintf("%s_%s", c.Prefix, key)
+}
+
+func (c Configuration) Validate() error {
+	return nil
 }

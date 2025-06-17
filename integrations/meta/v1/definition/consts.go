@@ -18,29 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shared
+package definition
 
-import (
-	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
+const (
+	Name = "meta.v1"
 )
-
-type Configuration struct {
-	integrationsShared.Endpoint
-	integrationsShared.Database
-
-	Extensions ConfigurationExtensions
-
-	Auth ConfigurationAuth
-}
-
-type ConfigurationAuth struct {
-	Enabled bool
-	Type    string
-	Path    string
-}
-
-type ConfigurationExtensions struct {
-	JWT         bool
-	CookieJWT   bool
-	UsersCreate bool
-}

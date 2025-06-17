@@ -18,29 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shared
+package v1
 
 import (
-	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-type Configuration struct {
-	integrationsShared.Endpoint
-	integrationsShared.Database
-
-	Extensions ConfigurationExtensions
-
-	Auth ConfigurationAuth
-}
-
-type ConfigurationAuth struct {
-	Enabled bool
-	Type    string
-	Path    string
-}
-
-type ConfigurationExtensions struct {
-	JWT         bool
-	CookieJWT   bool
-	UsersCreate bool
-}
+var logger = logging.Global().RegisterAndGetLogger("integration-meta-v1", logging.Info)

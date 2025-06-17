@@ -39,7 +39,7 @@ import (
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
-	"github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
+	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -84,7 +84,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 	reconcileRequired := k8sutil.NewReconcile(cachedStatus)
 
-	gen := func(name, version string, generator func() (sidecar.Integration, bool)) func() (string, *schedulerApi.ArangoProfile, error) {
+	gen := func(name, version string, generator func() (integrationsSidecar.Integration, bool)) func() (string, *schedulerApi.ArangoProfile, error) {
 		return func() (string, *schedulerApi.ArangoProfile, error) {
 			counterMetric.Inc()
 			fullName := fmt.Sprintf("%s-int-%s-%s", deploymentName, name, version)
@@ -94,7 +94,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				return fullName, nil, nil
 			}
 
-			integration, err := sidecar.NewIntegrationEnablement(intgr)
+			integration, err := integrationsSidecar.NewIntegrationEnablement(intgr)
 			if err != nil {
 				return "", nil, err
 			}
@@ -120,8 +120,8 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		}
 	}
 
-	always := func(in sidecar.Integration) func() (sidecar.Integration, bool) {
-		return func() (sidecar.Integration, bool) {
+	always := func(in integrationsSidecar.Integration) func() (integrationsSidecar.Integration, bool) {
+		return func() (integrationsSidecar.Integration, bool) {
 			return in, true
 		}
 	}
@@ -131,7 +131,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			counterMetric.Inc()
 			name := fmt.Sprintf("%s-int", deploymentName)
 
-			integration, err := sidecar.NewIntegration(
+			integration, err := integrationsSidecar.NewIntegration(
 				r.context.GetName(),
 				r.context.GetSpec(),
 				&schedulerContainerResourcesApi.Image{
@@ -162,20 +162,20 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				},
 			}, nil
 		},
-		gen(constants.ProfilesIntegrationAuthz, constants.ProfilesIntegrationV0, always(sidecar.IntegrationAuthorizationV0{})),
-		gen(constants.ProfilesIntegrationAuthn, constants.ProfilesIntegrationV1, always(sidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()})),
-		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV1, always(sidecar.IntegrationSchedulerV1{})),
-		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV2, always(sidecar.IntegrationSchedulerV2{
+		gen(constants.ProfilesIntegrationAuthz, constants.ProfilesIntegrationV0, always(integrationsSidecar.IntegrationAuthorizationV0{})),
+		gen(constants.ProfilesIntegrationAuthn, constants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()})),
+		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationSchedulerV1{})),
+		gen(constants.ProfilesIntegrationSched, constants.ProfilesIntegrationV2, always(integrationsSidecar.IntegrationSchedulerV2{
 			Spec:           spec,
 			DeploymentName: apiObject.GetName(),
 		})),
-		gen(constants.ProfilesIntegrationShutdown, constants.ProfilesIntegrationV1, always(sidecar.IntegrationShutdownV1{})),
-		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, always(sidecar.IntegrationEnvoyV3{Spec: spec})),
-		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV1, func() (sidecar.Integration, bool) {
+		gen(constants.ProfilesIntegrationShutdown, constants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationShutdownV1{})),
+		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, always(integrationsSidecar.IntegrationEnvoyV3{Spec: spec})),
+		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV1, func() (integrationsSidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {
 				if p, ok := v.GetSimple(deploymentName); ok {
 					if p.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
-						return sidecar.IntegrationStorageV1{
+						return integrationsSidecar.IntegrationStorageV1{
 							PlatformStorage: p,
 						}, true
 					}
@@ -184,11 +184,12 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 			return nil, false
 		}),
-		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV2, func() (sidecar.Integration, bool) {
+		gen(constants.ProfilesIntegrationMeta, constants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationMetaV1{})),
+		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV2, func() (integrationsSidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {
 				if p, ok := v.GetSimple(deploymentName); ok {
 					if p.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
-						return sidecar.IntegrationStorageV2{
+						return integrationsSidecar.IntegrationStorageV2{
 							Storage: p,
 						}, true
 					}

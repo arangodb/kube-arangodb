@@ -1,0 +1,104 @@
+//
+// DISCLAIMER
+//
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package meta;
+
+import "google/api/annotations.proto";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+import "integrations/shared/v1/definition/empty.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition";
+
+// MetaV1 define ServiceInterface for Meta V1
+service MetaV1 {
+  // Get returns the Object from the Meta Store. If TTL is set to 0, result is not cached
+  rpc Get (ObjectRequest) returns (ObjectResponse) {
+    option (google.api.http) = {
+      get: "/_integration/meta/v1/object/{key}"
+    };
+  }
+
+  // Set saves the object in the Meta Store
+  // Optionally, will check Revision for the conflict management
+  rpc Set (SetRequest) returns (ObjectResponse) {
+    option (google.api.http) = {
+      post: "/_integration/meta/v1/object/{key}"
+      body: "*"
+    };
+  }
+
+  // Delete deletes saves the object from the Meta Store
+  rpc Delete (ObjectRequest) returns (shared.Empty) {
+    option (google.api.http) = {
+      delete: "/_integration/meta/v1/object/{key}"
+    };
+  }
+}
+
+// ObjectRequest defines request for MetaV1 Object Request
+message ObjectRequest {
+  // Key defines the Object Key (optionally, prefixed with global prefix)
+  string key = 1;
+}
+
+// SetRequest defines request for MetaV1 Object Set Request
+message SetRequest {
+  // Key defines the Object Key (optionally, prefixed with global prefix)
+  string key = 1;
+
+  // Revision defines the object revision. When set, precondition is verified on the Meta Store level
+  optional string revision = 2;
+
+  // Object defines the Object JSON Definition in AnyProto
+  google.protobuf.Any object = 3;
+
+  // TTL Defines object time-to-live. Optional
+  optional google.protobuf.Duration ttl = 4;
+}
+
+// ObjectResponse defines response for MetaV1 Object Meta
+message ObjectResponseMeta {
+  // Updated defines when object has been updated last time
+  google.protobuf.Timestamp updated = 1;
+
+  // Expires defines the object expiration timestamp (if TTL was set during creation)
+  google.protobuf.Timestamp expires = 2;
+}
+
+// ObjectResponse defines response for MetaV1 Object
+message ObjectResponse {
+  // Key defines the Object Key (optionally, prefixed with global prefix)
+  string key = 1;
+
+  // Revision defines the object revision
+  optional string revision = 2;
+
+  // Object defines the Object JSON Definition in AnyProto
+  google.protobuf.Any object = 3;
+
+  // Meta defines the Object Metadata
+  ObjectResponseMeta meta = 4;
+}

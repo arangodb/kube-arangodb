@@ -23,6 +23,7 @@ package v1
 import (
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -40,8 +41,6 @@ const (
 
 	DefaultMaxTokenSize = 64
 )
-
-type Mod func(c Configuration) Configuration
 
 func NewConfiguration() Configuration {
 	return Configuration{
@@ -77,7 +76,7 @@ type ConfigurationDatabase struct {
 	Port     int
 }
 
-func (c Configuration) With(mods ...Mod) Configuration {
+func (c Configuration) With(mods ...util.ModR[Configuration]) Configuration {
 	n := c
 
 	for _, mod := range mods {

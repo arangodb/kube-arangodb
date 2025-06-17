@@ -33,6 +33,10 @@ linters-settings:
   importas:
     no-unaliased: true
     alias:
+      - alias: pbImplMetaV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1
+      - alias: pbMetaV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1/definition
       - alias: pbImplAuthenticationV1
         pkg: github.com/arangodb/kube-arangodb/integrations/authentication/v1
       - alias: pbAuthenticationV1
@@ -133,6 +137,14 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared
       - alias: sharedApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared/v1
+      - alias: integrationsShared
+        pkg: github.com/arangodb/kube-arangodb/pkg/integrations/shared
+      - alias: integrationsClients
+        pkg: github.com/arangodb/kube-arangodb/pkg/integrations/clients
+      - alias: integrationsSidecar
+        pkg: github.com/arangodb/kube-arangodb/pkg/integrations/sidecar
+      - alias: integrations
+        pkg: github.com/arangodb/kube-arangodb/pkg/integrations
       - alias: sharedReconcile
         pkg: github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared
       - alias: analyticsShared

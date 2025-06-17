@@ -40,6 +40,7 @@ const (
 	ProfilesIntegrationEnvoy    = "envoy"
 	ProfilesIntegrationStorage  = "storage"
 	ProfilesIntegrationShutdown = "shutdown"
+	ProfilesIntegrationMeta     = "meta"
 )
 
 const (

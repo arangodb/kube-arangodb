@@ -20,27 +20,18 @@
 
 package shared
 
-import (
-	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
-)
+import "github.com/spf13/cobra"
 
-type Configuration struct {
-	integrationsShared.Endpoint
-	integrationsShared.Database
+func FillAll(cmd *cobra.Command, f ...Fill) error {
+	for _, e := range f {
+		if err := e.New(cmd); err != nil {
+			return err
+		}
+	}
 
-	Extensions ConfigurationExtensions
-
-	Auth ConfigurationAuth
+	return nil
 }
 
-type ConfigurationAuth struct {
-	Enabled bool
-	Type    string
-	Path    string
-}
-
-type ConfigurationExtensions struct {
-	JWT         bool
-	CookieJWT   bool
-	UsersCreate bool
+type Fill interface {
+	New(cmd *cobra.Command) error
 }

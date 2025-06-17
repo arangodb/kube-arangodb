@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) MetaV1 Integration Service
 
 ## [1.2.49](https://github.com/arangodb/kube-arangodb/tree/1.2.49) (2025-06-17)
 - (Maintenance) Optimize go.mod

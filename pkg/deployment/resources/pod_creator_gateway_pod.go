@@ -31,7 +31,7 @@ import (
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
+	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -224,11 +224,11 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 		return nil, errors.Errorf("Unable to find accepted integration")
 	}
 
-	integrations, err := sidecar.NewIntegrationEnablement(
-		sidecar.IntegrationEnvoyV3{
+	integrations, err := integrationsSidecar.NewIntegrationEnablement(
+		integrationsSidecar.IntegrationEnvoyV3{
 			DeploymentName: m.context.GetName(),
 			Spec:           m.Deployment,
-		}, sidecar.IntegrationAuthenticationV1{
+		}, integrationsSidecar.IntegrationAuthenticationV1{
 			DeploymentName: m.context.GetName(),
 			Spec:           m.Deployment,
 		})
@@ -237,7 +237,7 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 		return nil, err
 	}
 
-	shutdownAnnotation := sidecar.NewShutdownAnnotations([]string{shared.ServerContainerName})
+	shutdownAnnotation := integrationsSidecar.NewShutdownAnnotations([]string{shared.ServerContainerName})
 
 	return []*schedulerApi.ProfileTemplate{integration.Status.Accepted.Template, integrations, shutdownAnnotation}, nil
 }

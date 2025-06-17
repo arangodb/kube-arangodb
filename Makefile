@@ -1057,3 +1057,7 @@ ci-check:
 	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint
 	@git checkout -- go.sum # ignore changes in go.sum
 	@if [ ! -z "$$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; exit 1; fi
+
+.PHONY: reset
+reset:
+	@git checkout origin/master -- go.mod

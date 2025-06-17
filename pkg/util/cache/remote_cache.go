@@ -39,22 +39,48 @@ type RemoteCacheObject interface {
 	Expires() time.Time
 }
 
-func NewRemoteCache[T RemoteCacheObject](collection Object[arangodb.Collection]) RemoteCache[T] {
+type RemoteCacheObjectRev interface {
+	RemoteCacheObject
+
+	GetRev() string
+}
+
+func GetRemoteCacheObjectRev(in RemoteCacheObject) string {
+	if v, ok := in.(RemoteCacheObjectRev); ok {
+		return v.GetRev()
+	}
+
+	return ""
+}
+
+func NewRemoteCacheWithTTL[T RemoteCacheObject](collection Object[arangodb.Collection], ttl time.Duration) RemoteCache[T] {
 	r := &remoteCache[T]{
 		collection: collection,
 	}
 
-	r.cache = NewCacheWithTTL[string, T](r.cacheRead, time.Minute)
+	r.cache = NewCacheWithTTL[string, T](r.cacheRead, ttl)
 
 	return r
 }
 
+func NewRemoteCache[T RemoteCacheObject](collection Object[arangodb.Collection]) RemoteCache[T] {
+	return NewRemoteCacheWithTTL[T](collection, time.Minute)
+}
+
 type RemoteCache[T RemoteCacheObject] interface {
+	// Put puts the key in the cache
 	Put(ctx context.Context, key string, obj T) error
 
+	// Get gets the key from the cache
+	// Returns T, Exists, Error
 	Get(ctx context.Context, key string) (T, bool, error)
 
-	Revoke(ctx context.Context, key string) (bool, error)
+	// Remove removed the key from the cache
+	// Returns Removed, Error
+	Remove(ctx context.Context, key string) (bool, error)
+
+	// Invalidate invalidates internal cache
+	Invalidate(ctx context.Context, key string)
 }
 
 type remoteCache[T RemoteCacheObject] struct {
@@ -78,7 +104,10 @@ func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {
 		return err
 	}
 
-	if _, err := client.UpdateDocumentWithOptions(ctx, key, obj, nil); err != nil {
+	if _, err := client.UpdateDocumentWithOptions(ctx, key, obj, &arangodb.CollectionDocumentUpdateOptions{
+		// Ignore the revision if it is not set
+		IgnoreRevs: util.NewType(GetRemoteCacheObjectRev(obj) == ""),
+	}); err != nil {
 		if !shared.IsNotFound(err) {
 			return err
 		}
@@ -121,7 +150,14 @@ func (r *remoteCache[T]) Get(ctx context.Context, key string) (T, bool, error) {
 	return obj, true, nil
 }
 
-func (r *remoteCache[T]) Revoke(ctx context.Context, key string) (bool, error) {
+func (r *remoteCache[T]) Invalidate(ctx context.Context, key string) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	r.cache.Invalidate(key)
+}
+
+func (r *remoteCache[T]) Remove(ctx context.Context, key string) (bool, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 

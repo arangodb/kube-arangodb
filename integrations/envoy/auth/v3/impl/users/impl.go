@@ -22,7 +22,6 @@ package users
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -30,13 +29,10 @@ import (
 
 	"github.com/arangodb/go-driver/v2/arangodb"
 	"github.com/arangodb/go-driver/v2/arangodb/shared"
-	"github.com/arangodb/go-driver/v2/connection"
 
-	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
-	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
 func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
@@ -44,28 +40,9 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		return nil, false
 	}
 
-	i := &impl{
-		authClient: cache.NewObject[pbAuthenticationV1.AuthenticationV1Client](configuration.GetAuthClientFetcher),
-	}
+	i := &impl{}
 
-	i.userClient = cache.NewObject(func(ctx context.Context) (arangodb.ClientUsers, time.Duration, error) {
-		ac, err := i.authClient.Get(ctx)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		client := arangodb.NewClient(connection.NewHttpConnection(connection.HttpConfiguration{
-			Authentication: pbAuthenticationV1.NewRootRequestModifier(ac),
-			Endpoint: connection.NewRoundRobinEndpoints([]string{
-				fmt.Sprintf("%s://%s:%d", configuration.Database.Proto, configuration.Database.Endpoint, configuration.Database.Port),
-			}),
-			ContentType:    connection.ApplicationJSON,
-			ArangoDBConfig: connection.ArangoDBConfiguration{},
-			Transport:      operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
-		}))
-
-		return client, 24 * time.Hour, nil
-	})
+	i.userClient = configuration.DatabaseClient(configuration.Endpoint)
 
 	i.users = cache.NewCache[string, arangodb.User](func(ctx context.Context, in string) (arangodb.User, time.Time, error) {
 		client, err := i.userClient.Get(ctx)
@@ -100,8 +77,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 }
 
 type impl struct {
-	authClient cache.Object[pbAuthenticationV1.AuthenticationV1Client]
-	userClient cache.Object[arangodb.ClientUsers]
+	userClient cache.Object[arangodb.Client]
 
 	users cache.Cache[string, arangodb.User]
 }

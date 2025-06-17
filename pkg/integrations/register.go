@@ -32,7 +32,7 @@ import (
 
 	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
 	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
-	"github.com/arangodb/kube-arangodb/pkg/integrations/clients"
+	integrationsClients "github.com/arangodb/kube-arangodb/pkg/integrations/clients"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -190,7 +190,7 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 		}
 	}
 
-	return clients.Register(cmd)
+	return integrationsClients.Register(cmd)
 }
 
 func (c *configuration) run(cmd *cobra.Command, args []string) error {

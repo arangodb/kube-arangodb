@@ -27,6 +27,7 @@ import (
 
 	pbImplEnvoyAuthV3 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -61,32 +62,9 @@ func (a *envoyAuthV3) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 }
 
 func (a *envoyAuthV3) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	f := cmd.Flags()
-
-	addr, err := f.GetString("services.address")
-	if err != nil {
+	if err := integrationsShared.FillAll(cmd, &a.config.Endpoint, &a.config.Database); err != nil {
 		return nil, err
 	}
-
-	dbE, err := f.GetString("database.endpoint")
-	if err != nil {
-		return nil, err
-	}
-
-	dbP, err := f.GetString("database.proto")
-	if err != nil {
-		return nil, err
-	}
-
-	dbPort, err := f.GetInt("database.port")
-	if err != nil {
-		return nil, err
-	}
-
-	a.config.Address = addr
-	a.config.Database.Endpoint = dbE
-	a.config.Database.Proto = dbP
-	a.config.Database.Port = dbPort
 
 	return pbImplEnvoyAuthV3.New(ctx, a.config), nil
 }

@@ -18,42 +18,39 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package integration
+package sidecar
 
 import (
-	goflag "flag"
-
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-
-	integrations "github.com/arangodb/kube-arangodb/pkg/integrations"
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	core "k8s.io/api/core/v1"
 )
 
-var (
-	cmd = cobra.Command{
-		Use:  "arangodb_operator_integration",
-		RunE: cli.Usage,
-	}
-)
-
-func init() {
-	if err := integrations.Register(&cmd); err != nil {
-		panic(err.Error())
-	}
-	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+type IntegrationMetaV1 struct {
+	Core *Core
 }
 
-func Command() *cobra.Command {
-	return &cmd
+func (i IntegrationMetaV1) Name() []string {
+	return []string{"META", "V1"}
 }
 
-func Execute() int {
-	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
+func (i IntegrationMetaV1) Validate() error {
+	return nil
+}
 
-	if err := cmd.Execute(); err != nil {
-		return 1
+func (i IntegrationMetaV1) Envs() ([]core.EnvVar, error) {
+	var envs = []core.EnvVar{
+		{
+			Name:  "INTEGRATION_META_V1",
+			Value: "true",
+		},
 	}
 
-	return 0
+	return i.Core.Envs(i, envs...), nil
+}
+
+func (i IntegrationMetaV1) GlobalEnvs() ([]core.EnvVar, error) {
+	return nil, nil
+}
+
+func (i IntegrationMetaV1) Volumes() ([]core.Volume, []core.VolumeMount, error) {
+	return nil, nil, nil
 }
