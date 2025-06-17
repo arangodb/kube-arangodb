@@ -21,6 +21,7 @@
 package v1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -59,6 +60,7 @@ func NewConfiguration() Configuration {
 }
 
 type Configuration struct {
+	shared.Database
 	Enabled bool
 
 	TTL time.Duration
@@ -66,14 +68,6 @@ type Configuration struct {
 	Path string
 
 	Create Token
-
-	Database ConfigurationDatabase
-}
-
-type ConfigurationDatabase struct {
-	Proto    string
-	Endpoint string
-	Port     int
 }
 
 func (c Configuration) With(mods ...util.ModR[Configuration]) Configuration {

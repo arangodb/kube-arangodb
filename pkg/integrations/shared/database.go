@@ -46,6 +46,34 @@ type Database struct {
 	WriteConcern      int
 }
 
+func (d *Database) Validate() error {
+	if d == nil {
+		return errors.Errorf("Database Ref is empty")
+	}
+
+	if d.Endpoint == "" {
+		return errors.Errorf("Database Endpoint is empty")
+	}
+
+	if d.Endpoint == "" {
+		return errors.Errorf("Database Endpoint is empty")
+	}
+
+	if d.Endpoint == "" {
+		return errors.Errorf("Database Endpoint is empty")
+	}
+
+	if d.WriteConcern < 1 || d.WriteConcern > d.ReplicationFactor {
+		return errors.Errorf("Database WriteConcern is invalid")
+	}
+
+	if d.ReplicationFactor < 1 {
+		return errors.Errorf("Database ReplicationFactor is invalid")
+	}
+
+	return nil
+}
+
 func (d *Database) New(cmd *cobra.Command) error {
 	if d == nil {
 		return errors.Errorf("Database Ref is empty")
@@ -84,7 +112,7 @@ func (d *Database) New(cmd *cobra.Command) error {
 		WriteConcern:      dbWC,
 	}
 
-	return nil
+	return d.Validate()
 }
 
 func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Client] {

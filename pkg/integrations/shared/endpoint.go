@@ -51,6 +51,18 @@ func (e *Endpoint) AuthClient() cache.Object[pbAuthenticationV1.AuthenticationV1
 	})
 }
 
+func (e *Endpoint) Validate() error {
+	if e == nil {
+		return errors.Errorf("Endpoint Ref is empty")
+	}
+
+	if e.Address == "" {
+		return errors.Errorf("Endpoint Address is empty")
+	}
+
+	return nil
+}
+
 func (e *Endpoint) New(cmd *cobra.Command) error {
 	if e == nil {
 		return errors.Errorf("Endpoint Ref is empty")
@@ -67,5 +79,5 @@ func (e *Endpoint) New(cmd *cobra.Command) error {
 		Address: addr,
 	}
 
-	return nil
+	return e.Validate()
 }

@@ -22,6 +22,7 @@ package integrations
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 
 	"github.com/spf13/cobra"
 
@@ -56,27 +57,9 @@ func (a *authenticationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error
 }
 
 func (a *authenticationV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	f := cmd.Flags()
-
-	dbE, err := f.GetString("database.endpoint")
-	if err != nil {
+	if err := shared.FillAll(cmd, &a.config.Database); err != nil {
 		return nil, err
 	}
-
-	dbP, err := f.GetString("database.proto")
-	if err != nil {
-		return nil, err
-	}
-
-	dbPort, err := f.GetInt("database.port")
-	if err != nil {
-		return nil, err
-	}
-
-	a.config.Database.Endpoint = dbE
-	a.config.Database.Proto = dbP
-	a.config.Database.Port = dbPort
-
 	return pbImplAuthenticationV1.New(ctx, a.config)
 }
 
