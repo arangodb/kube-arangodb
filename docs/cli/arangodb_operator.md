@@ -81,7 +81,7 @@ Flags:
       --image.discovery.status                                 Discover Operator Image from Pod Status by default. When disabled Pod Spec is used. (default true)
       --image.discovery.timeout duration                       Timeout for image discovery process (default 1m0s)
       --internal.scaling-integration                           Enable Scaling Integration
-      --kubernetes.burst int                                   Burst for the k8s API (default 64)
+      --kubernetes.burst int                                   Burst for the k8s API (default 256)
       --kubernetes.max-batch-size int                          Size of batch during objects read (default 256)
       --kubernetes.qps float32                                 Number of queries per second for k8s API (default 32)
       --leader.label.skip                                      Skips Leader Label for the Pod

@@ -22,12 +22,12 @@ package integrations
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 
 	"github.com/spf13/cobra"
 
 	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )

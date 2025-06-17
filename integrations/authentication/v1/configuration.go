@@ -21,9 +21,9 @@
 package v1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"time"
 
+	"github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
