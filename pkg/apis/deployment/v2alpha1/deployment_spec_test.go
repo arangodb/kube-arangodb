@@ -173,7 +173,7 @@ func TestDeploymentSpec_GetCoreContainers(t *testing.T) {
 			args: args{
 				group: ServerGroupDBServers,
 			},
-			want: utils.StringList{"server"},
+			want: utils.StringList{"server", "exporter", "integration"},
 		},
 		"two non-core containers": {
 			fields: fields{
