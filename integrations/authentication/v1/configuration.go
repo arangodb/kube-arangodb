@@ -23,7 +23,7 @@ package v1
 import (
 	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/integrations/shared"
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
@@ -60,7 +60,7 @@ func NewConfiguration() Configuration {
 }
 
 type Configuration struct {
-	shared.Database
+	integrationsShared.Database
 	Enabled bool
 
 	TTL time.Duration

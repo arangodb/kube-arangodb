@@ -27,7 +27,7 @@ import (
 
 	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
-	"github.com/arangodb/kube-arangodb/pkg/integrations/shared"
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -57,7 +57,7 @@ func (a *authenticationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error
 }
 
 func (a *authenticationV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	if err := shared.FillAll(cmd, &a.config.Database); err != nil {
+	if err := integrationsShared.FillAll(cmd, &a.config.Database); err != nil {
 		return nil, err
 	}
 	return pbImplAuthenticationV1.New(ctx, a.config)
