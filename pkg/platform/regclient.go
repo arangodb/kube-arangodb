@@ -21,27 +21,18 @@
 package platform
 
 import (
+	"github.com/regclient/regclient"
 	"github.com/spf13/cobra"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 )
 
-func registry() (*cobra.Command, error) {
-	var cmd cobra.Command
+func getRegClient(cmd *cobra.Command) (*regclient.RegClient, error) {
+	var flags = make([]regclient.Opt, 0, 1)
 
-	cmd.Use = "registry"
-	cmd.Short = "Registry related operations"
-
-	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint); err != nil {
+	if creds, err := flagRegistryUseCredentials.Get(cmd); err != nil {
 		return nil, err
+	} else if creds {
+		flags = append(flags, regclient.WithDockerCreds())
 	}
 
-	if err := withRegisterCommand(&cmd,
-		registryStatus,
-		registryInstall,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
+	return regclient.New(flags...), nil
 }

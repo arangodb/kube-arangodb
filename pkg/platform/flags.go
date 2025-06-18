@@ -23,6 +23,7 @@ package platform
 import (
 	"os"
 
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -42,6 +43,13 @@ var (
 		Description: "Kubernetes Platform Name (name of the ArangoDeployment)",
 		Default:     "",
 		Persistent:  true,
+		Check: func(in string) error {
+			if err := sharedApi.IsValidName(in); err != nil {
+				return errors.Errorf("Invalid deployment name: %s", err.Error())
+			}
+
+			return nil
+		},
 	}
 
 	flagOutput = cli.Flag[string]{
@@ -101,6 +109,15 @@ var (
 					return errors.Wrapf(err, "Unable to load file: %s", f)
 				}
 			}
+			return nil
+		},
+	}
+
+	flagRegistryUseCredentials = cli.Flag[bool]{
+		Name:        "registry.docker.credentials",
+		Description: "Use Docker Credentials",
+		Default:     false,
+		Check: func(in bool) error {
 			return nil
 		},
 	}

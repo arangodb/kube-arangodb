@@ -46,6 +46,9 @@ func FromAny[T any](in Any) (T, error) {
 }
 
 func (d Any) MarshalJSON() ([]byte, error) {
+	if len(d) == 0 {
+		return []byte("null"), nil
+	}
 	ret := make([]byte, len(d))
 	copy(ret, d)
 	return ret, nil

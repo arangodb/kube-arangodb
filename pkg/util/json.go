@@ -22,6 +22,7 @@ package util
 
 import (
 	"encoding/json"
+	"os"
 
 	"sigs.k8s.io/yaml"
 )
@@ -39,6 +40,15 @@ func JSONRemarshal[A, B any](in A) (B, error) {
 	}
 
 	return o, nil
+}
+
+func JsonOrYamlUnmarshalFile[T any](path string) (T, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Default[T](), err
+	}
+
+	return JsonOrYamlUnmarshal[T](data)
 }
 
 func JsonOrYamlUnmarshal[T any](b []byte) (T, error) {
