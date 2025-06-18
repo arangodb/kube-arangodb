@@ -24,15 +24,13 @@ import (
 	"github.com/spf13/cobra"
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func fetchLocallyInstalledCharts(cmd *cobra.Command) (map[string]*platformApi.ArangoPlatformChart, error) {
-	client, ok := kclient.GetDefaultFactory().Client()
-	if !ok {
-		return nil, errors.Errorf("Unable to create Kubernetes Client")
+	client, err := getKubernetesClient(cmd)
+	if err != nil {
+		return nil, err
 	}
 
 	namespace, err := flagNamespace.Get(cmd)

@@ -49,7 +49,7 @@ func NewMergeRawValues(opts ValuesMergeMethod, vs ...Values) (Values, error) {
 	return o, nil
 }
 
-func NewMergeValues(opts ValuesMergeMethod, vs ...any) (Values, error) {
+func NewMergeValues[T any](opts ValuesMergeMethod, vs ...T) (Values, error) {
 	if len(vs) == 0 {
 		return nil, nil
 	}

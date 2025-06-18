@@ -85,5 +85,9 @@ func (a *ArangoPlatformChart) Ready() bool {
 		return false
 	}
 
+	if a.Status.Info.Checksum != a.Spec.Checksum() {
+		return false
+	}
+
 	return true
 }

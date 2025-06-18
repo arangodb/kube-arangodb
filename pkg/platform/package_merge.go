@@ -22,26 +22,36 @@ package platform
 
 import (
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 )
 
-func registry() (*cobra.Command, error) {
+func packageMerge() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "registry"
-	cmd.Short = "Registry related operations"
+	cmd.Use = "merge ... packages"
+	cmd.Short = "Merges definitions into single file"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName); err != nil {
+	if err := cli.RegisterFlags(&cmd); err != nil {
 		return nil, err
 	}
 
-	if err := withRegisterCommand(&cmd,
-		registryStatus,
-		registryInstall,
-	); err != nil {
-		return nil, err
-	}
+	cmd.RunE = getRunner().With(packageMergeRun).Run
 
 	return &cmd, nil
+}
+
+func packageMergeRun(cmd *cobra.Command, args []string) error {
+	p, err := getHelmPackages(args...)
+	if err != nil {
+		return err
+	}
+
+	d, err := yaml.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	return render(cmd, "---\n\n%s", string(d))
 }

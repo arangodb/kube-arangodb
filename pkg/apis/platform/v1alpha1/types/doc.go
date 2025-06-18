@@ -18,23 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build testing
-
-package chart
-
-import (
-	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-)
-
-func Handler(operator operator.Operator, recorder event.Recorder, client kclient.Client) operator.Handler {
-	return &handler{
-		client:     client.Arango(),
-		kubeClient: client.Kubernetes(),
-
-		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
-
-		operator: operator,
-	}
-}
+// +k8s:deepcopy-gen=package
+// +groupName=types.platform.arangodb.com
+package types

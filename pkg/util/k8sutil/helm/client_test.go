@@ -243,7 +243,7 @@ func Test_Connection(t *testing.T) {
 		})
 
 		t.Run("Verify", func(t *testing.T) {
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "test")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "test")
 			require.NotNil(t, cm)
 			require.Equal(t, "PLACEHOLDER", cm.Data)
 		})
@@ -257,7 +257,7 @@ func Test_Connection(t *testing.T) {
 		})
 
 		t.Run("Verify", func(t *testing.T) {
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "test")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "test")
 			require.NotNil(t, cm)
 			require.Equal(t, "test", cm.Data)
 		})

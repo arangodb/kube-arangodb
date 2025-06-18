@@ -54,3 +54,10 @@ func NewConfig() (*rest.Config, error) {
 
 	return clientcmd.BuildConfigFromFlags("", fmt.Sprintf("%s/.kube/config", home))
 }
+
+// NewFileConfig loads config from path
+func NewFileConfig(path string) func() (*rest.Config, error) {
+	return func() (config *rest.Config, err error) {
+		return clientcmd.BuildConfigFromFlags("", path)
+	}
+}

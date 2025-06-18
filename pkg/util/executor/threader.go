@@ -20,7 +20,9 @@
 
 package executor
 
-import "sync"
+import (
+	"sync"
+)
 
 func NewThreadManager(threads int) ThreadManager {
 	r := make(chan ThreadID, threads)

@@ -53,6 +53,10 @@ func (d Data) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s)
 }
 
+func (d Data) IsZero() bool {
+	return len(d) == 0
+}
+
 func (d Data) SHA256() string {
 	return util.SHA256(d)
 }

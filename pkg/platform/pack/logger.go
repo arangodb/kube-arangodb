@@ -18,22 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package pack
 
-import "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-type Service struct {
-	Platform ServicePlatform `json:"arangodb_platform,omitempty"`
-}
-
-func (s Service) Values() (helm.Values, error) {
-	return helm.NewValues(s)
-}
-
-type ServicePlatform struct {
-	Deployment ServicePlatformDeployment `json:"deployment,omitempty"`
-}
-
-type ServicePlatformDeployment struct {
-	Name string `json:"name,omitempty"`
-}
+var (
+	logger = logging.Global().RegisterAndGetLogger("installer-pack", logging.Info)
+)

@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package labels
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"

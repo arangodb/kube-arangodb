@@ -18,27 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package types
 
-import (
-	"github.com/spf13/cobra"
+import "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-)
+type Service struct {
+	Platform ServicePlatform `json:"arangodb_platform,omitempty"`
+}
 
-func service() (*cobra.Command, error) {
-	var cmd cobra.Command
+func (s Service) Values() (helm.Values, error) {
+	return helm.NewValues(s)
+}
 
-	cmd.Use = "service"
-	cmd.Short = "Service related operations"
+type ServicePlatform struct {
+	Deployment ServicePlatformDeployment `json:"deployment,omitempty"`
+}
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName); err != nil {
-		return nil, err
-	}
-
-	if err := withRegisterCommand(&cmd, serviceEnable, serviceStatus, serviceEnableService); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
+type ServicePlatformDeployment struct {
+	Name string `json:"name,omitempty"`
 }

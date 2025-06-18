@@ -313,7 +313,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "PLACEHOLDER", cm.Data)
@@ -346,7 +346,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "chart", cm.Data)
@@ -382,7 +382,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "service", cm.Data)
@@ -418,7 +418,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "service", cm.Data)
@@ -453,7 +453,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "PLACEHOLDER", cm.Data)
@@ -475,7 +475,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "PLACEHOLDER", cm.Data)
@@ -497,7 +497,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "chart", cm.Data)
@@ -522,7 +522,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "service", cm.Data)
@@ -547,7 +547,7 @@ func Test_ImplementationV2(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "secret", "example")
 			require.NotNil(t, cm)
 
 			require.Equal(t, "service", cm.Data)

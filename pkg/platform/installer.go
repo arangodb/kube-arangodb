@@ -38,13 +38,11 @@ func installer() (*cobra.Command, error) {
 
 	cmd.SetContext(shutdown.Context())
 
-	if err := cli.RegisterFlags(&cmd, flagNamespace); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagNamespace, flagKubeconfig); err != nil {
 		return nil, err
 	}
 
 	if err := withRegisterCommand(&cmd,
-		service,
-		registry,
 		pkg,
 	); err != nil {
 		return nil, err

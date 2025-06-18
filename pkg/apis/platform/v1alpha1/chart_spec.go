@@ -23,6 +23,7 @@ package v1alpha1
 import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -45,4 +46,18 @@ func (c *ArangoPlatformChartSpec) Validate() error {
 	}
 
 	return nil
+}
+
+func (c *ArangoPlatformChartSpec) Checksum() string {
+	if c == nil {
+		return ""
+	}
+
+	checksums := make([]string, 0, 2)
+	checksums = append(checksums, c.Definition.SHA256())
+	if v := c.Overrides; !v.IsZero() {
+		checksums = append(checksums, v.SHA256())
+	}
+
+	return util.SHA256FromStringArray(checksums...)
 }

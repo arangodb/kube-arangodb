@@ -21,31 +21,33 @@
 package platform
 
 import (
-	"context"
-	"io"
+	"fmt"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/spf13/cobra"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/kconfig"
 )
 
-func waitForChart(ctx context.Context, client kclient.Client, namespace, name string) util.TimeoutFunc[*platformApi.ChartStatusInfo] {
-	return util.NewTimeoutFunc(func() (*platformApi.ChartStatusInfo, error) {
-		c, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(namespace).Get(ctx, name, meta.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
+func getKubernetesClient(cmd *cobra.Command) (kclient.Client, error) {
+	f := kclient.GetUnattachedFactory()
+	v, err := flagKubeconfig.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+	if v == "" {
+		f.SetKubeConfigGetter(kclient.NewStaticConfigGetter(kconfig.NewConfig))
+	} else {
+		f.SetKubeConfigGetter(kclient.NewStaticConfigGetter(kconfig.NewFileConfig(v)))
+	}
 
-		if !c.Ready() {
-			return nil, nil
-		}
+	if err := f.Refresh(); err != nil {
+		return nil, err
+	}
 
-		if c.Status.Info == nil {
-			return nil, nil
-		}
-
-		return c.Status.Info, io.EOF
-	})
+	if c, ok := f.Client(); !ok {
+		return nil, fmt.Errorf("unable to find Kubernetes client")
+	} else {
+		return c, nil
+	}
 }

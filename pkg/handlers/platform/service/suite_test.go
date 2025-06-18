@@ -53,7 +53,7 @@ func newFakeHandler(t *testing.T) (*handler, string, operator.Handler) {
 		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
 		operator:      op,
 		helm:          h,
-	}, ns, chart.Handler(op, recorder, client.Arango(), client.Kubernetes())
+	}, ns, chart.Handler(op, recorder, client)
 }
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {

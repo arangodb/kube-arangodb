@@ -108,3 +108,13 @@ func JSON(key string, item any) Wrap {
 		return in.Str(key, string(data))
 	}
 }
+
+func WithElapsed(key string) Wrap {
+	return WithElapsedCustom(key, time.Now())
+}
+
+func WithElapsedCustom(key string, t time.Time) Wrap {
+	return func(in *zerolog.Event) *zerolog.Event {
+		return in.Str(key, time.Since(t).String())
+	}
+}

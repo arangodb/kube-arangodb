@@ -23,12 +23,20 @@ package platform
 import (
 	"os"
 
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 var (
+	flagKubeconfig = cli.Flag[string]{
+		Name:        "kubeconfig",
+		Description: "Kubernetes Config File",
+		Default:     "",
+		Persistent:  true,
+	}
+
 	flagNamespace = cli.Flag[string]{
 		Name:        "namespace",
 		Short:       "n",
@@ -42,6 +50,13 @@ var (
 		Description: "Kubernetes Platform Name (name of the ArangoDeployment)",
 		Default:     "",
 		Persistent:  true,
+		Check: func(in string) error {
+			if err := sharedApi.IsValidName(in); err != nil {
+				return errors.Errorf("Invalid deployment name: %s", err.Error())
+			}
+
+			return nil
+		},
 	}
 
 	flagOutput = cli.Flag[string]{
@@ -103,5 +118,20 @@ var (
 			}
 			return nil
 		},
+	}
+
+	flagRegistryUseCredentials = cli.Flag[bool]{
+		Name:        "registry.docker.credentials",
+		Description: "Use Docker Credentials",
+		Default:     false,
+		Check: func(in bool) error {
+			return nil
+		},
+	}
+
+	flagRegistryInsecure = cli.Flag[[]string]{
+		Name:        "registry.docker.insecure",
+		Description: "List of insecure registries",
+		Default:     nil,
 	}
 )

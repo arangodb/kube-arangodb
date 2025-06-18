@@ -22,6 +22,8 @@ package executor
 
 import (
 	"context"
+	"io"
+	"os"
 	"sync"
 	"time"
 
@@ -54,6 +56,8 @@ type Executor interface {
 type Handler interface {
 	RunAsync(ctx context.Context, f RunFunc) Executor
 
+	Timeout(ctx context.Context, t Thread, f RunFunc, timeout, interval time.Duration) error
+
 	WaitForSubThreads(t Thread)
 }
 
@@ -69,6 +73,36 @@ type handler struct {
 	log logging.Logger
 
 	err error
+}
+
+func (h *handler) Timeout(ctx context.Context, t Thread, f RunFunc, timeout, interval time.Duration) error {
+	timeoutT := time.NewTimer(timeout)
+	defer timeoutT.Stop()
+
+	intervalT := time.NewTicker(interval)
+	defer intervalT.Stop()
+
+	for {
+		err := f(ctx, h.log, t, h)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+
+			return err
+		}
+
+		t.Release()
+
+		select {
+		case <-timeoutT.C:
+			return os.ErrDeadlineExceeded
+		case <-ctx.Done():
+			return os.ErrDeadlineExceeded
+		case <-intervalT.C:
+			continue
+		}
+	}
 }
 
 func (h *handler) WaitForSubThreads(t Thread) {

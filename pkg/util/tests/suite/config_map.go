@@ -24,7 +24,7 @@ package suite
 
 import (
 	"context"
-	"fmt"
+	goStrings "strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -35,8 +35,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
 
-func GetConfigMap(t *testing.T, k8s kubernetes.Interface, namespace, name string) *ConfigMap {
-	cm, err := k8s.CoreV1().ConfigMaps(namespace).Get(context.Background(), fmt.Sprintf("secret-%s", name), meta.GetOptions{})
+func GetConfigMap(t *testing.T, k8s kubernetes.Interface, namespace string, parts ...string) *ConfigMap {
+	cm, err := k8s.CoreV1().ConfigMaps(namespace).Get(context.Background(), goStrings.Join(parts, "-"), meta.GetOptions{})
 	if err != nil {
 		if kerrors.IsNotFound(err) {
 			return nil
