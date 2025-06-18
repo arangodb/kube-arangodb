@@ -34,17 +34,17 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func Handler(t *testing.T, ctx context.Context, mods ...Mod) svc.Handler {
+func Handler(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) svc.Handler {
 	handler, err := New(ctx, NewConfiguration().With(mods...))
 	require.NoError(t, err)
 
 	return handler
 }
 
-func Server(t *testing.T, ctx context.Context, mods ...Mod) (string, svc.ServiceStarter) {
+func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (string, svc.ServiceStarter) {
 	directory := t.TempDir()
 
-	var currentMods []Mod
+	var currentMods []util.ModR[Configuration]
 
 	currentMods = append(currentMods, func(c Configuration) Configuration {
 		c.Path = directory
@@ -64,7 +64,7 @@ func Server(t *testing.T, ctx context.Context, mods ...Mod) (string, svc.Service
 	return directory, local.Start(ctx)
 }
 
-func Client(t *testing.T, ctx context.Context, mods ...Mod) (pbAuthenticationV1.AuthenticationV1Client, string) {
+func Client(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (pbAuthenticationV1.AuthenticationV1Client, string) {
 	directory, start := Server(t, ctx, mods...)
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbAuthenticationV1.NewAuthenticationV1Client, start.Address())

@@ -90,7 +90,7 @@ func (m manager[T]) Get(ctx context.Context, key string) (T, bool, time.Duration
 }
 
 func (m manager[T]) Invalidate(ctx context.Context, key string) (bool, error) {
-	return m.cache.Revoke(ctx, fmt.Sprintf("%s_%s", m.t, util.SHA256FromString(key)))
+	return m.cache.Remove(ctx, fmt.Sprintf("%s_%s", m.t, util.SHA256FromString(key)))
 }
 
 type session struct {

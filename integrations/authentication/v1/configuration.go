@@ -23,6 +23,8 @@ package v1
 import (
 	"time"
 
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -41,8 +43,6 @@ const (
 	DefaultMaxTokenSize = 64
 )
 
-type Mod func(c Configuration) Configuration
-
 func NewConfiguration() Configuration {
 	return Configuration{
 		Enabled: true,
@@ -60,6 +60,7 @@ func NewConfiguration() Configuration {
 }
 
 type Configuration struct {
+	integrationsShared.Database
 	Enabled bool
 
 	TTL time.Duration
@@ -67,17 +68,9 @@ type Configuration struct {
 	Path string
 
 	Create Token
-
-	Database ConfigurationDatabase
 }
 
-type ConfigurationDatabase struct {
-	Proto    string
-	Endpoint string
-	Port     int
-}
-
-func (c Configuration) With(mods ...Mod) Configuration {
+func (c Configuration) With(mods ...util.ModR[Configuration]) Configuration {
 	n := c
 
 	for _, mod := range mods {

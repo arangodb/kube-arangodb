@@ -32,7 +32,7 @@ import (
 
 	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
 	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
-	"github.com/arangodb/kube-arangodb/pkg/integrations/clients"
+	integrationsClients "github.com/arangodb/kube-arangodb/pkg/integrations/clients"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -147,6 +147,8 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 		f.String("database.endpoint", "localhost", "Endpoint of ArangoDB"),
 		f.String("database.proto", "http", "Proto of the ArangoDB endpoint"),
 		f.Int("database.port", 8529, "Port of ArangoDB"),
+		f.Int("database.wc", 1, "ArangoDB WriteConcern"),
+		f.Int("database.rf", 1, "ArangoDB ReplicationFactor"),
 		f.StringVar(&c.health.address, "health.address", "0.0.0.0:9091", "Address to expose health service"),
 		f.BoolVar(&c.health.shutdownEnabled, "health.shutdown.enabled", true, "Determines if shutdown service should be enabled and exposed"),
 		f.StringVar(&c.health.auth.t, "health.auth.type", "None", "Auth type for health service"),
@@ -190,7 +192,7 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 		}
 	}
 
-	return clients.Register(cmd)
+	return integrationsClients.Register(cmd)
 }
 
 func (c *configuration) run(cmd *cobra.Command, args []string) error {

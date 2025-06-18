@@ -685,9 +685,6 @@ func (s DeploymentSpec) Checksum() (string, error) {
 // GetCoreContainers returns all containers' names which must running in the pod for the given group of servers.
 func (s DeploymentSpec) GetCoreContainers(group ServerGroup) utils.StringList {
 	groupSpec := s.GetServerGroupSpec(group)
-	if len(groupSpec.SidecarCoreNames) == 0 {
-		return utils.StringList{shared.ServerContainerName}
-	}
 
 	result := make(utils.StringList, 0, len(groupSpec.SidecarCoreNames)+3)
 	if !utils.StringList(groupSpec.SidecarCoreNames).Has(shared.ServerContainerName) {

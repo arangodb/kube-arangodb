@@ -13,7 +13,7 @@ import (
 	"io"
 	"net/http"
 
-	definition_7 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	definition_8 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -33,7 +33,7 @@ var _ = utilities.NewDoubleArray
 var _ = metadata.Join
 
 func request_ShutdownV1_Shutdown_0(ctx context.Context, marshaler runtime.Marshaler, client ShutdownV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq definition_7.Empty
+	var protoReq definition_8.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.Shutdown(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -42,7 +42,7 @@ func request_ShutdownV1_Shutdown_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 func local_request_ShutdownV1_Shutdown_0(ctx context.Context, marshaler runtime.Marshaler, server ShutdownV1Server, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq definition_7.Empty
+	var protoReq definition_8.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.Shutdown(ctx, &protoReq)

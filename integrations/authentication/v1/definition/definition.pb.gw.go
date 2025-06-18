@@ -13,7 +13,7 @@ import (
 	"io"
 	"net/http"
 
-	definition_7 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	definition_8 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -85,7 +85,7 @@ func local_request_AuthenticationV1_CreateToken_0(ctx context.Context, marshaler
 }
 
 func request_AuthenticationV1_Identity_0(ctx context.Context, marshaler runtime.Marshaler, client AuthenticationV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq definition_7.Empty
+	var protoReq definition_8.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.Identity(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -94,7 +94,7 @@ func request_AuthenticationV1_Identity_0(ctx context.Context, marshaler runtime.
 }
 
 func local_request_AuthenticationV1_Identity_0(ctx context.Context, marshaler runtime.Marshaler, server AuthenticationV1Server, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq definition_7.Empty
+	var protoReq definition_8.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.Identity(ctx, &protoReq)

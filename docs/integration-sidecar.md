@@ -123,6 +123,18 @@ metadata:
     integration.profiles.arangodb.com/shutdown: v1
 ```
 
+#### [Meta V1](./integration/meta.v1.md)
+
+Meta Integration Sidecar
+
+To enable:
+
+```yaml
+metadata:
+  labels:
+    integration.profiles.arangodb.com/meta: v1
+```
+
 ### Envs
 
 #### INTEGRATION_API_ADDRESS

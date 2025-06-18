@@ -42,7 +42,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 	var z impl
 
 	z.configuration = configuration
-	z.authClient = cache.NewObject[pbAuthenticationV1.AuthenticationV1Client](configuration.GetAuthClientFetcher)
+	z.authClient = configuration.AuthClient()
 
 	z.cache = cache.NewCache[pbImplEnvoyAuthV3Shared.Token, pbImplEnvoyAuthV3Shared.ResponseAuth](func(ctx context.Context, in pbImplEnvoyAuthV3Shared.Token) (pbImplEnvoyAuthV3Shared.ResponseAuth, time.Time, error) {
 		client, err := z.authClient.Get(ctx)
