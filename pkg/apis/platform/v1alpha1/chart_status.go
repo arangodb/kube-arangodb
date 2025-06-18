@@ -22,7 +22,6 @@ package v1alpha1
 
 import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
 type ArangoPlatformChartStatus struct {
@@ -31,7 +30,4 @@ type ArangoPlatformChartStatus struct {
 	// Conditions specific to the entire storage
 	// +doc/type: api.Conditions
 	Conditions api.ConditionList `json:"conditions,omitempty"`
-
-	// Overrides keeps the Chart overrides
-	Overrides sharedApi.Any `json:"overrides,omitempty"`
 }

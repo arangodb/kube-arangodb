@@ -51,6 +51,11 @@ service SchedulerV2 {
   // Executes Helm Test Action
   rpc Test(SchedulerV2TestRequest) returns (SchedulerV2TestResponse);
 
+  // Executes Helm Install Action
+  rpc InstallV2(SchedulerV2InstallV2Request) returns (SchedulerV2InstallV2Response);
+  // Executes Helm Upgrade Action
+  rpc UpgradeV2(SchedulerV2UpgradeV2Request) returns (SchedulerV2UpgradeV2Response);
+
   // Discovers Kubernetes API Resources for Group
   rpc DiscoverAPIResources(SchedulerV2DiscoverAPIResourcesRequest) returns (SchedulerV2DiscoverAPIResourcesResponse);
   // Discovers Kubernetes API Resources for Kind

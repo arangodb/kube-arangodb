@@ -64,4 +64,6 @@ message SchedulerV2GetChartResponse {
   bytes chart = 1;
   // Chart Info
   SchedulerV2ChartInfo info = 2;
+  // Chart Overrides
+  bytes overrides = 3;
 }

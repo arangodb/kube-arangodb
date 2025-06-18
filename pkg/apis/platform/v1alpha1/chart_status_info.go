@@ -30,4 +30,7 @@ type ChartStatusInfo struct {
 	Message string `json:"message,omitempty"`
 
 	Details *ChartDetails `json:"details,omitempty"`
+
+	// Overrides keeps the Chart overrides
+	Overrides sharedApi.Any `json:"overrides,omitempty"`
 }

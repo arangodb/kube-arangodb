@@ -67,3 +67,23 @@ func (a *ArangoPlatformChart) GetStatus() ArangoPlatformChartStatus {
 func (a *ArangoPlatformChart) SetStatus(status ArangoPlatformChartStatus) {
 	a.Status = status
 }
+
+func (a *ArangoPlatformChart) Ready() bool {
+	if a == nil {
+		return false
+	}
+
+	if a.Status.Info == nil {
+		return false
+	}
+
+	if a.Status.Info.Details == nil {
+		return false
+	}
+
+	if !a.Status.Conditions.IsTrue(ReadyCondition) {
+		return false
+	}
+
+	return true
+}

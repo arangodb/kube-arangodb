@@ -102,15 +102,15 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	for name, version := range r.Packages {
+	for name, packageSpec := range r.Packages {
 		def, ok := hm.Get(name)
 		if !ok {
 			return errors.Errorf("Unable to get '%s' chart", name)
 		}
 
-		ver, ok := def.Get(version)
+		ver, ok := def.Get(packageSpec.Version)
 		if !ok {
-			return errors.Errorf("Unable to get '%s' chart in version `%s`", name, version)
+			return errors.Errorf("Unable to get '%s' chart in version `%s`", name, packageSpec.Version)
 		}
 
 		chart, err := ver.Get(cmd.Context())
@@ -130,6 +130,7 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 				},
 				Spec: platformApi.ArangoPlatformChartSpec{
 					Definition: sharedApi.Data(chart),
+					Overrides:  sharedApi.Any(packageSpec.Overrides),
 				},
 			}, meta.CreateOptions{})
 			if err != nil {
@@ -157,13 +158,12 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 	}
 	logger.Str("uid", string(deploymentObject.GetUID())).Info("ArangoDeployment Found")
 
-	gv, err := r.Overrides.Marshal()
-	if err != nil {
-		logger.Err(err).Error("Unable to unmarshal values")
-		return err
-	}
-
 	for name, release := range r.Releases {
+		chartObject, err := waitForChart(cmd.Context(), client, ns, release.Package).Run(cmd.Context(), time.Minute, time.Second)
+		if err != nil {
+			return err
+		}
+
 		ov, err := release.Overrides.Marshal()
 		if err != nil {
 			logger.Err(err).Error("Unable to unmarshal values")
@@ -176,25 +176,20 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 					"name": deployment,
 				},
 			},
-		}, gv, ov)
+		}, chartObject.Overrides, ov)
 		if err != nil {
 			return errors.Wrapf(err, "Unable to build helm data")
 		}
 
 		logger.Info("Fetch ArangoPlatformChart")
 
-		chartObject, err := waitForChart(cmd.Context(), client, ns, release.Package).Run(cmd.Context(), time.Minute, time.Second)
-		if err != nil {
-			return err
-		}
-
-		logger.Str("uid", string(chartObject.GetUID())).Info("ArangoPlatformChart Found")
+		logger.Info("ArangoPlatformChart Found")
 
 		if current, err := hclient.Status(cmd.Context(), name); err != nil {
 			return err
 		} else if current == nil {
 			logger.Info("Service not found, installing")
-			if _, err := hclient.Install(cmd.Context(), helm.Chart(chartObject.Spec.Definition), mergedData, func(in *action.Install) {
+			if _, err := hclient.Install(cmd.Context(), helm.Chart(chartObject.Definition), mergedData, func(in *action.Install) {
 				in.Labels = map[string]string{
 					constants.HelmLabelArangoDBManaged:    "true",
 					constants.HelmLabelArangoDBDeployment: deployment,
@@ -211,7 +206,7 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 			logger.Info("Service found, comparing")
 
 			changed := false
-			if current.GetChart().GetMetadata().GetVersion() != chartObject.Status.Info.Details.GetVersion() {
+			if current.GetChart().GetMetadata().GetVersion() != chartObject.Details.GetVersion() {
 				logger.Info("Chart version expected: %s", current.GetChart().GetMetadata().GetVersion())
 				changed = true
 			}
@@ -224,7 +219,7 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 			}
 
 			if changed {
-				if _, err := hclient.Upgrade(cmd.Context(), name, helm.Chart(chartObject.Spec.Definition), mergedData, func(in *action.Upgrade) {
+				if _, err := hclient.Upgrade(cmd.Context(), name, helm.Chart(chartObject.Definition), mergedData, func(in *action.Upgrade) {
 					in.Labels = map[string]string{
 						constants.HelmLabelArangoDBManaged:    "true",
 						constants.HelmLabelArangoDBDeployment: deployment,

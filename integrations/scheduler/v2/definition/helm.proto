@@ -115,6 +115,72 @@ message SchedulerV2InstallResponse {
 
 
 // Request
+message SchedulerV2InstallV2Request {
+  // Request Options
+  optional SchedulerV2InstallRequestOptions options = 1;
+
+  // Helm Release Name
+  string name = 2;
+
+  // Helm Chart Name
+  string chart = 3;
+
+  // Helm Chart Values bytes
+  repeated bytes values = 4;
+}
+
+// Request Options
+message SchedulerV2InstallRequestV2Options {
+  // Release Labels
+  map<string, string> labels = 1;
+
+  // Waits for the upgrade to be completed
+  optional bool wait = 2;
+}
+
+// Response
+message SchedulerV2InstallV2Response {
+  // Helm Release Object
+  optional SchedulerV2Release release = 1;
+}
+
+
+// Request
+message SchedulerV2UpgradeV2Request {
+  // Request Options
+  optional SchedulerV2UpgradeRequestV2Options options = 1;
+
+  // Helm Release Name
+  string name = 2;
+
+  // Helm Chart Name
+  string chart = 3;
+
+  // Helm Chart Values bytes
+  repeated bytes values = 4;
+}
+
+// Request Options
+message SchedulerV2UpgradeRequestV2Options {
+  // Release Labels
+  map<string, string> labels = 1;
+
+  // Waits for the upgrade to be completed
+  optional bool wait = 2;
+}
+
+// Response
+message SchedulerV2UpgradeV2Response {
+  // Helm Release Object Before
+  optional SchedulerV2Release before = 1;
+
+
+  // Helm Release Object After
+  optional SchedulerV2Release after = 2;
+}
+
+
+// Request
 message SchedulerV2UpgradeRequest {
   // Request Options
   optional SchedulerV2UpgradeRequestOptions options = 1;

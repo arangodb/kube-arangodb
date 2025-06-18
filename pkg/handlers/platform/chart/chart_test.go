@@ -21,6 +21,7 @@
 package chart
 
 import (
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -173,5 +174,48 @@ func Test_ChartReconcile_EmptyChart(t *testing.T) {
 		require.Nil(t, extension.Status.Info.Details.Platform)
 		require.EqualValues(t, util.SHA256(suite.GetChart(t, "example", "1.1.0")), extension.Status.Info.Checksum)
 		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ReadyCondition))
+	})
+
+	t.Run("Valid chart 1.1.0 with overrides", func(t *testing.T) {
+		// Arrange
+		type object struct {
+			Name string `json:"name"`
+		}
+
+		obj := object{
+			Name: "TEST",
+		}
+
+		data, err := sharedApi.NewAny(obj)
+		require.NoError(t, err)
+
+		tests.Apply(t, extension, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+			obj.Spec.Definition = suite.GetChart(t, "example", "1.1.0")
+			obj.Spec.Overrides = data
+		})
+		tests.UpdateObjects(t, handler.kubeClient, handler.client, &extension)
+
+		// Test
+		require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+		// Refresh
+		refresh(t)
+
+		// Validate
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.SpecValidCondition))
+		require.NotNil(t, extension.Status.Info)
+		require.True(t, extension.Status.Info.Valid)
+		require.EqualValues(t, extension.Status.Info.Message, "")
+		require.NotNil(t, extension.Status.Info.Details)
+		require.EqualValues(t, "example", extension.Status.Info.Details.GetName())
+		require.EqualValues(t, "1.1.0", extension.Status.Info.Details.GetVersion())
+		require.Nil(t, extension.Status.Info.Details.Platform)
+		require.EqualValues(t, util.SHA256(suite.GetChart(t, "example", "1.1.0")), extension.Status.Info.Checksum)
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ReadyCondition))
+		require.NotNil(t, extension.Status.Info.Overrides)
+
+		nObj, err := sharedApi.FromAny[object](extension.Status.Info.Overrides)
+		require.NoError(t, err)
+		require.Equal(t, obj, nObj)
 	})
 }
