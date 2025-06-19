@@ -51,8 +51,18 @@ func (d Any) MarshalJSON() ([]byte, error) {
 	return ret, nil
 }
 
+func (Any) OpenAPISchemaType() []string { return []string{"object"} }
+
+func (Any) OpenAPIXPreserveUnknownFields() bool {
+	return true
+}
+
 func (d Any) SHA256() string {
 	return util.SHA256(d)
+}
+
+func (d Any) Equals(o Any) bool {
+	return d.SHA256() == o.SHA256()
 }
 
 func (d *Any) UnmarshalJSON(bytes []byte) error {

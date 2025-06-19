@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -117,7 +117,7 @@ func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, e
 
 func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformChart, status *platformApi.ArangoPlatformChartStatus) (bool, error) {
 	if status.Info != nil {
-		if status.Info.Checksum != extension.Spec.Definition.SHA256() {
+		if status.Info.Checksum != extension.Spec.Definition.SHA256() || !status.Info.Overrides.Equals(extension.Spec.Overrides) {
 			status.Info = nil
 			return true, operator.Reconcile("Spec changed")
 		}
@@ -135,6 +135,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 		status.Info = &platformApi.ChartStatusInfo{
 			Definition: extension.Spec.Definition,
 			Checksum:   extension.Spec.Definition.SHA256(),
+			Overrides:  extension.Spec.Overrides,
 			Valid:      false,
 			Message:    "Chart is invalid",
 		}
@@ -146,6 +147,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 		status.Info = &platformApi.ChartStatusInfo{
 			Definition: extension.Spec.Definition,
 			Checksum:   extension.Spec.Definition.SHA256(),
+			Overrides:  extension.Spec.Overrides,
 			Valid:      false,
 			Message:    "Chart Name mismatch",
 		}
@@ -158,6 +160,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 		status.Info = &platformApi.ChartStatusInfo{
 			Definition: extension.Spec.Definition,
 			Checksum:   extension.Spec.Definition.SHA256(),
+			Overrides:  extension.Spec.Overrides,
 			Valid:      false,
 			Message:    "Chart is invalid: Unable to get platform details",
 		}
@@ -168,6 +171,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 	status.Info = &platformApi.ChartStatusInfo{
 		Definition: extension.Spec.Definition,
 		Checksum:   extension.Spec.Definition.SHA256(),
+		Overrides:  extension.Spec.Overrides,
 		Valid:      true,
 		Details:    chartInfoExtract(chart.Chart(), platform),
 	}

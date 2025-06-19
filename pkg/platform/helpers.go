@@ -31,25 +31,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-func waitForChart(ctx context.Context, client kclient.Client, namespace, name string) util.TimeoutFunc[*platformApi.ArangoPlatformChart] {
-	return util.NewTimeoutFunc(func() (*platformApi.ArangoPlatformChart, error) {
+func waitForChart(ctx context.Context, client kclient.Client, namespace, name string) util.TimeoutFunc[*platformApi.ChartStatusInfo] {
+	return util.NewTimeoutFunc(func() (*platformApi.ChartStatusInfo, error) {
 		c, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(namespace).Get(ctx, name, meta.GetOptions{})
 		if err != nil {
 			return nil, err
+		}
+
+		if !c.Ready() {
+			return nil, nil
 		}
 
 		if c.Status.Info == nil {
 			return nil, nil
 		}
 
-		if c.Status.Info.Details == nil {
-			return nil, nil
-		}
-
-		if !c.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
-			return nil, nil
-		}
-
-		return c, io.EOF
+		return c.Status.Info, io.EOF
 	})
 }

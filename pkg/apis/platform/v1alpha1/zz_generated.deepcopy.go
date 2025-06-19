@@ -100,6 +100,11 @@ func (in *ArangoPlatformChartSpec) DeepCopyInto(out *ArangoPlatformChartSpec) {
 		*out = make(v1.Data, len(*in))
 		copy(*out, *in)
 	}
+	if in.Overrides != nil {
+		in, out := &in.Overrides, &out.Overrides
+		*out = make(v1.Any, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -433,6 +438,11 @@ func (in *ChartStatusInfo) DeepCopyInto(out *ChartStatusInfo) {
 		in, out := &in.Details, &out.Details
 		*out = new(ChartDetails)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.Overrides != nil {
+		in, out := &in.Overrides, &out.Overrides
+		*out = make(v1.Any, len(*in))
+		copy(*out, *in)
 	}
 	return
 }

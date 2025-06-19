@@ -41,6 +41,10 @@ type SchedulerV2Client interface {
 	Uninstall(ctx context.Context, in *SchedulerV2UninstallRequest, opts ...grpc.CallOption) (*SchedulerV2UninstallResponse, error)
 	// Executes Helm Test Action
 	Test(ctx context.Context, in *SchedulerV2TestRequest, opts ...grpc.CallOption) (*SchedulerV2TestResponse, error)
+	// Executes Helm Install Action
+	InstallV2(ctx context.Context, in *SchedulerV2InstallV2Request, opts ...grpc.CallOption) (*SchedulerV2InstallV2Response, error)
+	// Executes Helm Upgrade Action
+	UpgradeV2(ctx context.Context, in *SchedulerV2UpgradeV2Request, opts ...grpc.CallOption) (*SchedulerV2UpgradeV2Response, error)
 	// Discovers Kubernetes API Resources for Group
 	DiscoverAPIResources(ctx context.Context, in *SchedulerV2DiscoverAPIResourcesRequest, opts ...grpc.CallOption) (*SchedulerV2DiscoverAPIResourcesResponse, error)
 	// Discovers Kubernetes API Resources for Kind
@@ -138,6 +142,24 @@ func (c *schedulerV2Client) Uninstall(ctx context.Context, in *SchedulerV2Uninst
 func (c *schedulerV2Client) Test(ctx context.Context, in *SchedulerV2TestRequest, opts ...grpc.CallOption) (*SchedulerV2TestResponse, error) {
 	out := new(SchedulerV2TestResponse)
 	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV2/Test", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV2Client) InstallV2(ctx context.Context, in *SchedulerV2InstallV2Request, opts ...grpc.CallOption) (*SchedulerV2InstallV2Response, error) {
+	out := new(SchedulerV2InstallV2Response)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV2/InstallV2", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *schedulerV2Client) UpgradeV2(ctx context.Context, in *SchedulerV2UpgradeV2Request, opts ...grpc.CallOption) (*SchedulerV2UpgradeV2Response, error) {
+	out := new(SchedulerV2UpgradeV2Response)
+	err := c.cc.Invoke(ctx, "/scheduler.SchedulerV2/UpgradeV2", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -243,6 +265,10 @@ type SchedulerV2Server interface {
 	Uninstall(context.Context, *SchedulerV2UninstallRequest) (*SchedulerV2UninstallResponse, error)
 	// Executes Helm Test Action
 	Test(context.Context, *SchedulerV2TestRequest) (*SchedulerV2TestResponse, error)
+	// Executes Helm Install Action
+	InstallV2(context.Context, *SchedulerV2InstallV2Request) (*SchedulerV2InstallV2Response, error)
+	// Executes Helm Upgrade Action
+	UpgradeV2(context.Context, *SchedulerV2UpgradeV2Request) (*SchedulerV2UpgradeV2Response, error)
 	// Discovers Kubernetes API Resources for Group
 	DiscoverAPIResources(context.Context, *SchedulerV2DiscoverAPIResourcesRequest) (*SchedulerV2DiscoverAPIResourcesResponse, error)
 	// Discovers Kubernetes API Resources for Kind
@@ -288,6 +314,12 @@ func (UnimplementedSchedulerV2Server) Uninstall(context.Context, *SchedulerV2Uni
 }
 func (UnimplementedSchedulerV2Server) Test(context.Context, *SchedulerV2TestRequest) (*SchedulerV2TestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Test not implemented")
+}
+func (UnimplementedSchedulerV2Server) InstallV2(context.Context, *SchedulerV2InstallV2Request) (*SchedulerV2InstallV2Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InstallV2 not implemented")
+}
+func (UnimplementedSchedulerV2Server) UpgradeV2(context.Context, *SchedulerV2UpgradeV2Request) (*SchedulerV2UpgradeV2Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpgradeV2 not implemented")
 }
 func (UnimplementedSchedulerV2Server) DiscoverAPIResources(context.Context, *SchedulerV2DiscoverAPIResourcesRequest) (*SchedulerV2DiscoverAPIResourcesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DiscoverAPIResources not implemented")
@@ -482,6 +514,42 @@ func _SchedulerV2_Test_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SchedulerV2_InstallV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SchedulerV2InstallV2Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV2Server).InstallV2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV2/InstallV2",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV2Server).InstallV2(ctx, req.(*SchedulerV2InstallV2Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SchedulerV2_UpgradeV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SchedulerV2UpgradeV2Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SchedulerV2Server).UpgradeV2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/scheduler.SchedulerV2/UpgradeV2",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SchedulerV2Server).UpgradeV2(ctx, req.(*SchedulerV2UpgradeV2Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SchedulerV2_DiscoverAPIResources_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SchedulerV2DiscoverAPIResourcesRequest)
 	if err := dec(in); err != nil {
@@ -635,6 +703,14 @@ var SchedulerV2_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Test",
 			Handler:    _SchedulerV2_Test_Handler,
+		},
+		{
+			MethodName: "InstallV2",
+			Handler:    _SchedulerV2_InstallV2_Handler,
+		},
+		{
+			MethodName: "UpgradeV2",
+			Handler:    _SchedulerV2_UpgradeV2_Handler,
 		},
 		{
 			MethodName: "DiscoverAPIResources",

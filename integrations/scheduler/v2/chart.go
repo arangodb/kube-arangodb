@@ -69,12 +69,15 @@ func (i *implementation) ListCharts(req *pbSchedulerV2.SchedulerV2ListChartsRequ
 func (i *implementation) GetChart(ctx context.Context, in *pbSchedulerV2.SchedulerV2GetChartRequest) (*pbSchedulerV2.SchedulerV2GetChartResponse, error) {
 	resp, err := i.kclient.Arango().PlatformV1alpha1().ArangoPlatformCharts(i.client.Namespace()).Get(ctx, in.GetName(), meta.GetOptions{})
 	if err != nil {
-		logger.Err(err).Warn("Unable to run action: GetChart")
 		return nil, asGRPCError(err)
 	}
 
 	if !resp.Status.Conditions.IsTrue(platformApi.SpecValidCondition) {
 		return nil, status.Errorf(codes.Unavailable, "Chart Spec is invalid")
+	}
+
+	if !resp.Ready() {
+		return nil, status.Errorf(codes.Unavailable, "Chart is not Ready")
 	}
 
 	if info := resp.Status.Info; info == nil {
@@ -91,8 +94,9 @@ func (i *implementation) GetChart(ctx context.Context, in *pbSchedulerV2.Schedul
 				return nil, status.Errorf(codes.Unavailable, "Chart Details are missing")
 			} else {
 				return &pbSchedulerV2.SchedulerV2GetChartResponse{
-					Chart: info.Definition,
-					Info:  chartInfoDetailsAsInfo(details),
+					Chart:     info.Definition,
+					Info:      chartInfoDetailsAsInfo(details),
+					Overrides: info.Overrides,
 				}, nil
 			}
 		}

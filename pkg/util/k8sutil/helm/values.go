@@ -26,6 +26,25 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
+func NewMergeRawValues(opts ValuesMergeMethod, vs ...Values) (Values, error) {
+	if len(vs) == 1 {
+		return vs[0], nil
+	}
+
+	o := vs[0]
+
+	for _, el := range vs[1:] {
+		no, err := opts.Merge(o, el)
+		if err != nil {
+			return nil, err
+		}
+
+		o = no
+	}
+
+	return o, nil
+}
+
 func NewMergeValues(opts ValuesMergeMethod, vs ...any) (Values, error) {
 	if len(vs) == 0 {
 		return nil, nil

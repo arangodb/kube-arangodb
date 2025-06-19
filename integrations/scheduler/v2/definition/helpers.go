@@ -182,3 +182,37 @@ func (i *SchedulerV2ReleaseInfoResource) AsHelmResource() helm.Resource {
 		Namespace:        i.GetNamespace(),
 	}
 }
+
+func (i *SchedulerV2InstallRequestV2Options) Options() []util.Mod[action.Install] {
+	if i == nil {
+		return nil
+	}
+
+	var opts []util.Mod[action.Install]
+
+	if v := i.GetLabels(); len(v) > 0 {
+		opts = append(opts, func(in *action.Install) {
+			in.Labels = v
+			in.Wait = util.OptionalType(i.Wait, false)
+		})
+	}
+
+	return opts
+}
+
+func (i *SchedulerV2UpgradeRequestV2Options) Options() []util.Mod[action.Upgrade] {
+	if i == nil {
+		return nil
+	}
+
+	var opts []util.Mod[action.Upgrade]
+
+	if v := i.GetLabels(); len(v) > 0 {
+		opts = append(opts, func(in *action.Upgrade) {
+			in.Labels = v
+			in.Wait = util.OptionalType(i.Wait, false)
+		})
+	}
+
+	return opts
+}

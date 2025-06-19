@@ -176,8 +176,8 @@ func registryInstallRun(cmd *cobra.Command, args []string) error {
 
 		logger.Debug("Wait For Chart: %s", name)
 
-		if _, err := waitForChart(cmd.Context(), client, ns, name).With(func(in *platformApi.ArangoPlatformChart) error {
-			if in.Status.Info.Details.Version != ver.Version() {
+		if _, err := waitForChart(cmd.Context(), client, ns, name).With(func(in *platformApi.ChartStatusInfo) error {
+			if in.Details.Version != ver.Version() {
 				return nil
 			}
 

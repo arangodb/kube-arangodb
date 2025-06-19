@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
 func (i *implementation) Alive(ctx context.Context, in *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
@@ -219,4 +220,115 @@ func (i *implementation) Test(ctx context.Context, in *pbSchedulerV2.SchedulerV2
 	return &pbSchedulerV2.SchedulerV2TestResponse{
 		Release: newChartReleaseFromHelmRelease(resp),
 	}, nil
+}
+
+func (i *implementation) InstallV2(ctx context.Context, in *pbSchedulerV2.SchedulerV2InstallV2Request) (*pbSchedulerV2.SchedulerV2InstallV2Response, error) {
+	if in.GetName() == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Name cannot be empty")
+	}
+
+	chart, err := i.GetChart(ctx, &pbSchedulerV2.SchedulerV2GetChartRequest{Name: in.GetChart()})
+	if err != nil {
+		return nil, err
+	}
+
+	rawValues := make([]helm.Values, 0, len(in.Values)+1)
+
+	if len(chart.Overrides) > 0 {
+		rawValues = append(rawValues, chart.Overrides)
+	}
+
+	for _, v := range in.Values {
+		if len(v) > 0 {
+			rawValues = append(rawValues, v)
+		}
+	}
+
+	values, err := helm.NewMergeRawValues(helm.MergeMaps, rawValues...)
+	if err != nil {
+		return nil, err
+	}
+
+	var mods []util.Mod[action.Install]
+
+	mods = append(mods, in.GetOptions().Options()...)
+	mods = append(mods, func(action *action.Install) {
+		action.ReleaseName = in.GetName()
+		action.Namespace = i.cfg.Namespace
+
+		if action.Labels == nil {
+			action.Labels = map[string]string{}
+		}
+
+		action.Labels[LabelArangoDBDeploymentName] = i.cfg.Deployment
+	})
+
+	resp, err := i.client.Install(ctx, chart.Chart, values, mods...)
+	if err != nil {
+		logger.Err(err).Warn("Unable to run action: InstallV2")
+		return nil, status.Errorf(codes.Internal, "Unable to run action: InstallV2: %s", err.Error())
+	}
+
+	return &pbSchedulerV2.SchedulerV2InstallV2Response{
+		Release: newChartReleaseFromHelmRelease(resp),
+	}, nil
+}
+
+func (i *implementation) UpgradeV2(ctx context.Context, in *pbSchedulerV2.SchedulerV2UpgradeV2Request) (*pbSchedulerV2.SchedulerV2UpgradeV2Response, error) {
+	if in.GetName() == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Name cannot be empty")
+	}
+
+	chart, err := i.GetChart(ctx, &pbSchedulerV2.SchedulerV2GetChartRequest{Name: in.GetChart()})
+	if err != nil {
+		return nil, err
+	}
+
+	rawValues := make([]helm.Values, 0, len(in.Values)+1)
+
+	if len(chart.Overrides) > 0 {
+		rawValues = append(rawValues, chart.Overrides)
+	}
+
+	for _, v := range in.Values {
+		if len(v) > 0 {
+			rawValues = append(rawValues, v)
+		}
+	}
+
+	values, err := helm.NewMergeRawValues(helm.MergeMaps, rawValues...)
+	if err != nil {
+		return nil, err
+	}
+
+	var mods []util.Mod[action.Upgrade]
+
+	mods = append(mods, in.GetOptions().Options()...)
+	mods = append(mods, func(action *action.Upgrade) {
+		action.Namespace = i.cfg.Namespace
+
+		if action.Labels == nil {
+			action.Labels = map[string]string{}
+		}
+
+		action.Labels[LabelArangoDBDeploymentName] = i.cfg.Deployment
+	})
+
+	resp, err := i.client.Upgrade(ctx, in.GetName(), chart.Chart, values, mods...)
+	if err != nil {
+		logger.Err(err).Warn("Unable to run action: UpgradeV2")
+		return nil, status.Errorf(codes.Internal, "Unable to run action: UpgradeV2: %s", err.Error())
+	}
+
+	var r pbSchedulerV2.SchedulerV2UpgradeV2Response
+
+	if q := resp.Before; q != nil {
+		r.Before = newChartReleaseFromHelmRelease(q)
+	}
+
+	if q := resp.After; q != nil {
+		r.After = newChartReleaseFromHelmRelease(q)
+	}
+
+	return &r, nil
 }

@@ -33,9 +33,13 @@ import (
 )
 
 type Package struct {
-	Packages map[string]string `json:"packages,omitempty"`
+	Packages map[string]PackageSpec `json:"packages,omitempty"`
 
 	Releases map[string]PackageRelease `json:"releases,omitempty"`
+}
+
+type PackageSpec struct {
+	Version string `json:"version"`
 
 	Overrides Values `json:"overrides,omitempty"`
 }
@@ -63,7 +67,7 @@ func NewPackage(ctx context.Context, client kclient.Client, namespace, deploymen
 
 	var out Package
 
-	out.Packages = map[string]string{}
+	out.Packages = map[string]PackageSpec{}
 
 	out.Releases = map[string]PackageRelease{}
 
@@ -71,9 +75,13 @@ func NewPackage(ctx context.Context, client kclient.Client, namespace, deploymen
 		if !c.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
 			return nil, errors.Errorf("Chart `%s` is not in ready condition", name)
 		}
+
 		if info := c.Status.Info; info != nil {
 			if det := info.Details; det != nil {
-				out.Packages[name] = c.Status.Info.Details.GetVersion()
+				out.Packages[name] = PackageSpec{
+					Version:   det.GetVersion(),
+					Overrides: Values(info.Overrides),
+				}
 			}
 		}
 

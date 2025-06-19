@@ -62,6 +62,10 @@ func Test_Chart_List(t *testing.T) {
 							Type:   platformApi.SpecValidCondition,
 							Status: core.ConditionTrue,
 						},
+						{
+							Type:   platformApi.ReadyCondition,
+							Status: core.ConditionTrue,
+						},
 					},
 					Info: &platformApi.ChartStatusInfo{
 						Definition: make([]byte, 128),
@@ -208,6 +212,10 @@ func Test_Chart_Get(t *testing.T) {
 					Type:   platformApi.SpecValidCondition,
 					Status: core.ConditionTrue,
 				},
+				{
+					Type:   platformApi.ReadyCondition,
+					Status: core.ConditionTrue,
+				},
 			},
 			Info: &platformApi.ChartStatusInfo{
 				Definition: make([]byte, 128),
@@ -235,25 +243,25 @@ func Test_Chart_Get(t *testing.T) {
 
 	t.Run("Invalid Info", func(t *testing.T) {
 		resp, err := scheduler.GetChart(context.Background(), &pbSchedulerV2.SchedulerV2GetChartRequest{Name: t2.GetName()})
-		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable).Errorf(t, "Chart Infos are missing")
+		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable).Errorf(t, "Chart is not Ready")
 		require.Nil(t, resp)
 	})
 
 	t.Run("Invalid", func(t *testing.T) {
 		resp, err := scheduler.GetChart(context.Background(), &pbSchedulerV2.SchedulerV2GetChartRequest{Name: t3.GetName()})
-		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable).Errorf(t, "Chart is not Valid")
+		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable).Errorf(t, "Chart is not Ready")
 		require.Nil(t, resp)
 	})
 
 	t.Run("Invalid with message", func(t *testing.T) {
 		resp, err := scheduler.GetChart(context.Background(), &pbSchedulerV2.SchedulerV2GetChartRequest{Name: t4.GetName()})
-		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable).Errorf(t, "Chart is not Valid: Invalid XxX")
+		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable).Errorf(t, "Chart is not Ready")
 		require.Nil(t, resp)
 	})
 
 	t.Run("Valid with missing details", func(t *testing.T) {
 		resp, err := scheduler.GetChart(context.Background(), &pbSchedulerV2.SchedulerV2GetChartRequest{Name: t5.GetName()})
-		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable).Errorf(t, "Chart Details are missing")
+		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable).Errorf(t, "Chart is not Ready")
 		require.Nil(t, resp)
 	})
 

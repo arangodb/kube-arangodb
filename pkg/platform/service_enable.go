@@ -124,13 +124,13 @@ func serviceEnableRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Str("uid", string(chartObject.GetUID())).Info("ArangoPlatformChart Found")
+	logger.Info("ArangoPlatformChart Found")
 
 	if current, err := hclient.Status(cmd.Context(), name); err != nil {
 		println(err)
 	} else if current == nil {
 		logger.Info("Service not found, installing")
-		if _, err := hclient.Install(cmd.Context(), helm.Chart(chartObject.Spec.Definition), mergedData, func(in *action.Install) {
+		if _, err := hclient.Install(cmd.Context(), helm.Chart(chartObject.Definition), mergedData, func(in *action.Install) {
 			in.Labels = map[string]string{
 				constants.HelmLabelArangoDBManaged:    "true",
 				constants.HelmLabelArangoDBDeployment: deployment,
@@ -147,7 +147,7 @@ func serviceEnableRun(cmd *cobra.Command, args []string) error {
 		logger.Info("Service found, comparing")
 
 		changed := false
-		if current.GetChart().GetMetadata().GetVersion() != chartObject.Status.Info.Details.GetVersion() {
+		if current.GetChart().GetMetadata().GetVersion() != chartObject.Details.GetVersion() {
 			logger.Info("Chart version expected: %s", current.GetChart().GetMetadata().GetVersion())
 			changed = true
 		}
@@ -160,7 +160,7 @@ func serviceEnableRun(cmd *cobra.Command, args []string) error {
 		}
 
 		if changed {
-			if _, err := hclient.Upgrade(cmd.Context(), name, helm.Chart(chartObject.Spec.Definition), mergedData, func(in *action.Upgrade) {
+			if _, err := hclient.Upgrade(cmd.Context(), name, helm.Chart(chartObject.Definition), mergedData, func(in *action.Upgrade) {
 				in.Labels = map[string]string{
 					constants.HelmLabelArangoDBManaged:    "true",
 					constants.HelmLabelArangoDBDeployment: deployment,

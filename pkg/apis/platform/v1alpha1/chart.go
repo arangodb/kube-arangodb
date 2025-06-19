@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,4 +66,24 @@ func (a *ArangoPlatformChart) GetStatus() ArangoPlatformChartStatus {
 
 func (a *ArangoPlatformChart) SetStatus(status ArangoPlatformChartStatus) {
 	a.Status = status
+}
+
+func (a *ArangoPlatformChart) Ready() bool {
+	if a == nil {
+		return false
+	}
+
+	if a.Status.Info == nil {
+		return false
+	}
+
+	if a.Status.Info.Details == nil {
+		return false
+	}
+
+	if !a.Status.Conditions.IsTrue(ReadyCondition) {
+		return false
+	}
+
+	return true
 }
