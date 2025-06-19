@@ -62,6 +62,10 @@ func Test_Chart_List(t *testing.T) {
 							Type:   platformApi.SpecValidCondition,
 							Status: core.ConditionTrue,
 						},
+						{
+							Type:   platformApi.ReadyCondition,
+							Status: core.ConditionTrue,
+						},
 					},
 					Info: &platformApi.ChartStatusInfo{
 						Definition: make([]byte, 128),
