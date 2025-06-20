@@ -42,7 +42,6 @@ Available Commands:
 Flags:
   -h, --help                       help for registry
       --platform.endpoint string   Platform Repository URL (default "https://arangodb-platform-prd-chart-registry.s3.amazonaws.com")
-      --platform.name string       Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -190,11 +189,13 @@ Usage:
 
 Available Commands:
   dump        Dumps the current setup of the platform
+  export      Export the package in the ZIP Format
+  import      Imports the package from the ZIP format
   install     Installs the specified setup of the platform
+  merge       Merges definitions into single file
 
 Flags:
-  -h, --help                   help for package
-      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+  -h, --help   help for package
 
 Global Flags:
   -n, --namespace string   Kubernetes Namespace (default "default")
@@ -213,11 +214,11 @@ Usage:
   arangodb_operator_platform package dump [flags]
 
 Flags:
-  -h, --help   help for dump
+  -h, --help                   help for dump
+      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
-  -n, --namespace string       Kubernetes Namespace (default "default")
-      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+  -n, --namespace string   Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_dump_cmd)
 
@@ -228,15 +229,15 @@ Global Flags:
 Installs the specified setup of the platform
 
 Usage:
-  arangodb_operator_platform package install [flags] package
+  arangodb_operator_platform package install [flags] ... packages
 
 Flags:
   -h, --help                       help for install
       --platform.endpoint string   Platform Repository URL (default "https://arangodb-platform-prd-chart-registry.s3.amazonaws.com")
+      --platform.name string       Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
-  -n, --namespace string       Kubernetes Namespace (default "default")
-      --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
+  -n, --namespace string   Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_install_cmd)
 

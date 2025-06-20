@@ -32,13 +32,16 @@ func pkg() (*cobra.Command, error) {
 	cmd.Use = "package"
 	cmd.Short = "Release Package related operations"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformName); err != nil {
+	if err := cli.RegisterFlags(&cmd); err != nil {
 		return nil, err
 	}
 
 	if err := withRegisterCommand(&cmd,
 		packageDump,
 		packageInstall,
+		packageExport,
+		packageImport,
+		packageMerge,
 	); err != nil {
 		return nil, err
 	}

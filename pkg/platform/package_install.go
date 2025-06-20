@@ -21,7 +21,6 @@
 package platform
 
 import (
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -30,7 +29,6 @@ import (
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -41,10 +39,10 @@ import (
 func packageInstall() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "install [flags] package"
+	cmd.Use = "install [flags] ... packages"
 	cmd.Short = "Installs the specified setup of the platform"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName); err != nil {
 		return nil, err
 	}
 
@@ -88,37 +86,36 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("Invalid arguments")
 	}
 
-	file := args[0]
-
-	data, err := os.ReadFile(file)
+	r, err := getHelmPackages(args...)
 	if err != nil {
-		logger.Err(err).Error("Unable to read the file")
-		return err
-	}
-
-	r, err := util.JsonOrYamlUnmarshal[helm.Package](data)
-	if err != nil {
-		logger.Err(err).Error("Unable to read the file")
 		return err
 	}
 
 	for name, packageSpec := range r.Packages {
-		def, ok := hm.Get(name)
-		if !ok {
-			return errors.Errorf("Unable to get '%s' chart", name)
+		var chart helm.Chart
+
+		if len(packageSpec.Chart) == 0 {
+			def, ok := hm.Get(name)
+			if !ok {
+				return errors.Errorf("Unable to get '%s' chart", name)
+			}
+
+			ver, ok := def.Get(packageSpec.Version)
+			if !ok {
+				return errors.Errorf("Unable to get '%s' chart in version `%s`", name, packageSpec.Version)
+			}
+
+			c, err := ver.Get(cmd.Context())
+			if err != nil {
+				return errors.Wrapf(err, "Unable to download chart %s-%s", name, ver.Version())
+			}
+
+			chart = c
+		} else {
+			chart = helm.Chart(packageSpec.Chart)
 		}
 
-		ver, ok := def.Get(packageSpec.Version)
-		if !ok {
-			return errors.Errorf("Unable to get '%s' chart in version `%s`", name, packageSpec.Version)
-		}
-
-		chart, err := ver.Get(cmd.Context())
-		if err != nil {
-			return errors.Wrapf(err, "Unable to download chart %s-%s", name, ver.Version())
-		}
-
-		logger := logger.Str("chart", name).Str("version", ver.Version())
+		logger := logger.Str("chart", name).Str("version", packageSpec.Version)
 
 		if c, ok := charts[name]; !ok {
 			logger.Debug("Installing Chart: %s", name)
@@ -137,15 +134,16 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			logger.Debug("Installed Chart: %s", name)
+			logger.Info("Installed Chart: %s", name)
 		} else {
-			if c.Spec.Definition.SHA256() != chart.SHA256SUM() {
+			if c.Spec.Definition.SHA256() != chart.SHA256SUM() || !packageSpec.Overrides.Equals(helm.Values(c.Spec.Overrides)) {
 				c.Spec.Definition = sharedApi.Data(chart)
+				c.Spec.Overrides = sharedApi.Any(packageSpec.Overrides)
 				_, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns).Update(cmd.Context(), c, meta.UpdateOptions{})
 				if err != nil {
 					return err
 				}
-				logger.Debug("Updated Chart: %s", name)
+				logger.Info("Updated Chart: %s", name)
 			}
 		}
 	}
@@ -170,7 +168,9 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		mergedData, err := helm.NewMergeValues(helm.MergeMaps, map[string]any{
+		println(string(chartObject.Overrides))
+
+		mergedData, err := helm.NewMergeValues[any](helm.MergeMaps, map[string]any{
 			"arangodb_platform": map[string]any{
 				"deployment": map[string]any{
 					"name": deployment,

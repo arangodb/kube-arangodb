@@ -18,30 +18,34 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package closer
 
-import (
-	"github.com/spf13/cobra"
+import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-)
+type MultiCloser interface {
+	Close
+	With(closers ...Close) MultiCloser
+}
 
-func registry() (*cobra.Command, error) {
-	var cmd cobra.Command
+func NewMultiCloser(closers ...Close) MultiCloser {
+	return multiCloser(closers)
+}
 
-	cmd.Use = "registry"
-	cmd.Short = "Registry related operations"
+type multiCloser []Close
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint); err != nil {
-		return nil, err
+func (m multiCloser) With(closers ...Close) MultiCloser {
+	r := make(multiCloser, len(m)+len(closers))
+	copy(r, m)
+	copy(r[len(m):], closers)
+	return r
+}
+
+func (m multiCloser) Close() error {
+	e := make([]error, len(m))
+
+	for id := len(m) - 1; id >= 0; id-- {
+		e[id] = m[id].Close()
 	}
 
-	if err := withRegisterCommand(&cmd,
-		registryStatus,
-		registryInstall,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
+	return shared.WithErrors(e...)
 }

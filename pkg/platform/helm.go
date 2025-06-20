@@ -23,6 +23,7 @@ package platform
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -44,4 +45,36 @@ func getHelmClient(cmd *cobra.Command) (helm.Client, error) {
 		Config:    client.Config(),
 		Driver:    nil,
 	})
+}
+
+func getHelmPackages(files ...string) (helm.Package, error) {
+	if len(files) == 0 {
+		return helm.Package{}, nil
+	}
+
+	pkgs := make([]helm.Package, len(files))
+
+	for id := range pkgs {
+		p, err := util.JsonOrYamlUnmarshalFile[helm.Package](files[id])
+		if err != nil {
+			return helm.Package{}, err
+		}
+		pkgs[id] = p
+	}
+
+	if len(pkgs) == 1 {
+		return pkgs[0], nil
+	}
+
+	v, err := helm.NewMergeValues(helm.MergeMaps, pkgs...)
+	if err != nil {
+		return helm.Package{}, err
+	}
+
+	p, err := util.JSONRemarshal[helm.Values, helm.Package](v)
+	if err != nil {
+		return helm.Package{}, err
+	}
+
+	return p, nil
 }

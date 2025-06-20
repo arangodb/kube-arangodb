@@ -18,30 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package pack
 
-import (
-	"github.com/spf13/cobra"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+var (
+	logger = logging.Global().RegisterAndGetLogger("installer-pack", logging.Info)
 )
-
-func registry() (*cobra.Command, error) {
-	var cmd cobra.Command
-
-	cmd.Use = "registry"
-	cmd.Short = "Registry related operations"
-
-	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint); err != nil {
-		return nil, err
-	}
-
-	if err := withRegisterCommand(&cmd,
-		registryStatus,
-		registryInstall,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
-}
