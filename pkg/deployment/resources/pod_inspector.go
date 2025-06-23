@@ -23,6 +23,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	goStrings "strings"
 	"time"
 
@@ -106,7 +107,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 
 		spec := r.context.GetSpec()
 		groupSpec := spec.GetServerGroupSpec(group)
-		coreContainers := spec.GetCoreContainers(group)
+		coreContainers := getPodCoreContainers(spec.GetCoreContainers(group), pod.Spec.Containers)
 
 		if c, ok := memberStatus.Conditions.Get(api.ConditionTypeUpdating); ok {
 			if v, ok := c.Params[api.ConditionParamContainerUpdatingName]; ok {
@@ -522,4 +523,16 @@ func removeLabel(labels map[string]string, key string) map[string]string {
 	delete(labels, key)
 
 	return labels
+}
+
+func getPodCoreContainers(coreContainers utils.StringList, containers []core.Container) utils.StringList {
+	r := make(utils.StringList, 0, len(coreContainers))
+
+	for _, container := range containers {
+		if coreContainers.Has(container.Name) {
+			r = append(r, container.Name)
+		}
+	}
+
+	return r
 }
