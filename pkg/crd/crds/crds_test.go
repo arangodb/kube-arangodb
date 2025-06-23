@@ -102,6 +102,7 @@ func Test_CRD(t *testing.T) {
 		{scheduler.CronJobCRDName, SchedulerCronJobDefinitionWithOptions},
 		{platform.ArangoPlatformStorageCRDName, PlatformStorageDefinitionWithOptions},
 		{platform.ArangoPlatformChartCRDName, PlatformChartDefinitionWithOptions},
+		{platform.ArangoPlatformServiceCRDName, PlatformServiceDefinitionWithOptions},
 	}
 
 	for _, tc := range testCases {
@@ -161,6 +162,7 @@ func Test_CRDGetters(t *testing.T) {
 		NetworkingRouteWithOptions,
 		PlatformStorageWithOptions,
 		PlatformChartWithOptions,
+		PlatformServiceWithOptions,
 	}
 	require.Equal(t, len(AllDefinitions()), len(getters))
 

@@ -19,6 +19,8 @@ rules:
     - "arangoplatformstorages/status"
     - "arangoplatformcharts"
     - "arangoplatformcharts/status"
+    - "arangoplatformservices"
+    - "arangoplatformservices/status"
     verbs: ["*"]
 {{- end }}
 {{- end }}

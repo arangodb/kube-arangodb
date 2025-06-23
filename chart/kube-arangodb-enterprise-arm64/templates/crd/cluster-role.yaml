@@ -96,6 +96,7 @@ rules:
     resourceNames:
       - "arangoplatformcharts.platform.arangodb.com"
       - "arangoplatformstorages.platform.arangodb.com"
+      - "arangoplatformservices.platform.arangodb.com"
 {{- end }}
 
 {{- end }}

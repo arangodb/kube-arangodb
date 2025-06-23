@@ -377,6 +377,9 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoPlatformChart.V1Alpha1": {
 						"Spec": platformApi.ArangoPlatformChart{}.Spec,
 					},
+					"ArangoPlatformService.V1Alpha1": {
+						"Spec": platformApi.ArangoPlatformService{}.Spec,
+					},
 				},
 				Shared: []string{
 					"shared/v1",
@@ -546,7 +549,7 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 			write(t, out, "# API Reference for %s\n\n", objName)
 
 			util.IterateSorted(renderSections, func(name string, section []byte) {
-				write(t, out, "## %s\n\n", name)
+				write(t, out, "## %s\n\n", util.BoolSwitch(name == "", "Object", name))
 
 				_, err = out.Write(section)
 				require.NoError(t, err)

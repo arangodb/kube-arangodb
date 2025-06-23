@@ -27,7 +27,7 @@ import (
 type ArangoPlatformChartStatus struct {
 	Info *ChartStatusInfo `json:"info,omitempty"`
 
-	// Conditions specific to the entire storage
+	// Conditions specific to the entire chart
 	// +doc/type: api.Conditions
 	Conditions api.ConditionList `json:"conditions,omitempty"`
 }

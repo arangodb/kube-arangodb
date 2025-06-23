@@ -36,6 +36,10 @@ func (c *FakePlatformV1alpha1) ArangoPlatformCharts(namespace string) v1alpha1.A
 	return &FakeArangoPlatformCharts{c, namespace}
 }
 
+func (c *FakePlatformV1alpha1) ArangoPlatformServices(namespace string) v1alpha1.ArangoPlatformServiceInterface {
+	return &FakeArangoPlatformServices{c, namespace}
+}
+
 func (c *FakePlatformV1alpha1) ArangoPlatformStorages(namespace string) v1alpha1.ArangoPlatformStorageInterface {
 	return &FakeArangoPlatformStorages{c, namespace}
 }

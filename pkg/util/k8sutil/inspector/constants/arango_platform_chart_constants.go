@@ -36,7 +36,7 @@ const (
 )
 
 func init() {
-	register[*platformApi.ArangoPlatformChart](ArangoPlatformChartGKv1Beta1(), ArangoPlatformChartGRv1Beta1())
+	register[*platformApi.ArangoPlatformChart](ArangoPlatformChartGKv1Alpha1(), ArangoPlatformChartGRv1Alpha1())
 }
 
 func ArangoPlatformChartGK() schema.GroupKind {
@@ -46,7 +46,7 @@ func ArangoPlatformChartGK() schema.GroupKind {
 	}
 }
 
-func ArangoPlatformChartGKv1Beta1() schema.GroupVersionKind {
+func ArangoPlatformChartGKv1Alpha1() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   ArangoPlatformChartGroup,
 		Kind:    ArangoPlatformChartKind,
@@ -61,7 +61,7 @@ func ArangoPlatformChartGR() schema.GroupResource {
 	}
 }
 
-func ArangoPlatformChartGRv1Beta1() schema.GroupVersionResource {
+func ArangoPlatformChartGRv1Alpha1() schema.GroupVersionResource {
 	return schema.GroupVersionResource{
 		Group:    ArangoPlatformChartGroup,
 		Resource: ArangoPlatformChartResource,

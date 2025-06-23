@@ -6,7 +6,7 @@ title: ArangoPlatform V1Alpha1 Authentication OpenID
 
 # API Reference for ArangoPlatform V1Alpha1 Authentication OpenID
 
-## 
+## Object
 
 ### .claims.username
 

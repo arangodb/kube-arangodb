@@ -101,6 +101,7 @@ func AllDefinitions() []Definition {
 		// Platform
 		PlatformStorageDefinitionWithOptions(),
 		PlatformChartDefinitionWithOptions(),
+		PlatformServiceDefinitionWithOptions(),
 	}
 }
 

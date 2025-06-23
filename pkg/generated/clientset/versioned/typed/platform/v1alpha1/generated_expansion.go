@@ -24,4 +24,6 @@ package v1alpha1
 
 type ArangoPlatformChartExpansion interface{}
 
+type ArangoPlatformServiceExpansion interface{}
+
 type ArangoPlatformStorageExpansion interface{}

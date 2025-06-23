@@ -313,6 +313,15 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				},
 			},
 		},
+		"platform-service": {
+			fmt.Sprintf("%s/pkg/apis/platform", root): {
+				"v1alpha1": {
+					objects: map[string]interface{}{
+						"spec": platformApi.ArangoPlatformService{}.Spec,
+					},
+				},
+			},
+		},
 	}
 
 	for filePrefix, packagesToVersion := range input {
