@@ -23,7 +23,6 @@ package executor
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -47,12 +46,8 @@ func Test_Executor(t *testing.T) {
 				log.Info("Start third thread")
 				defer log.Info("Complete third thread")
 
-				time.Sleep(5 * time.Second)
-
 				return nil
 			})
-
-			time.Sleep(5 * time.Second)
 
 			return nil
 		})

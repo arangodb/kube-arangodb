@@ -23,6 +23,7 @@ package executor
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 
@@ -33,7 +34,7 @@ import (
 func Run(ctx context.Context, log logging.Logger, threads int, f RunFunc) error {
 	h := &handler{
 		th:        NewThreadManager(threads),
-		completed: make(chan any),
+		completed: make(chan struct{}),
 		log:       log,
 	}
 
@@ -63,7 +64,7 @@ type handler struct {
 
 	handlers []*handler
 
-	completed chan any
+	completed chan struct{}
 
 	log logging.Logger
 
@@ -77,6 +78,8 @@ func (h *handler) WaitForSubThreads(t Thread) {
 		if h.subThreadsCompleted() {
 			return
 		}
+
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -114,7 +117,7 @@ func (h *handler) RunAsync(ctx context.Context, f RunFunc) Executor {
 
 	n := &handler{
 		th:        h.th,
-		completed: make(chan any),
+		completed: make(chan struct{}),
 		log:       h.log,
 	}
 

@@ -57,6 +57,7 @@ type Thread interface {
 	ID() ThreadID
 
 	Release()
+	Wait()
 }
 
 type thread struct {
