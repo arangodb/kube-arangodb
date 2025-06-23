@@ -23,7 +23,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	goStrings "strings"
 	"time"
 
@@ -36,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
