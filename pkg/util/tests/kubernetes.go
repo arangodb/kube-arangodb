@@ -546,7 +546,7 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			_, err := arango.PlatformV1alpha1().ArangoPlatformServices(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		default:
-			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
+			require.Fail(t, fmt.Sprintf("Unable to update object: %s", reflect.TypeOf(v).String()))
 		}
 	}
 
@@ -1538,7 +1538,7 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			object.GetNamespace(),
 			object.GetName()))
 	default:
-		require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
+		require.Fail(t, fmt.Sprintf("Unable to get object meta: %s", reflect.TypeOf(v).String()))
 	}
 }
 
