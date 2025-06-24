@@ -1515,7 +1515,7 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			object.GetName()))
 	case *platformApi.ArangoPlatformStorage:
 		v.Kind = platform.ArangoPlatformStorageResourceKind
-		v.APIVersion = networkingApi.SchemeGroupVersion.String()
+		v.APIVersion = platformApi.SchemeGroupVersion.String()
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
 			platformApi.SchemeGroupVersion.String(),
 			platform.ArangoPlatformStorageResourcePlural,
@@ -1523,7 +1523,7 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			object.GetName()))
 	case *platformApi.ArangoPlatformChart:
 		v.Kind = platform.ArangoPlatformChartResourceKind
-		v.APIVersion = networkingApi.SchemeGroupVersion.String()
+		v.APIVersion = platformApi.SchemeGroupVersion.String()
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
 			platformApi.SchemeGroupVersion.String(),
 			platform.ArangoPlatformChartResourcePlural,
@@ -1531,7 +1531,7 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			object.GetName()))
 	case *platformApi.ArangoPlatformService:
 		v.Kind = platform.ArangoPlatformServiceResourceKind
-		v.APIVersion = networkingApi.SchemeGroupVersion.String()
+		v.APIVersion = platformApi.SchemeGroupVersion.String()
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
 			platformApi.SchemeGroupVersion.String(),
 			platform.ArangoPlatformServiceResourcePlural,
