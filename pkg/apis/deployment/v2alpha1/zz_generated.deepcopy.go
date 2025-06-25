@@ -2741,6 +2741,11 @@ func (in *ServerGroupSpec) DeepCopyInto(out *ServerGroupSpec) {
 		*out = new(ServerGroupUpgradeMode)
 		**out = **in
 	}
+	if in.ManualUpgradeMode != nil {
+		in, out := &in.ManualUpgradeMode, &out.ManualUpgradeMode
+		*out = new(ServerGroupUpgradeMode)
+		**out = **in
+	}
 	if in.RestartPolicy != nil {
 		in, out := &in.RestartPolicy, &out.RestartPolicy
 		*out = new(v1.RestartPolicy)

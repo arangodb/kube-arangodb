@@ -32,13 +32,17 @@ const (
 	// ServerGroupUpgradeModeReplace Replaces server instead of upgrading. Takes an effect only on DBServer
 	ServerGroupUpgradeModeReplace ServerGroupUpgradeMode = "replace"
 
+	// ServerGroupUpgradeModeManual Waits for the manual upgrade. Requires replacement or the annotation on the member.
+	// Requires annotation `upgrade.deployment.arangodb.com/allow` on a Pod
+	ServerGroupUpgradeModeManual ServerGroupUpgradeMode = "manual"
+
 	// DefaultServerGroupUpgradeMode defaults to ServerGroupUpgradeModeInplace
 	DefaultServerGroupUpgradeMode = ServerGroupUpgradeModeInplace
 )
 
 func (n *ServerGroupUpgradeMode) Validate() error {
 	switch v := n.Get(); v {
-	case ServerGroupUpgradeModeInplace, ServerGroupUpgradeModeReplace:
+	case ServerGroupUpgradeModeInplace, ServerGroupUpgradeModeReplace, ServerGroupUpgradeModeManual:
 		return nil
 	default:
 		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown UpgradeMode %s", v.String()))
@@ -46,8 +50,12 @@ func (n *ServerGroupUpgradeMode) Validate() error {
 }
 
 func (n *ServerGroupUpgradeMode) Get() ServerGroupUpgradeMode {
+	return n.Default(ServerGroupUpgradeModeInplace)
+}
+
+func (n *ServerGroupUpgradeMode) Default(d ServerGroupUpgradeMode) ServerGroupUpgradeMode {
 	if n == nil {
-		return DefaultServerGroupUpgradeMode
+		return d
 	}
 
 	return *n

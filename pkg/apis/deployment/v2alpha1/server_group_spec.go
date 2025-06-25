@@ -213,8 +213,15 @@ type ServerGroupSpec struct {
 	// UpgradeMode Defines the upgrade mode for the Member
 	// +doc/enum: inplace|Inplace Upgrade procedure (with Upgrade initContainer)
 	// +doc/enum: replace|Replaces server instead of upgrading. Takes an effect only on DBServer
+	// +doc/enum: manual| Waits for the manual upgrade. Requires replacement or the annotation on the member
 	// +doc/default: inplace
 	UpgradeMode *ServerGroupUpgradeMode `json:"upgradeMode,omitempty"`
+
+	// UpgradeMode Defines the manually triggered upgrade mode for the Member
+	// +doc/enum: inplace|Inplace Upgrade procedure (with Upgrade initContainer)
+	// +doc/enum: replace|Replaces server instead of upgrading. Takes an effect only on DBServer
+	// +doc/default: inplace
+	ManualUpgradeMode *ServerGroupUpgradeMode `json:"manualUpgradeMode,omitempty"`
 
 	// RestartPolicy for all pods within the group.
 	// +doc/type: core.RestartPolicy
@@ -479,7 +486,9 @@ func (s *ServerGroupSpec) validate() error {
 		shared.PrefixResourceError("volumes", s.Volumes.Validate()),
 		shared.PrefixResourceError("volumeMounts", s.VolumeMounts.Validate()),
 		shared.PrefixResourceError("initContainers", s.InitContainers.Validate()),
-		shared.PrefixResourceError("IndexMethod", s.IndexMethod.Validate()),
+		shared.PrefixResourceError("indexMethod", s.IndexMethod.Validate()),
+		shared.PrefixResourceError("upgradeMode", s.UpgradeMode.Validate()),
+		shared.PrefixResourceError("manualUpgradeMode", s.ManualUpgradeMode.Validate()),
 		s.validateVolumes(),
 	)
 }

@@ -292,16 +292,27 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 				return nil, false
 			}
 
-			um := spec.GetServerGroupSpec(group).UpgradeMode
+			dum := util.BoolSwitch(features.IsUpgradeIndexOrderIssueEnabled(group, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion), api.ServerGroupUpgradeModeReplace, api.ServerGroupUpgradeModeInplace)
 
-			if features.IsUpgradeIndexOrderIssueEnabled(group, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion) && um == nil {
-				um = util.NewType(api.ServerGroupUpgradeModeReplace)
+			um := spec.GetServerGroupSpec(group).UpgradeMode.Default(dum)
+
+			mum := spec.GetServerGroupSpec(group).ManualUpgradeMode.Default(dum)
+
+			switch um.Get() {
+			case api.ServerGroupUpgradeModeManual:
+				if !m.Member.Conditions.IsTrue(api.ConditionTypeUpgradeAllowed) {
+					continue
+				}
+
+				// Once we pick manual mode, ensure that we still follow planned scenario
+				um = mum
 			}
 
-			switch group {
-			case api.ServerGroupDBServers:
-				if um.Get() == api.ServerGroupUpgradeModeReplace {
-					// Members are suppose to be replaced
+			switch um.Get() {
+			case api.ServerGroupUpgradeModeReplace:
+				switch group {
+				case api.ServerGroupDBServers:
+					// Members are supposed to be replaced
 					if !m.Member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
 						return api.Plan{actions.NewAction(api.ActionTypeMarkToRemoveMember, m.Group, m.Member, "Replace by Upgrade")}, false
 					}
@@ -547,6 +558,39 @@ func groupReadyForRestart(context PlanBuilderContext, status api.DeploymentStatu
 	}
 
 	return true, "Restart allowed"
+}
+
+func (r *Reconciler) createMemberAllowUpgradeConditionPlan(ctx context.Context,
+	apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	var p api.Plan
+
+	for _, m := range status.Members.AsList() {
+		if m.Member.Conditions.IsTrue(api.ConditionTypeUpgradeAllowed) {
+			continue
+		}
+
+		cache, ok := context.ACS().ClusterCache(m.Member.ClusterID)
+		if !ok {
+			continue
+		}
+
+		if pod, ok := cache.Pod().V1().GetSimple(m.Member.Pod.GetName()); ok {
+			if _, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodAllowUpgradeAnnotation]; ok {
+				r.log.
+					Str("pod-name", m.Member.Pod.GetName()).
+					Str("server-group", m.Group.AsRole()).
+					Info("Upgrade Allowed by annotation")
+
+				return api.Plan{
+					sharedReconcile.UpdateMemberConditionActionV2("Upgrade allowed by Annotation", api.ConditionTypeUpgradeAllowed, m.Group, m.Member.ID, true, "Upgrade allowed by Annotation", "", ""),
+				}
+			}
+		}
+	}
+
+	return p
 }
 
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
