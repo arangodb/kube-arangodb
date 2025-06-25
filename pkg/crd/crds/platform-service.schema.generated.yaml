@@ -1,0 +1,43 @@
+v1alpha1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          chart:
+            description: Chart keeps the Chart Reference
+            properties:
+              checksum:
+                description: UID keeps the information about object Checksum
+                type: string
+              name:
+                description: Name of the object
+                type: string
+              namespace:
+                description: Namespace of the object. Should default to the namespace of the parent object
+                type: string
+              uid:
+                description: UID keeps the information about object UID
+                type: string
+            type: object
+          deployment:
+            description: Chart keeps the Deployment Reference
+            properties:
+              checksum:
+                description: UID keeps the information about object Checksum
+                type: string
+              name:
+                description: Name of the object
+                type: string
+              namespace:
+                description: Namespace of the object. Should default to the namespace of the parent object
+                type: string
+              uid:
+                description: UID keeps the information about object UID
+                type: string
+            type: object
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

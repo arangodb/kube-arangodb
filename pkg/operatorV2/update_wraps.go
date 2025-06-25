@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,4 +88,8 @@ func WithArangoPlatformStorageUpdateStatusInterfaceRetry(ctx context.Context, cl
 
 func WithArangoPlatformChartUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[platformApi.ArangoPlatformChartStatus, *platformApi.ArangoPlatformChart], obj *platformApi.ArangoPlatformChart, status platformApi.ArangoPlatformChartStatus, opts meta.UpdateOptions) (*platformApi.ArangoPlatformChart, error) {
 	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformChartStatus, *platformApi.ArangoPlatformChart](ctx, client, obj, status, opts)
+}
+
+func WithArangoPlatformServiceUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[platformApi.ArangoPlatformServiceStatus, *platformApi.ArangoPlatformService], obj *platformApi.ArangoPlatformService, status platformApi.ArangoPlatformServiceStatus, opts meta.UpdateOptions) (*platformApi.ArangoPlatformService, error) {
+	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformServiceStatus, *platformApi.ArangoPlatformService](ctx, client, obj, status, opts)
 }

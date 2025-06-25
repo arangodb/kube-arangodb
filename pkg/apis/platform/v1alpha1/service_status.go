@@ -18,25 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package crd
+package v1alpha1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
-func init() {
-	defs := []func(...func(options *crds.CRDOptions)) crds.Definition{
-		crds.PlatformStorageDefinitionWithOptions,
-		crds.PlatformChartDefinitionWithOptions,
-		crds.PlatformServiceDefinitionWithOptions,
-	}
-	for _, getDef := range defs {
-		defFn := getDef // bring into scope
-		registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
-			return defFn(opts.AsFunc())
-		}, &crds.CRDOptions{
-			WithSchema:   true,
-			WithPreserve: false,
-		})
-	}
+type ArangoPlatformServiceStatus struct {
+	// Chart keeps the Deployment Reference
+	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+
+	// Chart keeps the Chart Reference
+	Chart *sharedApi.Object `json:"chart,omitempty"`
+
+	// Conditions specific to the entire service
+	// +doc/type: api.Conditions
+	Conditions api.ConditionList `json:"conditions,omitempty"`
 }

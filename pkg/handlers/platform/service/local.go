@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,25 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package crd
+package service
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
+	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 )
 
-func init() {
-	defs := []func(...func(options *crds.CRDOptions)) crds.Definition{
-		crds.PlatformStorageDefinitionWithOptions,
-		crds.PlatformChartDefinitionWithOptions,
-		crds.PlatformServiceDefinitionWithOptions,
-	}
-	for _, getDef := range defs {
-		defFn := getDef // bring into scope
-		registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
-			return defFn(opts.AsFunc())
-		}, &crds.CRDOptions{
-			WithSchema:   true,
-			WithPreserve: false,
-		})
-	}
+func Kind() string {
+	return platform.ArangoPlatformServiceResourceKind
+}
+
+func Group() string {
+	return platformApi.SchemeGroupVersion.Group
+}
+
+func Version() string {
+	return platformApi.SchemeGroupVersion.Version
 }

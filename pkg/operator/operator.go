@@ -50,6 +50,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/networking/route"
 	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
+	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
 	platformShutdown "github.com/arangodb/kube-arangodb/pkg/handlers/platform/shutdown"
 	platformStorage "github.com/arangodb/kube-arangodb/pkg/handlers/platform/storage"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
@@ -410,6 +411,10 @@ func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recor
 	}
 
 	if err := platformChart.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+		panic(err)
+	}
+
+	if err := platformService.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
 		panic(err)
 	}
 

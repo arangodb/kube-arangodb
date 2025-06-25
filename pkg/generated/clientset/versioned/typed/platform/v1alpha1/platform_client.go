@@ -33,6 +33,7 @@ import (
 type PlatformV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ArangoPlatformChartsGetter
+	ArangoPlatformServicesGetter
 	ArangoPlatformStoragesGetter
 }
 
@@ -43,6 +44,10 @@ type PlatformV1alpha1Client struct {
 
 func (c *PlatformV1alpha1Client) ArangoPlatformCharts(namespace string) ArangoPlatformChartInterface {
 	return newArangoPlatformCharts(c, namespace)
+}
+
+func (c *PlatformV1alpha1Client) ArangoPlatformServices(namespace string) ArangoPlatformServiceInterface {
+	return newArangoPlatformServices(c, namespace)
 }
 
 func (c *PlatformV1alpha1Client) ArangoPlatformStorages(namespace string) ArangoPlatformStorageInterface {

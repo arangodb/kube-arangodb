@@ -18,25 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package crd
+package v1alpha1
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func init() {
-	defs := []func(...func(options *crds.CRDOptions)) crds.Definition{
-		crds.PlatformStorageDefinitionWithOptions,
-		crds.PlatformChartDefinitionWithOptions,
-		crds.PlatformServiceDefinitionWithOptions,
+type ArangoPlatformServiceSpec struct {
+	// Chart keeps the Deployment Reference
+	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+
+	// Chart keeps the Chart Reference
+	Chart *sharedApi.Object `json:"chart,omitempty"`
+}
+
+func (c *ArangoPlatformServiceSpec) Validate() error {
+	if c == nil {
+		return errors.Errorf("Nil spec not allowed")
 	}
-	for _, getDef := range defs {
-		defFn := getDef // bring into scope
-		registerCRDWithPanic(func(opts *crds.CRDOptions) crds.Definition {
-			return defFn(opts.AsFunc())
-		}, &crds.CRDOptions{
-			WithSchema:   true,
-			WithPreserve: false,
-		})
-	}
+
+	return shared.WithErrors(
+		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
+		shared.ValidateRequiredInterfacePath("chart", c.Chart),
+	)
 }
