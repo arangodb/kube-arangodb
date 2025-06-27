@@ -33,52 +33,58 @@ import (
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/executor"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/suite"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
 func Test_Chart_List(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
+	ctx, c := context.WithCancel(shutdown.Context())
 	defer c()
 
-	scheduler, client, _ := InternalClient(t, ctx, func(c Configuration) Configuration {
-		c.Namespace = tests.FakeNamespace
+	scheduler, ns, client, _ := Client(t, ctx, func(c Configuration) Configuration {
 		c.Deployment = tests.FakeNamespace
 		return c
 	})
 
+	h := chartHandler(client, ns)
+
 	t.Run("Create Charts", func(t *testing.T) {
-		for i := 0; i < 1024; i++ {
-			_, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(tests.FakeNamespace).Create(context.Background(), &platformApi.ArangoPlatformChart{
-				ObjectMeta: meta.ObjectMeta{
-					Name:      fmt.Sprintf("chart-%05d", i),
-					Namespace: tests.FakeNamespace,
-				},
-				Status: platformApi.ArangoPlatformChartStatus{
-					Conditions: []api.Condition{
-						{
-							Type:   platformApi.SpecValidCondition,
-							Status: core.ConditionTrue,
-						},
-						{
-							Type:   platformApi.ReadyCondition,
-							Status: core.ConditionTrue,
-						},
-					},
-					Info: &platformApi.ChartStatusInfo{
-						Definition: make([]byte, 128),
-						Valid:      true,
-						Details: &platformApi.ChartDetails{
-							Name:    fmt.Sprintf("chart-%05d", i),
-							Version: "1.2.3",
-						},
-					},
-				},
-			}, meta.CreateOptions{})
-			require.NoError(t, err)
-		}
+		require.NoError(t, executor.Run(ctx, logger, 128, func(ctx context.Context, log logging.Logger, th executor.Thread, ht executor.Handler) error {
+			for i := 0; i < 128; i++ {
+				ht.RunAsync(ctx, func(i int) executor.RunFunc {
+					return func(ctx context.Context, log logging.Logger, th executor.Thread, ht executor.Handler) error {
+						name := fmt.Sprintf("chart-%05d", i)
+
+						c := suite.RewriteChartName(t, "example", "1.0.0", name)
+
+						chart, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns).Create(ctx, &platformApi.ArangoPlatformChart{
+							ObjectMeta: meta.ObjectMeta{
+								Name:      name,
+								Namespace: ns,
+							},
+
+							Spec: platformApi.ArangoPlatformChartSpec{
+								Definition: c,
+							},
+						}, meta.CreateOptions{})
+						if err != nil {
+							return err
+						}
+
+						return tests.Handle(h, tests.NewItem(t, operation.Update, chart))
+					}
+				}(i))
+			}
+
+			return nil
+		}))
 	})
 
 	t.Run("Try to get", func(t *testing.T) {
@@ -88,9 +94,9 @@ func Test_Chart_List(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("List by 128", func(t *testing.T) {
+	t.Run("List by 16", func(t *testing.T) {
 		wr, err := scheduler.ListCharts(ctx, &pbSchedulerV2.SchedulerV2ListChartsRequest{
-			Items: util.NewType[int64](128),
+			Items: util.NewType[int64](16),
 		})
 		require.NoError(t, err)
 
@@ -101,7 +107,7 @@ func Test_Chart_List(t *testing.T) {
 			return nil
 		}))
 
-		require.Len(t, items, 1024)
+		require.Len(t, items, 128)
 	})
 }
 
@@ -109,18 +115,17 @@ func Test_Chart_Get(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	scheduler, client, _ := InternalClient(t, ctx, func(c Configuration) Configuration {
-		c.Namespace = tests.FakeNamespace
+	scheduler, ns, client, _ := MockClient(t, ctx, func(c Configuration) Configuration {
 		c.Deployment = tests.FakeNamespace
 		return c
 	})
 
-	z := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(tests.FakeNamespace)
+	z := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns)
 
 	t1, err := z.Create(context.Background(), &platformApi.ArangoPlatformChart{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test-1",
-			Namespace: tests.FakeNamespace,
+			Namespace: ns,
 		},
 		Status: platformApi.ArangoPlatformChartStatus{},
 	}, meta.CreateOptions{})
@@ -129,7 +134,7 @@ func Test_Chart_Get(t *testing.T) {
 	t2, err := z.Create(context.Background(), &platformApi.ArangoPlatformChart{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test-2",
-			Namespace: tests.FakeNamespace,
+			Namespace: ns,
 		},
 		Status: platformApi.ArangoPlatformChartStatus{
 			Conditions: []api.Condition{
@@ -145,7 +150,7 @@ func Test_Chart_Get(t *testing.T) {
 	t3, err := z.Create(context.Background(), &platformApi.ArangoPlatformChart{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test-3",
-			Namespace: tests.FakeNamespace,
+			Namespace: ns,
 		},
 		Status: platformApi.ArangoPlatformChartStatus{
 			Conditions: []api.Condition{
@@ -164,7 +169,7 @@ func Test_Chart_Get(t *testing.T) {
 	t4, err := z.Create(context.Background(), &platformApi.ArangoPlatformChart{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test-4",
-			Namespace: tests.FakeNamespace,
+			Namespace: ns,
 		},
 		Status: platformApi.ArangoPlatformChartStatus{
 			Conditions: []api.Condition{
@@ -184,7 +189,7 @@ func Test_Chart_Get(t *testing.T) {
 	t5, err := z.Create(context.Background(), &platformApi.ArangoPlatformChart{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test-5",
-			Namespace: tests.FakeNamespace,
+			Namespace: ns,
 		},
 		Status: platformApi.ArangoPlatformChartStatus{
 			Conditions: []api.Condition{
@@ -204,7 +209,7 @@ func Test_Chart_Get(t *testing.T) {
 	t6, err := z.Create(context.Background(), &platformApi.ArangoPlatformChart{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      "test-6",
-			Namespace: tests.FakeNamespace,
+			Namespace: ns,
 		},
 		Status: platformApi.ArangoPlatformChartStatus{
 			Conditions: []api.Condition{

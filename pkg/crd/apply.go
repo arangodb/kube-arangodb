@@ -23,6 +23,7 @@ package crd
 import (
 	"context"
 	"io"
+	"slices"
 	"sort"
 	"strconv"
 
@@ -35,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/executor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -64,30 +66,42 @@ func EnsureCRDWithOptions(ctx context.Context, client kclient.Client, opts Ensur
 	crdsLock.Lock()
 	defer crdsLock.Unlock()
 
-	for crdName, crdReg := range registeredCRDs {
+	return executor.Run(ctx, logger, 8, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+		for crdName := range registeredCRDs {
+			h.RunAsync(ctx, func(crdName string) executor.RunFunc {
+				return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+					crdReg := registeredCRDs[crdName]
 
-		getAccess := verifyCRDAccess(ctx, client, crdName, access.Get)
-		if !getAccess.Allowed {
-			logger.
-				Str("crd", crdName).
-				Str("reason", getAccess.Reason).
-				Str("evaluationError", getAccess.EvaluationError).
-				Info("Get Operations is not allowed. Continue")
-			continue
+					getAccess := verifyCRDAccess(ctx, client, crdName, access.Get)
+					if !getAccess.Allowed {
+						logger.
+							Str("crd", crdName).
+							Str("reason", getAccess.Reason).
+							Str("evaluationError", getAccess.EvaluationError).
+							Info("Get Operations is not allowed. Continue")
+						return nil
+					}
+
+					var opt = &crdReg.defaultOpts
+					if o, ok := opts.CRDOptions[crdName]; ok {
+						opt = &o
+					}
+					def := crdReg.getter(opt)
+
+					err := tryApplyCRD(ctx, client, def, opt, opts.ForceUpdate)
+					if !opts.IgnoreErrors && err != nil {
+						return err
+					}
+
+					return nil
+				}
+			}(crdName))
 		}
 
-		var opt = &crdReg.defaultOpts
-		if o, ok := opts.CRDOptions[crdName]; ok {
-			opt = &o
-		}
-		def := crdReg.getter(opt)
+		h.WaitForSubThreads(t)
 
-		err := tryApplyCRD(ctx, client, def, opt, opts.ForceUpdate)
-		if !opts.IgnoreErrors && err != nil {
-			return err
-		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func GenerateCRDYAMLWithOptions(opts EnsureCRDOptions, out io.Writer) error {
@@ -132,7 +146,7 @@ func GenerateCRDWithOptions(opts EnsureCRDOptions) []apiextensions.CustomResourc
 	ret := make([]apiextensions.CustomResourceDefinition, 0, len(registeredCRDs))
 
 	for crdName, crdReg := range registeredCRDs {
-		if util.ContainsList(opts.Skip, crdName) {
+		if slices.Contains(opts.Skip, crdName) {
 			continue
 		}
 

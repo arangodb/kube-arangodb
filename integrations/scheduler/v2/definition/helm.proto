@@ -117,7 +117,7 @@ message SchedulerV2InstallResponse {
 // Request
 message SchedulerV2InstallV2Request {
   // Request Options
-  optional SchedulerV2InstallRequestOptions options = 1;
+  optional SchedulerV2InstallV2RequestOptions options = 1;
 
   // Helm Release Name
   string name = 2;
@@ -130,7 +130,7 @@ message SchedulerV2InstallV2Request {
 }
 
 // Request Options
-message SchedulerV2InstallRequestV2Options {
+message SchedulerV2InstallV2RequestOptions {
   // Release Labels
   map<string, string> labels = 1;
 
@@ -148,7 +148,7 @@ message SchedulerV2InstallV2Response {
 // Request
 message SchedulerV2UpgradeV2Request {
   // Request Options
-  optional SchedulerV2UpgradeRequestV2Options options = 1;
+  optional SchedulerV2UpgradeV2RequestOptions options = 1;
 
   // Helm Release Name
   string name = 2;
@@ -161,7 +161,7 @@ message SchedulerV2UpgradeV2Request {
 }
 
 // Request Options
-message SchedulerV2UpgradeRequestV2Options {
+message SchedulerV2UpgradeV2RequestOptions {
   // Release Labels
   map<string, string> labels = 1;
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,10 @@ package operator
 
 import (
 	"context"
+	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 // Handler define interface for operator actions
@@ -33,4 +35,19 @@ type Handler interface {
 	Handle(ctx context.Context, item operation.Item) error
 
 	CanBeHandled(item operation.Item) bool
+}
+
+// HandlerTimeout extends the handle definition with timeout
+type HandlerTimeout interface {
+	Handler
+
+	Timeout() time.Duration
+}
+
+// WithHandlerTimeout returns the handler with custom timeout
+func WithHandlerTimeout(ctx context.Context, h Handler) (context.Context, context.CancelFunc) {
+	if t, ok := h.(HandlerTimeout); ok {
+		return context.WithTimeout(ctx, t.Timeout())
+	}
+	return globals.GetGlobals().Timeouts().Reconciliation().WithTimeout(ctx)
 }

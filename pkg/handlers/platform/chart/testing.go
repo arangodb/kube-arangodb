@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,35 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+//go:build testing
 
-type Hash interface {
-	Hash() string
-}
+package chart
 
-func CompareJSON[T interface{}](a, b T) (bool, error) {
-	ad, err := SHA256FromJSON(a)
-	if err != nil {
-		return false, err
+import (
+	"k8s.io/client-go/kubernetes"
+
+	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+)
+
+func Handler(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface) operator.Handler {
+	return &handler{
+		client:     client,
+		kubeClient: kubeClient,
+
+		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
+
+		operator: operator,
 	}
-	bd, err := SHA256FromJSON(b)
-	if err != nil {
-		return false, err
-	}
-
-	return ad == bd, nil
-}
-
-func CompareJSONP[T interface{}](a, b *T) (bool, error) {
-	var a1, b1 T
-
-	if a != nil {
-		a1 = *a
-	}
-
-	if b != nil {
-		b1 = *b
-	}
-
-	return CompareJSON(a1, b1)
 }

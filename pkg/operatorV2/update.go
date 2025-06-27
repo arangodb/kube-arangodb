@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,6 +55,8 @@ func WithUpdateStatusInterfaceRetry[S interface{}, T Object[S]](ctx context.Cont
 		// Let's try to make a call
 		if nObj, err := WithUpdateStatusInterface(ctx, client, obj, status, opts); err == nil {
 			return nObj, nil
+		} else {
+			println(err.Error())
 		}
 
 		select {

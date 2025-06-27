@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package util
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
-const (
-	ChartFoundCondition      api.ConditionType = "ChartFound"
-	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
-	SpecValidCondition       api.ConditionType = "SpecValid"
-	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
-	ReadyCondition           api.ConditionType = "Ready"
+import (
+	"crypto/md5"
+	"fmt"
 )
+
+func MD5FromString(data string) string {
+	return MD5([]byte(data))
+}
+
+func MD5(data []byte) string {
+	return fmt.Sprintf("%0x", md5.Sum(data))
+}

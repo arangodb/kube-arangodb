@@ -32,9 +32,9 @@ import (
 
 func Test_ObjectNotFound(t *testing.T) {
 	// Arrange
-	handler := newFakeHandler()
+	handler, ns, _ := newFakeHandler(t)
 
-	i := newItem(operation.Add, "test", "test")
+	i := newItem(operation.Add, ns, "test")
 
 	actions := map[operation.Operation]bool{
 		operation.Add:    false,

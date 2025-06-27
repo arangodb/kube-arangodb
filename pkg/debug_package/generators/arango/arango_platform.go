@@ -32,7 +32,8 @@ import (
 func Platform(f shared.FactoryGen) {
 	f.AddSection("platform").
 		Register("storage", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformStorage](arangoPlatformV1Alpha1ArangoPlatformStorageList, shared.WithDefinitions[*platformApi.ArangoPlatformStorage])).
-		Register("chart", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformChart](arangoPlatformV1Alpha1ArangoPlatformChartList, shared.WithDefinitions[*platformApi.ArangoPlatformChart], arangoPlatformV1Alpha1ArangoPlatformChartExtract))
+		Register("chart", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformChart](arangoPlatformV1Alpha1ArangoPlatformChartList, shared.WithDefinitions[*platformApi.ArangoPlatformChart], arangoPlatformV1Alpha1ArangoPlatformChartExtract)).
+		Register("service", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformService](arangoPlatformV1Alpha1ArangoPlatformServiceList, shared.WithDefinitions[*platformApi.ArangoPlatformService]))
 }
 
 func arangoPlatformV1Alpha1ArangoPlatformStorageList(ctx context.Context, client kclient.Client, namespace string) ([]*platformApi.ArangoPlatformStorage, error) {
@@ -50,6 +51,18 @@ func arangoPlatformV1Alpha1ArangoPlatformStorageList(ctx context.Context, client
 func arangoPlatformV1Alpha1ArangoPlatformChartList(ctx context.Context, client kclient.Client, namespace string) ([]*platformApi.ArangoPlatformChart, error) {
 	return list.ListObjects[*platformApi.ArangoPlatformChartList, *platformApi.ArangoPlatformChart](ctx, client.Arango().PlatformV1alpha1().ArangoPlatformCharts(namespace), func(result *platformApi.ArangoPlatformChartList) []*platformApi.ArangoPlatformChart {
 		q := make([]*platformApi.ArangoPlatformChart, len(result.Items))
+
+		for id, e := range result.Items {
+			q[id] = e.DeepCopy()
+		}
+
+		return q
+	})
+}
+
+func arangoPlatformV1Alpha1ArangoPlatformServiceList(ctx context.Context, client kclient.Client, namespace string) ([]*platformApi.ArangoPlatformService, error) {
+	return list.ListObjects[*platformApi.ArangoPlatformServiceList, *platformApi.ArangoPlatformService](ctx, client.Arango().PlatformV1alpha1().ArangoPlatformServices(namespace), func(result *platformApi.ArangoPlatformServiceList) []*platformApi.ArangoPlatformService {
+		q := make([]*platformApi.ArangoPlatformService, len(result.Items))
 
 		for id, e := range result.Items {
 			q[id] = e.DeepCopy()

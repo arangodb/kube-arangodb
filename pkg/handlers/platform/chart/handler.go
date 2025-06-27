@@ -116,8 +116,16 @@ func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, e
 }
 
 func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformChart, status *platformApi.ArangoPlatformChartStatus) (bool, error) {
+	checksums := make([]string, 0, 2)
+	checksums = append(checksums, extension.Spec.Definition.SHA256())
+	if v := extension.Spec.Overrides; !v.IsZero() {
+		checksums = append(checksums, v.SHA256())
+	}
+
+	checksum := util.SHA256FromStringArray(checksums...)
+
 	if status.Info != nil {
-		if status.Info.Checksum != extension.Spec.Definition.SHA256() || !status.Info.Overrides.Equals(extension.Spec.Overrides) {
+		if status.Info.Checksum != checksum {
 			status.Info = nil
 			return true, operator.Reconcile("Spec changed")
 		}
@@ -134,7 +142,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 	if err != nil {
 		status.Info = &platformApi.ChartStatusInfo{
 			Definition: extension.Spec.Definition,
-			Checksum:   extension.Spec.Definition.SHA256(),
+			Checksum:   checksum,
 			Overrides:  extension.Spec.Overrides,
 			Valid:      false,
 			Message:    "Chart is invalid",
@@ -146,7 +154,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 	if chart.Chart().Name() != extension.GetName() {
 		status.Info = &platformApi.ChartStatusInfo{
 			Definition: extension.Spec.Definition,
-			Checksum:   extension.Spec.Definition.SHA256(),
+			Checksum:   checksum,
 			Overrides:  extension.Spec.Overrides,
 			Valid:      false,
 			Message:    "Chart Name mismatch",
@@ -159,7 +167,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 	if err != nil {
 		status.Info = &platformApi.ChartStatusInfo{
 			Definition: extension.Spec.Definition,
-			Checksum:   extension.Spec.Definition.SHA256(),
+			Checksum:   checksum,
 			Overrides:  extension.Spec.Overrides,
 			Valid:      false,
 			Message:    "Chart is invalid: Unable to get platform details",
@@ -170,7 +178,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 
 	status.Info = &platformApi.ChartStatusInfo{
 		Definition: extension.Spec.Definition,
-		Checksum:   extension.Spec.Definition.SHA256(),
+		Checksum:   checksum,
 		Overrides:  extension.Spec.Overrides,
 		Valid:      true,
 		Details:    chartInfoExtract(chart.Chart(), platform),

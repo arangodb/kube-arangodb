@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+//go:build testing
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+package logging
 
-const (
-	ChartFoundCondition      api.ConditionType = "ChartFound"
-	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
-	SpecValidCondition       api.ConditionType = "SpecValid"
-	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
-	ReadyCondition           api.ConditionType = "Ready"
-)
+func init() {
+	Global().ApplyLogLevels(map[string]Level{
+		TopicAll: Trace,
+	})
+}

@@ -28,16 +28,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-func ListContains(a []string, b string) bool {
-	for _, v := range a {
-		if v == b {
-			return true
-		}
-	}
-
-	return false
-}
-
 func CompareStrings(a, b string) bool {
 	return a == b
 }

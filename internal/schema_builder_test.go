@@ -25,6 +25,7 @@ import (
 	"go/ast"
 	"go/token"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -124,7 +125,7 @@ func (b *schemaBuilder) tryGetKubeOpenAPIV2Definitions(t *testing.T, obj interfa
 }
 
 func (b *schemaBuilder) isV3IntOrString(types []string) bool {
-	return len(types) == 2 && util.ContainsList(types, "number") && util.ContainsList(types, "string")
+	return len(types) == 2 && slices.Contains(types, "number") && slices.Contains(types, "string")
 }
 
 func (b *schemaBuilder) openAPIDefToSchemaPros(t *testing.T, _ *openapi.OpenAPIDefinition) *apiextensions.JSONSchemaProps {

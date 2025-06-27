@@ -35,4 +35,13 @@ type ArangoPlatformServiceStatus struct {
 	// Conditions specific to the entire service
 	// +doc/type: api.Conditions
 	Conditions api.ConditionList `json:"conditions,omitempty"`
+
+	// Values keeps the values of the Service
+	Values sharedApi.Any `json:"values,omitempty,omitzero"`
+
+	// ChartInfo keeps the info about Chart
+	ChartInfo *ChartStatusInfo `json:"chartInfo,omitempty"`
+
+	// Release keeps the release status
+	Release *ArangoPlatformServiceStatusRelease `json:"release,omitempty"`
 }

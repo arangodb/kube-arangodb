@@ -25,6 +25,7 @@ import (
 )
 
 type ArangoPlatformChartStatus struct {
+	// Info keeps the info about Chart
 	Info *ChartStatusInfo `json:"info,omitempty"`
 
 	// Conditions specific to the entire chart

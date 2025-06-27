@@ -28,7 +28,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func (o *operator) worker() {
@@ -134,7 +133,7 @@ func (o *operator) processItem(item operation.Item) error {
 }
 
 func (o *operator) processItemWithCTX(item operation.Item, handler Handler) error {
-	ctx, c := globals.GetGlobals().Timeouts().Reconciliation().WithTimeout(context.Background())
+	ctx, c := WithHandlerTimeout(context.Background(), handler)
 	defer c()
 
 	return handler.Handle(ctx, item)

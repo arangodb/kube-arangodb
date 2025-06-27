@@ -31,7 +31,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -41,20 +40,20 @@ var (
 	accessCacheLock sync.Mutex
 )
 
-func AccessCache(name string) cache.Cache[authorization.ResourceAttributes, authorization.SubjectAccessReviewStatus] {
+func AccessCache(client kclient.Client) cache.Cache[authorization.ResourceAttributes, authorization.SubjectAccessReviewStatus] {
 	accessCacheLock.Lock()
 	defer accessCacheLock.Unlock()
 
-	if v, ok := accessCache[name]; ok {
+	if v, ok := accessCache[client.Name()]; ok {
 		return v
 	}
 
-	c := cache.NewCache(accessCacheFuncGen(name))
-	accessCache[name] = c
+	c := cache.NewCache(accessCacheFuncGen(client))
+	accessCache[client.Name()] = c
 	return c
 }
 
-func accessCacheFuncGen(name string) func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, time.Time, error) {
+func accessCacheFuncGen(client kclient.Client) func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, time.Time, error) {
 	return func(ctx context.Context, in authorization.ResourceAttributes) (authorization.SubjectAccessReviewStatus, time.Time, error) {
 		log := logger.
 			Str("Namespace", in.Namespace).
@@ -69,13 +68,6 @@ func accessCacheFuncGen(name string) func(ctx context.Context, in authorization.
 
 		ctx, c := context.WithTimeout(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get())
 		defer c()
-
-		f := kclient.GetFactory(name)
-
-		client, ok := f.Client()
-		if !ok {
-			return authorization.SubjectAccessReviewStatus{}, util.Default[time.Time](), errors.Errorf("Unable to create Kubernetes Client")
-		}
 
 		review := authorization.SelfSubjectAccessReview{
 			Spec: authorization.SelfSubjectAccessReviewSpec{
@@ -141,7 +133,7 @@ func IsAllowed(in authorization.SubjectAccessReviewStatus) bool {
 }
 
 func VerifyAccessRequest(ctx context.Context, client kclient.Client, in authorization.ResourceAttributes) authorization.SubjectAccessReviewStatus {
-	resp, err := AccessCache(client.Name()).Get(ctx, in)
+	resp, err := AccessCache(client).Get(ctx, in)
 
 	if err != nil {
 		return authorization.SubjectAccessReviewStatus{

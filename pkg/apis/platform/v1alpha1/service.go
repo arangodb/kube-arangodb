@@ -26,6 +26,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 )
 
+const (
+	FinalizerArangoPlatformServiceRelease = platform.ArangoPlatformServiceCRDName + "/cleanup"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoPlatformServiceList is a list of ArangoPlatform Service.

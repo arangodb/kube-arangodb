@@ -334,6 +334,13 @@ func UpdateObjectsC(t *testing.T, client kclient.Client, objects ...interface{})
 	return UpdateObjects(t, client.Kubernetes(), client.Arango(), objects...)
 }
 
+func Update[T meta.Object](t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, obj *T, mods ...MetaObjectMod[T]) {
+	z := *obj
+	Apply[T](t, z, mods...)
+	UpdateObjects(t, k8s, arango, &z)
+	*obj = z
+}
+
 func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
 	for _, object := range objects {
 		switch v := object.(type) {

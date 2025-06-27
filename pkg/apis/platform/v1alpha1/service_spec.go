@@ -32,6 +32,9 @@ type ArangoPlatformServiceSpec struct {
 
 	// Chart keeps the Chart Reference
 	Chart *sharedApi.Object `json:"chart,omitempty"`
+
+	// Values keeps the values of the Service
+	Values sharedApi.Any `json:"values,omitempty,omitzero"`
 }
 
 func (c *ArangoPlatformServiceSpec) Validate() error {

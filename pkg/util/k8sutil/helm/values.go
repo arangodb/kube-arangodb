@@ -27,6 +27,10 @@ import (
 )
 
 func NewMergeRawValues(opts ValuesMergeMethod, vs ...Values) (Values, error) {
+	if len(vs) == 0 {
+		return nil, nil
+	}
+
 	if len(vs) == 1 {
 		return vs[0], nil
 	}
@@ -82,6 +86,10 @@ func NewValues(in any) (Values, error) {
 		return nil, err
 	}
 
+	if string(data) == "null" {
+		return nil, nil
+	}
+
 	return data, nil
 }
 
@@ -111,6 +119,10 @@ func (v *Values) UnmarshalJSON(in []byte) error {
 	return nil
 }
 
+func (v Values) IsZero() bool {
+	return len(v) == 0
+}
+
 func (v Values) MarshalJSON() ([]byte, error) {
 	return v, nil
 }
@@ -121,7 +133,7 @@ func (v Values) String() string {
 
 func (v Values) Marshal() (map[string]interface{}, error) {
 	if len(v) == 0 {
-		return map[string]interface{}{}, nil
+		return nil, nil
 	}
 
 	var q map[string]interface{}

@@ -408,6 +408,9 @@ func (c *client) NativeGet(ctx context.Context, reqs ...Resource) ([]ResourceObj
 }
 
 func (c *client) StatusObjects(ctx context.Context, name string, mods ...util.Mod[action.Status]) (*Release, []ResourceObject, error) {
+	mods = append(mods, func(in *action.Status) {
+		in.ShowResources = true
+	})
 	s, err := c.Status(ctx, name, mods...)
 	if err != nil {
 		return nil, nil, err

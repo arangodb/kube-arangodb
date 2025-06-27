@@ -35,6 +35,10 @@ v1alpha1:
                 description: UID keeps the information about object UID
                 type: string
             type: object
+          values:
+            description: Values keeps the values of the Service
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
         type: object
       status:
         description: Object with preserved fields for backward compatibility

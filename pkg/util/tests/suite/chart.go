@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
+
+//go:build testing
 
 package suite
 
@@ -36,6 +38,15 @@ var chart_example_1_0_1 []byte
 //go:embed chart/example-1.1.0.tgz
 var chart_example_1_1_0 []byte
 
+//go:embed chart/secret-1.0.0.tgz
+var chart_secret_1_0_0 []byte
+
+//go:embed chart/secret-1.0.1.tgz
+var chart_secret_1_0_1 []byte
+
+//go:embed chart/secret-1.1.0.tgz
+var chart_secret_1_1_0 []byte
+
 func GetChart(t *testing.T, name, version string) []byte {
 	switch name {
 	case "example":
@@ -46,6 +57,15 @@ func GetChart(t *testing.T, name, version string) []byte {
 			return chart_example_1_0_1
 		case "1.1.0":
 			return chart_example_1_1_0
+		}
+	case "secret":
+		switch version {
+		case "1.0.0":
+			return chart_secret_1_0_0
+		case "1.0.1":
+			return chart_secret_1_0_1
+		case "1.1.0":
+			return chart_secret_1_1_0
 		}
 	}
 

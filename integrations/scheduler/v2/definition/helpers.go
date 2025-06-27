@@ -91,7 +91,7 @@ func (i *SchedulerV2InstallRequestOptions) Options() []util.Mod[action.Install] 
 	if v := i.GetLabels(); len(v) > 0 {
 		opts = append(opts, func(in *action.Install) {
 			in.Labels = v
-			in.Wait = util.OptionalType(i.Wait, false)
+			in.Wait = util.OptionalType(i.Wait, true)
 		})
 	}
 
@@ -108,7 +108,7 @@ func (i *SchedulerV2UpgradeRequestOptions) Options() []util.Mod[action.Upgrade] 
 	if v := i.GetLabels(); len(v) > 0 {
 		opts = append(opts, func(in *action.Upgrade) {
 			in.Labels = v
-			in.Wait = util.OptionalType(i.Wait, false)
+			in.Wait = util.OptionalType(i.Wait, true)
 		})
 	}
 
@@ -147,7 +147,7 @@ func (i *SchedulerV2UninstallRequestOptions) Options() []util.Mod[action.Uninsta
 	var opts []util.Mod[action.Uninstall]
 
 	opts = append(opts, func(in *action.Uninstall) {
-		in.Wait = util.OptionalType(i.Wait, false)
+		in.Wait = util.OptionalType(i.Wait, true)
 	})
 
 	return opts
@@ -183,7 +183,7 @@ func (i *SchedulerV2ReleaseInfoResource) AsHelmResource() helm.Resource {
 	}
 }
 
-func (i *SchedulerV2InstallRequestV2Options) Options() []util.Mod[action.Install] {
+func (i *SchedulerV2InstallV2RequestOptions) Options() []util.Mod[action.Install] {
 	if i == nil {
 		return nil
 	}
@@ -193,14 +193,14 @@ func (i *SchedulerV2InstallRequestV2Options) Options() []util.Mod[action.Install
 	if v := i.GetLabels(); len(v) > 0 {
 		opts = append(opts, func(in *action.Install) {
 			in.Labels = v
-			in.Wait = util.OptionalType(i.Wait, false)
+			in.Wait = util.OptionalType(i.Wait, true)
 		})
 	}
 
 	return opts
 }
 
-func (i *SchedulerV2UpgradeRequestV2Options) Options() []util.Mod[action.Upgrade] {
+func (i *SchedulerV2UpgradeV2RequestOptions) Options() []util.Mod[action.Upgrade] {
 	if i == nil {
 		return nil
 	}
@@ -210,7 +210,7 @@ func (i *SchedulerV2UpgradeRequestV2Options) Options() []util.Mod[action.Upgrade
 	if v := i.GetLabels(); len(v) > 0 {
 		opts = append(opts, func(in *action.Upgrade) {
 			in.Labels = v
-			in.Wait = util.OptionalType(i.Wait, false)
+			in.Wait = util.OptionalType(i.Wait, true)
 		})
 	}
 

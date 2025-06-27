@@ -23,105 +23,27 @@ package v2
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
 	"helm.sh/helm/v3/pkg/action"
-	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/suite"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
-
-func cleanup(t *testing.T, client kclient.Client, c helm.Client) func() {
-	t.Run("Cleanup Pre", func(t *testing.T) {
-		items, err := c.List(context.Background(), func(in *action.List) {
-			in.All = true
-			in.StateMask = action.ListDeployed | action.ListUninstalled | action.ListUninstalling | action.ListPendingInstall | action.ListPendingUpgrade | action.ListPendingRollback | action.ListSuperseded | action.ListFailed | action.ListUnknown
-		})
-		require.NoError(t, err)
-
-		for _, item := range items {
-			t.Run(item.Name, func(t *testing.T) {
-				_, err := c.Uninstall(context.Background(), item.Name)
-				require.NoError(t, err)
-			})
-		}
-
-		t.Run("Remove NS", func(t *testing.T) {
-			if err := client.Kubernetes().CoreV1().Namespaces().Delete(context.Background(), tests.FakeNamespace, meta.DeleteOptions{}); !kerrors.IsNotFound(err) {
-				require.NoError(t, err)
-			}
-
-			for {
-				time.Sleep(time.Second)
-
-				if _, err := client.Kubernetes().CoreV1().Namespaces().Get(context.Background(), tests.FakeNamespace, meta.GetOptions{}); !kerrors.IsNotFound(err) {
-					require.NoError(t, err)
-					continue
-				}
-
-				break
-			}
-		})
-
-		t.Run("Create NS", func(t *testing.T) {
-			_, err = client.Kubernetes().CoreV1().Namespaces().Create(context.Background(), &core.Namespace{
-				ObjectMeta: meta.ObjectMeta{
-					Name: tests.FakeNamespace,
-				},
-			}, meta.CreateOptions{})
-			require.NoError(t, err)
-		})
-	})
-
-	return func() {
-		t.Run("Cleanup Post", func(t *testing.T) {
-			items, err := c.List(context.Background(), func(in *action.List) {
-				in.All = true
-				in.StateMask = action.ListDeployed | action.ListUninstalled | action.ListUninstalling | action.ListPendingInstall | action.ListPendingUpgrade | action.ListPendingRollback | action.ListSuperseded | action.ListFailed | action.ListUnknown
-			})
-			require.NoError(t, err)
-
-			for _, item := range items {
-				t.Run(item.Name, func(t *testing.T) {
-					_, err := c.Uninstall(context.Background(), item.Name)
-					require.NoError(t, err)
-				})
-			}
-
-			t.Run("Remove NS", func(t *testing.T) {
-				if err := client.Kubernetes().CoreV1().Namespaces().Delete(context.Background(), tests.FakeNamespace, meta.DeleteOptions{}); !kerrors.IsNotFound(err) {
-					require.NoError(t, err)
-				}
-
-				for {
-					time.Sleep(time.Second)
-
-					if _, err := client.Kubernetes().CoreV1().Namespaces().Get(context.Background(), tests.FakeNamespace, meta.GetOptions{}); !kerrors.IsNotFound(err) {
-						require.NoError(t, err)
-						continue
-					}
-
-					break
-				}
-			})
-		})
-	}
-}
 
 func Test_Implementation(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	scheduler, kc, h := ExternalClient(t, ctx, func(c Configuration) Configuration {
-		c.Namespace = tests.FakeNamespace
+	scheduler, _, _, h := Client(t, ctx, func(c Configuration) Configuration {
 		c.Deployment = tests.FakeNamespace
 		return c
 	})
@@ -130,8 +52,6 @@ func Test_Implementation(t *testing.T) {
 		"A": "B",
 	})
 	require.NoError(t, err)
-
-	defer cleanup(t, kc, h)()
 
 	t.Run("Alive", func(t *testing.T) {
 		_, err := scheduler.Alive(context.Background(), &pbSharedV1.Empty{})
@@ -169,12 +89,10 @@ func Test_Implementation(t *testing.T) {
 	})
 
 	t.Run("Status on Missing", func(t *testing.T) {
-		status, err := scheduler.Status(context.Background(), &pbSchedulerV2.SchedulerV2StatusRequest{
+		_, err := scheduler.Status(context.Background(), &pbSchedulerV2.SchedulerV2StatusRequest{
 			Name: "test",
 		})
-		require.NoError(t, err)
-
-		require.Nil(t, status.GetRelease())
+		tgrpc.AsGRPCError(t, err).Code(t, codes.NotFound)
 	})
 
 	t.Run("List Empty", func(t *testing.T) {
@@ -276,7 +194,7 @@ func Test_Implementation(t *testing.T) {
 
 		require.EqualValues(t, 1, status.GetRelease().GetVersion())
 		t.Logf("Data: %s", string(status.GetRelease().GetValues()))
-		require.Len(t, status.GetRelease().GetValues(), 4)
+		require.Len(t, status.GetRelease().GetValues(), 0)
 	})
 
 	t.Run("Upgrade", func(t *testing.T) {
@@ -335,5 +253,304 @@ func Test_Implementation(t *testing.T) {
 
 		require.NotNil(t, status.GetRelease())
 		t.Logf("Response: %s", status.GetInfo())
+	})
+}
+
+func Test_ImplementationV2(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	scheduler, ns, client, _ := Client(t, ctx, func(c Configuration) Configuration {
+		c.Deployment = tests.FakeNamespace
+		return c
+	})
+
+	h := chartHandler(client, ns)
+
+	chart := tests.NewMetaObject[*platformApi.ArangoPlatformChart](t, ns, "secret",
+		func(t *testing.T, obj *platformApi.ArangoPlatformChart) {})
+
+	refresh := tests.CreateObjects(t, client.Kubernetes(), client.Arango(), &chart)
+
+	refresh(t)
+
+	t.Run("Check Empty", func(t *testing.T) {
+		rs, err := scheduler.List(context.Background(), &pbSchedulerV2.SchedulerV2ListRequest{})
+		require.NoError(t, err)
+		require.Len(t, rs.Releases, 0)
+	})
+
+	t.Run("Install Empty - Missing Chart", func(t *testing.T) {
+		_, err := scheduler.InstallV2(context.Background(), &pbSchedulerV2.SchedulerV2InstallV2Request{
+			Name:  "example",
+			Chart: "missing",
+		})
+		tgrpc.AsGRPCError(t, err).Code(t, codes.NotFound).Errorf(t, "NotFound: arangoplatformcharts.platform.arangodb.com \"missing\" not found")
+	})
+
+	t.Run("Install Empty - Invalid Chart", func(t *testing.T) {
+		_, err := scheduler.InstallV2(context.Background(), &pbSchedulerV2.SchedulerV2InstallV2Request{
+			Name:  "example",
+			Chart: "secret",
+		})
+		tgrpc.AsGRPCError(t, err).Code(t, codes.Unavailable)
+	})
+
+	t.Run("Install", func(t *testing.T) {
+		t.Run("Empty", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = nil
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.InstallV2(context.Background(), &pbSchedulerV2.SchedulerV2InstallV2Request{
+				Name:  "example",
+				Chart: "secret",
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "PLACEHOLDER", cm.Data)
+
+			_, err = scheduler.Uninstall(ctx, &pbSchedulerV2.SchedulerV2UninstallRequest{
+				Name:    "example",
+				Options: &pbSchedulerV2.SchedulerV2UninstallRequestOptions{},
+			})
+			require.NoError(t, err)
+
+			_, err = scheduler.Status(ctx, &pbSchedulerV2.SchedulerV2StatusRequest{
+				Name: "example",
+			})
+			tgrpc.AsGRPCError(t, err).Code(t, codes.NotFound)
+		})
+
+		t.Run("From Chart", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = sharedApi.NewAnyT(t, suite.ConfigMapInput{Data: "chart"})
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.InstallV2(context.Background(), &pbSchedulerV2.SchedulerV2InstallV2Request{
+				Name:  "example",
+				Chart: "secret",
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "chart", cm.Data)
+
+			_, err = scheduler.Uninstall(ctx, &pbSchedulerV2.SchedulerV2UninstallRequest{
+				Name:    "example",
+				Options: &pbSchedulerV2.SchedulerV2UninstallRequestOptions{},
+			})
+			require.NoError(t, err)
+
+			_, err = scheduler.Status(ctx, &pbSchedulerV2.SchedulerV2StatusRequest{
+				Name: "example",
+			})
+			tgrpc.AsGRPCError(t, err).Code(t, codes.NotFound)
+		})
+
+		t.Run("From Service", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = sharedApi.NewAnyT(t, suite.ConfigMapInput{Data: "chart"})
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.InstallV2(context.Background(), &pbSchedulerV2.SchedulerV2InstallV2Request{
+				Name:  "example",
+				Chart: "secret",
+				Values: [][]byte{
+					sharedApi.NewAnyT(t, suite.ConfigMapInput{Data: "service"}),
+				},
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "service", cm.Data)
+
+			_, err = scheduler.Uninstall(ctx, &pbSchedulerV2.SchedulerV2UninstallRequest{
+				Name:    "example",
+				Options: &pbSchedulerV2.SchedulerV2UninstallRequestOptions{},
+			})
+			require.NoError(t, err)
+
+			_, err = scheduler.Status(ctx, &pbSchedulerV2.SchedulerV2StatusRequest{
+				Name: "example",
+			})
+			tgrpc.AsGRPCError(t, err).Code(t, codes.NotFound)
+		})
+
+		t.Run("From Service over Chart", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = nil
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.InstallV2(context.Background(), &pbSchedulerV2.SchedulerV2InstallV2Request{
+				Name:  "example",
+				Chart: "secret",
+				Values: [][]byte{
+					sharedApi.NewAnyT(t, suite.ConfigMapInput{Data: "service"}),
+				},
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "service", cm.Data)
+
+			_, err = scheduler.Uninstall(ctx, &pbSchedulerV2.SchedulerV2UninstallRequest{
+				Name:    "example",
+				Options: &pbSchedulerV2.SchedulerV2UninstallRequestOptions{},
+			})
+			require.NoError(t, err)
+
+			_, err = scheduler.Status(ctx, &pbSchedulerV2.SchedulerV2StatusRequest{
+				Name: "example",
+			})
+			tgrpc.AsGRPCError(t, err).Code(t, codes.NotFound)
+		})
+	})
+
+	t.Run("Upgrade", func(t *testing.T) {
+		t.Run("Install", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = nil
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.InstallV2(context.Background(), &pbSchedulerV2.SchedulerV2InstallV2Request{
+				Name:  "example",
+				Chart: "secret",
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "PLACEHOLDER", cm.Data)
+		})
+
+		t.Run("Empty", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = nil
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.UpgradeV2(context.Background(), &pbSchedulerV2.SchedulerV2UpgradeV2Request{
+				Name:  "example",
+				Chart: "secret",
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "PLACEHOLDER", cm.Data)
+		})
+
+		t.Run("From Chart", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = sharedApi.NewAnyT(t, suite.ConfigMapInput{Data: "chart"})
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.UpgradeV2(context.Background(), &pbSchedulerV2.SchedulerV2UpgradeV2Request{
+				Name:  "example",
+				Chart: "secret",
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "chart", cm.Data)
+		})
+
+		t.Run("From Service", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = sharedApi.NewAnyT(t, suite.ConfigMapInput{Data: "chart"})
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.UpgradeV2(context.Background(), &pbSchedulerV2.SchedulerV2UpgradeV2Request{
+				Name:  "example",
+				Chart: "secret",
+				Values: [][]byte{
+					sharedApi.NewAnyT(t, suite.ConfigMapInput{Data: "service"}),
+				},
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "service", cm.Data)
+		})
+
+		t.Run("From Service over Chart", func(t *testing.T) {
+			tests.Update(t, client.Kubernetes(), client.Arango(), &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+				obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
+				obj.Spec.Overrides = nil
+			})
+
+			require.NoError(t, tests.Handle(h, tests.NewItem(t, operation.Update, chart)))
+
+			refresh(t)
+
+			_, err := scheduler.UpgradeV2(context.Background(), &pbSchedulerV2.SchedulerV2UpgradeV2Request{
+				Name:  "example",
+				Chart: "secret",
+				Values: [][]byte{
+					sharedApi.NewAnyT(t, suite.ConfigMapInput{Data: "service"}),
+				},
+			})
+			require.NoError(t, err)
+
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "example")
+			require.NotNil(t, cm)
+
+			require.Equal(t, "service", cm.Data)
+		})
 	})
 }

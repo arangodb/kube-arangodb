@@ -20,7 +20,10 @@
 
 package util
 
-import "sort"
+import (
+	"slices"
+	"sort"
+)
 
 type List[T any] []T
 
@@ -146,21 +149,11 @@ func FilterList[A any](in []A, filter func(A) bool) []A {
 	return r
 }
 
-func ContainsList[A comparable](in []A, item A) bool {
-	for _, el := range in {
-		if el == item {
-			return true
-		}
-	}
-
-	return false
-}
-
 func UniqueList[A comparable](in []A) []A {
 	var r = make([]A, 0, len(in))
 
 	for _, el := range in {
-		if !ContainsList(r, el) {
+		if !slices.Contains(r, el) {
 			r = append(r, el)
 		}
 	}

@@ -206,6 +206,15 @@ func (list ConditionList) IsTrue(conditionType ConditionType) bool {
 	return found && c.IsTrue()
 }
 
+// Hash return hash of the Condition. Empty string if ConditionType not found
+func (list ConditionList) Hash(conditionType ConditionType) string {
+	c, found := list.Get(conditionType)
+	if found {
+		return c.Hash
+	}
+	return ""
+}
+
 // Check create a condition checker.
 func (list ConditionList) Check(conditionType ConditionType) ConditionCheck {
 	c, ok := list.Get(conditionType)
