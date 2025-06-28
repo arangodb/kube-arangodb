@@ -22,14 +22,13 @@ package helm
 
 import (
 	_ "embed"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient/external"
 )
 
 func init() {
@@ -44,22 +43,13 @@ func newValues(t *testing.T, in any) Values {
 	return v
 }
 
-func newClient(t *testing.T, namespace string) (kclient.Client, Client) {
-	z, ok := os.LookupEnv("TEST_KUBECONFIG")
-	if !ok {
-		t.Skipf("TEST_KUBECONFIG is not set")
-	}
-
-	kcfg, err := clientcmd.BuildConfigFromFlags("", z)
-	require.NoError(t, err)
-
-	client, err := kclient.NewClient("test", kcfg)
-	require.NoError(t, err)
+func newClient(t *testing.T) (kclient.Client, string, Client) {
+	client, ns := external.ExternalClient(t)
 
 	c, err := NewClient(Configuration{
-		Namespace: namespace,
+		Namespace: ns,
 		Config:    client.Config(),
 	})
 	require.NoError(t, err)
-	return client, c
+	return client, ns, c
 }

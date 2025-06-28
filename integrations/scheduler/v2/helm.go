@@ -93,6 +93,10 @@ func (i *implementation) Status(ctx context.Context, in *pbSchedulerV2.Scheduler
 		return nil, status.Errorf(codes.Internal, "Unable to run action: Status: %s", err.Error())
 	}
 
+	if resp == nil {
+		return nil, status.Errorf(codes.NotFound, "Release `%s` not found", in.GetName())
+	}
+
 	return &pbSchedulerV2.SchedulerV2StatusResponse{
 		Release: newChartReleaseFromHelmRelease(resp),
 	}, nil
@@ -106,6 +110,10 @@ func (i *implementation) StatusObjects(ctx context.Context, in *pbSchedulerV2.Sc
 	if err != nil {
 		logger.Err(err).Warn("Unable to run action: Status")
 		return nil, status.Errorf(codes.Internal, "Unable to run action: Status: %s", err.Error())
+	}
+
+	if resp == nil {
+		return nil, status.Errorf(codes.NotFound, "Release `%s` not found", in.GetName())
 	}
 
 	return &pbSchedulerV2.SchedulerV2StatusObjectsResponse{
@@ -187,6 +195,10 @@ func (i *implementation) Uninstall(ctx context.Context, in *pbSchedulerV2.Schedu
 	}
 
 	var mods []util.Mod[action.Uninstall]
+
+	mods = append(mods, func(in *action.Uninstall) {
+		in.DeletionPropagation = "background"
+	})
 
 	mods = append(mods, in.GetOptions().Options()...)
 

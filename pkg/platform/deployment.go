@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package platform
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+import "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 
-const (
-	ChartFoundCondition      api.ConditionType = "ChartFound"
-	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
-	SpecValidCondition       api.ConditionType = "SpecValid"
-	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
-	ReadyCondition           api.ConditionType = "Ready"
-)
+type Service struct {
+	Platform ServicePlatform `json:"arangodb_platform,omitempty"`
+}
+
+func (s Service) Values() (helm.Values, error) {
+	return helm.NewValues(s)
+}
+
+type ServicePlatform struct {
+	Deployment ServicePlatformDeployment `json:"deployment,omitempty"`
+}
+
+type ServicePlatformDeployment struct {
+	Name string `json:"name,omitempty"`
+}

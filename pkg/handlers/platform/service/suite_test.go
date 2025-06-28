@@ -22,29 +22,38 @@ package service
 
 import (
 	_ "embed"
+	"testing"
 
-	"k8s.io/client-go/kubernetes/fake"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
-	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient/external"
 )
 
-func newFakeHandler() *handler {
-	f := fakeClientSet.NewSimpleClientset()
-	k := fake.NewSimpleClientset()
+func newFakeHandler(t *testing.T) (*handler, string, operator.Handler) {
+	client, ns := external.ExternalClient(t)
 
-	h := &handler{
-		client:        f,
-		kubeClient:    k,
-		eventRecorder: event.NewEventRecorder("mock", k).NewInstance(Group(), Version(), Kind()),
-		operator:      operator.NewOperator("mock", "mock", "mock"),
-	}
+	op := operator.NewOperator("mock", ns, "mock")
+	recorder := event.NewEventRecorder("mock", client.Kubernetes())
+	h, err := helm.NewClient(helm.Configuration{
+		Namespace: ns,
+		Config:    client.Config(),
+	})
+	require.NoError(t, err)
 
-	return h
+	return &handler{
+		client:        client.Arango(),
+		kubeClient:    client.Kubernetes(),
+		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
+		operator:      op,
+		helm:          h,
+	}, ns, chart.Handler(op, recorder, client.Arango(), client.Kubernetes())
 }
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {

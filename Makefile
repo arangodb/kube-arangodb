@@ -4,6 +4,8 @@ ROOT:=$(CURRENT)
 SED ?= sed
 REALPATH ?= realpath
 
+K3D ?= k3d
+
 ifeq ($(shell uname),Darwin)
 	SED ?= gsed
 	REALPATH ?= grealpath
@@ -47,6 +49,9 @@ ORGDIR := $(GOBUILDDIR)/src/$(ORGPATH)
 REPONAME := kube-arangodb
 REPODIR := $(ORGDIR)/$(REPONAME)
 REPOPATH := $(ORGPATH)/$(REPONAME)
+
+K3D_KUBECONFIG = $(GOBUILDDIR)/.kubeconfig
+K3D_CLUSTER ?= $(REPONAME)
 
 include $(ROOT)/$(RELEASE_MODE).mk
 
@@ -412,11 +417,11 @@ fmt-verify: license-verify
 
 .PHONY: linter
 linter:
-	@$(GOPATH)/bin/golangci-lint run --build-tags "$(GOBUILDTAGS)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
+	@$(GOPATH)/bin/golangci-lint run --build-tags "testing,$(GOBUILDTAGS)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
 .PHONY: linter-fix
 linter-fix:
-	@$(GOPATH)/bin/golangci-lint run --fix --build-tags "$(GOBUILDTAGS)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
+	@$(GOPATH)/bin/golangci-lint run --fix --build-tags "testing,$(GOBUILDTAGS)" $(foreach LINT_EXCLUDE,$(LINT_EXCLUDES),--exclude '$(LINT_EXCLUDE)') ./...
 
 .PHONY: protolint protolint-fix
 
@@ -820,12 +825,36 @@ manifest-verify-helm-ee: manifests-verify-env-reset
 	helm install --generate-name --set "operator.image=arangodb/kube-arangodb-enterprise:$(VERSION_MAJOR_MINOR_PATCH)" --set "operator.features.storage=true" \
 		./bin/charts/kube-arangodb-$(VERSION_MAJOR_MINOR_PATCH).tgz
 
+# K3D
+
+.PHONY: _k3d_cluster_start _k3d_cluster_stop _k3d_cluster_config _k3d_cluster
+
+_k3d_cluster_config:
+	@$(K3D) kubeconfig get "$(K3D_CLUSTER)" > "$(K3D_KUBECONFIG)"
+
+_k3d_cluster_start:
+	@$(K3D) cluster delete "$(K3D_CLUSTER)"
+	@$(K3D) cluster create "$(K3D_CLUSTER)"
+
+_k3d_cluster_stop:
+	@$(K3D) cluster delete "$(K3D_CLUSTER)"
 
 # Testing
 
 .PHONY: run-unit-tests
+ifdef K3D_ENABLED
+.PHONY: _run-unit-tests
+
+run-unit-tests: _k3d_cluster_start _k3d_cluster_config _run-unit-tests _k3d_cluster_stop
+
+_run-unit-tests: $(SOURCES)
+_run-unit-tests: export TEST_KUBECONFIG=$(K3D_KUBECONFIG)
+_run-unit-tests:
+	@echo "Running in the internal test scope -> $(TEST_KUBECONFIG)"
+else
 run-unit-tests: $(SOURCES)
-	go test --count=1 --tags "$(GOBUILDTAGS)" $(TESTVERBOSEOPTIONS) \
+endif
+	go test --count=1 --tags "testing,$(GOBUILDTAGS)" $(TESTVERBOSEOPTIONS) \
 		$(REPOPATH)/pkg/... \
 		$(REPOPATH)/cmd/... \
 		$(REPOPATH)/integrations/...

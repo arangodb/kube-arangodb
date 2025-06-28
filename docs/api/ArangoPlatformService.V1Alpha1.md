@@ -70,3 +70,11 @@ Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2
 
 UID keeps the information about object UID
 
+***
+
+### .spec.values
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/platform/v1alpha1/service_spec.go#L37)</sup>
+
+Values keeps the values of the Service
+

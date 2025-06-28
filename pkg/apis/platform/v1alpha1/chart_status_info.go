@@ -34,3 +34,10 @@ type ChartStatusInfo struct {
 	// Overrides keeps the Chart overrides
 	Overrides sharedApi.Any `json:"overrides,omitempty"`
 }
+
+func (c *ChartStatusInfo) GetChecksum() string {
+	if c == nil {
+		return ""
+	}
+	return c.Checksum
+}

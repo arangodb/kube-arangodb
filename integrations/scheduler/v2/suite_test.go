@@ -23,16 +23,18 @@ package v2
 import (
 	"context"
 	_ "embed"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"k8s.io/client-go/tools/clientcmd"
 
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient/external"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
@@ -51,7 +53,31 @@ func Handler(t *testing.T, ctx context.Context, kclient kclient.Client, client h
 	return handler
 }
 
-func InternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, kclient.Client, helm.Client) {
+func Client(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, string, kclient.Client, helm.Client) {
+	client, ns := external.ExternalClient(t)
+
+	h, err := helm.NewClient(helm.Configuration{
+		Namespace: ns,
+		Config:    client.Config(),
+	})
+	require.NoError(t, err)
+
+	mods = append(mods, func(c Configuration) Configuration {
+		c.Namespace = ns
+		return c
+	})
+
+	local, err := svc.NewService(svc.Configuration{
+		Address: "127.0.0.1:0",
+	}, Handler(t, ctx, client, h, mods...))
+	require.NoError(t, err)
+
+	start := local.Start(ctx)
+
+	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), ns, client, h
+}
+
+func MockClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, string, kclient.Client, helm.Client) {
 	client := kclient.NewFakeClient()
 
 	h, err := helm.NewClient(helm.Configuration{
@@ -60,6 +86,11 @@ func InternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbScheduler
 	})
 	require.NoError(t, err)
 
+	mods = append(mods, func(c Configuration) Configuration {
+		c.Namespace = tests.FakeNamespace
+		return c
+	})
+
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
 	}, Handler(t, ctx, client, h, mods...))
@@ -67,33 +98,12 @@ func InternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbScheduler
 
 	start := local.Start(ctx)
 
-	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), client, h
+	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), tests.FakeNamespace, client, h
 }
 
-func ExternalClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.SchedulerV2Client, kclient.Client, helm.Client) {
-	z, ok := os.LookupEnv("TEST_KUBECONFIG")
-	if !ok {
-		t.Skipf("TEST_KUBECONFIG is not set")
-	}
+func chartHandler(client kclient.Client, ns string) operator.Handler {
+	op := operator.NewOperator("mock", ns, "mock")
+	recorder := event.NewEventRecorder("mock", client.Kubernetes())
 
-	cfg, err := clientcmd.BuildConfigFromFlags("", z)
-	require.NoError(t, err)
-
-	client, err := kclient.NewClient("test", cfg)
-	require.NoError(t, err)
-
-	h, err := helm.NewClient(helm.Configuration{
-		Namespace: tests.FakeNamespace,
-		Config:    client.Config(),
-	})
-	require.NoError(t, err)
-
-	local, err := svc.NewService(svc.Configuration{
-		Address: "127.0.0.1:0",
-	}, Handler(t, ctx, client, h, mods...))
-	require.NoError(t, err)
-
-	start := local.Start(ctx)
-
-	return tgrpc.NewGRPCClient(t, ctx, pbSchedulerV2.NewSchedulerV2Client, start.Address()), client, h
+	return chart.Handler(op, recorder, client.Arango(), client.Kubernetes())
 }

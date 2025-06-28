@@ -51,6 +51,10 @@ func (d Any) MarshalJSON() ([]byte, error) {
 	return ret, nil
 }
 
+func (d Any) IsZero() bool {
+	return len(d) == 0 || string(d) == "{}"
+}
+
 func (Any) OpenAPISchemaType() []string { return []string{"object"} }
 
 func (Any) OpenAPIXPreserveUnknownFields() bool {

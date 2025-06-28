@@ -21,12 +21,12 @@
 package v1
 
 import (
+	"slices"
 	"time"
 
 	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 const (
@@ -130,7 +130,7 @@ func (t Token) Validate() error {
 	if len(t.AllowedUsers) > 0 {
 		// We are enforcing allowed users
 
-		if !strings.ListContains(t.AllowedUsers, t.DefaultUser) {
+		if !slices.Contains(t.AllowedUsers, t.DefaultUser) {
 			return errors.Errorf("DefaultUser should be always allowed")
 		}
 	}

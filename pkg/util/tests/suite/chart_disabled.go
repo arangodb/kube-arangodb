@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+//go:build !testing
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+package suite
 
-const (
-	ChartFoundCondition      api.ConditionType = "ChartFound"
-	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
-	SpecValidCondition       api.ConditionType = "SpecValid"
-	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
-	ReadyCondition           api.ConditionType = "Ready"
+import (
+	_ "embed"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
+
+func GetChart(t *testing.T, name, version string) []byte {
+	require.Fail(t, "Chart not supported in non testing mode")
+
+	return nil
+}

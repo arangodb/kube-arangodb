@@ -114,6 +114,7 @@ Flags:
       --generator.arango-ml-storage             Define if generator arango-ml-storage is enabled (default true)
       --generator.arango-networking-route       Define if generator arango-networking-route is enabled (default true)
       --generator.arango-platform-chart         Define if generator arango-platform-chart is enabled (default true)
+      --generator.arango-platform-service       Define if generator arango-platform-service is enabled (default true)
       --generator.arango-platform-storage       Define if generator arango-platform-storage is enabled (default true)
       --generator.arango-scheduler-batchjob     Define if generator arango-scheduler-batchjob is enabled (default true)
       --generator.arango-scheduler-cronjob      Define if generator arango-scheduler-cronjob is enabled (default true)

@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	goHttp "net/http"
+	"slices"
 	goStrings "strings"
 	"time"
 
@@ -45,7 +46,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
-	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
@@ -177,7 +177,7 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 
 	// Check configuration
 	if v := i.cfg.Create.AllowedUsers; len(v) > 0 {
-		if !strings.ListContains(v, user) {
+		if !slices.Contains(v, user) {
 			return nil, errors.Errorf("User %s is not allowed", user)
 		}
 	}

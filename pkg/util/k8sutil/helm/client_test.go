@@ -27,9 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"helm.sh/helm/v3/pkg/action"
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/suite"
 )
 
@@ -68,7 +66,7 @@ func cleanup(t *testing.T, c Client) func() {
 }
 
 func Test_Connection(t *testing.T) {
-	client, c := newClient(t, tests.FakeNamespace)
+	client, ns, c := newClient(t)
 
 	require.NoError(t, c.Alive(context.Background()))
 
@@ -82,7 +80,7 @@ func Test_Connection(t *testing.T) {
 	})
 
 	t.Run("Install", func(t *testing.T) {
-		resp, err := c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
+		resp, err := c.Install(context.Background(), suite.GetChart(t, "secret", "1.0.0"), nil, func(in *action.Install) {
 			in.ReleaseName = "test"
 		})
 		require.NoError(t, err)
@@ -91,7 +89,7 @@ func Test_Connection(t *testing.T) {
 	})
 
 	t.Run("Upgrade With No change", func(t *testing.T) {
-		resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "example", "1.0.0"), nil)
+		resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "secret", "1.0.0"), nil)
 		require.NoError(t, err)
 
 		require.NotNil(t, resp)
@@ -100,7 +98,7 @@ func Test_Connection(t *testing.T) {
 	})
 
 	t.Run("Upgrade With change", func(t *testing.T) {
-		resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "example", "1.0.0"), Values(`{"A":"X"}`))
+		resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "secret", "1.0.0"), Values(`{"A":"X"}`))
 		require.NoError(t, err)
 
 		require.NotNil(t, resp)
@@ -136,7 +134,7 @@ func Test_Connection(t *testing.T) {
 	})
 
 	t.Run("Reinstall", func(t *testing.T) {
-		resp, err := c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
+		resp, err := c.Install(context.Background(), suite.GetChart(t, "secret", "1.0.0"), nil, func(in *action.Install) {
 			in.ReleaseName = "test"
 			in.Labels = map[string]string{
 				"X1": "X1",
@@ -151,7 +149,7 @@ func Test_Connection(t *testing.T) {
 		defer cleanup(t, c)()
 
 		t.Run("Install", func(t *testing.T) {
-			resp, err := c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
+			resp, err := c.Install(context.Background(), suite.GetChart(t, "secret", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test-1"
 				in.Labels = map[string]string{
 					"X1": "X1",
@@ -161,7 +159,7 @@ func Test_Connection(t *testing.T) {
 
 			require.Len(t, resp.Labels, 1)
 
-			resp, err = c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
+			resp, err = c.Install(context.Background(), suite.GetChart(t, "secret", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test-2"
 				in.Labels = map[string]string{
 					"X1": "X2",
@@ -171,7 +169,7 @@ func Test_Connection(t *testing.T) {
 
 			require.Len(t, resp.Labels, 1)
 
-			resp, err = c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
+			resp, err = c.Install(context.Background(), suite.GetChart(t, "secret", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test-3"
 				in.Labels = map[string]string{
 					"X1": "X1",
@@ -182,7 +180,7 @@ func Test_Connection(t *testing.T) {
 
 			require.Len(t, resp.Labels, 2)
 
-			resp, err = c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
+			resp, err = c.Install(context.Background(), suite.GetChart(t, "secret", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test-4"
 			})
 			require.NoError(t, err)
@@ -237,7 +235,7 @@ func Test_Connection(t *testing.T) {
 		defer cleanup(t, c)()
 
 		t.Run("Install", func(t *testing.T) {
-			resp, err := c.Install(context.Background(), suite.GetChart(t, "example", "1.0.0"), nil, func(in *action.Install) {
+			resp, err := c.Install(context.Background(), suite.GetChart(t, "secret", "1.0.0"), nil, func(in *action.Install) {
 				in.ReleaseName = "test"
 			})
 			require.NoError(t, err)
@@ -245,27 +243,23 @@ func Test_Connection(t *testing.T) {
 		})
 
 		t.Run("Verify", func(t *testing.T) {
-			cm, err := client.Kubernetes().CoreV1().ConfigMaps(tests.FakeNamespace).Get(context.Background(), "test", meta.GetOptions{})
-			require.NoError(t, err)
-			require.Len(t, cm.Data, 0)
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "test")
+			require.NotNil(t, cm)
+			require.Equal(t, "PLACEHOLDER", cm.Data)
 		})
 
 		t.Run("Update", func(t *testing.T) {
-			resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "example", "1.0.0"), newValues(t, map[string]any{
-				"data": map[string]string{
-					"test": "test",
-				},
+			resp, err := c.Upgrade(context.Background(), "test", suite.GetChart(t, "secret", "1.0.0"), newValues(t, map[string]any{
+				"data": "test",
 			}))
 			require.NoError(t, err)
 			require.NotNil(t, resp)
 		})
 
 		t.Run("Verify", func(t *testing.T) {
-			cm, err := client.Kubernetes().CoreV1().ConfigMaps(tests.FakeNamespace).Get(context.Background(), "test", meta.GetOptions{})
-			require.NoError(t, err)
-			require.Len(t, cm.Data, 1)
-			require.Contains(t, cm.Data, "test")
-			require.EqualValues(t, cm.Data["test"], "test")
+			cm := suite.GetConfigMap(t, client.Kubernetes(), ns, "test")
+			require.NotNil(t, cm)
+			require.Equal(t, "test", cm.Data)
 		})
 	})
 }
