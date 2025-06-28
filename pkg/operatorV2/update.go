@@ -56,7 +56,7 @@ func WithUpdateStatusInterfaceRetry[S interface{}, T Object[S]](ctx context.Cont
 		if nObj, err := WithUpdateStatusInterface(ctx, client, obj, status, opts); err == nil {
 			return nObj, nil
 		} else {
-			println(err.Error())
+			logger.Err(err).Int("retry", id).Warn("Error during status update retry")
 		}
 
 		select {

@@ -109,8 +109,6 @@ func (f *fakeClientBuilder) Client() Client {
 	} else {
 		panic("Unable to get client")
 	}
-	var cfg rest.Config
-	cfg.Host = "x.y.z.d:12345"
 	return NewStaticClient(
 		&rest.Config{
 			Host: "x.y.z.d:12345",
