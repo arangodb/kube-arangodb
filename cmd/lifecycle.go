@@ -129,6 +129,9 @@ func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 				logger.Err(err).Fatal("Too many recent errors")
 				return
 			}
+		} else if p.DeletionTimestamp == nil {
+			// We are just restarting, no need for the finalizer wait
+			return
 		} else {
 			// We got our pod
 			finalizerCount := len(p.GetFinalizers())
