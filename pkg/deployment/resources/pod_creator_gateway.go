@@ -42,6 +42,10 @@ func GetGatewayConfigMapName(name string, parts ...string) string {
 func createGatewayVolumes(input pod.Input) pod.Volumes {
 	volumes := pod.NewVolumes()
 
+	volumes.AddVolume(k8sutil.LifecycleVolume())
+	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+	volumes.Append(pod.JWT(), input)
+
 	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName())))
 	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayCDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "cds")))
 	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayLDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "lds")))

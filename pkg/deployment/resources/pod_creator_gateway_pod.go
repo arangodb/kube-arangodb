@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os"
 
 	core "k8s.io/api/core/v1"
 
@@ -123,6 +124,20 @@ func (m *MemberGatewayPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 	var initContainers []core.Container
 	if c := m.GroupSpec.InitContainers.GetContainers(); len(c) > 0 {
 		initContainers = append(initContainers, c...)
+	}
+
+	executable, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+
+	{
+		sc := k8sutil.CreateSecurityContext(m.GroupSpec.SecurityContext)
+		c, err := k8sutil.InitLifecycleContainer(m.resources.context.GetOperatorImage(), executable, &m.Deployment.Lifecycle.Resources, sc)
+		if err != nil {
+			return nil, err
+		}
+		initContainers = append(initContainers, c)
 	}
 
 	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())
