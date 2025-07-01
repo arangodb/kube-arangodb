@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -205,6 +205,11 @@ func (r *Resources) probeBuilders(imageInfo api.ImageInfo) map[api.ServerGroup]p
 		api.ServerGroupCoordinators: {
 			startup:   r.probeBuilderStartupCoreSelect(api.ServerGroupCoordinators, imageInfo),
 			liveness:  r.probeBuilderLivenessCoreSelect(api.ServerGroupCoordinators, imageInfo),
+			readiness: r.probeBuilderReadinessCoreSelect(),
+		},
+		api.ServerGroupGateways: {
+			startup:   r.probeBuilderStartupCoreSelect(api.ServerGroupGateways, imageInfo),
+			liveness:  r.probeBuilderLivenessCoreSelect(api.ServerGroupGateways, imageInfo),
 			readiness: r.probeBuilderReadinessCoreSelect(),
 		},
 		api.ServerGroupSyncMasters: {
@@ -490,10 +495,10 @@ func getProbeRetries(group api.ServerGroup) (int32, int32) {
 	// Set default values.
 	period, howLong := 5*time.Second, 300*time.Second
 
-	if group == api.ServerGroupDBServers {
+	if group == api.ServerGroupDBServers || group == api.ServerGroupSingle {
 		// Wait 6 hours (in seconds) for WAL replay.
 		howLong = 6 * time.Hour
-	} else if group == api.ServerGroupCoordinators {
+	} else if group == api.ServerGroupCoordinators || group == api.ServerGroupGateways {
 		// Coordinator should wait for agents, but agents could take more time to spin up.
 		howLong = time.Hour
 	}

@@ -9,6 +9,7 @@
 - (Feature) (Platform) Packer
 - (Feature) Manual Upgrade Mode
 - (Feature) (Platform) SchedulerV2 Defaults Revert
+- (Bugfix) Enable Probes for Single & Gateway
 
 ## [1.2.49](https://github.com/arangodb/kube-arangodb/tree/1.2.49) (2025-06-17)
 - (Maintenance) Optimize go.mod
