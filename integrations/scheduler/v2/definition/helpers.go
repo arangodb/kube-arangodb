@@ -91,7 +91,7 @@ func (i *SchedulerV2InstallRequestOptions) Options() []util.Mod[action.Install] 
 	if v := i.GetLabels(); len(v) > 0 {
 		opts = append(opts, func(in *action.Install) {
 			in.Labels = v
-			in.Wait = util.OptionalType(i.Wait, true)
+			in.Wait = util.OptionalType(i.Wait, false)
 		})
 	}
 
@@ -108,7 +108,7 @@ func (i *SchedulerV2UpgradeRequestOptions) Options() []util.Mod[action.Upgrade] 
 	if v := i.GetLabels(); len(v) > 0 {
 		opts = append(opts, func(in *action.Upgrade) {
 			in.Labels = v
-			in.Wait = util.OptionalType(i.Wait, true)
+			in.Wait = util.OptionalType(i.Wait, false)
 		})
 	}
 
