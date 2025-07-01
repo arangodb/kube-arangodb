@@ -53,6 +53,8 @@ const (
 	ConditionTypeTerminated ConditionType = "Terminated"
 	// ConditionTypeAutoUpgrade indicates that the member has to be started with `--database.auto-upgrade` once.
 	ConditionTypeAutoUpgrade ConditionType = "AutoUpgrade"
+	// ConditionTypeUpgradeAllowed indicates that the member upgrade is allowed in the manual procedure.
+	ConditionTypeUpgradeAllowed ConditionType = "UpgradeAllowed"
 
 	// ConditionTypeCleanedOut indicates that the member (dbserver) has been cleaned out.
 	// Always check in combination with ConditionTypeTerminated.

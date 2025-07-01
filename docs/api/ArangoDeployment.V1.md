@@ -230,6 +230,18 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ***
 
+### .spec.agents.manualUpgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+UpgradeMode Defines the manually triggered upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+
+***
+
 ### .spec.agents.maxCount
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
@@ -611,7 +623,7 @@ Links:
 
 ### .spec.agents.restartPolicy
 
-Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L231)</sup>
 
 RestartPolicy for all pods within the group.
 
@@ -852,13 +864,14 @@ Links:
 
 ### .spec.agents.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L218)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+* `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
 
@@ -1327,6 +1340,18 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ***
 
+### .spec.coordinators.manualUpgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+UpgradeMode Defines the manually triggered upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+
+***
+
 ### .spec.coordinators.maxCount
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
@@ -1708,7 +1733,7 @@ Links:
 
 ### .spec.coordinators.restartPolicy
 
-Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L231)</sup>
 
 RestartPolicy for all pods within the group.
 
@@ -1949,13 +1974,14 @@ Links:
 
 ### .spec.coordinators.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L218)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+* `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
 
@@ -2289,6 +2315,18 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
+
+***
+
+### .spec.dbservers.manualUpgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+UpgradeMode Defines the manually triggered upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
@@ -2673,7 +2711,7 @@ Links:
 
 ### .spec.dbservers.restartPolicy
 
-Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L231)</sup>
 
 RestartPolicy for all pods within the group.
 
@@ -2914,13 +2952,14 @@ Links:
 
 ### .spec.dbservers.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L218)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+* `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
 
@@ -3478,6 +3517,18 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ***
 
+### .spec.gateways.manualUpgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+UpgradeMode Defines the manually triggered upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+
+***
+
 ### .spec.gateways.maxCount
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
@@ -3859,7 +3910,7 @@ Links:
 
 ### .spec.gateways.restartPolicy
 
-Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L231)</sup>
 
 RestartPolicy for all pods within the group.
 
@@ -4100,13 +4151,14 @@ Links:
 
 ### .spec.gateways.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L218)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+* `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
 
@@ -5208,6 +5260,18 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ***
 
+### .spec.single.manualUpgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+UpgradeMode Defines the manually triggered upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+
+***
+
 ### .spec.single.maxCount
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
@@ -5589,7 +5653,7 @@ Links:
 
 ### .spec.single.restartPolicy
 
-Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L231)</sup>
 
 RestartPolicy for all pods within the group.
 
@@ -5830,13 +5894,14 @@ Links:
 
 ### .spec.single.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L218)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+* `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
 
@@ -6387,6 +6452,18 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 ***
 
+### .spec.syncmasters.manualUpgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+UpgradeMode Defines the manually triggered upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+
+***
+
 ### .spec.syncmasters.maxCount
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L50)</sup>
@@ -6768,7 +6845,7 @@ Links:
 
 ### .spec.syncmasters.restartPolicy
 
-Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L231)</sup>
 
 RestartPolicy for all pods within the group.
 
@@ -7009,13 +7086,14 @@ Links:
 
 ### .spec.syncmasters.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L218)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+* `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
 
@@ -7341,6 +7419,18 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L106)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
+
+***
+
+### .spec.syncworkers.manualUpgradeMode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+
+UpgradeMode Defines the manually triggered upgrade mode for the Member
+
+Possible Values: 
+* `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
+* `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
 
 ***
 
@@ -7725,7 +7815,7 @@ Links:
 
 ### .spec.syncworkers.restartPolicy
 
-Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
+Type: `core.RestartPolicy` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L231)</sup>
 
 RestartPolicy for all pods within the group.
 
@@ -7966,13 +8056,14 @@ Links:
 
 ### .spec.syncworkers.upgradeMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.49/pkg/apis/deployment/v1/server_group_spec.go#L218)</sup>
 
 UpgradeMode Defines the upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
+* `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
 
