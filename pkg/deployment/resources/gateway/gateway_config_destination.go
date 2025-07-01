@@ -72,6 +72,8 @@ type ConfigDestination struct {
 
 	AuthExtension *ConfigAuthZExtension `json:"authExtension,omitempty"`
 
+	HealthChecks ConfigDestinationHealthChecks `json:"healthChecks,omitempty"`
+
 	UpgradeConfigs ConfigDestinationsUpgrade `json:"upgradeConfigs,omitempty"`
 
 	TLS ConfigDestinationTLS `json:"tls,omitempty"`
@@ -103,6 +105,7 @@ func (c *ConfigDestination) Validate() error {
 			shared.PrefixResourceError("type", c.Type.Validate()),
 			shared.PrefixResourceError("protocol", c.Protocol.Validate()),
 			shared.PrefixResourceError("tls", c.TLS.Validate()),
+			shared.PrefixResourceError("healthChecks", c.HealthChecks.Validate()),
 			shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
 			shared.PrefixResourceError("pathType", shared.ValidateOptionalInterface(c.Match)),
 			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
@@ -244,6 +247,7 @@ func (c *ConfigDestination) RenderCluster(name string) (*pbEnvoyClusterV3.Cluste
 				},
 			},
 		},
+		HealthChecks: c.HealthChecks.Render(),
 		TypedExtensionProtocolOptions: map[string]*anypb.Any{
 			"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": hpo,
 		},

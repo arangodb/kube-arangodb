@@ -81,7 +81,7 @@ func (a *MemberGatewayContainer) GetProbes() (*core.Probe, *core.Probe, *core.Pr
 		return nil, nil, nil, err
 	}
 
-	probeStartupConfig, err := a.resources.getReadinessProbe(a.Deployment, a.Group, a.Image)
+	probeStartupConfig, err := a.resources.getStartupProbe(a.Deployment, a.Group, a.Image)
 	if err != nil {
 		return nil, nil, nil, err
 	}
