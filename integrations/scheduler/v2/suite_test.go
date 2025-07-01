@@ -105,5 +105,5 @@ func chartHandler(client kclient.Client, ns string) operator.Handler {
 	op := operator.NewOperator("mock", ns, "mock")
 	recorder := event.NewEventRecorder("mock", client.Kubernetes())
 
-	return chart.Handler(op, recorder, client.Arango(), client.Kubernetes())
+	return chart.Handler(op, recorder, client)
 }

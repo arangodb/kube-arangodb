@@ -22,52 +22,49 @@ package platform
 
 import (
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/yaml"
 
+	"github.com/arangodb/kube-arangodb/pkg/platform/pack"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func packageDump() (*cobra.Command, error) {
+func packageExport() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "dump [flags]"
-	cmd.Short = "Dumps the current setup of the platform"
+	cmd.Use = "export [flags] package output"
+	cmd.Short = "Export the package in the ZIP Format"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformName); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagRegistryUseCredentials, flagRegistryInsecure); err != nil {
 		return nil, err
 	}
 
-	cmd.RunE = getRunner().With(packageDumpRun).Run
+	cmd.RunE = getRunner().With(packageExportRun).Run
 
 	return &cmd, nil
 }
 
-func packageDumpRun(cmd *cobra.Command, args []string) error {
-	client, err := getKubernetesClient(cmd)
+func packageExportRun(cmd *cobra.Command, args []string) error {
+	if len(args) != 2 {
+		return errors.Errorf("Invalid arguments")
+	}
+
+	pkg, err := getHelmPackages(args[0])
+	if err != nil {
+		logger.Err(err).Error("Unable to read the file")
+		return err
+	}
+
+	out := args[1]
+
+	cm, err := getChartManager(cmd)
 	if err != nil {
 		return err
 	}
 
-	ns, err := flagNamespace.Get(cmd)
+	rc, err := getRegClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	deployment, err := flagPlatformName.Get(cmd)
-	if err != nil {
-		return err
-	}
-
-	out, err := helm.NewPackage(cmd.Context(), client, ns, deployment)
-	if err != nil {
-		return err
-	}
-
-	d, err := yaml.Marshal(out)
-	if err != nil {
-		return err
-	}
-
-	return render(cmd, "---\n\n%s", string(d))
+	return pack.Export(cmd.Context(), out, cm, rc, pkg)
 }

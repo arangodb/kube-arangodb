@@ -46,6 +46,9 @@ func FromAny[T any](in Any) (T, error) {
 }
 
 func (d Any) MarshalJSON() ([]byte, error) {
+	if len(d) == 0 {
+		return []byte("null"), nil
+	}
 	ret := make([]byte, len(d))
 	copy(ret, d)
 	return ret, nil
@@ -66,6 +69,9 @@ func (d Any) SHA256() string {
 }
 
 func (d Any) Equals(o Any) bool {
+	if d.IsZero() && o.IsZero() {
+		return true
+	}
 	return d.SHA256() == o.SHA256()
 }
 

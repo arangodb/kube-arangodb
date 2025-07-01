@@ -225,6 +225,7 @@ func Test_Chart_Get(t *testing.T) {
 			Info: &platformApi.ChartStatusInfo{
 				Definition: make([]byte, 128),
 				Valid:      true,
+				Checksum:   util.NewType(platformApi.ArangoPlatformChartSpec{}).Checksum(),
 				Details: &platformApi.ChartDetails{
 					Name:    "test-6",
 					Version: "1.2.3",

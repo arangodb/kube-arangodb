@@ -30,7 +30,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
@@ -44,7 +43,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
-	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
@@ -336,25 +334,25 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 
 	switch operatorType {
 	case appsOperator:
-		o.onStartOperatorV2Apps(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer)
+		o.onStartOperatorV2Apps(operator, eventRecorder, o.Client, arangoInformer)
 		o.Dependencies.AppsProbe.SetReady()
 	case backupOperator:
-		o.onStartOperatorV2Backup(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer)
+		o.onStartOperatorV2Backup(operator, eventRecorder, o.Client, arangoInformer)
 		o.Dependencies.BackupProbe.SetReady()
 	case mlOperator:
-		o.onStartOperatorV2ML(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
+		o.onStartOperatorV2ML(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.MlProbe.SetReady()
 	case analyticsOperator:
-		o.onStartOperatorV2Analytics(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
+		o.onStartOperatorV2Analytics(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.AnalyticsProbe.SetReady()
 	case networkingOperator:
-		o.onStartOperatorV2Networking(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
+		o.onStartOperatorV2Networking(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.NetworkingProbe.SetReady()
 	case platformOperator:
-		o.onStartOperatorV2Platform(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
+		o.onStartOperatorV2Platform(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.PlatformProbe.SetReady()
 	case schedulerOperator:
-		o.onStartOperatorV2Scheduler(operator, eventRecorder, o.Client.Arango(), o.Client.Kubernetes(), arangoInformer, kubeInformer)
+		o.onStartOperatorV2Scheduler(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.SchedulerProbe.SetReady()
 	}
 
@@ -375,55 +373,55 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	<-stop
 }
 
-func (o *Operator) onStartOperatorV2Apps(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Apps(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().AppsV1().ArangoJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
 	o.waitForCRD(apps.ArangoJobCRDName, checkFn)
 
-	if err := job.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+	if err := job.RegisterInformer(operator, recorder, client, informer); err != nil {
 		panic(err)
 	}
 }
 
-func (o *Operator) onStartOperatorV2Networking(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Networking(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().NetworkingV1alpha1().ArangoRoutes(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
 	o.waitForCRD(networking.ArangoRouteCRDName, checkFn)
 
-	if err := route.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+	if err := route.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }
 
-func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().PlatformV1alpha1().ArangoPlatformStorages(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
 	o.waitForCRD(platform.ArangoPlatformStorageCRDName, checkFn)
 
-	if err := platformStorage.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+	if err := platformStorage.RegisterInformer(operator, recorder, client, informer); err != nil {
 		panic(err)
 	}
 
-	if err := platformChart.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+	if err := platformChart.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 
-	if err := platformService.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+	if err := platformService.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 
-	if err := platformShutdown.RegisterInformer(operator, recorder, kubeClient, kubeInformer); err != nil {
+	if err := platformShutdown.RegisterInformer(operator, recorder, client, kubeInformer); err != nil {
 		panic(err)
 	}
 }
 
-func (o *Operator) onStartOperatorV2Scheduler(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Scheduler(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().SchedulerV1beta1().ArangoProfiles(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
@@ -454,35 +452,35 @@ func (o *Operator) onStartOperatorV2Scheduler(operator operatorV2.Operator, reco
 	}
 	o.waitForCRD(scheduler.CronJobCRDName, checkFn)
 
-	if err := schedulerProfileHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+	if err := schedulerProfileHandler.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 
-	if err := schedulerPodHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+	if err := schedulerPodHandler.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 
-	if err := schedulerDeploymentHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+	if err := schedulerDeploymentHandler.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 
-	if err := schedulerBatchJobHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+	if err := schedulerBatchJobHandler.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 
-	if err := schedulerCronJobHandler.RegisterInformer(operator, recorder, client, kubeClient, informer, kubeInformer); err != nil {
+	if err := schedulerCronJobHandler.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }
 
-func (o *Operator) onStartOperatorV2Backup(operator operatorV2.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Backup(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
 	o.waitForCRD(backupdef.ArangoBackupCRDName, checkFn)
 
-	if err := backup.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+	if err := backup.RegisterInformer(operator, recorder, client, informer); err != nil {
 		panic(err)
 	}
 
@@ -492,7 +490,7 @@ func (o *Operator) onStartOperatorV2Backup(operator operatorV2.Operator, recorde
 	}
 	o.waitForCRD(backupdef.ArangoBackupPolicyCRDName, checkFn)
 
-	if err := policy.RegisterInformer(operator, recorder, client, kubeClient, informer); err != nil {
+	if err := policy.RegisterInformer(operator, recorder, client, informer); err != nil {
 		panic(err)
 	}
 }

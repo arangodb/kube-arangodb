@@ -180,7 +180,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, release.Version, extension.Status.Release.Version)
 		require.Equal(t, 1, extension.Status.Release.Version)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
 		require.Equal(t, "PLACEHOLDER", cm.Data)
 	})
@@ -196,7 +196,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, release)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.Nil(t, cm)
 	})
 
@@ -235,7 +235,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, release.Version, extension.Status.Release.Version)
 		require.Equal(t, 1, extension.Status.Release.Version)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
 		require.Equal(t, "PLACEHOLDER", cm.Data)
 	})
@@ -266,7 +266,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, release.Version, extension.Status.Release.Version)
 		require.Equal(t, 1, extension.Status.Release.Version)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
 		require.Equal(t, "PLACEHOLDER", cm.Data)
 	})
@@ -300,7 +300,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, release.Version, extension.Status.Release.Version)
 		require.Equal(t, 2, extension.Status.Release.Version)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
 		require.Equal(t, "PLACEHOLDER", cm.Data)
 	})
@@ -348,7 +348,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, release.Version, extension.Status.Release.Version)
 		require.Equal(t, 2, extension.Status.Release.Version)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
 		require.Equal(t, "PLACEHOLDER", cm.Data)
 	})
@@ -382,7 +382,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, release.Version, extension.Status.Release.Version)
 		require.Equal(t, 3, extension.Status.Release.Version)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
 		require.Equal(t, "service", cm.Data)
 	})
@@ -417,7 +417,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, release.Version, extension.Status.Release.Version)
 		require.Equal(t, 3, extension.Status.Release.Version)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
 		require.Equal(t, "service", cm.Data)
 	})
@@ -449,7 +449,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, release.Version, extension.Status.Release.Version)
 		require.Equal(t, 4, extension.Status.Release.Version)
 
-		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "example")
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
 		require.Equal(t, "chart", cm.Data)
 	})

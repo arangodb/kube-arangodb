@@ -31,13 +31,14 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/types"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-	"github.com/arangodb/kube-arangodb/pkg/platform"
+	"github.com/arangodb/kube-arangodb/pkg/platform/labels"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
@@ -320,9 +321,9 @@ func (h *handler) HandleChartInfo(ctx context.Context, item operation.Item, exte
 }
 
 func (h *handler) HandleValues(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformService, status *platformApi.ArangoPlatformServiceStatus, depl *api.ArangoDeployment, chart *platformApi.ArangoPlatformChart) (bool, error) {
-	vs, err := platform.Service{
-		Platform: platform.ServicePlatform{
-			Deployment: platform.ServicePlatformDeployment{
+	vs, err := types.Service{
+		Platform: types.ServicePlatform{
+			Deployment: types.ServicePlatformDeployment{
 				Name: depl.GetName(),
 			},
 		},
@@ -361,7 +362,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 			in.ReleaseName = extension.GetName()
 			in.Namespace = extension.GetNamespace()
 
-			in.Labels = platform.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
 
 			in.Timeout = 20 * time.Minute
 		})
@@ -372,7 +373,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 		status.Release = extractReleaseStatus(release, expectedChecksum)
 
 		return true, operator.Reconcile("Release Installed")
-	} else if !platform.IsPlatformManaged(release) {
+	} else if !labels.IsPlatformManaged(release) {
 		return false, operator.Stop("Release already installed")
 	}
 
@@ -391,7 +392,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 		_, err = h.helm.Upgrade(ctx, extension.GetName(), helm.Chart(status.ChartInfo.Definition), helm.Values(status.Values), func(in *action.Upgrade) {
 			in.Namespace = extension.GetNamespace()
 
-			in.Labels = platform.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
 
 			in.Timeout = 20 * time.Minute
 		})

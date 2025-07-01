@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,19 +23,17 @@ package pod
 import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
 
-	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/generic/parent"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 // RegisterInformer into operator
-func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface,
-	kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) error {
+func RegisterInformer(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) error {
 
 	if err := operator.RegisterInformer(informer.Scheduler().V1beta1().ArangoSchedulerPods().Informer(),
 		Group(),
@@ -45,8 +43,8 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 	}
 
 	h := &handler{
-		client:     client,
-		kubeClient: kubeClient,
+		client:     client.Arango(),
+		kubeClient: client.Kubernetes(),
 
 		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
 
@@ -69,7 +67,7 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 			return err
 		}
 
-		podHandler := parent.NewNotifyHandler[*core.Pod]("core-pod-v1-parent", operator, kubeClient.CoreV1().Pods, pod, GVK())
+		podHandler := parent.NewNotifyHandler[*core.Pod]("core-pod-v1-parent", operator, client.Kubernetes().CoreV1().Pods, pod, GVK())
 
 		if err := operator.RegisterHandler(podHandler); err != nil {
 			return err

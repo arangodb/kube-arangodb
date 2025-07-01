@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,16 +21,14 @@
 package storage
 
 import (
-	"k8s.io/client-go/kubernetes"
-
-	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 // RegisterInformer into operator
-func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
+func RegisterInformer(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory) error {
 	if err := operator.RegisterInformer(informer.Platform().V1alpha1().ArangoPlatformStorages().Informer(),
 		Group(),
 		Version(),
@@ -39,8 +37,8 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 	}
 
 	h := &handler{
-		client:     client,
-		kubeClient: kubeClient,
+		client:     client.Arango(),
+		kubeClient: client.Kubernetes(),
 
 		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
 

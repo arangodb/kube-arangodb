@@ -116,13 +116,7 @@ func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, e
 }
 
 func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformChart, status *platformApi.ArangoPlatformChartStatus) (bool, error) {
-	checksums := make([]string, 0, 2)
-	checksums = append(checksums, extension.Spec.Definition.SHA256())
-	if v := extension.Spec.Overrides; !v.IsZero() {
-		checksums = append(checksums, v.SHA256())
-	}
-
-	checksum := util.SHA256FromStringArray(checksums...)
+	checksum := extension.Spec.Checksum()
 
 	if status.Info != nil {
 		if status.Info.Checksum != checksum {

@@ -24,7 +24,6 @@ package external
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -34,17 +33,19 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 
 	"github.com/arangodb/kube-arangodb/pkg/crd"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
+const TEST_KUBECONFIG util.EnvironmentVariable = "TEST_KUBECONFIG"
+
 func ExternalClient(t *testing.T) (kclient.Client, string) {
-	z, ok := os.LookupEnv("TEST_KUBECONFIG")
-	if !ok {
+	if !TEST_KUBECONFIG.Exists() {
 		t.Skipf("TEST_KUBECONFIG is not set")
 	}
 
-	cfg, err := clientcmd.BuildConfigFromFlags("", z)
+	cfg, err := clientcmd.BuildConfigFromFlags("", TEST_KUBECONFIG.Get())
 	require.NoError(t, err)
 
 	cfg.RateLimiter = flowcontrol.NewFakeAlwaysRateLimiter()

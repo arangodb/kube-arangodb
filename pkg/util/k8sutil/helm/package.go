@@ -27,6 +27,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -38,8 +39,14 @@ type Package struct {
 	Releases map[string]PackageRelease `json:"releases,omitempty"`
 }
 
+func (pkg *Package) Validate() error {
+	return nil
+}
+
 type PackageSpec struct {
 	Version string `json:"version"`
+
+	Chart sharedApi.Data `json:"chart,omitempty"`
 
 	Overrides Values `json:"overrides,omitempty"`
 }
@@ -81,6 +88,7 @@ func NewPackage(ctx context.Context, client kclient.Client, namespace, deploymen
 				out.Packages[name] = PackageSpec{
 					Version:   det.GetVersion(),
 					Overrides: Values(info.Overrides),
+					Chart:     c.Status.Info.Definition,
 				}
 			}
 		}

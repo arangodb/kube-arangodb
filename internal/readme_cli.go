@@ -121,48 +121,6 @@ func GenerateCLIArangoDBOperatorPlatformReadme(root string) error {
 		readmeSections["arangodb_operator_platform_cmd"] = section
 	}
 
-	if section, err := GenerateHelpQuoted(cmd, "registry"); err != nil {
-		return err
-	} else {
-		readmeSections["arangodb_operator_platform_registry_cmd"] = section
-	}
-
-	if section, err := GenerateHelpQuoted(cmd, "registry", "install"); err != nil {
-		return err
-	} else {
-		readmeSections["arangodb_operator_platform_registry_install_cmd"] = section
-	}
-
-	if section, err := GenerateHelpQuoted(cmd, "registry", "status"); err != nil {
-		return err
-	} else {
-		readmeSections["arangodb_operator_platform_registry_status_cmd"] = section
-	}
-
-	if section, err := GenerateHelpQuoted(cmd, "service"); err != nil {
-		return err
-	} else {
-		readmeSections["arangodb_operator_platform_service_cmd"] = section
-	}
-
-	if section, err := GenerateHelpQuoted(cmd, "service", "enable"); err != nil {
-		return err
-	} else {
-		readmeSections["arangodb_operator_platform_service_enable_cmd"] = section
-	}
-
-	if section, err := GenerateHelpQuoted(cmd, "service", "enable-service"); err != nil {
-		return err
-	} else {
-		readmeSections["arangodb_operator_platform_service_enableservice_cmd"] = section
-	}
-
-	if section, err := GenerateHelpQuoted(cmd, "service", "status"); err != nil {
-		return err
-	} else {
-		readmeSections["arangodb_operator_platform_service_status_cmd"] = section
-	}
-
 	if section, err := GenerateHelpQuoted(cmd, "package"); err != nil {
 		return err
 	} else {

@@ -18,23 +18,34 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build testing
+package closer
 
-package chart
+import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
-import (
-	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-)
+type MultiCloser interface {
+	Close
+	With(closers ...Close) MultiCloser
+}
 
-func Handler(operator operator.Operator, recorder event.Recorder, client kclient.Client) operator.Handler {
-	return &handler{
-		client:     client.Arango(),
-		kubeClient: client.Kubernetes(),
+func NewMultiCloser(closers ...Close) MultiCloser {
+	return multiCloser(closers)
+}
 
-		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
+type multiCloser []Close
 
-		operator: operator,
+func (m multiCloser) With(closers ...Close) MultiCloser {
+	r := make(multiCloser, len(m)+len(closers))
+	copy(r, m)
+	copy(r[len(m):], closers)
+	return r
+}
+
+func (m multiCloser) Close() error {
+	e := make([]error, len(m))
+
+	for id := len(m) - 1; id >= 0; id-- {
+		e[id] = m[id].Close()
 	}
+
+	return shared.WithErrors(e...)
 }

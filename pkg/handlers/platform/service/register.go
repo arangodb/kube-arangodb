@@ -21,16 +21,18 @@
 package service
 
 import (
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/informers"
 
-	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 // RegisterInformer into operator
-func RegisterInformer(operator operator.Operator, recorder event.Recorder, client arangoClientSet.Interface, kubeClient kubernetes.Interface, informer arangoInformer.SharedInformerFactory) error {
+func RegisterInformer(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, _ informers.SharedInformerFactory) error {
 	if err := operator.RegisterInformer(informer.Platform().V1alpha1().ArangoPlatformServices().Informer(),
 		Group(),
 		Version(),
@@ -38,9 +40,20 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 		return err
 	}
 
+	hm, err := helm.NewClient(helm.Configuration{
+		Namespace: operator.Namespace(),
+		Config:    client.Config(),
+		Driver:    util.NewType(helm.ConfigurationDriverSecret),
+	})
+	if err != nil {
+		return err
+	}
+
 	h := &handler{
-		client:     client,
-		kubeClient: kubeClient,
+		client:     client.Arango(),
+		kubeClient: client.Kubernetes(),
+
+		helm: hm,
 
 		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
 

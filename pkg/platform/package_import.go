@@ -21,53 +21,54 @@
 package platform
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
+	"github.com/arangodb/kube-arangodb/pkg/platform/pack"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func packageDump() (*cobra.Command, error) {
+func packageImport() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "dump [flags]"
-	cmd.Short = "Dumps the current setup of the platform"
+	cmd.Use = "import [flags] registry package output"
+	cmd.Short = "Imports the package from the ZIP format"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformName); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagRegistryUseCredentials, flagRegistryInsecure); err != nil {
 		return nil, err
 	}
 
-	cmd.RunE = getRunner().With(packageDumpRun).Run
+	cmd.RunE = getRunner().With(packageImportRun).Run
 
 	return &cmd, nil
 }
 
-func packageDumpRun(cmd *cobra.Command, args []string) error {
-	client, err := getKubernetesClient(cmd)
+func packageImportRun(cmd *cobra.Command, args []string) error {
+	if len(args) != 3 {
+		return errors.Errorf("Invalid arguments")
+	}
+
+	reg := args[0]
+	dest := args[1]
+	out := args[2]
+
+	rc, err := getRegClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	ns, err := flagNamespace.Get(cmd)
+	_, pkg, err := pack.Import(cmd.Context(), dest, rc, reg)
 	if err != nil {
 		return err
 	}
 
-	deployment, err := flagPlatformName.Get(cmd)
+	data, err := yaml.Marshal(pkg)
 	if err != nil {
 		return err
 	}
 
-	out, err := helm.NewPackage(cmd.Context(), client, ns, deployment)
-	if err != nil {
-		return err
-	}
-
-	d, err := yaml.Marshal(out)
-	if err != nil {
-		return err
-	}
-
-	return render(cmd, "---\n\n%s", string(d))
+	return os.WriteFile(out, data, 0644)
 }

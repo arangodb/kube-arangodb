@@ -19,5 +19,5 @@
 //
 
 // +k8s:deepcopy-gen=package
-// +groupName=auth.arangodb.com
+// +groupName=auth.platform.arangodb.com
 package authentication
