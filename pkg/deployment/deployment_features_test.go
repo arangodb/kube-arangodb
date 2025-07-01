@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -364,6 +364,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName)
 				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(httpProbe, false, "")
+				testCase.ExpectedPod.Spec.Containers[0].StartupProbe = createTestStartupProbe(httpProbe, false, "", 720*6)
 			},
 			ExpectedEvent: "member single is created",
 			ExpectedPod: core.Pod{
@@ -429,6 +430,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName)
 				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(httpProbe, false, "")
+				testCase.ExpectedPod.Spec.Containers[0].StartupProbe = createTestStartupProbe(httpProbe, false, "", 720*6)
 			},
 			ExpectedEvent: "member single is created",
 			ExpectedPod: core.Pod{
@@ -494,6 +496,7 @@ func TestEnsurePod_ArangoDB_Features(t *testing.T) {
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, "", shared.ServerPortName)
 				testCase.ExpectedPod.Spec.Containers[0].ReadinessProbe = createTestReadinessProbe(httpProbe, false, "")
+				testCase.ExpectedPod.Spec.Containers[0].StartupProbe = createTestStartupProbe(httpProbe, false, "", 720*6)
 			},
 			ExpectedEvent: "member single is created",
 			ExpectedPod: core.Pod{

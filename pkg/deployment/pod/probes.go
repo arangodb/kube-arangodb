@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ type probes struct {
 // probeMap defines default values and if Probe can be enabled
 var probeMap = map[api.ServerGroup]probes{
 	api.ServerGroupSingle: {
-		startup:   newProbe(true, false),
+		startup:   newProbe(true, true),
 		liveness:  newProbe(true, true),
 		readiness: newProbe(true, true),
 	},
@@ -81,9 +81,9 @@ var probeMap = map[api.ServerGroup]probes{
 		liveness:  newProbe(true, true),
 		readiness: newProbe(false, false),
 	},
-	api.ServerGroupGateways: { // TODO: Enable Probes
-		startup:   newProbe(false, false),
-		liveness:  newProbe(false, false),
-		readiness: newProbe(false, false),
+	api.ServerGroupGateways: {
+		startup:   newProbe(true, true),
+		liveness:  newProbe(true, false),
+		readiness: newProbe(true, true),
 	},
 }
