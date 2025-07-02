@@ -106,7 +106,6 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 		}
 
 		spec := r.context.GetSpec()
-		groupSpec := spec.GetServerGroupSpec(group)
 		coreContainers := getPodCoreContainers(spec.GetCoreContainers(group), pod.Spec.Containers)
 
 		if c, ok := memberStatus.Conditions.Get(api.ConditionTypeUpdating); ok {
@@ -114,13 +113,6 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				// We are in update phase, container needs to be ignored
 				if v != "" {
 					coreContainers = coreContainers.Remove(v)
-				}
-			}
-		} else {
-			// Restore gracefulness
-			if !k8sutil.IsPodTerminating(pod) {
-				if err := k8sutil.EnsureFinalizerPresent(ctx, cachedStatus.PodsModInterface().V1(), pod, k8sutil.GetFinalizers(groupSpec, group)...); err != nil {
-					log.Err(err).Error("Unable to enforce finalizer")
 				}
 			}
 		}

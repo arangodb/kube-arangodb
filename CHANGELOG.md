@@ -11,6 +11,7 @@
 - (Feature) (Platform) SchedulerV2 Defaults Revert
 - (Bugfix) Enable Probes for Single & Gateway
 - (Bugfix) Fix Gateway Probes with Auth Enabled
+- (Bugfix) Remove Finalizer from Gateway
 
 ## [1.2.49](https://github.com/arangodb/kube-arangodb/tree/1.2.49) (2025-06-17)
 - (Maintenance) Optimize go.mod
