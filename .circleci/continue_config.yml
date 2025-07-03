@@ -27,6 +27,7 @@ executors:
 jobs:
   check-code:
     executor: golang-executor
+    resource_class: xlarge
     environment:
       GOCACHE: "/tmp/go/cache"
       GOPATH: "/tmp/go/path"
