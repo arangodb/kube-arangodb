@@ -123,10 +123,21 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			return errors.Errorf("Chart %s is not ready", name)
 		}
 
+		// Prepare for update
+		svc, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		if svc.Spec.Deployment.GetName() != deployment.GetName() {
+			return errors.Errorf("Unable to change Deployment name for %s", name)
+		}
+
 		if _, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{}); err != nil {
 			if !kerrors.IsNotFound(err) {
 				return err
 			}
+			logger.Debug("Installing Service: %s", name)
 
 			// Prepare Object
 			if _, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Create(ctx, &platformApi.ArangoPlatformService{
@@ -147,16 +158,7 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			}, meta.CreateOptions{}); err != nil {
 				return err
 			}
-		}
-
-		// Prepare for update
-		svc, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
-
-		if svc.Spec.Deployment.GetName() != deployment.GetName() {
-			return errors.Errorf("Unable to change Deployment name for %s", name)
+			logger.Info("Installed Service: %s", name)
 		}
 
 		if !svc.Spec.Values.Equals(sharedApi.Any(packageSpec.Overrides)) {
@@ -165,6 +167,7 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			if err != nil {
 				return err
 			}
+			logger.Info("Updated Service: %s", name)
 		}
 
 		// Ensure we wait for reconcile
