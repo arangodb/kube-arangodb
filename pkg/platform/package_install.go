@@ -123,10 +123,12 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			return errors.Errorf("Chart %s is not ready", name)
 		}
 
-		if _, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{}); err != nil {
+		if svc, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{}); err != nil {
 			if !kerrors.IsNotFound(err) {
 				return err
 			}
+
+			logger.Debug("Installing Service: %s", name)
 
 			// Prepare Object
 			if _, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Create(ctx, &platformApi.ArangoPlatformService{
@@ -147,31 +149,32 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			}, meta.CreateOptions{}); err != nil {
 				return err
 			}
-		}
 
-		// Prepare for update
-		svc, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
-		if err != nil {
-			return err
-		}
+			logger.Info("Installed Service: %s", name)
+		} else {
+			if svc.Spec.Deployment.GetName() != deployment.GetName() {
+				return errors.Errorf("Unable to change Deployment name for %s", name)
+			}
 
-		if svc.Spec.Deployment.GetName() != deployment.GetName() {
-			return errors.Errorf("Unable to change Deployment name for %s", name)
-		}
+			if svc.Spec.Chart.GetName() != chart.GetName() {
+				return errors.Errorf("Unable to change Chart name for %s", name)
+			}
 
-		if !svc.Spec.Values.Equals(sharedApi.Any(packageSpec.Overrides)) {
-			svc.Spec.Values = sharedApi.Any(packageSpec.Overrides)
-			_, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Update(ctx, svc, meta.UpdateOptions{})
-			if err != nil {
-				return err
+			if !svc.Spec.Values.Equals(sharedApi.Any(packageSpec.Overrides)) {
+				svc.Spec.Values = sharedApi.Any(packageSpec.Overrides)
+				_, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Update(ctx, svc, meta.UpdateOptions{})
+				if err != nil {
+					return err
+				}
+				logger.Info("Updated Service: %s", name)
 			}
 		}
 
 		// Ensure we wait for reconcile
 		time.Sleep(time.Second)
 
-		return h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
-			svc, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(svc.GetNamespace()).Get(ctx, svc.GetName(), meta.GetOptions{})
+		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+			svc, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -189,7 +192,15 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			}
 
 			return io.EOF
-		}, 5*time.Minute, time.Second)
+		}, 5*time.Minute, time.Second); err != nil {
+			if errors.Is(err, io.EOF) {
+				return errors.Errorf("Service %s is not ready", name)
+			}
+
+			return err
+		}
+
+		return nil
 	})
 }
 
@@ -247,7 +258,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 			}
 		}
 
-		return h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 			c, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns).Get(ctx, name, meta.GetOptions{})
 			if err != nil {
 				return err
@@ -262,7 +273,15 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 			}
 
 			return io.EOF
-		}, 5*time.Minute, time.Second)
+		}, 5*time.Minute, time.Second); err != nil {
+			if errors.Is(err, io.EOF) {
+				return errors.Errorf("Chart %s is not ready", name)
+			}
+
+			return err
+		}
+
+		return nil
 	})
 }
 
