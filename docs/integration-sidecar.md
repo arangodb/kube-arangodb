@@ -19,6 +19,8 @@ Integration Sidecar is supported in a few resources managed by Operator:
 - ArangoSchedulerCronJob (scheduler.arangodb.com/v1beta1)
 - ArangoSchedulerPod (scheduler.arangodb.com/v1beta1)
 
+Standard Kubernetes Resources (like Pod) are also supported with Webhook extension is enabled.
+
 To enable integration sidecar for specific deployment label needs to be defined:
 
 ```yaml
@@ -97,6 +99,9 @@ To enable:
 metadata:
   labels:
     integration.profiles.arangodb.com/storage: v1
+    
+    # Optionally, enable DebugPackage integration
+    storage.integration.profiles.arangodb.com/debug: "enabled"
 ```
 
 #### [Storage V2](./integration/storage.v2.md)

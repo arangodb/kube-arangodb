@@ -50,6 +50,14 @@ const (
 	ProfilesIntegrationV3 = "v3"
 )
 
+const (
+	ProfilesExtensionEnabled = "enabled"
+)
+
 func NewProfileIntegration(name, version string) (string, string) {
 	return fmt.Sprintf("%s/%s", ProfilesIntegrationPrefix, name), version
+}
+
+func NewProfileIntegrationFeature(name, feature string) string {
+	return fmt.Sprintf("%s.%s/%s", name, ProfilesIntegrationPrefix, feature)
 }

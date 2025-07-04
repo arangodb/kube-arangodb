@@ -27,6 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/platform"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 func main() {
@@ -50,7 +51,7 @@ func mainE() error {
 		return err
 	}
 
-	if err := c.Execute(); err != nil {
+	if err := c.ExecuteContext(shutdown.Context()); err != nil {
 		return err
 	}
 
