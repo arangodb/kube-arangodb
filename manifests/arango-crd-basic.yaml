@@ -34573,7 +34573,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 71cade3524466da316e8961dfeb5bf5a
+    arangodb.com/schema: fabf0410d51d4804ed1ff43e3795982e
     arangodb.com/version: 32d94232935338672acd9f94b483475e
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoplatformcharts.platform.arangodb.com
@@ -34611,8 +34611,88 @@ spec:
             spec:
               properties:
                 definition:
+                  description: Definition keeps the Chart base64 encoded definition
                   format: byte
                   type: string
+                overrides:
+                  description: Overrides keeps the Chart overrides
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/schema: b83f696120169a60d0dc47fdff894c1e
+    arangodb.com/version: 7068f2620421a6ffb639fad2522f2d0f
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangoplatformservices.platform.arangodb.com
+spec:
+  group: platform.arangodb.com
+  names:
+    kind: ArangoPlatformService
+    listKind: ArangoPlatformServiceList
+    plural: arangoplatformservices
+    singular: arangoplatformservice
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Service is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                chart:
+                  description: Chart keeps the Chart Reference
+                  properties:
+                    checksum:
+                      description: UID keeps the information about object Checksum
+                      type: string
+                    name:
+                      description: Name of the object
+                      type: string
+                    namespace:
+                      description: Namespace of the object. Should default to the namespace of the parent object
+                      type: string
+                    uid:
+                      description: UID keeps the information about object UID
+                      type: string
+                  type: object
+                deployment:
+                  description: Chart keeps the Deployment Reference
+                  properties:
+                    checksum:
+                      description: UID keeps the information about object Checksum
+                      type: string
+                    name:
+                      description: Name of the object
+                      type: string
+                    namespace:
+                      description: Namespace of the object. Should default to the namespace of the parent object
+                      type: string
+                    uid:
+                      description: UID keeps the information about object UID
+                      type: string
+                  type: object
+                values:
+                  description: Values keeps the values of the Service
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
               type: object
             status:
               description: Object with preserved fields for backward compatibility

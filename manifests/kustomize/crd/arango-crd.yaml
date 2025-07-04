@@ -580,6 +580,37 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/version: 7068f2620421a6ffb639fad2522f2d0f
+    arangodb.com/x-preserve-unknown-fields: "true"
+  name: arangoplatformservices.platform.arangodb.com
+spec:
+  group: platform.arangodb.com
+  names:
+    kind: ArangoPlatformService
+    listKind: ArangoPlatformServiceList
+    plural: arangoplatformservices
+    singular: arangoplatformservice
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Service is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
     arangodb.com/version: c2e81d22e5dfb0a789b0965989913c1e
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoplatformstorages.platform.arangodb.com
