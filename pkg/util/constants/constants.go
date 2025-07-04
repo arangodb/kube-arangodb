@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,15 @@ const (
 	EnvOperatorPodNamespace   = "MY_POD_NAMESPACE"
 	EnvOperatorCoreContainer  = "MY_POD_CORE_CONTAINER"
 	EnvOperatorPodIP          = "MY_POD_IP"
-	EnvArangoJobSAName        = "ARANGOJOB_SA_NAME"
+
+	EnvOperatorNodeNameEnv       util.EnvironmentVariable = EnvOperatorNodeName
+	EnvOperatorNodeNameArangoEnv util.EnvironmentVariable = EnvOperatorNodeNameArango
+	EnvOperatorPodNameEnv        util.EnvironmentVariable = EnvOperatorPodName
+	EnvOperatorPodNamespaceEnv   util.EnvironmentVariable = EnvOperatorPodNamespace
+	EnvOperatorCoreContainerEnv  util.EnvironmentVariable = EnvOperatorCoreContainer
+	EnvOperatorPodIPEnv          util.EnvironmentVariable = EnvOperatorPodIP
+
+	EnvArangoJobSAName = "ARANGOJOB_SA_NAME"
 
 	PathMountServiceAccount          = "/var/run/secrets/kubernetes.io/serviceaccount"
 	PathMountServiceAccountNamespace = PathMountServiceAccount + "/namespace"

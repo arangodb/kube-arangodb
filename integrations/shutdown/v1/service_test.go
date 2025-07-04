@@ -37,7 +37,7 @@ import (
 func Client(t *testing.T, ctx context.Context, c context.CancelFunc) pbShutdownV1.ShutdownV1Client {
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, New(c))
+	}, New(Configuration{}, c))
 	require.NoError(t, err)
 
 	start := local.Start(ctx)

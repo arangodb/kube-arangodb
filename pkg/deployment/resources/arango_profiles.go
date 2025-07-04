@@ -60,14 +60,24 @@ var (
 	inspectArangoProfilesDurationGauges = metrics.MustRegisterGaugeVec(metricsComponent, "inspect_arango_profiles_duration", "Amount of time taken by a single inspection of all ArangoProfiles for a deployment (in sec)", metrics.DeploymentName)
 )
 
-func matchArangoProfilesLabels(labels map[string]string) *schedulerApi.ProfileSelectors {
+func matchArangoProfilesLabels(labels map[string]string, additional ...util.KV[string, string]) *schedulerApi.ProfileSelectors {
 	if labels == nil {
 		return nil
 	}
 
+	out := make(map[string]string)
+
+	for k, v := range labels {
+		out[k] = v
+	}
+
+	for _, k := range additional {
+		out[k.K] = k.V
+	}
+
 	return &schedulerApi.ProfileSelectors{
 		Label: &meta.LabelSelector{
-			MatchLabels: labels,
+			MatchLabels: out,
 		},
 	}
 }
@@ -113,6 +123,45 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 					Selectors: matchArangoProfilesLabels(map[string]string{
 						constants.ProfilesDeployment: deploymentName,
 						key:                          v,
+					}),
+					Template: integration,
+				},
+			}, nil
+		}
+	}
+
+	genf := func(name, version, feature string, generator func() (integrationsSidecar.Integration, bool)) func() (string, *schedulerApi.ArangoProfile, error) {
+		return func() (string, *schedulerApi.ArangoProfile, error) {
+			counterMetric.Inc()
+			fullName := fmt.Sprintf("%s-int-%s-%s-%s", deploymentName, name, version, feature)
+
+			intgr, exists := generator()
+			if !exists {
+				return fullName, nil, nil
+			}
+
+			integration, err := integrationsSidecar.NewIntegrationEnablement(intgr)
+			if err != nil {
+				return "", nil, err
+			}
+
+			key, v := constants.NewProfileIntegration(name, version)
+
+			return fullName, &schedulerApi.ArangoProfile{
+				ObjectMeta: meta.ObjectMeta{
+					Name:      fullName,
+					Namespace: apiObject.GetNamespace(),
+					OwnerReferences: []meta.OwnerReference{
+						apiObject.AsOwner(),
+					},
+				},
+				Spec: schedulerApi.ProfileSpec{
+					Selectors: matchArangoProfilesLabels(map[string]string{
+						constants.ProfilesDeployment: deploymentName,
+						key:                          v,
+					}, util.KV[string, string]{
+						K: constants.NewProfileIntegrationFeature(constants.ProfilesIntegrationShutdown, feature),
+						V: constants.ProfilesExtensionEnabled,
 					}),
 					Template: integration,
 				},
@@ -170,6 +219,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			DeploymentName: apiObject.GetName(),
 		})),
 		gen(constants.ProfilesIntegrationShutdown, constants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationShutdownV1{})),
+		genf(constants.ProfilesIntegrationShutdown, constants.ProfilesIntegrationV1, "debug", always(integrationsSidecar.ExtensionShutdownV1Debug{})),
 		gen(constants.ProfilesIntegrationEnvoy, constants.ProfilesIntegrationV3, always(integrationsSidecar.IntegrationEnvoyV3{Spec: spec})),
 		gen(constants.ProfilesIntegrationStorage, constants.ProfilesIntegrationV1, func() (integrationsSidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Alpha1(); err == nil {
