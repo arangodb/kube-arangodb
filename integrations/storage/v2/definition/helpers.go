@@ -23,6 +23,7 @@ package definition
 import (
 	"context"
 	"io"
+	"os"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -30,6 +31,26 @@ import (
 )
 
 const BufferSize = 4094
+
+func SendFile(ctx context.Context, client StorageV2Client, key string, path string) (*StorageV2WriteObjectResponse, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
+
+	p, err := Send(ctx, client, key, f)
+	if err != nil {
+		if cerr := f.Close(); cerr != nil {
+			return nil, cerr
+		}
+
+		return nil, err
+	}
+
+	return p, nil
+}
 
 func Send(ctx context.Context, client StorageV2Client, key string, in io.Reader) (*StorageV2WriteObjectResponse, error) {
 	cache := make([]byte, BufferSize)

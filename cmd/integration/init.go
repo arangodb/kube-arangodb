@@ -28,6 +28,7 @@ import (
 
 	integrations "github.com/arangodb/kube-arangodb/pkg/integrations"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 var (
@@ -51,7 +52,7 @@ func Command() *cobra.Command {
 func Execute() int {
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
-	if err := cmd.Execute(); err != nil {
+	if err := cmd.ExecuteContext(shutdown.Context()); err != nil {
 		return 1
 	}
 

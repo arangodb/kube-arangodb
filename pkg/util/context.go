@@ -118,3 +118,5 @@ func WithKubernetesPatch[P1 meta.Object](ctx context.Context, obj string, client
 
 	return client.Patch(nCtx, obj, types.JSONPatchType, data, meta.PatchOptions{})
 }
+
+type ContextKey string

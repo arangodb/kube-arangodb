@@ -40,7 +40,7 @@ func Test_ShutdownGRPC(t *testing.T) {
 
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, New(c))
+	}, New(Configuration{}, c))
 	require.NoError(t, err)
 
 	start := local.Start(ctx)

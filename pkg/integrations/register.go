@@ -31,13 +31,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
-	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
+	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
 	integrationsClients "github.com/arangodb/kube-arangodb/pkg/integrations/clients"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 var registerer = util.NewRegisterer[string, Factory]()
@@ -48,15 +46,7 @@ func Register(cmd *cobra.Command) error {
 	return c.Register(cmd)
 }
 
-type configurationTest struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-}
-
 type configuration struct {
-	// Only for testing
-	test *configurationTest
-
 	registered []Integration
 
 	health struct {
@@ -196,16 +186,10 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 }
 
 func (c *configuration) run(cmd *cobra.Command, args []string) error {
-	if t := c.test; t == nil {
-		return c.runWithContext(shutdown.Context(), shutdown.Stop, cmd)
-	} else {
-		return c.runWithContext(t.ctx, t.cancel, cmd)
-	}
+	return c.runWithContext(cmd.Context(), cmd)
 }
 
-func (c *configuration) runWithContext(ctx context.Context, cancel context.CancelFunc, cmd *cobra.Command) error {
-	println(version.GetVersionV1().String())
-
+func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) error {
 	healthConfig, err := c.health.Config()
 	if err != nil {
 		return errors.Wrapf(err, "Unable to parse health config")
@@ -222,6 +206,15 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 	var internalHandlers, externalHandlers, healthHandlers []svc.Handler
 
 	var services []pbImplPongV1.Service
+
+	pong, err := pbImplPongV1.New(services...)
+	if err != nil {
+		return err
+	}
+
+	internalHandlers = append(internalHandlers, pong)
+	externalHandlers = append(externalHandlers, pong)
+	healthHandlers = append(healthHandlers, pong)
 
 	for _, handler := range c.registered {
 		if ok, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s", handler.Name())); err != nil {
@@ -255,7 +248,7 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 				Enabled: ok,
 			})
 
-			if ok && (internalEnabled || externalEnabled) {
+			if ok && (internalEnabled || externalEnabled) || (c.health.shutdownEnabled && handler.Name() == pbShutdownV1.Name) {
 				if svc, err := handler.Handler(ctx, cmd); err != nil {
 					return err
 				} else {
@@ -266,22 +259,13 @@ func (c *configuration) runWithContext(ctx context.Context, cancel context.Cance
 					if externalEnabled {
 						externalHandlers = append(externalHandlers, svc)
 					}
+
+					if c.health.shutdownEnabled && handler.Name() == pbShutdownV1.Name {
+						healthHandlers = append(healthHandlers, svc)
+					}
 				}
 			}
 		}
-	}
-
-	pong, err := pbImplPongV1.New(services...)
-	if err != nil {
-		return err
-	}
-
-	internalHandlers = append(internalHandlers, pong)
-	externalHandlers = append(externalHandlers, pong)
-	healthHandlers = append(healthHandlers, pong)
-
-	if c.health.shutdownEnabled {
-		healthHandlers = append(healthHandlers, pbImplShutdownV1.New(cancel))
 	}
 
 	health, err := svc.NewHealthService(healthConfig, svc.Readiness, healthHandlers...)
