@@ -35,6 +35,7 @@ import (
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -50,7 +51,7 @@ func newInternal(c Configuration) (*implementation, error) {
 		return nil, errors.Wrapf(err, "Invalid config")
 	}
 
-	io, err := c.IO()
+	io, err := c.IO(shutdown.Context())
 	if err != nil {
 		return nil, err
 	}

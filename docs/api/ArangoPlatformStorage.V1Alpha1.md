@@ -8,6 +8,64 @@ title: ArangoPlatformStorage V1Alpha1
 
 ## Spec
 
+### .spec.backend.gcs.bucketName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/storage_spec_backend_gcs.go#L35)</sup>
+
+BucketName specifies the name of the bucket
+Required
+
+***
+
+### .spec.backend.gcs.bucketPath
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/storage_spec_backend_gcs.go#L38)</sup>
+
+BucketPath specifies the Prefix within the bucket
+
+***
+
+### .spec.backend.gcs.credentialsSecret.checksum
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+
+UID keeps the information about object Checksum
+
+***
+
+### .spec.backend.gcs.credentialsSecret.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+
+Name of the object
+
+***
+
+### .spec.backend.gcs.credentialsSecret.namespace
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+
+Namespace of the object. Should default to the namespace of the parent object
+
+***
+
+### .spec.backend.gcs.credentialsSecret.uid
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+
+UID keeps the information about object UID
+
+***
+
+### .spec.backend.gcs.projectID
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/storage_spec_backend_gcs.go#L32)</sup>
+
+ProjectID specifies the GCP ProjectID
+Required
+
+***
+
 ### .spec.backend.s3.allowInsecure
 
 Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/storage_spec_backend_s3.go#L46)</sup>

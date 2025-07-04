@@ -77,7 +77,6 @@ func (i IntegrationStorageV2) Envs() ([]core.EnvVar, error) {
 	}
 
 	if s3 := i.Storage.Spec.GetBackend().GetS3(); s3 != nil {
-
 		endpointURL, _ := url.Parse(s3.GetEndpoint())
 		disableSSL := endpointURL.Scheme == "http"
 
@@ -133,6 +132,29 @@ func (i IntegrationStorageV2) Envs() ([]core.EnvVar, error) {
 				},
 			)
 		}
+	} else if gcs := i.Storage.Spec.GetBackend().GetGCS(); gcs != nil {
+		envs = append(envs,
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_TYPE",
+				Value: string(pbImplStorageV2.ConfigurationTypeGCS),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_GCS_PROJECT_ID",
+				Value: gcs.GetProjectID(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_GCS_BUCKET_NAME",
+				Value: gcs.GetBucketName(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_GCS_BUCKET_PREFIX",
+				Value: gcs.GetBucketPrefix(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_GCS_PROVIDER_SA_FILE",
+				Value: filepath.Join(mountPathStorageCredentials, constants.SecretCredentialsServiceAccount),
+			},
+		)
 	}
 
 	return i.Core.Envs(i, envs...), nil
@@ -167,6 +189,16 @@ func (i IntegrationStorageV2) Volumes() ([]core.Volume, []core.VolumeMount, erro
 				MountPath: mountPathStorageCA,
 			})
 		}
+	} else if gcs := i.Storage.Spec.GetBackend().GetGCS(); gcs != nil {
+		secretObj := gcs.GetCredentialsSecret()
+		if secretObj.GetNamespace(i.Storage) != i.Storage.GetNamespace() {
+			return nil, nil, errors.New("secrets from different namespace are not supported yet")
+		}
+		volumes = append(volumes, k8sutil.CreateVolumeWithSecret(mountNameStorageCredentials, secretObj.GetName()))
+		volumeMounts = append(volumeMounts, core.VolumeMount{
+			Name:      mountNameStorageCredentials,
+			MountPath: mountPathStorageCredentials,
+		})
 	}
 
 	return volumes, volumeMounts, nil
