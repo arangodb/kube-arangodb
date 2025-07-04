@@ -27,11 +27,13 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
+	pbImplStorageV2SharedGCS "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/gcs"
 	pbImplStorageV2SharedS3 "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	awsHelper "github.com/arangodb/kube-arangodb/pkg/util/aws"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	gcsHelper "github.com/arangodb/kube-arangodb/pkg/util/gcs"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -106,6 +108,35 @@ func NewIOFromObject(ctx context.Context, client kclient.Client, in *platformApi
 			cfg.Client = config
 
 			return cfg.New()
+		}
+
+		if gcsSpec := backend.GCS; gcsSpec != nil {
+			var config gcsHelper.Config
+
+			if v := gcsSpec.CredentialsSecret; v != nil {
+				secret, err := client.Kubernetes().CoreV1().Secrets(v.GetNamespace(in)).Get(ctx, v.GetName(), meta.GetOptions{})
+				if err != nil {
+					return nil, errors.WithMessage(err, "Failed to get GCS secret")
+				}
+
+				sk, ok := secret.Data[constants.SecretCredentialsServiceAccount]
+				if !ok {
+					return nil, errors.Errorf("Failed to get GCS secret %s data: Key %s not found", secret.GetName(), constants.SecretCredentialsServiceAccount)
+				}
+
+				config.Provider.ServiceAccount.JSON = string(sk)
+				config.Provider.Type = gcsHelper.ProviderTypeServiceAccount
+			}
+
+			config.ProjectID = gcsSpec.GetProjectID()
+
+			var cfg pbImplStorageV2SharedGCS.Configuration
+
+			cfg.BucketName = gcsSpec.GetBucketName()
+			cfg.BucketPrefix = gcsSpec.GetBucketPrefix()
+			cfg.Client = config
+
+			return cfg.New(ctx)
 		}
 	}
 

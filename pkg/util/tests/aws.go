@@ -41,7 +41,7 @@ const (
 func GetAWSS3Bucket(t *testing.T) string {
 	b, ok := TestAWSBucket.Lookup()
 	if !ok {
-		t.Skipf("Bucket does not exists")
+		t.Skipf("Bucket does not exist")
 	}
 
 	return b

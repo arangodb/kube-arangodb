@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,22 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package s3
+package gcs
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/s3"
+	"cloud.google.com/go/storage"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func (i *ios) Delete(ctx context.Context, key string) (bool, error) {
-	_, err := i.client.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
-		Key:    util.NewType(i.key(key)),
-		Bucket: util.NewType(i.config.BucketName),
-	})
-	if err != nil {
+	b := i.client.Bucket(i.config.BucketName)
+
+	obj := b.Object(i.key(key))
+
+	if err := obj.Delete(ctx); err != nil {
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			return true, nil
+		}
 		return false, err
 	}
 

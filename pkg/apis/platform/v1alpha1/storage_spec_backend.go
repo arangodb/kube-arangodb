@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ import (
 type ArangoPlatformStorageSpecBackend struct {
 	// S3 backend implements storage as a proxy to the provided S3 API endpoint
 	S3 *ArangoPlatformStorageSpecBackendS3 `json:"s3,omitempty"`
+
+	// GCS backend implements storage as a proxy to the provided GCS API endpoint
+	GCS *ArangoPlatformStorageSpecBackendGCS `json:"gcs,omitempty"`
 }
 
 func (s *ArangoPlatformStorageSpecBackend) GetS3() *ArangoPlatformStorageSpecBackendS3 {
@@ -37,14 +40,33 @@ func (s *ArangoPlatformStorageSpecBackend) GetS3() *ArangoPlatformStorageSpecBac
 	return s.S3
 }
 
+func (s *ArangoPlatformStorageSpecBackend) GetGCS() *ArangoPlatformStorageSpecBackendGCS {
+	if s == nil || s.GCS == nil {
+		return nil
+	}
+	return s.GCS
+}
+
 func (s *ArangoPlatformStorageSpecBackend) Validate() error {
 	if s == nil {
 		return errors.Errorf("Backend is not specified")
 	}
 
-	if s.S3 == nil {
+	if s.S3 == nil && s.GCS == nil {
 		return errors.Errorf("At least one backend needs to be defined")
 	}
 
-	return shared.WithErrors(shared.PrefixResourceError("s3", s.S3.Validate()))
+	if s.S3 != nil && s.GCS != nil {
+		return errors.Errorf("Only one backend can be defined")
+	}
+
+	if s.S3 != nil {
+		return shared.WithErrors(shared.PrefixResourceError("s3", s.S3.Validate()))
+	}
+
+	if s.GCS != nil {
+		return shared.WithErrors(shared.PrefixResourceError("gcs", s.GCS.Validate()))
+	}
+
+	return nil
 }

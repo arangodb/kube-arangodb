@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,24 +18,39 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package s3
+package gcs
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/s3"
+	"cloud.google.com/go/storage"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
+	gcsHelper "github.com/arangodb/kube-arangodb/pkg/util/gcs"
 )
 
-func (i *ios) Delete(ctx context.Context, key string) (bool, error) {
-	_, err := i.client.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
-		Key:    util.NewType(i.key(key)),
-		Bucket: util.NewType(i.config.BucketName),
-	})
+type Configuration struct {
+	BucketName   string
+	BucketPrefix string
+
+	MaxListKeys *int64
+
+	Client gcsHelper.Config
+}
+
+func (c Configuration) New(ctx context.Context) (pbImplStorageV2Shared.IO, error) {
+	opts, err := c.Client.GetClientOptions()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	return true, nil
+	client, err := storage.NewClient(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ios{
+		config: c,
+		client: client,
+	}, nil
 }

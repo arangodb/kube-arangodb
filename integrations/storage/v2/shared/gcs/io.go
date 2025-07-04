@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,26 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package s3
+package gcs
 
 import (
 	"context"
+	"crypto/sha256"
+	"errors"
+	"os"
 	"path"
 	goStrings "strings"
 
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"cloud.google.com/go/storage"
 
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type ios struct {
-	config     Configuration
-	client     s3iface.S3API
-	uploader   *s3manager.Uploader
-	downloader *s3manager.Downloader
+	config Configuration
+
+	client *storage.Client
 }
 
 func (i *ios) key(keys ...string) string {
@@ -57,23 +56,31 @@ func (i *ios) clean(key string) string {
 }
 
 func (i *ios) Write(ctx context.Context, key string) (pbImplStorageV2Shared.Writer, error) {
-	w := newWriter(i)
+	b := i.client.Bucket(i.config.BucketName)
 
-	w.start(ctx, &s3manager.UploadInput{
-		Bucket: util.NewType(i.config.BucketName),
-		Key:    util.NewType(i.key(key)),
-	})
+	obj := b.Object(i.key(key))
 
-	return w, nil
+	return &writer{
+		write:    obj.NewWriter(ctx),
+		checksum: sha256.New(),
+	}, nil
 }
 
 func (i *ios) Read(ctx context.Context, key string) (pbImplStorageV2Shared.Reader, error) {
-	r := newReader(i)
+	b := i.client.Bucket(i.config.BucketName)
 
-	r.start(ctx, &s3.GetObjectInput{
-		Bucket: util.NewType(i.config.BucketName),
-		Key:    util.NewType(i.key(key)),
-	})
+	obj := b.Object(i.key(key))
 
-	return r, nil
+	r, err := obj.NewReader(ctx)
+	if err != nil {
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			return nil, os.ErrNotExist
+		}
+		return nil, err
+	}
+
+	return &reader{
+		read:     r,
+		checksum: sha256.New(),
+	}, nil
 }

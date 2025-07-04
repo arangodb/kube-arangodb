@@ -23,34 +23,16 @@ package v2
 import (
 	"context"
 	_ "embed"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/util/uuid"
 
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
-	pbImplStorageV2SharedS3 "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
-
-func getClient(t *testing.T, mods ...Mod) Configuration {
-	var scfg pbImplStorageV2SharedS3.Configuration
-
-	scfg.Client = tests.GetAWSClientConfig(t)
-	scfg.BucketName = tests.GetAWSS3Bucket(t)
-	scfg.BucketPrefix = fmt.Sprintf("test/%s/", uuid.NewUUID())
-
-	var cfg Configuration
-
-	cfg.Type = ConfigurationTypeS3
-	cfg.S3 = scfg
-
-	return cfg.With(mods...)
-}
 
 func init() {
 	logging.Global().ApplyLogLevels(map[string]logging.Level{
@@ -58,17 +40,19 @@ func init() {
 	})
 }
 
-func Handler(t *testing.T, mods ...Mod) svc.Handler {
-	handler, err := New(getClient(t).With(mods...))
+type configGenerator func(t *testing.T, mods ...util.ModR[Configuration]) Configuration
+
+func Handler(t *testing.T, gen configGenerator, mods ...util.ModR[Configuration]) svc.Handler {
+	handler, err := New(gen(t, mods...))
 	require.NoError(t, err)
 
 	return handler
 }
 
-func Client(t *testing.T, ctx context.Context, mods ...Mod) pbStorageV2.StorageV2Client {
+func Client(t *testing.T, ctx context.Context, gen configGenerator, mods ...util.ModR[Configuration]) pbStorageV2.StorageV2Client {
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, Handler(t, mods...))
+	}, Handler(t, gen, mods...))
 	require.NoError(t, err)
 
 	start := local.Start(ctx)

@@ -6,6 +6,32 @@ v1alpha1:
           backend:
             description: Backend defines how storage is implemented
             properties:
+              gcs:
+                description: GCS backend implements storage as a proxy to the provided GCS API endpoint
+                properties:
+                  bucketName:
+                    description: BucketName specifies the name of the bucket
+                    type: string
+                  bucketPath:
+                    description: BucketPath specifies the Prefix within the bucket
+                    type: string
+                  credentialsSecret:
+                    description: CredentialsSecret specifies the Kubernetes Secret containing Service Account JSON Key as data field
+                    properties:
+                      name:
+                        description: Name of the object
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  projectID:
+                    description: ProjectID specifies the GCP ProjectID
+                    type: string
+                required:
+                  - bucketName
+                  - credentialsSecret
+                  - projectID
+                type: object
               s3:
                 description: S3 backend implements storage as a proxy to the provided S3 API endpoint
                 properties:
