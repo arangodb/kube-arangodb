@@ -9,5 +9,5 @@ parent: Integration Sidecars
 
 Definitions:
 
-- [Service](https://github.com/arangodb/kube-arangodb/blob/1.2.44/integrations/authorization/v0/definition/definition.proto)
+- [Service](https://github.com/arangodb/kube-arangodb/blob/1.2.49/integrations/authorization/v0/definition/definition.proto)
 
