@@ -28,6 +28,11 @@ import (
 )
 
 const (
+	TestAwsAccessKeyId     util.EnvironmentVariable = "TEST_AWS_ACCESS_KEY_ID"
+	TestAwsSecretAccessKey util.EnvironmentVariable = "TEST_AWS_SECRET_ACCESS_KEY"
+	TestAwsSessionToken    util.EnvironmentVariable = "TEST_AWS_SESSION_TOKEN"
+	TestAwsRegion          util.EnvironmentVariable = "TEST_AWS_REGION"
+
 	TestAwsProfile util.EnvironmentVariable = "TEST_AWS_PROFILE"
 	TestAwsRole    util.EnvironmentVariable = "TEST_AWS_ROLE"
 	TestAWSBucket  util.EnvironmentVariable = "TEST_AWS_BUCKET"
@@ -43,18 +48,24 @@ func GetAWSS3Bucket(t *testing.T) string {
 }
 
 func GetAWSClientConfig(t *testing.T) awsHelper.Config {
-	v, ok := TestAwsProfile.Lookup()
-	if !ok {
-		t.Skipf("Client does not exists")
-	}
-
 	var c awsHelper.Config
-	c.Region = "eu-central-1"
+	c.Region = TestAwsRegion.GetOrDefault("eu-central-1")
 
-	c.Provider.Config = awsHelper.ProviderConfig{
-		Profile: v,
+	if v, ok := TestAwsProfile.Lookup(); ok {
+		c.Provider.Config = awsHelper.ProviderConfig{
+			Profile: v,
+		}
+		c.Provider.Type = awsHelper.ProviderTypeConfig
+	} else if TestAwsAccessKeyId.Exists() {
+		c.Provider.Static = awsHelper.ProviderConfigStatic{
+			AccessKeyID:     TestAwsAccessKeyId.Get(),
+			SecretAccessKey: TestAwsSecretAccessKey.Get(),
+			SessionToken:    TestAwsSessionToken.Get(),
+		}
+		c.Provider.Type = awsHelper.ProviderTypeStatic
+	} else {
+		t.Skipf("AWS Config not provided")
 	}
-	c.Provider.Type = awsHelper.ProviderTypeConfig
 
 	r, ok := TestAwsRole.Lookup()
 	if ok {

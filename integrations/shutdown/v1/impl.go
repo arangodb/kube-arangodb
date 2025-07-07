@@ -103,6 +103,7 @@ func (i *impl) Close() error {
 				k := goStrings.TrimPrefix(p, i.cfg.Debug.Path)
 
 				prefix := []string{
+					"debug",
 					"pod",
 				}
 

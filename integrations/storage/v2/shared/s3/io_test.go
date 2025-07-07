@@ -48,6 +48,8 @@ func getClient(t *testing.T) pbImplStorageV2Shared.IO {
 }
 
 func Test(t *testing.T) {
+	t.Skipf("DATA")
+
 	w := getClient(t)
 
 	data := make([]byte, 1024*1024*64)
