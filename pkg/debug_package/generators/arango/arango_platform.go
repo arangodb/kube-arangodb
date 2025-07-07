@@ -31,7 +31,7 @@ import (
 
 func Platform(f shared.FactoryGen) {
 	f.AddSection("platform").
-		Register("storage", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformStorage](arangoPlatformV1Alpha1ArangoPlatformStorageList, shared.WithDefinitions[*platformApi.ArangoPlatformStorage])).
+		Register("storage", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformStorage](arangoPlatformV1Alpha1ArangoPlatformStorageList, shared.WithDefinitions[*platformApi.ArangoPlatformStorage], arangoPlatformV1Alpha1ArangoPlatformStorageDebug)).
 		Register("chart", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformChart](arangoPlatformV1Alpha1ArangoPlatformChartList, shared.WithDefinitions[*platformApi.ArangoPlatformChart], arangoPlatformV1Alpha1ArangoPlatformChartExtract)).
 		Register("service", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformService](arangoPlatformV1Alpha1ArangoPlatformServiceList, shared.WithDefinitions[*platformApi.ArangoPlatformService]))
 }

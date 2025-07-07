@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,4 +61,26 @@ type IO interface {
 	Head(ctx context.Context, key string) (*Info, error)
 	Delete(ctx context.Context, key string) (bool, error)
 	List(ctx context.Context, key string) (util.NextIterator[[]File], error)
+}
+
+func ToIOReader(ctx context.Context, in Reader) io.ReadCloser {
+	return ioReader{
+		ctx:    ctx,
+		reader: in,
+	}
+}
+
+type ioReader struct {
+	ctx context.Context
+
+	reader Reader
+}
+
+func (i ioReader) Read(p []byte) (n int, err error) {
+	return i.reader.Read(p)
+}
+
+func (i ioReader) Close() error {
+	_, _, err := i.reader.Close(i.ctx)
+	return err
 }
