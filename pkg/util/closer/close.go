@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ type closeOnce struct {
 }
 
 func (c *closeOnce) Close() error {
-	c.lock.Unlock()
+	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	if c.closed {

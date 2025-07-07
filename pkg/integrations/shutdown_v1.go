@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,13 @@ package integrations
 
 import (
 	"context"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	pbImplShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1"
 	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -38,10 +39,11 @@ func init() {
 }
 
 type shutdownV1 struct {
+	Configuration pbImplShutdownV1.Configuration
 }
 
 func (s *shutdownV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	return pbImplShutdownV1.New(shutdown.Stop), nil
+	return pbImplShutdownV1.New(s.Configuration, extractShutdownFunc(ctx)), nil
 }
 
 func (s *shutdownV1) Name() string {
@@ -53,7 +55,11 @@ func (s *shutdownV1) Description() string {
 }
 
 func (s *shutdownV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
-	return nil
+	return errors.Errors(
+		fs.BoolVar(&s.Configuration.Debug.Enabled, "debug.enabled", false, "Defines if debug extension is enabled"),
+		fs.StringVar(&s.Configuration.Debug.Path, "debug.path", "/debug", "Path of the Debug Directory"),
+		fs.DurationVar(&s.Configuration.Debug.Timeout, "debug.timeout", time.Minute, "Timeout of the Debug action"),
+	)
 }
 
 func (*shutdownV1) Init(ctx context.Context, cmd *cobra.Command) error {

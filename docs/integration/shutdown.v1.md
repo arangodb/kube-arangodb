@@ -31,3 +31,15 @@ spec:
 ```
 
 Pod will receive shutdown request on port `port1` if containers `app` and `app2` will be in non running state.
+
+## Extensions
+
+### DebugPackage PreShutdown Hook
+
+Example:
+
+```yaml
+metadata:
+  labels:
+    core.shutdown.arangodb.com/app: "wait"
+```

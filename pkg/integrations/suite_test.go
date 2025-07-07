@@ -51,10 +51,7 @@ func executeSync(t *testing.T, ctx context.Context, args ...string) error {
 		<-shutdown.Channel()
 	}()
 
-	c.test = &configurationTest{
-		ctx:    ctx,
-		cancel: cancel,
-	}
+	ctx = WithShutdownV1ContextCancelFunc(ctx, cancel)
 
 	cmd := &cobra.Command{}
 
@@ -71,7 +68,7 @@ func executeSync(t *testing.T, ctx context.Context, args ...string) error {
 	cmd.SetArgs(append([]string{"test"}, args...))
 	logger.Info("Command: %s", goStrings.Join(args, " "))
 
-	return cmd.Execute()
+	return cmd.ExecuteContext(ctx)
 }
 
 func executeAsync(t *testing.T, ctx context.Context, args ...string) waitFunc {

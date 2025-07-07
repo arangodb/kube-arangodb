@@ -149,7 +149,7 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
 		},
 		{
-			Name:  "INTEGRATION_SERVICE_ADDRESS",
+			Name:  constants.INTEGRATION_SERVICE_ADDRESS.String(),
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
 		},
 		{
@@ -163,7 +163,7 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 			Command: append([]string{exePath, "integration"}, options.Sort().AsArgs()...),
 		},
 		Environments: &schedulerContainerResourcesApi.Environments{
-			Env: k8sutil.GetLifecycleEnv(),
+			Env: append(k8sutil.GetLifecycleEnv(), envs...),
 		},
 		Networking: &schedulerContainerResourcesApi.Networking{
 			Ports: []core.ContainerPort{

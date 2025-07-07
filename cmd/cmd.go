@@ -282,7 +282,7 @@ func Command() *cobra.Command {
 func Execute() int {
 	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
-	if err := cmdMain.Execute(); err != nil {
+	if err := cmdMain.ExecuteContext(shutdown.Context()); err != nil {
 		var v cli.CommandExitCode
 		if errors.As(err, &v) {
 			return v.ExitCode
