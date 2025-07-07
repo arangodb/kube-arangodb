@@ -916,7 +916,7 @@ v1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -3218,7 +3218,7 @@ v1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -5438,7 +5438,7 @@ v1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -7778,7 +7778,7 @@ v1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -11213,7 +11213,7 @@ v1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -13578,7 +13578,7 @@ v1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -15791,7 +15791,7 @@ v1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -18111,7 +18111,7 @@ v2alpha1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -20413,7 +20413,7 @@ v2alpha1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -22633,7 +22633,7 @@ v2alpha1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -24973,7 +24973,7 @@ v2alpha1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -28408,7 +28408,7 @@ v2alpha1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -30773,7 +30773,7 @@ v2alpha1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
@@ -32986,7 +32986,7 @@ v2alpha1:
                 description: LabelsMode Define labels mode which should be use while overriding labels
                 type: string
               manualUpgradeMode:
-                description: UpgradeMode Defines the manually triggered upgrade mode for the Member
+                description: ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
                 enum:
                   - inplace
                   - replace
