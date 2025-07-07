@@ -59,6 +59,7 @@ func arangoPlatformV1Alpha1ArangoPlatformStorageDebug(ctx context.Context, logge
 		}
 
 		for _, f := range t {
+			f := f
 			files <- shared.NewFile(path.Join("debug", f.Key), func() ([]byte, error) {
 				reader, err := c.Read(ctx, f.Key)
 				if err != nil {
