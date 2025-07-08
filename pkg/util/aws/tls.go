@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import (
 type TLS struct {
 	Insecure bool
 	CAFiles  []string
+	CABytes  [][]byte
 }
 
 func (s TLS) configuration() (*tls.Config, error) {
@@ -40,7 +41,7 @@ func (s TLS) configuration() (*tls.Config, error) {
 		r.InsecureSkipVerify = true
 	}
 
-	if len(s.CAFiles) > 0 {
+	if len(s.CAFiles) > 0 || len(s.CABytes) > 0 {
 		caCertPool := x509.NewCertPool()
 
 		for _, file := range s.CAFiles {
@@ -48,7 +49,15 @@ func (s TLS) configuration() (*tls.Config, error) {
 			if err != nil {
 				return nil, errors.Wrapf(err, "Unable to load CA from %s", file)
 			}
-			caCertPool.AppendCertsFromPEM(caCert)
+			if !caCertPool.AppendCertsFromPEM(caCert) {
+				return nil, errors.Errorf("Unable to add CA from %s", file)
+			}
+		}
+
+		for _, data := range s.CABytes {
+			if !caCertPool.AppendCertsFromPEM(data) {
+				return nil, errors.Errorf("Unable to add CA bytes")
+			}
 		}
 
 		r.RootCAs = caCertPool

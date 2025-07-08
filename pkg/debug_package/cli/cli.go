@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ func Register(cmd *cobra.Command) {
 	f.StringVarP(&input.Namespace, "namespace", "n", constants.NamespaceWithDefault("default"), "Kubernetes namespace")
 	f.BoolVar(&input.HideSensitiveData, "hide-sensitive-data", true, "Hide sensitive data")
 	f.BoolVar(&input.PodLogs, "pod-logs", true, "Collect pod logs")
+	f.BoolVar(&input.DebugPackageFiles, "debug-package-files", false, "Collect Debug files from Storage")
 }
 
 var input Input
@@ -43,4 +44,5 @@ type Input struct {
 	Namespace         string
 	HideSensitiveData bool
 	PodLogs           bool
+	DebugPackageFiles bool
 }
