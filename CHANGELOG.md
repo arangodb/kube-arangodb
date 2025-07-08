@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) (Platform) Storage Debug
 - (Feature) Extend DebugPackage with Debug files
+- (Documentation) Shutdown Debug Feature
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)
 - (Feature) (Platform) MetaV1 Integration Service

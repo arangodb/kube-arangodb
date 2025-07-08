@@ -36,10 +36,23 @@ Pod will receive shutdown request on port `port1` if containers `app` and `app2`
 
 ### DebugPackage PreShutdown Hook
 
-Example:
+The PreShutdown hook copies all non-empty files from the debug-package-mount volume when the main container exits.
+
+How to enable:
 
 ```yaml
 metadata:
   labels:
-    core.shutdown.arangodb.com/app: "wait"
+    shutdown.integration.profiles.arangodb.com/debug: enabled
+```
+
+This creates a Pod volume named debug-package-mount, which can be mounted to any container (including InitContainers) via the volumeMounts directive.
+
+```yaml
+spec:
+  containers:
+  - name: XXX
+    volumeMounts:
+    - mountPath: /debug
+      name: debug-package-mount
 ```
