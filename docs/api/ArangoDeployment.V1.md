@@ -234,7 +234,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
 
-UpgradeMode Defines the manually triggered upgrade mode for the Member
+ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
@@ -1344,7 +1344,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
 
-UpgradeMode Defines the manually triggered upgrade mode for the Member
+ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
@@ -2322,7 +2322,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
 
-UpgradeMode Defines the manually triggered upgrade mode for the Member
+ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
@@ -3521,7 +3521,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
 
-UpgradeMode Defines the manually triggered upgrade mode for the Member
+ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
@@ -5264,7 +5264,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
 
-UpgradeMode Defines the manually triggered upgrade mode for the Member
+ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
@@ -6456,7 +6456,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
 
-UpgradeMode Defines the manually triggered upgrade mode for the Member
+ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
@@ -7426,7 +7426,7 @@ LabelsMode Define labels mode which should be use while overriding labels
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/server_group_spec.go#L224)</sup>
 
-UpgradeMode Defines the manually triggered upgrade mode for the Member
+ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
