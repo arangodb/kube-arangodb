@@ -26,11 +26,13 @@ import (
 	"go/token"
 	"reflect"
 	"slices"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	openapi "k8s.io/kube-openapi/pkg/common"
+	stringslices "k8s.io/utils/strings/slices"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -133,7 +135,7 @@ func (b *schemaBuilder) openAPIDefToSchemaPros(t *testing.T, _ *openapi.OpenAPID
 	return nil
 }
 
-func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string) (schema *apiextensions.JSONSchemaProps) {
+func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, parent *DocDefinition, path string) (schema *apiextensions.JSONSchemaProps) {
 	// first check if type already implements a method to get OpenAPI schema:
 	schema = b.tryGetKubeOpenAPIDefinitions(t, obj)
 	if schema != nil {
@@ -143,7 +145,7 @@ func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string
 	// fallback to our impl:
 	switch obj.Kind() {
 	case reflect.Pointer:
-		schema = b.TypeToSchema(t, obj.Elem(), path)
+		schema = b.TypeToSchema(t, obj.Elem(), parent, path)
 	case reflect.Struct:
 		if obj == reflect.TypeOf(allowAnyType{}) || obj == reflect.TypeOf(&allowAnyType{}) {
 			schema = &apiextensions.JSONSchemaProps{
@@ -153,11 +155,11 @@ func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, path string
 			}
 			return
 		}
-		schema = b.StructToSchema(t, obj, path)
+		schema = b.StructToSchema(t, obj, parent, path)
 	case reflect.Array, reflect.Slice:
-		schema = b.ArrayToSchema(t, obj.Elem(), path)
+		schema = b.ArrayToSchema(t, obj.Elem(), parent, path)
 	case reflect.Map:
-		schema = b.MapToSchema(t, obj, path)
+		schema = b.MapToSchema(t, obj, parent, path)
 	default:
 		if typ, frmt, simple := isSimpleType(obj); simple {
 			schema = &apiextensions.JSONSchemaProps{
@@ -178,11 +180,11 @@ func (b *schemaBuilder) lookupDefinition(t *testing.T, fullName, path string) *D
 		return nil
 	}
 
-	d := parseDocDefinition(t, b.root, path, "", f, b.fs)
+	d := parseDocDefinition(t, b.root, path, "", typeInfo{}, f, b.fs)
 	return &d
 }
 
-func (b *schemaBuilder) ArrayToSchema(t *testing.T, elemObj reflect.Type, path string) *apiextensions.JSONSchemaProps {
+func (b *schemaBuilder) ArrayToSchema(t *testing.T, elemObj reflect.Type, parent *DocDefinition, path string) *apiextensions.JSONSchemaProps {
 	isByteArray := elemObj.Kind() == reflect.Uint8
 	if isByteArray {
 		return &apiextensions.JSONSchemaProps{
@@ -194,28 +196,30 @@ func (b *schemaBuilder) ArrayToSchema(t *testing.T, elemObj reflect.Type, path s
 	return &apiextensions.JSONSchemaProps{
 		Type: "array",
 		Items: &apiextensions.JSONSchemaPropsOrArray{
-			Schema: b.TypeToSchema(t, elemObj, path),
+			Schema: b.TypeToSchema(t, elemObj, parent, path),
 		},
 	}
 }
 
-func (b *schemaBuilder) MapToSchema(t *testing.T, mapObj reflect.Type, path string) *apiextensions.JSONSchemaProps {
+func (b *schemaBuilder) MapToSchema(t *testing.T, mapObj reflect.Type, parent *DocDefinition, path string) *apiextensions.JSONSchemaProps {
 	require.Equal(t, reflect.String, mapObj.Key().Kind(), "only string keys for map are supported %s", path)
 
 	return &apiextensions.JSONSchemaProps{
 		Type: "object",
 		AdditionalProperties: &apiextensions.JSONSchemaPropsOrBool{
-			Schema: b.TypeToSchema(t, mapObj.Elem(), path),
+			Schema: b.TypeToSchema(t, mapObj.Elem(), parent, path),
 			Allows: true, /* set automatically by serialization, but useful for testing */
 		},
 	}
 }
 
-func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, path string) *apiextensions.JSONSchemaProps {
+func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, parent *DocDefinition, path string) *apiextensions.JSONSchemaProps {
 	schema := &apiextensions.JSONSchemaProps{
 		Type:       "object",
 		Properties: make(map[string]apiextensions.JSONSchemaProps),
 	}
+
+	var required []string
 
 	for field := 0; field < structObj.NumField(); field++ {
 		f := structObj.Field(field)
@@ -238,17 +242,32 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, pat
 			continue
 		}
 
+		if parent != nil {
+			if stringslices.Contains(parent.Skip, n) {
+				continue
+			}
+		}
+
 		p := path
 		if !inline {
 			p = fmt.Sprintf("%s.%s", path, n)
 		}
 
-		s := b.TypeToSchema(t, f.Type, p)
-		require.NotNil(t, s, p)
-
 		fullFieldName := fmt.Sprintf("%s.%s.%s", structObj.PkgPath(), structObj.Name(), f.Name)
 		def := b.lookupDefinition(t, fullFieldName, p)
+
+		s := b.TypeToSchema(t, f.Type, def, p)
+		require.NotNil(t, s, p)
+
 		if def != nil {
+			if stringslices.Contains(def.Skip, "") {
+				continue
+			}
+
+			if def.Required != nil {
+				required = append(required, n)
+			}
+
 			def.ApplyToSchema(s)
 		}
 
@@ -257,10 +276,18 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, pat
 			for k, v := range s.Properties {
 				schema.Properties[k] = v
 			}
+
+			required = append(required, s.Required...)
 		} else {
 			require.NotEmpty(t, n, fullFieldName, inline)
 			schema.Properties[n] = *s
 		}
 	}
+
+	if len(required) > 0 {
+		sort.Strings(required)
+		schema.Required = required
+	}
+
 	return schema
 }

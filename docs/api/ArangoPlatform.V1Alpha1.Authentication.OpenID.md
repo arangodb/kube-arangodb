@@ -75,7 +75,7 @@ Default Value: `false`
 
 ***
 
-### .provider..authorizationEndpoint
+### .provider.authorizationEndpoint
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/authentication/openid.go#L216)</sup>
 
@@ -86,7 +86,15 @@ Links:
 
 ***
 
-### .provider..tokenEndpoint
+### .provider.issuer
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/authentication/openid.go#L210)</sup>
+
+Issuer defines OpenID Issuer
+
+***
+
+### .provider.tokenEndpoint
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/authentication/openid.go#L220)</sup>
 
@@ -97,7 +105,7 @@ Links:
 
 ***
 
-### .provider..userInfoEndpoint
+### .provider.userInfoEndpoint
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/authentication/openid.go#L224)</sup>
 
@@ -105,14 +113,6 @@ UserInfoEndpoint defines OpenID UserInfo Endpoint
 
 Links:
 * [Documentation](https://www.ibm.com/docs/en/was-liberty/base?topic=connect-openid-endpoint-urls#rwlp_oidc_endpoint_urls__userinfo_endpoint__title__1)
-
-***
-
-### .provider.issuer
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/authentication/openid.go#L210)</sup>
-
-Issuer defines OpenID Issuer
 
 ***
 

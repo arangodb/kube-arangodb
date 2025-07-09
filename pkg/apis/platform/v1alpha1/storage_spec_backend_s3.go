@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,16 +30,19 @@ import (
 
 type ArangoPlatformStorageSpecBackendS3 struct {
 	// BucketName specifies the name of the bucket
-	// Required
+	// +doc/required
 	BucketName *string `json:"bucketName,omitempty"`
 	// BucketPath specifies the Prefix within the bucket
 	// +doc/default:
 	BucketPrefix *string `json:"bucketPath,omitempty"`
 	// Endpoint specifies the S3 API-compatible endpoint which implements storage
-	// Required
+	// +doc/required
 	Endpoint *string `json:"endpoint"`
 	// CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
-	// Required
+	// +doc/required
+	// +doc/skip: namespace
+	// +doc/skip: uid
+	// +doc/skip: checksum
 	CredentialsSecret *sharedApi.Object `json:"credentialsSecret"`
 	// AllowInsecure if set to true, the Endpoint certificates won't be checked
 	// +doc/default: false
@@ -49,6 +52,9 @@ type ArangoPlatformStorageSpecBackendS3 struct {
 	// - `ca.crt` PEM encoded public key of the CA certificate
 	// - `ca.key` PEM encoded private key of the CA certificate
 	// +doc/default: nil
+	// +doc/skip: namespace
+	// +doc/skip: uid
+	// +doc/skip: checksum
 	CASecret *sharedApi.Object `json:"caSecret,omitempty"`
 	// Region defines the availability zone name.
 	// +doc/default: ""

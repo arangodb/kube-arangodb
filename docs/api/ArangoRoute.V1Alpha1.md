@@ -10,7 +10,9 @@ title: ArangoRoute V1Alpha1
 
 ### .spec.deployment
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/networking/v1alpha1/route_spec.go#L27)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/networking/v1alpha1/route_spec.go#L28)</sup>
+
+This field is **required**
 
 Deployment specifies the ArangoDeployment object name
 
@@ -41,17 +43,11 @@ Possible Values:
 
 ***
 
-### .spec.destination.endpoints.checksum
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
-
-UID keeps the information about object Checksum
-
-***
-
 ### .spec.destination.endpoints.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -59,7 +55,7 @@ Name of the object
 
 ### .spec.destination.endpoints.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -67,17 +63,11 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .spec.destination.endpoints.port
 
-Type: `intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/networking/v1alpha1/route_spec_destination_endpoint.go#L36)</sup>
+Type: `intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/networking/v1alpha1/route_spec_destination_endpoint.go#L39)</sup>
+
+This field is **required**
 
 Port defines Port or Port Name used as destination
-
-***
-
-### .spec.destination.endpoints.uid
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
-
-UID keeps the information about object UID
 
 ***
 
@@ -113,17 +103,11 @@ Possible Values:
 
 ***
 
-### .spec.destination.service.checksum
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
-
-UID keeps the information about object Checksum
-
-***
-
 ### .spec.destination.service.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -131,7 +115,7 @@ Name of the object
 
 ### .spec.destination.service.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -139,17 +123,11 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .spec.destination.service.port
 
-Type: `intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/networking/v1alpha1/route_spec_destination_service.go#L35)</sup>
+Type: `intstr.IntOrString` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/networking/v1alpha1/route_spec_destination_service.go#L38)</sup>
+
+This field is **required**
 
 Port defines Port or Port Name used as destination
-
-***
-
-### .spec.destination.service.uid
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
-
-UID keeps the information about object UID
 
 ***
 
@@ -208,7 +186,7 @@ Conditions specific to the entire extension
 
 ### .status.deployment.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -216,7 +194,9 @@ UID keeps the information about object Checksum
 
 ### .status.deployment.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -224,7 +204,7 @@ Name of the object
 
 ### .status.deployment.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -232,7 +212,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.deployment.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 

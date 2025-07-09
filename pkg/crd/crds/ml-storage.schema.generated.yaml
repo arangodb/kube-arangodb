@@ -31,11 +31,11 @@ v1alpha1:
                       uid:
                         description: UID keeps the information about object UID
                         type: string
+                    required:
+                      - name
                     type: object
                   credentialsSecret:
-                    description: |-
-                      CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
-                      Required
+                    description: CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
                     properties:
                       checksum:
                         description: UID keeps the information about object Checksum
@@ -49,21 +49,22 @@ v1alpha1:
                       uid:
                         description: UID keeps the information about object UID
                         type: string
+                    required:
+                      - name
                     type: object
                   endpoint:
-                    description: |-
-                      Endpoint specifies the S3 API-compatible endpoint which implements storage
-                      Required
+                    description: Endpoint specifies the S3 API-compatible endpoint which implements storage
                     type: string
                   region:
                     description: Region defines the availability zone name.
                     type: string
+                required:
+                  - credentialsSecret
+                  - endpoint
                 type: object
             type: object
           bucketName:
-            description: |-
-              BucketName specifies the name of the bucket
-              Required
+            description: BucketName specifies the name of the bucket
             type: string
           bucketPath:
             description: BucketPath specifies the path within the bucket
@@ -578,6 +579,8 @@ v1alpha1:
                     type: string
                 type: object
             type: object
+        required:
+          - bucketName
         type: object
       status:
         description: Object with preserved fields for backward compatibility
@@ -617,11 +620,11 @@ v1beta1:
                       uid:
                         description: UID keeps the information about object UID
                         type: string
+                    required:
+                      - name
                     type: object
                   credentialsSecret:
-                    description: |-
-                      CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
-                      Required
+                    description: CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
                     properties:
                       checksum:
                         description: UID keeps the information about object Checksum
@@ -635,21 +638,22 @@ v1beta1:
                       uid:
                         description: UID keeps the information about object UID
                         type: string
+                    required:
+                      - name
                     type: object
                   endpoint:
-                    description: |-
-                      Endpoint specifies the S3 API-compatible endpoint which implements storage
-                      Required
+                    description: Endpoint specifies the S3 API-compatible endpoint which implements storage
                     type: string
                   region:
                     description: Region defines the availability zone name.
                     type: string
+                required:
+                  - credentialsSecret
+                  - endpoint
                 type: object
             type: object
           bucketName:
-            description: |-
-              BucketName specifies the name of the bucket
-              Required
+            description: BucketName specifies the name of the bucket
             type: string
           bucketPath:
             description: BucketPath specifies the path within the bucket
@@ -661,6 +665,8 @@ v1beta1:
                 description: Sidecar mode runs the storage implementation as a sidecar
                 type: object
             type: object
+        required:
+          - bucketName
         type: object
       status:
         description: Object with preserved fields for backward compatibility

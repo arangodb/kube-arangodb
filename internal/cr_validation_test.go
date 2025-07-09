@@ -357,7 +357,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 					objects := map[string]apiextensions.JSONSchemaProps{}
 
 					for k, obj := range generationSpec.objects {
-						s := sb.TypeToSchema(t, reflect.TypeOf(obj), fmt.Sprintf(".%s", k))
+						s := sb.TypeToSchema(t, reflect.TypeOf(obj), nil, fmt.Sprintf(".%s", k))
 						require.NotNil(t, s, version)
 
 						objects[k] = *s

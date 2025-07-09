@@ -24,6 +24,8 @@ import (
 	"sort"
 	goStrings "strings"
 
+	stringslices "k8s.io/utils/strings/slices"
+
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -37,6 +39,8 @@ type DocDefinition struct {
 	File string
 	Line int
 
+	Include bool
+
 	Docs []string
 
 	Grade *DocDefinitionGradeDefinition
@@ -48,6 +52,10 @@ type DocDefinition struct {
 	Enum []string
 
 	Immutable *string
+
+	Skip []string
+
+	Required *string
 
 	Default *string
 	Example []string
@@ -61,6 +69,46 @@ func (d DocDefinitions) Sort() {
 		}
 		return a < b
 	})
+}
+
+func (d DocDefinitions) Find(path string) []DocDefinition {
+	var r []DocDefinition
+
+	for _, d := range d {
+		if d.Path == path {
+			r = append(r, d)
+		}
+	}
+
+	return r
+}
+
+func (d DocDefinitions) Skipped(path string) bool {
+	if path == "." {
+		return false
+	}
+
+	parts := strings.Split(path, ".")
+	if len(parts) == 1 {
+		return false
+	}
+
+	for _, current := range d.Find(path) {
+		if stringslices.Contains(current.Skip, "") {
+			return true
+		}
+	}
+
+	pPath := strings.Join(parts[0:len(parts)-1], ".")
+	name := parts[len(parts)-1]
+
+	for _, parent := range d.Find(pPath) {
+		if stringslices.Contains(parent.Skip, name) {
+			return true
+		}
+	}
+
+	return d.Skipped(pPath)
 }
 
 func NewDocDefinitionGradeDefinition(lines ...string) (*DocDefinitionGradeDefinition, error) {

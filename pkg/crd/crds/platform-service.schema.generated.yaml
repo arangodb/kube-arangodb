@@ -6,39 +6,28 @@ v1alpha1:
           chart:
             description: Chart keeps the Chart Reference
             properties:
-              checksum:
-                description: UID keeps the information about object Checksum
-                type: string
               name:
                 description: Name of the object
                 type: string
-              namespace:
-                description: Namespace of the object. Should default to the namespace of the parent object
-                type: string
-              uid:
-                description: UID keeps the information about object UID
-                type: string
+            required:
+              - name
             type: object
           deployment:
-            description: Chart keeps the Deployment Reference
+            description: Deployment keeps the Deployment Reference
             properties:
-              checksum:
-                description: UID keeps the information about object Checksum
-                type: string
               name:
                 description: Name of the object
                 type: string
-              namespace:
-                description: Namespace of the object. Should default to the namespace of the parent object
-                type: string
-              uid:
-                description: UID keeps the information about object UID
-                type: string
+            required:
+              - name
             type: object
           values:
             description: Values keeps the values of the Service
             type: object
             x-kubernetes-preserve-unknown-fields: true
+        required:
+          - chart
+          - deployment
         type: object
       status:
         description: Object with preserved fields for backward compatibility
