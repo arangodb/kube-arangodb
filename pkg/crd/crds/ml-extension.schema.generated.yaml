@@ -13300,6 +13300,8 @@ v1alpha1:
               uid:
                 description: UID keeps the information about object UID
                 type: string
+            required:
+              - name
             type: object
         type: object
       status:
@@ -27134,6 +27136,8 @@ v1beta1:
               uid:
                 description: UID keeps the information about object UID
                 type: string
+            required:
+              - name
             type: object
           storageType:
             description: ArangoMLExtensionSpecStorageType defines storage used for extension

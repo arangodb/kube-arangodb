@@ -5,6 +5,7 @@
 - (Feature) Extend DebugPackage with Debug files
 - (Documentation) Shutdown Debug Feature
 - (Documentation) ManualUpgrade Docs
+- (Documentation) Add Required & Skip in Docs
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)
 - (Feature) (Platform) MetaV1 Integration Service

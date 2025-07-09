@@ -632,7 +632,7 @@ might be configured in the container image.
 
 ### .status.arangoDB.deployment.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -640,7 +640,9 @@ UID keeps the information about object Checksum
 
 ### .status.arangoDB.deployment.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -648,7 +650,7 @@ Name of the object
 
 ### .status.arangoDB.deployment.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -656,7 +658,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.arangoDB.deployment.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 
@@ -664,7 +666,7 @@ UID keeps the information about object UID
 
 ### .status.arangoDB.secret.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -672,7 +674,9 @@ UID keeps the information about object Checksum
 
 ### .status.arangoDB.secret.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -680,7 +684,7 @@ Name of the object
 
 ### .status.arangoDB.secret.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -688,7 +692,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.arangoDB.secret.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 
@@ -696,7 +700,7 @@ UID keeps the information about object UID
 
 ### .status.arangoDB.tls.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -704,7 +708,9 @@ UID keeps the information about object Checksum
 
 ### .status.arangoDB.tls.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -712,7 +718,7 @@ Name of the object
 
 ### .status.arangoDB.tls.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -720,7 +726,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.arangoDB.tls.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 
@@ -736,7 +742,7 @@ Conditions specific to the entire extension
 
 ### .status.reconciliation.service.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -744,7 +750,9 @@ UID keeps the information about object Checksum
 
 ### .status.reconciliation.service.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -752,7 +760,7 @@ Name of the object
 
 ### .status.reconciliation.service.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -760,7 +768,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.reconciliation.service.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 
@@ -768,7 +776,7 @@ UID keeps the information about object UID
 
 ### .status.reconciliation.statefulSet.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -776,7 +784,9 @@ UID keeps the information about object Checksum
 
 ### .status.reconciliation.statefulSet.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -784,7 +794,7 @@ Name of the object
 
 ### .status.reconciliation.statefulSet.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -792,7 +802,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .status.reconciliation.statefulSet.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 

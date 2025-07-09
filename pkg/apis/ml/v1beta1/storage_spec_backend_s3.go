@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@ import (
 
 type ArangoMLStorageSpecBackendS3 struct {
 	// Endpoint specifies the S3 API-compatible endpoint which implements storage
-	// Required
+	// +doc/required
 	Endpoint *string `json:"endpoint"`
 	// CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
-	// Required
+	// +doc/required
 	CredentialsSecret *sharedApi.Object `json:"credentialsSecret"`
 	// AllowInsecure if set to true, the Endpoint certificates won't be checked
 	// +doc/default: false

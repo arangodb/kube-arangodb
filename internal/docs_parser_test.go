@@ -33,6 +33,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	openapi "k8s.io/kube-openapi/pkg/common"
+	stringslices "k8s.io/utils/strings/slices"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -42,10 +43,11 @@ const (
 	rootPackageName = "github.com/arangodb/kube-arangodb"
 )
 
-func parseDocDefinition(t *testing.T, root, path, typ string, field *ast.Field, fs *token.FileSet) DocDefinition {
+func parseDocDefinition(t *testing.T, root, path, typ string, info typeInfo, field *ast.Field, fs *token.FileSet) DocDefinition {
 	def := DocDefinition{
-		Path: path,
-		Type: typ,
+		Path:    path,
+		Type:    typ,
+		Include: !info.skip,
 	}
 
 	require.NotNil(t, field)
@@ -68,6 +70,14 @@ func parseDocDefinition(t *testing.T, root, path, typ string, field *ast.Field, 
 
 	if immutable, ok := extract(field, "immutable"); ok {
 		def.Immutable = util.NewType[string](immutable[0])
+	}
+
+	if skip, ok := extract(field, "skip"); ok {
+		def.Skip = skip
+	}
+
+	if required, ok := extract(field, "required"); ok {
+		def.Required = util.NewType[string](required[0])
 	}
 
 	if important, ok := extract(field, "important"); ok {
@@ -98,58 +108,59 @@ func parseDocDefinition(t *testing.T, root, path, typ string, field *ast.Field, 
 type typeInfo struct {
 	path string
 	typ  string
+	skip bool
 }
 
-func iterateOverObject(t *testing.T, fields map[string]*ast.Field, name string, object reflect.Type, path string) map[typeInfo]*ast.Field {
-	r := map[typeInfo]*ast.Field{}
+func iterateOverObject(t *testing.T, fields map[string]*ast.Field, ffn, name string, object reflect.Type, path string) []util.KV[typeInfo, *ast.Field] {
+	var r []util.KV[typeInfo, *ast.Field]
 	t.Run(name, func(t *testing.T) {
-		for k, v := range iterateOverObjectDirect(t, fields, name, object, path) {
-			r[k] = v
-		}
+		r = append(r, iterateOverObjectDirect(t, fields, ffn, name, object, path)...)
 	})
 
 	return r
 }
 
-func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name string, object reflect.Type, path string) map[typeInfo]*ast.Field {
+func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, ffn, name string, object reflect.Type, path string) []util.KV[typeInfo, *ast.Field] {
 	if n, _, simple := isSimpleType(object); simple {
-		return map[typeInfo]*ast.Field{
-			typeInfo{
-				path: fmt.Sprintf("%s.%s", path, name),
-				typ:  n,
-			}: nil,
+		return []util.KV[typeInfo, *ast.Field]{
+			{
+				K: typeInfo{
+					path: fmt.Sprintf("%s.%s", path, name),
+					typ:  n,
+				},
+			},
 		}
 	}
 
-	r := map[typeInfo]*ast.Field{}
+	var r []util.KV[typeInfo, *ast.Field]
 
 	switch object.Kind() {
 	case reflect.Array, reflect.Slice:
 		if _, _, simple := isSimpleType(object.Elem()); simple {
-			return map[typeInfo]*ast.Field{
-				typeInfo{
-					path: fmt.Sprintf("%s.%s", path, name),
-					typ:  "array",
-				}: nil,
+			return []util.KV[typeInfo, *ast.Field]{
+				{
+					K: typeInfo{
+						path: fmt.Sprintf("%s.%s", path, name),
+						typ:  "array",
+					},
+				},
 			}
 		}
 
-		for k, v := range iterateOverObjectDirect(t, fields, fmt.Sprintf("%s\\[int\\]", name), object.Elem(), path) {
-			r[k] = v
-		}
+		r = append(r, iterateOverObjectDirect(t, fields, ffn, fmt.Sprintf("%s\\[int\\]", name), object.Elem(), path)...)
 	case reflect.Map:
 		if _, _, simple := isSimpleType(object.Elem()); simple {
-			return map[typeInfo]*ast.Field{
-				typeInfo{
-					path: fmt.Sprintf("%s.%s", path, name),
-					typ:  "object",
-				}: nil,
+			return []util.KV[typeInfo, *ast.Field]{
+				{
+					K: typeInfo{
+						path: fmt.Sprintf("%s.%s", path, name),
+						typ:  "object",
+					},
+				},
 			}
 		}
 
-		for k, v := range iterateOverObjectDirect(t, fields, fmt.Sprintf("%s.\\<%s\\>", name, object.Key().Kind().String()), object.Elem(), path) {
-			r[k] = v
-		}
+		r = append(r, iterateOverObjectDirect(t, fields, ffn, fmt.Sprintf("%s.\\<%s\\>", name, object.Key().Kind().String()), object.Elem(), path)...)
 	case reflect.Struct:
 		for field := 0; field < object.NumField(); field++ {
 			f := object.Field(field)
@@ -184,7 +195,10 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 						path: fmt.Sprintf("%s.%s.%s", path, name, n),
 						typ:  t[0],
 					}
-					r[info] = doc
+					r = append(r, util.KV[typeInfo, *ast.Field]{
+						K: info,
+						V: doc,
+					})
 					continue
 				}
 			}
@@ -197,33 +211,44 @@ func iterateOverObjectDirect(t *testing.T, fields map[string]*ast.Field, name st
 							path: fmt.Sprintf("%s.%s", path, name),
 							typ:  t[0],
 						}
-						r[info] = doc
+						r = append(r, util.KV[typeInfo, *ast.Field]{
+							K: info,
+							V: doc,
+						})
 						continue
 					}
 				}
 			}
 
 			if inline {
-				for k, v := range iterateOverObjectDirect(t, fields, name, f.Type, path) {
-					if v == nil {
-						v = doc
+				for _, el := range iterateOverObjectDirect(t, fields, fullFieldName, name, f.Type, path) {
+					if el.V == nil {
+						el.V = doc
 					}
-					r[k] = v
+					r = append(r, el)
 				}
 			} else {
-
-				for k, v := range iterateOverObject(t, fields, n, f.Type, fmt.Sprintf("%s.%s", path, name)) {
-					if v == nil {
-						v = doc
+				for _, el := range iterateOverObject(t, fields, fullFieldName, n, f.Type, fmt.Sprintf("%s.%s", path, name)) {
+					if el.V == nil {
+						el.V = doc
 					}
-					r[k] = v
+					r = append(r, el)
 				}
 			}
 		}
-	case reflect.Pointer:
-		for k, v := range iterateOverObjectDirect(t, fields, name, object.Elem(), path) {
-			r[k] = v
+
+		if z := fields[ffn]; z != nil && ffn != "" {
+			r = append(r, util.KV[typeInfo, *ast.Field]{
+				K: typeInfo{
+					path: fmt.Sprintf("%s.%s", path, name),
+					typ:  "object",
+					skip: true,
+				},
+				V: z,
+			})
 		}
+	case reflect.Pointer:
+		r = append(r, iterateOverObjectDirect(t, fields, ffn, name, object.Elem(), path)...)
 	default:
 		require.Failf(t, "unsupported type", "%s for %s at %s", object.String(), name, path)
 	}
@@ -245,6 +270,8 @@ func extract(n *ast.Field, tag string) ([]string, bool) {
 	for _, c := range n.Doc.List {
 		if goStrings.HasPrefix(c.Text, fmt.Sprintf("// +doc/%s: ", tag)) {
 			ret = append(ret, goStrings.TrimPrefix(c.Text, fmt.Sprintf("// +doc/%s: ", tag)))
+		} else if c.Text == fmt.Sprintf("// +doc/%s", tag) {
+			ret = append(ret, "")
 		}
 	}
 
@@ -335,15 +362,7 @@ func isSimpleType(obj reflect.Type) (string, string, bool) {
 func extractTag(tag string) (string, bool) {
 	parts := goStrings.Split(tag, ",")
 
-	if len(parts) == 1 {
-		return parts[0], false
-	}
-
-	if parts[1] == "inline" {
-		return parts[0], true
-	}
-
-	return parts[0], false
+	return parts[0], stringslices.Contains(parts, "inline")
 }
 
 // parseSourceFiles returns map of <path to field in structure> -> AST for structure Field and the token inspector for all files in package

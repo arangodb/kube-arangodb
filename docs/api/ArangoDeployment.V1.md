@@ -1017,7 +1017,7 @@ Possible Values:
 
 ### .spec.architecture
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/deployment_spec.go#L260)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/deployment_spec.go#L259)</sup>
 
 Architecture defines the list of supported architectures.
 First element on the list is marked as default architecture.
@@ -1094,10 +1094,9 @@ KillPodProbability is the chance of a pod being killed during an event
 
 ### .spec.ClusterDomain
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/deployment_spec.go#L232)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/deployment_spec.go#L231)</sup>
 
 ClusterDomain define domain used in the kubernetes cluster.
-Required only of domain is not set to default (cluster.local)
 
 Default Value: `cluster.local`
 
@@ -1105,7 +1104,7 @@ Default Value: `cluster.local`
 
 ### .spec.communicationMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/deployment_spec.go#L240)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/deployment_spec.go#L239)</sup>
 
 CommunicationMethod define communication method used in deployment
 
@@ -3178,7 +3177,7 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .spec.gateway.authentication.secret.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -3186,7 +3185,9 @@ UID keeps the information about object Checksum
 
 ### .spec.gateway.authentication.secret.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -3194,7 +3195,7 @@ Name of the object
 
 ### .spec.gateway.authentication.secret.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -3202,7 +3203,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .spec.gateway.authentication.secret.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 
@@ -8198,7 +8199,7 @@ MaintenanceGracePeriod action timeout
 
 ### .spec.timezone
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/deployment_spec.go#L264)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/deployment/v1/deployment_spec.go#L263)</sup>
 
 Timezone if specified, will set a timezone for deployment.
 Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/London`

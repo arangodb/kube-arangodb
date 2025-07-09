@@ -62,10 +62,22 @@ const (
 func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []byte {
 	out := bytes.NewBuffer(nil)
 
-	for i, el := range d {
-		if i != 0 {
+	els := 0
+
+	for _, el := range d {
+		if !el.Include {
+			continue
+		}
+
+		if d.Skipped(el.Path) {
+			continue
+		}
+
+		if els != 0 {
 			write(t, out, "***\n\n")
 		}
+
+		els += 1
 
 		write(t, out, "### %s\n\n", el.Path)
 		write(t, out, "Type: `%s` <sup>[\\[ref\\]](%s/%s#L%d)</sup>\n\n", el.Type, repositoryPath, el.File, el.Line)
@@ -102,6 +114,14 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 		if d := el.Important; d != nil {
 			write(t, out, "> [!IMPORTANT]\n")
 			write(t, out, "> **%s**\n\n", *d)
+		}
+
+		if d := el.Required; d != nil {
+			if *d == "" {
+				write(t, out, "This field is **required**\n\n")
+			} else {
+				write(t, out, "This field is **required**: %s\n\n", *d)
+			}
 		}
 
 		if len(el.Docs) > 0 {
@@ -163,7 +183,11 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 		}
 
 		if d := el.Immutable; d != nil {
-			write(t, out, "This field is **immutable**: %s\n\n", *d)
+			if *d == "" {
+				write(t, out, "This field is **immutable**\n\n")
+			} else {
+				write(t, out, "This field is **immutable**: %s\n\n", *d)
+			}
 		}
 	}
 
@@ -518,11 +542,11 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 			for section, fieldInstance := range sections {
 				t.Run(section, func(t *testing.T) {
 
-					sectionParsed := iterateOverObject(t, fields, goStrings.ToLower(section), reflect.TypeOf(fieldInstance), "")
+					sectionParsed := iterateOverObject(t, fields, "", goStrings.ToLower(section), reflect.TypeOf(fieldInstance), "")
 
 					defs := make(DocDefinitions, 0, len(sectionParsed))
-					for k, f := range sectionParsed {
-						defs = append(defs, parseDocDefinition(t, root, cleanPrefixPath(k.path), k.typ, f, fs))
+					for _, el := range sectionParsed {
+						defs = append(defs, parseDocDefinition(t, root, cleanPrefixPath(el.K.path), el.K.typ, el.K, el.V, fs))
 					}
 					defs.Sort()
 

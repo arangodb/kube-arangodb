@@ -29,9 +29,6 @@ v1alpha1:
               endpoints:
                 description: Endpoints defines service upstream reference - which is used to find endpoints
                 properties:
-                  checksum:
-                    description: UID keeps the information about object Checksum
-                    type: string
                   name:
                     description: Name of the object
                     type: string
@@ -42,9 +39,9 @@ v1alpha1:
                     description: Port defines Port or Port Name used as destination
                     type: string
                     x-kubernetes-int-or-string: true
-                  uid:
-                    description: UID keeps the information about object UID
-                    type: string
+                required:
+                  - name
+                  - port
                 type: object
               path:
                 description: Path defines service path used for overrides
@@ -64,9 +61,6 @@ v1alpha1:
               service:
                 description: Service defines service upstream reference
                 properties:
-                  checksum:
-                    description: UID keeps the information about object Checksum
-                    type: string
                   name:
                     description: Name of the object
                     type: string
@@ -77,9 +71,9 @@ v1alpha1:
                     description: Port defines Port or Port Name used as destination
                     type: string
                     x-kubernetes-int-or-string: true
-                  uid:
-                    description: UID keeps the information about object UID
-                    type: string
+                required:
+                  - name
+                  - port
                 type: object
               timeout:
                 description: Timeout specify the upstream request timeout
@@ -117,6 +111,9 @@ v1alpha1:
                 description: Path specifies the Path route
                 type: string
             type: object
+        required:
+          - deployment
+          - destination
         type: object
       status:
         description: Object with preserved fields for backward compatibility

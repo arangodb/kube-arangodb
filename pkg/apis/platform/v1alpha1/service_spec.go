@@ -27,10 +27,18 @@ import (
 )
 
 type ArangoPlatformServiceSpec struct {
-	// Chart keeps the Deployment Reference
+	// Deployment keeps the Deployment Reference
+	// +doc/required
+	// +doc/skip: namespace
+	// +doc/skip: uid
+	// +doc/skip: checksum
 	Deployment *sharedApi.Object `json:"deployment,omitempty"`
 
 	// Chart keeps the Chart Reference
+	// +doc/required
+	// +doc/skip: namespace
+	// +doc/skip: uid
+	// +doc/skip: checksum
 	Chart *sharedApi.Object `json:"chart,omitempty"`
 
 	// Values keeps the values of the Service

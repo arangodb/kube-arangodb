@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,11 @@ import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 
 type ArangoRouteSpec struct {
 	// Deployment specifies the ArangoDeployment object name
+	// +doc/required
 	Deployment *string `json:"deployment,omitempty"`
 
 	// Destination defines the route destination
+	// +doc/required
 	Destination *ArangoRouteSpecDestination `json:"destination,omitempty"`
 
 	// Route defines the route spec
