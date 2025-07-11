@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ type ArangoBackupPolicySpec struct {
 	// AllowConcurrent if false, ArangoBackup will not be created when previous Backups are not finished
 	// +doc/default: true
 	AllowConcurrent *bool `json:"allowConcurrent,omitempty"`
-	// DeploymentSelector Selector definition for selecting matching ArangoBackup Custom Resources.
+	// DeploymentSelector Selector definition for selecting matching ArangoDeployment Custom Resources.
 	// +doc/type: meta.LabelSelector
 	// +doc/link: Kubernetes Documentation|https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#LabelSelector
 	DeploymentSelector *meta.LabelSelector `json:"selector,omitempty"`

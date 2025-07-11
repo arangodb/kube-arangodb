@@ -37,7 +37,7 @@ func packageImport() (*cobra.Command, error) {
 	cmd.Use = "import [flags] registry package output"
 	cmd.Short = "Imports the package from the ZIP format"
 
-	if err := cli.RegisterFlags(&cmd, flagRegistryUseCredentials, flagRegistryInsecure); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagRegistryUseCredentials, flagRegistryInsecure, flagRegistryList); err != nil {
 		return nil, err
 	}
 

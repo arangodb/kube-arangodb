@@ -18,7 +18,7 @@ v1:
               Parsed by https://godoc.org/github.com/robfig/cron
             type: string
           selector:
-            description: DeploymentSelector Selector definition for selecting matching ArangoBackup Custom Resources.
+            description: DeploymentSelector Selector definition for selecting matching ArangoDeployment Custom Resources.
             properties:
               matchExpressions:
                 items:
