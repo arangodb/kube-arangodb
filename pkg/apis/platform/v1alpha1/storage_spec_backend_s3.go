@@ -68,17 +68,15 @@ func (s *ArangoPlatformStorageSpecBackendS3) Validate() error {
 
 	var errs []error
 
-	if s.GetEndpoint() == "" {
-		errs = append(errs, shared.PrefixResourceErrors("endpoint", errors.New("must be not empty")))
-	}
-
-	if _, err := url.Parse(s.GetEndpoint()); err != nil {
-		errs = append(errs, shared.PrefixResourceErrors("endpoint", errors.Errorf("invalid URL: %s", err.Error())))
+	if end := s.GetEndpoint(); end != "" {
+		if _, err := url.Parse(s.GetEndpoint()); err != nil {
+			errs = append(errs, shared.PrefixResourceErrors("endpoint", errors.Errorf("invalid URL: %s", err.Error())))
+		}
 	}
 
 	errs = append(errs,
 		shared.PrefixResourceErrors("credentialsSecret", s.GetCredentialsSecret().Validate()),
-		shared.PrefixResourceError("bucket", shared.ValidateRequired(s.BucketName, shared.ValidateResourceName)),
+		shared.PrefixResourceError("bucketName", shared.ValidateRequired(s.BucketName, shared.ValidateResourceName)),
 	)
 
 	if caSecret := s.GetCASecret(); !caSecret.IsEmpty() {

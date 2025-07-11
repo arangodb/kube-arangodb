@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,20 +21,23 @@
 package v2
 
 import (
+	"context"
+
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
+	pbImplStorageV2SharedGCS "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/gcs"
 	pbImplStorageV2SharedS3 "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
-
-type Mod func(c Configuration) Configuration
 
 type ConfigurationType string
 
 const (
-	ConfigurationTypeS3 ConfigurationType = "s3"
+	ConfigurationTypeS3  ConfigurationType = "s3"
+	ConfigurationTypeGCS ConfigurationType = "gcs"
 )
 
-func NewConfiguration(mods ...Mod) Configuration {
+func NewConfiguration(mods ...util.ModR[Configuration]) Configuration {
 	var cfg Configuration
 
 	return cfg.With(mods...)
@@ -43,15 +46,18 @@ func NewConfiguration(mods ...Mod) Configuration {
 type Configuration struct {
 	Type ConfigurationType
 
-	S3 pbImplStorageV2SharedS3.Configuration
+	S3  pbImplStorageV2SharedS3.Configuration
+	GCS pbImplStorageV2SharedGCS.Configuration
 }
 
-func (c Configuration) IO() (pbImplStorageV2Shared.IO, error) {
+func (c Configuration) IO(ctx context.Context) (pbImplStorageV2Shared.IO, error) {
 	switch c.Type {
 	case ConfigurationTypeS3:
 		return c.S3.New()
+	case ConfigurationTypeGCS:
+		return c.GCS.New(ctx)
 	default:
-		return nil, errors.Errorf("Unknoen Type: %s", c.Type)
+		return nil, errors.Errorf("Unknown Type: %s", c.Type)
 	}
 }
 
@@ -59,7 +65,7 @@ func (c Configuration) Validate() error {
 	return nil
 }
 
-func (c Configuration) With(mods ...Mod) Configuration {
+func (c Configuration) With(mods ...util.ModR[Configuration]) Configuration {
 	n := c
 
 	for _, mod := range mods {

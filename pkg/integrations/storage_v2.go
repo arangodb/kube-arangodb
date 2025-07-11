@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	awsHelper "github.com/arangodb/kube-arangodb/pkg/util/aws"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/gcs"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -53,6 +54,7 @@ func (b *storageV2) Description() string {
 func (b *storageV2) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
 		fs.StringVar((*string)(&b.Configuration.Type), "type", string(pbImplStorageV2.ConfigurationTypeS3), "Type of the Storage Integration"),
+
 		fs.StringVar(&b.Configuration.S3.Client.Endpoint, "s3.endpoint", "", "Endpoint of S3 API implementation"),
 		fs.StringSliceVar(&b.Configuration.S3.Client.TLS.CAFiles, "s3.ca", nil, "Path to file containing CA certificate to validate endpoint connection"),
 		fs.BoolVar(&b.Configuration.S3.Client.TLS.Insecure, "s3.allow-insecure", false, "If set to true, the Endpoint certificates won't be checked"),
@@ -63,6 +65,13 @@ func (b *storageV2) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 		fs.StringVar((*string)(&b.Configuration.S3.Client.Provider.Type), "s3.provider.type", string(awsHelper.ProviderTypeFile), "S3 Credentials Provider type"),
 		fs.StringVar(&b.Configuration.S3.Client.Provider.File.AccessKeyIDFile, "s3.provider.file.access-key", "", "Path to file containing S3 AccessKey"),
 		fs.StringVar(&b.Configuration.S3.Client.Provider.File.SecretAccessKeyFile, "s3.provider.file.secret-key", "", "Path to file containing S3 SecretKey"),
+
+		fs.StringVar(&b.Configuration.GCS.Client.ProjectID, "gcs.project-id", "", "GCP Project ID"),
+		fs.StringVar(&b.Configuration.GCS.BucketName, "gcs.bucket.name", "", "Bucket name"),
+		fs.StringVar(&b.Configuration.GCS.BucketPrefix, "gcs.bucket.prefix", "", "Bucket Prefix"),
+		fs.StringVar((*string)(&b.Configuration.GCS.Client.Provider.Type), "gcs.provider.type", string(gcs.ProviderTypeServiceAccount), "Type of the provided credentials"),
+		fs.StringVar(&b.Configuration.GCS.Client.Provider.ServiceAccount.File, "gcs.provider.sa.file", "", "Path to the file with ServiceAccount JSON"),
+		fs.StringVar(&b.Configuration.GCS.Client.Provider.ServiceAccount.JSON, "gcs.provider.sa.json", "", "ServiceAccount JSON"),
 	)
 }
 

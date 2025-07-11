@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,24 +18,31 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package s3
+package gcs
 
 import (
-	"context"
+	"google.golang.org/api/option"
 
-	"github.com/aws/aws-sdk-go/service/s3"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func (i *ios) Delete(ctx context.Context, key string) (bool, error) {
-	_, err := i.client.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
-		Key:    util.NewType(i.key(key)),
-		Bucket: util.NewType(i.config.BucketName),
-	})
-	if err != nil {
-		return false, err
+type Config struct {
+	ProjectID string
+
+	Provider Provider
+}
+
+func (c Config) GetClientOptions() ([]option.ClientOption, error) {
+	if c.ProjectID == "" {
+		return nil, errors.New("projectID is required")
 	}
 
-	return true, nil
+	var r = make([]option.ClientOption, 0, 2)
+	if auth, err := c.Provider.Provider(); err != nil {
+		return nil, err
+	} else {
+		r = append(r, auth)
+	}
+
+	return r, nil
 }

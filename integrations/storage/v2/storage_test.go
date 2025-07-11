@@ -35,65 +35,56 @@ import (
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
-func Test_List(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
+func testConfiguration(t *testing.T, gen configGenerator, mods ...util.ModR[Configuration]) {
+	t.Run("List", func(t *testing.T) {
+		ctx, c := context.WithCancel(shutdown.Context())
+		defer c()
 
-	h := Client(t, ctx, func(c Configuration) Configuration {
-		c.S3.MaxListKeys = util.NewType[int64](32)
-		return c
-	})
-	testFileListing(t, ctx, h)
-}
+		h := Client(t, ctx, gen, mods...)
 
-func Test_Flow_16(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
-
-	h := Client(t, ctx, func(c Configuration) Configuration {
-		c.S3.MaxListKeys = util.NewType[int64](32)
-		return c
+		testFileListing(t, ctx, h)
 	})
 
-	testS3BucketFileHandling(t, ctx, h, 16)
-}
+	t.Run("Flow", func(t *testing.T) {
+		t.Run("16", func(t *testing.T) {
+			ctx, c := context.WithCancel(shutdown.Context())
+			defer c()
 
-func Test_Flow_1024(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
+			h := Client(t, ctx, gen, mods...)
 
-	h := Client(t, ctx, func(c Configuration) Configuration {
-		c.S3.MaxListKeys = util.NewType[int64](32)
-		return c
+			testFileHandling(t, ctx, h, 16)
+		})
+
+		t.Run("1024", func(t *testing.T) {
+			ctx, c := context.WithCancel(shutdown.Context())
+			defer c()
+
+			h := Client(t, ctx, gen, mods...)
+
+			testFileHandling(t, ctx, h, 1024)
+		})
+
+		t.Run("1048576", func(t *testing.T) {
+			ctx, c := context.WithCancel(shutdown.Context())
+			defer c()
+
+			h := Client(t, ctx, gen, mods...)
+
+			testFileHandling(t, ctx, h, 1048576)
+		})
+
+		t.Run("4194304", func(t *testing.T) {
+			ctx, c := context.WithCancel(shutdown.Context())
+			defer c()
+
+			h := Client(t, ctx, gen, mods...)
+
+			testFileHandling(t, ctx, h, 4194304)
+		})
 	})
-
-	testS3BucketFileHandling(t, ctx, h, 1024)
-}
-
-func Test_Flow_1048576(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
-
-	h := Client(t, ctx, func(c Configuration) Configuration {
-		c.S3.MaxListKeys = util.NewType[int64](32)
-		return c
-	})
-
-	testS3BucketFileHandling(t, ctx, h, 1024*1024)
-}
-
-func Test_Flow_4194304(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
-
-	h := Client(t, ctx, func(c Configuration) Configuration {
-		c.S3.MaxListKeys = util.NewType[int64](32)
-		return c
-	})
-
-	testS3BucketFileHandling(t, ctx, h, 4*1024*1024)
 }
 
 func testFileListing(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2Client) {
@@ -183,7 +174,7 @@ func testFileListing(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2C
 	})
 }
 
-func testS3BucketFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2Client, size int) {
+func testFileHandling(t *testing.T, ctx context.Context, h pbStorageV2.StorageV2Client, size int) {
 	t.Run(fmt.Sprintf("Size:%d", size), func(t *testing.T) {
 		prefix := fmt.Sprintf("%s/", uuid.NewUUID())
 		name := fmt.Sprintf("%stest.local", prefix)
