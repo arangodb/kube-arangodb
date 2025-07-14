@@ -134,6 +134,10 @@ func (c *client) Uninstall(ctx context.Context, name string, mods ...util.Mod[ac
 		return nil, err
 	}
 
+	if result == nil {
+		return nil, nil
+	}
+
 	var res UninstallRelease
 
 	res.Info = result.Info
