@@ -160,6 +160,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("CompactMember", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeCompactMember)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeCompactMember.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeCompactMember.Optional())
+		})
+	})
+
 	t.Run("Delay", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeDelay)
 		t.Run("Internal", func(t *testing.T) {

@@ -65,6 +65,9 @@ const (
 	// ActionClusterMemberCleanupDefaultTimeout define default timeout for action ActionClusterMemberCleanup
 	ActionClusterMemberCleanupDefaultTimeout time.Duration = ActionsDefaultTimeout
 
+	// ActionCompactMemberDefaultTimeout define default timeout for action ActionCompactMember
+	ActionCompactMemberDefaultTimeout time.Duration = 28800 * time.Second // 8h0m0s
+
 	// ActionDelayDefaultTimeout define default timeout for action ActionDelay
 	ActionDelayDefaultTimeout time.Duration = ActionsDefaultTimeout
 
@@ -328,6 +331,9 @@ const (
 	// ActionTypeClusterMemberCleanup in scopes Normal. Remove member from Cluster if it is gone already (Coordinators)
 	ActionTypeClusterMemberCleanup ActionType = "ClusterMemberCleanup"
 
+	// ActionTypeCompactMember in scopes Normal. Runs the Compact API on the Member
+	ActionTypeCompactMember ActionType = "CompactMember"
+
 	// ActionTypeDelay in scopes High and Normal. Define delay operation
 	ActionTypeDelay ActionType = "Delay"
 
@@ -589,6 +595,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionCleanTLSKeyfileCertificateDefaultTimeout
 	case ActionTypeClusterMemberCleanup:
 		return ActionClusterMemberCleanupDefaultTimeout
+	case ActionTypeCompactMember:
+		return ActionCompactMemberDefaultTimeout
 	case ActionTypeDelay:
 		return ActionDelayDefaultTimeout
 	case ActionTypeDisableClusterScaling:
@@ -770,6 +778,8 @@ func (a ActionType) Priority() ActionPriority {
 	case ActionTypeCleanTLSKeyfileCertificate:
 		return ActionPriorityNormal
 	case ActionTypeClusterMemberCleanup:
+		return ActionPriorityNormal
+	case ActionTypeCompactMember:
 		return ActionPriorityNormal
 	case ActionTypeDelay:
 		return ActionPriorityHigh
@@ -978,6 +988,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeCleanTLSKeyfileCertificate:
 		return false
 	case ActionTypeClusterMemberCleanup:
+		return false
+	case ActionTypeCompactMember:
 		return false
 	case ActionTypeDelay:
 		return true

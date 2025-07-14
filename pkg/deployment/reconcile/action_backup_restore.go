@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import (
 )
 
 const (
-	actionBackupRestoreLocalJobID      api.PlanLocalKey = "jobID"
 	actionBackupRestoreLocalBackupName api.PlanLocalKey = "backupName"
 )
 
@@ -114,7 +113,7 @@ func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi
 
 	if err := dbc.Backup().Restore(ctxChild, driver.BackupID(backup.Status.Backup.ID), nil); err != nil {
 		if id, ok := conn.IsAsyncJobInProgress(err); ok {
-			a.actionCtx.Add(actionBackupRestoreLocalJobID, id, true)
+			a.actionCtx.Add(LocalJobID, id, true)
 			a.actionCtx.Add(actionBackupRestoreLocalBackupName, backup.GetName(), true)
 
 			// Async request has been sent
@@ -169,9 +168,9 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 		return false, false, errors.Errorf("Local Key is missing in action: %s", actionBackupRestoreLocalBackupName)
 	}
 
-	job, ok := a.actionCtx.Get(a.action, actionBackupRestoreLocalJobID)
+	job, ok := a.actionCtx.Get(a.action, LocalJobID)
 	if !ok {
-		return false, false, errors.Errorf("Local Key is missing in action: %s", actionBackupRestoreLocalJobID)
+		return false, false, errors.Errorf("Local Key is missing in action: %s", LocalJobID)
 	}
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
