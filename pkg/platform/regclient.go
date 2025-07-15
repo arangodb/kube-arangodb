@@ -35,6 +35,10 @@ func getRegClient(cmd *cobra.Command) (*regclient.RegClient, error) {
 
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
+	flags = append(flags, regclient.WithConfigHostDefault(config.Host{
+		ReqConcurrent: 8,
+	}))
+
 	flags = append(flags, regclient.WithRegOpts(reg.WithTransport(&goHttp.Transport{
 		MaxConnsPerHost: 64,
 		MaxIdleConns:    100,
@@ -55,6 +59,24 @@ func getRegClient(cmd *cobra.Command) (*regclient.RegClient, error) {
 		}
 
 		v.TLS = config.TLSDisabled
+		v.ReqConcurrent = 8
+
+		configs[el] = v
+	}
+
+	regs, err := flagRegistryList.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, el := range regs {
+		v, ok := configs[el]
+		if !ok {
+			v.Name = el
+			v.Hostname = el
+		}
+
+		v.ReqConcurrent = 8
 
 		configs[el] = v
 	}

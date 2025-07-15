@@ -134,4 +134,10 @@ var (
 		Description: "List of insecure registries",
 		Default:     nil,
 	}
+
+	flagRegistryList = cli.Flag[[]string]{
+		Name:        "registry.docker.endpoint",
+		Description: "List of boosted registries",
+		Default:     nil,
+	}
 )
