@@ -42,6 +42,7 @@ type ArangoPlatformServiceSpec struct {
 	Chart *sharedApi.Object `json:"chart,omitempty"`
 
 	// Values keeps the values of the Service
+	// +doc/type: Object
 	Values sharedApi.Any `json:"values,omitempty,omitzero"`
 }
 

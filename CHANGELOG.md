@@ -9,6 +9,7 @@
 - (Feature) (Platform) ECS Storage
 - (Bugfix) (Platform) Prevent NPE in case of missing Helm Release 
 - (Feature) Unify Errors
+- (Documentation) Update Service Values Doc Type
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)
 - (Feature) (Platform) MetaV1 Integration Service
