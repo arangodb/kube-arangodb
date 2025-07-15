@@ -30,7 +30,7 @@ Name of the object
 
 ### .spec.values
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/service_spec.go#L45)</sup>
+Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/service_spec.go#L46)</sup>
 
 Values keeps the values of the Service
 
