@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 const (
@@ -192,12 +193,12 @@ func Test_Volume_Validation(t *testing.T) {
 			if c.fail {
 				require.Error(t, err)
 
-				mergedErr, ok := err.(shared.MergedErrors)
+				mergedErr, ok := err.(errors.Array)
 				require.True(t, ok, "Is not MergedError type")
 
-				require.Equal(t, len(mergedErr.Errors()), len(c.failedFields), "Count of expected fields and merged errors does not match")
+				require.Equal(t, len(mergedErr), len(c.failedFields), "Count of expected fields and merged errors does not match")
 
-				for _, fieldError := range mergedErr.Errors() {
+				for _, fieldError := range mergedErr {
 					resourceErr, ok := fieldError.(shared.ResourceError)
 					if !ok {
 						resourceErr = shared.ResourceError{
