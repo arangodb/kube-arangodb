@@ -79,7 +79,7 @@ func NewServer(cli typedCore.CoreV1Interface, cfg ServerConfig) (*Server, error)
 		return nil, err
 	}
 
-	auth := &authorization{jwtSigningKey: jwtSigningKey}
+	auth := &authorization{secret: jwtSigningKey}
 
 	s := &Server{
 		httpServer: &goHttp.Server{

@@ -22,6 +22,7 @@ package arangod
 
 import (
 	"context"
+	"fmt"
 	"net"
 	goHttp "net/http"
 	"strconv"
@@ -30,7 +31,6 @@ import (
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
-	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/go-driver/util/connection/wrappers/async"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -39,6 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 type (
@@ -176,11 +177,11 @@ func createArangodClientAuthentication(ctx context.Context, cli typedCore.CoreV1
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
-			jwt, err := jwt.CreateArangodJwtAuthorizationHeader(s, "kube-arangodb")
+			jwt, err := token.NewClaims().With(token.WithDefaultClaims(), token.WithServerID("kube-arangodb")).Sign(s)
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
-			return driver.RawAuthentication(jwt), nil
+			return driver.RawAuthentication(fmt.Sprintf("bearer %s", jwt)), nil
 		}
 	} else {
 		// Authentication is not enabled.

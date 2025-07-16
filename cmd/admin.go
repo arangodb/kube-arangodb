@@ -38,7 +38,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb-helper/go-certificates"
-	"github.com/arangodb/go-driver/jwt"
 	"github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -51,6 +50,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 const (
@@ -401,19 +401,30 @@ func createClient(endpoints []string, certCA *x509.CertPool, auth connection.Aut
 }
 
 // getJWTTokenFromSecrets returns token from the secret.
-func getJWTTokenFromSecrets(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string) (connection.Authentication, error) {
+func getJWTTokenFromSecrets(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string, paths ...string) (connection.Authentication, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 
-	token, err := k8sutil.GetTokenSecret(ctxChild, secrets, name)
+	secret, err := k8sutil.GetTokenSecret(ctxChild, secrets, name)
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("failed to get secret \"%s\"", name))
 	}
 
-	bearerToken, err := jwt.CreateArangodJwtAuthorizationHeader(token, "kube-arangodb")
+	claims := token.NewClaims().With(
+		token.WithDefaultClaims(),
+		token.WithServerID("kube-arangodb"),
+	)
+
+	if len(paths) > 0 {
+		claims = claims.With(token.WithAllowedPaths(paths...))
+	}
+
+	authz, err := claims.Sign(secret)
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("failed to create bearer token from secret \"%s\"", name))
 	}
+
+	bearerToken := fmt.Sprintf("bearer %s", authz)
 
 	return JWTAuthentication{key: "Authorization", value: bearerToken}, nil
 }

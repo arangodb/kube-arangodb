@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -262,23 +262,42 @@ func ValidateTokenFromSecret(s *core.Secret) error {
 	return nil
 }
 
-// GetTokenSecret loads the token secret from a Secret with given name.
-func GetTokenSecret(ctx context.Context, secrets generic.ReadClient[*core.Secret], secretName string) (string, error) {
+// GetTokenSecretString loads the token secret from a Secret with given name.
+func GetTokenSecretString(ctx context.Context, secrets generic.ReadClient[*core.Secret], secretName string) (string, error) {
 	s, err := secrets.Get(ctx, secretName, meta.GetOptions{})
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
-	return GetTokenFromSecret(s)
+	return GetTokenFromSecretString(s)
 }
 
-// GetTokenFromSecret loads the token secret from a Secret with given name.
-func GetTokenFromSecret(s *core.Secret) (string, error) {
+// GetTokenFromSecretString loads the token secret from a Secret with given name.
+func GetTokenFromSecretString(s *core.Secret) (string, error) {
 	// Take the first data from the token key
 	data, found := s.Data[constants.SecretKeyToken]
 	if !found {
 		return "", errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyToken, s.GetName()))
 	}
 	return string(data), nil
+}
+
+// GetTokenSecret loads the token secret from a Secret with given name.
+func GetTokenSecret(ctx context.Context, secrets generic.ReadClient[*core.Secret], secretName string) (token.Secret, error) {
+	s, err := secrets.Get(ctx, secretName, meta.GetOptions{})
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return GetTokenFromSecret(s)
+}
+
+// GetTokenFromSecret loads the token secret from a Secret with given name.
+func GetTokenFromSecret(s *core.Secret) (token.Secret, error) {
+	// Take the first data from the token key
+	data, found := s.Data[constants.SecretKeyToken]
+	if !found {
+		return nil, errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyToken, s.GetName()))
+	}
+	return token.NewSecret(data), nil
 }
 
 // CreateTokenSecret creates a secret with given name in given namespace
@@ -318,13 +337,13 @@ func UpdateTokenSecret(ctx context.Context, secrets generic.ModClient[*core.Secr
 
 // CreateJWTFromSecret creates a JWT using the secret stored in secretSecretName and stores the
 // result in a new secret called tokenSecretName
-func CreateJWTFromSecret(ctx context.Context, cachedSecrets generic.ReadClient[*core.Secret], secrets generic.ModClient[*core.Secret], tokenSecretName, secretSecretName string, claims map[string]interface{}, ownerRef *meta.OwnerReference) error {
+func CreateJWTFromSecret(ctx context.Context, cachedSecrets generic.ReadClient[*core.Secret], secrets generic.ModClient[*core.Secret], tokenSecretName, secretSecretName string, claims token.Claims, ownerRef *meta.OwnerReference) error {
 	secret, err := GetTokenSecret(ctx, cachedSecrets, secretSecretName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	signedToken, err := token.New([]byte(secret), claims)
+	signedToken, err := claims.Sign(secret)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -336,7 +355,7 @@ func CreateJWTFromSecret(ctx context.Context, cachedSecrets generic.ReadClient[*
 
 // UpdateJWTFromSecret updates a JWT using the secret stored in secretSecretName and stores the
 // result in a new secret called tokenSecretName
-func UpdateJWTFromSecret(ctx context.Context, cachedSecrets generic.ReadClient[*core.Secret], secrets generic.ModClient[*core.Secret], tokenSecretName, secretSecretName string, claims map[string]interface{}) error {
+func UpdateJWTFromSecret(ctx context.Context, cachedSecrets generic.ReadClient[*core.Secret], secrets generic.ModClient[*core.Secret], tokenSecretName, secretSecretName string, claims token.Claims) error {
 	current, err := cachedSecrets.Get(ctx, tokenSecretName, meta.GetOptions{})
 	if err != nil {
 		return errors.WithStack(err)
@@ -347,7 +366,7 @@ func UpdateJWTFromSecret(ctx context.Context, cachedSecrets generic.ReadClient[*
 		return errors.WithStack(err)
 	}
 
-	signedToken, err := token.New([]byte(secret), claims)
+	signedToken, err := claims.Sign(secret)
 	if err != nil {
 		return errors.WithStack(err)
 	}
