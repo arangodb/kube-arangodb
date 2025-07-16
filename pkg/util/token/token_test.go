@@ -36,7 +36,7 @@ func testSecretToken() []byte {
 func testSecretTokenSized(size int) []byte {
 	var z = make([]byte, size)
 	for id := range z {
-		z[id] = byte('A' + util.Rand().Intn('Z'-'A'))
+		z[id] = byte('A' + util.Rand().Intn('Z'-'A'+1))
 	}
 	return z
 }
