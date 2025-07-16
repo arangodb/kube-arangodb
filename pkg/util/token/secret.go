@@ -21,6 +21,7 @@
 package token
 
 import (
+	"bytes"
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 
@@ -29,40 +30,22 @@ import (
 
 const DefaultTokenSecretSize = 64
 
-var secretTrimCharacters = []byte{
-	' ',
-	'\t',
-	'\n',
-	'\r',
+var secretTrimCharacters = map[byte]any{
+	' ':  true,
+	'\t': true,
+	'\n': true,
+	'\r': true,
 }
 
 func isTrimCharacter(char byte) bool {
-	for _, b := range secretTrimCharacters {
-		if b == char {
-			return true
-		}
-	}
-	return false
+	_, exists := secretTrimCharacters[char]
+	return exists
 }
 
 func trimSecret(in []byte) []byte {
-	for {
-		if len(in) == 0 {
-			return in
-		}
-
-		if isTrimCharacter(in[0]) {
-			in = in[1:]
-			continue
-		}
-
-		if isTrimCharacter(in[len(in)-1]) {
-			in = in[:len(in)-1]
-			continue
-		}
-
-		return in
-	}
+	return bytes.TrimFunc(in, func(r rune) bool {
+		return isTrimCharacter(byte(r))
+	})
 }
 
 func NewSecret(data []byte) Secret {

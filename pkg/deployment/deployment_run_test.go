@@ -298,6 +298,6 @@ func compareSpec(t *testing.T, a, b core.PodSpec) {
 	bj, err := json.Marshal(b)
 	require.NoError(t, err)
 
-	require.Equal(t, string(bj), string(aj))
+	require.Equal(t, string(aj), string(bj))
 	require.Equal(t, ac, bc)
 }
