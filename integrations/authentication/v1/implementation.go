@@ -92,7 +92,7 @@ type implementation struct {
 	cfg Configuration
 
 	userClient cache.Object[arangodb.Requests]
-	cache      cache.Object[*tokens]
+	cache      cache.Object[token.Secret]
 }
 
 func (i *implementation) Name() string {
@@ -190,16 +190,12 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		duration = v
 	}
 
-	// Token is validated, we can continue with creation
-	secret := cache.signingToken
-
-	signedToken, err := token.New(secret,
-		token.NewClaims().With(token.WithDefaultClaims(),
-			token.WithCurrentIAT(),
-			token.WithDuration(duration),
-			token.WithUsername(user),
-			token.WithRoles(request.GetRoles()...)),
-	)
+	signedToken, err := token.NewClaims().With(
+		token.WithDefaultClaims(),
+		token.WithCurrentIAT(),
+		token.WithDuration(duration),
+		token.WithUsername(user),
+		token.WithRoles(request.GetRoles()...)).Sign(cache)
 	if err != nil {
 		return nil, err
 	}
@@ -344,16 +340,15 @@ func (i *implementation) Logout(ctx context.Context, req *pbAuthenticationV1.Log
 	return &pbSharedV1.Empty{}, nil
 }
 
-func (i *implementation) extractTokenDetails(cache *tokens, t string) (string, []string, time.Duration, error) {
+func (i *implementation) extractTokenDetails(cache token.Secret, t string) (string, []string, time.Duration, error) {
 	// Let's check if token is signed properly
-
-	p, err := token.ParseWithAny(t, cache.validationTokens...)
+	p, err := cache.Validate(t)
 	if err != nil {
 		return "", nil, 0, err
 	}
 
 	user := DefaultAdminUser
-	if v, ok := p[token.ClaimPreferredUsername]; ok {
+	if v, ok := p.Claims()[token.ClaimPreferredUsername]; ok {
 		if s, ok := v.(string); ok {
 			user = s
 		}
@@ -361,7 +356,9 @@ func (i *implementation) extractTokenDetails(cache *tokens, t string) (string, [
 
 	duration := DefaultTokenMaxTTL
 
-	if v, ok := p[token.ClaimEXP]; ok {
+	claims := p.Claims()
+
+	if v, ok := claims[token.ClaimEXP]; ok {
 		switch o := v.(type) {
 		case int64:
 			duration = time.Until(time.Unix(o, 0))
@@ -372,7 +369,7 @@ func (i *implementation) extractTokenDetails(cache *tokens, t string) (string, [
 
 	var roles []string
 
-	if v, ok := p[token.ClaimRoles]; ok {
+	if v, ok := claims[token.ClaimRoles]; ok {
 		switch o := v.(type) {
 		case []string:
 			roles = o

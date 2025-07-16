@@ -8,6 +8,7 @@
 - (Documentation) Add Required & Skip in Docs
 - (Feature) (Platform) ECS Storage
 - (Bugfix) (Platform) Prevent NPE in case of missing Helm Release
+- (Bugfix) Align JWT Discovery
 - (Feature) Compact Action
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)

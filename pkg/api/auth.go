@@ -36,11 +36,11 @@ import (
 )
 
 type authorization struct {
-	jwtSigningKey string
+	secret token.Secret
 }
 
 func (a *authorization) isValid(t string) bool {
-	if _, err := token.Parse(t, []byte(a.jwtSigningKey)); err != nil {
+	if _, err := a.secret.Validate(t); err != nil {
 		if errors.Is(err, token.NotValidToken) {
 			return false
 		}

@@ -42,7 +42,7 @@ Parsed by https://godoc.org/github.com/robfig/cron
 
 Type: `meta.LabelSelector` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/backup/v1/backup_policy_spec.go#L39)</sup>
 
-DeploymentSelector Selector definition for selecting matching ArangoBackup Custom Resources.
+DeploymentSelector Selector definition for selecting matching ArangoDeployment Custom Resources.
 
 Links:
 * [Kubernetes Documentation](https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#LabelSelector)

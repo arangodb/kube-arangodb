@@ -34,7 +34,7 @@ func packageExport() (*cobra.Command, error) {
 	cmd.Use = "export [flags] package output"
 	cmd.Short = "Export the package in the ZIP Format"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagRegistryUseCredentials, flagRegistryInsecure); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagRegistryUseCredentials, flagRegistryInsecure, flagRegistryList); err != nil {
 		return nil, err
 	}
 

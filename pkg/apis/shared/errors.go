@@ -23,7 +23,8 @@ package shared
 import (
 	"fmt"
 	"io"
-	goStrings "strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ResourceError struct {
@@ -84,8 +85,8 @@ func PrefixResourceErrors(prefix string, errs ...error) error {
 
 	for _, err := range errs {
 		switch errType := err.(type) {
-		case MergedErrors:
-			for _, subError := range errType.errors {
+		case errors.Array:
+			for _, subError := range errType {
 				prefixed = append(prefixed, PrefixResourceError(prefix, subError))
 			}
 		default:
@@ -93,29 +94,7 @@ func PrefixResourceErrors(prefix string, errs ...error) error {
 		}
 	}
 
-	return WithErrors(prefixed...)
-}
-
-type MergedErrors struct {
-	errors []error
-}
-
-func (m MergedErrors) Error() string {
-	errStrings := make([]string, 0, len(m.errors))
-
-	for _, err := range m.errors {
-		if err == nil {
-			continue
-		}
-
-		errStrings = append(errStrings, err.Error())
-	}
-
-	return fmt.Sprintf("Received %d errors: %s", len(errStrings), goStrings.Join(errStrings, ", "))
-}
-
-func (m MergedErrors) Errors() []error {
-	return m.errors
+	return errors.Errors(prefixed...)
 }
 
 // WithErrors filter out nil errors
@@ -128,18 +107,12 @@ func WithErrors(errs ...error) error {
 		}
 
 		switch errType := err.(type) {
-		case MergedErrors:
-			filteredErrs = append(filteredErrs, errType.errors...)
+		case errors.Array:
+			filteredErrs = append(filteredErrs, errType...)
 		default:
 			filteredErrs = append(filteredErrs, err)
 		}
 	}
 
-	if len(filteredErrs) == 0 {
-		return nil
-	}
-
-	return MergedErrors{
-		errors: filteredErrs,
-	}
+	return errors.Errors(filteredErrs...)
 }

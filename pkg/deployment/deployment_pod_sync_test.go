@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -227,7 +227,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -316,7 +316,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -420,7 +420,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -521,7 +521,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -622,7 +622,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -726,7 +726,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -825,7 +825,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -931,7 +931,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -1047,7 +1047,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -1161,7 +1161,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 
 				testCase.createTestPodData(deployment, api.ServerGroupSyncMasters, firstSyncMaster)
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -1272,7 +1272,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncWorkers, firstSyncWorker)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)
@@ -1367,7 +1367,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				testCase.createTestPodData(deployment, api.ServerGroupSyncWorkers, firstSyncWorker)
 
 				name := testCase.ArangoDeployment.Spec.Sync.Monitoring.GetTokenSecretName()
-				auth, err := k8sutil.GetTokenSecret(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
+				auth, err := k8sutil.GetTokenSecretString(context.Background(), deployment.GetCachedStatus().Secret().V1().Read(), name)
 				require.NoError(t, err)
 
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe("", true, "bearer "+auth, shared.ServerPortName)

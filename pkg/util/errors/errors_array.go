@@ -21,9 +21,24 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	goStrings "strings"
 )
+
+func ExpandArray(err error) []error {
+	if err == nil {
+		return nil
+	}
+
+	var v Array
+	if errors.As(err, &v) {
+		return v
+	}
+
+	return []error{err}
+}
 
 type Array []error
 
@@ -37,6 +52,25 @@ func (a Array) Error() string {
 	return fmt.Sprintf("Received %d errors: %s", len(q), goStrings.Join(q, ", "))
 }
 
+// Format formats error with verbs
+func (p Array) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			fmt.Fprintf(s, "%s\n", p.Error())
+			for _, err := range p {
+				fmt.Fprintf(s, "%+v\n", err)
+			}
+			return
+		}
+		fallthrough
+	case 's':
+		io.WriteString(s, p.Error())
+	case 'q':
+		fmt.Fprintf(s, "%q", p.Error())
+	}
+}
+
 func Errors(errs ...error) error {
 	f := make(Array, 0, len(errs))
 
@@ -45,7 +79,7 @@ func Errors(errs ...error) error {
 			continue
 		}
 
-		f = append(f, err)
+		f = append(f, ExpandArray(err)...)
 	}
 
 	if len(f) == 0 {

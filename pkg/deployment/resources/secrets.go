@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v5"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -424,15 +423,18 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 }
 
 var (
-	exporterTokenClaims = jwt.MapClaims{
-		token.ClaimISS: token.ClaimISSValue,
-		"server_id":    "exporter",
-		"allowed_paths": []interface{}{"/_admin/statistics", "/_admin/statistics-description",
+	exporterTokenClaimsMods = []util.ModR[token.Claims]{
+		token.WithDefaultClaims(),
+		token.WithServerID("exporter"),
+		token.WithAllowedPaths(
+			"/_admin/statistics",
+			"/_admin/statistics-description",
 			shared.ArangoExporterInternalEndpoint,
 			shared.ArangoExporterInternalEndpointV2,
 			shared.ArangoExporterUsageEndpoint,
 			shared.ArangoExporterStatusEndpoint,
-			shared.ArangoExporterClusterHealthEndpoint},
+			shared.ArangoExporterClusterHealthEndpoint,
+		),
 	}
 )
 
@@ -444,9 +446,10 @@ func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus 
 		return err
 	} else if update {
 		// Create secret
+		claims := token.NewClaims().With(exporterTokenClaimsMods...)
 		if !exists {
 			owner := r.context.GetAPIObject().AsOwner()
-			err = k8sutil.CreateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, exporterTokenClaims, &owner)
+			err = k8sutil.CreateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, claims, &owner)
 			if kerrors.IsAlreadyExists(err) {
 				// Secret added while we tried it also
 				return nil
@@ -455,7 +458,7 @@ func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus 
 				return errors.WithStack(err)
 			}
 		} else {
-			err = k8sutil.UpdateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, exporterTokenClaims)
+			err = k8sutil.UpdateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, claims)
 			if kerrors.IsAlreadyExists(err) {
 				// Secret added while we tried it also
 				return nil
@@ -490,15 +493,14 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 			return true, true, errors.WithStack(err)
 		}
 
-		token, err := token.Parse(string(data), []byte(secret))
-
+		tokenClaims, err := secret.Validate(string(data))
 		if err != nil {
 			return true, true, nil
 		}
 
-		tokenClaims := jwt.MapClaims(token)
+		expectedClaims := token.NewClaims().With(exporterTokenClaimsMods...)
 
-		return !equality.Semantic.DeepDerivative(tokenClaims, exporterTokenClaims), true, nil
+		return !equality.Semantic.DeepDerivative(tokenClaims.Claims(), expectedClaims), true, nil
 	}
 }
 
@@ -551,26 +553,26 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 }
 
 // getJWTSecret loads the JWT secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
-func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (string, error) {
+func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (token.Secret, error) {
 	if !spec.IsAuthenticated() {
-		return "", nil
+		return token.EmptySecret(), nil
 	}
 	secretName := spec.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get JWT secret")
-		return "", errors.WithStack(err)
+		return token.EmptySecret(), errors.WithStack(err)
 	}
 	return s, nil
 }
 
 // getSyncJWTSecret loads the JWT secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
-func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
+func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (token.Secret, error) {
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get sync JWT secret")
-		return "", errors.WithStack(err)
+		return token.EmptySecret(), errors.WithStack(err)
 	}
 	return s, nil
 }
@@ -578,7 +580,7 @@ func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (string, error) {
 // getSyncMonitoringToken loads the token secret used for monitoring sync masters & workers.
 func (r *Resources) getSyncMonitoringToken(spec api.DeploymentSpec) (string, error) {
 	secretName := spec.Sync.Monitoring.GetTokenSecretName()
-	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
+	s, err := k8sutil.GetTokenSecretString(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get sync monitoring secret")
 		return "", errors.WithStack(err)
