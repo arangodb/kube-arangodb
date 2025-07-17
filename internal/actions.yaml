@@ -24,6 +24,11 @@ actions:
   RecreateMember:
     description: Recreate member with same ID and Data
     timeout: 15m
+  CompactMember:
+    description: Runs the Compact API on the Member
+    timeout: 8h
+    scopes:
+      - Normal
   CleanOutMember:
     description: Run the CleanOut job on member
     timeout: 48h

@@ -134,7 +134,7 @@ func (c *testContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client
 	panic("implement me")
 }
 
-func (ac *testContext) GetServerAsyncClient(id string) (driver.Client, error) {
+func (c *testContext) GetServerAsyncClient(id string) (driver.Client, error) {
 	//TODO implement me
 	panic("implement me")
 }

@@ -55,6 +55,8 @@ type Client interface {
 	RefreshJWT(ctx context.Context) (JWTDetails, error)
 
 	DeleteExpiredJobs(ctx context.Context, timeout time.Duration) error
+
+	Compact(ctx context.Context, request *CompactRequest) error
 }
 
 type client struct {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,8 @@ import (
 
 const (
 	DefaultStartFailureGracePeriod = 10 * time.Second
+
+	LocalJobID api.PlanLocalKey = "jobID"
 )
 
 func GetAllActions() []api.ActionType {
