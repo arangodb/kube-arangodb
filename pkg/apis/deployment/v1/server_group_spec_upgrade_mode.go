@@ -46,7 +46,7 @@ const (
 
 func (n *ServerGroupUpgradeMode) Validate() error {
 	switch v := n.Get(); v {
-	case ServerGroupUpgradeModeInplace, ServerGroupUpgradeModeReplace, ServerGroupUpgradeModeManual:
+	case ServerGroupUpgradeModeInplace, ServerGroupUpgradeModeReplace, ServerGroupUpgradeModeManual, ServerGroupUpgradeModeOptionalReplace:
 		return nil
 	default:
 		return errors.WithStack(errors.Wrapf(ValidationError, "Unknown UpgradeMode %s", v.String()))
