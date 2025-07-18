@@ -54,7 +54,7 @@ func (a *actionCompactMember) Start(ctx context.Context) (bool, error) {
 	}
 
 	switch g {
-	case api.ServerGroupDBServers:
+	case api.ServerGroupDBServers, api.ServerGroupSingle:
 		dbc, err := a.actionCtx.GetServerAsyncClient(m.ID)
 		if err != nil {
 			return false, errors.Wrapf(err, "Unable to create client")
@@ -91,7 +91,7 @@ func (a actionCompactMember) CheckProgress(ctx context.Context) (bool, bool, err
 	}
 
 	switch g {
-	case api.ServerGroupDBServers:
+	case api.ServerGroupDBServers, api.ServerGroupSingle:
 		dbc, err := a.actionCtx.GetServerAsyncClient(m.ID)
 		if err != nil {
 			return false, false, errors.Wrapf(err, "Unable to create client")

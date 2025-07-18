@@ -136,13 +136,20 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 							switch containers[id] {
 							case api.ServerGroupReservedInitContainerNameVersionCheck:
 								if c, ok := kresources.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, containers[id]); ok {
-									if t := c.State.Terminated; t != nil && t.ExitCode == 11 {
+									if t := c.State.Terminated; t != nil && t.ExitCode == constants.ArangoDBExitCodeUpgradeRequired {
 										memberStatus.Upgrade = true
 										updateMemberStatusNeeded = true
 									}
 								}
 							case api.ServerGroupReservedInitContainerNameUpgrade:
 								memberStatus.Conditions.Update(api.ConditionTypeUpgradeFailed, true, "Upgrade Failed", "")
+								if group == api.ServerGroupDBServers {
+									if c, ok := kresources.GetAnyContainerStatusByName(pod.Status.InitContainerStatuses, containers[id]); ok {
+										if t := c.State.Terminated; t != nil && t.ExitCode == constants.ArangoDBExitCodeUpgradeFailedCompaction {
+											memberStatus.Conditions.Update(api.ConditionTypeMarkedToRemove, true, "Replace Required due to the mismatch", "")
+										}
+									}
+								}
 							}
 						}
 					}

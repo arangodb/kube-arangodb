@@ -10,6 +10,7 @@
 - (Bugfix) (Platform) Prevent NPE in case of missing Helm Release
 - (Bugfix) Align JWT Discovery
 - (Feature) Compact Action
+- (Feature) OptionalReplace Upgrade Mode
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)
 - (Feature) (Platform) MetaV1 Integration Service

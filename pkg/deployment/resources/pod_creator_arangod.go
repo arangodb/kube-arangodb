@@ -638,6 +638,13 @@ func (a *ArangoUpgradeContainer) GetCommand() ([]string, error) {
 		pod.UpgradeDebug().Args(a.input).Sort().AsArgs()...,
 	)
 
+	if a.input.Group == api.ServerGroupDBServers || a.input.Group == api.ServerGroupSingle {
+		if a.input.GroupSpec.UpgradeMode.Get() == api.ServerGroupUpgradeModeOptionalReplace ||
+			(a.input.GroupSpec.UpgradeMode.Get() == api.ServerGroupUpgradeModeManual && a.input.GroupSpec.ManualUpgradeMode.Get() == api.ServerGroupUpgradeModeOptionalReplace) {
+			upgradeArgs = append(upgradeArgs, "--database.auto-upgrade-full-compaction")
+		}
+	}
+
 	return append(args, upgradeArgs...), nil
 }
 
