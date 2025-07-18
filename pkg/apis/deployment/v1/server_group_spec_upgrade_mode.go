@@ -32,6 +32,10 @@ const (
 	// ServerGroupUpgradeModeReplace Replaces server instead of upgrading. Takes an effect only on DBServer
 	ServerGroupUpgradeModeReplace ServerGroupUpgradeMode = "replace"
 
+	// ServerGroupUpgradeModeOptionalReplace Replaces the member if upgrade fails with specific exit codes:
+	// Code 30: In case of the Compaction Failure
+	ServerGroupUpgradeModeOptionalReplace ServerGroupUpgradeMode = "optional-replace"
+
 	// ServerGroupUpgradeModeManual Waits for the manual upgrade. Requires replacement or the annotation on the member.
 	// Requires annotation `upgrade.deployment.arangodb.com/allow` on a Pod
 	ServerGroupUpgradeModeManual ServerGroupUpgradeMode = "manual"

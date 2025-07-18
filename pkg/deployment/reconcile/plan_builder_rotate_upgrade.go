@@ -287,6 +287,11 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 				return nil, false
 			}
 
+			if m.Member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+				// Server is supposed to be removed, lets not continue
+				return nil, false
+			}
+
 			if decision.AreGroupsPendingUpgrade(upgradeOrder[:id]...) {
 				// Not all members before were upgraded
 				return nil, false
@@ -313,20 +318,19 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 				switch group {
 				case api.ServerGroupDBServers:
 					// Members are supposed to be replaced
-					if !m.Member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-						return api.Plan{actions.NewAction(api.ActionTypeMarkToRemoveMember, m.Group, m.Member, "Replace by Upgrade")}, false
-					}
-					return nil, false
+					return api.Plan{actions.NewAction(api.ActionTypeMarkToRemoveMember, m.Group, m.Member, "Replace by Upgrade")}, false
 				}
 			}
+
+			compact := um.Get() == api.ServerGroupUpgradeModeOptionalReplace
 
 			if d.updateAllowed {
 				// We are fine, group is alive so we can proceed
 				r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Upgrade allowed")
-				return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, agencyCache), false
+				return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, compact, agencyCache), false
 			} else if d.unsafeUpdateAllowed {
 				r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready, but unsafe upgrade is allowed")
-				return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, agencyCache), false
+				return r.createUpgradeMemberPlan(m.Member, m.Group, "Version upgrade", spec, status, !d.upgradeDecision.AutoUpgradeNeeded, compact, agencyCache), false
 			} else {
 				r.planLogger.Str("member", m.Member.ID).Str("Reason", d.updateMessage).Info("Pod needs upgrade but cluster is not ready. Either some shards are not in sync or some member is not ready.")
 				return nil, true
@@ -596,7 +600,7 @@ func (r *Reconciler) createMemberAllowUpgradeConditionPlan(ctx context.Context,
 // createUpgradeMemberPlan creates a plan to upgrade (stop-recreateWithAutoUpgrade-stop-start) an existing
 // member.
 func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
-	group api.ServerGroup, reason string, spec api.DeploymentSpec, status api.DeploymentStatus, rotateStatefull bool, agencyCache state.State) api.Plan {
+	group api.ServerGroup, reason string, spec api.DeploymentSpec, status api.DeploymentStatus, rotateStatefull, compact bool, agencyCache state.State) api.Plan {
 	upgradeAction := api.ActionTypeUpgradeMember
 	if rotateStatefull || group.IsStateless() {
 		upgradeAction = api.ActionTypeRotateMember
@@ -608,7 +612,7 @@ func (r *Reconciler) createUpgradeMemberPlan(member api.MemberStatus,
 		Str("action", string(upgradeAction)).
 		Info("Creating upgrade plan")
 
-	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason, util.CheckConditionalP1Nil(agencyCache.GetRebootID, state.Server(member.ID)))
+	plan := createRotateMemberPlanWithAction(member, group, upgradeAction, spec, reason, util.CheckConditionalP1Nil(agencyCache.GetRebootID, state.Server(member.ID)), compact)
 
 	if member.Image == nil || member.Image.Image != spec.GetImage() {
 		plan = plan.Before(actions.NewAction(api.ActionTypeSetMemberCurrentImage, group, member, reason).SetImage(spec.GetImage()))

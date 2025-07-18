@@ -213,6 +213,7 @@ type ServerGroupSpec struct {
 	// UpgradeMode Defines the upgrade mode for the Member
 	// +doc/enum: inplace|Inplace Upgrade procedure (with Upgrade initContainer)
 	// +doc/enum: replace|Replaces server instead of upgrading. Takes an effect only on DBServer
+	// +doc/enum: optional-replace|Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
 	// +doc/enum: manual| Waits for the manual upgrade. Requires replacement or the annotation on the member
 	// +doc/default: inplace
 	UpgradeMode *ServerGroupUpgradeMode `json:"upgradeMode,omitempty"`
@@ -220,6 +221,7 @@ type ServerGroupSpec struct {
 	// ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 	// +doc/enum: inplace|Inplace Upgrade procedure (with Upgrade initContainer)
 	// +doc/enum: replace|Replaces server instead of upgrading. Takes an effect only on DBServer
+	// +doc/enum: optional-replace|Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
 	// +doc/default: inplace
 	ManualUpgradeMode *ServerGroupUpgradeMode `json:"manualUpgradeMode,omitempty"`
 
