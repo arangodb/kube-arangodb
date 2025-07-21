@@ -40,10 +40,6 @@ func kubernetesCorePodLogs(ctx context.Context, logger zerolog.Logger, client kc
 
 	if s := item.Status.ContainerStatuses; len(s) > 0 {
 		for id := range s {
-			if s[id].State.Waiting != nil {
-				continue
-			}
-
 			files <- kubernetesCorePodLogsExtract(ctx, client, item, s[id].Name)
 
 			if s[id].RestartCount > 0 {
@@ -54,10 +50,6 @@ func kubernetesCorePodLogs(ctx context.Context, logger zerolog.Logger, client kc
 
 	if s := item.Status.EphemeralContainerStatuses; len(s) > 0 {
 		for id := range s {
-			if s[id].State.Waiting != nil {
-				continue
-			}
-
 			files <- kubernetesCorePodLogsExtract(ctx, client, item, s[id].Name)
 
 			if s[id].RestartCount > 0 {
@@ -68,10 +60,6 @@ func kubernetesCorePodLogs(ctx context.Context, logger zerolog.Logger, client kc
 
 	if s := item.Status.InitContainerStatuses; len(s) > 0 {
 		for id := range s {
-			if s[id].State.Waiting != nil {
-				continue
-			}
-
 			files <- kubernetesCorePodLogsExtract(ctx, client, item, s[id].Name)
 
 			if s[id].RestartCount > 0 {
