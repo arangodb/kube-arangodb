@@ -394,9 +394,7 @@ func (c Config) RenderSecondaryFilterChains() ([]*pbEnvoyListenerV3.FilterChain,
 	var r []*pbEnvoyListenerV3.FilterChain
 
 	if chain, err := c.HttpToHttpsChain(); err != nil {
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	} else if chain != nil {
 		r = append(r, chain)
 	}
