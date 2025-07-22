@@ -423,7 +423,7 @@ func (c Config) HttpToHttpsChain() (*pbEnvoyListenerV3.FilterChain, error) {
 
 	httpFilterConfigType, err := anypb.New(&routerAPI.Router{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Unable to render route config")
+		return nil, errors.Wrapf(err, "Unable to create router filter configuration for HTTP to HTTPS redirect")
 	}
 
 	filterConfigType, err := anypb.New(&httpConnectionManagerAPI.HttpConnectionManager{
@@ -466,7 +466,7 @@ func (c Config) HttpToHttpsChain() (*pbEnvoyListenerV3.FilterChain, error) {
 		},
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Unable to render http connection manager")
+		return nil, errors.Wrapf(err, "Unable to create HTTP connection manager configuration for HTTP to HTTPS redirect")
 	}
 
 	return &pbEnvoyListenerV3.FilterChain{
