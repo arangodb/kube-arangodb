@@ -391,16 +391,98 @@ func (c Config) RenderDefaultFilterChain() (*pbEnvoyListenerV3.FilterChain, erro
 }
 
 func (c Config) RenderSecondaryFilterChains() ([]*pbEnvoyListenerV3.FilterChain, error) {
-	if len(c.SNI) == 0 {
+	var r []*pbEnvoyListenerV3.FilterChain
+
+	if chain, err := c.HttpToHttpsChain(); err != nil {
+		if err != nil {
+			return nil, err
+		}
+	} else if chain != nil {
+		r = append(r, chain)
+	}
+
+	if len(c.SNI) > 0 {
+		filters, err := c.RenderFilters()
+		if err != nil {
+			return nil, err
+		}
+
+		chain, err := c.SNI.RenderFilterChain(filters)
+		if err != nil {
+			return nil, err
+		}
+
+		r = append(r, chain...)
+	}
+
+	return r, nil
+}
+
+func (c Config) HttpToHttpsChain() (*pbEnvoyListenerV3.FilterChain, error) {
+	if c.DefaultTLS == nil {
 		return nil, nil
 	}
 
-	filters, err := c.RenderFilters()
+	httpFilterConfigType, err := anypb.New(&routerAPI.Router{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "Unable to render route config")
 	}
 
-	return c.SNI.RenderFilterChain(filters)
+	filterConfigType, err := anypb.New(&httpConnectionManagerAPI.HttpConnectionManager{
+		StatPrefix: "ingress_http",
+		CodecType:  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
+		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
+			RouteConfig: &pbEnvoyRouteV3.RouteConfiguration{
+				Name: "local_http",
+				VirtualHosts: []*pbEnvoyRouteV3.VirtualHost{
+					{
+						Domains: []string{"*"},
+						Routes: []*pbEnvoyRouteV3.Route{
+							{
+								Match: &pbEnvoyRouteV3.RouteMatch{
+									PathSpecifier: &pbEnvoyRouteV3.RouteMatch_Prefix{
+										Prefix: "/",
+									},
+								},
+								Action: &pbEnvoyRouteV3.Route_Redirect{
+									Redirect: &pbEnvoyRouteV3.RedirectAction{
+										SchemeRewriteSpecifier: &pbEnvoyRouteV3.RedirectAction_HttpsRedirect{
+											HttpsRedirect: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		HttpFilters: []*httpConnectionManagerAPI.HttpFilter{
+			{
+				Name: "envoy.filters.http.routerAPI",
+				ConfigType: &httpConnectionManagerAPI.HttpFilter_TypedConfig{
+					TypedConfig: httpFilterConfigType,
+				},
+			},
+		},
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Unable to render http connection manager")
+	}
+
+	return &pbEnvoyListenerV3.FilterChain{
+		FilterChainMatch: &pbEnvoyListenerV3.FilterChainMatch{
+			TransportProtocol: "raw_buffer",
+		},
+		Filters: []*pbEnvoyListenerV3.Filter{
+			{
+				Name: "envoy.filters.http.routerAPI",
+				ConfigType: &pbEnvoyListenerV3.Filter_TypedConfig{
+					TypedConfig: filterConfigType,
+				},
+			},
+		},
+	}, nil
 }
 
 func (c Config) RenderListener() (*pbEnvoyListenerV3.Listener, error) {
