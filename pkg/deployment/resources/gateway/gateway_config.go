@@ -458,7 +458,7 @@ func (c Config) HttpToHttpsChain() (*pbEnvoyListenerV3.FilterChain, error) {
 		},
 		HttpFilters: []*httpConnectionManagerAPI.HttpFilter{
 			{
-				Name: "envoy.filters.http.routerAPI",
+				Name: "envoy.filters.http.router",
 				ConfigType: &httpConnectionManagerAPI.HttpFilter_TypedConfig{
 					TypedConfig: httpFilterConfigType,
 				},
@@ -475,7 +475,7 @@ func (c Config) HttpToHttpsChain() (*pbEnvoyListenerV3.FilterChain, error) {
 		},
 		Filters: []*pbEnvoyListenerV3.Filter{
 			{
-				Name: "envoy.filters.http.routerAPI",
+				Name: "envoy.filters.network.http_connection_manager",
 				ConfigType: &pbEnvoyListenerV3.Filter_TypedConfig{
 					TypedConfig: filterConfigType,
 				},
