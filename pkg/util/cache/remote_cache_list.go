@@ -42,8 +42,8 @@ func (r *remoteCache[T]) List(ctx context.Context, size int, prefix string) (uti
 	bindVars := map[string]interface{}{}
 
 	if prefix != "" {
-		query += " FILTER doc._key LIKE @prefix"
-		bindVars["prefix"] = fmt.Sprintf("%%%s", prefix)
+		query += " FILTER doc._key LIKE CONCAT(@prefix, '%')"
+		bindVars["prefix"] = prefix
 	}
 
 	query += " SORT doc._key RETURN doc._key"
