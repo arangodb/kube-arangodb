@@ -39,15 +39,18 @@ func (r *remoteCache[T]) List(ctx context.Context, size int, prefix string) (uti
 	db := col.Database()
 
 	query := fmt.Sprintf("FOR doc IN %s", col.Name())
+	bindVars := map[string]interface{}{}
 
 	if prefix != "" {
-		query = fmt.Sprintf("%s FILTER doc._key LIKE \"%s%%\"", query, prefix)
+		query += " FILTER doc._key LIKE @prefix"
+		bindVars["prefix"] = fmt.Sprintf("%%%s", prefix)
 	}
 
 	query += " SORT doc._key RETURN doc._key"
 
 	resp, err := db.Query(ctx, query, &arangodb.QueryOptions{
 		BatchSize: size,
+		BindVars:  bindVars,
 	})
 	if err != nil {
 		return nil, err
