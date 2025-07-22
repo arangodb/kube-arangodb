@@ -39,8 +39,11 @@ service MetaV1 {
   // Optionally, will check Revision for the conflict management
   rpc Set (SetRequest) returns (ObjectResponse);
 
-  // Delete deletes saves the object from the Meta Store
+  // Delete deletes the object from the Meta Store
   rpc Delete (ObjectRequest) returns (shared.Empty);
+
+  // List lists the object from the Meta Store
+  rpc List (ListRequest) returns (stream ListResponseChunk);
 }
 
 // ObjectRequest defines request for MetaV1 Object Request
@@ -87,3 +90,19 @@ message ObjectResponse {
   // Meta defines the Object Metadata
   ObjectResponseMeta meta = 4;
 }
+
+// ListRequest defines request for MetaV1 Object List Request
+message ListRequest {
+  // Refines the batch size
+  optional int32 batch = 1;
+
+  // Defines the object prefix
+  optional string prefix = 2;
+}
+
+// ListResponseChunk defines chunk response for MetaV1 Object List Request
+message ListResponseChunk {
+  // Returns list of keys
+  repeated string keys = 1;
+}
+

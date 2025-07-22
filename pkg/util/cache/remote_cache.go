@@ -81,6 +81,10 @@ type RemoteCache[T RemoteCacheObject] interface {
 
 	// Invalidate invalidates internal cache
 	Invalidate(ctx context.Context, key string)
+
+	// List lists the keys matching predicate from the server
+	// Always misses the cache
+	List(ctx context.Context, size int, prefix string) (util.NextIterator[[]string], error)
 }
 
 type remoteCache[T RemoteCacheObject] struct {

@@ -28,8 +28,10 @@ type MetaV1Client interface {
 	// Set saves the object in the Meta Store
 	// Optionally, will check Revision for the conflict management
 	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*ObjectResponse, error)
-	// Delete deletes saves the object from the Meta Store
+	// Delete deletes the object from the Meta Store
 	Delete(ctx context.Context, in *ObjectRequest, opts ...grpc.CallOption) (*definition.Empty, error)
+	// List lists the object from the Meta Store
+	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (MetaV1_ListClient, error)
 }
 
 type metaV1Client struct {
@@ -67,6 +69,38 @@ func (c *metaV1Client) Delete(ctx context.Context, in *ObjectRequest, opts ...gr
 	return out, nil
 }
 
+func (c *metaV1Client) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (MetaV1_ListClient, error) {
+	stream, err := c.cc.NewStream(ctx, &MetaV1_ServiceDesc.Streams[0], "/meta.MetaV1/List", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &metaV1ListClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type MetaV1_ListClient interface {
+	Recv() (*ListResponseChunk, error)
+	grpc.ClientStream
+}
+
+type metaV1ListClient struct {
+	grpc.ClientStream
+}
+
+func (x *metaV1ListClient) Recv() (*ListResponseChunk, error) {
+	m := new(ListResponseChunk)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // MetaV1Server is the server API for MetaV1 service.
 // All implementations must embed UnimplementedMetaV1Server
 // for forward compatibility
@@ -76,8 +110,10 @@ type MetaV1Server interface {
 	// Set saves the object in the Meta Store
 	// Optionally, will check Revision for the conflict management
 	Set(context.Context, *SetRequest) (*ObjectResponse, error)
-	// Delete deletes saves the object from the Meta Store
+	// Delete deletes the object from the Meta Store
 	Delete(context.Context, *ObjectRequest) (*definition.Empty, error)
+	// List lists the object from the Meta Store
+	List(*ListRequest, MetaV1_ListServer) error
 	mustEmbedUnimplementedMetaV1Server()
 }
 
@@ -93,6 +129,9 @@ func (UnimplementedMetaV1Server) Set(context.Context, *SetRequest) (*ObjectRespo
 }
 func (UnimplementedMetaV1Server) Delete(context.Context, *ObjectRequest) (*definition.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedMetaV1Server) List(*ListRequest, MetaV1_ListServer) error {
+	return status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedMetaV1Server) mustEmbedUnimplementedMetaV1Server() {}
 
@@ -161,6 +200,27 @@ func _MetaV1_Delete_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MetaV1_List_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(MetaV1Server).List(m, &metaV1ListServer{stream})
+}
+
+type MetaV1_ListServer interface {
+	Send(*ListResponseChunk) error
+	grpc.ServerStream
+}
+
+type metaV1ListServer struct {
+	grpc.ServerStream
+}
+
+func (x *metaV1ListServer) Send(m *ListResponseChunk) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // MetaV1_ServiceDesc is the grpc.ServiceDesc for MetaV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -181,6 +241,12 @@ var MetaV1_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MetaV1_Delete_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "List",
+			Handler:       _MetaV1_List_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "integrations/meta/v1/definition/definition.proto",
 }
