@@ -434,6 +434,7 @@ func (c Config) HttpToHttpsChain() (*pbEnvoyListenerV3.FilterChain, error) {
 				Name: "local_http",
 				VirtualHosts: []*pbEnvoyRouteV3.VirtualHost{
 					{
+						Name:    "local_http",
 						Domains: []string{"*"},
 						Routes: []*pbEnvoyRouteV3.Route{
 							{
