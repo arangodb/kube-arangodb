@@ -22,6 +22,7 @@ package v1
 
 import (
 	"context"
+	"io"
 	"sync"
 	"time"
 
@@ -37,6 +38,7 @@ import (
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -166,4 +168,35 @@ func (i *implementation) Delete(ctx context.Context, req *pbMetaV1.ObjectRequest
 	}
 
 	return &pbSharedV1.Empty{}, nil
+}
+
+func (i *implementation) List(req *pbMetaV1.ListRequest, server pbMetaV1.MetaV1_ListServer) error {
+	log := logger.Str("func", "List")
+
+	size := int(util.OptionalType(req.Batch, 128))
+
+	if size <= 0 {
+		return status.Errorf(codes.InvalidArgument, "batch cannot be smaller than 0")
+	}
+
+	resp, err := i.cache.List(server.Context(), size, util.OptionalType(req.Prefix, ""))
+	if err != nil {
+		log.Err(err).Debug("Failed to list objects")
+		return err
+	}
+
+	for {
+		keys, err := resp.Next(server.Context())
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return err
+		}
+
+		if err := server.Send(&pbMetaV1.ListResponseChunk{Keys: keys}); err != nil {
+			log.Err(err).Debug("Failed to send ListResponseChunk")
+			return err
+		}
+	}
 }

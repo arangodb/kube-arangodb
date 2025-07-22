@@ -143,8 +143,10 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Clien
 }
 
 func (d *Database) KVCollection(endpoint Endpoint, database, collection string) cache.Object[arangodb.Collection] {
-	clientO := d.DatabaseClient(endpoint)
+	return d.KVCollectionFromClient(d.DatabaseClient(endpoint), database, collection)
+}
 
+func (d *Database) KVCollectionFromClient(clientO cache.Object[arangodb.Client], database, collection string) cache.Object[arangodb.Collection] {
 	return cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
 		if d == nil {
 			return nil, 0, errors.Errorf("Database Ref is empty")
