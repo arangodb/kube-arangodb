@@ -181,7 +181,7 @@ func (i *implementation) List(req *pbMetaV1.ListRequest, server pbMetaV1.MetaV1_
 
 	resp, err := i.cache.List(server.Context(), size, util.OptionalType(req.Prefix, ""))
 	if err != nil {
-		log.Err(err).Debug("Failed to send ReadObjectChunk")
+		log.Err(err).Debug("Failed to list objects")
 		return err
 	}
 
