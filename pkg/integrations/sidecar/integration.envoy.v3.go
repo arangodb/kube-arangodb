@@ -22,12 +22,12 @@ package sidecar
 
 import (
 	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -53,32 +53,40 @@ func (i IntegrationEnvoyV3) Envs() ([]core.EnvVar, error) {
 			Value: "true",
 		},
 		{
-			Name:  "INTEGRATION_ENVOY_AUTH_V3_EXTENSIONS_COOKIE_JWT",
-			Value: util.BoolSwitch(i.Spec.Gateway.IsCookiesSupportEnabled(), "true", "false"),
-		},
-		{
-			Name:  "INTEGRATION_ENVOY_AUTH_V3_EXTENSIONS_USERS_CREATE",
-			Value: util.BoolSwitch(i.Spec.Gateway.IsCreateUsersEnabled(), "true", "false"),
+			Name:  "INTEGRATION_ENVOY_AUTH_V3_ENABLED",
+			Value: util.BoolSwitch(i.Spec.IsAuthenticated(), "true", "false"),
 		},
 	}
 
-	if gw := i.Spec.Gateway; gw != nil {
-		if auth := gw.Authentication; auth != nil {
-			if obj := auth.Secret; obj != nil {
-				envs = append(envs,
-					core.EnvVar{
-						Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_ENABLED",
-						Value: "true",
-					},
-					core.EnvVar{
-						Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_TYPE",
-						Value: string(auth.Type),
-					},
-					core.EnvVar{
-						Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_PATH",
-						Value: fmt.Sprintf("%sconfig", constants.MemberAuthVolumeMountDir),
-					},
-				)
+	if i.Spec.IsAuthenticated() {
+		envs = append(envs,
+			core.EnvVar{
+				Name:  "INTEGRATION_ENVOY_AUTH_V3_EXTENSIONS_COOKIE_JWT",
+				Value: util.BoolSwitch(i.Spec.Gateway.IsCookiesSupportEnabled(), "true", "false"),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_ENVOY_AUTH_V3_EXTENSIONS_USERS_CREATE",
+				Value: util.BoolSwitch(i.Spec.Gateway.IsCreateUsersEnabled(), "true", "false"),
+			})
+
+		if gw := i.Spec.Gateway; gw != nil {
+			if auth := gw.Authentication; auth != nil {
+				if obj := auth.Secret; obj != nil {
+					envs = append(envs,
+						core.EnvVar{
+							Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_ENABLED",
+							Value: "true",
+						},
+						core.EnvVar{
+							Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_TYPE",
+							Value: string(auth.Type),
+						},
+						core.EnvVar{
+							Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_PATH",
+							Value: fmt.Sprintf("%sconfig", constants.MemberAuthVolumeMountDir),
+						},
+					)
+				}
 			}
 		}
 	}
