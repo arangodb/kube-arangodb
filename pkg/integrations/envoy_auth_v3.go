@@ -52,7 +52,7 @@ func (a *envoyAuthV3) Description() string {
 
 func (a *envoyAuthV3) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
-		fs.BoolVar(&a.config.Auth.Enabled, "enabled", true, "Defines if Auth extension is enabled"),
+		fs.BoolVar(&a.config.Enabled, "enabled", true, "Defines if Auth extension is enabled"),
 		fs.BoolVar(&a.config.Extensions.JWT, "extensions.jwt", true, "Defines if JWT extension is enabled"),
 		fs.BoolVar(&a.config.Extensions.CookieJWT, "extensions.cookie.jwt", true, "Defines if Cookie JWT extension is enabled"),
 		fs.BoolVar(&a.config.Extensions.UsersCreate, "extensions.users.create", false, "Defines if UserCreation extension is enabled"),
