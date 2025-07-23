@@ -32,6 +32,10 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		return nil, false
 	}
 
+	if !configuration.Auth.Enabled {
+		return nil, false
+	}
+
 	switch configuration.Auth.Type {
 	case "OpenID":
 		return openid.New(ctx, configuration)
