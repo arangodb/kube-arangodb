@@ -12,6 +12,7 @@
 - (Feature) Compact Action
 - (DebugPackage) Fetch All logs
 - (Feature) (Platform) MetaV1 List Operation
+- (Feature) (Platform) Enable HTTP to HTTPS Redirect
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)
 - (Feature) (Platform) MetaV1 Integration Service

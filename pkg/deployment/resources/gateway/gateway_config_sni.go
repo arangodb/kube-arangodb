@@ -64,7 +64,8 @@ func (c ConfigSNI) RenderFilterChain(filters []*pbEnvoyListenerV3.Filter) (*pbEn
 	return &pbEnvoyListenerV3.FilterChain{
 		TransportSocket: transport,
 		FilterChainMatch: &pbEnvoyListenerV3.FilterChainMatch{
-			ServerNames: util.CopyList(c.ServerNames),
+			ServerNames:       util.CopyList(c.ServerNames),
+			TransportProtocol: "tls",
 		},
 		Filters: filters,
 	}, nil
