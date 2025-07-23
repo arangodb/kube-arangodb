@@ -25,6 +25,8 @@ import (
 )
 
 type Configuration struct {
+	Enabled bool
+
 	integrationsShared.Endpoint
 	integrationsShared.Database
 

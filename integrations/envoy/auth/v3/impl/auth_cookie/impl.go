@@ -40,7 +40,7 @@ import (
 const JWTAuthorizationCookieName = "X-ArangoDB-Token-JWT"
 
 func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
-	if !configuration.Auth.Enabled {
+	if !configuration.Enabled {
 		return nil, false
 	}
 
