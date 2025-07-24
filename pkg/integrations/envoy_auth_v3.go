@@ -52,10 +52,11 @@ func (a *envoyAuthV3) Description() string {
 
 func (a *envoyAuthV3) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
+		fs.BoolVar(&a.config.Enabled, "enabled", true, "Defines if Auth extension is enabled"),
 		fs.BoolVar(&a.config.Extensions.JWT, "extensions.jwt", true, "Defines if JWT extension is enabled"),
 		fs.BoolVar(&a.config.Extensions.CookieJWT, "extensions.cookie.jwt", true, "Defines if Cookie JWT extension is enabled"),
 		fs.BoolVar(&a.config.Extensions.UsersCreate, "extensions.users.create", false, "Defines if UserCreation extension is enabled"),
-		fs.BoolVar(&a.config.Auth.Enabled, "auth.enabled", false, "Defines if Auth extension is enabled"),
+		fs.BoolVar(&a.config.Auth.Enabled, "auth.enabled", false, "Defines if SSO Auth extension is enabled"),
 		fs.StringVar(&a.config.Auth.Type, "auth.type", "OpenID", "Defines type of the authentication"),
 		fs.StringVar(&a.config.Auth.Path, "auth.path", "", "Path of the config file"),
 	)

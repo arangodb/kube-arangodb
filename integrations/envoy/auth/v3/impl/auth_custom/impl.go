@@ -28,6 +28,10 @@ import (
 )
 
 func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+	if !configuration.Enabled {
+		return nil, false
+	}
+
 	if !configuration.Auth.Enabled {
 		return nil, false
 	}

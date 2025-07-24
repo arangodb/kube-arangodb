@@ -40,6 +40,10 @@ import (
 )
 
 func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+	if !configuration.Enabled {
+		return nil, false
+	}
+
 	var z impl
 
 	z.configuration = configuration
