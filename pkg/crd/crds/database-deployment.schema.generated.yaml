@@ -918,6 +918,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -1884,6 +1885,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -3220,6 +3222,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -4186,6 +4189,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -5440,6 +5444,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -6406,6 +6411,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -7782,6 +7788,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -8748,6 +8755,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -11217,6 +11225,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -12183,6 +12192,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -13582,6 +13592,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -14548,6 +14559,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -15795,6 +15807,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -16761,6 +16774,7 @@ v1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -18113,6 +18127,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -19079,6 +19094,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -20415,6 +20431,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -21381,6 +21398,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -22635,6 +22653,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -23601,6 +23620,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -24977,6 +24997,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -25943,6 +25964,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -28412,6 +28434,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -29378,6 +29401,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -30777,6 +30801,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -31743,6 +31768,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
@@ -32990,6 +33016,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                 type: string
               maxCount:
                 description: MaxCount specifies a maximum for the count of servers. If set, a specification is invalid if `count > maxCount`.
@@ -33956,6 +33983,7 @@ v2alpha1:
                 enum:
                   - inplace
                   - replace
+                  - optional-replace
                   - manual
                 type: string
               volumeAllowShrink:
