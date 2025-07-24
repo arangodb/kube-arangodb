@@ -37,18 +37,24 @@ func (r *Reconciler) createRotateMemberPlan(member api.MemberStatus,
 		Str("role", group.AsRole()).
 		Str("reason", reason).
 		Debug("Creating rotation plan")
-	return createRotateMemberPlanWithAction(member, group, api.ActionTypeRotateMember, spec, reason, rebootId)
+	return createRotateMemberPlanWithAction(member, group, api.ActionTypeRotateMember, spec, reason, rebootId, false)
 }
 
 // createRotateMemberPlanWithAction creates a plan to rotate (stop-<action>>-start) an existing
 // member.
 func createRotateMemberPlanWithAction(member api.MemberStatus,
-	group api.ServerGroup, action api.ActionType, spec api.DeploymentSpec, reason string, rebootId *int) api.Plan {
+	group api.ServerGroup, action api.ActionType, spec api.DeploymentSpec, reason string, rebootId *int, compact bool) api.Plan {
 
 	var plan = api.Plan{
 		actions.NewAction(api.ActionTypeCleanTLSKeyfileCertificate, group, member, "Remove server keyfile and enforce renewal/recreation"),
 	}
 	plan = withSecureWrap(member, group, spec, rebootId, plan...)
+
+	if compact {
+		plan = plan.After(
+			actions.NewAction(api.ActionTypeCompactMember, group, member, reason),
+		)
+	}
 
 	plan = plan.After(
 		actions.NewAction(api.ActionTypeKillMemberPod, group, member, reason),
