@@ -79,8 +79,7 @@ type ServerGroupSpecVolumeMount struct {
 	// None (or be unspecified, which defaults to None).
 	//
 	// If this field is not specified, it is treated as an equivalent of Disabled.
-	// TODO: Uncomment after upgrade to 1.31.1+
-	// RecursiveReadOnly *RecursiveReadOnlyMode `json:"recursiveReadOnly,omitempty" protobuf:"bytes,7,opt,name=recursiveReadOnly,casttype=RecursiveReadOnlyMode"`
+	RecursiveReadOnly *core.RecursiveReadOnlyMode `json:"recursiveReadOnly,omitempty" protobuf:"bytes,7,opt,name=recursiveReadOnly,casttype=RecursiveReadOnlyMode"`
 
 	// Path within the container at which the volume should be mounted.  Must
 	// not contain ':'.
@@ -107,13 +106,13 @@ type ServerGroupSpecVolumeMount struct {
 
 func (s ServerGroupSpecVolumeMount) VolumeMount() core.VolumeMount {
 	return core.VolumeMount{
-		Name:     s.Name,
-		ReadOnly: s.ReadOnly,
-		//RecursiveReadOnly: s.RecursiveReadOnly, TODO: Uncomment after upgrade to 1.31.1+
-		MountPath:        s.MountPath,
-		SubPath:          s.SubPath,
-		MountPropagation: s.MountPropagation,
-		SubPathExpr:      s.SubPathExpr,
+		Name:              s.Name,
+		ReadOnly:          s.ReadOnly,
+		RecursiveReadOnly: s.RecursiveReadOnly,
+		MountPath:         s.MountPath,
+		SubPath:           s.SubPath,
+		MountPropagation:  s.MountPropagation,
+		SubPathExpr:       s.SubPathExpr,
 	}
 }
 
