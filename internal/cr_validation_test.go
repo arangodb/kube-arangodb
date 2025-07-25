@@ -325,7 +325,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				},
 				"v1beta1": {
 					objects: map[string]interface{}{
-						"spec": platformApi.ArangoPlatformStorage{}.Spec,
+						"spec": platformApi.ArangoPlatformChart{}.Spec,
 					},
 				},
 			},
@@ -339,7 +339,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				},
 				"v1beta1": {
 					objects: map[string]interface{}{
-						"spec": platformApi.ArangoPlatformStorage{}.Spec,
+						"spec": platformApi.ArangoPlatformService{}.Spec,
 					},
 				},
 			},
