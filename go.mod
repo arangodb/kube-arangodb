@@ -1,8 +1,8 @@
 module github.com/arangodb/kube-arangodb
 
-go 1.23.0
+go 1.23.8
 
-toolchain go1.23.8
+toolchain go1.24.5
 
 replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.2
@@ -30,7 +30,7 @@ require (
 	github.com/arangodb-helper/go-helper v0.4.2
 	github.com/arangodb/arangosync-client v0.9.1
 	github.com/arangodb/go-driver v1.6.6
-	github.com/arangodb/go-driver/v2 v2.1.3
+	github.com/arangodb/go-driver/v2 v2.1.4
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	//github.com/arangodb/rebalancer v0.1.1
 	//github.com/arangodb/go-agency-helper v0.3.0
