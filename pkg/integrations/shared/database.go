@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/go-driver/v2/connection"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -167,11 +168,11 @@ func (d *Database) KVCollectionFromClient(clientO cache.Object[arangodb.Client],
 				return nil, 0, err
 			}
 
-			if _, err := db.CreateCollectionWithOptions(ctx, collection, &arangodb.CreateCollectionProperties{
-				IsSystem:          true,
-				WriteConcern:      d.WriteConcern,
-				ReplicationFactor: arangodb.ReplicationFactor(d.ReplicationFactor),
-			}, nil); err != nil {
+			if _, err := db.CreateCollectionV2(ctx, collection, &arangodb.CreateCollectionPropertiesV2{
+				IsSystem:          util.NewType(true),
+				WriteConcern:      util.NewType(d.WriteConcern),
+				ReplicationFactor: util.NewType(arangodb.ReplicationFactor(d.ReplicationFactor)),
+			}); err != nil {
 				if !shared.IsConflict(err) {
 					return nil, 0, err
 				}
