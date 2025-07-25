@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +26,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 const (
-	ArangoNetworkingVersion = "v1alpha1"
+	ArangoNetworkingVersion = constants.VersionV1Alpha1
 )
 
 var (
