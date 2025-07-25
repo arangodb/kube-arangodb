@@ -23,7 +23,7 @@ package arango
 import (
 	"context"
 
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/list"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -31,11 +31,11 @@ import (
 
 func Networking(f shared.FactoryGen) {
 	f.AddSection("networking").
-		Register("route", true, shared.WithKubernetesItems[*networkingApi.ArangoRoute](arangoNetworkingV1Alpha1ArangoRouteList, shared.WithDefinitions[*networkingApi.ArangoRoute]))
+		Register("route", true, shared.WithKubernetesItems[*networkingApi.ArangoRoute](arangoNetworkingV1beta1ArangoRouteList, shared.WithDefinitions[*networkingApi.ArangoRoute]))
 }
 
-func arangoNetworkingV1Alpha1ArangoRouteList(ctx context.Context, client kclient.Client, namespace string) ([]*networkingApi.ArangoRoute, error) {
-	return list.ListObjects[*networkingApi.ArangoRouteList, *networkingApi.ArangoRoute](ctx, client.Arango().NetworkingV1alpha1().ArangoRoutes(namespace), func(result *networkingApi.ArangoRouteList) []*networkingApi.ArangoRoute {
+func arangoNetworkingV1beta1ArangoRouteList(ctx context.Context, client kclient.Client, namespace string) ([]*networkingApi.ArangoRoute, error) {
+	return list.ListObjects[*networkingApi.ArangoRouteList, *networkingApi.ArangoRoute](ctx, client.Arango().NetworkingV1beta1().ArangoRoutes(namespace), func(result *networkingApi.ArangoRouteList) []*networkingApi.ArangoRoute {
 		q := make([]*networkingApi.ArangoRoute, len(result.Items))
 
 		for id, e := range result.Items {

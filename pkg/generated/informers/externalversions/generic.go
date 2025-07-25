@@ -33,7 +33,9 @@ import (
 	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
@@ -123,6 +125,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case networkingv1alpha1.SchemeGroupVersion.WithResource("arangoroutes"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha1().ArangoRoutes().Informer()}, nil
 
+		// Group=networking.arangodb.com, Version=v1beta1
+	case networkingv1beta1.SchemeGroupVersion.WithResource("arangoroutes"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().ArangoRoutes().Informer()}, nil
+
 		// Group=platform.arangodb.com, Version=v1alpha1
 	case platformv1alpha1.SchemeGroupVersion.WithResource("arangoplatformcharts"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1alpha1().ArangoPlatformCharts().Informer()}, nil
@@ -130,6 +136,14 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1alpha1().ArangoPlatformServices().Informer()}, nil
 	case platformv1alpha1.SchemeGroupVersion.WithResource("arangoplatformstorages"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1alpha1().ArangoPlatformStorages().Informer()}, nil
+
+		// Group=platform.arangodb.com, Version=v1beta1
+	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformcharts"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformCharts().Informer()}, nil
+	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformservices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformServices().Informer()}, nil
+	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformstorages"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformStorages().Informer()}, nil
 
 		// Group=replication.database.arangodb.com, Version=v1
 	case replicationv1.SchemeGroupVersion.WithResource("arangodeploymentreplications"):

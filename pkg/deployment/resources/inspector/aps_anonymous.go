@@ -23,7 +23,7 @@ package inspector
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )

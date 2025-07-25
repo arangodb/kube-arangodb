@@ -162,19 +162,3 @@ azure://test
 
 This field is **immutable**: can't be changed after backup creation
 
-## Status
-
-### .status.message
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/backup/v1/backup_policy_status.go#L33)</sup>
-
-Message from the operator in case of failures - schedule not valid, ArangoBackupPolicy not valid
-
-***
-
-### .status.scheduled
-
-Type: `meta.Time` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/backup/v1/backup_policy_status.go#L31)</sup>
-
-Scheduled Next scheduled time in UTC
-

@@ -120,3 +120,125 @@ v1alpha1:
         type: object
         x-kubernetes-preserve-unknown-fields: true
     type: object
+v1beta1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          deployment:
+            description: Deployment specifies the ArangoDeployment object name
+            type: string
+          destination:
+            description: Destination defines the route destination
+            properties:
+              authentication:
+                description: Authentication defines auth methods
+                properties:
+                  passMode:
+                    description: PassMode define authorization details pass mode when authorization was successful
+                    enum:
+                      - override
+                      - pass
+                      - remove
+                    type: string
+                  type:
+                    description: Type of the authentication
+                    enum:
+                      - optional
+                      - required
+                    type: string
+                type: object
+              endpoints:
+                description: Endpoints defines service upstream reference - which is used to find endpoints
+                properties:
+                  name:
+                    description: Name of the object
+                    type: string
+                  namespace:
+                    description: Namespace of the object. Should default to the namespace of the parent object
+                    type: string
+                  port:
+                    description: Port defines Port or Port Name used as destination
+                    type: string
+                    x-kubernetes-int-or-string: true
+                required:
+                  - name
+                  - port
+                type: object
+              path:
+                description: Path defines service path used for overrides
+                type: string
+              protocol:
+                description: Protocol defines http protocol used for the route
+                enum:
+                  - http1
+                  - http2
+                type: string
+              schema:
+                description: Schema defines HTTP/S schema used for connection
+                enum:
+                  - http
+                  - https
+                type: string
+              service:
+                description: Service defines service upstream reference
+                properties:
+                  name:
+                    description: Name of the object
+                    type: string
+                  namespace:
+                    description: Namespace of the object. Should default to the namespace of the parent object
+                    type: string
+                  port:
+                    description: Port defines Port or Port Name used as destination
+                    type: string
+                    x-kubernetes-int-or-string: true
+                required:
+                  - name
+                  - port
+                type: object
+              timeout:
+                description: Timeout specify the upstream request timeout
+                type: string
+              tls:
+                description: TLS defines TLS Configuration
+                properties:
+                  insecure:
+                    description: Insecure allows Insecure traffic
+                    type: boolean
+                type: object
+            type: object
+          options:
+            description: Options defines connection upgrade options
+            properties:
+              upgrade:
+                description: Upgrade keeps the connection upgrade options
+                items:
+                  properties:
+                    enabled:
+                      description: Enabled defines if upgrade option is enabled
+                      type: boolean
+                    type:
+                      description: Type defines type of the Upgrade
+                      enum:
+                        - websocket
+                      type: string
+                  type: object
+                type: array
+            type: object
+          route:
+            description: Route defines the route spec
+            properties:
+              path:
+                description: Path specifies the Path route
+                type: string
+            type: object
+        required:
+          - deployment
+          - destination
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

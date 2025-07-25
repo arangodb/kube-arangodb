@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package inspector
 
 import (
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
@@ -42,5 +42,5 @@ func (p arangoPlatformStorageMod) V1Alpha1() generic.ModStatusClient[*platformAp
 }
 
 func (p arangoPlatformStorageMod) clientv1beta1() generic.ModStatusClient[*platformApi.ArangoPlatformStorage] {
-	return p.i.Client().Arango().PlatformV1alpha1().ArangoPlatformStorages(p.i.Namespace())
+	return p.i.Client().Arango().PlatformV1beta1().ArangoPlatformStorages(p.i.Namespace())
 }

@@ -181,11 +181,11 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 	}
 
 	if _, err := i.ArangoPlatformStorage().V1Alpha1(); err == nil {
-		arango.Platform().V1alpha1().ArangoPlatformStorages().Informer().AddEventHandler(i.eventHandler(definitions.ArangoPlatformStorage))
+		arango.Platform().V1beta1().ArangoPlatformStorages().Informer().AddEventHandler(i.eventHandler(definitions.ArangoPlatformStorage))
 	}
 
 	if _, err := i.ArangoRoute().V1Alpha1(); err == nil {
-		arango.Networking().V1alpha1().ArangoRoutes().Informer().AddEventHandler(i.eventHandler(definitions.ArangoRoute))
+		arango.Networking().V1beta1().ArangoRoutes().Informer().AddEventHandler(i.eventHandler(definitions.ArangoRoute))
 	}
 
 	if _, err := i.ArangoClusterSynchronization().V1(); err == nil {

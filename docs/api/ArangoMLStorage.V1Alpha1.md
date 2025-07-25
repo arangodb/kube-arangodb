@@ -316,11 +316,3 @@ Container's working directory.
 If not specified, the container runtime's default will be used, which
 might be configured in the container image.
 
-## Status
-
-### .status.conditions
-
-Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_status.go#L28)</sup>
-
-Conditions specific to the entire storage
-

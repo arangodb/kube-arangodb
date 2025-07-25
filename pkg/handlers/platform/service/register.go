@@ -33,7 +33,7 @@ import (
 
 // RegisterInformer into operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, _ informers.SharedInformerFactory) error {
-	if err := operator.RegisterInformer(informer.Platform().V1alpha1().ArangoPlatformServices().Informer(),
+	if err := operator.RegisterInformer(informer.Platform().V1beta1().ArangoPlatformServices().Informer(),
 		Group(),
 		Version(),
 		Kind()); err != nil {

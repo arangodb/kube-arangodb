@@ -17,6 +17,20 @@ spec:
           type: object
           x-kubernetes-preserve-unknown-fields: true
       served: true
+      storage: false
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if Storage is valid
+          name: Ready
+          type: string
+      subresources:
+        status: {}
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
       storage: true
       additionalPrinterColumns:
         - jsonPath: '.status.conditions[?(@.type=="Ready")].status'

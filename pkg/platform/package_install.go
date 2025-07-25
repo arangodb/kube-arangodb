@@ -29,7 +29,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -114,7 +114,7 @@ func packageInstallRunInstallServices(cmd *cobra.Command, client kclient.Client,
 
 func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, client kclient.Client, deployment *api.ArangoDeployment, name string, packageSpec helm.PackageRelease) {
 	h.RunAsync(cmd.Context(), func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
-		chart, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(deployment.GetNamespace()).Get(ctx, packageSpec.Package, meta.GetOptions{})
+		chart, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(deployment.GetNamespace()).Get(ctx, packageSpec.Package, meta.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -123,7 +123,7 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			return errors.Errorf("Chart %s is not ready", name)
 		}
 
-		if svc, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{}); err != nil {
+		if svc, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{}); err != nil {
 			if !kerrors.IsNotFound(err) {
 				return err
 			}
@@ -131,7 +131,7 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			logger.Debug("Installing Service: %s", name)
 
 			// Prepare Object
-			if _, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Create(ctx, &platformApi.ArangoPlatformService{
+			if _, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Create(ctx, &platformApi.ArangoPlatformService{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      name,
 					Namespace: deployment.GetNamespace(),
@@ -162,7 +162,7 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 
 			if !svc.Spec.Values.Equals(sharedApi.Any(packageSpec.Overrides)) {
 				svc.Spec.Values = sharedApi.Any(packageSpec.Overrides)
-				_, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Update(ctx, svc, meta.UpdateOptions{})
+				_, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Update(ctx, svc, meta.UpdateOptions{})
 				if err != nil {
 					return err
 				}
@@ -174,7 +174,7 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 		time.Sleep(time.Second)
 
 		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
-			svc, err := client.Arango().PlatformV1alpha1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
+			svc, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -231,7 +231,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 		if c, ok := charts[name]; !ok {
 			logger.Debug("Installing Chart: %s", name)
 
-			_, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns).Create(cmd.Context(), &platformApi.ArangoPlatformChart{
+			_, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns).Create(cmd.Context(), &platformApi.ArangoPlatformChart{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      name,
 					Namespace: ns,
@@ -250,7 +250,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 			if c.Spec.Definition.SHA256() != chart.SHA256SUM() || !packageSpec.Overrides.Equals(helm.Values(c.Spec.Overrides)) {
 				c.Spec.Definition = sharedApi.Data(chart)
 				c.Spec.Overrides = sharedApi.Any(packageSpec.Overrides)
-				_, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns).Update(cmd.Context(), c, meta.UpdateOptions{})
+				_, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns).Update(cmd.Context(), c, meta.UpdateOptions{})
 				if err != nil {
 					return err
 				}
@@ -259,7 +259,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 		}
 
 		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
-			c, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns).Get(ctx, name, meta.GetOptions{})
+			c, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns).Get(ctx, name, meta.GetOptions{})
 			if err != nil {
 				return err
 			}

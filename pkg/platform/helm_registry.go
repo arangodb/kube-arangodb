@@ -23,7 +23,7 @@ package platform
 import (
 	"github.com/spf13/cobra"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 

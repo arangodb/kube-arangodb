@@ -24,7 +24,7 @@ import (
 	"context"
 	"time"
 
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
@@ -53,7 +53,7 @@ func (p arangoRoutesInspectorLoader) Load(ctx context.Context, i *inspectorState
 	q.v1alpha1 = newInspectorVersion[*networkingApi.ArangoRouteList, *networkingApi.ArangoRoute](ctx,
 		constants.ArangoRouteGRv1Alpha1(),
 		constants.ArangoRouteGKv1Alpha1(),
-		i.client.Arango().NetworkingV1alpha1().ArangoRoutes(i.namespace),
+		i.client.Arango().NetworkingV1beta1().ArangoRoutes(i.namespace),
 		arangoroute.List())
 
 	i.arangoRoutes = &q

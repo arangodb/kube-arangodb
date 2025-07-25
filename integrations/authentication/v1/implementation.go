@@ -41,7 +41,7 @@ import (
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_cookie"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
-	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication"
+	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"

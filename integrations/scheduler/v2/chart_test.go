@@ -32,7 +32,7 @@ import (
 
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -64,7 +64,7 @@ func Test_Chart_List(t *testing.T) {
 
 						c := suite.RewriteChartName(t, "example", "1.0.0", name)
 
-						chart, err := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns).Create(ctx, &platformApi.ArangoPlatformChart{
+						chart, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns).Create(ctx, &platformApi.ArangoPlatformChart{
 							ObjectMeta: meta.ObjectMeta{
 								Name:      name,
 								Namespace: ns,
@@ -120,7 +120,7 @@ func Test_Chart_Get(t *testing.T) {
 		return c
 	})
 
-	z := client.Arango().PlatformV1alpha1().ArangoPlatformCharts(ns)
+	z := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns)
 
 	t1, err := z.Create(context.Background(), &platformApi.ArangoPlatformChart{
 		ObjectMeta: meta.ObjectMeta{

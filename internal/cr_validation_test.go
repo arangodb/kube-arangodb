@@ -40,8 +40,10 @@ import (
 	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	networkingApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	platformApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
@@ -290,6 +292,11 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/networking", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
+						"spec": networkingApiv1alpha1.ArangoRoute{}.Spec,
+					},
+				},
+				"v1beta1": {
+					objects: map[string]interface{}{
 						"spec": networkingApi.ArangoRoute{}.Spec,
 					},
 				},
@@ -298,6 +305,11 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 		"platform-storage": {
 			fmt.Sprintf("%s/pkg/apis/platform", root): {
 				"v1alpha1": {
+					objects: map[string]interface{}{
+						"spec": platformApiv1alpha1.ArangoPlatformStorage{}.Spec,
+					},
+				},
+				"v1beta1": {
 					objects: map[string]interface{}{
 						"spec": platformApi.ArangoPlatformStorage{}.Spec,
 					},
@@ -308,7 +320,12 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/platform", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
-						"spec": platformApi.ArangoPlatformChart{}.Spec,
+						"spec": platformApiv1alpha1.ArangoPlatformChart{}.Spec,
+					},
+				},
+				"v1beta1": {
+					objects: map[string]interface{}{
+						"spec": platformApi.ArangoPlatformStorage{}.Spec,
 					},
 				},
 			},
@@ -317,7 +334,12 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/platform", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
-						"spec": platformApi.ArangoPlatformService{}.Spec,
+						"spec": platformApiv1alpha1.ArangoPlatformService{}.Spec,
+					},
+				},
+				"v1beta1": {
+					objects: map[string]interface{}{
+						"spec": platformApi.ArangoPlatformStorage{}.Spec,
 					},
 				},
 			},

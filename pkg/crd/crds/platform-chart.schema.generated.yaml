@@ -17,3 +17,89 @@ v1alpha1:
         type: object
         x-kubernetes-preserve-unknown-fields: true
     type: object
+v1beta1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          backend:
+            description: Backend defines how storage is implemented
+            properties:
+              gcs:
+                description: GCS backend implements storage as a proxy to the provided GCS API endpoint
+                properties:
+                  bucketName:
+                    description: BucketName specifies the name of the bucket
+                    type: string
+                  bucketPath:
+                    description: BucketPath specifies the Prefix within the bucket
+                    type: string
+                  credentialsSecret:
+                    description: CredentialsSecret specifies the Kubernetes Secret containing Service Account JSON Key as data field
+                    properties:
+                      name:
+                        description: Name of the object
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  projectID:
+                    description: ProjectID specifies the GCP ProjectID
+                    type: string
+                required:
+                  - bucketName
+                  - credentialsSecret
+                  - projectID
+                type: object
+              s3:
+                description: S3 backend implements storage as a proxy to the provided S3 API endpoint
+                properties:
+                  allowInsecure:
+                    description: AllowInsecure if set to true, the Endpoint certificates won't be checked
+                    type: boolean
+                  bucketName:
+                    description: BucketName specifies the name of the bucket
+                    type: string
+                  bucketPath:
+                    description: BucketPath specifies the Prefix within the bucket
+                    type: string
+                  caSecret:
+                    description: |-
+                      CASecret if not empty, the given Kubernetes Secret will be used to check the authenticity of Endpoint
+                      The specified Secret, must contain the following data fields:
+                      - `ca.crt` PEM encoded public key of the CA certificate
+                      - `ca.key` PEM encoded private key of the CA certificate
+                    properties:
+                      name:
+                        description: Name of the object
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  credentialsSecret:
+                    description: CredentialsSecret specifies the Kubernetes Secret containing AccessKey and SecretKey for S3 API authorization
+                    properties:
+                      name:
+                        description: Name of the object
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  endpoint:
+                    description: Endpoint specifies the S3 API-compatible endpoint which implements storage
+                    type: string
+                  region:
+                    description: Region defines the availability zone name.
+                    type: string
+                required:
+                  - bucketName
+                  - credentialsSecret
+                  - endpoint
+                type: object
+            type: object
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

@@ -29,7 +29,7 @@ import (
 
 	pbImplStorageV1 "github.com/arangodb/kube-arangodb/integrations/storage/v1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/aws"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"

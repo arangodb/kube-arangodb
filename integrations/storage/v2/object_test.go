@@ -28,7 +28,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -58,7 +58,7 @@ func listAll(t *testing.T, in util.NextIterator[[]pbImplStorageV2Shared.File]) [
 func testObject(t *testing.T, gen testObjectFunc, mods ...util.Mod[platformApi.ArangoPlatformStorage]) {
 	name, namespace, client := gen(t, mods...)
 
-	storage, err := client.Arango().PlatformV1alpha1().ArangoPlatformStorages(namespace).Get(shutdown.Context(), name, meta.GetOptions{})
+	storage, err := client.Arango().PlatformV1beta1().ArangoPlatformStorages(namespace).Get(shutdown.Context(), name, meta.GetOptions{})
 	require.NoError(t, err)
 
 	require.NoError(t, storage.Spec.Validate())

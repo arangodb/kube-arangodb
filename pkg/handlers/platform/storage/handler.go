@@ -27,7 +27,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -54,7 +54,7 @@ func (h *handler) Name() string {
 
 func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	// Get Backup object. It also covers NotFound case
-	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.PlatformV1alpha1().ArangoPlatformStorages(item.Namespace).Get, item.Name, meta.GetOptions{})
+	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.PlatformV1beta1().ArangoPlatformStorages(item.Namespace).Get, item.Name, meta.GetOptions{})
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
 			return nil
@@ -84,7 +84,7 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		item.Namespace,
 		item.Name)
 
-	if _, err := operator.WithArangoPlatformStorageUpdateStatusInterfaceRetry(context.Background(), h.client.PlatformV1alpha1().ArangoPlatformStorages(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
+	if _, err := operator.WithArangoPlatformStorageUpdateStatusInterfaceRetry(context.Background(), h.client.PlatformV1beta1().ArangoPlatformStorages(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
 		return err
 	}
 

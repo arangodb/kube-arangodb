@@ -1,10 +1,10 @@
 ---
 layout: page
 parent: CRD reference
-title: ArangoPlatformService V1Alpha1
+title: ArangoPlatformService V1Beta1
 ---
 
-# API Reference for ArangoPlatformService V1Alpha1
+# API Reference for ArangoPlatformService V1Beta1
 
 ## Spec
 
@@ -30,7 +30,7 @@ Name of the object
 
 ### .spec.values
 
-Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1alpha1/service_spec.go#L46)</sup>
+Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/service_spec.go#L46)</sup>
 
 Values keeps the values of the Service
 

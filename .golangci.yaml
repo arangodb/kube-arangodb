@@ -101,12 +101,18 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1
       - alias: mlApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1
-      - alias: networkingApi
+      - alias: networkingApiv1alpha1
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
-      - alias: platformApi
+      - alias: networkingApi
+        pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1
+      - alias: platformApiv1alpha1
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1
-      - alias: platformAuthenticationApi
+      - alias: platformApi
+        pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1
+      - alias: platformAuthenticationApiv1alpha1
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication
+      - alias: platformAuthenticationApi
+        pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication
       - alias: schedulerApiv1alpha1
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1
       - alias: schedulerContainerApiv1alpha1

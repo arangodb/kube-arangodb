@@ -31,7 +31,9 @@ import (
 	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
@@ -56,7 +58,9 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	mlv1alpha1.AddToScheme,
 	mlv1beta1.AddToScheme,
 	networkingv1alpha1.AddToScheme,
+	networkingv1beta1.AddToScheme,
 	platformv1alpha1.AddToScheme,
+	platformv1beta1.AddToScheme,
 	replicationv1.AddToScheme,
 	replicationv2alpha1.AddToScheme,
 	schedulerv1alpha1.AddToScheme,

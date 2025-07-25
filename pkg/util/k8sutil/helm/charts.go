@@ -23,14 +23,14 @@ package helm
 import (
 	"context"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/list"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func GetLocalCharts(ctx context.Context, client kclient.Client, namespace string) (map[string]*platformApi.ArangoPlatformChart, error) {
-	l, err := list.ListObjects[*platformApi.ArangoPlatformChartList, *platformApi.ArangoPlatformChart](ctx, client.Arango().PlatformV1alpha1().ArangoPlatformCharts(namespace), func(result *platformApi.ArangoPlatformChartList) []*platformApi.ArangoPlatformChart {
+	l, err := list.ListObjects[*platformApi.ArangoPlatformChartList, *platformApi.ArangoPlatformChart](ctx, client.Arango().PlatformV1beta1().ArangoPlatformCharts(namespace), func(result *platformApi.ArangoPlatformChartList) []*platformApi.ArangoPlatformChart {
 		q := make([]*platformApi.ArangoPlatformChart, len(result.Items))
 
 		for id, e := range result.Items {
