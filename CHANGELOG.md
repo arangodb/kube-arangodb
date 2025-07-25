@@ -17,6 +17,7 @@
 - (Feature) Define OptionalReplace Upgrade Mode option
 - (Feature) OptionalReplace Upgrade Mode
 - (Feature) Update GoDriver
+- (Feature) Use Version Consts
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)
 - (Feature) (Platform) MetaV1 Integration Service

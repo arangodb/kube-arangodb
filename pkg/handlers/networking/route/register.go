@@ -48,8 +48,6 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 		operator: operator,
 	}
 
-	h.init()
-
 	if err := operator.RegisterHandler(h); err != nil {
 		return err
 	}

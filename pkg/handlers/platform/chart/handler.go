@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
@@ -183,7 +184,7 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 
 func (h *handler) CanBeHandled(item operation.Item) bool {
 	return item.Group == Group() &&
-		item.Version == Version() &&
+		constants.IsCompatible(Version(), item.Version) &&
 		item.Kind == Kind()
 }
 
