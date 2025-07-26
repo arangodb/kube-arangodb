@@ -29,7 +29,7 @@ import (
 
 // RegisterInformer into operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory) error {
-	if err := operator.RegisterInformer(informer.Platform().V1alpha1().ArangoPlatformStorages().Informer(),
+	if err := operator.RegisterInformer(informer.Platform().V1beta1().ArangoPlatformStorages().Informer(),
 		Group(),
 		Version(),
 		Kind()); err != nil {

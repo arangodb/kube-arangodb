@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 )
 

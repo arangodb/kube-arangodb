@@ -34,3 +34,39 @@ v1alpha1:
         type: object
         x-kubernetes-preserve-unknown-fields: true
     type: object
+v1beta1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          chart:
+            description: Chart keeps the Chart Reference
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          deployment:
+            description: Deployment keeps the Deployment Reference
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          values:
+            description: Values keeps the values of the Service
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+        required:
+          - chart
+          - deployment
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

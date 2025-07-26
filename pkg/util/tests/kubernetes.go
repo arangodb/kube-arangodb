@@ -45,9 +45,9 @@ import (
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
 	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
@@ -300,25 +300,25 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := arango.NetworkingV1alpha1().ArangoRoutes(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			_, err := arango.NetworkingV1beta1().ArangoRoutes(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		case **platformApi.ArangoPlatformStorage:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			_, err := arango.PlatformV1beta1().ArangoPlatformStorages(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		case **platformApi.ArangoPlatformChart:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := arango.PlatformV1alpha1().ArangoPlatformCharts(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			_, err := arango.PlatformV1beta1().ArangoPlatformCharts(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		case **platformApi.ArangoPlatformService:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := arango.PlatformV1alpha1().ArangoPlatformServices(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
@@ -532,25 +532,25 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := arango.NetworkingV1alpha1().ArangoRoutes(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			_, err := arango.NetworkingV1beta1().ArangoRoutes(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		case **platformApi.ArangoPlatformStorage:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			_, err := arango.PlatformV1beta1().ArangoPlatformStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		case **platformApi.ArangoPlatformChart:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := arango.PlatformV1alpha1().ArangoPlatformCharts(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			_, err := arango.PlatformV1beta1().ArangoPlatformCharts(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		case **platformApi.ArangoPlatformService:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := arango.PlatformV1alpha1().ArangoPlatformServices(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to update object: %s", reflect.TypeOf(v).String()))
@@ -724,22 +724,22 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			require.NotNil(t, v)
 
 			vl := *v
-			require.NoError(t, arango.NetworkingV1alpha1().ArangoRoutes(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+			require.NoError(t, arango.NetworkingV1beta1().ArangoRoutes(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **platformApi.ArangoPlatformStorage:
 			require.NotNil(t, v)
 
 			vl := *v
-			require.NoError(t, arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+			require.NoError(t, arango.PlatformV1beta1().ArangoPlatformStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **platformApi.ArangoPlatformChart:
 			require.NotNil(t, v)
 
 			vl := *v
-			require.NoError(t, arango.PlatformV1alpha1().ArangoPlatformCharts(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+			require.NoError(t, arango.PlatformV1beta1().ArangoPlatformCharts(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **platformApi.ArangoPlatformService:
 			require.NotNil(t, v)
 
 			vl := *v
-			require.NoError(t, arango.PlatformV1alpha1().ArangoPlatformServices(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+			require.NoError(t, arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1221,7 +1221,7 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 
 			vl := *v
 
-			vn, err := arango.NetworkingV1alpha1().ArangoRoutes(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			vn, err := arango.NetworkingV1beta1().ArangoRoutes(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -1236,7 +1236,7 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 
 			vl := *v
 
-			vn, err := arango.PlatformV1alpha1().ArangoPlatformStorages(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			vn, err := arango.PlatformV1beta1().ArangoPlatformStorages(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -1251,7 +1251,7 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 
 			vl := *v
 
-			vn, err := arango.PlatformV1alpha1().ArangoPlatformCharts(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			vn, err := arango.PlatformV1beta1().ArangoPlatformCharts(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -1266,7 +1266,7 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 
 			vl := *v
 
-			vn, err := arango.PlatformV1alpha1().ArangoPlatformServices(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			vn, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil

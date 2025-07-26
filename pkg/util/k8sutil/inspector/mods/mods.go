@@ -26,8 +26,8 @@ import (
 	policy "k8s.io/api/policy/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )

@@ -28,7 +28,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -38,7 +38,7 @@ func (i *implementation) ListCharts(req *pbSchedulerV2.SchedulerV2ListChartsRequ
 	var ct string
 
 	for {
-		resp, err := i.kclient.Arango().PlatformV1alpha1().ArangoPlatformCharts(i.client.Namespace()).List(ctx, meta.ListOptions{
+		resp, err := i.kclient.Arango().PlatformV1beta1().ArangoPlatformCharts(i.client.Namespace()).List(ctx, meta.ListOptions{
 			Limit:    util.OptionalType(req.Items, 128),
 			Continue: ct,
 		})
@@ -67,7 +67,7 @@ func (i *implementation) ListCharts(req *pbSchedulerV2.SchedulerV2ListChartsRequ
 }
 
 func (i *implementation) GetChart(ctx context.Context, in *pbSchedulerV2.SchedulerV2GetChartRequest) (*pbSchedulerV2.SchedulerV2GetChartResponse, error) {
-	resp, err := i.kclient.Arango().PlatformV1alpha1().ArangoPlatformCharts(i.client.Namespace()).Get(ctx, in.GetName(), meta.GetOptions{})
+	resp, err := i.kclient.Arango().PlatformV1beta1().ArangoPlatformCharts(i.client.Namespace()).Get(ctx, in.GetName(), meta.GetOptions{})
 	if err != nil {
 		return nil, asGRPCError(err)
 	}

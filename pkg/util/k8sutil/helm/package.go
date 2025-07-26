@@ -26,7 +26,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"

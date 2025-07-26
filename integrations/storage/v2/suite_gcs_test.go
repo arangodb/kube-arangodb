@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	pbImplStorageV2SharedGCS "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/gcs"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -93,7 +93,7 @@ func gcsKubernetesObject(t *testing.T, mods ...util.Mod[platformApi.ArangoPlatfo
 
 	util.ApplyMods(obj, mods...)
 
-	obj, err = client.Arango().PlatformV1alpha1().ArangoPlatformStorages(tests.FakeNamespace).Create(shutdown.Context(), obj, meta.CreateOptions{})
+	obj, err = client.Arango().PlatformV1beta1().ArangoPlatformStorages(tests.FakeNamespace).Create(shutdown.Context(), obj, meta.CreateOptions{})
 	require.NoError(t, err)
 
 	return obj.GetName(), obj.GetNamespace(), client

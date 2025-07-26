@@ -17,6 +17,28 @@ spec:
           type: object
           x-kubernetes-preserve-unknown-fields: true
       served: true
+      storage: false
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if Route is valid
+          name: Ready
+          type: string
+        - jsonPath: '.status.deployment.name'
+          description: ArangoDeployment Name
+          name: Deployment
+          type: string
+        - jsonPath: '.status.target.route.path'
+          description: Route Path
+          name: Route
+          type: string
+      subresources:
+        status: {}
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
       storage: true
       additionalPrinterColumns:
         - jsonPath: '.status.conditions[?(@.type=="Ready")].status'

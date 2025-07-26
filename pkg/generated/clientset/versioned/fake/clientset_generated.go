@@ -40,8 +40,12 @@ import (
 	fakemlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1/fake"
 	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1alpha1"
 	fakenetworkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1alpha1/fake"
+	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1beta1"
+	fakenetworkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1beta1/fake"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1"
 	fakeplatformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1/fake"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1"
+	fakeplatformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1/fake"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
 	fakereplicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1/fake"
 	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
@@ -153,9 +157,19 @@ func (c *Clientset) NetworkingV1alpha1() networkingv1alpha1.NetworkingV1alpha1In
 	return &fakenetworkingv1alpha1.FakeNetworkingV1alpha1{Fake: &c.Fake}
 }
 
+// NetworkingV1beta1 retrieves the NetworkingV1beta1Client
+func (c *Clientset) NetworkingV1beta1() networkingv1beta1.NetworkingV1beta1Interface {
+	return &fakenetworkingv1beta1.FakeNetworkingV1beta1{Fake: &c.Fake}
+}
+
 // PlatformV1alpha1 retrieves the PlatformV1alpha1Client
 func (c *Clientset) PlatformV1alpha1() platformv1alpha1.PlatformV1alpha1Interface {
 	return &fakeplatformv1alpha1.FakePlatformV1alpha1{Fake: &c.Fake}
+}
+
+// PlatformV1beta1 retrieves the PlatformV1beta1Client
+func (c *Clientset) PlatformV1beta1() platformv1beta1.PlatformV1beta1Interface {
+	return &fakeplatformv1beta1.FakePlatformV1beta1{Fake: &c.Fake}
 }
 
 // ReplicationV1 retrieves the ReplicationV1Client

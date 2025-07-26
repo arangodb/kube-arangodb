@@ -33,7 +33,7 @@ import (
 
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	pbInventoryV1 "github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition"
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
 	"github.com/arangodb/kube-arangodb/pkg/util"

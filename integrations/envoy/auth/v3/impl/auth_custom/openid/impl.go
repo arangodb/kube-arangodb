@@ -37,7 +37,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/session"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
-	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication"
+	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"

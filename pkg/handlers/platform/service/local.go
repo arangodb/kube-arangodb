@@ -22,7 +22,7 @@ package service
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 )
 
 func Kind() string {

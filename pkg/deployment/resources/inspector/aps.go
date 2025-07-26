@@ -24,7 +24,7 @@ import (
 	"context"
 	"time"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoplatformstorage"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
@@ -53,7 +53,7 @@ func (p arangoPlatformStoragesInspectorLoader) Load(ctx context.Context, i *insp
 	q.v1alpha1 = newInspectorVersion[*platformApi.ArangoPlatformStorageList, *platformApi.ArangoPlatformStorage](ctx,
 		constants.ArangoPlatformStorageGRv1Alpha1(),
 		constants.ArangoPlatformStorageGKv1Alpha1(),
-		i.client.Arango().PlatformV1alpha1().ArangoPlatformStorages(i.namespace),
+		i.client.Arango().PlatformV1beta1().ArangoPlatformStorages(i.namespace),
 		arangoplatformstorage.List())
 
 	i.arangoPlatformStorages = &q

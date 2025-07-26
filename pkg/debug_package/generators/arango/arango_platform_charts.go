@@ -26,12 +26,12 @@ import (
 
 	"github.com/rs/zerolog"
 
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
-func arangoPlatformV1Alpha1ArangoPlatformChartExtract(ctx context.Context, logger zerolog.Logger, client kclient.Client, files chan<- shared.File, item *platformApi.ArangoPlatformChart) error {
+func arangoPlatformV1beta1ArangoPlatformChartExtract(ctx context.Context, logger zerolog.Logger, client kclient.Client, files chan<- shared.File, item *platformApi.ArangoPlatformChart) error {
 	if i := item.Status.Info; i != nil {
 		if i.Valid {
 			if d := i.Details; d != nil {

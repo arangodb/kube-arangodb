@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -134,70 +133,6 @@ func (l *MemberStatusList) removeByID(id string) error {
 		}
 	}
 	return errors.WithStack(errors.Wrapf(NotFoundError, "Member '%s' is not a member", id))
-}
-
-type MemberToRemoveSelector func(m MemberStatusList) (string, error)
-
-// SelectMemberToRemove selects a member from the given list that should
-// be removed in a ScaleDown action.
-// Returns an error if the list is empty.
-// Deprecated: will be removed in 1.3.0 since ScaleDown annotation is already removed
-func (l MemberStatusList) SelectMemberToRemove(selectors ...MemberToRemoveSelector) (MemberStatus, error) {
-	if len(l) > 0 {
-		// Try to find member with phase to be removed
-		for _, m := range l {
-			if m.Conditions.IsTrue(ConditionTypeMarkedToRemove) {
-				return m, nil
-			}
-		}
-		for _, m := range l {
-			if m.Conditions.IsTrue(ConditionTypeScaleDownCandidate) {
-				return m, nil
-			}
-		}
-		// Try to find a not ready member
-		for _, m := range l {
-			if m.Phase.IsPending() {
-				return m, nil
-			}
-		}
-		for _, m := range l {
-			if !m.Conditions.IsTrue(ConditionTypeReady) {
-				return m, nil
-			}
-		}
-		for _, m := range l {
-			if m.Conditions.IsTrue(ConditionTypeCleanedOut) {
-				return m, nil
-			}
-		}
-
-		// Run conditional picker
-		for _, selector := range selectors {
-			if selector == nil {
-				continue
-			}
-			if m, err := selector(l); err != nil {
-				return MemberStatus{}, err
-			} else if m != "" {
-				if member, ok := l.ElementByID(m); ok {
-					return member, nil
-				} else {
-					return MemberStatus{}, errors.Errorf("Unable to find member with id %s", m)
-				}
-			}
-		}
-
-		// Pick a random member that is in created state
-		perm := util.Rand().Perm(len(l))
-		for _, idx := range perm {
-			m := l[idx]
-			if m.Phase == MemberPhaseCreated {
-				return m, nil
-			}
-		}
-	}
-	return MemberStatus{}, errors.WithStack(errors.Wrap(NotFoundError, "No member available for removal"))
 }
 
 // MembersReady returns the number of members that are in the Ready state.

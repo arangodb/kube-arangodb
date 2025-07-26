@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package inspector
 
 import (
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
@@ -42,5 +42,5 @@ func (p arangoRouteMod) V1Alpha1() generic.ModStatusClient[*networkingApi.Arango
 }
 
 func (p arangoRouteMod) clientv1alpha1() generic.ModStatusClient[*networkingApi.ArangoRoute] {
-	return p.i.Client().Arango().NetworkingV1alpha1().ArangoRoutes(p.i.Namespace())
+	return p.i.Client().Arango().NetworkingV1beta1().ArangoRoutes(p.i.Namespace())
 }

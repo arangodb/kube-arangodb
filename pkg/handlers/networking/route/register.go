@@ -32,7 +32,7 @@ import (
 // RegisterInformer into operator
 func RegisterInformer(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) error {
 
-	if err := operator.RegisterInformer(informer.Networking().V1alpha1().ArangoRoutes().Informer(),
+	if err := operator.RegisterInformer(informer.Networking().V1beta1().ArangoRoutes().Informer(),
 		Group(),
 		Version(),
 		Kind()); err != nil {

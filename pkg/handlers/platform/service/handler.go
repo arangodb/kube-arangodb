@@ -30,8 +30,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/types"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/types"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -64,7 +64,7 @@ func (h *handler) Name() string {
 
 func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	// Get Backup object. It also covers NotFound case
-	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.PlatformV1alpha1().ArangoPlatformServices(item.Namespace).Get, item.Name, meta.GetOptions{})
+	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.PlatformV1beta1().ArangoPlatformServices(item.Namespace).Get, item.Name, meta.GetOptions{})
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
 			return nil
@@ -81,7 +81,7 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		}
 
 		if finalizer != "" {
-			if changed, err := patcher.EnsureFinalizersGone(ctx, h.client.PlatformV1alpha1().ArangoPlatformServices(item.Namespace), object, finalizer); err != nil {
+			if changed, err := patcher.EnsureFinalizersGone(ctx, h.client.PlatformV1beta1().ArangoPlatformServices(item.Namespace), object, finalizer); err != nil {
 				return err
 			} else if changed {
 				return operator.Reconcile("Finalizers updated")
@@ -91,7 +91,7 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		return operator.Reconcile("Finalizers pending removal")
 	}
 
-	if changed, err := patcher.EnsureFinalizersPresent(ctx, h.client.PlatformV1alpha1().ArangoPlatformServices(item.Namespace), object, platformApi.FinalizerArangoPlatformServiceRelease); err != nil {
+	if changed, err := patcher.EnsureFinalizersPresent(ctx, h.client.PlatformV1beta1().ArangoPlatformServices(item.Namespace), object, platformApi.FinalizerArangoPlatformServiceRelease); err != nil {
 		return err
 	} else if changed {
 		return operator.Reconcile("Finalizers updated")
@@ -118,7 +118,7 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		item.Namespace,
 		item.Name)
 
-	if _, err := operator.WithArangoPlatformServiceUpdateStatusInterfaceRetry(ctx, h.client.PlatformV1alpha1().ArangoPlatformServices(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
+	if _, err := operator.WithArangoPlatformServiceUpdateStatusInterfaceRetry(ctx, h.client.PlatformV1beta1().ArangoPlatformServices(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
 		return err
 	}
 
@@ -234,7 +234,7 @@ func (h *handler) HandleChart(ctx context.Context, item operation.Item, extensio
 
 	if status.Chart == nil {
 		// Find the chart
-		chart, err := h.client.PlatformV1alpha1().ArangoPlatformCharts(extension.GetNamespace()).Get(ctx, extension.Spec.Chart.GetName(), meta.GetOptions{})
+		chart, err := h.client.PlatformV1beta1().ArangoPlatformCharts(extension.GetNamespace()).Get(ctx, extension.Spec.Chart.GetName(), meta.GetOptions{})
 		if err != nil {
 			if !apiErrors.IsNotFound(err) {
 				return false, err
@@ -253,7 +253,7 @@ func (h *handler) HandleChart(ctx context.Context, item operation.Item, extensio
 		return false, operator.Stop("Chart Not Accepted")
 	}
 
-	chart, err := h.client.PlatformV1alpha1().ArangoPlatformCharts(extension.GetNamespace()).Get(ctx, extension.Spec.Chart.GetName(), meta.GetOptions{})
+	chart, err := h.client.PlatformV1beta1().ArangoPlatformCharts(extension.GetNamespace()).Get(ctx, extension.Spec.Chart.GetName(), meta.GetOptions{})
 	if err != nil {
 		if !apiErrors.IsNotFound(err) {
 			return false, err

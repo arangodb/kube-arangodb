@@ -387,7 +387,7 @@ func (o *Operator) onStartOperatorV2Apps(operator operatorV2.Operator, recorder 
 
 func (o *Operator) onStartOperatorV2Networking(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	checkFn := func() error {
-		_, err := o.Client.Arango().NetworkingV1alpha1().ArangoRoutes(o.Namespace).List(context.Background(), meta.ListOptions{})
+		_, err := o.Client.Arango().NetworkingV1beta1().ArangoRoutes(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
 	o.waitForCRD(networking.ArangoRouteCRDName, checkFn)
@@ -399,7 +399,7 @@ func (o *Operator) onStartOperatorV2Networking(operator operatorV2.Operator, rec
 
 func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	checkFn := func() error {
-		_, err := o.Client.Arango().PlatformV1alpha1().ArangoPlatformStorages(o.Namespace).List(context.Background(), meta.ListOptions{})
+		_, err := o.Client.Arango().PlatformV1beta1().ArangoPlatformStorages(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
 	o.waitForCRD(platform.ArangoPlatformStorageCRDName, checkFn)

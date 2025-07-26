@@ -30,10 +30,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func TestDeploymentSpecValidate(t *testing.T) {
-	// TODO
-}
-
 func TestDeploymentSpecSetDefaults(t *testing.T) {
 	def := func(spec DeploymentSpec) DeploymentSpec {
 		spec.SetDefaults("test")

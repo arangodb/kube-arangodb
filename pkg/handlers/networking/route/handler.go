@@ -26,7 +26,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -55,7 +55,7 @@ func (h *handler) Name() string {
 func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	// Get Backup object. It also covers NotFound case
 
-	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.NetworkingV1alpha1().ArangoRoutes(item.Namespace).Get, item.Name, meta.GetOptions{})
+	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.NetworkingV1beta1().ArangoRoutes(item.Namespace).Get, item.Name, meta.GetOptions{})
 	if err != nil {
 		if kerrors.IsNotFound(err) {
 			return nil
@@ -85,7 +85,7 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		item.Namespace,
 		item.Name)
 
-	if _, err := operator.WithNetworkingArangoRouteUpdateStatusInterfaceRetry(context.Background(), h.client.NetworkingV1alpha1().ArangoRoutes(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
+	if _, err := operator.WithNetworkingArangoRouteUpdateStatusInterfaceRetry(context.Background(), h.client.NetworkingV1beta1().ArangoRoutes(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
 		return err
 	}
 
