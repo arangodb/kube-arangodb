@@ -43,7 +43,7 @@ import (
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
@@ -200,11 +200,11 @@ func (c Config) RenderClusters() ([]*pbEnvoyClusterV3.Cluster, error) {
 			return nil, err
 		}
 		cluster := &pbEnvoyClusterV3.Cluster{
-			Name:           constants.EnvoyIntegrationSidecarCluster,
+			Name:           utilConstants.EnvoyIntegrationSidecarCluster,
 			ConnectTimeout: durationpb.New(time.Second),
 			LbPolicy:       pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
 			LoadAssignment: &pbEnvoyEndpointV3.ClusterLoadAssignment{
-				ClusterName: constants.EnvoyIntegrationSidecarCluster,
+				ClusterName: utilConstants.EnvoyIntegrationSidecarCluster,
 				Endpoints: []*pbEnvoyEndpointV3.LocalityLbEndpoints{
 					{
 						LbEndpoints: []*pbEnvoyEndpointV3.LbEndpoint{
@@ -300,7 +300,7 @@ func (c Config) RenderIntegrationSidecarFilter() (*httpConnectionManagerAPI.Http
 	}
 
 	return &httpConnectionManagerAPI.HttpFilter{
-		Name: constants.EnvoyIntegrationSidecarFilterName,
+		Name: utilConstants.EnvoyIntegrationSidecarFilterName,
 		ConfigType: &httpConnectionManagerAPI.HttpFilter_TypedConfig{
 			TypedConfig: e,
 		},

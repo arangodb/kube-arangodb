@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -64,9 +64,9 @@ func (a arangoDeploymentLicenseLoader) Refresh(ctx context.Context) (string, boo
 
 	var licenseData []byte
 
-	if lic, ok := secret.Data[constants.SecretKeyV2License]; ok {
+	if lic, ok := secret.Data[utilConstants.SecretKeyV2License]; ok {
 		licenseData = lic
-	} else if lic2, ok := secret.Data[constants.SecretKeyV2Token]; ok {
+	} else if lic2, ok := secret.Data[utilConstants.SecretKeyV2Token]; ok {
 		licenseData = lic2
 	}
 

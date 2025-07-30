@@ -23,7 +23,7 @@ package inspector
 import (
 	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
@@ -40,7 +40,7 @@ type serviceMonitorsMod struct {
 }
 
 func (p serviceMonitorsMod) V1() generic.ModClient[*monitoringApi.ServiceMonitor] {
-	return wrapMod[*monitoringApi.ServiceMonitor](definitions.ServiceMonitor, p.i.GetThrottles, generic.WithModStatusGetter[*monitoringApi.ServiceMonitor](constants.ServiceMonitorGKv1(), p.clientv1))
+	return wrapMod[*monitoringApi.ServiceMonitor](definitions.ServiceMonitor, p.i.GetThrottles, generic.WithModStatusGetter[*monitoringApi.ServiceMonitor](inspectorConstants.ServiceMonitorGKv1(), p.clientv1))
 }
 
 func (p serviceMonitorsMod) clientv1() generic.ModClient[*monitoringApi.ServiceMonitor] {

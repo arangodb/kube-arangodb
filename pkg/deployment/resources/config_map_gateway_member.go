@@ -25,7 +25,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 
@@ -35,17 +35,17 @@ func (r *Resources) ensureMemberConfigGatewayConfig(ctx context.Context, cachedS
 	}
 
 	data, _, _, err := gateway.NodeDynamicConfig("arangodb", member.Member.ID, &gateway.DynamicConfig{
-		Path: constants.GatewayCDSVolumeMountDir,
-		File: constants.GatewayConfigFileName,
+		Path: utilConstants.GatewayCDSVolumeMountDir,
+		File: utilConstants.GatewayConfigFileName,
 	}, &gateway.DynamicConfig{
-		Path: constants.GatewayLDSVolumeMountDir,
-		File: constants.GatewayConfigFileName,
+		Path: utilConstants.GatewayLDSVolumeMountDir,
+		File: utilConstants.GatewayConfigFileName,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]string{
-		constants.GatewayConfigFileName: string(data),
+		utilConstants.GatewayConfigFileName: string(data),
 	}, nil
 }

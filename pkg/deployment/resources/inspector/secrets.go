@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -52,8 +52,8 @@ func (p secretsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q secretsInspector
 
 	q.v1 = newInspectorVersion[*core.SecretList, *core.Secret](ctx,
-		constants.SecretGRv1(),
-		constants.SecretGKv1(),
+		inspectorConstants.SecretGRv1(),
+		inspectorConstants.SecretGKv1(),
 		i.client.Kubernetes().CoreV1().Secrets(i.namespace),
 		secret.List())
 
@@ -102,8 +102,8 @@ func (p *secretsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, secretsInspectorLoaderObj)
 }
 
-func (p *secretsInspector) Version() version.Version {
-	return version.V1
+func (p *secretsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *secretsInspector) Throttle(c throttle.Components) throttle.Throttle {

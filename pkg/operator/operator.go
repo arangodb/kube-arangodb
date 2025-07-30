@@ -63,7 +63,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/timer"
@@ -164,72 +164,72 @@ func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 func (o *Operator) Run() {
 	if o.Config.EnableDeployment {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-deployment-operator", constants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
+			go o.runLeaderElection("arango-deployment-operator", utilConstants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-deployment-operator", constants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
+			go o.runWithoutLeaderElection("arango-deployment-operator", utilConstants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
 		}
 	}
 	if o.Config.EnableDeploymentReplication {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-deployment-replication-operator", constants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
+			go o.runLeaderElection("arango-deployment-replication-operator", utilConstants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-deployment-replication-operator", constants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
+			go o.runWithoutLeaderElection("arango-deployment-replication-operator", utilConstants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
 		}
 	}
 	if o.Config.EnableStorage {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-storage-operator", constants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
+			go o.runLeaderElection("arango-storage-operator", utilConstants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-storage-operator", constants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
+			go o.runWithoutLeaderElection("arango-storage-operator", utilConstants.LabelRole, o.onStartStorage, o.Dependencies.StorageProbe)
 		}
 	}
 	if o.Config.EnableBackup {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
+			go o.runLeaderElection("arango-backup-operator", utilConstants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-backup-operator", constants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
+			go o.runWithoutLeaderElection("arango-backup-operator", utilConstants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
 		}
 	}
 	if o.Config.EnableApps {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
+			go o.runLeaderElection("arango-apps-operator", utilConstants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-apps-operator", constants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
+			go o.runWithoutLeaderElection("arango-apps-operator", utilConstants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		}
 	}
 	if o.Config.EnableML {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-ml-operator", constants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
+			go o.runLeaderElection("arango-ml-operator", utilConstants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-ml-operator", constants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
+			go o.runWithoutLeaderElection("arango-ml-operator", utilConstants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
 		}
 	}
 	if o.Config.EnableAnalytics {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-analytics-operator", constants.AnalyticsLabelRole, o.onStartAnalytics, o.Dependencies.AnalyticsProbe)
+			go o.runLeaderElection("arango-analytics-operator", utilConstants.AnalyticsLabelRole, o.onStartAnalytics, o.Dependencies.AnalyticsProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-analytics-operator", constants.AnalyticsLabelRole, o.onStartAnalytics, o.Dependencies.AnalyticsProbe)
+			go o.runWithoutLeaderElection("arango-analytics-operator", utilConstants.AnalyticsLabelRole, o.onStartAnalytics, o.Dependencies.AnalyticsProbe)
 		}
 	}
 	if o.Config.EnableNetworking {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-networking-operator", constants.NetworkingLabelRole, o.onStartNetworking, o.Dependencies.NetworkingProbe)
+			go o.runLeaderElection("arango-networking-operator", utilConstants.NetworkingLabelRole, o.onStartNetworking, o.Dependencies.NetworkingProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-networking-operator", constants.NetworkingLabelRole, o.onStartNetworking, o.Dependencies.NetworkingProbe)
+			go o.runWithoutLeaderElection("arango-networking-operator", utilConstants.NetworkingLabelRole, o.onStartNetworking, o.Dependencies.NetworkingProbe)
 		}
 	}
 	if o.Config.EnablePlatform {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-platform-operator", constants.PlatformLabelRole, o.onStartPlatform, o.Dependencies.PlatformProbe)
+			go o.runLeaderElection("arango-platform-operator", utilConstants.PlatformLabelRole, o.onStartPlatform, o.Dependencies.PlatformProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-platform-operator", constants.PlatformLabelRole, o.onStartPlatform, o.Dependencies.PlatformProbe)
+			go o.runWithoutLeaderElection("arango-platform-operator", utilConstants.PlatformLabelRole, o.onStartPlatform, o.Dependencies.PlatformProbe)
 		}
 	}
 	if o.Config.EnableScheduler {
 		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-scheduler-operator", constants.SchedulerLabelRole, o.onStartScheduler, o.Dependencies.SchedulerProbe)
+			go o.runLeaderElection("arango-scheduler-operator", utilConstants.SchedulerLabelRole, o.onStartScheduler, o.Dependencies.SchedulerProbe)
 		} else {
-			go o.runWithoutLeaderElection("arango-scheduler-operator", constants.SchedulerLabelRole, o.onStartScheduler, o.Dependencies.SchedulerProbe)
+			go o.runWithoutLeaderElection("arango-scheduler-operator", utilConstants.SchedulerLabelRole, o.onStartScheduler, o.Dependencies.SchedulerProbe)
 		}
 	}
 	if o.Config.EnableK2KClusterSync {

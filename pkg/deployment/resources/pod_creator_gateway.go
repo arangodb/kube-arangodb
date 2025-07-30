@@ -27,7 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -46,28 +46,28 @@ func createGatewayVolumes(input pod.Input) pod.Volumes {
 	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
 	volumes.Append(pod.JWT(), input)
 
-	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName())))
-	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayCDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "cds")))
-	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.GatewayLDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "lds")))
-	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(constants.MemberConfigVolumeName, input.ArangoMember.GetName()))
+	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(utilConstants.GatewayVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName())))
+	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(utilConstants.GatewayCDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "cds")))
+	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(utilConstants.GatewayLDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "lds")))
+	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(utilConstants.MemberConfigVolumeName, input.ArangoMember.GetName()))
 	volumes.AddVolumeMount(core.VolumeMount{
-		Name:      constants.GatewayVolumeName,
-		MountPath: constants.GatewayVolumeMountDir,
+		Name:      utilConstants.GatewayVolumeName,
+		MountPath: utilConstants.GatewayVolumeMountDir,
 		ReadOnly:  true,
 	})
 	volumes.AddVolumeMount(core.VolumeMount{
-		Name:      constants.GatewayCDSVolumeName,
-		MountPath: constants.GatewayCDSVolumeMountDir,
+		Name:      utilConstants.GatewayCDSVolumeName,
+		MountPath: utilConstants.GatewayCDSVolumeMountDir,
 		ReadOnly:  true,
 	})
 	volumes.AddVolumeMount(core.VolumeMount{
-		Name:      constants.GatewayLDSVolumeName,
-		MountPath: constants.GatewayLDSVolumeMountDir,
+		Name:      utilConstants.GatewayLDSVolumeName,
+		MountPath: utilConstants.GatewayLDSVolumeMountDir,
 		ReadOnly:  true,
 	})
 	volumes.AddVolumeMount(core.VolumeMount{
-		Name:      constants.MemberConfigVolumeName,
-		MountPath: constants.MemberConfigVolumeMountDir,
+		Name:      utilConstants.MemberConfigVolumeName,
+		MountPath: utilConstants.MemberConfigVolumeMountDir,
 		ReadOnly:  true,
 	})
 

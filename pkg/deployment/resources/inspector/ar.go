@@ -25,13 +25,13 @@ import (
 	"time"
 
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -50,9 +50,9 @@ func (p arangoRoutesInspectorLoader) Component() definitions.Component {
 func (p arangoRoutesInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q arangoRoutesInspector
 
-	q.v1alpha1 = newInspectorVersion[*networkingApi.ArangoRouteList, *networkingApi.ArangoRoute](ctx,
-		constants.ArangoRouteGRv1Alpha1(),
-		constants.ArangoRouteGKv1Alpha1(),
+	q.v1beta1 = newInspectorVersion[*networkingApi.ArangoRouteList, *networkingApi.ArangoRoute](ctx,
+		inspectorConstants.ArangoRouteGRv1Beta1(),
+		inspectorConstants.ArangoRouteGKv1Beta1(),
 		i.client.Arango().NetworkingV1beta1().ArangoRoutes(i.namespace),
 		arangoroute.List())
 
@@ -85,7 +85,7 @@ type arangoRoutesInspector struct {
 
 	last time.Time
 
-	v1alpha1 *inspectorVersion[*networkingApi.ArangoRoute]
+	v1beta1 *inspectorVersion[*networkingApi.ArangoRoute]
 }
 
 func (p *arangoRoutesInspector) LastRefresh() time.Time {
@@ -97,8 +97,8 @@ func (p *arangoRoutesInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, arangoRoutesInspectorLoaderObj)
 }
 
-func (p *arangoRoutesInspector) Version() version.Version {
-	return version.V1
+func (p *arangoRoutesInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1Beta1
 }
 
 func (p *arangoRoutesInspector) Throttle(c throttle.Components) throttle.Throttle {
@@ -114,13 +114,13 @@ func (p *arangoRoutesInspector) validate() error {
 		return errors.Errorf("Parent is nil")
 	}
 
-	return p.v1alpha1.validate()
+	return p.v1beta1.validate()
 }
 
-func (p *arangoRoutesInspector) V1Alpha1() (generic.Inspector[*networkingApi.ArangoRoute], error) {
-	if p.v1alpha1.err != nil {
-		return nil, p.v1alpha1.err
+func (p *arangoRoutesInspector) V1Beta1() (generic.Inspector[*networkingApi.ArangoRoute], error) {
+	if p.v1beta1.err != nil {
+		return nil, p.v1beta1.err
 	}
 
-	return p.v1alpha1, nil
+	return p.v1beta1, nil
 }

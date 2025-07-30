@@ -239,7 +239,7 @@ ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 
 ***
 
@@ -872,7 +872,7 @@ UpgradeMode Defines the upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 * `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
@@ -1350,7 +1350,7 @@ ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 
 ***
 
@@ -1983,7 +1983,7 @@ UpgradeMode Defines the upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 * `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
@@ -2330,7 +2330,7 @@ ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 
 ***
 
@@ -2963,7 +2963,7 @@ UpgradeMode Defines the upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 * `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
@@ -3533,7 +3533,7 @@ ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 
 ***
 
@@ -4166,7 +4166,7 @@ UpgradeMode Defines the upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 * `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
@@ -5278,7 +5278,7 @@ ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 
 ***
 
@@ -5911,7 +5911,7 @@ UpgradeMode Defines the upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 * `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
@@ -6472,7 +6472,7 @@ ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 
 ***
 
@@ -7105,7 +7105,7 @@ UpgradeMode Defines the upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 * `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***
@@ -7444,7 +7444,7 @@ ManualUpgradeMode Defines the manually triggered upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 
 ***
 
@@ -8077,7 +8077,7 @@ UpgradeMode Defines the upgrade mode for the Member
 Possible Values: 
 * `"inplace"` (default) - Inplace Upgrade procedure (with Upgrade initContainer)
 * `"replace"` - Replaces server instead of upgrading. Takes an effect only on DBServer
-* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. Takes an effect only on DBServer
+* `"optional-replace"` - Replaces the member if upgrade fails with predefined exit codes. If ArangoDB is below version 3.12.5.1, it is always replaced. Takes an effect only on DBServer
 * `"manual"` -  Waits for the manual upgrade. Requires replacement or the annotation on the member
 
 ***

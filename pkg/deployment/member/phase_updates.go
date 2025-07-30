@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 type phaseMapFunc func(obj meta.Object, spec api.DeploymentSpec, group api.ServerGroup, action api.Action, m *api.MemberStatus)
@@ -117,7 +117,7 @@ func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	m.Conditions.Remove(api.ConditionTypeArchitectureChangeCannotBeApplied)
 	m.Conditions.Remove(api.ConditionTypeMemberVolumeUnschedulable)
 
-	m.RemoveTerminationsBefore(time.Now().Add(-1 * constants.RecentTerminationsKeepPeriod))
+	m.RemoveTerminationsBefore(time.Now().Add(-1 * utilConstants.RecentTerminationsKeepPeriod))
 
 	m.Upgrade = false
 }

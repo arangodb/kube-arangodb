@@ -24,19 +24,22 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
+	networkingApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 )
 
 // ArangoRoute
 const (
-	ArangoRouteGroup           = networking.ArangoNetworkingGroupName
-	ArangoRouteResource        = networking.ArangoRouteResourcePlural
-	ArangoRouteKind            = networking.ArangoRouteResourceKind
-	ArangoRouteVersionV1Alpha1 = networkingApi.ArangoNetworkingVersion
+	ArangoRouteGroup    = networking.ArangoNetworkingGroupName
+	ArangoRouteResource = networking.ArangoRouteResourcePlural
+	ArangoRouteKind     = networking.ArangoRouteResourceKind
+	// deprecated: Use v1beta1 instead
+	ArangoRouteVersionV1Alpha1 = networkingApiv1alpha1.ArangoNetworkingVersion
+	ArangoRouteVersionV1Beta1  = networkingApi.ArangoNetworkingVersion
 )
 
 func init() {
-	register[*networkingApi.ArangoRoute](ArangoRouteGKv1Alpha1(), ArangoRouteGRv1Alpha1())
+	register[*networkingApi.ArangoRoute](ArangoRouteGKv1Beta1(), ArangoRouteGRv1Beta1())
 }
 
 func ArangoRouteGK() schema.GroupKind {
@@ -46,11 +49,20 @@ func ArangoRouteGK() schema.GroupKind {
 	}
 }
 
+// deprecated: Use v1beta1 instead
 func ArangoRouteGKv1Alpha1() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   ArangoRouteGroup,
 		Kind:    ArangoRouteKind,
 		Version: ArangoRouteVersionV1Alpha1,
+	}
+}
+
+func ArangoRouteGKv1Beta1() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   ArangoRouteGroup,
+		Kind:    ArangoRouteKind,
+		Version: ArangoRouteVersionV1Beta1,
 	}
 }
 
@@ -61,10 +73,19 @@ func ArangoRouteGR() schema.GroupResource {
 	}
 }
 
+// deprecated: Use v1beta1 instead
 func ArangoRouteGRv1Alpha1() schema.GroupVersionResource {
 	return schema.GroupVersionResource{
 		Group:    ArangoRouteGroup,
 		Resource: ArangoRouteResource,
 		Version:  ArangoRouteVersionV1Alpha1,
+	}
+}
+
+func ArangoRouteGRv1Beta1() schema.GroupVersionResource {
+	return schema.GroupVersionResource{
+		Group:    ArangoRouteGroup,
+		Resource: ArangoRouteResource,
+		Version:  ArangoRouteVersionV1Beta1,
 	}
 }

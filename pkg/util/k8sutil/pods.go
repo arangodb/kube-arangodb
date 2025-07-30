@@ -42,7 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
@@ -513,7 +513,7 @@ func operatorInitContainer(name, operatorImage string, command []string, securit
 		Env: []core.EnvVar{
 			{
 				Name:  "MY_POD_NAMESPACE",
-				Value: os.Getenv(constants.EnvOperatorPodNamespace),
+				Value: os.Getenv(utilConstants.EnvOperatorPodNamespace),
 			},
 		},
 		VolumeMounts:    volumes,
@@ -749,17 +749,17 @@ func GetFinalizers(spec api.ServerGroupSpec, group api.ServerGroup) []string {
 	var finalizers []string
 
 	if d := spec.GetShutdownDelay(group); d != 0 {
-		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
+		finalizers = append(finalizers, utilConstants.FinalizerDelayPodTermination)
 	}
 
 	if features.GracefulShutdown().Enabled() {
-		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown) // No need for other finalizers, quorum will be managed
+		finalizers = append(finalizers, utilConstants.FinalizerPodGracefulShutdown) // No need for other finalizers, quorum will be managed
 	} else {
 		switch group {
 		case api.ServerGroupAgents:
-			finalizers = append(finalizers, constants.FinalizerPodAgencyServing)
+			finalizers = append(finalizers, utilConstants.FinalizerPodAgencyServing)
 		case api.ServerGroupDBServers:
-			finalizers = append(finalizers, constants.FinalizerPodDrainDBServer)
+			finalizers = append(finalizers, utilConstants.FinalizerPodDrainDBServer)
 		}
 	}
 

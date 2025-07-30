@@ -26,7 +26,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func NewResourceError(cause error, obj interface{}) error {
@@ -35,7 +35,7 @@ func NewResourceError(cause error, obj interface{}) error {
 	}
 
 	if meta, ok := obj.(meta.Object); ok {
-		if gvk, ok := constants.ExtractGVKFromObject(meta); !ok {
+		if gvk, ok := inspectorConstants.ExtractGVKFromObject(meta); !ok {
 			return cause
 		} else {
 			return ResourceError{

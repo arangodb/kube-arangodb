@@ -24,7 +24,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -113,7 +113,7 @@ func (d *DeploymentSpecGateway) IsDynamic() bool {
 func (d *DeploymentSpecGateway) GetTimeout() meta.Duration {
 	if d == nil || d.Timeout == nil {
 		return meta.Duration{
-			Duration: constants.DefaultEnvoyUpstreamTimeout,
+			Duration: utilConstants.DefaultEnvoyUpstreamTimeout,
 		}
 	}
 
@@ -128,10 +128,10 @@ func (d *DeploymentSpecGateway) Validate() error {
 
 	return shared.WithErrors(
 		shared.PrefixResourceErrorFunc("timeout", func() error {
-			if t := d.GetTimeout(); t.Duration < constants.MinEnvoyUpstreamTimeout {
-				return errors.Errorf("Timeout lower than %s not allowed", constants.MinEnvoyUpstreamTimeout.String())
-			} else if t.Duration > constants.MaxEnvoyUpstreamTimeout {
-				return errors.Errorf("Timeout greater than %s not allowed", constants.MaxEnvoyUpstreamTimeout.String())
+			if t := d.GetTimeout(); t.Duration < utilConstants.MinEnvoyUpstreamTimeout {
+				return errors.Errorf("Timeout lower than %s not allowed", utilConstants.MinEnvoyUpstreamTimeout.String())
+			} else if t.Duration > utilConstants.MaxEnvoyUpstreamTimeout {
+				return errors.Errorf("Timeout greater than %s not allowed", utilConstants.MaxEnvoyUpstreamTimeout.String())
 			}
 			return nil
 		}),

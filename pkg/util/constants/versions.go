@@ -20,24 +20,34 @@
 
 package constants
 
-const (
-	VersionV1Alpha1 = "v1alpha1"
-	VersionV1Beta1  = "v1beta1"
-	VersionV1       = "v1"
+type Version string
 
-	VersionV2Alpha1 = "v2alpha1"
+const (
+	VersionV1Alpha1 Version = "v1alpha1"
+	VersionV1Beta1  Version = "v1beta1"
+	VersionV1       Version = "v1"
+
+	VersionV2Alpha1 Version = "v2alpha1"
 )
 
-func IsCompatible(base, version string) bool {
-	return (IsV1Compatible(base) && IsV1Compatible(version)) || (IsV2Compatible(base) && IsV2Compatible(version))
+func (v Version) String() string {
+	return string(v)
 }
 
-func IsV1Compatible(version string) bool {
-	return version == VersionV1Alpha1 ||
-		version == VersionV1Beta1 ||
-		version == VersionV1
+func (v Version) Is(other Version) bool {
+	return v == other
 }
 
-func IsV2Compatible(version string) bool {
-	return version == VersionV2Alpha1
+func (v Version) IsCompatible(other Version) bool {
+	return (v.IsV1Compatible() && other.IsV1Compatible()) || (v.IsV2Compatible() && other.IsV2Compatible())
+}
+
+func (v Version) IsV1Compatible() bool {
+	return v == VersionV1Alpha1 ||
+		v == VersionV1Beta1 ||
+		v == VersionV1
+}
+
+func (v Version) IsV2Compatible() bool {
+	return v == VersionV2Alpha1
 }

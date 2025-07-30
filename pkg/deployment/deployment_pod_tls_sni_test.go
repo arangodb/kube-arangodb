@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
@@ -46,7 +46,7 @@ func createTLSSNISecret(t *testing.T, client generic.ModClient[*core.Secret], na
 		Type: core.SecretTypeOpaque,
 		Data: map[string][]byte{},
 	}
-	secret.Data[constants.SecretTLSKeyfile] = []byte("")
+	secret.Data[utilConstants.SecretTLSKeyfile] = []byte("")
 
 	_, err := client.Create(context.Background(), &secret, meta.CreateOptions{})
 	require.NoError(t, err)

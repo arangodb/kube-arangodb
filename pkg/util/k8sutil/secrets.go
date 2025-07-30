@@ -28,7 +28,7 @@ import (
 
 	"github.com/arangodb-helper/go-certificates"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/crypto"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -49,12 +49,12 @@ func ValidateEncryptionKeySecret(secrets generic.InspectorInterface[*core.Secret
 
 func ValidateEncryptionKeyFromSecret(s *core.Secret) error {
 	// Check `key` field
-	keyData, found := s.Data[constants.SecretEncryptionKey]
+	keyData, found := s.Data[utilConstants.SecretEncryptionKey]
 	if !found {
-		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretEncryptionKey, s.GetName()))
+		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretEncryptionKey, s.GetName()))
 	}
 	if len(keyData) != 32 {
-		return errors.WithStack(errors.Errorf("'%s' in secret '%s' is expected to be 32 bytes long, found %d", constants.SecretEncryptionKey, s.GetName(), len(keyData)))
+		return errors.WithStack(errors.Errorf("'%s' in secret '%s' is expected to be 32 bytes long, found %d", utilConstants.SecretEncryptionKey, s.GetName(), len(keyData)))
 	}
 	return nil
 }
@@ -70,7 +70,7 @@ func CreateEncryptionKeySecret(secrets generic.ModClient[*core.Secret], secretNa
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			constants.SecretEncryptionKey: key,
+			utilConstants.SecretEncryptionKey: key,
 		},
 	}
 	if _, err := secrets.Create(context.Background(), secret, meta.CreateOptions{}); err != nil {
@@ -88,9 +88,9 @@ func ValidateCACertificateSecret(ctx context.Context, secrets generic.ReadClient
 		return errors.WithStack(err)
 	}
 	// Check `ca.crt` field
-	_, found := s.Data[constants.SecretCACertificate]
+	_, found := s.Data[utilConstants.SecretCACertificate]
 	if !found {
-		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretCACertificate, secretName))
 	}
 	return nil
 }
@@ -109,9 +109,9 @@ func GetCACertficateSecret(ctx context.Context, secrets generic.ReadClient[*core
 		return "", errors.WithStack(err)
 	}
 	// Load `ca.crt` field
-	cert, found := s.Data[constants.SecretCACertificate]
+	cert, found := s.Data[utilConstants.SecretCACertificate]
 	if !found {
-		return "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, secretName))
+		return "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretCACertificate, secretName))
 	}
 	return string(cert), nil
 }
@@ -141,13 +141,13 @@ func GetCAFromSecret(s *core.Secret, ownerRef *meta.OwnerReference) (string, str
 		}
 	}
 	// Load `ca.crt` field
-	cert, found := s.Data[constants.SecretCACertificate]
+	cert, found := s.Data[utilConstants.SecretCACertificate]
 	if !found {
-		return "", "", isOwned, errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretCACertificate, s.GetName()))
+		return "", "", isOwned, errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretCACertificate, s.GetName()))
 	}
-	priv, found := s.Data[constants.SecretCAKey]
+	priv, found := s.Data[utilConstants.SecretCAKey]
 	if !found {
-		return "", "", isOwned, errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretCAKey, s.GetName()))
+		return "", "", isOwned, errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretCAKey, s.GetName()))
 	}
 	return string(cert), string(priv), isOwned, nil
 }
@@ -180,8 +180,8 @@ func CreateCASecret(ctx context.Context, secrets generic.ModClient[*core.Secret]
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			constants.SecretCACertificate: []byte(certificate),
-			constants.SecretCAKey:         []byte(key),
+			utilConstants.SecretCACertificate: []byte(certificate),
+			utilConstants.SecretCAKey:         []byte(key),
 		},
 	}
 	// Attach secret to owner
@@ -206,9 +206,9 @@ func GetTLSKeyfileSecret(secrets generic.ReadClient[*core.Secret], secretName st
 
 func GetTLSKeyfileFromSecret(s *core.Secret) (string, error) {
 	// Load `tls.keyfile` field
-	keyfile, found := s.Data[constants.SecretTLSKeyfile]
+	keyfile, found := s.Data[utilConstants.SecretTLSKeyfile]
 	if !found {
-		return "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretTLSKeyfile, s.GetName()))
+		return "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretTLSKeyfile, s.GetName()))
 	}
 	return string(keyfile), nil
 }
@@ -222,7 +222,7 @@ func RenderTLSKeyfileSecret(secretName string, keyfile string, ownerRef *meta.Ow
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			constants.SecretTLSKeyfile: []byte(keyfile),
+			utilConstants.SecretTLSKeyfile: []byte(keyfile),
 		},
 	}
 	// Attach secret to owner
@@ -255,9 +255,9 @@ func ValidateTokenSecret(ctx context.Context, secrets generic.ReadClient[*core.S
 
 func ValidateTokenFromSecret(s *core.Secret) error {
 	// Check `token` field
-	_, found := s.Data[constants.SecretKeyToken]
+	_, found := s.Data[utilConstants.SecretKeyToken]
 	if !found {
-		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretKeyToken, s.GetName()))
+		return errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretKeyToken, s.GetName()))
 	}
 	return nil
 }
@@ -274,9 +274,9 @@ func GetTokenSecretString(ctx context.Context, secrets generic.ReadClient[*core.
 // GetTokenFromSecretString loads the token secret from a Secret with given name.
 func GetTokenFromSecretString(s *core.Secret) (string, error) {
 	// Take the first data from the token key
-	data, found := s.Data[constants.SecretKeyToken]
+	data, found := s.Data[utilConstants.SecretKeyToken]
 	if !found {
-		return "", errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyToken, s.GetName()))
+		return "", errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", utilConstants.SecretKeyToken, s.GetName()))
 	}
 	return string(data), nil
 }
@@ -293,9 +293,9 @@ func GetTokenSecret(ctx context.Context, secrets generic.ReadClient[*core.Secret
 // GetTokenFromSecret loads the token secret from a Secret with given name.
 func GetTokenFromSecret(s *core.Secret) (token.Secret, error) {
 	// Take the first data from the token key
-	data, found := s.Data[constants.SecretKeyToken]
+	data, found := s.Data[utilConstants.SecretKeyToken]
 	if !found {
-		return nil, errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", constants.SecretKeyToken, s.GetName()))
+		return nil, errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", utilConstants.SecretKeyToken, s.GetName()))
 	}
 	return token.NewSecret(data), nil
 }
@@ -310,7 +310,7 @@ func CreateTokenSecret(ctx context.Context, secrets generic.ModClient[*core.Secr
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			constants.SecretKeyToken: []byte(token),
+			utilConstants.SecretKeyToken: []byte(token),
 		},
 	}
 	// Attach secret to owner
@@ -326,7 +326,7 @@ func CreateTokenSecret(ctx context.Context, secrets generic.ModClient[*core.Secr
 // with a given token as value.
 func UpdateTokenSecret(ctx context.Context, secrets generic.ModClient[*core.Secret], secret *core.Secret, token string) error {
 	secret.Data = map[string][]byte{
-		constants.SecretKeyToken: []byte(token),
+		utilConstants.SecretKeyToken: []byte(token),
 	}
 	if _, err := secrets.Update(ctx, secret, meta.UpdateOptions{}); err != nil {
 		// Failed to update secret
@@ -386,8 +386,8 @@ func CreateBasicAuthSecret(ctx context.Context, secrets generic.ModClient[*core.
 			Name: secretName,
 		},
 		Data: map[string][]byte{
-			constants.SecretUsername: []byte(username),
-			constants.SecretPassword: []byte(password),
+			utilConstants.SecretUsername: []byte(username),
+			utilConstants.SecretPassword: []byte(password),
 		},
 	}
 	// Attach secret to owner
@@ -418,13 +418,13 @@ func GetBasicAuthSecret(secrets generic.ReadClient[*core.Secret], secretName str
 
 // GetSecretAuthCredentials returns username and password from the secret
 func GetSecretAuthCredentials(secret *core.Secret) (string, string, error) {
-	username, found := secret.Data[constants.SecretUsername]
+	username, found := secret.Data[utilConstants.SecretUsername]
 	if !found {
-		return "", "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretUsername, secret.Name))
+		return "", "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretUsername, secret.Name))
 	}
-	password, found := secret.Data[constants.SecretPassword]
+	password, found := secret.Data[utilConstants.SecretPassword]
 	if !found {
-		return "", "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", constants.SecretPassword, secret.Name))
+		return "", "", errors.WithStack(errors.Errorf("No '%s' found in secret '%s'", utilConstants.SecretPassword, secret.Name))
 	}
 	return string(username), string(password), nil
 }

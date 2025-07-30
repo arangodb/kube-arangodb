@@ -25,19 +25,19 @@ import (
 
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *arangoRoutesInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.ArangoRouteGKv1Alpha1()
+	g := inspectorConstants.ArangoRouteGKv1Beta1()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case constants.ArangoRouteVersionV1Alpha1, DefaultVersion:
-			if p.v1alpha1 == nil || p.v1alpha1.err != nil {
+		case inspectorConstants.ArangoRouteVersionV1Alpha1, DefaultVersion:
+			if p.v1beta1 == nil || p.v1beta1.err != nil {
 				return nil, false
 			}
-			return anonymous.NewAnonymous[*networkingApi.ArangoRoute](g, p.state.arangoRoutes.v1alpha1, p.state.ArangoRouteModInterface().V1Alpha1()), true
+			return anonymous.NewAnonymous[*networkingApi.ArangoRoute](g, p.state.arangoRoutes.v1beta1, p.state.ArangoRouteModInterface().V1Alpha1()), true
 		}
 	}
 

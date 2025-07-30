@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func WithSlash(files chan<- File) (chan<- File, func()) {
@@ -32,7 +32,7 @@ func WithSlash(files chan<- File) (chan<- File, func()) {
 }
 
 func WithGVRPrefix(files chan<- File, t reflect.Type) (chan<- File, func()) {
-	gvr, ok := constants.ExtractGVR(t)
+	gvr, ok := inspectorConstants.ExtractGVR(t)
 	if !ok {
 		panic(fmt.Sprintf("Unable to get GVR for %s", t.String()))
 	}

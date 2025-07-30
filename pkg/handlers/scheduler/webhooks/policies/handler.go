@@ -33,7 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	kerrors "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -65,11 +65,11 @@ func (h handler) CanHandle(ctx context.Context, log logging.Logger, t webhook.Ad
 		return false
 	}
 
-	if _, ok := new.GetLabels()[constants.ProfilesDeployment]; ok {
+	if _, ok := new.GetLabels()[utilConstants.ProfilesDeployment]; ok {
 		return true
 	}
 
-	if _, ok := new.GetLabels()[constants.ProfilesApplyLabel]; ok {
+	if _, ok := new.GetLabels()[utilConstants.ProfilesApplyLabel]; ok {
 		return true
 	}
 
@@ -84,7 +84,7 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 	labels := new.GetLabels()
 	annotations := new.GetAnnotations()
 
-	if v, ok := labels[constants.ProfilesDeployment]; ok {
+	if v, ok := labels[utilConstants.ProfilesDeployment]; ok {
 		if _, err := h.client.Arango().DatabaseV1().ArangoDeployments(request.Namespace).Get(ctx, v, meta.GetOptions{}); err != nil {
 			if kerrors.IsNotFound(err) {
 				return webhook.MutationResponse{
@@ -97,7 +97,7 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		}
 	}
 
-	allProfiles := util.FlattenLists(goStrings.Split(labels[constants.ProfilesList], ","), goStrings.Split(annotations[constants.ProfilesList], ","))
+	allProfiles := util.FlattenLists(goStrings.Split(labels[utilConstants.ProfilesList], ","), goStrings.Split(annotations[utilConstants.ProfilesList], ","))
 	profiles := util.FilterList(util.FormatList(allProfiles, func(s string) string {
 		return goStrings.TrimSpace(s)
 	}), func(s string) bool {
@@ -121,9 +121,9 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		template.Annotations = map[string]string{}
 	}
 
-	template.Annotations[constants.ProfilesAnnotationApplied] = "true"
-	template.Annotations[constants.ProfilesAnnotationChecksum] = profilesChecksum
-	template.Annotations[constants.ProfilesAnnotationProfiles] = goStrings.Join(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) string {
+	template.Annotations[utilConstants.ProfilesAnnotationApplied] = "true"
+	template.Annotations[utilConstants.ProfilesAnnotationChecksum] = profilesChecksum
+	template.Annotations[utilConstants.ProfilesAnnotationProfiles] = goStrings.Join(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) string {
 		return a.K
 	}), ",")
 

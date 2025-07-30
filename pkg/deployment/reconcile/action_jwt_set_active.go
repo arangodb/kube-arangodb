@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -82,7 +82,7 @@ func (a *actionJWTSetActive) Start(ctx context.Context) (bool, error) {
 	}
 
 	activeKeyData, active := f.Data[pod.ActiveJWTKey]
-	tokenKeyData, token := f.Data[constants.SecretKeyToken]
+	tokenKeyData, token := f.Data[utilConstants.SecretKeyToken]
 
 	if util.SHA256(activeKeyData) == toActiveChecksum && util.SHA256(activeKeyData) == util.SHA256(tokenKeyData) {
 		a.log.Info("Desired JWT is already active")
@@ -97,7 +97,7 @@ func (a *actionJWTSetActive) Start(ctx context.Context) (bool, error) {
 		p.ItemReplace(path, base64.StdEncoding.EncodeToString(toActiveData))
 	}
 
-	path = patch.NewPath("data", constants.SecretKeyToken)
+	path = patch.NewPath("data", utilConstants.SecretKeyToken)
 	if !token {
 		p.ItemAdd(path, base64.StdEncoding.EncodeToString(toActiveData))
 	} else {

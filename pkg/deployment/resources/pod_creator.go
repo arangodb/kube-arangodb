@@ -43,7 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -234,9 +234,9 @@ func createArangoSyncArgs(input pod.Input, additionalOptions ...k8sutil.OptionPa
 	port := input.GroupSpec.GetPort()
 
 	if input.Deployment.Sync.Monitoring.GetTokenSecretName() != "" {
-		options.Addf("--monitoring.token", "$(%s)", constants.EnvArangoSyncMonitoringToken)
+		options.Addf("--monitoring.token", "$(%s)", utilConstants.EnvArangoSyncMonitoringToken)
 	}
-	masterSecretPath := filepath.Join(shared.MasterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+	masterSecretPath := filepath.Join(shared.MasterJWTSecretVolumeMountDir, utilConstants.SecretKeyToken)
 	options.Add("--master.jwt-secret", masterSecretPath)
 
 	var masterEndpoint []string
@@ -244,13 +244,13 @@ func createArangoSyncArgs(input pod.Input, additionalOptions ...k8sutil.OptionPa
 	case api.ServerGroupSyncMasters:
 		runCmd = "master"
 		masterEndpoint = input.Deployment.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain), int(port))
-		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
-		clientCAPath := filepath.Join(shared.ClientAuthCAVolumeMountDir, constants.SecretCACertificate)
+		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
+		clientCAPath := filepath.Join(shared.ClientAuthCAVolumeMountDir, utilConstants.SecretCACertificate)
 		options.Add("--server.keyfile", keyPath)
 		options.Add("--server.client-cafile", clientCAPath)
 		options.Add("--mq.type", "direct")
 		if input.Deployment.IsAuthenticated() {
-			clusterSecretPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+			clusterSecretPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, utilConstants.SecretKeyToken)
 			options.Add("--cluster.jwt-secret", clusterSecretPath)
 		}
 		dbServiceName := k8sutil.CreateDatabaseClientServiceName(input.ApiObject.GetName())
@@ -293,9 +293,9 @@ func createArangoSyncArgs(input pod.Input, additionalOptions ...k8sutil.OptionPa
 func createArangoGatewayArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	if input.Deployment.Gateway.IsDynamic() {
-		options.Add("--config-path", path.Join(constants.MemberConfigVolumeMountDir, constants.GatewayConfigFileName))
+		options.Add("--config-path", path.Join(utilConstants.MemberConfigVolumeMountDir, utilConstants.GatewayConfigFileName))
 	} else {
-		options.Add("--config-path", path.Join(constants.GatewayVolumeMountDir, constants.GatewayConfigFileName))
+		options.Add("--config-path", path.Join(utilConstants.GatewayVolumeMountDir, utilConstants.GatewayConfigFileName))
 	}
 
 	options.Append(additionalOptions...)

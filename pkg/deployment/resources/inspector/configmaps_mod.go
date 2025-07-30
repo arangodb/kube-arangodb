@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package inspector
 import (
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
@@ -40,7 +40,7 @@ type configMapsMod struct {
 }
 
 func (p configMapsMod) V1() generic.ModClient[*core.ConfigMap] {
-	return wrapMod[*core.ConfigMap](definitions.ConfigMap, p.i.GetThrottles, generic.WithModStatusGetter[*core.ConfigMap](constants.ConfigMapGKv1(), p.clientv1))
+	return wrapMod[*core.ConfigMap](definitions.ConfigMap, p.i.GetThrottles, generic.WithModStatusGetter[*core.ConfigMap](inspectorConstants.ConfigMapGKv1(), p.clientv1))
 }
 
 func (p configMapsMod) clientv1() generic.ModClient[*core.ConfigMap] {

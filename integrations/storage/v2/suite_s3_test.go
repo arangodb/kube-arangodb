@@ -34,7 +34,7 @@ import (
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	awsHelper "github.com/arangodb/kube-arangodb/pkg/util/aws"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
@@ -72,8 +72,8 @@ func s3KubernetesObject(t *testing.T, mods ...util.Mod[platformApi.ArangoPlatfor
 			Namespace: tests.FakeNamespace,
 		},
 		Data: map[string][]byte{
-			constants.SecretCredentialsAccessKey: []byte(config.Provider.Static.AccessKeyID),
-			constants.SecretCredentialsSecretKey: []byte(config.Provider.Static.SecretAccessKey),
+			utilConstants.SecretCredentialsAccessKey: []byte(config.Provider.Static.AccessKeyID),
+			utilConstants.SecretCredentialsSecretKey: []byte(config.Provider.Static.SecretAccessKey),
 		},
 	}, meta.CreateOptions{})
 	require.NoError(t, err)

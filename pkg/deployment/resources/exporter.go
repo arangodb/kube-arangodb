@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 )
 
 func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, version driver.Version) []string {
-	tokenpath := filepath.Join(shared.ExporterJWTVolumeMountDir, constants.SecretKeyToken)
+	tokenpath := filepath.Join(shared.ExporterJWTVolumeMountDir, utilConstants.SecretKeyToken)
 	options := k8sutil.CreateOptionPairs(64)
 
 	if spec.Authentication.IsAuthenticated() {
@@ -56,7 +56,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, 
 		}
 	}
 
-	keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+	keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
 	if spec.IsSecure() && spec.Metrics.IsTLS() {
 		options.Add("--ssl.keyfile", keyPath)
 	}

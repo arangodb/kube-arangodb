@@ -52,7 +52,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -283,7 +283,7 @@ func (d *Deployment) getJWTToken() (string, bool) {
 		return "", false
 	}
 
-	jwt, ok := s.Data[constants.SecretKeyToken]
+	jwt, ok := s.Data[utilConstants.SecretKeyToken]
 	if !ok {
 		return "", false
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -52,8 +52,8 @@ func (p endpointsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q endpointsInspector
 
 	q.v1 = newInspectorVersion[*core.EndpointsList, *core.Endpoints](ctx,
-		constants.EndpointsGRv1(),
-		constants.EndpointsGKv1(),
+		inspectorConstants.EndpointsGRv1(),
+		inspectorConstants.EndpointsGKv1(),
 		i.client.Kubernetes().CoreV1().Endpoints(i.namespace),
 		endpoints.List())
 
@@ -98,8 +98,8 @@ func (p *endpointsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, endpointsInspectorLoaderObj)
 }
 
-func (p *endpointsInspector) Version() version.Version {
-	return version.V1
+func (p *endpointsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *endpointsInspector) Throttle(c throttle.Components) throttle.Throttle {

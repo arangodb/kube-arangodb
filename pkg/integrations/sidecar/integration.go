@@ -20,7 +20,7 @@ import (
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -41,7 +41,7 @@ func NewShutdownAnnotations(coreContainers []string) *schedulerApi.ProfileTempla
 	}
 
 	for _, container := range coreContainers {
-		pt.Pod.Metadata.Annotations[fmt.Sprintf("%s/%s", constants.AnnotationShutdownCoreContainer, container)] = constants.AnnotationShutdownCoreContainerModeWait
+		pt.Pod.Metadata.Annotations[fmt.Sprintf("%s/%s", utilConstants.AnnotationShutdownCoreContainer, container)] = utilConstants.AnnotationShutdownCoreContainerModeWait
 	}
 
 	return &pt
@@ -149,7 +149,7 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
 		},
 		{
-			Name:  constants.INTEGRATION_SERVICE_ADDRESS.String(),
+			Name:  utilConstants.INTEGRATION_SERVICE_ADDRESS.String(),
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
 		},
 		{

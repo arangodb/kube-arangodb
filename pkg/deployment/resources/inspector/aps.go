@@ -25,13 +25,13 @@ import (
 	"time"
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoplatformstorage"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -50,9 +50,9 @@ func (p arangoPlatformStoragesInspectorLoader) Component() definitions.Component
 func (p arangoPlatformStoragesInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q arangoPlatformStoragesInspector
 
-	q.v1alpha1 = newInspectorVersion[*platformApi.ArangoPlatformStorageList, *platformApi.ArangoPlatformStorage](ctx,
-		constants.ArangoPlatformStorageGRv1Alpha1(),
-		constants.ArangoPlatformStorageGKv1Alpha1(),
+	q.v1beta1 = newInspectorVersion[*platformApi.ArangoPlatformStorageList, *platformApi.ArangoPlatformStorage](ctx,
+		inspectorConstants.ArangoPlatformStorageGRv1Beta1(),
+		inspectorConstants.ArangoPlatformStorageGKv1Beta1(),
 		i.client.Arango().PlatformV1beta1().ArangoPlatformStorages(i.namespace),
 		arangoplatformstorage.List())
 
@@ -85,7 +85,7 @@ type arangoPlatformStoragesInspector struct {
 
 	last time.Time
 
-	v1alpha1 *inspectorVersion[*platformApi.ArangoPlatformStorage]
+	v1beta1 *inspectorVersion[*platformApi.ArangoPlatformStorage]
 }
 
 func (p *arangoPlatformStoragesInspector) LastRefresh() time.Time {
@@ -97,8 +97,8 @@ func (p *arangoPlatformStoragesInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, arangoPlatformStoragesInspectorLoaderObj)
 }
 
-func (p *arangoPlatformStoragesInspector) Version() version.Version {
-	return version.V1
+func (p *arangoPlatformStoragesInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1Beta1
 }
 
 func (p *arangoPlatformStoragesInspector) Throttle(c throttle.Components) throttle.Throttle {
@@ -114,13 +114,13 @@ func (p *arangoPlatformStoragesInspector) validate() error {
 		return errors.Errorf("Parent is nil")
 	}
 
-	return p.v1alpha1.validate()
+	return p.v1beta1.validate()
 }
 
-func (p *arangoPlatformStoragesInspector) V1Alpha1() (generic.Inspector[*platformApi.ArangoPlatformStorage], error) {
-	if p.v1alpha1.err != nil {
-		return nil, p.v1alpha1.err
+func (p *arangoPlatformStoragesInspector) V1Beta1() (generic.Inspector[*platformApi.ArangoPlatformStorage], error) {
+	if p.v1beta1.err != nil {
+		return nil, p.v1beta1.err
 	}
 
-	return p.v1alpha1, nil
+	return p.v1beta1, nil
 }

@@ -36,7 +36,7 @@ import (
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
@@ -52,7 +52,7 @@ func runUpdate[T Object](t *testing.T, iterations int, factory ClientFactory[T],
 
 	var obj T
 
-	o, ok := constants.ExtractGVKFromObject(obj)
+	o, ok := inspectorConstants.ExtractGVKFromObject(obj)
 	require.True(t, ok)
 
 	update := NewUpdator[T](Config[T]{

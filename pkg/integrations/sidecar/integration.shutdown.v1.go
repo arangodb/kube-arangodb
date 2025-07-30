@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 type IntegrationShutdownV1 struct {
@@ -34,8 +34,8 @@ type IntegrationShutdownV1 struct {
 
 func (i IntegrationShutdownV1) Annotations() (map[string]string, error) {
 	return map[string]string{
-		fmt.Sprintf("%s/%s", constants.AnnotationShutdownContainer, ContainerName): ListenPortHealthName,
-		constants.AnnotationShutdownManagedContainer:                               "true",
+		fmt.Sprintf("%s/%s", utilConstants.AnnotationShutdownContainer, ContainerName): ListenPortHealthName,
+		utilConstants.AnnotationShutdownManagedContainer:                               "true",
 	}, nil
 }
 

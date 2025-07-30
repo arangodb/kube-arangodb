@@ -33,5 +33,5 @@ type Inspector interface {
 type Definition interface {
 	base.Inspector
 
-	V1Alpha1() (generic.Inspector[*networkingApi.ArangoRoute], error)
+	V1Beta1() (generic.Inspector[*networkingApi.ArangoRoute], error)
 }

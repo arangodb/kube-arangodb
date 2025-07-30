@@ -29,7 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -103,7 +103,7 @@ func (r *Resources) ensureMemberConfig(ctx context.Context, cachedStatus inspect
 					return errors.Reconcile()
 				} else {
 					// CM Exists, checks checksum - if key is not in the map we return empty string
-					if currentSha, expectedSha := util.Optional(obj.Data, constants.ConfigMapChecksumKey, ""), util.Optional(elements, constants.ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
+					if currentSha, expectedSha := util.Optional(obj.Data, utilConstants.ConfigMapChecksumKey, ""), util.Optional(elements, utilConstants.ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
 						// We need to do the update
 						if _, changed, err := patcher.Patcher[*core.ConfigMap](ctx, cachedStatus.ConfigMapsModInterface().V1(), obj, meta.PatchOptions{},
 							patcher.PatchConfigMapData(elements)); err != nil {
@@ -144,7 +144,7 @@ func (r *Resources) renderConfigMap(elements ...map[string]string) (map[string]s
 		return nil, nil
 	}
 
-	result[constants.ConfigMapChecksumKey] = util.SHA256FromStringMap(result)
+	result[utilConstants.ConfigMapChecksumKey] = util.SHA256FromStringMap(result)
 
 	return result, nil
 }

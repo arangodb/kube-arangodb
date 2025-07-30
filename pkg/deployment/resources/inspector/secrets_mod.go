@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package inspector
 import (
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
@@ -40,7 +40,7 @@ type secretsMod struct {
 }
 
 func (p secretsMod) V1() generic.ModClient[*core.Secret] {
-	return wrapMod[*core.Secret](definitions.Secret, p.i.GetThrottles, generic.WithModStatusGetter[*core.Secret](constants.SecretGKv1(), p.clientv1))
+	return wrapMod[*core.Secret](definitions.Secret, p.i.GetThrottles, generic.WithModStatusGetter[*core.Secret](inspectorConstants.SecretGKv1(), p.clientv1))
 }
 
 func (p secretsMod) clientv1() generic.ModClient[*core.Secret] {

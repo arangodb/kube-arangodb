@@ -43,7 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	resources "github.com/arangodb/kube-arangodb/pkg/storage/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -310,7 +310,7 @@ func createNodeSelector(nodeName string) *core.NodeSelector {
 func getDeploymentInfo(pvc core.PersistentVolumeClaim) (string, string, bool) {
 	deploymentName := pvc.GetLabels()[k8sutil.LabelKeyArangoDeployment]
 	role := pvc.GetLabels()[k8sutil.LabelKeyRole]
-	enforceAntiAffinity, _ := strconv.ParseBool(pvc.GetAnnotations()[constants.AnnotationEnforceAntiAffinity]) // If annotation empty, this will yield false.
+	enforceAntiAffinity, _ := strconv.ParseBool(pvc.GetAnnotations()[utilConstants.AnnotationEnforceAntiAffinity]) // If annotation empty, this will yield false.
 	return deploymentName, role, enforceAntiAffinity
 }
 

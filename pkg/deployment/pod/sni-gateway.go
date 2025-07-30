@@ -28,7 +28,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -68,9 +68,9 @@ func (s sniGateway) Verify(i Input, cachedStatus interfaces.Inspector) error {
 			return errors.Errorf("SNI Secret not found %s", secret)
 		}
 
-		_, ok := kubeSecret.Data[constants.SecretTLSKeyfile]
+		_, ok := kubeSecret.Data[utilConstants.SecretTLSKeyfile]
 		if !ok {
-			return errors.Errorf("Unable to find secret key %s/%s for SNI", secret, constants.SecretTLSKeyfile)
+			return errors.Errorf("Unable to find secret key %s/%s for SNI", secret, utilConstants.SecretTLSKeyfile)
 		}
 	}
 	return nil

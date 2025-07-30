@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -54,7 +54,7 @@ func init() {
 
 	f.StringVar(&webhookInput.listenAddress, "server.address", "0.0.0.0:8828", "Address the webhook will listen on (IP:port)")
 	f.StringVar(&webhookInput.secretName, "ssl.secret.name", "", "Secret Name containing TLS certificate used for the metrics server")
-	f.StringVar(&webhookInput.secretNamespace, "ssl.secret.namespace", os.Getenv(constants.EnvOperatorPodNamespace), "Secret Name containing TLS certificate used for the metrics server")
+	f.StringVar(&webhookInput.secretNamespace, "ssl.secret.namespace", os.Getenv(utilConstants.EnvOperatorPodNamespace), "Secret Name containing TLS certificate used for the metrics server")
 
 	cmdMain.AddCommand(cmdWebhook)
 }

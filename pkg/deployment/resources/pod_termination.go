@@ -35,7 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
@@ -60,7 +60,7 @@ func (r *Resources) prepareAgencyPodTermination(ctx context.Context, p *core.Pod
 	// Check node the pod is scheduled on. Only if not in namespaced scope
 	agentDataWillBeGone := false
 	if p.Spec.NodeName != "" {
-		if access.VerifyAccess(ctx, r.context.ACS().CurrentClusterCache().Client(), access.GVR(constants.NodeGRv1(), p.Spec.NodeName, access.Get)) {
+		if access.VerifyAccess(ctx, r.context.ACS().CurrentClusterCache().Client(), access.GVR(inspectorConstants.NodeGRv1(), p.Spec.NodeName, access.Get)) {
 			if nodes, err := r.context.ACS().CurrentClusterCache().Node().V1(); err == nil {
 				node, ok := nodes.GetSimple(p.Spec.NodeName)
 				if !ok {

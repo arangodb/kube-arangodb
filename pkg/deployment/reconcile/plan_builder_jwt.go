@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
@@ -59,7 +59,7 @@ func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.A
 		return nil
 	}
 
-	jwt, ok := s.Data[constants.SecretKeyToken]
+	jwt, ok := s.Data[utilConstants.SecretKeyToken]
 	if !ok {
 		r.planLogger.Warn("JWT Secret is invalid, no rotation will take place")
 		return r.addJWTPropagatedPlanAction(status)
@@ -76,7 +76,7 @@ func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.A
 		return r.addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTSetActive, "Set active key").AddParam(checksum, jwtSha))
 	}
 
-	tokenKey, ok := folder.Data[constants.SecretKeyToken]
+	tokenKey, ok := folder.Data[utilConstants.SecretKeyToken]
 	if !ok || util.SHA256(activeKey) != util.SHA256(tokenKey) {
 		return r.addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTSetActive, "Set active key and add token field").AddParam(checksum, jwtSha))
 	}
@@ -96,7 +96,7 @@ func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.A
 	}
 
 	for key := range folder.Data {
-		if key == pod.ActiveJWTKey || key == constants.SecretKeyToken {
+		if key == pod.ActiveJWTKey || key == utilConstants.SecretKeyToken {
 			continue
 		}
 
@@ -143,7 +143,7 @@ func (r *Reconciler) createJWTStatusUpdateRequired(apiObject k8sutil.APIObject, 
 			return false
 		}
 
-		key, ok := f.Data[constants.SecretKeyToken]
+		key, ok := f.Data[utilConstants.SecretKeyToken]
 		if !ok {
 			r.planLogger.Error("JWT Token is invalid")
 			return false
@@ -181,7 +181,7 @@ func (r *Reconciler) createJWTStatusUpdateRequired(apiObject k8sutil.APIObject, 
 	var keys []string
 
 	for key := range f.Data {
-		if key == pod.ActiveJWTKey || key == activeKeyShort || key == constants.SecretKeyToken {
+		if key == pod.ActiveJWTKey || key == activeKeyShort || key == utilConstants.SecretKeyToken {
 			continue
 		}
 
@@ -291,7 +291,7 @@ func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[stri
 
 func compareJWTKeys(e client.Entries, keys map[string][]byte) bool {
 	for k := range keys {
-		if k == pod.ActiveJWTKey || k == constants.SecretKeyToken {
+		if k == pod.ActiveJWTKey || k == utilConstants.SecretKeyToken {
 			continue
 		}
 

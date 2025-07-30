@@ -39,7 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -226,7 +226,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 	var license *string
 	if s := ib.Spec.License; s.HasSecretName() {
 		if secret, ok := cachedStatus.Secret().V1().GetSimple(s.GetSecretName()); ok {
-			if _, ok := secret.Data[constants.SecretKeyToken]; ok {
+			if _, ok := secret.Data[utilConstants.SecretKeyToken]; ok {
 				license = util.NewType[string](s.GetSecretName())
 			}
 		}
@@ -479,8 +479,8 @@ func (a *ArangoDIdentity) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 
 	// Add advanced check for license
 	if l := a.License; l != nil {
-		env = append(env, k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-			*l, constants.SecretKeyToken))
+		env = append(env, k8sutil.CreateEnvSecretKeySelector(utilConstants.EnvArangoLicenseKey,
+			*l, utilConstants.SecretKeyToken))
 	}
 
 	if len(env) > 0 {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/compare"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 // CheckPossible returns true if rotation is possible
@@ -47,7 +47,7 @@ func IsRotationRequired(acs sutil.ACS, spec api.DeploymentSpec, member api.Membe
 	// We are under termination
 	if pod != nil {
 		if member.Conditions.IsTrue(api.ConditionTypeTerminating) || pod.DeletionTimestamp != nil {
-			if l := utils.StringList(pod.Finalizers); l.Has(constants.FinalizerPodGracefulShutdown) && !l.Has(constants.FinalizerDelayPodTermination) {
+			if l := utils.StringList(pod.Finalizers); l.Has(utilConstants.FinalizerPodGracefulShutdown) && !l.Has(utilConstants.FinalizerDelayPodTermination) {
 				reason = "Recreation enforced by deleted state"
 				mode = compare.EnforcedRotation
 			}

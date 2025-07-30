@@ -19,6 +19,7 @@
 - (Feature) Update GoDriver
 - (Feature) Use Version Consts
 - (Maintenace) 1.3.x Release Preparation
+- (Bugfix) Move Helpers to V1Beta1
 
 ## [1.2.50](https://github.com/arangodb/kube-arangodb/tree/1.2.50) (2025-07-04)
 - (Feature) (Platform) MetaV1 Integration Service

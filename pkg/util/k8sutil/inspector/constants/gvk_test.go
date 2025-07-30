@@ -32,6 +32,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 )
 
@@ -39,7 +40,7 @@ func Test_GVK(t *testing.T) {
 	testGVK(t, ArangoClusterSynchronizationGKv1(), &api.ArangoClusterSynchronization{})
 	testGVK(t, ArangoMemberGKv1(), &api.ArangoMember{})
 	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{})
-	testGVK(t, ArangoRouteGKv1Alpha1(), &networkingApi.ArangoRoute{})
+	testGVK(t, ArangoRouteGKv1Beta1(), &networkingApi.ArangoRoute{})
 	testGVK(t, ArangoProfileGKv1Beta1(), &schedulerApi.ArangoProfile{})
 	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{})
 	testGVK(t, EndpointsGKv1(), &core.Endpoints{})
@@ -52,6 +53,7 @@ func Test_GVK(t *testing.T) {
 	testGVK(t, SecretGKv1(), &core.Secret{})
 	testGVK(t, ServiceMonitorGKv1(), &monitoringApi.ServiceMonitor{})
 	testGVK(t, ArangoDeploymentGKv1(), &api.ArangoDeployment{})
+	testGVK(t, ArangoPlatformStorageGKv1Beta1(), &platformApi.ArangoPlatformStorage{})
 }
 
 func testGVK[T meta.Object](t *testing.T, gvk schema.GroupVersionKind, in T) {

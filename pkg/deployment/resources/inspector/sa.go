@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/serviceaccount"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -52,8 +52,8 @@ func (p serviceAccountsInspectorLoader) Load(ctx context.Context, i *inspectorSt
 	var q serviceAccountsInspector
 
 	q.v1 = newInspectorVersion[*core.ServiceAccountList, *core.ServiceAccount](ctx,
-		constants.ServiceAccountGRv1(),
-		constants.ServiceAccountGKv1(),
+		inspectorConstants.ServiceAccountGRv1(),
+		inspectorConstants.ServiceAccountGKv1(),
 		i.client.Kubernetes().CoreV1().ServiceAccounts(i.namespace),
 		serviceaccount.List())
 
@@ -102,8 +102,8 @@ func (p *serviceAccountsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, serviceAccountsInspectorLoaderObj)
 }
 
-func (p *serviceAccountsInspector) Version() version.Version {
-	return version.V1
+func (p *serviceAccountsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *serviceAccountsInspector) Throttle(c throttle.Components) throttle.Throttle {

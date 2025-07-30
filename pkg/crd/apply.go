@@ -38,7 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/executor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -286,7 +286,7 @@ func verifyCRDAccess(ctx context.Context, client kclient.Client, crd string, ver
 		return *c
 	}
 
-	return access.VerifyAccessRequest(ctx, client, access.GVR(constants.CustomResourceDefinitionGRv1(), crd, verb))
+	return access.VerifyAccessRequest(ctx, client, access.GVR(inspectorConstants.CustomResourceDefinitionGRv1(), crd, verb))
 }
 
 var verifyCRDAccessForTests *authorization.SubjectAccessReviewStatus

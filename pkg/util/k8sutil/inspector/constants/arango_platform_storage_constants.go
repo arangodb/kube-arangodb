@@ -24,19 +24,22 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
+	platformApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 )
 
 // ArangoPlatformStorage
 const (
-	ArangoPlatformStorageGroup           = platform.ArangoPlatformGroupName
-	ArangoPlatformStorageResource        = platform.ArangoPlatformStorageResourcePlural
-	ArangoPlatformStorageKind            = platform.ArangoPlatformStorageResourceKind
-	ArangoPlatformStorageVersionV1Alpha1 = platformApi.ArangoPlatformVersion
+	ArangoPlatformStorageGroup    = platform.ArangoPlatformGroupName
+	ArangoPlatformStorageResource = platform.ArangoPlatformStorageResourcePlural
+	ArangoPlatformStorageKind     = platform.ArangoPlatformStorageResourceKind
+	// deprecated: Use v1beta1 instead
+	ArangoPlatformStorageVersionV1Alpha1 = platformApiv1alpha1.ArangoPlatformVersion
+	ArangoPlatformStorageVersionV1Beta1  = platformApi.ArangoPlatformVersion
 )
 
 func init() {
-	register[*platformApi.ArangoPlatformStorage](ArangoPlatformStorageGKv1Alpha1(), ArangoPlatformStorageGRv1Alpha1())
+	register[*platformApi.ArangoPlatformStorage](ArangoPlatformStorageGKv1Beta1(), ArangoPlatformStorageGRv1Beta1())
 }
 
 func ArangoPlatformStorageGK() schema.GroupKind {
@@ -46,11 +49,20 @@ func ArangoPlatformStorageGK() schema.GroupKind {
 	}
 }
 
+// deprecated: Use v1beta1 instead
 func ArangoPlatformStorageGKv1Alpha1() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   ArangoPlatformStorageGroup,
 		Kind:    ArangoPlatformStorageKind,
 		Version: ArangoPlatformStorageVersionV1Alpha1,
+	}
+}
+
+func ArangoPlatformStorageGKv1Beta1() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   ArangoPlatformStorageGroup,
+		Kind:    ArangoPlatformStorageKind,
+		Version: ArangoPlatformStorageVersionV1Beta1,
 	}
 }
 
@@ -61,10 +73,19 @@ func ArangoPlatformStorageGR() schema.GroupResource {
 	}
 }
 
+// deprecated: Use v1beta1 instead
 func ArangoPlatformStorageGRv1Alpha1() schema.GroupVersionResource {
 	return schema.GroupVersionResource{
 		Group:    ArangoPlatformStorageGroup,
 		Resource: ArangoPlatformStorageResource,
 		Version:  ArangoPlatformStorageVersionV1Alpha1,
+	}
+}
+
+func ArangoPlatformStorageGRv1Beta1() schema.GroupVersionResource {
+	return schema.GroupVersionResource{
+		Group:    ArangoPlatformStorageGroup,
+		Resource: ArangoPlatformStorageResource,
+		Version:  ArangoPlatformStorageVersionV1Beta1,
 	}
 }

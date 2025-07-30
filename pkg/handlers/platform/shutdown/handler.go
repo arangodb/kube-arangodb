@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("platform-pod-shutdown", logging.Info)
@@ -67,18 +67,18 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	}
 
 	// If not annotated, stop execution
-	if _, ok := pod.Annotations[constants.AnnotationShutdownManagedContainer]; !ok {
+	if _, ok := pod.Annotations[utilConstants.AnnotationShutdownManagedContainer]; !ok {
 		return nil
 	}
 
 	for _, container := range pod.Status.ContainerStatuses {
-		v, ok := pod.Annotations[fmt.Sprintf("%s/%s", constants.AnnotationShutdownCoreContainer, container.Name)]
+		v, ok := pod.Annotations[fmt.Sprintf("%s/%s", utilConstants.AnnotationShutdownCoreContainer, container.Name)]
 		if !ok {
 			continue
 		}
 
 		switch v {
-		case constants.AnnotationShutdownCoreContainerModeWait:
+		case utilConstants.AnnotationShutdownCoreContainerModeWait:
 			if container.State.Terminated == nil {
 				// Container is not yet stopped, skip shutdown
 				return nil
@@ -94,7 +94,7 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	// All containers, which are expected to shutdown, are down
 
 	for _, container := range pod.Status.ContainerStatuses {
-		v, ok := pod.Annotations[fmt.Sprintf("%s/%s", constants.AnnotationShutdownContainer, container.Name)]
+		v, ok := pod.Annotations[fmt.Sprintf("%s/%s", utilConstants.AnnotationShutdownContainer, container.Name)]
 		if !ok {
 			continue
 		}

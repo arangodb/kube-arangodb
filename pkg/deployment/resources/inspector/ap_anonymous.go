@@ -25,15 +25,15 @@ import (
 
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *arangoProfilesInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.ArangoProfileGKv1Beta1()
+	g := inspectorConstants.ArangoProfileGKv1Beta1()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case constants.ArangoProfileVersionV1Beta1, DefaultVersion:
+		case inspectorConstants.ArangoProfileVersionV1Beta1, DefaultVersion:
 			if p.v1beta1 == nil || p.v1beta1.err != nil {
 				return nil, false
 			}

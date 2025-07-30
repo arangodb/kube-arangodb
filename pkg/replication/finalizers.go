@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -65,25 +65,25 @@ func (dr *DeploymentReplication) addFinalizer(finalizer string) error {
 // addFinalizers adds a required finalizers to the api object when needed.
 func (dr *DeploymentReplication) addFinalizers() error {
 	// Add stop sync replication finalizer automatically.
-	return dr.addFinalizer(constants.FinalizerDeplReplStopSync)
+	return dr.addFinalizer(utilConstants.FinalizerDeplReplStopSync)
 }
 
 // runFinalizers removes stop sync finalizer if it is possible.
 func (dr *DeploymentReplication) runFinalizers(ctx context.Context, p *api.ArangoDeploymentReplication) (bool, error) {
-	if !finalizerExists(p, constants.FinalizerDeplReplStopSync) {
+	if !finalizerExists(p, utilConstants.FinalizerDeplReplStopSync) {
 		return false, nil
 	}
 
 	dr.log.Str("replication-name", p.GetName()).Debug("Inspecting stop-sync finalizer")
 	if retrySoon, err := dr.inspectFinalizerDeplReplStopSync(ctx, p); err != nil {
-		return true, errors.WithMessagef(err, "Cannot remove finalizer \"%s\" yet", constants.FinalizerDeplReplStopSync)
+		return true, errors.WithMessagef(err, "Cannot remove finalizer \"%s\" yet", utilConstants.FinalizerDeplReplStopSync)
 	} else if retrySoon {
 		// No error, but not finished. Try to reconcile soon.
 		dr.log.Debug("Synchronization is still cancelling")
 		return true, nil
 	}
 
-	removalList := []string{constants.FinalizerDeplReplStopSync}
+	removalList := []string{utilConstants.FinalizerDeplReplStopSync}
 	c := dr.deps.Client.Arango().ReplicationV1().ArangoDeploymentReplications(p.GetNamespace())
 
 	if _, err := k8sutil.RemoveSelectedFinalizers[*api.ArangoDeploymentReplication](ctx, c, c, p, removalList, false); err != nil {

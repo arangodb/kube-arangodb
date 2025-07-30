@@ -58,7 +58,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -297,9 +297,9 @@ func Execute() int {
 // Run the operator
 func executeMain(cmd *cobra.Command, args []string) {
 	// Get environment
-	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
-	name := os.Getenv(constants.EnvOperatorPodName)
-	ip := os.Getenv(constants.EnvOperatorPodIP)
+	namespace := os.Getenv(utilConstants.EnvOperatorPodNamespace)
+	name := os.Getenv(utilConstants.EnvOperatorPodName)
+	ip := os.Getenv(utilConstants.EnvOperatorPodIP)
 
 	go monitorMemoryLimit()
 
@@ -383,13 +383,13 @@ func executeMain(cmd *cobra.Command, args []string) {
 	// Check environment
 	if !operatorOptions.versionOnly {
 		if len(namespace) == 0 {
-			logger.Fatal("%s environment variable missing", constants.EnvOperatorPodNamespace)
+			logger.Fatal("%s environment variable missing", utilConstants.EnvOperatorPodNamespace)
 		}
 		if len(name) == 0 {
-			logger.Fatal("%s environment variable missing", constants.EnvOperatorPodName)
+			logger.Fatal("%s environment variable missing", utilConstants.EnvOperatorPodName)
 		}
 		if len(ip) == 0 {
-			logger.Fatal("%s environment variable missing", constants.EnvOperatorPodIP)
+			logger.Fatal("%s environment variable missing", utilConstants.EnvOperatorPodIP)
 		}
 
 		// Get host name
@@ -672,9 +672,9 @@ func getMyPodInfoWrap(kubecli kubernetes.Interface, namespace, name string, imag
 func getMyImageInfoFunc(status bool) func(pod *core.Pod) (string, bool) {
 	return func(pod *core.Pod) (string, bool) {
 		if status {
-			return k8sutil.GetArangoDBImageIDFromContainerStatuses(pod.Status.ContainerStatuses, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
+			return k8sutil.GetArangoDBImageIDFromContainerStatuses(pod.Status.ContainerStatuses, shared.ServerContainerName, shared.OperatorContainerName, utilConstants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
 		}
-		return k8sutil.GetArangoDBImageFromContainers(pod.Spec.Containers, shared.ServerContainerName, shared.OperatorContainerName, constants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
+		return k8sutil.GetArangoDBImageFromContainers(pod.Spec.Containers, shared.ServerContainerName, shared.OperatorContainerName, utilConstants.MyContainerNameEnv.GetOrDefault(shared.OperatorContainerName))
 	}
 }
 

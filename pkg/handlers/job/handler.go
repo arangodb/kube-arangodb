@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
@@ -133,7 +133,7 @@ func (h *handler) prepareK8sJob(job *appsApi.ArangoJob) (*batch.Job, error) {
 	k8sJob.Name = job.Name
 	k8sJob.Namespace = job.Namespace
 	k8sJob.Spec = *job.Spec.JobTemplate
-	k8sJob.Spec.Template.Spec.ServiceAccountName = os.Getenv(constants.EnvArangoJobSAName)
+	k8sJob.Spec.Template.Spec.ServiceAccountName = os.Getenv(utilConstants.EnvArangoJobSAName)
 	k8sJob.SetOwnerReferences(append(job.GetOwnerReferences(), job.AsOwner()))
 
 	deployment, err := h.client.DatabaseV1().ArangoDeployments(job.Namespace).Get(context.Background(), job.Spec.ArangoDeploymentName, meta.GetOptions{})

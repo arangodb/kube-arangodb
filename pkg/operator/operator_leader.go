@@ -33,7 +33,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -80,7 +80,7 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 			OnStartedLeading: func(ctx context.Context) {
 				recordEvent("Leader Election Won", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
 				readyProbe.SetReady()
-				if err := o.setRoleLabel(log, label, constants.LabelRoleLeader); err != nil {
+				if err := o.setRoleLabel(log, label, utilConstants.LabelRoleLeader); err != nil {
 					log.Error("Cannot set leader role on Pod. Terminating process")
 					os.Exit(2)
 				}
@@ -111,7 +111,7 @@ func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func
 
 	recordEvent("Leader Election Skipped", fmt.Sprintf("Pod %s is running as leader", o.Config.PodName))
 	readyProbe.SetReady()
-	if err := o.setRoleLabel(log, label, constants.LabelRoleLeader); err != nil {
+	if err := o.setRoleLabel(log, label, utilConstants.LabelRoleLeader); err != nil {
 		log.Error("Cannot set leader role on Pod. Terminating process")
 		os.Exit(2)
 	}

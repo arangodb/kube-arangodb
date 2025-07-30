@@ -26,11 +26,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 const (
-	ArangoDeploymentReplicationVersion = constants.VersionV2Alpha1
+	ArangoDeploymentReplicationVersion = string(utilConstants.VersionV2Alpha1)
 )
 
 var (

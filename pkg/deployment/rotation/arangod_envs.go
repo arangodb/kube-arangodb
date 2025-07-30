@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util/compare"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 func compareServerContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.Container) compare.Func {
@@ -50,7 +50,7 @@ func compareServerContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, 
 				resources.ArangoDBOverrideEnterpriseEnv:
 				// Those envs can change without restart
 				continue
-			case constants.EnvOperatorPodName, constants.EnvOperatorPodNamespace, constants.EnvOperatorNodeName, constants.EnvOperatorNodeNameArango:
+			case utilConstants.EnvOperatorPodName, utilConstants.EnvOperatorPodNamespace, utilConstants.EnvOperatorNodeName, utilConstants.EnvOperatorNodeNameArango:
 				// Lifecycle envs can change without restart
 				continue
 			default:
@@ -76,7 +76,7 @@ func compareAnyContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, sta
 
 		for k := range diff {
 			switch k {
-			case constants.EnvOperatorPodName, constants.EnvOperatorPodNamespace, constants.EnvOperatorNodeName, constants.EnvOperatorNodeNameArango:
+			case utilConstants.EnvOperatorPodName, utilConstants.EnvOperatorPodNamespace, utilConstants.EnvOperatorNodeName, utilConstants.EnvOperatorNodeNameArango:
 				// Lifecycle envs can change without restart
 				continue
 			default:

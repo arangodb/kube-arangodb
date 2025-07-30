@@ -183,6 +183,10 @@ linters-settings:
         pkg: github.com/envoyproxy/go-control-plane/envoy/config/route/v3
       - alias: monitoringApi
         pkg: github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
+      - alias: inspectorConstants
+        pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants
+      - alias: utilConstants
+        pkg: github.com/arangodb/kube-arangodb/pkg/util/constants
       - alias: apps
         pkg: k8s.io/api/apps/v1
       - alias: batch

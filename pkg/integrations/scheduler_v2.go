@@ -28,7 +28,7 @@ import (
 	pbImplSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2"
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -56,7 +56,7 @@ func (b *schedulerV2) Description() string {
 
 func (b *schedulerV2) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
-		fs.StringVar(&b.Configuration.Namespace, "namespace", constants.NamespaceWithDefault("default"), "Kubernetes Namespace"),
+		fs.StringVar(&b.Configuration.Namespace, "namespace", utilConstants.NamespaceWithDefault("default"), "Kubernetes Namespace"),
 		fs.StringVar(&b.Configuration.Deployment, "deployment", "", "ArangoDeployment Name"),
 		fs.StringVar(&b.Driver, "driver", string(helm.ConfigurationDriverSecret), "Helm Driver"),
 	)

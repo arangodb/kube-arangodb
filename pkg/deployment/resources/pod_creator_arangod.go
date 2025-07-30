@@ -37,7 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
@@ -188,8 +188,8 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
 	if a.Deployment.License.HasSecretName() && a.Image.ArangoDBVersion.CompareTo("3.9.0") < 0 {
-		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.Deployment.License.GetSecretName(),
-			constants.SecretKeyToken)
+		env := k8sutil.CreateEnvSecretKeySelector(utilConstants.EnvArangoLicenseKey, a.Deployment.License.GetSecretName(),
+			utilConstants.SecretKeyToken)
 
 		envs.Add(true, env)
 	}

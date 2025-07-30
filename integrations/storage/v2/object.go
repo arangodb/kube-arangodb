@@ -31,7 +31,7 @@ import (
 	pbImplStorageV2SharedS3 "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	awsHelper "github.com/arangodb/kube-arangodb/pkg/util/aws"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	gcsHelper "github.com/arangodb/kube-arangodb/pkg/util/gcs"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -52,9 +52,9 @@ func NewIOFromObject(ctx context.Context, client kclient.Client, in *platformApi
 					return nil, errors.WithMessage(err, "Failed to get S3 secret")
 				}
 
-				q, ok := secret.Data[constants.SecretCACertificate]
+				q, ok := secret.Data[utilConstants.SecretCACertificate]
 				if !ok {
-					return nil, errors.WithMessagef(err, "Failed to get S3 secret %s data: Key %s not found", secret.GetName(), constants.SecretCACertificate)
+					return nil, errors.WithMessagef(err, "Failed to get S3 secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCACertificate)
 				}
 
 				config.TLS.CABytes = [][]byte{q}
@@ -66,14 +66,14 @@ func NewIOFromObject(ctx context.Context, client kclient.Client, in *platformApi
 					return nil, errors.WithMessage(err, "Failed to get S3 secret")
 				}
 
-				sk, ok := secret.Data[constants.SecretCredentialsSecretKey]
+				sk, ok := secret.Data[utilConstants.SecretCredentialsSecretKey]
 				if !ok {
-					return nil, errors.Errorf("Failed to get S3 secret %s data: Key %s not found", secret.GetName(), constants.SecretCredentialsSecretKey)
+					return nil, errors.Errorf("Failed to get S3 secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsSecretKey)
 				}
 
-				ak, ok := secret.Data[constants.SecretCredentialsAccessKey]
+				ak, ok := secret.Data[utilConstants.SecretCredentialsAccessKey]
 				if !ok {
-					return nil, errors.Errorf("Failed to get S3 secret %s data: Key %s not found", secret.GetName(), constants.SecretCredentialsAccessKey)
+					return nil, errors.Errorf("Failed to get S3 secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsAccessKey)
 				}
 
 				config.Provider.Static.AccessKeyID = string(ak)
@@ -119,9 +119,9 @@ func NewIOFromObject(ctx context.Context, client kclient.Client, in *platformApi
 					return nil, errors.WithMessage(err, "Failed to get GCS secret")
 				}
 
-				sk, ok := secret.Data[constants.SecretCredentialsServiceAccount]
+				sk, ok := secret.Data[utilConstants.SecretCredentialsServiceAccount]
 				if !ok {
-					return nil, errors.Errorf("Failed to get GCS secret %s data: Key %s not found", secret.GetName(), constants.SecretCredentialsServiceAccount)
+					return nil, errors.Errorf("Failed to get GCS secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsServiceAccount)
 				}
 
 				config.Provider.ServiceAccount.JSON = string(sk)

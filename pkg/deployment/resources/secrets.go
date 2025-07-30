@@ -41,7 +41,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -200,14 +200,14 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 				return errors.Errorf("Token secret does not exist")
 			}
 
-			token, ok := s.Data[constants.SecretKeyToken]
+			token, ok := s.Data[utilConstants.SecretKeyToken]
 			if !ok {
 				return errors.Errorf("Token secret is invalid")
 			}
 
 			f.Data[util.SHA256(token)] = token
 			f.Data[pod.ActiveJWTKey] = token
-			f.Data[constants.SecretKeyToken] = token
+			f.Data[utilConstants.SecretKeyToken] = token
 
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				_, err := secrets.Update(ctxChild, f, meta.UpdateOptions{})
@@ -243,14 +243,14 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 			}
 		}
 
-		if _, ok := f.Data[constants.SecretKeyToken]; !ok {
+		if _, ok := f.Data[utilConstants.SecretKeyToken]; !ok {
 			b, ok := f.Data[pod.ActiveJWTKey]
 			if !ok {
 				return errors.Errorf("Token Folder secret is invalid")
 			}
 
 			p := patch.NewPatch()
-			p.ItemAdd(patch.NewPath("data", constants.SecretKeyToken), util.SHA256(b))
+			p.ItemAdd(patch.NewPath("data", utilConstants.SecretKeyToken), util.SHA256(b))
 
 			pdata, err := json.Marshal(p)
 			if err != nil {
@@ -274,7 +274,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 		return errors.Errorf("Token secret does not exist")
 	}
 
-	token, ok := s.Data[constants.SecretKeyToken]
+	token, ok := s.Data[utilConstants.SecretKeyToken]
 	if !ok {
 		return errors.Errorf("Token secret is invalid")
 	}
@@ -282,7 +282,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 	if err := r.createSecretWithMod(ctx, secrets, folderSecretName, func(s *core.Secret) {
 		s.Data[util.SHA256(token)] = token
 		s.Data[pod.ActiveJWTKey] = token
-		s.Data[constants.SecretKeyToken] = token
+		s.Data[utilConstants.SecretKeyToken] = token
 	}); err != nil {
 		return err
 	}
@@ -377,7 +377,7 @@ func (r *Resources) ensureEncryptionKeyfolderSecret(ctx context.Context, cachedS
 		return errors.Errorf("Missing key in secret")
 	}
 
-	d, ok := keyfile.Data[constants.SecretEncryptionKey]
+	d, ok := keyfile.Data[utilConstants.SecretEncryptionKey]
 	if !ok {
 		if folderExists {
 			return nil
@@ -478,7 +478,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 		return true, false, nil
 	} else {
 		// Check if claims are fine
-		data, ok := secret.Data[constants.SecretKeyToken]
+		data, ok := secret.Data[utilConstants.SecretKeyToken]
 		if !ok {
 			return true, true, nil
 		}

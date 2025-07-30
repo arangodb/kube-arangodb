@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
@@ -133,10 +133,10 @@ func EnvExists(a []core.EnvVar, name string) bool {
 
 func GetLifecycleEnv() []core.EnvVar {
 	return []core.EnvVar{
-		CreateEnvFieldPath(constants.EnvOperatorPodName, "metadata.name"),
-		CreateEnvFieldPath(constants.EnvOperatorPodNamespace, "metadata.namespace"),
-		CreateEnvFieldPath(constants.EnvOperatorNodeName, "spec.nodeName"),
-		CreateEnvFieldPath(constants.EnvOperatorNodeNameArango, "spec.nodeName"),
+		CreateEnvFieldPath(utilConstants.EnvOperatorPodName, "metadata.name"),
+		CreateEnvFieldPath(utilConstants.EnvOperatorPodNamespace, "metadata.namespace"),
+		CreateEnvFieldPath(utilConstants.EnvOperatorNodeName, "spec.nodeName"),
+		CreateEnvFieldPath(utilConstants.EnvOperatorNodeNameArango, "spec.nodeName"),
 	}
 }
 

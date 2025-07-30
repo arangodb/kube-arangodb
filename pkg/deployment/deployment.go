@@ -58,7 +58,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -550,7 +550,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 	}
 
 	var err error
-	if !access.VerifyAccess(shutdown.Context(), d.deps.Client, access.GVR(constants.CustomResourceDefinitionGRv1(), "servicemonitors.monitoring.coreos.com", access.Get)) {
+	if !access.VerifyAccess(shutdown.Context(), d.deps.Client, access.GVR(inspectorConstants.CustomResourceDefinitionGRv1(), "servicemonitors.monitoring.coreos.com", access.Get)) {
 		_, err = d.acs.CurrentClusterCache().ServiceMonitor().V1()
 		if kerrors.IsForbiddenOrNotFound(err) {
 			return

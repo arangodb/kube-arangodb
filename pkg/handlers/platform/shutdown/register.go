@@ -26,7 +26,7 @@ import (
 
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -37,7 +37,7 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 		Version(),
 		Kind(), func(obj meta.Object) bool {
 			if anns := obj.GetAnnotations(); len(anns) != 0 {
-				if _, ok := anns[constants.AnnotationShutdownManagedContainer]; ok {
+				if _, ok := anns[utilConstants.AnnotationShutdownManagedContainer]; ok {
 					return true
 				}
 			}

@@ -30,7 +30,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 const (
@@ -71,7 +71,7 @@ func cmdLifecycleWaitCheck(cmd *cobra.Command, _ []string) {
 	}
 
 	for {
-		d, err := getDeployment(ctx, os.Getenv(constants.EnvOperatorPodNamespace), deploymentName)
+		d, err := getDeployment(ctx, os.Getenv(utilConstants.EnvOperatorPodNamespace), deploymentName)
 		if err != nil {
 			logger.Err(err).Fatal(fmt.Sprintf("error getting ArangoDeployment: %s", d.Name))
 		}

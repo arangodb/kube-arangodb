@@ -42,7 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/crypto"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -596,7 +596,7 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 				return false, false
 			}
 
-			keyfile, ok := s.Data[constants.SecretTLSKeyfile]
+			keyfile, ok := s.Data[utilConstants.SecretTLSKeyfile]
 			if !ok {
 				r.planLogger.Warn("Keyfile secret is invalid")
 				return false, false

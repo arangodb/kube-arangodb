@@ -29,7 +29,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -89,9 +89,9 @@ func (s sni) Verify(i Input, cachedStatus interfaces.Inspector) error {
 			return errors.Errorf("SNI Secret not found %s", secret)
 		}
 
-		_, ok := kubeSecret.Data[constants.SecretTLSKeyfile]
+		_, ok := kubeSecret.Data[utilConstants.SecretTLSKeyfile]
 		if !ok {
-			return errors.Errorf("Unable to find secret key %s/%s for SNI", secret, constants.SecretTLSKeyfile)
+			return errors.Errorf("Unable to find secret key %s/%s for SNI", secret, utilConstants.SecretTLSKeyfile)
 		}
 	}
 	return nil
@@ -147,7 +147,7 @@ func (s sni) Args(i Input) k8sutil.OptionPairs {
 		}
 
 		for _, server := range servers {
-			opts.Addf("--ssl.server-name-indication", "%s=%s/%s/%s", server, shared.TLSSNIKeyfileVolumeMountDir, volume, constants.SecretTLSKeyfile)
+			opts.Addf("--ssl.server-name-indication", "%s=%s/%s/%s", server, shared.TLSSNIKeyfileVolumeMountDir, volume, utilConstants.SecretTLSKeyfile)
 		}
 	}
 

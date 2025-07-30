@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -52,8 +52,8 @@ func (p configMapsInspectorLoader) Load(ctx context.Context, i *inspectorState) 
 	var q configMapsInspector
 
 	q.v1 = newInspectorVersion[*core.ConfigMapList, *core.ConfigMap](ctx,
-		constants.ConfigMapGRv1(),
-		constants.ConfigMapGKv1(),
+		inspectorConstants.ConfigMapGRv1(),
+		inspectorConstants.ConfigMapGKv1(),
 		i.client.Kubernetes().CoreV1().ConfigMaps(i.namespace),
 		configmap.List())
 
@@ -102,8 +102,8 @@ func (p *configMapsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, configMapsInspectorLoaderObj)
 }
 
-func (p *configMapsInspector) Version() version.Version {
-	return version.V1
+func (p *configMapsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *configMapsInspector) Throttle(c throttle.Components) throttle.Throttle {
