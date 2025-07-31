@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolume"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -52,8 +52,8 @@ func (p persistentVolumesInspectorLoader) Load(ctx context.Context, i *inspector
 	var q persistentVolumesInspector
 
 	q.v1 = newInspectorVersion[*core.PersistentVolumeList, *core.PersistentVolume](ctx,
-		constants.PersistentVolumeGRv1(),
-		constants.PersistentVolumeGKv1(),
+		inspectorConstants.PersistentVolumeGRv1(),
+		inspectorConstants.PersistentVolumeGKv1(),
 		i.client.Kubernetes().CoreV1().PersistentVolumes(),
 		persistentvolume.List())
 
@@ -98,8 +98,8 @@ func (p *persistentVolumesInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, persistentVolumesInspectorLoaderObj)
 }
 
-func (p *persistentVolumesInspector) Version() version.Version {
-	return version.V1
+func (p *persistentVolumesInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *persistentVolumesInspector) Throttle(c throttle.Components) throttle.Throttle {

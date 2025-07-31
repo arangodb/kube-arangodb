@@ -24,7 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
@@ -61,7 +61,7 @@ func (a *MemberGatewayContainer) GetPorts() []core.ContainerPort {
 }
 
 func (a *MemberGatewayContainer) GetExecutor() string {
-	return a.GroupSpec.GetEntrypoint(constants.ArangoGatewayExecutor)
+	return a.GroupSpec.GetEntrypoint(utilConstants.ArangoGatewayExecutor)
 }
 
 func (a *MemberGatewayContainer) GetSecurityContext() *core.SecurityContext {
@@ -124,9 +124,9 @@ func (a *MemberGatewayContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource)
 
 	if !a.Deployment.Gateway.IsDynamic() {
 		if cm, ok := a.cachedStatus.ConfigMap().V1().GetSimple(GetGatewayConfigMapName(a.ApiObject.GetName())); ok {
-			if v, ok := cm.Data[constants.ConfigMapChecksumKey]; ok {
+			if v, ok := cm.Data[utilConstants.ConfigMapChecksumKey]; ok {
 				envs.Add(true, core.EnvVar{
-					Name:  constants.GatewayConfigChecksumENV,
+					Name:  utilConstants.GatewayConfigChecksumENV,
 					Value: v,
 				})
 			}

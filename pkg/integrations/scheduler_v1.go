@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pbImplSchedulerV1 "github.com/arangodb/kube-arangodb/integrations/scheduler/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
@@ -52,7 +52,7 @@ func (b *schedulerV1) Description() string {
 
 func (b *schedulerV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
-		fs.StringVar(&b.Configuration.Namespace, "namespace", constants.NamespaceWithDefault("default"), "Kubernetes Namespace"),
+		fs.StringVar(&b.Configuration.Namespace, "namespace", utilConstants.NamespaceWithDefault("default"), "Kubernetes Namespace"),
 		fs.BoolVar(&b.Configuration.VerifyAccess, "verify-access", true, "Verify the CRD Access"),
 	)
 }

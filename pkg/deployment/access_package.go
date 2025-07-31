@@ -31,7 +31,7 @@ import (
 
 	certificates "github.com/arangodb-helper/go-certificates"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -68,7 +68,7 @@ func (d *Deployment) createAccessPackages(ctx context.Context) error {
 	secretList := d.acs.CurrentClusterCache().Secret().V1().ListSimple()
 	for _, secret := range secretList {
 		if d.isOwnerOf(secret) {
-			if _, found := secret.Data[constants.SecretAccessPackageYaml]; found {
+			if _, found := secret.Data[utilConstants.SecretAccessPackageYaml]; found {
 				// Secret is an access package
 				if _, wanted := apNameMap[secret.GetName()]; !wanted {
 					// We found an obsolete access package secret. Remove it.
@@ -158,7 +158,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 			},
 		},
 		Data: map[string][]byte{
-			constants.SecretTLSKeyfile: []byte(keyfile),
+			utilConstants.SecretTLSKeyfile: []byte(keyfile),
 		},
 		Type: "Opaque",
 	}
@@ -174,7 +174,7 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 			},
 		},
 		Data: map[string][]byte{
-			constants.SecretCACertificate: []byte(tlsCACert),
+			utilConstants.SecretCACertificate: []byte(tlsCACert),
 		},
 		Type: "Opaque",
 	}
@@ -198,9 +198,9 @@ func (d *Deployment) ensureAccessPackage(ctx context.Context, apSecretName strin
 			Name: apSecretName,
 		},
 		Data: map[string][]byte{
-			constants.SecretAccessPackageYaml: []byte(allYaml),
-			constants.SecretCACertificate:     []byte(tlsCACert),
-			constants.SecretTLSKeyfile:        []byte(keyfile),
+			utilConstants.SecretAccessPackageYaml: []byte(allYaml),
+			utilConstants.SecretCACertificate:     []byte(tlsCACert),
+			utilConstants.SecretTLSKeyfile:        []byte(keyfile),
 		},
 	}
 	// Attach secret to owner

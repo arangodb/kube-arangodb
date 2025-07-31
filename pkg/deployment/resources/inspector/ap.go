@@ -25,13 +25,13 @@ import (
 	"time"
 
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -51,8 +51,8 @@ func (p arangoProfilesInspectorLoader) Load(ctx context.Context, i *inspectorSta
 	var q arangoProfilesInspector
 
 	q.v1beta1 = newInspectorVersion[*schedulerApi.ArangoProfileList, *schedulerApi.ArangoProfile](ctx,
-		constants.ArangoProfileGRv1Beta1(),
-		constants.ArangoProfileGKv1Beta1(),
+		inspectorConstants.ArangoProfileGRv1Beta1(),
+		inspectorConstants.ArangoProfileGKv1Beta1(),
 		i.client.Arango().SchedulerV1beta1().ArangoProfiles(i.namespace),
 		arangoprofile.List())
 
@@ -97,8 +97,8 @@ func (p *arangoProfilesInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, arangoProfilesInspectorLoaderObj)
 }
 
-func (p *arangoProfilesInspector) Version() version.Version {
-	return version.V1
+func (p *arangoProfilesInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *arangoProfilesInspector) Throttle(c throttle.Components) throttle.Throttle {

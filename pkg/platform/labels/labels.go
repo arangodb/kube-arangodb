@@ -22,7 +22,7 @@ package labels
 
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
@@ -31,11 +31,11 @@ func IsPlatformManaged(r *helm.Release) bool {
 		return false
 	}
 
-	if managed, ok := r.Labels[constants.HelmLabelArangoDBManaged]; !ok || managed != "true" {
+	if managed, ok := r.Labels[utilConstants.HelmLabelArangoDBManaged]; !ok || managed != "true" {
 		return false
 	}
 
-	if managed, ok := r.Labels[constants.HelmLabelArangoDBType]; !ok || managed != "platform" {
+	if managed, ok := r.Labels[utilConstants.HelmLabelArangoDBType]; !ok || managed != "platform" {
 		return false
 	}
 
@@ -44,10 +44,10 @@ func IsPlatformManaged(r *helm.Release) bool {
 
 func GetLabels(deployment, chart string, mods ...util.ModR[map[string]string]) map[string]string {
 	m := map[string]string{
-		constants.HelmLabelArangoDBManaged:    "true",
-		constants.HelmLabelArangoDBDeployment: deployment,
-		constants.HelmLabelArangoDBChart:      chart,
-		constants.HelmLabelArangoDBType:       "platform",
+		utilConstants.HelmLabelArangoDBManaged:    "true",
+		utilConstants.HelmLabelArangoDBDeployment: deployment,
+		utilConstants.HelmLabelArangoDBChart:      chart,
+		utilConstants.HelmLabelArangoDBType:       "platform",
 	}
 
 	for _, mod := range mods {

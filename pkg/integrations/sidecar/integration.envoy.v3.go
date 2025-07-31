@@ -28,7 +28,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -83,7 +83,7 @@ func (i IntegrationEnvoyV3) Envs() ([]core.EnvVar, error) {
 						},
 						core.EnvVar{
 							Name:  "INTEGRATION_ENVOY_AUTH_V3_AUTH_PATH",
-							Value: fmt.Sprintf("%sconfig", constants.MemberAuthVolumeMountDir),
+							Value: fmt.Sprintf("%sconfig", utilConstants.MemberAuthVolumeMountDir),
 						},
 					)
 				}
@@ -104,11 +104,11 @@ func (i IntegrationEnvoyV3) Volumes() ([]core.Volume, []core.VolumeMount, error)
 	if gw := i.Spec.Gateway; gw != nil {
 		if auth := gw.Authentication; auth != nil {
 			if obj := auth.Secret; obj != nil {
-				volumes.AddVolume(k8sutil.CreateVolumeWithSecret(constants.MemberAuthVolumeName, obj.GetName()))
+				volumes.AddVolume(k8sutil.CreateVolumeWithSecret(utilConstants.MemberAuthVolumeName, obj.GetName()))
 
 				volumes.AddVolumeMount(core.VolumeMount{
-					Name:      constants.MemberAuthVolumeName,
-					MountPath: constants.MemberAuthVolumeMountDir,
+					Name:      utilConstants.MemberAuthVolumeName,
+					MountPath: utilConstants.MemberAuthVolumeMountDir,
 					ReadOnly:  true,
 				})
 			}

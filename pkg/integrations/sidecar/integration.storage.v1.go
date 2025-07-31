@@ -31,7 +31,7 @@ import (
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/aws"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -102,11 +102,11 @@ func (i IntegrationStorageV1) Envs() ([]core.EnvVar, error) {
 				},
 				core.EnvVar{
 					Name:  "INTEGRATION_STORAGE_V1_S3_SECRET_KEY",
-					Value: filepath.Join(mountPathStorageCredentials, constants.SecretCredentialsSecretKey),
+					Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsSecretKey),
 				},
 				core.EnvVar{
 					Name:  "INTEGRATION_STORAGE_V1_S3_ACCESS_KEY",
-					Value: filepath.Join(mountPathStorageCredentials, constants.SecretCredentialsAccessKey),
+					Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAccessKey),
 				},
 			)
 
@@ -115,11 +115,11 @@ func (i IntegrationStorageV1) Envs() ([]core.EnvVar, error) {
 				envs = append(envs,
 					core.EnvVar{
 						Name:  "INTEGRATION_STORAGE_V1_S3_CA_CRT",
-						Value: filepath.Join(mountPathStorageCA, constants.SecretCACertificate),
+						Value: filepath.Join(mountPathStorageCA, utilConstants.SecretCACertificate),
 					},
 					core.EnvVar{
 						Name:  "INTEGRATION_STORAGE_V1_S3_CA_KEY",
-						Value: filepath.Join(mountPathStorageCA, constants.SecretCAKey),
+						Value: filepath.Join(mountPathStorageCA, utilConstants.SecretCAKey),
 					},
 				)
 			}
@@ -163,11 +163,11 @@ func (i IntegrationStorageV1) Envs() ([]core.EnvVar, error) {
 				},
 				core.EnvVar{
 					Name:  "INTEGRATION_STORAGE_V1_S3_SECRET_KEY",
-					Value: filepath.Join(mountPathStorageCredentials, constants.SecretCredentialsSecretKey),
+					Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsSecretKey),
 				},
 				core.EnvVar{
 					Name:  "INTEGRATION_STORAGE_V1_S3_ACCESS_KEY",
-					Value: filepath.Join(mountPathStorageCredentials, constants.SecretCredentialsAccessKey),
+					Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAccessKey),
 				},
 			)
 
@@ -176,11 +176,11 @@ func (i IntegrationStorageV1) Envs() ([]core.EnvVar, error) {
 				envs = append(envs,
 					core.EnvVar{
 						Name:  "INTEGRATION_STORAGE_V1_S3_CA_CRT",
-						Value: filepath.Join(mountPathStorageCA, constants.SecretCACertificate),
+						Value: filepath.Join(mountPathStorageCA, utilConstants.SecretCACertificate),
 					},
 					core.EnvVar{
 						Name:  "INTEGRATION_STORAGE_V1_S3_CA_KEY",
-						Value: filepath.Join(mountPathStorageCA, constants.SecretCAKey),
+						Value: filepath.Join(mountPathStorageCA, utilConstants.SecretCAKey),
 					},
 				)
 			}

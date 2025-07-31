@@ -22,11 +22,8 @@ package arangoplatformstorage
 
 import (
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/base"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/gvk"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/refresh"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 type Inspector interface {
@@ -34,12 +31,7 @@ type Inspector interface {
 }
 
 type Definition interface {
-	refresh.Inspector
+	base.Inspector
 
-	gvk.GK
-	anonymous.Impl
-
-	Version() version.Version
-
-	V1Alpha1() (generic.Inspector[*platformApi.ArangoPlatformStorage], error)
+	V1Beta1() (generic.Inspector[*platformApi.ArangoPlatformStorage], error)
 }

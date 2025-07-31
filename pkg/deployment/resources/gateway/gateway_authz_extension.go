@@ -26,7 +26,7 @@ import (
 
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 type ConfigAuthZExtension struct {
@@ -58,7 +58,7 @@ func (c *ConfigAuthZExtension) RenderTypedFilterConfig() (util.KV[string, *anypb
 	}
 
 	return util.KV[string, *anypb.Any]{
-		K: constants.EnvoyIntegrationSidecarFilterName,
+		K: utilConstants.EnvoyIntegrationSidecarFilterName,
 		V: q,
 	}, nil
 }

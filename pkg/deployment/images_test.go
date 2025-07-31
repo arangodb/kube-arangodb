@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tolerations"
 )
@@ -168,7 +168,7 @@ func TestEnsureImages(t *testing.T) {
 						Namespace: testNamespace,
 					},
 					Data: map[string][]byte{
-						constants.SecretKeyToken: []byte("data"),
+						utilConstants.SecretKeyToken: []byte("data"),
 					},
 				}
 
@@ -197,8 +197,8 @@ func TestEnsureImages(t *testing.T) {
 							Command: createTestCommandForImageUpdatePod(),
 							Ports:   createTestPorts(api.ServerGroupAgents),
 							Env: []core.EnvVar{
-								k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-									testLicense, constants.SecretKeyToken),
+								k8sutil.CreateEnvSecretKeySelector(utilConstants.EnvArangoLicenseKey,
+									testLicense, utilConstants.SecretKeyToken),
 							},
 							Resources: core.ResourceRequirements{
 								Limits:   make(core.ResourceList),

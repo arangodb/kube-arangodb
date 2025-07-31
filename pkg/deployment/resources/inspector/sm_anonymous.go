@@ -25,16 +25,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 func (p *serviceMonitorsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := constants.ServiceMonitorGKv1()
+	g := inspectorConstants.ServiceMonitorGKv1()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case constants.ServiceMonitorVersionV1, DefaultVersion:
+		case inspectorConstants.ServiceMonitorVersionV1, DefaultVersion:
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}

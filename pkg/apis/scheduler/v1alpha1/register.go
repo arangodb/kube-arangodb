@@ -26,11 +26,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 const (
-	ArangoSchedulerVersion = constants.VersionV1Alpha1
+	ArangoSchedulerVersion = string(utilConstants.VersionV1Alpha1)
 )
 
 var (

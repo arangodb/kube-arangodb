@@ -32,7 +32,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -111,10 +111,10 @@ func (c *ConfigDestination) Validate() error {
 			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
 			shared.PrefixResourceError("upgradeConfigs", c.UpgradeConfigs.Validate()),
 			shared.PrefixResourceErrorFunc("timeout", func() error {
-				if t := c.GetTimeout(); t < constants.MinEnvoyUpstreamTimeout {
-					return errors.Errorf("Timeout lower than %s not allowed", constants.MinEnvoyUpstreamTimeout.String())
-				} else if t > constants.MaxEnvoyUpstreamTimeout {
-					return errors.Errorf("Timeout greater than %s not allowed", constants.MaxEnvoyUpstreamTimeout.String())
+				if t := c.GetTimeout(); t < utilConstants.MinEnvoyUpstreamTimeout {
+					return errors.Errorf("Timeout lower than %s not allowed", utilConstants.MinEnvoyUpstreamTimeout.String())
+				} else if t > utilConstants.MaxEnvoyUpstreamTimeout {
+					return errors.Errorf("Timeout greater than %s not allowed", utilConstants.MaxEnvoyUpstreamTimeout.String())
 				}
 				return nil
 			}),
@@ -124,7 +124,7 @@ func (c *ConfigDestination) Validate() error {
 
 func (c *ConfigDestination) GetTimeout() time.Duration {
 	if c == nil || c.Timeout == nil {
-		return constants.DefaultEnvoyUpstreamTimeout
+		return utilConstants.DefaultEnvoyUpstreamTimeout
 	}
 
 	return c.Timeout.Duration

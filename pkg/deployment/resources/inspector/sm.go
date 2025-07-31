@@ -26,13 +26,13 @@ import (
 
 	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/servicemonitor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -52,8 +52,8 @@ func (p serviceMonitorsInspectorLoader) Load(ctx context.Context, i *inspectorSt
 	var q serviceMonitorsInspector
 
 	q.v1 = newInspectorVersion[*monitoringApi.ServiceMonitorList, *monitoringApi.ServiceMonitor](ctx,
-		constants.ServiceMonitorGRv1(),
-		constants.ServiceMonitorGKv1(),
+		inspectorConstants.ServiceMonitorGRv1(),
+		inspectorConstants.ServiceMonitorGKv1(),
 		i.client.Monitoring().MonitoringV1().ServiceMonitors(i.namespace),
 		servicemonitor.List())
 
@@ -98,8 +98,8 @@ func (p *serviceMonitorsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, serviceMonitorsInspectorLoaderObj)
 }
 
-func (p *serviceMonitorsInspector) Version() version.Version {
-	return version.V1
+func (p *serviceMonitorsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *serviceMonitorsInspector) Throttle(c throttle.Components) throttle.Throttle {

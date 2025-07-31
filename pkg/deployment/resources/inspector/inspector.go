@@ -37,6 +37,7 @@ import (
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
@@ -156,7 +157,7 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 	// K8S
 	k8s.Core().V1().PersistentVolumeClaims().Informer().AddEventHandler(i.eventHandler(definitions.PersistentVolumeClaim))
 
-	if i.PodDisruptionBudget().Version().IsV1() {
+	if i.PodDisruptionBudget().Version().Is(utilConstants.VersionV1) {
 		k8s.Policy().V1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
 	} else {
 		k8s.Policy().V1beta1().PodDisruptionBudgets().Informer().AddEventHandler(i.eventHandler(definitions.PodDisruptionBudget))
@@ -180,11 +181,11 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 		arango.Scheduler().V1beta1().ArangoProfiles().Informer().AddEventHandler(i.eventHandler(definitions.ArangoProfile))
 	}
 
-	if _, err := i.ArangoPlatformStorage().V1Alpha1(); err == nil {
+	if _, err := i.ArangoPlatformStorage().V1Beta1(); err == nil {
 		arango.Platform().V1beta1().ArangoPlatformStorages().Informer().AddEventHandler(i.eventHandler(definitions.ArangoPlatformStorage))
 	}
 
-	if _, err := i.ArangoRoute().V1Alpha1(); err == nil {
+	if _, err := i.ArangoRoute().V1Beta1(); err == nil {
 		arango.Networking().V1beta1().ArangoRoutes().Informer().AddEventHandler(i.eventHandler(definitions.ArangoRoute))
 	}
 

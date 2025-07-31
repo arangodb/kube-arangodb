@@ -29,7 +29,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -55,7 +55,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 
 	for _, f := range p.ObjectMeta.GetFinalizers() {
 		switch f {
-		case constants.FinalizerPodAgencyServing:
+		case utilConstants.FinalizerPodAgencyServing:
 			log.Debug("Inspecting agency-serving finalizer")
 			if isServerContainerDead {
 				log.Debug("Server Container is dead, removing finalizer")
@@ -67,7 +67,7 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 			} else {
 				log.Err(err).Str("finalizer", f).Debug("Cannot remove finalizer yet")
 			}
-		case constants.FinalizerPodDrainDBServer:
+		case utilConstants.FinalizerPodDrainDBServer:
 			log.Debug("Inspecting drain dbserver finalizer")
 			if isServerContainerDead {
 				log.Debug("Server Container is dead, removing finalizer")
@@ -79,13 +79,13 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 			} else {
 				log.Err(err).Str("finalizer", f).Debug("Cannot remove Pod finalizer yet")
 			}
-		case constants.FinalizerPodGracefulShutdown:
+		case utilConstants.FinalizerPodGracefulShutdown:
 			// We are in graceful shutdown, only one way to remove it is when container is already dead
 			if isServerContainerDead {
 				log.Debug("Server Container is dead, removing finalizer")
 				removalList = append(removalList, f)
 			}
-		case constants.FinalizerDelayPodTermination:
+		case utilConstants.FinalizerDelayPodTermination:
 			if isServerContainerDead {
 				log.Debug("Server Container is dead, removing finalizer")
 				removalList = append(removalList, f)

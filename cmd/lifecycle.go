@@ -35,7 +35,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -100,13 +100,13 @@ func cmdLifecyclePreStopRunFinalizer(cmd *cobra.Command, args []string) {
 	logger.Info("Starting arangodb-operator (%s), lifecycle preStop, version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Get environment
-	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
+	namespace := os.Getenv(utilConstants.EnvOperatorPodNamespace)
 	if len(namespace) == 0 {
-		logger.Fatal("%s environment variable missing", constants.EnvOperatorPodNamespace)
+		logger.Fatal("%s environment variable missing", utilConstants.EnvOperatorPodNamespace)
 	}
-	name := os.Getenv(constants.EnvOperatorPodName)
+	name := os.Getenv(utilConstants.EnvOperatorPodName)
 	if len(name) == 0 {
-		logger.Fatal("%s environment variable missing", constants.EnvOperatorPodName)
+		logger.Fatal("%s environment variable missing", utilConstants.EnvOperatorPodName)
 	}
 
 	// Create kubernetes client
@@ -192,13 +192,13 @@ func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) erro
 	address := net.JoinHostPort("127.0.0.1", strconv.Itoa(shared.ArangoPort))
 
 	// Get environment
-	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
+	namespace := os.Getenv(utilConstants.EnvOperatorPodNamespace)
 	if len(namespace) == 0 {
-		logger.Fatal("%s environment variable missing", constants.EnvOperatorPodNamespace)
+		logger.Fatal("%s environment variable missing", utilConstants.EnvOperatorPodNamespace)
 	}
-	name := os.Getenv(constants.EnvOperatorPodName)
+	name := os.Getenv(utilConstants.EnvOperatorPodName)
 	if len(name) == 0 {
-		logger.Fatal("%s environment variable missing", constants.EnvOperatorPodName)
+		logger.Fatal("%s environment variable missing", utilConstants.EnvOperatorPodName)
 	}
 
 	// Create kubernetes client
@@ -234,7 +234,7 @@ func (c *cmdLifecyclePreStopRunPort) run(cmd *cobra.Command, args []string) erro
 		} else {
 			// We got our pod
 			finalizers := utils.StringList(p.GetFinalizers())
-			if !finalizers.Has(constants.FinalizerPodGracefulShutdown) {
+			if !finalizers.Has(utilConstants.FinalizerPodGracefulShutdown) {
 				return retry.Interrput()
 			}
 		}

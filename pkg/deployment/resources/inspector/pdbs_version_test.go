@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,22 +28,22 @@ import (
 	"github.com/stretchr/testify/require"
 	kversion "k8s.io/apimachinery/pkg/version"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 func Test_PDB_Versions(t *testing.T) {
-	k8sVersions := map[string]version.Version{
+	k8sVersions := map[string]utilConstants.Version{
 		"v1.18.0": "",
 		"v1.19.0": "",
 		"v1.20.0": "",
-		"v1.21.0": version.V1,
-		"v1.22.0": version.V1,
-		"v1.23.0": version.V1,
-		"v1.24.0": version.V1,
-		"v1.25.0": version.V1,
-		"v1.26.0": version.V1,
+		"v1.21.0": utilConstants.VersionV1,
+		"v1.22.0": utilConstants.VersionV1,
+		"v1.23.0": utilConstants.VersionV1,
+		"v1.24.0": utilConstants.VersionV1,
+		"v1.25.0": utilConstants.VersionV1,
+		"v1.26.0": utilConstants.VersionV1,
 	}
 
 	for v, expected := range k8sVersions {
@@ -57,7 +57,7 @@ func Test_PDB_Versions(t *testing.T) {
 			i := NewInspector(tc, c, "test", "test")
 			require.NoError(t, i.Refresh(context.Background()))
 
-			if expected.IsV1() {
+			if expected.Is(utilConstants.VersionV1) {
 				_, err := i.PodDisruptionBudget().V1()
 				require.NoError(t, err)
 			} else {

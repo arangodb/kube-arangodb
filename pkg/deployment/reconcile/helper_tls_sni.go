@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
@@ -49,7 +49,7 @@ func mapTLSSNIConfig(sni api.TLSSNISpec, cachedStatus inspectorInterface.Inspect
 			return nil, errors.Errorf("Secret %s does not exist", name)
 		}
 
-		tlsKey, ok := secret.Data[constants.SecretTLSKeyfile]
+		tlsKey, ok := secret.Data[utilConstants.SecretTLSKeyfile]
 		if !ok {
 			return nil, errors.Errorf("Not found tls keyfile key in SNI secret")
 		}

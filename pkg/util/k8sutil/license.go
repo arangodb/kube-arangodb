@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"encoding/json"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/secret"
 )
@@ -53,18 +53,18 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 
 	var l LicenseSecret
 
-	if v, ok := s.Data[constants.SecretKeyToken]; ok {
+	if v, ok := s.Data[utilConstants.SecretKeyToken]; ok {
 		l.V1 = string(v)
 	}
 
-	if v1, ok1 := s.Data[constants.SecretKeyV2License]; ok1 {
+	if v1, ok1 := s.Data[utilConstants.SecretKeyV2License]; ok1 {
 		// some customers put the raw JSON-encoded value, but operator and DB servers expect the base64-encoded value
 		if IsJSON(v1) {
 			l.V2 = License(base64.StdEncoding.EncodeToString(v1))
 		} else {
 			l.V2 = License(v1)
 		}
-	} else if v2, ok2 := s.Data[constants.SecretKeyV2Token]; ok2 {
+	} else if v2, ok2 := s.Data[utilConstants.SecretKeyV2Token]; ok2 {
 		// some customers put the raw JSON-encoded value, but operator and DB servers expect the base64-encoded value
 		if IsJSON(v2) {
 			l.V2 = License(base64.StdEncoding.EncodeToString(v2))
@@ -73,7 +73,7 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 		}
 	} else {
 		return LicenseSecret{}, errors.Errorf("Key (%s, %s or %s) is missing in the license secret (%s)",
-			constants.SecretKeyToken, constants.SecretKeyV2License, constants.SecretKeyV2Token, name)
+			utilConstants.SecretKeyToken, utilConstants.SecretKeyV2License, utilConstants.SecretKeyV2Token, name)
 	}
 
 	return l, nil

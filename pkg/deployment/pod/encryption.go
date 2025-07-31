@@ -32,7 +32,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -88,7 +88,7 @@ func GetEncryptionKeyFromSecret(keyfile *core.Secret) (string, []byte, error) {
 		return "", nil, errors.Errorf("Current encryption key is not valid - missing data section")
 	}
 
-	d, ok := keyfile.Data[constants.SecretEncryptionKey]
+	d, ok := keyfile.Data[utilConstants.SecretEncryptionKey]
 	if !ok {
 		return "", nil, errors.Errorf("Current encryption key is not valid - missing field")
 	}
@@ -131,7 +131,7 @@ func (e encryption) Args(i Input) k8sutil.OptionPairs {
 		return nil
 	}
 	if !MultiFileMode(i) {
-		keyPath := filepath.Join(shared.RocksDBEncryptionVolumeMountDir, constants.SecretEncryptionKey)
+		keyPath := filepath.Join(shared.RocksDBEncryptionVolumeMountDir, utilConstants.SecretEncryptionKey)
 		return k8sutil.NewOptionPair(k8sutil.OptionPair{
 			Key:   "--rocksdb.encryption-keyfile",
 			Value: keyPath,

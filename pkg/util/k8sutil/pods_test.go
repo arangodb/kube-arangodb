@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
@@ -358,12 +358,12 @@ func Test_EnsureFinalizer(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Ensure finalizers", func(t *testing.T) {
-		require.NoError(t, EnsureFinalizerPresent(context.Background(), c.Kubernetes().CoreV1().Pods(pod.GetNamespace()), pod, constants.FinalizerPodGracefulShutdown))
+		require.NoError(t, EnsureFinalizerPresent(context.Background(), c.Kubernetes().CoreV1().Pods(pod.GetNamespace()), pod, utilConstants.FinalizerPodGracefulShutdown))
 
 		refresh(t)
 
 		require.Len(t, pod.Finalizers, 1)
-		require.Contains(t, pod.Finalizers, constants.FinalizerPodGracefulShutdown)
+		require.Contains(t, pod.Finalizers, utilConstants.FinalizerPodGracefulShutdown)
 	})
 
 	t.Run("Add finalizers", func(t *testing.T) {
@@ -372,7 +372,7 @@ func Test_EnsureFinalizer(t *testing.T) {
 		refresh(t)
 
 		require.Len(t, pod.Finalizers, 2)
-		require.Contains(t, pod.Finalizers, constants.FinalizerPodGracefulShutdown)
+		require.Contains(t, pod.Finalizers, utilConstants.FinalizerPodGracefulShutdown)
 		require.Contains(t, pod.Finalizers, f)
 	})
 
@@ -382,7 +382,7 @@ func Test_EnsureFinalizer(t *testing.T) {
 		refresh(t)
 
 		require.Len(t, pod.Finalizers, 2)
-		require.Contains(t, pod.Finalizers, constants.FinalizerPodGracefulShutdown)
+		require.Contains(t, pod.Finalizers, utilConstants.FinalizerPodGracefulShutdown)
 		require.Contains(t, pod.Finalizers, f)
 	})
 
@@ -392,7 +392,7 @@ func Test_EnsureFinalizer(t *testing.T) {
 		refresh(t)
 
 		require.Len(t, pod.Finalizers, 1)
-		require.Contains(t, pod.Finalizers, constants.FinalizerPodGracefulShutdown)
+		require.Contains(t, pod.Finalizers, utilConstants.FinalizerPodGracefulShutdown)
 		require.NotContains(t, pod.Finalizers, f)
 	})
 
@@ -402,17 +402,17 @@ func Test_EnsureFinalizer(t *testing.T) {
 		refresh(t)
 
 		require.Len(t, pod.Finalizers, 1)
-		require.Contains(t, pod.Finalizers, constants.FinalizerPodGracefulShutdown)
+		require.Contains(t, pod.Finalizers, utilConstants.FinalizerPodGracefulShutdown)
 		require.NotContains(t, pod.Finalizers, f)
 	})
 
 	t.Run("Remove final finalizers", func(t *testing.T) {
-		require.NoError(t, EnsureFinalizerAbsent(context.Background(), c.Kubernetes().CoreV1().Pods(pod.GetNamespace()), pod, constants.FinalizerPodGracefulShutdown))
+		require.NoError(t, EnsureFinalizerAbsent(context.Background(), c.Kubernetes().CoreV1().Pods(pod.GetNamespace()), pod, utilConstants.FinalizerPodGracefulShutdown))
 
 		refresh(t)
 
 		require.Len(t, pod.Finalizers, 0)
-		require.NotContains(t, pod.Finalizers, constants.FinalizerPodGracefulShutdown)
+		require.NotContains(t, pod.Finalizers, utilConstants.FinalizerPodGracefulShutdown)
 		require.NotContains(t, pod.Finalizers, f)
 	})
 }

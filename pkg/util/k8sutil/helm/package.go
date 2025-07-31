@@ -28,7 +28,7 @@ import (
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -96,10 +96,10 @@ func NewPackage(ctx context.Context, client kclient.Client, namespace, deploymen
 		existingReleases, err := hclient.List(ctx, func(in *action.List) {
 			in.Selector = meta.FormatLabelSelector(&meta.LabelSelector{
 				MatchLabels: map[string]string{
-					constants.HelmLabelArangoDBManaged:    "true",
-					constants.HelmLabelArangoDBDeployment: deployment,
-					constants.HelmLabelArangoDBChart:      name,
-					constants.HelmLabelArangoDBType:       "platform",
+					utilConstants.HelmLabelArangoDBManaged:    "true",
+					utilConstants.HelmLabelArangoDBDeployment: deployment,
+					utilConstants.HelmLabelArangoDBChart:      name,
+					utilConstants.HelmLabelArangoDBType:       "platform",
 				},
 			})
 		})

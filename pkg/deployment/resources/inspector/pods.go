@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -52,8 +52,8 @@ func (p podsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q podsInspector
 
 	q.v1 = newInspectorVersion[*core.PodList, *core.Pod](ctx,
-		constants.PodGRv1(),
-		constants.PodGKv1(),
+		inspectorConstants.PodGRv1(),
+		inspectorConstants.PodGKv1(),
 		i.client.Kubernetes().CoreV1().Pods(i.namespace),
 		pod.List())
 
@@ -102,8 +102,8 @@ func (p *podsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, podsInspectorLoaderObj)
 }
 
-func (p *podsInspector) Version() version.Version {
-	return version.V1
+func (p *podsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *podsInspector) Throttle(c throttle.Components) throttle.Throttle {

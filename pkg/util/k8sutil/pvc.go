@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -77,7 +77,7 @@ func CreatePersistentVolumeClaim(ctx context.Context, pvcs generic.ModClient[*co
 			Labels:     labels,
 			Finalizers: finalizers,
 			Annotations: map[string]string{
-				constants.AnnotationEnforceAntiAffinity: strconv.FormatBool(enforceAntiAffinity),
+				utilConstants.AnnotationEnforceAntiAffinity: strconv.FormatBool(enforceAntiAffinity),
 			},
 		},
 	}

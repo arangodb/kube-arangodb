@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
@@ -92,9 +92,9 @@ func getLicenseFromSecret(t *testing.T, raw, encoded string) {
 	c := kclient.NewFakeClient()
 	i := tests.NewInspector(t, c)
 
-	t.Run(constants.SecretKeyV2License, func(t *testing.T) {
+	t.Run(utilConstants.SecretKeyV2License, func(t *testing.T) {
 		t.Run("Encoded license", func(t *testing.T) {
-			n := createLicenseSecret(t, c, constants.SecretKeyV2License, encoded)
+			n := createLicenseSecret(t, c, utilConstants.SecretKeyV2License, encoded)
 
 			require.NoError(t, i.Refresh(context.Background()))
 
@@ -107,7 +107,7 @@ func getLicenseFromSecret(t *testing.T, raw, encoded string) {
 		})
 
 		t.Run("Raw license", func(t *testing.T) {
-			n := createLicenseSecret(t, c, constants.SecretKeyV2License, raw)
+			n := createLicenseSecret(t, c, utilConstants.SecretKeyV2License, raw)
 
 			require.NoError(t, i.Refresh(context.Background()))
 
@@ -120,9 +120,9 @@ func getLicenseFromSecret(t *testing.T, raw, encoded string) {
 		})
 	})
 
-	t.Run(constants.SecretKeyV2Token, func(t *testing.T) {
+	t.Run(utilConstants.SecretKeyV2Token, func(t *testing.T) {
 		t.Run("Encoded license", func(t *testing.T) {
-			n := createLicenseSecret(t, c, constants.SecretKeyV2Token, encoded)
+			n := createLicenseSecret(t, c, utilConstants.SecretKeyV2Token, encoded)
 
 			require.NoError(t, i.Refresh(context.Background()))
 
@@ -135,7 +135,7 @@ func getLicenseFromSecret(t *testing.T, raw, encoded string) {
 		})
 
 		t.Run("Raw license", func(t *testing.T) {
-			n := createLicenseSecret(t, c, constants.SecretKeyV2Token, raw)
+			n := createLicenseSecret(t, c, utilConstants.SecretKeyV2Token, raw)
 
 			require.NoError(t, i.Refresh(context.Background()))
 

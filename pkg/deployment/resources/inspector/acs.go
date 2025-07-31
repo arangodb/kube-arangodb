@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@ import (
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -51,8 +51,8 @@ func (p arangoClusterSynchronizationsInspectorLoader) Load(ctx context.Context, 
 	var q arangoClusterSynchronizationsInspector
 
 	q.v1 = newInspectorVersion[*api.ArangoClusterSynchronizationList, *api.ArangoClusterSynchronization](ctx,
-		constants.ArangoClusterSynchronizationGRv1(),
-		constants.ArangoClusterSynchronizationGKv1(),
+		inspectorConstants.ArangoClusterSynchronizationGRv1(),
+		inspectorConstants.ArangoClusterSynchronizationGKv1(),
 		i.client.Arango().DatabaseV1().ArangoClusterSynchronizations(i.namespace),
 		arangoclustersynchronization.List())
 
@@ -97,8 +97,8 @@ func (p *arangoClusterSynchronizationsInspector) Refresh(ctx context.Context) er
 	return p.state.refresh(ctx, arangoClusterSynchronizationsInspectorLoaderObj)
 }
 
-func (p *arangoClusterSynchronizationsInspector) Version() version.Version {
-	return version.V1
+func (p *arangoClusterSynchronizationsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *arangoClusterSynchronizationsInspector) Throttle(c throttle.Components) throttle.Throttle {

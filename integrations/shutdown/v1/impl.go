@@ -35,7 +35,7 @@ import (
 	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/closer"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -78,7 +78,7 @@ func (i *impl) Close() error {
 		logger.Info("Enforce Debug collection")
 
 		// Need to fetch Debug Details
-		if addr, ok := constants.INTEGRATION_SERVICE_ADDRESS.Lookup(); ok {
+		if addr, ok := utilConstants.INTEGRATION_SERVICE_ADDRESS.Lookup(); ok {
 			client, close, err := ugrpc.NewGRPCClient(ctx, pbStorageV2.NewStorageV2Client, addr)
 			if err != nil {
 				return err
@@ -107,11 +107,11 @@ func (i *impl) Close() error {
 					"pod",
 				}
 
-				if v, ok := constants.EnvOperatorPodNamespaceEnv.Lookup(); ok {
+				if v, ok := utilConstants.EnvOperatorPodNamespaceEnv.Lookup(); ok {
 					prefix = append(prefix, v)
 				}
 
-				if v, ok := constants.EnvOperatorPodNameEnv.Lookup(); ok {
+				if v, ok := utilConstants.EnvOperatorPodNameEnv.Lookup(); ok {
 					prefix = append(prefix, v)
 				}
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -89,7 +89,7 @@ func (a *actionJWTStatusUpdate) Start(ctx context.Context) (bool, error) {
 			return true, nil
 		}
 
-		key, ok := f.Data[constants.SecretKeyToken]
+		key, ok := f.Data[utilConstants.SecretKeyToken]
 		if !ok {
 			a.log.Error("JWT Token is invalid")
 			return true, nil
@@ -143,7 +143,7 @@ func (a *actionJWTStatusUpdate) Start(ctx context.Context) (bool, error) {
 		var keys []string
 
 		for key := range f.Data {
-			if key == pod.ActiveJWTKey || key == activeKeyShort || key == constants.SecretKeyToken {
+			if key == pod.ActiveJWTKey || key == activeKeyShort || key == utilConstants.SecretKeyToken {
 				continue
 			}
 

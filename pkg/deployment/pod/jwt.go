@@ -28,7 +28,7 @@ import (
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -67,7 +67,7 @@ func (e jwt) Args(i Input) k8sutil.OptionPairs {
 	if features.JWTRotation().ImageSupported(&i.Image) {
 		options.Add("--server.jwt-secret-folder", shared.ClusterJWTSecretVolumeMountDir)
 	} else {
-		keyPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+		keyPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, utilConstants.SecretKeyToken)
 		options.Add("--server.jwt-secret-keyfile", keyPath)
 	}
 

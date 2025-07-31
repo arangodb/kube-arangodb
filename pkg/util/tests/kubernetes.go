@@ -56,7 +56,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -1588,7 +1588,7 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 		Name:      object.GetName(),
 	}
 
-	gvk, ok := constants.ExtractGVKFromObject(object)
+	gvk, ok := inspectorConstants.ExtractGVKFromObject(object)
 	require.True(t, ok, reflect.TypeOf(object).String())
 
 	item.Group = gvk.Group

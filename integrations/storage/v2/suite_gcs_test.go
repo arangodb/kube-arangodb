@@ -33,7 +33,7 @@ import (
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
@@ -67,7 +67,7 @@ func gcsKubernetesObject(t *testing.T, mods ...util.Mod[platformApi.ArangoPlatfo
 			Namespace: tests.FakeNamespace,
 		},
 		Data: map[string][]byte{
-			constants.SecretCredentialsServiceAccount: []byte(config.Provider.ServiceAccount.JSON),
+			utilConstants.SecretCredentialsServiceAccount: []byte(config.Provider.ServiceAccount.JSON),
 		},
 	}, meta.CreateOptions{})
 	require.NoError(t, err)

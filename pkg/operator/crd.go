@@ -25,7 +25,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/crd"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
@@ -36,7 +36,7 @@ func (o *Operator) waitForCRD(crdName string, checkFn func() error) {
 
 	for {
 		var err error = nil
-		if !access.VerifyAccess(shutdown.Context(), o.Dependencies.Client, access.GVR(constants.CustomResourceDefinitionGRv1(), crdName, access.Get)) {
+		if !access.VerifyAccess(shutdown.Context(), o.Dependencies.Client, access.GVR(inspectorConstants.CustomResourceDefinitionGRv1(), crdName, access.Get)) {
 			log.Debug("Check by the CheckFun")
 			if checkFn != nil {
 				err = crd.WaitReady(checkFn)

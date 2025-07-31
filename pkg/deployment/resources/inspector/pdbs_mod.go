@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package inspector
 import (
 	policy "k8s.io/api/policy/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
@@ -40,7 +40,7 @@ type podDisruptionBudgetsMod struct {
 }
 
 func (p podDisruptionBudgetsMod) V1() generic.ModClient[*policy.PodDisruptionBudget] {
-	return wrapMod[*policy.PodDisruptionBudget](definitions.PodDisruptionBudget, p.i.GetThrottles, generic.WithModStatusGetter[*policy.PodDisruptionBudget](constants.PodDisruptionBudgetGKv1(), p.clientv1))
+	return wrapMod[*policy.PodDisruptionBudget](definitions.PodDisruptionBudget, p.i.GetThrottles, generic.WithModStatusGetter[*policy.PodDisruptionBudget](inspectorConstants.PodDisruptionBudgetGKv1(), p.clientv1))
 }
 
 func (p podDisruptionBudgetsMod) clientv1() generic.ModClient[*policy.PodDisruptionBudget] {

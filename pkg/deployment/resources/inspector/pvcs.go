@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -52,8 +52,8 @@ func (p persistentVolumeClaimsInspectorLoader) Load(ctx context.Context, i *insp
 	var q persistentVolumeClaimsInspector
 
 	q.v1 = newInspectorVersion[*core.PersistentVolumeClaimList, *core.PersistentVolumeClaim](ctx,
-		constants.PersistentVolumeClaimGRv1(),
-		constants.PersistentVolumeClaimGKv1(),
+		inspectorConstants.PersistentVolumeClaimGRv1(),
+		inspectorConstants.PersistentVolumeClaimGKv1(),
 		i.client.Kubernetes().CoreV1().PersistentVolumeClaims(i.namespace),
 		persistentvolumeclaim.List())
 
@@ -102,8 +102,8 @@ func (p *persistentVolumeClaimsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, persistentVolumeClaimsInspectorLoaderObj)
 }
 
-func (p *persistentVolumeClaimsInspector) Version() version.Version {
-	return version.V1
+func (p *persistentVolumeClaimsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *persistentVolumeClaimsInspector) Throttle(c throttle.Components) throttle.Throttle {

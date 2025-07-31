@@ -44,7 +44,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -303,9 +303,9 @@ func getAgencyState(ctx context.Context, conn connection.Connection) (io.ReadClo
 func getDeploymentAndCredentials(ctx context.Context,
 	deploymentName string) (d api.ArangoDeployment, certCA *x509.CertPool, auth connection.Authentication, err error) {
 
-	namespace := os.Getenv(constants.EnvOperatorPodNamespace)
+	namespace := os.Getenv(utilConstants.EnvOperatorPodNamespace)
 	if len(namespace) == 0 {
-		err = errors.New(fmt.Sprintf("\"%s\" environment variable missing", constants.EnvOperatorPodNamespace))
+		err = errors.New(fmt.Sprintf("\"%s\" environment variable missing", utilConstants.EnvOperatorPodNamespace))
 		return
 	}
 

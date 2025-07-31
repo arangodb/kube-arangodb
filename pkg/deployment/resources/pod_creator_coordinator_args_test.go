@@ -32,14 +32,14 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 // TestCreateArangodArgsCoordinator tests createArangodArgs for coordinator.
 func TestCreateArangodArgsCoordinator(t *testing.T) {
-	jwtSecretFile := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, constants.SecretKeyToken)
+	jwtSecretFile := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, utilConstants.SecretKeyToken)
 	// Default deployment
 	{
 		apiObject := &api.ArangoDeployment{

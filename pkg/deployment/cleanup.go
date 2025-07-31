@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -43,7 +43,7 @@ func (d *Deployment) removePodFinalizers(ctx context.Context, cachedStatus inspe
 
 	if err := cachedStatus.Pod().V1().Iterate(func(pod *core.Pod) error {
 		log.Str("pod", pod.GetName()).Info("Removing Pod Finalizer")
-		if count, err := k8sutil.RemoveSelectedFinalizers[*core.Pod](ctx, cachedStatus.Pod().V1().Read(), cachedStatus.PodsModInterface().V1(), pod, constants.ManagedFinalizers(), true); err != nil {
+		if count, err := k8sutil.RemoveSelectedFinalizers[*core.Pod](ctx, cachedStatus.Pod().V1().Read(), cachedStatus.PodsModInterface().V1(), pod, utilConstants.ManagedFinalizers(), true); err != nil {
 			log.Err(err).Warn("Failed to remove pod finalizers")
 			return err
 		} else if count > 0 {
@@ -77,7 +77,7 @@ func (d *Deployment) removePVCFinalizers(ctx context.Context, cachedStatus inspe
 
 	if err := cachedStatus.PersistentVolumeClaim().V1().Iterate(func(pvc *core.PersistentVolumeClaim) error {
 		log.Str("pvc", pvc.GetName()).Info("Removing PVC Finalizer")
-		if count, err := k8sutil.RemoveSelectedFinalizers[*core.PersistentVolumeClaim](ctx, cachedStatus.PersistentVolumeClaim().V1().Read(), cachedStatus.PersistentVolumeClaimsModInterface().V1(), pvc, constants.ManagedFinalizers(), true); err != nil {
+		if count, err := k8sutil.RemoveSelectedFinalizers[*core.PersistentVolumeClaim](ctx, cachedStatus.PersistentVolumeClaim().V1().Read(), cachedStatus.PersistentVolumeClaimsModInterface().V1(), pvc, utilConstants.ManagedFinalizers(), true); err != nil {
 			log.Err(err).Warn("Failed to remove PVC finalizers")
 			return err
 		} else if count > 0 {

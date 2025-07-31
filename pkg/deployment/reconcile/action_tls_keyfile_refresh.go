@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -56,7 +56,7 @@ func (a *actionRefreshTLSKeyfileCertificate) CheckProgress(ctx context.Context) 
 		return true, false, nil
 	}
 
-	keyfile, ok := s.Data[constants.SecretTLSKeyfile]
+	keyfile, ok := s.Data[utilConstants.SecretTLSKeyfile]
 	if !ok {
 		a.log.Warn("Keyfile secret is invalid")
 		return true, false, nil

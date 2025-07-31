@@ -43,7 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -148,8 +148,8 @@ func readJWTFile(file string) ([]byte, error) {
 
 func getJWTToken() ([]byte, error) {
 	// Try read default one
-	if token, err := readJWTFile(constants.SecretKeyToken); err == nil {
-		log.Info().Str("token", constants.SecretKeyToken).Msgf("Using JWT Token")
+	if token, err := readJWTFile(utilConstants.SecretKeyToken); err == nil {
+		log.Info().Str("token", utilConstants.SecretKeyToken).Msgf("Using JWT Token")
 		return token, nil
 	}
 

@@ -31,7 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
 	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner/service"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
@@ -68,9 +68,9 @@ func cmdStorageProvisionerRun(cmd *cobra.Command, args []string) {
 	logger.Info("Starting arangodb local storage provisioner (%s), version %s build %s", version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
 	// Get environment
-	nodeName := os.Getenv(constants.EnvOperatorNodeName)
+	nodeName := os.Getenv(utilConstants.EnvOperatorNodeName)
 	if len(nodeName) == 0 {
-		logger.Fatal("%s environment variable missing", constants.EnvOperatorNodeName)
+		logger.Fatal("%s environment variable missing", utilConstants.EnvOperatorNodeName)
 	}
 
 	config := newProvisionerConfigAndDeps(nodeName)

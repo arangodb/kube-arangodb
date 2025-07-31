@@ -50,7 +50,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
@@ -540,7 +540,7 @@ func createTestCommandForSyncMaster(name string, tls, auth, monitoring bool, cus
 	command = append(command, "--master.jwt-secret=/secrets/master/jwt/token")
 
 	if monitoring {
-		command = append(command, "--monitoring.token="+"$("+constants.EnvArangoSyncMonitoringToken+")")
+		command = append(command, "--monitoring.token="+"$("+utilConstants.EnvArangoSyncMonitoringToken+")")
 	}
 
 	command = append(command, "--mq.type=direct", "--server.client-cafile=/secrets/client-auth/ca/ca.crt")
@@ -565,7 +565,7 @@ func createTestCommandForSyncWorker(name string, tls, monitoring bool) []string 
 		"--master.jwt-secret=/secrets/master/jwt/token")
 
 	if monitoring {
-		command = append(command, "--monitoring.token="+"$("+constants.EnvArangoSyncMonitoringToken+")")
+		command = append(command, "--monitoring.token="+"$("+utilConstants.EnvArangoSyncMonitoringToken+")")
 	}
 
 	command = append(command,
@@ -746,14 +746,14 @@ func finalizers(group api.ServerGroup) []string {
 	var finalizers []string
 	switch group {
 	case api.ServerGroupAgents:
-		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown)
+		finalizers = append(finalizers, utilConstants.FinalizerPodGracefulShutdown)
 	case api.ServerGroupCoordinators:
-		finalizers = append(finalizers, constants.FinalizerDelayPodTermination)
-		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown)
+		finalizers = append(finalizers, utilConstants.FinalizerDelayPodTermination)
+		finalizers = append(finalizers, utilConstants.FinalizerPodGracefulShutdown)
 	case api.ServerGroupDBServers:
-		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown)
+		finalizers = append(finalizers, utilConstants.FinalizerPodGracefulShutdown)
 	case api.ServerGroupSingle:
-		finalizers = append(finalizers, constants.FinalizerPodGracefulShutdown)
+		finalizers = append(finalizers, utilConstants.FinalizerPodGracefulShutdown)
 	}
 
 	return finalizers
@@ -881,8 +881,8 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 				p.Spec.Containers[0].Env = append(k8sutil.GetLifecycleEnv(), p.Spec.Containers[0].Env...)
 				if license != "" {
 					p.Spec.Containers[0].Env = append([]core.EnvVar{
-						k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey,
-							license, constants.SecretKeyToken)}, p.Spec.Containers[0].Env...)
+						k8sutil.CreateEnvSecretKeySelector(utilConstants.EnvArangoLicenseKey,
+							license, utilConstants.SecretKeyToken)}, p.Spec.Containers[0].Env...)
 				}
 			}
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -34,7 +34,7 @@ import (
 )
 
 var expectedFinalizers = []string{
-	constants.FinalizerDeplRemoveChildFinalizers,
+	utilConstants.FinalizerDeplRemoveChildFinalizers,
 }
 
 // ensureFinalizers adds all required finalizers to the given deployment (in memory).
@@ -76,7 +76,7 @@ func (d *Deployment) runDeploymentFinalizers(ctx context.Context, cachedStatus i
 	}
 	for _, f := range updated.ObjectMeta.GetFinalizers() {
 		switch f {
-		case constants.FinalizerDeplRemoveChildFinalizers:
+		case utilConstants.FinalizerDeplRemoveChildFinalizers:
 			d.log.Debug("Inspecting 'remove child finalizers' finalizer")
 			if retry, err := d.inspectRemoveChildFinalizers(ctx, updated, cachedStatus); err == nil && !retry {
 				removalList = append(removalList, f)

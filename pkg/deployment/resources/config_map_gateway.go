@@ -37,7 +37,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
@@ -58,7 +58,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
 	}
 
-	cfg.Destinations[constants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
+	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
 		Type:  util.NewType(gateway.ConfigDestinationTypeStatic),
 		Match: util.NewType(gateway.ConfigMatchPath),
 		AuthExtension: &gateway.ConfigAuthZExtension{
@@ -84,7 +84,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
-	cfg.Destinations[constants.EnvoyIdentityDestination] = gateway.ConfigDestination{
+	cfg.Destinations[utilConstants.EnvoyIdentityDestination] = gateway.ConfigDestination{
 		Type:  util.NewType(gateway.ConfigDestinationTypeHTTP),
 		Match: util.NewType(gateway.ConfigMatchPath),
 		Path:  util.NewType("/_integration/authn/v1/identity"),
@@ -102,7 +102,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
-	cfg.Destinations[constants.EnvoyLoginDestination] = gateway.ConfigDestination{
+	cfg.Destinations[utilConstants.EnvoyLoginDestination] = gateway.ConfigDestination{
 		Type:  util.NewType(gateway.ConfigDestinationTypeHTTP),
 		Match: util.NewType(gateway.ConfigMatchPath),
 		Path:  util.NewType("/_integration/authn/v1/login"),
@@ -120,7 +120,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
-	cfg.Destinations[constants.EnvoyLogoutDestination] = gateway.ConfigDestination{
+	cfg.Destinations[utilConstants.EnvoyLogoutDestination] = gateway.ConfigDestination{
 		Type:  util.NewType(gateway.ConfigDestinationTypeHTTP),
 		Match: util.NewType(gateway.ConfigMatchPath),
 		Path:  util.NewType("/_integration/authn/v1/logout"),
@@ -154,19 +154,19 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName()), map[string]string{
-		constants.GatewayConfigFileName: string(gatewayCfgYaml),
+		utilConstants.GatewayConfigFileName: string(gatewayCfgYaml),
 	}); err != nil {
 		return err
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "cds"), map[string]string{
-		constants.GatewayConfigFileName: string(gatewayCfgCDSYaml),
+		utilConstants.GatewayConfigFileName: string(gatewayCfgCDSYaml),
 	}); err != nil {
 		return err
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "lds"), map[string]string{
-		constants.GatewayConfigFileName: string(gatewayCfgLDSYaml),
+		utilConstants.GatewayConfigFileName: string(gatewayCfgLDSYaml),
 	}); err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func (r *Resources) ensureGatewayConfigMap(ctx context.Context, cachedStatus ins
 		return errors.Reconcile()
 	} else {
 		// CM Exists, checks checksum - if key is not in the map we return empty string
-		if currentSha, expectedSha := util.Optional(cm.Data, constants.ConfigMapChecksumKey, ""), util.Optional(elements, constants.ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
+		if currentSha, expectedSha := util.Optional(cm.Data, utilConstants.ConfigMapChecksumKey, ""), util.Optional(elements, utilConstants.ConfigMapChecksumKey, ""); currentSha != expectedSha || currentSha == "" {
 			// We need to do the update
 			if _, changed, err := patcher.Patcher[*core.ConfigMap](ctx, cachedStatus.ConfigMapsModInterface().V1(), cm, meta.PatchOptions{},
 				patcher.PatchConfigMapData(elements)); err != nil {
@@ -254,7 +254,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 		},
 		AuthExtension: &gateway.ConfigAuthZExtension{},
 		Timeout: &meta.Duration{
-			Duration: constants.MaxEnvoyUpstreamTimeout,
+			Duration: utilConstants.MaxEnvoyUpstreamTimeout,
 		},
 	}
 
@@ -267,7 +267,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 
 	if spec.TLS.IsSecure() {
 		// Enabled TLS, add config
-		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
 		cfg.DefaultTLS = &gateway.ConfigTLS{
 			CertificatePath: keyPath,
 			PrivateKeyPath:  keyPath,
@@ -283,7 +283,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				}
 
 				var s gateway.ConfigSNI
-				f := path.Join(shared.TLSSNIKeyfileVolumeMountDir, volume, constants.SecretTLSKeyfile)
+				f := path.Join(shared.TLSSNIKeyfileVolumeMountDir, volume, utilConstants.SecretTLSKeyfile)
 				s.ConfigTLS = gateway.ConfigTLS{
 					CertificatePath: f,
 					PrivateKeyPath:  f,
@@ -295,8 +295,8 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 	}
 
 	// Check ArangoRoutes
-	if c, err := cachedStatus.ArangoRoute().V1Alpha1(); err == nil {
-		cfg.Destinations = gateway.ConfigDestinations{}
+	cfg.Destinations = gateway.ConfigDestinations{}
+	if c, err := cachedStatus.ArangoRoute().V1Beta1(); err == nil {
 		if err := c.Iterate(func(at *networkingApi.ArangoRoute) error {
 			log := log.Str("ArangoRoute", at.GetName())
 			if !at.Status.Conditions.IsTrue(networkingApi.ReadyCondition) {
@@ -352,7 +352,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					},
 				}
 				dest.ResponseHeaders = map[string]string{
-					constants.EnvoyRouteHeader: at.GetName(),
+					utilConstants.EnvoyRouteHeader: at.GetName(),
 				}
 				cfg.Destinations[target.Route.Path] = dest
 			}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	policy "k8s.io/api/policy/v1"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/poddisruptionbudget"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/version"
 )
 
 func init() {
@@ -53,8 +53,8 @@ func (p podDisruptionBudgetsInspectorLoader) Load(ctx context.Context, i *inspec
 
 	if i.versionInfo.CompareTo("1.21") >= 1 {
 		q.v1 = newInspectorVersion[*policy.PodDisruptionBudgetList, *policy.PodDisruptionBudget](ctx,
-			constants.PodDisruptionBudgetGRv1(),
-			constants.PodDisruptionBudgetGKv1(),
+			inspectorConstants.PodDisruptionBudgetGRv1(),
+			inspectorConstants.PodDisruptionBudgetGKv1(),
 			i.client.Kubernetes().PolicyV1().PodDisruptionBudgets(i.namespace),
 			poddisruptionbudget.List())
 	} else {
@@ -104,8 +104,8 @@ func (p *podDisruptionBudgetsInspector) Refresh(ctx context.Context) error {
 	return p.state.refresh(ctx, podDisruptionBudgetsInspectorLoaderObj)
 }
 
-func (p *podDisruptionBudgetsInspector) Version() version.Version {
-	return version.V1
+func (p *podDisruptionBudgetsInspector) Version() utilConstants.Version {
+	return utilConstants.VersionV1
 }
 
 func (p *podDisruptionBudgetsInspector) Throttle(c throttle.Components) throttle.Throttle {

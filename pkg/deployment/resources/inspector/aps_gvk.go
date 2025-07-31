@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,13 +23,13 @@ package inspector
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
 func (p *arangoPlatformStoragesInspector) GroupKind() schema.GroupKind {
-	return constants.ArangoPlatformStorageGK()
+	return inspectorConstants.ArangoPlatformStorageGK()
 }
 
 func (p *arangoPlatformStoragesInspector) GroupResource() schema.GroupResource {
-	return constants.ArangoPlatformStorageGR()
+	return inspectorConstants.ArangoPlatformStorageGR()
 }

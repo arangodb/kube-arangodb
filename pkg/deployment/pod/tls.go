@@ -28,7 +28,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
@@ -80,7 +80,7 @@ func (s tls) Args(i Input) k8sutil.OptionPairs {
 
 	opts := k8sutil.CreateOptionPairs()
 
-	keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, constants.SecretTLSKeyfile)
+	keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
 	opts.Add("--ssl.keyfile", keyPath)
 	opts.Add("--ssl.ecdh-curve", "") // This way arangod accepts curves other than P256 as well.
 

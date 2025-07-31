@@ -37,7 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -158,15 +158,15 @@ func (a *ArangoSyncContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
 	if a.Deployment.Sync.Monitoring.GetTokenSecretName() != "" {
-		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoSyncMonitoringToken,
-			a.Deployment.Sync.Monitoring.GetTokenSecretName(), constants.SecretKeyToken)
+		env := k8sutil.CreateEnvSecretKeySelector(utilConstants.EnvArangoSyncMonitoringToken,
+			a.Deployment.Sync.Monitoring.GetTokenSecretName(), utilConstants.SecretKeyToken)
 
 		envs.Add(true, env)
 	}
 
 	if a.Deployment.License.HasSecretName() {
-		env := k8sutil.CreateEnvSecretKeySelector(constants.EnvArangoLicenseKey, a.Deployment.License.GetSecretName(),
-			constants.SecretKeyToken)
+		env := k8sutil.CreateEnvSecretKeySelector(utilConstants.EnvArangoLicenseKey, a.Deployment.License.GetSecretName(),
+			utilConstants.SecretKeyToken)
 
 		envs.Add(true, env)
 	}
