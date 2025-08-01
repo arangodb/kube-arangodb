@@ -10,7 +10,7 @@ title: ArangoPlatform V1Beta1 Authentication OpenID
 
 ### .claims.username
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L254)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L254)</sup>
 
 Username defines the claim key to extract username
 
@@ -20,7 +20,7 @@ Default Value: `username`
 
 ### .client.id
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L229)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L229)</sup>
 
 ID defines OpenID Client ID
 
@@ -28,7 +28,7 @@ ID defines OpenID Client ID
 
 ### .client.secret
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L232)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L232)</sup>
 
 Secret defines OpenID Client Secret
 
@@ -36,7 +36,7 @@ Secret defines OpenID Client Secret
 
 ### .disabledPaths
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L67)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L67)</sup>
 
 DisabledPaths keeps the list of SSO disabled paths. By default, "_logout" endpoint is passed through
 
@@ -44,7 +44,7 @@ DisabledPaths keeps the list of SSO disabled paths. By default, "_logout" endpoi
 
 ### .endpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L61)</sup>
 
 Endpoint defines the OpenID callback Endpoint
 
@@ -52,7 +52,7 @@ Endpoint defines the OpenID callback Endpoint
 
 ### .features.refreshEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L240)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L240)</sup>
 
 > [!WARNING]
 > ***ALPHA***
@@ -67,7 +67,7 @@ Default Value: `false`
 
 ### .http.insecure
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L185)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L185)</sup>
 
 Insecure defines if insecure HTTP Client is used
 
@@ -77,7 +77,7 @@ Default Value: `false`
 
 ### .provider.authorizationEndpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L216)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L216)</sup>
 
 AuthorizationEndpoint defines OpenID Authorization Endpoint
 
@@ -88,7 +88,7 @@ Links:
 
 ### .provider.issuer
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L210)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L210)</sup>
 
 Issuer defines OpenID Issuer
 
@@ -96,7 +96,7 @@ Issuer defines OpenID Issuer
 
 ### .provider.tokenEndpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L220)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L220)</sup>
 
 TokenEndpoint defines OpenID Token Endpoint
 
@@ -107,7 +107,7 @@ Links:
 
 ### .provider.userInfoEndpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L224)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L224)</sup>
 
 UserInfoEndpoint defines OpenID UserInfo Endpoint
 
@@ -118,7 +118,7 @@ Links:
 
 ### .scope
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/platform/v1beta1/authentication/openid.go#L64)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/authentication/openid.go#L64)</sup>
 
 Scope defines OpenID Scopes (OpenID is added by default).
 

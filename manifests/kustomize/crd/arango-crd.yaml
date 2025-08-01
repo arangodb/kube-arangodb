@@ -536,7 +536,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: 32d94232935338672acd9f94b483475e
+    arangodb.com/version: f9390d93cf372a2517385099bb1c97b5
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoplatformcharts.platform.arangodb.com
 spec:
@@ -572,6 +572,33 @@ spec:
           type: object
           x-kubernetes-preserve-unknown-fields: true
       served: true
+      storage: false
+      subresources:
+        status: {}
+    - additionalPrinterColumns:
+        - description: Defines if Chart is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+        - description: Defines the name of Chart
+          jsonPath: .status.info.details.name
+          name: ChartName
+          type: string
+        - description: Defines the version of Chart
+          jsonPath: .status.info.details.version
+          name: ChartVersion
+          type: string
+        - description: Defines the checksum of Chart
+          jsonPath: .status.info.checksum
+          name: ChartChecksum
+          priority: 1
+          type: string
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
       storage: true
       subresources:
         status: {}
@@ -580,7 +607,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: 7068f2620421a6ffb639fad2522f2d0f
+    arangodb.com/version: b6ce8014e77e8d26d6feb526d103e08b
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoplatformservices.platform.arangodb.com
 spec:
@@ -603,6 +630,20 @@ spec:
           type: object
           x-kubernetes-preserve-unknown-fields: true
       served: true
+      storage: false
+      subresources:
+        status: {}
+    - additionalPrinterColumns:
+        - description: Defines if Service is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
       storage: true
       subresources:
         status: {}
@@ -611,7 +652,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: c2e81d22e5dfb0a789b0965989913c1e
+    arangodb.com/version: aff966efc3d295c26e2e1207c5b1a2a5
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoplatformstorages.platform.arangodb.com
 spec:
@@ -629,6 +670,20 @@ spec:
           name: Ready
           type: string
       name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
+    - additionalPrinterColumns:
+        - description: Defines if Storage is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1beta1
       schema:
         openAPIV3Schema:
           type: object
@@ -677,7 +732,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: 4a5c3b6e101fe8c2ec608dbbd38d34c5
+    arangodb.com/version: ed2f810b803d33ebf147bc1c5d4ff3aa
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoroutes.networking.arangodb.com
 spec:
@@ -703,6 +758,28 @@ spec:
           name: Route
           type: string
       name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: false
+      subresources:
+        status: {}
+    - additionalPrinterColumns:
+        - description: Defines if Route is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+        - description: ArangoDeployment Name
+          jsonPath: .status.deployment.name
+          name: Deployment
+          type: string
+        - description: Route Path
+          jsonPath: .status.target.route.path
+          name: Route
+          type: string
+      name: v1beta1
       schema:
         openAPIV3Schema:
           type: object
