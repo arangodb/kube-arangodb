@@ -10,7 +10,7 @@ title: ArangoMLStorage V1Alpha1
 
 ### .spec.backend.s3.allowInsecure
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L40)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L40)</sup>
 
 AllowInsecure if set to true, the Endpoint certificates won't be checked
 
@@ -20,7 +20,7 @@ Default Value: `false`
 
 ### .spec.backend.s3.caSecret.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -28,7 +28,9 @@ UID keeps the information about object Checksum
 
 ### .spec.backend.s3.caSecret.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -36,7 +38,7 @@ Name of the object
 
 ### .spec.backend.s3.caSecret.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -44,7 +46,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .spec.backend.s3.caSecret.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 
@@ -52,7 +54,7 @@ UID keeps the information about object UID
 
 ### .spec.backend.s3.credentialsSecret.checksum
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/shared/v1/object.go#L62)</sup>
 
 UID keeps the information about object Checksum
 
@@ -60,7 +62,9 @@ UID keeps the information about object Checksum
 
 ### .spec.backend.s3.credentialsSecret.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
 
 Name of the object
 
@@ -68,7 +72,7 @@ Name of the object
 
 ### .spec.backend.s3.credentialsSecret.namespace
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/shared/v1/object.go#L56)</sup>
 
 Namespace of the object. Should default to the namespace of the parent object
 
@@ -76,7 +80,7 @@ Namespace of the object. Should default to the namespace of the parent object
 
 ### .spec.backend.s3.credentialsSecret.uid
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/shared/v1/object.go#L58)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/shared/v1/object.go#L59)</sup>
 
 UID keeps the information about object UID
 
@@ -84,16 +88,17 @@ UID keeps the information about object UID
 
 ### .spec.backend.s3.endpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L34)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L34)</sup>
+
+This field is **required**
 
 Endpoint specifies the S3 API-compatible endpoint which implements storage
-Required
 
 ***
 
 ### .spec.backend.s3.region
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L49)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/ml/v1alpha1/storage_spec_backend_s3.go#L49)</sup>
 
 Region defines the availability zone name.
 
@@ -103,16 +108,17 @@ Default Value: `""`
 
 ### .spec.bucketName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_spec.go#L30)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/ml/v1alpha1/storage_spec.go#L30)</sup>
+
+This field is **required**
 
 BucketName specifies the name of the bucket
-Required
 
 ***
 
 ### .spec.bucketPath
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_spec.go#L34)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/ml/v1alpha1/storage_spec.go#L34)</sup>
 
 BucketPath specifies the path within the bucket
 
@@ -122,7 +128,7 @@ Default Value: `/`
 
 ### .spec.mode.sidecar.args
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L50)</sup>
 
 Arguments to the entrypoint.
 The container image's CMD is used if this is not provided.
@@ -139,7 +145,7 @@ Links:
 
 ### .spec.mode.sidecar.command
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L40)</sup>
 
 Entrypoint array. Not executed within a shell.
 The container image's ENTRYPOINT is used if this is not provided.
@@ -156,7 +162,7 @@ Links:
 
 ### .spec.mode.sidecar.controllerListenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L36)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L36)</sup>
 
 ControllerListenPort defines on which port the sidecar container will be listening for controller requests
 
@@ -166,7 +172,7 @@ Default Value: `9202`
 
 ### .spec.mode.sidecar.env
 
-Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
+Type: `core.EnvVar` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L36)</sup>
 
 Env keeps the information about environment variables provided to the container
 
@@ -177,7 +183,7 @@ Links:
 
 ### .spec.mode.sidecar.envFrom
 
-Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L41)</sup>
+Type: `core.EnvFromSource` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/environments.go#L41)</sup>
 
 EnvFrom keeps the information about environment variable sources provided to the container
 
@@ -188,7 +194,7 @@ Links:
 
 ### .spec.mode.sidecar.image
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L35)</sup>
 
 Image define image details
 
@@ -196,7 +202,7 @@ Image define image details
 
 ### .spec.mode.sidecar.imagePullPolicy
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/image.go#L39)</sup>
 
 ImagePullPolicy define Image pull policy
 
@@ -206,7 +212,7 @@ Default Value: `IfNotPresent`
 
 ### .spec.mode.sidecar.lifecycle
 
-Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
+Type: `core.Lifecycle` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/lifecycle.go#L35)</sup>
 
 Lifecycle keeps actions that the management system should take in response to container lifecycle events.
 
@@ -214,7 +220,7 @@ Lifecycle keeps actions that the management system should take in response to co
 
 ### .spec.mode.sidecar.listenPort
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L32)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/ml/v1alpha1/storage_spec_mode_sidecar.go#L32)</sup>
 
 ListenPort defines on which port the sidecar container will be listening for connections
 
@@ -224,7 +230,7 @@ Default Value: `9201`
 
 ### .spec.mode.sidecar.livenessProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L37)</sup>
 
 LivenessProbe keeps configuration of periodic probe of container liveness.
 Container will be restarted if the probe fails.
@@ -236,7 +242,7 @@ Links:
 
 ### .spec.mode.sidecar.ports
 
-Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
+Type: `[]core.ContainerPort` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/networking.go#L39)</sup>
 
 Ports contains list of ports to expose from the container. Not specifying a port here
 DOES NOT prevent that port from being exposed. Any port which is
@@ -247,7 +253,7 @@ accessible from the network.
 
 ### .spec.mode.sidecar.readinessProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L42)</sup>
 
 ReadinessProbe keeps configuration of periodic probe of container service readiness.
 Container will be removed from service endpoints if the probe fails.
@@ -259,7 +265,7 @@ Links:
 
 ### .spec.mode.sidecar.resources
 
-Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/resources.go#L37)</sup>
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/resources.go#L37)</sup>
 
 Resources holds resource requests & limits for container
 
@@ -270,7 +276,7 @@ Links:
 
 ### .spec.mode.sidecar.securityContext
 
-Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/security.go#L35)</sup>
+Type: `core.SecurityContext` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/security.go#L35)</sup>
 
 SecurityContext holds container-level security attributes and common container settings.
 
@@ -281,7 +287,7 @@ Links:
 
 ### .spec.mode.sidecar.startupProbe
 
-Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
+Type: `core.Probe` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/probes.go#L50)</sup>
 
 StartupProbe indicates that the Pod has successfully initialized.
 If specified, no other probes are executed until this completes successfully.
@@ -296,7 +302,7 @@ Links:
 
 ### .spec.mode.sidecar.volumeMounts
 
-Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
+Type: `[]core.VolumeMount` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/volume_mounts.go#L35)</sup>
 
 VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
@@ -304,17 +310,9 @@ VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
 
 ### .spec.mode.sidecar.workingDir
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/scheduler/v1alpha1/container/resources/core.go#L55)</sup>
 
 Container's working directory.
 If not specified, the container runtime's default will be used, which
 might be configured in the container image.
-
-## Status
-
-### .status.conditions
-
-Type: `api.Conditions` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.2.50/pkg/apis/ml/v1alpha1/storage_status.go#L28)</sup>
-
-Conditions specific to the entire storage
 

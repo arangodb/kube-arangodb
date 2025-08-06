@@ -2,6 +2,14 @@ apiVersion: v1
 entries:
   kube-arangodb:
   - apiVersion: v1
+    created: "2025-08-06T10:25:53.648678187Z"
+    description: ArangoDB Kubernetes Operator
+    digest: 5986710f556bc89639a3075e50fe0b57c7a237a21a6a0fe8021df26e0501635b
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.3.0/kube-arangodb-1.3.0.tgz
+    version: 1.3.0
+  - apiVersion: v1
     created: "2025-07-04T12:17:56.304610847Z"
     description: ArangoDB Kubernetes Operator
     digest: 748eed00ef4c45390c446ad9851ea54b9458d5790d284ea34afc4d0796c6a474
@@ -419,6 +427,14 @@ entries:
     version: 1.2.1
   kube-arangodb-arm64:
   - apiVersion: v1
+    created: "2025-08-06T10:25:53.693658226Z"
+    description: ArangoDB Kubernetes Operator with ARM64 defaults
+    digest: ca205609995856cae748c0936682d373c2f3021ec58456d5c13e30298b82aa09
+    name: kube-arangodb-arm64
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.3.0/kube-arangodb-arm64-1.3.0.tgz
+    version: 1.3.0
+  - apiVersion: v1
     created: "2025-07-04T12:17:56.350535019Z"
     description: ArangoDB Kubernetes Operator with ARM64 defaults
     digest: e536db53ae3e596fa4e435c2ec1ebf1b236b40b62cf6fcf4a91b405575078b9a
@@ -475,6 +491,15 @@ entries:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-arm64-1.2.43.tgz
     version: 1.2.43
   kube-arangodb-crd:
+  - apiVersion: v1
+    appVersion: 3.5.0
+    created: "2025-08-06T10:25:53.810889279Z"
+    description: ArangoDB Kubernetes Custom Resource Definitions (Deprecated)
+    digest: 564323539130ff9f369493ef8f307df5f4ee4f72420135a82d723d0f6ecc8844
+    name: kube-arangodb-crd
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.3.0/kube-arangodb-crd-1.3.0.tgz
+    version: 1.3.0
   - apiVersion: v1
     appVersion: 3.5.0
     created: "2025-07-04T12:17:56.476831933Z"
@@ -909,6 +934,14 @@ entries:
     version: 1.2.1
   kube-arangodb-enterprise:
   - apiVersion: v1
+    created: "2025-08-06T10:25:53.854400931Z"
+    description: ArangoDB Kubernetes Enterprise Operator
+    digest: 92f3235579c9434771d0aeb13f2b3044cd3fb25785b4554973a96441abf8e772
+    name: kube-arangodb-enterprise
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.3.0/kube-arangodb-enterprise-1.3.0.tgz
+    version: 1.3.0
+  - apiVersion: v1
     created: "2025-07-04T12:17:56.52167672Z"
     description: ArangoDB Kubernetes Enterprise Operator
     digest: 20d759f044db30f2c875c2c5953663b3af8fdb22e4879e7ef16eee3bf95113fb
@@ -974,6 +1007,14 @@ entries:
     version: 1.2.42
   kube-arangodb-enterprise-arm64:
   - apiVersion: v1
+    created: "2025-08-06T10:25:53.979079318Z"
+    description: ArangoDB Kubernetes Enterprise Operator with ARM64 defaults
+    digest: 045e7eb5c1df070c72ed3d2fca845d7cffe6cf03328121556ed97e85f7d6aa28
+    name: kube-arangodb-enterprise-arm64
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.3.0/kube-arangodb-enterprise-arm64-1.3.0.tgz
+    version: 1.3.0
+  - apiVersion: v1
     created: "2025-07-04T12:17:56.652296423Z"
     description: ArangoDB Kubernetes Enterprise Operator with ARM64 defaults
     digest: b1f42aca5316745b02fd9f7e6efe57cd19b3ea380968857a2b1fe33ae6aea74d
@@ -1029,4 +1070,4 @@ entries:
     urls:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-enterprise-arm64-1.2.43.tgz
     version: 1.2.43
-generated: "2025-07-04T12:17:56.653264987Z"
+generated: "2025-08-06T10:25:53.979644549Z"
