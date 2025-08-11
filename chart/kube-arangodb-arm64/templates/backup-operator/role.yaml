@@ -51,7 +51,9 @@ rules:
       - "backup.arangodb.com"
     resources:
       - "arangobackuppolicies"
-      - "arangobackuppolicies/status", "arangobackups", "arangobackups/status"
+        - "arangobackuppolicies/status"
+          - "arangobackups"
+        - "arangobackups/status"
     verbs:
       - "get"
       - "list"
