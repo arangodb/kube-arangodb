@@ -22,5 +22,28 @@ rules:
     - "arangoplatformservices"
     - "arangoplatformservices/status"
     verbs: ["*"]
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - "roles"
+      - "rolebindings"
+    verbs: [ "*" ]
+  - apiGroups:
+      - "batch"
+    resources:
+      - "cronjobs"
+      - "jobs"
+    verbs: [ "*" ]
+  - apiGroups: [ "apps" ]
+    resources:
+      - "statefulsets"
+    verbs: [ "*" ]
+  - apiGroups: [ "" ]
+    resources:
+      - "pods"
+      - "secrets"
+      - "services"
+      - "serviceaccounts"
+    verbs: [ "*" ]
 {{- end }}
 {{- end }}
