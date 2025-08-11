@@ -5,20 +5,31 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-    name: {{ template "kube-arangodb.rbac-cluster" . }}-deployment
-    labels:
-        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        release: {{ .Release.Name }}
+  name: {{ template "kube-arangodb.rbac-cluster" . }}-deployment
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
 rules:
-    - apiGroups: ["apiextensions.k8s.io"]
-      resources: ["customresourcedefinitions"]
-      verbs: ["get", "list", "watch"]
-    - apiGroups: [""]
-      resources: ["namespaces", "nodes", "persistentvolumes"]
-      verbs: ["get", "list"]
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
+  - apiGroups:
+      - ""
+    resources:
+      - "namespaces"
+      - "nodes"
+      - "persistentvolumes"
+    verbs:
+      - "get"
+      - "list"
 
 {{- end }}
 {{- end }}

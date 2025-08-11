@@ -4,50 +4,141 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-    name: {{ template "kube-arangodb.rbac" . }}-deployment
-    namespace: {{ .Release.Namespace }}
-    labels:
-        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        release: {{ .Release.Name }}
+  name: {{ template "kube-arangodb.rbac" . }}-deployment
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
 rules:
-    - apiGroups: ["database.arangodb.com"]
-      resources: ["arangodeployments", "arangodeployments/status","arangomembers", "arangomembers/status"]
-      verbs: ["*"]
+  - apiGroups:
+      - "database.arangodb.com"
+    resources:
+      - "arangodeployments"
+      - "arangodeployments/status"
+      - "arangomembers"
+      - "arangomembers/status"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
 {{- if .Values.rbac.extensions.acs }}
-    - apiGroups: ["database.arangodb.com"]
-      resources: ["arangoclustersynchronizations", "arangoclustersynchronizations/status"]
-      verbs: ["*"]
+  - apiGroups:
+      - "database.arangodb.com"
+    resources:
+      - "arangoclustersynchronizations"
+      - "arangoclustersynchronizations/status"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
 {{- end }}
 {{- if .Values.rbac.extensions.at }}
-    - apiGroups: ["database.arangodb.com"]
-      resources: ["arangotasks", "arangotasks/status"]
-      verbs: ["*"]
+  - apiGroups:
+      - "database.arangodb.com"
+    resources:
+      - "arangotasks"
+      - "arangotasks/status"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
 {{- end }}
-    - apiGroups: [""]
-      resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "secrets", "serviceaccounts", "configmaps"]
-      verbs: ["*"]
-    - apiGroups: ["apps"]
-      resources: ["deployments", "replicasets"]
-      verbs: ["get"]
-    - apiGroups: ["policy"]
-      resources: ["poddisruptionbudgets"]
-      verbs: ["*"]
-    - apiGroups: ["coordination.k8s.io"]
-      resources: ["leases"]
-      verbs: ["*"]
-    - apiGroups: ["platform.arangodb.com"]
-      resources: ["arangoplatformstorages", "arangoplatformstorages/status"]
-      verbs: ["get", "list", "watch"]
-    - apiGroups: ["backup.arangodb.com"]
-      resources: ["arangobackuppolicies", "arangobackups"]
-      verbs: ["get", "list", "watch"]
+  - apiGroups:
+      - ""
+    resources:
+      - "pods"
+      - "services"
+      - "endpoints"
+      - "persistentvolumeclaims"
+      - "events"
+      - "secrets"
+      - "serviceaccounts"
+      - "configmaps"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - "apps"
+    resources:
+      - "deployments"
+      - "replicasets"
+    verbs:
+      - "get"
+  - apiGroups:
+      - "policy"
+    resources:
+      - "poddisruptionbudgets"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - "coordination.k8s.io"
+    resources:
+      - "leases"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - "platform.arangodb.com"
+    resources:
+      - "arangoplatformstorages"
+      - "arangoplatformstorages/status"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
+  - apiGroups:
+      - "backup.arangodb.com"
+    resources:
+      - "arangobackuppolicies"
+      - "arangobackups"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
 {{- if .Values.rbac.extensions.monitoring }}
-    - apiGroups: ["monitoring.coreos.com"]
-      resources: ["servicemonitors"]
-      verbs: ["get", "create", "delete", "update", "list", "watch", "patch"]
+  - apiGroups:
+      - "monitoring.coreos.com"
+    resources:
+      - "servicemonitors"
+    verbs:
+      - "get"
+      - "create"
+      - "delete"
+      - "update"
+      - "list"
+      - "watch"
+      - "patch"
 {{- end }}
 {{- end }}
 {{- end }}

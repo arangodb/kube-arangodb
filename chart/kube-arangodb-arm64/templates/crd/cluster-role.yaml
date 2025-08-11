@@ -5,44 +5,52 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-    name: {{ template "kube-arangodb.rbac-cluster" . }}-crd
-    labels:
-        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        release: {{ .Release.Name }}
+  name: {{ template "kube-arangodb.rbac-cluster" . }}-crd
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
 rules:
 {{ if .Values.operator.features.analytics -}}
-# analytics.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # analytics.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "graphanalyticsengines.analytics.arangodb.com"
 {{- end }}
 {{ if .Values.operator.features.apps -}}
-# apps.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # apps.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "arangojobs.apps.arangodb.com"
 {{- end }}
 {{ if .Values.operator.features.backup -}}
-# backup.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # backup.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "arangobackuppolicies.backup.arangodb.com"
       - "arangobackups.backup.arangodb.com"
 {{- end }}
 {{ if .Values.operator.features.deployment -}}
-# database.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # database.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "arangoclustersynchronizations.database.arangodb.com"
       - "arangodeployments.database.arangodb.com"
@@ -50,10 +58,12 @@ rules:
       - "arangotasks.database.arangodb.com"
 {{- end }}
 {{ if .Values.operator.features.ml -}}
-# ml.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # ml.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "arangomlbatchjobs.ml.arangodb.com"
       - "arangomlcronjobs.ml.arangodb.com"
@@ -61,26 +71,32 @@ rules:
       - "arangomlstorages.ml.arangodb.com"
 {{- end }}
 {{ if .Values.operator.features.networking -}}
-# networking.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # networking.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "arangoroutes.networking.arangodb.com"
 {{- end }}
 {{ if .Values.operator.features.deploymentReplications -}}
-# replication.database.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # replication.database.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "arangodeploymentreplications.replication.database.arangodb.com"
 {{- end }}
 {{ if .Values.operator.features.scheduler -}}
-# scheduler.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # scheduler.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "arangoprofiles.scheduler.arangodb.com"
       - "arangoschedulerpods.scheduler.arangodb.com"
@@ -89,10 +105,12 @@ rules:
       - "arangoschedulercronjobs.scheduler.arangodb.com"
 {{- end }}
 {{ if .Values.operator.features.platform -}}
-# platform.arangodb.com
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update"]
+  # platform.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
     resourceNames:
       - "arangoplatformcharts.platform.arangodb.com"
       - "arangoplatformstorages.platform.arangodb.com"
