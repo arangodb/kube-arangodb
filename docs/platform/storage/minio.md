@@ -14,7 +14,7 @@ In order to connect to the MinIO, or any other S3 Compatible storage in the Aran
 Storage Integration requires static credentials in order to access MinIO API. Credentials can be provided via the Kubernetes Secret.
 
 ```shell
-kubectl create secret generic credentials --from-literal 'accessKey=<AWS Access Key ID>' --from-literal 'secretKey=<AWS Secret Access Key'
+kubectl create secret generic credentials --from-literal 'accessKey=<MinIO Access Key ID>' --from-literal 'secretKey=<MinIO Secret Access Key>'
 ```
 
 ## MinIO TLS Certificate
