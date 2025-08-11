@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Documentation) Add ArangoPlatformStorage Docs & Examples
 
 ## [1.3.0](https://github.com/arangodb/kube-arangodb/tree/1.3.0) (2025-08-01)
 - (Feature) (Platform) Storage Debug

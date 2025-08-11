@@ -9,7 +9,7 @@ parent: SSO
 
 ## OpenID Configuration
 
-[Full Configuration reference ->](./api/ArangoPlatform.V1Alpha1.Authentication.OpenID.md)
+[Full Configuration reference ->](./api/ArangoPlatform.V1Beta1.Authentication.OpenID.md)
 
 Example:
 
