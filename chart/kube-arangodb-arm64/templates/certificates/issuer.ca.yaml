@@ -12,6 +12,6 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
 spec:
-  selfSigned: {}
+  selfSigned: { }
 
 {{- end }}

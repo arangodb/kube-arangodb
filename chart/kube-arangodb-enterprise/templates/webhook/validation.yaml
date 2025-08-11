@@ -12,6 +12,6 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
-webhooks: []
+webhooks: [ ]
 
 {{- end }}

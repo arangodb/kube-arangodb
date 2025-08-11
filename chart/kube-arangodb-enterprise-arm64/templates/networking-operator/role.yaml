@@ -4,20 +4,37 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-    name: {{ template "kube-arangodb.rbac" . }}-networking
-    namespace: {{ .Release.Namespace }}
-    labels:
-        app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        release: {{ .Release.Name }}
+  name: {{ template "kube-arangodb.rbac" . }}-networking
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
 rules:
-  - apiGroups: ["networking.arangodb.com"]
-    resources: ["arangoroutes", "arangoroutes/status"]
-    verbs: ["*"]
-  - apiGroups: [""]
-    resources: ["pods", "services", "endpoints"]
-    verbs: ["get", "list", "watch"]
+  - apiGroups:
+      - "networking.arangodb.com"
+    resources:
+      - "arangoroutes"
+      - "arangoroutes/status"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - ""
+    resources:
+      - "pods"
+      - "services"
+      - "endpoints"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
 {{- end }}
 {{- end }}

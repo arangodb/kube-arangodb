@@ -11,259 +11,259 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: {{ template "kube-arangodb.operatorName" . }}
-    namespace: {{ .Release.Namespace }}
+  name: {{ template "kube-arangodb.operatorName" . }}
+  namespace: {{ .Release.Namespace }}
 {{- if .Values.operator.annotations }}
-    annotations:
+  annotations:
 {{ toYaml .Values.operator.annotations | indent 8 }}
 {{- end }}
-    labels:
+  labels:
+    app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+{{- if .Values.operator.debug }}
+  replicas: 1
+{{- else }}
+  replicas: {{ .Values.operator.replicaCount }}
+{{- end }}
+  strategy:
+{{ toYaml .Values.operator.updateStrategy | indent 8 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
+      app.kubernetes.io/managed-by: {{ .Release.Service }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
         app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         release: {{ .Release.Name }}
-spec:
-{{- if .Values.operator.debug }}
-    replicas: 1
-{{- else }}
-    replicas: {{ .Values.operator.replicaCount }}
-{{- end }}
-    strategy:
-{{ toYaml .Values.operator.updateStrategy | indent 8 }}
-    selector:
-        matchLabels:
-            app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
-            app.kubernetes.io/managed-by: {{ .Release.Service }}
-            app.kubernetes.io/instance: {{ .Release.Name }}
-            release: {{ .Release.Name }}
-    template:
-        metadata:
-            labels:
-                app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
-                helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-                app.kubernetes.io/managed-by: {{ .Release.Service }}
-                app.kubernetes.io/instance: {{ .Release.Name }}
-                release: {{ .Release.Name }}
 {{- if .Values.operator.annotations }}
-            annotations:
+      annotations:
 {{ toYaml .Values.operator.annotations | indent 16 }}
 {{- end }}
-        spec:
+    spec:
 {{- if .Values.operator.nodeSelector }}
-            nodeSelector:
+      nodeSelector:
 {{ toYaml .Values.operator.nodeSelector | indent 16 }}
 {{- end }}
-            serviceAccountName: {{ template "kube-arangodb.operatorName" . }}
-            affinity:
-              nodeAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  nodeSelectorTerms:
-                    - matchExpressions:
-                        - key: kubernetes.io/arch
-                          operator: In
-                          values:
+      serviceAccountName: {{ template "kube-arangodb.operatorName" . }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
 {{- range .Values.operator.architectures }}
-                          - {{ . | quote }}
+                      - {{ . | quote }}
 {{- end }}
-              podAntiAffinity:
-                preferredDuringSchedulingIgnoredDuringExecution:
-                  - weight: 100
-                    podAffinityTerm:
-                      topologyKey: "kubernetes.io/hostname"
-                      labelSelector:
-                        matchExpressions:
-                          - key: app.kubernetes.io/name
-                            operator: In
-                            values:
-                              - {{ template "kube-arangodb.name" . }}
-                          - key: app.kubernetes.io/instance
-                            operator: In
-                            values:
-                              - {{ .Release.Name }}
-            hostNetwork: false
-            hostPID: false
-            hostIPC: false
-            securityContext:
-                runAsNonRoot: true
-                runAsUser: {{ .Values.operator.securityContext.runAsUser }}
-            containers:
-                - name: operator
-                  imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
-                  image: {{ .Values.operator.image }}
-                  args:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: "kubernetes.io/hostname"
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - {{ template "kube-arangodb.name" . }}
+                    - key: app.kubernetes.io/instance
+                      operator: In
+                      values:
+                        - {{ .Release.Name }}
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.operator.securityContext.runAsUser }}
+      containers:
+        - name: operator
+          imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
+          image: {{ .Values.operator.image }}
+          args:
 {{- if .Values.certificate.enabled }}
-                    - --server.tls-secret-name={{ template "kube-arangodb.operatorName" . }}-cert
-                    - --api.tls-secret-name={{ template "kube-arangodb.operatorName" . }}-cert
+            - --server.tls-secret-name={{ template "kube-arangodb.operatorName" . }}-cert
+            - --api.tls-secret-name={{ template "kube-arangodb.operatorName" . }}-cert
 {{- end -}}
 {{- if .Values.operator.features.deployment }}
-                    - --operator.deployment
+            - --operator.deployment
 {{- end -}}
 {{ if .Values.operator.features.deploymentReplications }}
-                    - --operator.deployment-replication
+            - --operator.deployment-replication
 {{- end -}}
 {{ if .Values.operator.features.storage }}
-                    - --operator.storage
+            - --operator.storage
 {{- end }}
 {{ if .Values.operator.features.backup }}
-                    - --operator.backup
+            - --operator.backup
 {{- end }}
 {{- if or .Values.operator.debug (eq ( int .Values.operator.replicaCount)  1)  }}
-                    - --mode.single
+            - --mode.single
 {{- end }}
 {{- if .Values.operator.skipLeaderLabels  }}
-                    - --leader.label.skip
+            - --leader.label.skip
 {{- end }}
 {{ if .Values.operator.features.apps }}
-                    - --operator.apps
+            - --operator.apps
 {{- end }}
 {{ if .Values.operator.features.ml }}
-                    - --operator.ml
+            - --operator.ml
 {{- end }}
 {{ if .Values.operator.features.analytics }}
-                    - --operator.analytics
+            - --operator.analytics
 {{- end }}
 {{ if .Values.operator.features.networking }}
-                    - --operator.networking
+            - --operator.networking
 {{- end }}
 {{ if .Values.operator.features.scheduler }}
-                    - --operator.scheduler
+            - --operator.scheduler
 {{- end }}
 {{ if .Values.operator.features.platform }}
-                    - --operator.platform
+            - --operator.platform
 {{- end }}
 {{ if .Values.operator.features.k8sToK8sClusterSync }}
-                    - --operator.k2k-cluster-sync
+            - --operator.k2k-cluster-sync
 {{- end }}
-                    - --chaos.allowed={{ .Values.operator.allowChaos }}
+            - --chaos.allowed={{ .Values.operator.allowChaos }}
 {{- if .Values.operator.args }}
 {{- range .Values.operator.args }}
-                    - {{ . | quote }}
+            - {{ . | quote }}
 {{- end }}
 {{- end }}
-                  env:
-                      - name: MY_POD_NAMESPACE
-                        valueFrom:
-                            fieldRef:
-                                fieldPath: metadata.namespace
-                      - name: MY_POD_NAME
-                        valueFrom:
-                            fieldRef:
-                                fieldPath: metadata.name
-                      - name: MY_CONTAINER_NAME
-                        value: "operator"
-                      - name: MY_POD_IP
-                        valueFrom:
-                            fieldRef:
-                                fieldPath: status.podIP
+          env:
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_CONTAINER_NAME
+              value: "operator"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
 {{- if .Values.operator.features.apps }}
-                      - name: ARANGOJOB_SA_NAME
-                        value: "{{ template "kube-arangodb.operatorName" . }}-job"
+            - name: ARANGOJOB_SA_NAME
+              value: "{{ template "kube-arangodb.operatorName" . }}-job"
 {{- end }}
-                  ports:
-                      - name: metrics
-                        containerPort: 8528
-                  securityContext:
-                      privileged: false
-                      allowPrivilegeEscalation: false
-                      readOnlyRootFilesystem: true
-                      capabilities:
-                          drop:
-                              - 'ALL'
+          ports:
+            - name: metrics
+              containerPort: 8528
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - 'ALL'
 {{- if .Values.operator.debug }}
-                          add:
-                            - 'SYS_PTRACE'
+              add:
+                - 'SYS_PTRACE'
 {{- end }}
 {{- if .Values.operator.resources }}
-                  resources:
+          resources:
 {{ toYaml .Values.operator.resources | indent 22 }}
 {{- end }}
 {{- if not .Values.operator.debug }}
-                  livenessProbe:
-                      httpGet:
-                          path: /health
-                          port: 8528
-                          scheme: HTTPS
-                      initialDelaySeconds: 5
-                      periodSeconds: 10
-                  readinessProbe:
-                      httpGet:
-                          path: /ready
-                          port: 8528
-                          scheme: HTTPS
-                      initialDelaySeconds: 5
-                      periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8528
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8528
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
 {{- end }}
 {{ if .Values.webhooks.enabled }}
-                - name: webhooks
-                  imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
-                  image: {{ .Values.operator.image }}
-                  args:
-                    - webhook
+        - name: webhooks
+          imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
+          image: {{ .Values.operator.image }}
+          args:
+            - webhook
 {{- if .Values.certificate.enabled }}
-                    - --ssl.secret.name={{ template "kube-arangodb.operatorName" . }}-webhook-cert
-                    - --ssl.secret.namespace={{ .Release.Namespace }}
+            - --ssl.secret.name={{ template "kube-arangodb.operatorName" . }}-webhook-cert
+            - --ssl.secret.namespace={{ .Release.Namespace }}
 {{- end -}}
 {{- if .Values.webhooks.args }}
 {{- range .Values.webhooks.args }}
-                    - {{ . | quote }}
+            - {{ . | quote }}
 {{- end }}
 {{- end }}
-                  env:
-                      - name: MY_POD_NAMESPACE
-                        valueFrom:
-                            fieldRef:
-                                fieldPath: metadata.namespace
-                      - name: MY_POD_NAME
-                        valueFrom:
-                            fieldRef:
-                                fieldPath: metadata.name
-                      - name: MY_CONTAINER_NAME
-                        value: "webhooks"
-                      - name: MY_POD_IP
-                        valueFrom:
-                            fieldRef:
-                                fieldPath: status.podIP
-                  ports:
-                      - name: webhooks
-                        containerPort: 8828
-                  securityContext:
-                      privileged: false
-                      allowPrivilegeEscalation: false
-                      readOnlyRootFilesystem: true
-                      capabilities:
-                          drop:
-                              - 'ALL'
+          env:
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_CONTAINER_NAME
+              value: "webhooks"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - name: webhooks
+              containerPort: 8828
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - 'ALL'
 {{- if .Values.webhooks.resources }}
-                  resources:
+          resources:
 {{ toYaml .Values.webhooks.resources | indent 22 }}
 {{- end }}
 {{- if not .Values.webhooks.debug }}
-                  livenessProbe:
-                      httpGet:
-                          path: /health
-                          port: 8828
-                          scheme: HTTPS
-                      initialDelaySeconds: 5
-                      periodSeconds: 10
-                  readinessProbe:
-                      httpGet:
-                          path: /ready
-                          port: 8828
-                          scheme: HTTPS
-                      initialDelaySeconds: 5
-                      periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8828
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8828
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
 {{- end }}
 {{- end }}
-            tolerations:
-                - key: "node.kubernetes.io/unreachable"
-                  operator: "Exists"
-                  effect: "NoExecute"
-                  tolerationSeconds: 5
-                - key: "node.kubernetes.io/not-ready"
-                  operator: "Exists"
-                  effect: "NoExecute"
-                  tolerationSeconds: 5
+      tolerations:
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 5
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 5
 {{- if .Values.operator.tolerations }}
 {{ toYaml .Values.operator.tolerations | indent 16 }}
 {{- end }}
