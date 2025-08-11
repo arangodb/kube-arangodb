@@ -17,7 +17,9 @@ rules:
       - "database.arangodb.com"
     resources:
       - "arangodeployments"
-      - "arangodeployments/status","arangomembers", "arangomembers/status"
+      - "arangodeployments/status"
+      - "arangomembers"
+      - "arangomembers/status"
     verbs:
       - "get"
       - "list"

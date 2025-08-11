@@ -70,7 +70,8 @@ rules:
   - apiGroups:
       - "apps.arangodb.com"
     resources:
-      - "arangojobs","arangojobs/status"
+      - "arangojobs"
+      - "arangojobs/status"
     verbs:
       - "get"
       - "list"
