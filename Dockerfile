@@ -9,7 +9,7 @@ FROM ${IMAGE} AS base
 
 ARG BUILD_SKIP_UPDATE=false
 ENV BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}
-RUN if [ X"${BUILD_SKIP_UPDATE}" = X"true" ]; then echo "Update skipped!"; else apt-get update && apt-get upgrade -y && apt-get clean; fi
+RUN apt-get update && apt-get upgrade -y && (if [ X"${BUILD_SKIP_UPDATE}" = X"true" ]; then echo "Update skipped!"; else apt-get install -y ca-certificates; fi) && apt-get clean
 
 FROM base
 
