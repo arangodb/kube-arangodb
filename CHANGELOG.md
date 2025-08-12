@@ -4,6 +4,7 @@
 - (Documentation) Add ArangoPlatformStorage Docs & Examples
 - (Feature) Enable ML Operator and add required Platform Roles
 - (Feature) Helm Lint
+- (Bugfix) Helm Lint Indent fix
 
 ## [1.3.0](https://github.com/arangodb/kube-arangodb/tree/1.3.0) (2025-08-01)
 - (Feature) (Platform) Storage Debug
