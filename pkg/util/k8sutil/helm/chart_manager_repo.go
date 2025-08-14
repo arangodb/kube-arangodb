@@ -25,12 +25,16 @@ import (
 	"sort"
 
 	"helm.sh/helm/v3/pkg/repo"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 type ChartManagerRepo interface {
 	Versions() []string
 
 	Get(version string) (ChartManagerRepoVersion, bool)
+	GetByTag(version string) (ChartManagerRepoVersion, bool)
 	Latest() (ChartManagerRepoVersion, bool)
 }
 
@@ -61,6 +65,34 @@ func (c chartManagerRepo) Versions() []string {
 	sort.Strings(s)
 
 	return s
+}
+
+func (c chartManagerRepo) GetByTag(version string) (ChartManagerRepoVersion, bool) {
+	r, ok := c.manager.index.Entries[c.name]
+	if !ok {
+		return nil, false
+	}
+
+	r = util.FilterList(r, func(v *repo.ChartVersion) bool {
+		if v, ok := v.Annotations[constants.HelmLabelTag]; ok && v == version {
+			return true
+		}
+		return false
+	})
+
+	r = util.Sort(r, func(i, j *repo.ChartVersion) bool {
+		return i.Created.After(j.Created)
+	})
+
+	if len(r) == 0 {
+		return nil, false
+	}
+
+	return chartManagerRepoVersion{
+		version: r[0].Version,
+		manager: c.manager,
+		chart:   r[0],
+	}, true
 }
 
 func (c chartManagerRepo) Get(version string) (ChartManagerRepoVersion, bool) {

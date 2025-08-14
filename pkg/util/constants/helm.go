@@ -34,4 +34,6 @@ const (
 
 	// HelmLabelArangoDBType set to platform or service
 	HelmLabelArangoDBType = HelmLabelInstallationBase + "/type"
+
+	HelmLabelTag = HelmLabelBase + "/tag"
 )
