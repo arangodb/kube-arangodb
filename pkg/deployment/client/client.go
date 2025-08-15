@@ -27,6 +27,7 @@ import (
 
 	"github.com/arangodb/go-driver"
 
+	pbInventoryV1 "github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
@@ -57,6 +58,8 @@ type Client interface {
 	DeleteExpiredJobs(ctx context.Context, timeout time.Duration) error
 
 	Compact(ctx context.Context, request *CompactRequest) error
+
+	Inventory(ctx context.Context) (*pbInventoryV1.Inventory, error)
 }
 
 type client struct {

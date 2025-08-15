@@ -53,37 +53,6 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to generate gateway config"))
 	}
 
-	_, baseGatewayCfgYamlChecksum, _, err := cfg.RenderYAML()
-	if err != nil {
-		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
-	}
-
-	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
-		Type:  util.NewType(gateway.ConfigDestinationTypeStatic),
-		Match: util.NewType(gateway.ConfigMatchPath),
-		AuthExtension: &gateway.ConfigAuthZExtension{
-			AuthZExtension: map[string]string{
-				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue,
-				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
-			},
-		},
-		Static: &gateway.ConfigDestinationStatic[*pbInventoryV1.Inventory]{
-			Code: util.NewType[uint32](200),
-			Response: &pbInventoryV1.Inventory{
-				Configuration: &pbInventoryV1.InventoryConfiguration{
-					Hash: baseGatewayCfgYamlChecksum,
-				},
-				Arangodb: pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus()),
-			},
-			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
-			Options: []util.Mod[protojson.MarshalOptions]{
-				func(in *protojson.MarshalOptions) {
-					in.EmitDefaultValues = true
-				},
-			},
-		},
-	}
-
 	cfg.Destinations[utilConstants.EnvoyIdentityDestination] = gateway.ConfigDestination{
 		Type:  util.NewType(gateway.ConfigDestinationTypeHTTP),
 		Match: util.NewType(gateway.ConfigMatchPath),
@@ -134,6 +103,37 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			{
 				Host: "127.0.0.1",
 				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			},
+		},
+	}
+
+	_, baseGatewayCfgYamlChecksum, _, err := cfg.RenderYAML()
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
+	}
+
+	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
+		Type:  util.NewType(gateway.ConfigDestinationTypeStatic),
+		Match: util.NewType(gateway.ConfigMatchPath),
+		AuthExtension: &gateway.ConfigAuthZExtension{
+			AuthZExtension: map[string]string{
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue,
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
+			},
+		},
+		Static: &gateway.ConfigDestinationStatic[*pbInventoryV1.Inventory]{
+			Code: util.NewType[uint32](200),
+			Response: &pbInventoryV1.Inventory{
+				Configuration: &pbInventoryV1.InventoryConfiguration{
+					Hash: baseGatewayCfgYamlChecksum,
+				},
+				Arangodb: pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus()),
+			},
+			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
+			Options: []util.Mod[protojson.MarshalOptions]{
+				func(in *protojson.MarshalOptions) {
+					in.EmitDefaultValues = true
+				},
 			},
 		},
 	}
