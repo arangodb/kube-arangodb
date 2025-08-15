@@ -27,7 +27,7 @@ import (
 	"helm.sh/helm/v3/pkg/repo"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 type ChartManagerRepo interface {
@@ -74,7 +74,7 @@ func (c chartManagerRepo) GetByTag(version string) (ChartManagerRepoVersion, boo
 	}
 
 	r = util.FilterList(r, func(v *repo.ChartVersion) bool {
-		if v, ok := v.Annotations[constants.HelmLabelTag]; ok && v == version {
+		if v, ok := v.Annotations[utilConstants.HelmLabelTag]; ok && v == version {
 			return true
 		}
 		return false
