@@ -35,7 +35,7 @@ import (
 type PlanBuilderContext interface {
 	reconciler.DeploymentStatusUpdate
 
-	reconciler.DeploymentInfoGetter
+	reconciler.DeploymentGetter
 	reconciler.DeploymentAgencyMaintenance
 	reconciler.DeploymentPodRenderer
 	reconciler.DeploymentImageManager

@@ -42,7 +42,7 @@ type Context interface {
 	reconciler.DeploymentImageManager
 	reconciler.ArangoAgencyGet
 	reconciler.ArangoApplier
-	reconciler.DeploymentInfoGetter
+	reconciler.DeploymentGetter
 	reconciler.DeploymentDatabaseClient
 	reconciler.KubernetesEventGenerator
 

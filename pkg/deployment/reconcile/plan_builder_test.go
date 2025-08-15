@@ -82,6 +82,16 @@ type testContext struct {
 	state     member.StateInspector
 }
 
+func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *testContext) IsSyncEnabled() bool {
 	return false
 }

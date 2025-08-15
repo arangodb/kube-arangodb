@@ -51,5 +51,6 @@ func (r *Resources) EnsureConfigMaps(ctx context.Context, cachedStatus inspector
 			return errors.Section(err, "Member ConfigMap")
 		}
 	}
+
 	return reconcileRequired.Reconcile(ctx)
 }

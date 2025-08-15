@@ -135,6 +135,9 @@ const (
 	ConditionTypeDBServerWithData ConditionType = "DBServerWithData"
 	// ConditionTypeSyncEnabled Define if DBServer contains any active data leaders
 	ConditionTypeDBServerWithDataLeader ConditionType = "DBServerWithDataLeader"
+
+	// ConditionTypeGatewayConfig contains current config checksum of the Gateway
+	ConditionTypeGatewayConfig ConditionType = "GatewayConfig"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

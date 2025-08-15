@@ -6,6 +6,7 @@
 - (Feature) Helm Lint
 - (Bugfix) Helm Lint Indent fix
 - (Feature) Add CA Certificates
+- (Feature) Add Gateway Config condition
 
 ## [1.3.0](https://github.com/arangodb/kube-arangodb/tree/1.3.0) (2025-08-01)
 - (Feature) (Platform) Storage Debug
