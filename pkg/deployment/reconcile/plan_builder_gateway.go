@@ -49,7 +49,7 @@ func (r *Reconciler) createMemberGatewayConfigConditionPlan(ctx context.Context,
 		}
 
 		if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != inv.GetConfiguration().GetHash() {
-			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config Present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, false, "Config Present", "Config Present", inv.GetConfiguration().GetHash()))
+			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config Present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, true, "Config Present", "Config Present", inv.GetConfiguration().GetHash()))
 		}
 	}
 
