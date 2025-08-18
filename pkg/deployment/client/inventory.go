@@ -28,11 +28,11 @@ import (
 )
 
 type Inventory struct {
-	Configuration InventoryConfiguration `yaml:"configuration"`
+	Configuration InventoryConfiguration `json:"configuration"`
 }
 
 type InventoryConfiguration struct {
-	Hash string `yaml:"hash"`
+	Hash string `json:"hash"`
 }
 
 func (c *client) Inventory(ctx context.Context) (*Inventory, error) {
