@@ -26,7 +26,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	pbInventoryV1 "github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	client "github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
@@ -50,15 +49,15 @@ func (r *Reconciler) createMemberGatewayConfigConditionPlan(ctx context.Context,
 
 		logger.JSON("inv", inv).Info("Inventory Fetched")
 
-		if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != inv.GetConfiguration().GetHash() {
-			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config Present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, true, "Config Present", "Config Present", inv.GetConfiguration().GetHash()))
+		if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != inv.Configuration.Hash {
+			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config Present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, true, "Config Present", "Config Present", inv.Configuration.Hash))
 		}
 	}
 
 	return plan
 }
 
-func (r *Reconciler) getGatewayInventoryConfig(ctx context.Context, planCtx PlanBuilderContext, group api.ServerGroup, member api.MemberStatus) (*pbInventoryV1.Inventory, error) {
+func (r *Reconciler) getGatewayInventoryConfig(ctx context.Context, planCtx PlanBuilderContext, group api.ServerGroup, member api.MemberStatus) (*client.Inventory, error) {
 	serverClient, err := planCtx.GetServerClient(ctx, group, member.ID)
 	if err != nil {
 		return nil, err

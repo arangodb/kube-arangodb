@@ -24,12 +24,18 @@ import (
 	"context"
 	goHttp "net/http"
 
-	pbInventoryV1 "github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
-func (c *client) Inventory(ctx context.Context) (*pbInventoryV1.Inventory, error) {
+type Inventory struct {
+	Configuration InventoryConfiguration `yaml:"configuration"`
+}
+
+type InventoryConfiguration struct {
+	Hash string `yaml:"hash"`
+}
+
+func (c *client) Inventory(ctx context.Context) (*Inventory, error) {
 	req, err := c.c.NewRequest(goHttp.MethodGet, utilConstants.EnvoyInventoryConfigDestination)
 	if err != nil {
 		return nil, err
@@ -44,11 +50,11 @@ func (c *client) Inventory(ctx context.Context) (*pbInventoryV1.Inventory, error
 		return nil, err
 	}
 
-	var l ugrpc.GRPC[*pbInventoryV1.Inventory]
+	var l Inventory
 
 	if err := resp.ParseBody("", &l); err != nil {
 		return nil, err
 	}
 
-	return l.Object, nil
+	return &l, nil
 }
