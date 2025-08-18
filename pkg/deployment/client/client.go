@@ -57,6 +57,8 @@ type Client interface {
 	DeleteExpiredJobs(ctx context.Context, timeout time.Duration) error
 
 	Compact(ctx context.Context, request *CompactRequest) error
+
+	Inventory(ctx context.Context) (*Inventory, error)
 }
 
 type client struct {
