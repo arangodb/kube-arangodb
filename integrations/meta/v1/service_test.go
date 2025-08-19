@@ -22,6 +22,7 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,6 +32,29 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
+
+func Test_Types(t *testing.T) {
+	z := `{
+  "meta": {
+    "updatedAt": "2025-07-07T15:13:09Z"
+  },
+  "object": {
+    "Object": {
+      "type_url": "type.googleapis.com/arangodb_platform_internal.metadata_store.GenAiProjectNames",
+      "value": "ChV0ZXN0X3Byb2plY3RfNmVhYWM3MjM="
+    }
+  }
+}`
+
+	var obj Object
+
+	require.NoError(t, json.Unmarshal([]byte(z), &obj))
+
+	n, err := json.Marshal(obj)
+	require.NoError(t, err)
+
+	require.JSONEq(t, z, string(n))
+}
 
 func Handler(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) svc.Handler {
 	handler, err := New(ctx, NewConfiguration().With(mods...))

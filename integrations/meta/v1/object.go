@@ -28,7 +28,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 type Object struct {
@@ -37,7 +36,11 @@ type Object struct {
 
 	Meta *ObjectMeta `json:"meta,omitempty"`
 
-	Object ugrpc.GRPC[*anypb.Any] `json:"object"`
+	Object ObjectProto `json:"object,omitempty"`
+}
+
+type ObjectProto struct {
+	Object *anypb.Any `json:"Object,omitempty"`
 }
 
 func (o *Object) SetKey(s string) {
