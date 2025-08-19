@@ -39,7 +39,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -129,7 +128,7 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 	obj.Key = key
 	obj.Rev = req.Revision
 
-	obj.Object = ugrpc.NewGRPC(req.GetObject())
+	obj.Object.Object = req.GetObject()
 
 	if err := i.cache.Put(ctx, key, &obj); err != nil {
 		if shared.IsPreconditionFailed(err) {
