@@ -535,6 +535,7 @@ func getTestTolerations() []core.Toleration {
 	}
 
 	return []core.Toleration{
+		tolerations.NewNoScheduleToleration(tolerations.TolerationArchitecture, tolerations.TolerationDuration{Forever: true}),
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeNotReady, shortDur),
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeUnreachable, shortDur),
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeAlphaUnreachable, shortDur),

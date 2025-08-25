@@ -9,6 +9,7 @@
 - (Feature) Chart By Tag filter
 - (Feature) Add Gateway Config condition
 - (Bugfix) Fix AnyPB Parsing in Meta Service
+- (Feature) Add Arch Tolerations
 
 ## [1.3.0](https://github.com/arangodb/kube-arangodb/tree/1.3.0) (2025-08-01)
 - (Feature) (Platform) Storage Debug

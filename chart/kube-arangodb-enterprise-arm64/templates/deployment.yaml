@@ -264,6 +264,9 @@ spec:
           operator: "Exists"
           effect: "NoExecute"
           tolerationSeconds: 5
+        - key: "kubernetes.io/arch"
+          operator: "Exists"
+          effect: "NoSchedule"
 {{- if .Values.operator.tolerations }}
 {{ toYaml .Values.operator.tolerations | indent 8 }}
 {{- end }}
