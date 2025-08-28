@@ -339,6 +339,8 @@ func (i *ImageUpdatePod) GetTolerations() []core.Toleration {
 	}
 
 	ts = tolerations.AddTolerationIfNotFound(ts,
+		tolerations.NewNoScheduleToleration(tolerations.TolerationArchitecture, tolerations.TolerationDuration{Forever: true}))
+	ts = tolerations.AddTolerationIfNotFound(ts,
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeNotReady, shortDur))
 	ts = tolerations.AddTolerationIfNotFound(ts,
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeUnreachable, shortDur))

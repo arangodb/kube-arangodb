@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 )
 
 const (
+	TolerationArchitecture            = "kubernetes.io/arch"
 	TolerationKeyNodeNotReady         = "node.kubernetes.io/not-ready"
 	TolerationKeyNodeAlphaUnreachable = "node.alpha.kubernetes.io/unreachable"
 	TolerationKeyNodeUnreachable      = "node.kubernetes.io/unreachable"
@@ -44,7 +45,22 @@ func NewNoExecuteToleration(key string, duration TolerationDuration) core.Tolera
 	t := core.Toleration{
 		Key:      key,
 		Operator: "Exists",
-		Effect:   "NoExecute",
+		Effect:   core.TaintEffectNoExecute,
+	}
+	if !duration.Forever {
+		tolerationSeconds := int64(duration.TimeSpan.Seconds())
+		t.TolerationSeconds = &tolerationSeconds
+	}
+	return t
+}
+
+// NewNoScheduleToleration is a helper to create a Toleration with
+// Key=key, Operator='Exists' Effect='NoSchedule', TolerationSeconds=tolerationDuration.Seconds().
+func NewNoScheduleToleration(key string, duration TolerationDuration) core.Toleration {
+	t := core.Toleration{
+		Key:      key,
+		Operator: "Exists",
+		Effect:   core.TaintEffectNoSchedule,
 	}
 	if !duration.Forever {
 		tolerationSeconds := int64(duration.TimeSpan.Seconds())
