@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,8 +61,10 @@ func CreatePodTolerations(mode api.DeploymentMode, group api.ServerGroup) []core
 		notReadyDur.TimeSpan = 15 * time.Second
 		unreachableDur.TimeSpan = 15 * time.Second
 	}
-	return []core.Toleration{tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeNotReady, notReadyDur),
+	return []core.Toleration{
+		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeNotReady, notReadyDur),
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeUnreachable, unreachableDur),
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeAlphaUnreachable, unreachableDur),
+		tolerations.NewNoScheduleToleration(tolerations.TolerationArchitecture, tolerations.TolerationDuration{Forever: true}),
 	}
 }
