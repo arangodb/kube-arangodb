@@ -78,7 +78,7 @@ func NodeDynamicConfig(cluster, id string, cds, lds *DynamicConfig) ([]byte, str
 		b.DynamicResources.LdsConfig = v.AsConfigSource()
 	}
 
-	data, err := ugrpc.MarshalYAML(&b)
+	data, err := ugrpc.MarshalYAML(&b, ugrpc.WithUseProtoNames(true))
 	if err != nil {
 		return nil, "", nil, err
 	}

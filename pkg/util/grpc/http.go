@@ -105,7 +105,7 @@ func Get[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, u
 }
 
 func Post[IN, T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, in IN, url string, mods ...util.Mod[goHttp.Request]) HTTPResponse[T] {
-	data, err := Marshal(in)
+	data, err := Marshal(in, WithUseProtoNames(true))
 	if err != nil {
 		return httpErrorResponse[T]{err: err}
 	}

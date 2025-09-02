@@ -77,7 +77,7 @@ func (c Config) RenderYAML() ([]byte, string, *pbEnvoyBootstrapV3.Bootstrap, err
 		return nil, "", nil, err
 	}
 
-	data, err := ugrpc.MarshalYAML(cfg)
+	data, err := ugrpc.MarshalYAML(cfg, ugrpc.WithUseProtoNames(true))
 	if err != nil {
 		return nil, "", nil, err
 	}
@@ -90,7 +90,7 @@ func (c Config) RenderCDSYAML() ([]byte, string, *discoveryApi.DiscoveryResponse
 		return nil, "", nil, err
 	}
 
-	data, err := ugrpc.MarshalYAML(cfg)
+	data, err := ugrpc.MarshalYAML(cfg, ugrpc.WithUseProtoNames(true))
 	if err != nil {
 		return nil, "", nil, err
 	}
@@ -103,7 +103,7 @@ func (c Config) RenderLDSYAML() ([]byte, string, *discoveryApi.DiscoveryResponse
 		return nil, "", nil, err
 	}
 
-	data, err := ugrpc.MarshalYAML(cfg)
+	data, err := ugrpc.MarshalYAML(cfg, ugrpc.WithUseProtoNames(true))
 	if err != nil {
 		return nil, "", nil, err
 	}

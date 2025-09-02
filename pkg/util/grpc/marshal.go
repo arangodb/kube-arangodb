@@ -28,10 +28,20 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func Marshal[T proto.Message](in T, opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error) {
-	options := protojson.MarshalOptions{
-		UseProtoNames: true,
+func WithUseProtoNames(value bool) util.Mod[protojson.MarshalOptions] {
+	return func(in *protojson.MarshalOptions) {
+		in.UseProtoNames = value
 	}
+}
+
+func WithEmitDefaultValues(value bool) util.Mod[protojson.MarshalOptions] {
+	return func(in *protojson.MarshalOptions) {
+		in.EmitDefaultValues = value
+	}
+}
+
+func Marshal[T proto.Message](in T, opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error) {
+	options := protojson.MarshalOptions{}
 
 	util.ApplyMods(&options, opts...)
 

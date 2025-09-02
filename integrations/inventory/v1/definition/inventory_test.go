@@ -45,6 +45,7 @@ func Test_State_Marshal(t *testing.T) {
 
 	data, err := ugrpc.Marshal(&s, func(in *protojson.MarshalOptions) {
 		in.EmitDefaultValues = true
+		in.UseProtoNames = false
 	})
 	require.NoError(t, err)
 

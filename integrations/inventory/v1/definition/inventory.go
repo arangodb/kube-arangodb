@@ -37,7 +37,7 @@ func (s *Inventory) JSON() ([]byte, error) {
 		return []byte("{}"), nil
 	}
 
-	return ugrpc.Marshal(s)
+	return ugrpc.Marshal(s, ugrpc.WithUseProtoNames(true))
 }
 
 func NewArangoDBConfiguration(spec api.DeploymentSpec, status api.DeploymentStatus) *ArangoDBConfiguration {
