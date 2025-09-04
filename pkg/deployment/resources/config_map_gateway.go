@@ -131,9 +131,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
 			Options: []util.Mod[protojson.MarshalOptions]{
-				func(in *protojson.MarshalOptions) {
-					in.EmitDefaultValues = true
-				},
+				ugrpc.WithUseProtoNames(true),
+				ugrpc.WithEmitDefaultValues(true),
 			},
 		},
 	}
