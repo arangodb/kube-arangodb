@@ -263,7 +263,7 @@ func ValidateMap[K comparable, T any](in map[K]T, validator func(K, T) error, ch
 	errors := make([]error, 0, len(in)+len(checks))
 
 	for id := range in {
-		if err := PrefixResourceError(fmt.Sprintf("`%s`", id), validator(id, in[id])); err != nil {
+		if err := PrefixResourceError(fmt.Sprintf("`%v`", id), validator(id, in[id])); err != nil {
 			errors = append(errors, err)
 		}
 	}
