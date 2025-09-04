@@ -313,6 +313,11 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					log.Warn("ArangoRoute Route Path not defined")
 					return nil
 				}
+				var key = utilConstants.EnvoyDestination(target.Route.Path)
+				if key.IsReserved() {
+					log.Warn("ArangoRoute Route Path `%s` is reserved", key)
+					return nil
+				}
 				var dest gateway.ConfigDestination
 				if destinations := target.Destinations; len(destinations) > 0 {
 					for _, destination := range destinations {
@@ -353,7 +358,10 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				dest.ResponseHeaders = map[string]string{
 					utilConstants.EnvoyRouteHeader: at.GetName(),
 				}
-				cfg.Destinations[target.Route.Path] = dest
+				if err := cfg.Destinations.Append(key, dest); err != nil {
+					log.Err(err).Warn("Unable to add destination `%s`", key)
+					return nil
+				}
 			}
 
 			return nil

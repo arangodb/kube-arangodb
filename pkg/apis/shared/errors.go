@@ -24,12 +24,20 @@ import (
 	"fmt"
 	"io"
 
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ResourceError struct {
 	Prefix string
 	Err    error
+}
+
+func (p ResourceError) AsGRPCError() *pbSharedV1.PathError {
+	return &pbSharedV1.PathError{
+		Path:    p.Prefix,
+		Message: p.Err.Error(),
+	}
 }
 
 // Error return string representation of error

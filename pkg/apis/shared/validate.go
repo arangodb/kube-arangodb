@@ -259,7 +259,7 @@ func ValidateInterfaceMap[T ValidateInterface](in map[string]T) error {
 }
 
 // ValidateMap validates all elements on the list
-func ValidateMap[T any](in map[string]T, validator func(string, T) error, checks ...func(in map[string]T) error) error {
+func ValidateMap[K comparable, T any](in map[K]T, validator func(K, T) error, checks ...func(in map[K]T) error) error {
 	errors := make([]error, 0, len(in)+len(checks))
 
 	for id := range in {

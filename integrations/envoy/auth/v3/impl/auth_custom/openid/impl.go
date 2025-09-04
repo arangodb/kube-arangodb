@@ -329,6 +329,10 @@ func (i *impl) handleOpenIDAuthentication(ctx context.Context, request *pbEnvoyA
 				},
 			})
 
+			if _, err := i.session.Invalidate(ctx, cookie.Value); err != nil {
+				return err
+			}
+
 			continue
 		}
 
@@ -355,20 +359,31 @@ func (i *impl) handleOpenIDAuthentication(ctx context.Context, request *pbEnvoyA
 				continue
 			}
 
-			session, cookie, err := i.handleOpenIDRefresh(ctx, cfg, ocfg, session)
+			session, ok, _, err := i.session.Refresh(ctx, cookie.Value)
 			if err != nil {
 				return err
 			}
 
-			current.User = session.AsResponse()
+			if ok {
+				newSession, newCookie, err := i.handleOpenIDRefresh(ctx, cfg, ocfg, session)
+				if err != nil {
+					return err
+				}
 
-			if cookie != nil {
-				current.ResponseHeaders = append(current.ResponseHeaders, &pbEnvoyCoreV3.HeaderValueOption{
-					Header: &pbEnvoyCoreV3.HeaderValue{
-						Key:   "Set-Cookie",
-						Value: cookie.String(),
-					},
-				})
+				current.User = newSession.AsResponse()
+
+				if newCookie != nil {
+					current.ResponseHeaders = append(current.ResponseHeaders, &pbEnvoyCoreV3.HeaderValueOption{
+						Header: &pbEnvoyCoreV3.HeaderValue{
+							Key:   "Set-Cookie",
+							Value: newCookie.String(),
+						},
+					})
+				}
+
+				if _, err := i.session.Invalidate(ctx, cookie.Value); err != nil {
+					return err
+				}
 			}
 
 			continue

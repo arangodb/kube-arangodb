@@ -20,13 +20,15 @@
 
 package constants
 
+type EnvoyDestination string
+
 const (
 	EnvoyRouteHeader = "arangodb-platform-route"
 
-	EnvoyInventoryConfigDestination = "/_inventory"
-	EnvoyIdentityDestination        = "/_identity"
-	EnvoyLoginDestination           = "/_login"
-	EnvoyLogoutDestination          = "/_logout"
+	EnvoyInventoryConfigDestination EnvoyDestination = "/_inventory"
+	EnvoyIdentityDestination        EnvoyDestination = "/_identity"
+	EnvoyLoginDestination           EnvoyDestination = "/_login"
+	EnvoyLogoutDestination          EnvoyDestination = "/_logout"
 
 	EnvoyIntegrationSidecarFilterName = "envoy.filters.http.ext_authz"
 
@@ -34,3 +36,16 @@ const (
 
 	EnvoyIntegrationSidecarClusterHTTP = "integration_sidecar_http"
 )
+
+func (d EnvoyDestination) IsReserved() bool {
+	switch d {
+	case EnvoyInventoryConfigDestination, EnvoyIdentityDestination, EnvoyLoginDestination, EnvoyLogoutDestination:
+		return true
+	}
+
+	return false
+}
+
+func (d EnvoyDestination) String() string {
+	return string(d)
+}

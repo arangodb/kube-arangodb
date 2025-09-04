@@ -36,19 +36,37 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type ConfigDestinations map[string]ConfigDestination
+type ConfigDestinations map[utilConstants.EnvoyDestination]ConfigDestination
+
+func (c *ConfigDestinations) Append(key utilConstants.EnvoyDestination, value ConfigDestination) error {
+	if c == nil {
+		return errors.Errorf("Unable to assign to nil map")
+	}
+
+	v := *c
+
+	if _, ok := v[key]; ok {
+		return errors.Errorf("Destination `%s` already exists", key)
+	}
+
+	v[key] = value
+
+	*c = v
+
+	return nil
+}
 
 func (c ConfigDestinations) Validate() error {
 	if len(c) == 0 {
 		return nil
 	}
 	return shared.WithErrors(
-		shared.ValidateMap(c, func(k string, destination ConfigDestination) error {
+		shared.ValidateMap(c, func(k utilConstants.EnvoyDestination, destination ConfigDestination) error {
 			var errs []error
 			if k == "/" {
 				errs = append(errs, errors.Errorf("Route for `/` is reserved"))
 			}
-			if err := shared.ValidateAPIPath(k); err != nil {
+			if err := shared.ValidateAPIPath(k.String()); err != nil {
 				errs = append(errs, err)
 			}
 			if err := destination.Validate(); err != nil {
