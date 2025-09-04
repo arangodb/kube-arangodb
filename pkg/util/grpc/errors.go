@@ -80,7 +80,7 @@ func (g grpcError) Err() error {
 	return g.err.Err()
 }
 
-type AsGRCPError interface {
+type Interface interface {
 	AsGRPCError() protoadapt.MessageV1
 }
 
@@ -89,7 +89,7 @@ func AsGRPCMessage(err error) protoadapt.MessageV1 {
 		return &pbSharedV1.Error{Message: "unknown error"}
 	}
 
-	if v, ok := err.(AsGRCPError); ok {
+	if v, ok := err.(Interface); ok {
 		return v.AsGRPCError()
 	}
 
