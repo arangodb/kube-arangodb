@@ -12,6 +12,7 @@
 - (Feature) Add Arch Tolerations
 - (Bugfix) Enable Platform Operator on EE Chart
 - (Feature) Improve GRPC JSON Handling
+- (Bugfix) Fix Operator Pod Resources
 
 ## [1.3.0](https://github.com/arangodb/kube-arangodb/tree/1.3.0) (2025-08-01)
 - (Feature) (Platform) Storage Debug
