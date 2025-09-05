@@ -176,7 +176,7 @@ spec:
 {{- end }}
 {{- if .Values.operator.resources }}
           resources:
-{{ toYaml .Values.operator.resources | indent 10 }}
+{{ toYaml .Values.operator.resources | indent 12 }}
 {{- end }}
 {{- if not .Values.operator.debug }}
           livenessProbe:
@@ -236,7 +236,7 @@ spec:
                 - 'ALL'
 {{- if .Values.webhooks.resources }}
           resources:
-{{ toYaml .Values.webhooks.resources | indent 10 }}
+{{ toYaml .Values.webhooks.resources | indent 12 }}
 {{- end }}
 {{- if not .Values.webhooks.debug }}
           livenessProbe:
