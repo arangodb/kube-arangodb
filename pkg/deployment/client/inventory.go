@@ -36,7 +36,7 @@ type InventoryConfiguration struct {
 }
 
 func (c *client) Inventory(ctx context.Context) (*Inventory, error) {
-	req, err := c.c.NewRequest(goHttp.MethodGet, utilConstants.EnvoyInventoryConfigDestination)
+	req, err := c.c.NewRequest(goHttp.MethodGet, utilConstants.EnvoyInventoryConfigDestination.String())
 	if err != nil {
 		return nil, err
 	}

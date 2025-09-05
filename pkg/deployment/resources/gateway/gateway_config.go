@@ -222,7 +222,7 @@ func (c Config) RenderClusters() ([]*pbEnvoyClusterV3.Cluster, error) {
 	}
 
 	for k, v := range c.Destinations {
-		name := fmt.Sprintf("cluster_%s", util.SHA256FromString(k))
+		name := fmt.Sprintf("cluster_%s", util.SHA256FromString(k.String()))
 		c, err := v.RenderCluster(name)
 		if err != nil {
 			return nil, err
@@ -251,8 +251,8 @@ func (c Config) RenderRoutes() ([]*pbEnvoyRouteV3.Route, error) {
 	}
 
 	for k, v := range c.Destinations {
-		name := fmt.Sprintf("cluster_%s", util.SHA256FromString(k))
-		c, err := v.RenderRoute(name, k)
+		name := fmt.Sprintf("cluster_%s", util.SHA256FromString(k.String()))
+		c, err := v.RenderRoute(name, k.String())
 		if err != nil {
 			return nil, err
 		}

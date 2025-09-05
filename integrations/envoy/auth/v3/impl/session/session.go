@@ -38,7 +38,7 @@ import (
 func NewManager[T any](ctx context.Context, t Type, client cache.Object[arangodb.Collection]) Manager[T] {
 	return manager[T]{
 		t:     t,
-		cache: cache.NewRemoteCache[*session](client),
+		cache: cache.NewRemoteCacheWithTTL[*session](client, 5*time.Second),
 	}
 }
 
@@ -47,12 +47,20 @@ type Manager[T any] interface {
 
 	Get(ctx context.Context, key string) (T, bool, time.Duration, error)
 
+	Refresh(ctx context.Context, key string) (T, bool, time.Duration, error)
+
 	Invalidate(ctx context.Context, key string) (bool, error)
 }
 
 type manager[T any] struct {
 	t     Type
 	cache cache.RemoteCache[*session]
+}
+
+func (m manager[T]) Refresh(ctx context.Context, key string) (T, bool, time.Duration, error) {
+	m.cache.Invalidate(ctx, key)
+
+	return m.Get(ctx, key)
 }
 
 func (m manager[T]) Put(ctx context.Context, expires time.Time, obj T) (string, error) {
