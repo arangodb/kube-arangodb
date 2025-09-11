@@ -91,3 +91,19 @@ func Test_AppendAfter(t *testing.T) {
 	}, 4)
 	require.Equal(t, []int{1, 3, 2, 4}, elements)
 }
+
+func Test_Batcher(t *testing.T) {
+	v := make([]int, 17)
+	for id := range v {
+		v[id] = id
+	}
+
+	res := BatchList(16, v)
+	require.Len(t, res, 2)
+
+	require.Len(t, res[0], 16)
+	require.Len(t, res[1], 1)
+
+	require.Equal(t, v[0:16], res[0])
+	require.Equal(t, v[16:], res[1])
+}
