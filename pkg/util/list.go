@@ -161,6 +161,21 @@ func UniqueList[A comparable](in []A) []A {
 	return r
 }
 
+func BatchList[A any](size int, in []A) [][]A {
+	ret := make([][]A, 0, len(in)/size+1)
+
+	for id := 0; id < len(in); id += size {
+		end := id + size
+		if limit := len(in); end > limit {
+			end = limit
+		}
+
+		ret = append(ret, in[id:end])
+	}
+
+	return ret
+}
+
 func FormatListErr[A, B any](in []A, format func(A) (B, error)) ([]B, error) {
 	var r = make([]B, len(in))
 

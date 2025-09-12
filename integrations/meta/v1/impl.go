@@ -47,6 +47,10 @@ func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
 }
 
 func newInternal(ctx context.Context, cfg Configuration) (*implementation, error) {
+	return newInternalWithRemoteCache(ctx, cfg, cache.NewRemoteCacheWithTTL[*Object](cfg.KVCollection(cfg.Endpoint, "_system", "_meta_store"), cfg.TTL))
+}
+
+func newInternalWithRemoteCache(ctx context.Context, cfg Configuration, c cache.RemoteCache[*Object]) (*implementation, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -54,7 +58,7 @@ func newInternal(ctx context.Context, cfg Configuration) (*implementation, error
 	obj := &implementation{
 		cfg:   cfg,
 		ctx:   ctx,
-		cache: cache.NewRemoteCacheWithTTL[*Object](cfg.KVCollection(cfg.Endpoint, "_system", "_meta_store"), cfg.TTL),
+		cache: c,
 	}
 
 	return obj, nil

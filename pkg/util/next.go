@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,39 @@
 
 package util
 
-import "context"
+import (
+	"context"
+	"io"
+	"sync"
+)
 
 type NextIterator[T any] interface {
 	Next(ctx context.Context) (T, error)
+}
+
+func NewStaticNextIterator[T any](objs ...T) NextIterator[T] {
+	return &staticNextIterator[T]{
+		objects: objs,
+	}
+}
+
+type staticNextIterator[T any] struct {
+	lock sync.Mutex
+
+	id int
+
+	objects []T
+}
+
+func (s *staticNextIterator[T]) Next(ctx context.Context) (T, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if s.id >= len(s.objects) {
+		return Default[T](), io.EOF
+	}
+
+	obj := s.objects[s.id]
+	s.id++
+	return obj, nil
 }

@@ -32,6 +32,7 @@ import (
 
 type Object struct {
 	Key string  `json:"_key,omitempty"`
+	ID  string  `json:"_id,omitempty"`
 	Rev *string `json:"_rev,omitempty"`
 
 	Meta *ObjectMeta `json:"meta,omitempty"`

@@ -30,6 +30,7 @@ import (
 	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	tcache "github.com/arangodb/kube-arangodb/pkg/util/tests/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
@@ -57,7 +58,7 @@ func Test_Types(t *testing.T) {
 }
 
 func Handler(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) svc.Handler {
-	handler, err := New(ctx, NewConfiguration().With(mods...))
+	handler, err := newInternalWithRemoteCache(ctx, NewConfiguration().With(mods...), tcache.NewRemoteCache[*Object]())
 	require.NoError(t, err)
 
 	return handler

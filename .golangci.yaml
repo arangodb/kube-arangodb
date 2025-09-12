@@ -187,6 +187,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants
       - alias: utilConstants
         pkg: github.com/arangodb/kube-arangodb/pkg/util/constants
+      - alias: tcache
+        pkg: github.com/arangodb/kube-arangodb/pkg/util/tests/cache
       - alias: apps
         pkg: k8s.io/api/apps/v1
       - alias: batch
