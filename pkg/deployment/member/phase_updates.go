@@ -116,6 +116,7 @@ func removeMemberConditionsMapFunc(m *api.MemberStatus) {
 	m.Conditions.Remove(api.ConditionTypeArchitectureMismatch)
 	m.Conditions.Remove(api.ConditionTypeArchitectureChangeCannotBeApplied)
 	m.Conditions.Remove(api.ConditionTypeMemberVolumeUnschedulable)
+	m.Conditions.Remove(api.ConditionTypeGatewayConfig)
 
 	m.RemoveTerminationsBefore(time.Now().Add(-1 * utilConstants.RecentTerminationsKeepPeriod))
 

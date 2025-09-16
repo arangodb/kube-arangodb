@@ -486,6 +486,12 @@ func (d *Deployment) isUpToDateStatus(mode api.DeploymentMode, status api.Deploy
 		return
 	}
 
+	if !status.Conditions.Check(api.ConditionTypeGatewayConfig).Exists().IsTrue().Evaluate() {
+		upToDate = false
+		reason = "Gateway is not propagated"
+		return
+	}
+
 	for _, m := range status.Members.AsList() {
 		member := m.Member
 		if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {

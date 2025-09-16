@@ -29,6 +29,8 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	client "github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -47,10 +49,66 @@ func (r *Reconciler) createMemberGatewayConfigConditionPlan(ctx context.Context,
 			continue
 		}
 
-		logger.JSON("inv", inv).Info("Inventory Fetched")
-
 		if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != inv.Configuration.Hash {
 			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config Present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, true, "Config Present", "Config Present", inv.Configuration.Hash))
+		}
+	}
+
+	return plan
+}
+
+func (r *Reconciler) createGatewayConfigConditionPlan(ctx context.Context, _ k8sutil.APIObject, spec api.DeploymentSpec,
+	status api.DeploymentStatus, planCtx PlanBuilderContext) api.Plan {
+	var plan api.Plan
+
+	if spec.Gateway.IsEnabled() {
+		cm, exists := planCtx.ACS().CurrentClusterCache().ConfigMap().V1().GetSimple(resources.GetGatewayConfigMapName(r.context.GetAPIObject().GetName()))
+		if !exists {
+			if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue || c.Hash != "" {
+				plan = append(plan, sharedReconcile.UpdateConditionActionV2("Gateway CM Missing", api.ConditionTypeGatewayConfig, false, "Gateway CM Missing", "Gateway CM Missing", ""))
+			}
+			return plan
+		}
+
+		if cm == nil || cm.Data[utilConstants.GatewayConfigChecksum] == "" {
+			if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue || c.Hash != "" {
+				plan = append(plan, sharedReconcile.UpdateConditionActionV2("Gateway CM Missing", api.ConditionTypeGatewayConfig, false, "Gateway CM Missing", "Gateway CM Missing", ""))
+			}
+			return plan
+		}
+
+		checksum := cm.Data[utilConstants.GatewayConfigChecksum]
+
+		cok := true
+		for _, m := range status.Members.AsListInGroup(api.ServerGroupGateways) {
+			if v, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || v.Status != core.ConditionTrue || v.Hash != checksum {
+				cok = false
+			}
+			if !cok {
+				break
+			}
+		}
+
+		if cok {
+			if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != checksum {
+				if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue || c.Hash != "" {
+					plan = append(plan, sharedReconcile.UpdateConditionActionV2("Gateway Config UpToDate", api.ConditionTypeGatewayConfig, true, "Gateway Config Propagated", "Gateway Config Propagated", checksum))
+				}
+				return plan
+			}
+		} else {
+			if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue || c.Hash != checksum {
+				if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue || c.Hash != "" {
+					plan = append(plan, sharedReconcile.UpdateConditionActionV2("Gateway Config Not UpToDate", api.ConditionTypeGatewayConfig, false, "Gateway Config Not Propagated", "Gateway Config Not Propagated", checksum))
+				}
+				return plan
+			}
+		}
+
+	} else {
+		if _, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); ok {
+			plan = append(plan, sharedReconcile.RemoveConditionActionV2("Gateways Disabled", api.ConditionTypeGatewayConfig))
+			return plan
 		}
 	}
 
