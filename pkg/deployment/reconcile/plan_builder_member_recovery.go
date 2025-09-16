@@ -61,9 +61,15 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 	for _, group := range api.AllServerGroups {
 		members := status.Members.MembersOfGroup(group)
 		failed := 0
+		marked := 0
 		for _, m := range members {
 			if m.Phase == api.MemberPhaseFailed {
 				failed++
+			}
+
+			// Find also marked to remove servers
+			if m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+				marked++
 			}
 		}
 
@@ -95,7 +101,10 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 
 				if c := spec.DBServers.GetCount(); c <= len(members)-failed {
 					// There are more or equal alive members than current count. A member should not be recreated.
-					continue
+					// Ensure that other member is not marked to removed
+					if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) && spec.DBServers.GetCount() <= len(members)-marked {
+						continue
+					}
 				}
 
 				if agencyState.Plan.Collections.IsDBServerPresent(state.Server(m.ID)) {

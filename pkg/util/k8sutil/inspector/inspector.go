@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoclustersynchronization"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangodeployment"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangomember"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoplatformservice"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoplatformstorage"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoprofile"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
@@ -98,6 +99,7 @@ type Inspector interface {
 	arangoroute.Inspector
 	arangoprofile.Inspector
 	arangoplatformstorage.Inspector
+	arangoplatformservice.Inspector
 
 	mods.Mods
 

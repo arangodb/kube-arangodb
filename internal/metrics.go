@@ -28,6 +28,7 @@ import (
 	"path"
 	"sort"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/pretty"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -114,9 +115,10 @@ type Alerting struct {
 }
 
 type Label struct {
-	Key         string  `json:"key" yaml:"key"`
-	Description string  `json:"description" yaml:"description"`
-	Type        *string `json:"type" yaml:"type"`
+	Key         string   `json:"key" yaml:"key"`
+	Description string   `json:"description" yaml:"description"`
+	Type        *string  `json:"type" yaml:"type"`
+	Values      []string `json:"values" yaml:"values"`
 }
 
 func GenerateMetricsDocumentation(root string, in MetricsDoc) error {
@@ -158,6 +160,7 @@ func generateMetricFile(root, name string, m Metric) error {
 	type tableRowLabels struct {
 		Label       string `table:"Label" table_align:"center"`
 		Description string `table:"Description" table_align:"left"`
+		Values      string `table:"Values" table_align:"center"`
 	}
 	type tableRowPriority struct {
 		Priority    string `table:"Priority" table_align:"center"`
@@ -173,6 +176,7 @@ func generateMetricFile(root, name string, m Metric) error {
 		t.Add(tableRowLabels{
 			Label:       l.Key,
 			Description: l.Description,
+			Values:      util.BoolSwitch(len(l.Values) == 0, "*", strings.Join(l.Values, "\n")),
 		})
 	}
 

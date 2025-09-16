@@ -16,6 +16,7 @@
 - (Feature) (Platform) MetaV1 Integration Tests
 - (Feature) (Platform) Gateway UpToDate Condition
 - (Documentation) Update Supported Kubernetes Versions
+- (Feature) (Platform) Inventory Improvement
 
 ## [1.3.0](https://github.com/arangodb/kube-arangodb/tree/1.3.0) (2025-08-01)
 - (Feature) (Platform) Storage Debug

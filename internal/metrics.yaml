@@ -258,6 +258,10 @@ namespaces:
             description: "Deployment Name"
           - key: condition
             description: "Condition Name"
+            values:
+              - SpecAccepted
+              - SpecPropagated
+              - UpToDate
     members:
       unexpected_container_exit_codes:
         shortDescription: "Counter of unexpected restarts in pod (Containers/InitContainers/EphemeralContainers)"
@@ -291,6 +295,12 @@ namespaces:
             description: "Member ID"
           - key: condition
             description: "Condition Name"
+            values:
+              - Serving
+              - Scheduled
+              - Reachable
+              - Started
+              - Ready
     engine:
       panics_recovered:
         shortDescription: "Number of Panics recovered inside Operator reconciliation loop"

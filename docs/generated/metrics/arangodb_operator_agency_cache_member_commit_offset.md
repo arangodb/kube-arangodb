@@ -12,8 +12,8 @@ Determines agency member commit offset. Set to -1 if Agent is not reachable
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| namespace | Deployment Namespace |
-| name | Deployment Name |
-| agent | Agent ID |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| namespace | Deployment Namespace | * |
+| name | Deployment Name | * |
+| agent | Agent ID | * |

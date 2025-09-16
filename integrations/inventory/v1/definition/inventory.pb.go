@@ -201,6 +201,10 @@ type Inventory struct {
 	Configuration *InventoryConfiguration `protobuf:"bytes,1,opt,name=configuration,proto3,oneof" json:"configuration,omitempty"`
 	// ArangoDB Deployment Configuration
 	Arangodb *ArangoDBConfiguration `protobuf:"bytes,2,opt,name=arangodb,proto3,oneof" json:"arangodb,omitempty"`
+	// ArangoDB Platform Networking
+	Networking *InventoryNetworking `protobuf:"bytes,3,opt,name=networking,proto3,oneof" json:"networking,omitempty"`
+	// ArangoDB Platform Spec
+	Platform *InventoryPlatform `protobuf:"bytes,4,opt,name=platform,proto3,oneof" json:"platform,omitempty"`
 }
 
 func (x *Inventory) Reset() {
@@ -245,6 +249,20 @@ func (x *Inventory) GetConfiguration() *InventoryConfiguration {
 func (x *Inventory) GetArangodb() *ArangoDBConfiguration {
 	if x != nil {
 		return x.Arangodb
+	}
+	return nil
+}
+
+func (x *Inventory) GetNetworking() *InventoryNetworking {
+	if x != nil {
+		return x.Networking
+	}
+	return nil
+}
+
+func (x *Inventory) GetPlatform() *InventoryPlatform {
+	if x != nil {
+		return x.Platform
 	}
 	return nil
 }
@@ -298,6 +316,280 @@ func (x *InventoryConfiguration) GetHash() string {
 	return ""
 }
 
+// Platform Configuration details
+type InventoryPlatform struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Defines Services definition
+	Services map[string]*InventoryPlatformService `protobuf:"bytes,1,rep,name=services,proto3" json:"services,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (x *InventoryPlatform) Reset() {
+	*x = InventoryPlatform{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *InventoryPlatform) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryPlatform) ProtoMessage() {}
+
+func (x *InventoryPlatform) ProtoReflect() protoreflect.Message {
+	mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryPlatform.ProtoReflect.Descriptor instead.
+func (*InventoryPlatform) Descriptor() ([]byte, []int) {
+	return file_integrations_inventory_v1_definition_inventory_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *InventoryPlatform) GetServices() map[string]*InventoryPlatformService {
+	if x != nil {
+		return x.Services
+	}
+	return nil
+}
+
+// Envoy Service Configuration details
+type InventoryPlatformService struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Service Version
+	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	// Defines if Service is Ready
+	Ready bool `protobuf:"varint,2,opt,name=ready,proto3" json:"ready,omitempty"`
+}
+
+func (x *InventoryPlatformService) Reset() {
+	*x = InventoryPlatformService{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *InventoryPlatformService) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryPlatformService) ProtoMessage() {}
+
+func (x *InventoryPlatformService) ProtoReflect() protoreflect.Message {
+	mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryPlatformService.ProtoReflect.Descriptor instead.
+func (*InventoryPlatformService) Descriptor() ([]byte, []int) {
+	return file_integrations_inventory_v1_definition_inventory_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *InventoryPlatformService) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *InventoryPlatformService) GetReady() bool {
+	if x != nil {
+		return x.Ready
+	}
+	return false
+}
+
+// Envoy Configuration details
+type InventoryNetworking struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Defines Routes definition
+	Routes map[string]*InventoryNetworkingRoute `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (x *InventoryNetworking) Reset() {
+	*x = InventoryNetworking{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *InventoryNetworking) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryNetworking) ProtoMessage() {}
+
+func (x *InventoryNetworking) ProtoReflect() protoreflect.Message {
+	mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryNetworking.ProtoReflect.Descriptor instead.
+func (*InventoryNetworking) Descriptor() ([]byte, []int) {
+	return file_integrations_inventory_v1_definition_inventory_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *InventoryNetworking) GetRoutes() map[string]*InventoryNetworkingRoute {
+	if x != nil {
+		return x.Routes
+	}
+	return nil
+}
+
+// Envoy Route Configuration details
+type InventoryNetworkingRoute struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Route:
+	//
+	//	*InventoryNetworkingRoute_Path
+	Route isInventoryNetworkingRoute_Route `protobuf_oneof:"route"`
+}
+
+func (x *InventoryNetworkingRoute) Reset() {
+	*x = InventoryNetworkingRoute{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *InventoryNetworkingRoute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryNetworkingRoute) ProtoMessage() {}
+
+func (x *InventoryNetworkingRoute) ProtoReflect() protoreflect.Message {
+	mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryNetworkingRoute.ProtoReflect.Descriptor instead.
+func (*InventoryNetworkingRoute) Descriptor() ([]byte, []int) {
+	return file_integrations_inventory_v1_definition_inventory_proto_rawDescGZIP(), []int{5}
+}
+
+func (m *InventoryNetworkingRoute) GetRoute() isInventoryNetworkingRoute_Route {
+	if m != nil {
+		return m.Route
+	}
+	return nil
+}
+
+func (x *InventoryNetworkingRoute) GetPath() *InventoryNetworkingRoutePath {
+	if x, ok := x.GetRoute().(*InventoryNetworkingRoute_Path); ok {
+		return x.Path
+	}
+	return nil
+}
+
+type isInventoryNetworkingRoute_Route interface {
+	isInventoryNetworkingRoute_Route()
+}
+
+type InventoryNetworkingRoute_Path struct {
+	// Path Route
+	Path *InventoryNetworkingRoutePath `protobuf:"bytes,1,opt,name=path,proto3,oneof"`
+}
+
+func (*InventoryNetworkingRoute_Path) isInventoryNetworkingRoute_Route() {}
+
+// Envoy Route Path Configuration details
+type InventoryNetworkingRoutePath struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Path definition
+	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+}
+
+func (x *InventoryNetworkingRoutePath) Reset() {
+	*x = InventoryNetworkingRoutePath{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *InventoryNetworkingRoutePath) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryNetworkingRoutePath) ProtoMessage() {}
+
+func (x *InventoryNetworkingRoutePath) ProtoReflect() protoreflect.Message {
+	mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryNetworkingRoutePath.ProtoReflect.Descriptor instead.
+func (*InventoryNetworkingRoutePath) Descriptor() ([]byte, []int) {
+	return file_integrations_inventory_v1_definition_inventory_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *InventoryNetworkingRoutePath) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
 // ArangoDB Deployment Configuration
 type ArangoDBConfiguration struct {
 	state         protoimpl.MessageState
@@ -317,7 +609,7 @@ type ArangoDBConfiguration struct {
 func (x *ArangoDBConfiguration) Reset() {
 	*x = ArangoDBConfiguration{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[2]
+		mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -330,7 +622,7 @@ func (x *ArangoDBConfiguration) String() string {
 func (*ArangoDBConfiguration) ProtoMessage() {}
 
 func (x *ArangoDBConfiguration) ProtoReflect() protoreflect.Message {
-	mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[2]
+	mi := &file_integrations_inventory_v1_definition_inventory_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -343,7 +635,7 @@ func (x *ArangoDBConfiguration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArangoDBConfiguration.ProtoReflect.Descriptor instead.
 func (*ArangoDBConfiguration) Descriptor() ([]byte, []int) {
-	return file_integrations_inventory_v1_definition_inventory_proto_rawDescGZIP(), []int{2}
+	return file_integrations_inventory_v1_definition_inventory_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ArangoDBConfiguration) GetMode() ArangoDBMode {
@@ -381,7 +673,7 @@ var file_integrations_inventory_v1_definition_inventory_proto_rawDesc = []byte{
 	0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x76, 0x31, 0x2f, 0x64, 0x65, 0x66, 0x69,
 	0x6e, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x09, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72,
-	0x79, 0x22, 0xbb, 0x01, 0x0a, 0x09, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x12,
+	0x79, 0x22, 0xdb, 0x02, 0x0a, 0x09, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x12,
 	0x4c, 0x0a, 0x0d, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f,
 	0x72, 0x79, 0x2e, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x66,
@@ -391,11 +683,59 @@ var file_integrations_inventory_v1_definition_inventory_proto_rawDesc = []byte{
 	0x20, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x41, 0x72, 0x61, 0x6e,
 	0x67, 0x6f, 0x44, 0x42, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f,
 	0x6e, 0x48, 0x01, 0x52, 0x08, 0x61, 0x72, 0x61, 0x6e, 0x67, 0x6f, 0x64, 0x62, 0x88, 0x01, 0x01,
-	0x42, 0x10, 0x0a, 0x0e, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x42, 0x0b, 0x0a, 0x09, 0x5f, 0x61, 0x72, 0x61, 0x6e, 0x67, 0x6f, 0x64, 0x62, 0x22,
+	0x12, 0x43, 0x0a, 0x0a, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79,
+	0x2e, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x69, 0x6e, 0x67, 0x48, 0x02, 0x52, 0x0a, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69,
+	0x6e, 0x67, 0x88, 0x01, 0x01, 0x12, 0x3d, 0x0a, 0x08, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72,
+	0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74,
+	0x6f, 0x72, 0x79, 0x2e, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x50, 0x6c, 0x61,
+	0x74, 0x66, 0x6f, 0x72, 0x6d, 0x48, 0x03, 0x52, 0x08, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72,
+	0x6d, 0x88, 0x01, 0x01, 0x42, 0x10, 0x0a, 0x0e, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x75,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x0b, 0x0a, 0x09, 0x5f, 0x61, 0x72, 0x61, 0x6e, 0x67,
+	0x6f, 0x64, 0x62, 0x42, 0x0d, 0x0a, 0x0b, 0x5f, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69,
+	0x6e, 0x67, 0x42, 0x0b, 0x0a, 0x09, 0x5f, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x22,
 	0x2c, 0x0a, 0x16, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x43, 0x6f, 0x6e, 0x66,
 	0x69, 0x67, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x61, 0x73,
-	0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x68, 0x61, 0x73, 0x68, 0x22, 0xcd, 0x01,
+	0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x68, 0x61, 0x73, 0x68, 0x22, 0xbd, 0x01,
+	0x0a, 0x11, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x50, 0x6c, 0x61, 0x74, 0x66,
+	0x6f, 0x72, 0x6d, 0x12, 0x46, 0x0a, 0x08, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72,
+	0x79, 0x2e, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x50, 0x6c, 0x61, 0x74, 0x66,
+	0x6f, 0x72, 0x6d, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72,
+	0x79, 0x52, 0x08, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x1a, 0x60, 0x0a, 0x0d, 0x53,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03,
+	0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x39,
+	0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e,
+	0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74,
+	0x6f, 0x72, 0x79, 0x50, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x53, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x4a, 0x0a,
+	0x18, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x50, 0x6c, 0x61, 0x74, 0x66, 0x6f,
+	0x72, 0x6d, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72,
+	0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73,
+	0x69, 0x6f, 0x6e, 0x12, 0x14, 0x0a, 0x05, 0x72, 0x65, 0x61, 0x64, 0x79, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x05, 0x72, 0x65, 0x61, 0x64, 0x79, 0x22, 0xb9, 0x01, 0x0a, 0x13, 0x49, 0x6e,
+	0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e,
+	0x67, 0x12, 0x42, 0x0a, 0x06, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x2a, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x49, 0x6e,
+	0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e,
+	0x67, 0x2e, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x06, 0x72,
+	0x6f, 0x75, 0x74, 0x65, 0x73, 0x1a, 0x5e, 0x0a, 0x0b, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x73, 0x45,
+	0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x39, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72,
+	0x79, 0x2e, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f,
+	0x72, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x62, 0x0a, 0x18, 0x49, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f,
+	0x72, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x6f, 0x75, 0x74,
+	0x65, 0x12, 0x3d, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x27, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x49, 0x6e, 0x76, 0x65,
+	0x6e, 0x74, 0x6f, 0x72, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x52,
+	0x6f, 0x75, 0x74, 0x65, 0x50, 0x61, 0x74, 0x68, 0x48, 0x00, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68,
+	0x42, 0x07, 0x0a, 0x05, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x22, 0x32, 0x0a, 0x1c, 0x49, 0x6e, 0x76,
+	0x65, 0x6e, 0x74, 0x6f, 0x72, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67,
+	0x52, 0x6f, 0x75, 0x74, 0x65, 0x50, 0x61, 0x74, 0x68, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74,
+	0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x22, 0xcd, 0x01,
 	0x0a, 0x15, 0x41, 0x72, 0x61, 0x6e, 0x67, 0x6f, 0x44, 0x42, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67,
 	0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2b, 0x0a, 0x04, 0x6d, 0x6f, 0x64, 0x65, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x17, 0x2e, 0x69, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x6f, 0x72,
@@ -440,26 +780,40 @@ func file_integrations_inventory_v1_definition_inventory_proto_rawDescGZIP() []b
 }
 
 var file_integrations_inventory_v1_definition_inventory_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_integrations_inventory_v1_definition_inventory_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_integrations_inventory_v1_definition_inventory_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_integrations_inventory_v1_definition_inventory_proto_goTypes = []interface{}{
-	(ArangoDBMode)(0),              // 0: inventory.ArangoDBMode
-	(ArangoDBEdition)(0),           // 1: inventory.ArangoDBEdition
-	(ArangoDBSharding)(0),          // 2: inventory.ArangoDBSharding
-	(*Inventory)(nil),              // 3: inventory.Inventory
-	(*InventoryConfiguration)(nil), // 4: inventory.InventoryConfiguration
-	(*ArangoDBConfiguration)(nil),  // 5: inventory.ArangoDBConfiguration
+	(ArangoDBMode)(0),                    // 0: inventory.ArangoDBMode
+	(ArangoDBEdition)(0),                 // 1: inventory.ArangoDBEdition
+	(ArangoDBSharding)(0),                // 2: inventory.ArangoDBSharding
+	(*Inventory)(nil),                    // 3: inventory.Inventory
+	(*InventoryConfiguration)(nil),       // 4: inventory.InventoryConfiguration
+	(*InventoryPlatform)(nil),            // 5: inventory.InventoryPlatform
+	(*InventoryPlatformService)(nil),     // 6: inventory.InventoryPlatformService
+	(*InventoryNetworking)(nil),          // 7: inventory.InventoryNetworking
+	(*InventoryNetworkingRoute)(nil),     // 8: inventory.InventoryNetworkingRoute
+	(*InventoryNetworkingRoutePath)(nil), // 9: inventory.InventoryNetworkingRoutePath
+	(*ArangoDBConfiguration)(nil),        // 10: inventory.ArangoDBConfiguration
+	nil,                                  // 11: inventory.InventoryPlatform.ServicesEntry
+	nil,                                  // 12: inventory.InventoryNetworking.RoutesEntry
 }
 var file_integrations_inventory_v1_definition_inventory_proto_depIdxs = []int32{
-	4, // 0: inventory.Inventory.configuration:type_name -> inventory.InventoryConfiguration
-	5, // 1: inventory.Inventory.arangodb:type_name -> inventory.ArangoDBConfiguration
-	0, // 2: inventory.ArangoDBConfiguration.mode:type_name -> inventory.ArangoDBMode
-	1, // 3: inventory.ArangoDBConfiguration.edition:type_name -> inventory.ArangoDBEdition
-	2, // 4: inventory.ArangoDBConfiguration.sharding:type_name -> inventory.ArangoDBSharding
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	4,  // 0: inventory.Inventory.configuration:type_name -> inventory.InventoryConfiguration
+	10, // 1: inventory.Inventory.arangodb:type_name -> inventory.ArangoDBConfiguration
+	7,  // 2: inventory.Inventory.networking:type_name -> inventory.InventoryNetworking
+	5,  // 3: inventory.Inventory.platform:type_name -> inventory.InventoryPlatform
+	11, // 4: inventory.InventoryPlatform.services:type_name -> inventory.InventoryPlatform.ServicesEntry
+	12, // 5: inventory.InventoryNetworking.routes:type_name -> inventory.InventoryNetworking.RoutesEntry
+	9,  // 6: inventory.InventoryNetworkingRoute.path:type_name -> inventory.InventoryNetworkingRoutePath
+	0,  // 7: inventory.ArangoDBConfiguration.mode:type_name -> inventory.ArangoDBMode
+	1,  // 8: inventory.ArangoDBConfiguration.edition:type_name -> inventory.ArangoDBEdition
+	2,  // 9: inventory.ArangoDBConfiguration.sharding:type_name -> inventory.ArangoDBSharding
+	6,  // 10: inventory.InventoryPlatform.ServicesEntry.value:type_name -> inventory.InventoryPlatformService
+	8,  // 11: inventory.InventoryNetworking.RoutesEntry.value:type_name -> inventory.InventoryNetworkingRoute
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_integrations_inventory_v1_definition_inventory_proto_init() }
@@ -493,6 +847,66 @@ func file_integrations_inventory_v1_definition_inventory_proto_init() {
 			}
 		}
 		file_integrations_inventory_v1_definition_inventory_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*InventoryPlatform); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_integrations_inventory_v1_definition_inventory_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*InventoryPlatformService); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_integrations_inventory_v1_definition_inventory_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*InventoryNetworking); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_integrations_inventory_v1_definition_inventory_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*InventoryNetworkingRoute); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_integrations_inventory_v1_definition_inventory_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*InventoryNetworkingRoutePath); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_integrations_inventory_v1_definition_inventory_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ArangoDBConfiguration); i {
 			case 0:
 				return &v.state
@@ -506,13 +920,16 @@ func file_integrations_inventory_v1_definition_inventory_proto_init() {
 		}
 	}
 	file_integrations_inventory_v1_definition_inventory_proto_msgTypes[0].OneofWrappers = []interface{}{}
+	file_integrations_inventory_v1_definition_inventory_proto_msgTypes[5].OneofWrappers = []interface{}{
+		(*InventoryNetworkingRoute_Path)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_integrations_inventory_v1_definition_inventory_proto_rawDesc,
 			NumEnums:      3,
-			NumMessages:   3,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

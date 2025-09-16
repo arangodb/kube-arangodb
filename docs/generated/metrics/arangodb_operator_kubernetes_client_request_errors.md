@@ -12,7 +12,7 @@ Number of Kubernetes Client request errors
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| component | K8S Resource name |
-| verb | Verb (create,update,update-status,patch,delete,force-delete) |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| component | K8S Resource name | * |
+| verb | Verb (create,update,update-status,patch,delete,force-delete) | * |
