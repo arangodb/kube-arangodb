@@ -10,7 +10,7 @@ has_toc: false
 
 #### Community & Enterprise Edition
 
-[Full CustomResourceDefinition reference ->](./api/ArangoPlatformStorage.V1Alpha1.md)
+[Full CustomResourceDefinition reference ->](./api/ArangoDeployment.V1.md)
 
 This instruction covers only the steps to enable ArangoPlatform in Kubernetes cluster with already running ArangoDeployment.
 If you don't have one yet, consider checking [kube-arangodb installation guide](./using-the-operator.md) and [ArangoDeployment CR description](./deployment-resource-reference.md).
