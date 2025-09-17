@@ -1,7 +1,7 @@
 platforms:
   - name: "Google GKE"
     versions:
-      - kubernetesVersion: "1.28-1.31"
+      - kubernetesVersion: "1.28-1.34"
         arangoDBVersion: ">= 3.11.0"
         state: "Production"
         remarks: "Don't use micro nodes"
@@ -15,7 +15,7 @@ platforms:
         remarks: "Don't use micro nodes"
   - name: "Azure AKS"
     versions:
-      - kubernetesVersion: "1.28-1.32"
+      - kubernetesVersion: "1.28-1.34"
         arangoDBVersion: ">= 3.11.0"
         state: "Production"
       - kubernetesVersion: "1.25-1.27"
@@ -26,7 +26,7 @@ platforms:
         state: "NotSupported"
   - name: "Amazon EKS"
     versions:
-      - kubernetesVersion: "1.28-1.31"
+      - kubernetesVersion: "1.28-1.34"
         arangoDBVersion: ">= 3.11.0"
         state: "Production"
         providerRemarks: "[Amazon EKS](./docs/providers/eks)"
@@ -62,7 +62,7 @@ platforms:
         state: "NotSupported"
   - name: "BareMetal (kubeadm)"
     versions:
-      - kubernetesVersion: "1.28-1.31"
+      - kubernetesVersion: "1.28-1.34"
         arangoDBVersion: ">= 3.11.0"
         state: "Production"
       - kubernetesVersion: "1.25-1.27"
@@ -73,7 +73,7 @@ platforms:
         state: "NotSupported"
   - name: "Minikube"
     versions:
-      - kubernetesVersion: "1.28-1.31"
+      - kubernetesVersion: "1.28-1.34"
         arangoDBVersion: ">= 3.11.0"
         state: "Devel Only"
       - kubernetesVersion: "1.25-1.27"
@@ -84,7 +84,7 @@ platforms:
         state: "NotSupported"
   - name: "Other"
     versions:
-      - kubernetesVersion: "1.28-1.31"
+      - kubernetesVersion: "1.28-1.34"
         arangoDBVersion: ">= 3.11.0"
         state: "Production"
       - kubernetesVersion: "1.25-1.27"

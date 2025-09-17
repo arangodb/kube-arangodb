@@ -55,13 +55,13 @@ covers individual newer features separately.
 
 | Platform | State | Kubernetes Version | ArangoDB Version | Remarks | Provider Remarks |
 |:--- |:--- |:--- |:--- |:--- |:--- |
-| Google GKE | Production | 1.28-1.31 | >= 3.11.0 | Don't use micro nodes |  |
+| Google GKE | Production | 1.28-1.34 | >= 3.11.0 | Don't use micro nodes |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 | Don't use micro nodes |  |
 |  | NotSupported | < 1.25 | < 3.8.0 | Don't use micro nodes |  |
-| Azure AKS | Production | 1.28-1.32 | >= 3.11.0 |  |  |
+| Azure AKS | Production | 1.28-1.34 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
-| Amazon EKS | Production | 1.28-1.31 | >= 3.11.0 |  | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS | Production | 1.28-1.34 | >= 3.11.0 |  | [Amazon EKS](./docs/providers/eks) |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  | [Amazon EKS](./docs/providers/eks) |
 |  | NotSupported | < 1.25 | < 3.8.0 |  | [Amazon EKS](./docs/providers/eks) |
 | IBM Cloud | Production | 1.29-1.31 | >= 3.11.0 |  |  |
@@ -70,13 +70,13 @@ covers individual newer features separately.
 | OpenShift | Production | 4.11-4.17 | >= 3.11.0 |  |  |
 |  | EOL | 4.2-4.11 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 4.2 | < 3.8.0 |  |  |
-| BareMetal (kubeadm) | Production | 1.28-1.31 | >= 3.11.0 |  |  |
+| BareMetal (kubeadm) | Production | 1.28-1.34 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
-| Minikube | Devel Only | 1.28-1.31 | >= 3.11.0 |  |  |
+| Minikube | Devel Only | 1.28-1.34 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
-| Other | Production | 1.28-1.31 | >= 3.11.0 |  |  |
+| Other | Production | 1.28-1.34 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
 
