@@ -33,6 +33,7 @@ const (
 
 	ArangoGatewayExecutor = "/usr/local/bin/envoy"
 
+	GatewayConfigChecksum    = "gateway.checksum"
 	GatewayConfigFileName    = "gateway.yaml"
 	GatewayConfigChecksumENV = "GATEWAY_CONFIG_CHECKSUM"
 
