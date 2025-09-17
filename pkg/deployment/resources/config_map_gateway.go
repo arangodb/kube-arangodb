@@ -154,18 +154,21 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName()), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgYaml),
+		utilConstants.GatewayConfigChecksum: baseGatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "cds"), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgCDSYaml),
+		utilConstants.GatewayConfigChecksum: baseGatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "lds"), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgLDSYaml),
+		utilConstants.GatewayConfigChecksum: baseGatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
 	}
