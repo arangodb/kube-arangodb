@@ -91,16 +91,12 @@ func (r *Reconciler) createGatewayConfigConditionPlan(ctx context.Context, _ k8s
 
 		if cok {
 			if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != checksum {
-				if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue || c.Hash != "" {
-					plan = append(plan, sharedReconcile.UpdateConditionActionV2("Gateway Config UpToDate", api.ConditionTypeGatewayConfig, true, "Gateway Config Propagated", "Gateway Config Propagated", checksum))
-				}
+				plan = append(plan, sharedReconcile.UpdateConditionActionV2("Gateway Config UpToDate", api.ConditionTypeGatewayConfig, true, "Gateway Config Propagated", "Gateway Config Propagated", checksum))
 				return plan
 			}
 		} else {
 			if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue || c.Hash != checksum {
-				if c, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue || c.Hash != "" {
-					plan = append(plan, sharedReconcile.UpdateConditionActionV2("Gateway Config Not UpToDate", api.ConditionTypeGatewayConfig, false, "Gateway Config Not Propagated", "Gateway Config Not Propagated", checksum))
-				}
+				plan = append(plan, sharedReconcile.UpdateConditionActionV2("Gateway Config Not UpToDate", api.ConditionTypeGatewayConfig, false, "Gateway Config Not Propagated", "Gateway Config Not Propagated", checksum))
 				return plan
 			}
 		}
