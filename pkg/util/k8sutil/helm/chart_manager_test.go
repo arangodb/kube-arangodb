@@ -97,7 +97,9 @@ func Test_Manager_Tag(t *testing.T) {
 	mgr, err := NewChartManager(context.Background(), nil, "https://arangodb-platform-dev-chart-registry.s3.amazonaws.com/index.yaml")
 	require.NoError(t, err)
 
-	repo, ok := mgr.Get("platform_test_example")
+	require.True(t, len(mgr.Repositories()) > 0)
+
+	repo, ok := mgr.Get(mgr.Repositories()[0])
 	require.True(t, ok)
 
 	repo.GetByTag("dev")
