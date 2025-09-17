@@ -486,7 +486,7 @@ func (d *Deployment) isUpToDateStatus(mode api.DeploymentMode, status api.Deploy
 		return
 	}
 
-	if !status.Conditions.Check(api.ConditionTypeGatewayConfig).Exists().IsTrue().Evaluate() {
+	if v, ok := status.Conditions.Get(api.ConditionTypeGatewayConfig); ok && !v.IsTrue() {
 		upToDate = false
 		reason = "Gateway is not propagated"
 		return
