@@ -76,6 +76,16 @@ func (g ServerGroup) MarshalJSON() ([]byte, error) {
 	return json.Marshal(g.AsRole())
 }
 
+func (g ServerGroup) RecreateAllowed() bool {
+	switch g {
+	case ServerGroupGateways, ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
+		return true
+
+	default:
+		return false
+	}
+}
+
 const (
 	ServerGroupUnknown        ServerGroup = 0
 	ServerGroupSingle         ServerGroup = 1
