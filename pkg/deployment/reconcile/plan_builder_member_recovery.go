@@ -80,6 +80,12 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 
 			memberLog := r.log.Str("id", m.ID).Str("role", group.AsRole())
 
+			if !spec.GetAllowMemberRecreation(group) {
+				// If recreate not allowed always recover member
+				plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))
+				continue
+			}
+
 			if group == api.ServerGroupDBServers && spec.GetMode() == api.DeploymentModeCluster {
 				if !agencyOK {
 					// If agency is down DBServers should not be touched.
@@ -99,10 +105,12 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 					continue
 				}
 
+				// There are more or equal alive members than current count. A member should not be recreated.
+				// Ensure that other member is not marked to removed
 				if c := spec.DBServers.GetCount(); c <= len(members)-failed {
 					// There are more or equal alive members than current count. A member should not be recreated.
 					// Ensure that other member is not marked to removed
-					if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) && spec.DBServers.GetCount() <= len(members)-marked {
+					if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) && c <= len(members)-marked {
 						continue
 					}
 				}
@@ -134,9 +142,6 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 						actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")),
 						actions.NewAction(api.ActionTypeWaitForMemberUp, group, sharedReconcile.WithPredefinedMember(api.MemberIDPreviousAction)),
 					)
-				} else {
-					memberLog.Info("Restoring old member. Recreation is disabled for group")
-					plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))
 				}
 			}
 		}
