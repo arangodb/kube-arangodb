@@ -105,14 +105,9 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 					continue
 				}
 
-				// There are more or equal alive members than current count. A member should not be recreated.
-				// Ensure that other member is not marked to removed
 				if c := spec.DBServers.GetCount(); c <= len(members)-failed {
 					// There are more or equal alive members than current count. A member should not be recreated.
-					// Ensure that other member is not marked to removed
-					if !m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) && c <= len(members)-marked {
-						continue
-					}
+					continue
 				}
 
 				if agencyState.Plan.Collections.IsDBServerPresent(state.Server(m.ID)) {
