@@ -1107,7 +1107,7 @@ func TestCreatePlan(t *testing.T) {
 			ExpectedHighPlan: []api.Action{
 				actions.NewAction(api.ActionTypeRecreateMember, api.ServerGroupAgents, sharedReconcile.WithPredefinedMember("id")),
 			},
-			ExpectedLog: "Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss",
+			ExpectedLog: "Restoring old member",
 		},
 		{
 			Name: "Coordinator in failed state",
@@ -1118,6 +1118,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Spec.Coordinators = api.ServerGroupSpec{
 					Count: util.NewType[int](2),
 				}
+				ad.Spec.Coordinators.AllowMemberRecreation = util.NewType(true)
 				ad.Status.Members.Coordinators[0].Phase = api.MemberPhaseFailed
 				ad.Status.Members.Coordinators[0].ID = "id"
 			},
@@ -1138,6 +1139,7 @@ func TestCreatePlan(t *testing.T) {
 				ad.Spec.DBServers = api.ServerGroupSpec{
 					Count: util.NewType[int](3),
 				}
+				ad.Spec.DBServers.AllowMemberRecreation = util.NewType(true)
 				ad.Status.Members.DBServers[0].Phase = api.MemberPhaseFailed
 				ad.Status.Members.DBServers[0].ID = "id"
 			},

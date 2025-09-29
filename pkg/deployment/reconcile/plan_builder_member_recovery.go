@@ -82,6 +82,7 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 
 			if !spec.GetAllowMemberRecreation(group) {
 				// If recreate not allowed always recover member
+				memberLog.Info("Restoring old member")
 				plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))
 				continue
 			}
@@ -120,24 +121,13 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 				// From here on, DBServer can be recreated.
 			}
 
-			switch group {
-			case api.ServerGroupAgents:
-				// For agents just recreate member do not rotate ID, do not remove PVC or service.
-				memberLog.Info("Restoring old member. For agency members recreation of PVC is not supported - to prevent DataLoss")
-				plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))
-			case api.ServerGroupSingle:
-				// Do not remove data for single.
-				memberLog.Info("Restoring old member. Rotation for single servers is not safe")
-				plan = append(plan, actions.NewAction(api.ActionTypeRecreateMember, group, m))
-			default:
-				if spec.GetAllowMemberRecreation(group) {
-					memberLog.Info("Creating member replacement plan because member has failed")
-					plan = append(plan,
-						actions.NewAction(api.ActionTypeRemoveMember, group, m),
-						actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")),
-						actions.NewAction(api.ActionTypeWaitForMemberUp, group, sharedReconcile.WithPredefinedMember(api.MemberIDPreviousAction)),
-					)
-				}
+			if spec.GetAllowMemberRecreation(group) {
+				memberLog.Info("Creating member replacement plan because member has failed")
+				plan = append(plan,
+					actions.NewAction(api.ActionTypeRemoveMember, group, m),
+					actions.NewAction(api.ActionTypeAddMember, group, sharedReconcile.WithPredefinedMember("")),
+					actions.NewAction(api.ActionTypeWaitForMemberUp, group, sharedReconcile.WithPredefinedMember(api.MemberIDPreviousAction)),
+				)
 			}
 		}
 	}

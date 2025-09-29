@@ -141,8 +141,8 @@ v1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -2460,8 +2460,8 @@ v1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -4697,8 +4697,8 @@ v1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -7056,8 +7056,8 @@ v1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -10508,8 +10508,8 @@ v1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -12890,8 +12890,8 @@ v1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -15120,8 +15120,8 @@ v1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -17455,8 +17455,8 @@ v2alpha1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -19774,8 +19774,8 @@ v2alpha1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -22011,8 +22011,8 @@ v2alpha1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -24370,8 +24370,8 @@ v2alpha1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -27822,8 +27822,8 @@ v2alpha1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -30204,8 +30204,8 @@ v2alpha1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
@@ -32434,8 +32434,8 @@ v2alpha1:
                 description: |-
                   AllowMemberRecreation allows to recreate member.
                   This setting changes the member recreation logic based on group:
-                  - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-                  - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+                  - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+                  - For others this value is hardcoded to `false` and the value provided in spec is ignored.
                 type: boolean
               annotations:
                 additionalProperties:
