@@ -571,6 +571,7 @@ func (i *inspectorState) copyCore() *inspectorState {
 		arangoRoutes:                  i.arangoRoutes,
 		arangoProfiles:                i.arangoProfiles,
 		arangoPlatformStorages:        i.arangoPlatformStorages,
+		arangoPlatformServices:        i.arangoPlatformServices,
 		arangoClusterSynchronizations: i.arangoClusterSynchronizations,
 		throttles:                     i.throttles.Copy(),
 		versionInfo:                   i.versionInfo,
