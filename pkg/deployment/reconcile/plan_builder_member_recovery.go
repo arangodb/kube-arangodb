@@ -61,15 +61,9 @@ func (r *Reconciler) createMemberFailedRestoreInternal(_ context.Context, _ k8su
 	for _, group := range api.AllServerGroups {
 		members := status.Members.MembersOfGroup(group)
 		failed := 0
-		marked := 0
 		for _, m := range members {
 			if m.Phase == api.MemberPhaseFailed {
 				failed++
-			}
-
-			// Find also marked to remove servers
-			if m.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
-				marked++
 			}
 		}
 
