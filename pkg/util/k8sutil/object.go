@@ -32,7 +32,6 @@ func Copy[T meta.Object](obj T) (T, bool) {
 	}
 
 	if q, ok := any(obj).(Q); ok {
-		println("OK")
 		return q.DeepCopy(), true
 	}
 
