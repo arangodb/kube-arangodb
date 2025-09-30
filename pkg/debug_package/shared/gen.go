@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -67,7 +68,11 @@ func WithKubernetesItems[T meta.Object](extract Extract[T], iterators ...Iterate
 		})
 
 		for _, item := range items {
-			if err := WithItem[T](shutdown.Context(), logger, k, files, item, iterators...); err != nil {
+			cp, ok := k8sutil.Copy(item)
+			if !ok {
+				return errors.Errorf("Unable to copy item")
+			}
+			if err := WithItem[T](shutdown.Context(), logger, k, files, cp, iterators...); err != nil {
 				return err
 			}
 		}
@@ -80,7 +85,11 @@ func WithItem[T meta.Object](ctx context.Context, logger zerolog.Logger, client 
 	files, c := WithPrefix(files, "/%s/", item.GetName())
 	defer c()
 	for _, iter := range iterators {
-		if err := iter(ctx, logger, client, files, item); err != nil {
+		cp, ok := k8sutil.Copy(item)
+		if !ok {
+			return errors.Errorf("Unable to copy item")
+		}
+		if err := iter(ctx, logger, client, files, cp); err != nil {
 			return err
 		}
 	}

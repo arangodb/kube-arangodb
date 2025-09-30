@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ const (
 	ArangoRoute                  Component = "ArangoRoute"
 	ArangoProfile                Component = "ArangoProfile"
 	ArangoPlatformStorage        Component = "ArangoPlatformStorage"
+	ArangoPlatformService        Component = "ArangoPlatformService"
 	Node                         Component = "Node"
 	PersistentVolume             Component = "PersistentVolume"
 	PersistentVolumeClaim        Component = "PersistentVolumeClaim"
@@ -52,6 +53,7 @@ func AllComponents() []Component {
 		ArangoRoute,
 		ArangoProfile,
 		ArangoPlatformStorage,
+		ArangoPlatformService,
 		Node,
 		PersistentVolume,
 		PersistentVolumeClaim,

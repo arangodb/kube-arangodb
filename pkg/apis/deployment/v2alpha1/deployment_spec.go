@@ -275,20 +275,12 @@ func (s *DeploymentSpec) GetAllowMemberRecreation(group ServerGroup) bool {
 		return false
 	}
 
-	groupSpec := s.GetServerGroupSpec(group)
-
-	switch group {
-	case ServerGroupGateways:
-		return true
-	case ServerGroupDBServers, ServerGroupCoordinators, ServerGroupSyncMasters, ServerGroupSyncWorkers:
-		if v := groupSpec.AllowMemberRecreation; v == nil {
-			return true
-		} else {
-			return *v
-		}
-	default:
+	// Ensure that by default we do not replace servers
+	if !group.RecreateAllowed() {
 		return false
 	}
+
+	return util.OptionalType(s.GetServerGroupSpec(group).AllowMemberRecreation, false)
 }
 
 // GetRestoreFrom returns the restore from string or empty string if not set

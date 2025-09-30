@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ func NewDefaultThrottle() throttle.Components {
 		30*time.Second, // ArangoRoute
 		30*time.Second, // ArangoProfile
 		30*time.Second, // ArangoPlatformStorage
+		30*time.Second, // ArangoPlatformService
 		30*time.Second, // Node
 		30*time.Second, // PV
 		15*time.Second, // PVC

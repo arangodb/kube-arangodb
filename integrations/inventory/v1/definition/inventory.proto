@@ -30,12 +30,51 @@ message Inventory {
   optional InventoryConfiguration configuration = 1;
   // ArangoDB Deployment Configuration
   optional ArangoDBConfiguration arangodb = 2;
+  // ArangoDB Platform Networking
+  optional InventoryNetworking networking = 3;
+  // ArangoDB Platform Spec
+  optional InventoryPlatform platform = 4;
 }
 
 // Envoy Configuration details
 message InventoryConfiguration {
   // Configuration hash
   string hash = 1;
+}
+
+// Platform Configuration details
+message InventoryPlatform {
+  // Defines Services definition
+  map<string, InventoryPlatformService> services = 1;
+}
+
+// Envoy Service Configuration details
+message InventoryPlatformService {
+  // Service Version
+  string version = 1;
+
+  // Defines if Service is Ready
+  bool ready = 2;
+}
+
+// Envoy Configuration details
+message InventoryNetworking {
+  // Defines Routes definition
+  map<string, InventoryNetworkingRoute> routes = 1;
+}
+
+// Envoy Route Configuration details
+message InventoryNetworkingRoute {
+  oneof route {
+    // Path Route
+    InventoryNetworkingRoutePath path = 1;
+  }
+}
+
+// Envoy Route Path Configuration details
+message InventoryNetworkingRoutePath {
+  // Path definition
+  string path = 1;
 }
 
 // ArangoDB Deployment Mode

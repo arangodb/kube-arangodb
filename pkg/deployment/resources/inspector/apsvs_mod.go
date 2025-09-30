@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,20 +27,20 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 )
 
-func (i *inspectorState) ArangoPlatformStorageModInterface() mods.ArangoPlatformStorageMods {
-	return arangoPlatformStorageMod{
+func (i *inspectorState) ArangoPlatformServiceModInterface() mods.ArangoPlatformServiceMods {
+	return arangoPlatformServiceMod{
 		i: i,
 	}
 }
 
-type arangoPlatformStorageMod struct {
+type arangoPlatformServiceMod struct {
 	i *inspectorState
 }
 
-func (p arangoPlatformStorageMod) V1Beta1() generic.ModStatusClient[*platformApi.ArangoPlatformStorage] {
-	return wrapMod[*platformApi.ArangoPlatformStorage](definitions.ArangoPlatformStorage, p.i.GetThrottles, p.clientv1beta1)
+func (p arangoPlatformServiceMod) V1Beta1() generic.ModStatusClient[*platformApi.ArangoPlatformService] {
+	return wrapMod[*platformApi.ArangoPlatformService](definitions.ArangoPlatformService, p.i.GetThrottles, p.clientv1beta1)
 }
 
-func (p arangoPlatformStorageMod) clientv1beta1() generic.ModStatusClient[*platformApi.ArangoPlatformStorage] {
-	return p.i.Client().Arango().PlatformV1beta1().ArangoPlatformStorages(p.i.Namespace())
+func (p arangoPlatformServiceMod) clientv1beta1() generic.ModStatusClient[*platformApi.ArangoPlatformService] {
+	return p.i.Client().Arango().PlatformV1beta1().ArangoPlatformServices(p.i.Namespace())
 }

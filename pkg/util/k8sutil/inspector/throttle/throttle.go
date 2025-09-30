@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,17 +32,18 @@ type Inspector interface {
 }
 
 func NewAlwaysThrottleComponents() Components {
-	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
-func NewThrottleComponents(acs, am, at, ar, ap, aps, node, pvc, pod, pv, pdb, secret, cm, service, serviceAccount, sm, endpoints time.Duration) Components {
+func NewThrottleComponents(acs, am, at, ar, ap, aps, apsvc, node, pvc, pod, pv, pdb, secret, cm, service, serviceAccount, sm, endpoints time.Duration) Components {
 	return &throttleComponents{
 		arangoClusterSynchronization: NewThrottle(acs),
 		arangoMember:                 NewThrottle(am),
 		arangoTask:                   NewThrottle(at),
 		arangoRoute:                  NewThrottle(ar),
 		arangoProfile:                NewThrottle(ap),
-		arangopPlatformStorage:       NewThrottle(aps),
+		arangoPlatformStorage:        NewThrottle(aps),
+		arangoPlatformService:        NewThrottle(apsvc),
 		node:                         NewThrottle(node),
 		persistentVolume:             NewThrottle(pv),
 		persistentVolumeClaim:        NewThrottle(pvc),
@@ -64,6 +65,7 @@ type Components interface {
 	ArangoRoute() Throttle
 	ArangoProfile() Throttle
 	ArangoPlatformStorage() Throttle
+	ArangoPlatformService() Throttle
 	Node() Throttle
 	PersistentVolume() Throttle
 	PersistentVolumeClaim() Throttle
@@ -89,7 +91,8 @@ type throttleComponents struct {
 	arangoTask                   Throttle
 	arangoRoute                  Throttle
 	arangoProfile                Throttle
-	arangopPlatformStorage       Throttle
+	arangoPlatformStorage        Throttle
+	arangoPlatformService        Throttle
 	node                         Throttle
 	persistentVolume             Throttle
 	persistentVolumeClaim        Throttle
@@ -147,7 +150,9 @@ func (t *throttleComponents) Get(c definitions.Component) Throttle {
 	case definitions.ArangoProfile:
 		return t.arangoProfile
 	case definitions.ArangoPlatformStorage:
-		return t.arangopPlatformStorage
+		return t.arangoPlatformStorage
+	case definitions.ArangoPlatformService:
+		return t.arangoPlatformService
 	case definitions.Node:
 		return t.node
 	case definitions.PersistentVolume:
@@ -182,7 +187,8 @@ func (t *throttleComponents) Copy() Components {
 		arangoTask:                   t.arangoTask.Copy(),
 		arangoRoute:                  t.arangoRoute.Copy(),
 		arangoProfile:                t.arangoProfile.Copy(),
-		arangopPlatformStorage:       t.arangopPlatformStorage.Copy(),
+		arangoPlatformStorage:        t.arangoPlatformStorage.Copy(),
+		arangoPlatformService:        t.arangoPlatformService.Copy(),
 		node:                         t.node.Copy(),
 		persistentVolume:             t.persistentVolume.Copy(),
 		persistentVolumeClaim:        t.persistentVolumeClaim.Copy(),
@@ -218,7 +224,11 @@ func (t *throttleComponents) ArangoProfile() Throttle {
 }
 
 func (t *throttleComponents) ArangoPlatformStorage() Throttle {
-	return t.arangopPlatformStorage
+	return t.arangoPlatformStorage
+}
+
+func (t *throttleComponents) ArangoPlatformService() Throttle {
+	return t.arangoPlatformService
 }
 
 func (t *throttleComponents) Node() Throttle {

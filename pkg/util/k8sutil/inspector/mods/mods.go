@@ -73,7 +73,11 @@ type ArangoMemberMods interface {
 }
 
 type ArangoPlatformStorageMods interface {
-	V1Alpha1() generic.ModStatusClient[*platformApi.ArangoPlatformStorage]
+	V1Beta1() generic.ModStatusClient[*platformApi.ArangoPlatformStorage]
+}
+
+type ArangoPlatformServiceMods interface {
+	V1Beta1() generic.ModStatusClient[*platformApi.ArangoPlatformService]
 }
 
 type ArangoTaskMods interface {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,16 +28,16 @@ import (
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 )
 
-func (p *arangoPlatformStoragesInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := inspectorConstants.ArangoPlatformStorageGKv1Beta1()
+func (p *arangoPlatformServicesInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
+	g := inspectorConstants.ArangoPlatformServiceGKv1Beta1()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case inspectorConstants.ArangoPlatformStorageVersionV1Beta1, DefaultVersion:
+		case inspectorConstants.ArangoPlatformServiceVersionV1Beta1, DefaultVersion:
 			if p.v1beta1 == nil || p.v1beta1.err != nil {
 				return nil, false
 			}
-			return anonymous.NewAnonymous[*platformApi.ArangoPlatformStorage](g, p.state.arangoPlatformStorages.v1beta1, p.state.ArangoPlatformStorageModInterface().V1Beta1()), true
+			return anonymous.NewAnonymous[*platformApi.ArangoPlatformService](g, p.state.arangoPlatformServices.v1beta1, p.state.ArangoPlatformServiceModInterface().V1Beta1()), true
 		}
 	}
 

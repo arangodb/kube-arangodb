@@ -34,6 +34,7 @@ import (
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	pbInventoryV1 "github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -48,7 +49,7 @@ import (
 )
 
 func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, configMaps generic.ModClient[*core.ConfigMap]) error {
-	cfg, err := r.renderGatewayConfig(cachedStatus)
+	inventory, cfg, err := r.renderGatewayConfig(cachedStatus)
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to generate gateway config"))
 	}
@@ -112,6 +113,11 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
 	}
 
+	inventory.Arangodb = pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus())
+	inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
+		Hash: baseGatewayCfgYamlChecksum,
+	}
+
 	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
 		Type:  util.NewType(gateway.ConfigDestinationTypeStatic),
 		Match: util.NewType(gateway.ConfigMatchPath),
@@ -122,13 +128,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		Static: &gateway.ConfigDestinationStatic[*pbInventoryV1.Inventory]{
-			Code: util.NewType[uint32](200),
-			Response: &pbInventoryV1.Inventory{
-				Configuration: &pbInventoryV1.InventoryConfiguration{
-					Hash: baseGatewayCfgYamlChecksum,
-				},
-				Arangodb: pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus()),
-			},
+			Code:       util.NewType[uint32](200),
+			Response:   inventory,
 			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
 			Options: []util.Mod[protojson.MarshalOptions]{
 				ugrpc.WithUseProtoNames(true),
@@ -223,7 +224,12 @@ func (r *Resources) ensureGatewayConfigMap(ctx context.Context, cachedStatus ins
 	return nil
 }
 
-func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspector) (gateway.Config, error) {
+func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspector) (*pbInventoryV1.Inventory, gateway.Config, error) {
+	var inventory pbInventoryV1.Inventory
+
+	inventory.Networking = &pbInventoryV1.InventoryNetworking{}
+	inventory.Platform = &pbInventoryV1.InventoryPlatform{}
+
 	deploymentName := r.context.GetAPIObject().GetName()
 
 	log := r.log.Str("section", "gateway-config-render")
@@ -233,7 +239,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 
 	svc, svcExist := cachedStatus.Service().V1().GetSimple(svcServingName)
 	if !svcExist {
-		return gateway.Config{}, errors.Errorf("Service %s not found", svcServingName)
+		return nil, gateway.Config{}, errors.Errorf("Service %s not found", svcServingName)
 	}
 
 	var cfg gateway.Config
@@ -299,6 +305,8 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 	// Check ArangoRoutes
 	cfg.Destinations = gateway.ConfigDestinations{}
 	if c, err := cachedStatus.ArangoRoute().V1Beta1(); err == nil {
+		var routes = make(map[string]*pbInventoryV1.InventoryNetworkingRoute)
+
 		if err := c.Iterate(func(at *networkingApi.ArangoRoute) error {
 			log := log.Str("ArangoRoute", at.GetName())
 			if !at.Status.Conditions.IsTrue(networkingApi.ReadyCondition) {
@@ -357,6 +365,14 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					utilConstants.EnvoyRouteHeader: at.GetName(),
 				}
 				cfg.Destinations[target.Route.Path] = dest
+
+				routes[at.GetName()] = &pbInventoryV1.InventoryNetworkingRoute{
+					Route: &pbInventoryV1.InventoryNetworkingRoute_Path{
+						Path: &pbInventoryV1.InventoryNetworkingRoutePath{
+							Path: target.Route.Path,
+						},
+					},
+				}
 			}
 
 			return nil
@@ -364,9 +380,34 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 		}, func(at *networkingApi.ArangoRoute) bool {
 			return at.Spec.GetDeployment() == deploymentName
 		}); err != nil {
-			return gateway.Config{}, errors.Wrapf(err, "Unable to iterate over ArangoRoutes")
+			return nil, gateway.Config{}, errors.Wrapf(err, "Unable to iterate over ArangoRoutes")
 		}
+
+		inventory.Networking.Routes = routes
+	}
+	if c, err := cachedStatus.ArangoPlatformService().V1Beta1(); err == nil {
+		var services = make(map[string]*pbInventoryV1.InventoryPlatformService)
+
+		if err := c.Iterate(func(at *platformApi.ArangoPlatformService) error {
+			var svc pbInventoryV1.InventoryPlatformService
+
+			svc.Ready = at.Status.Conditions.IsTrue(platformApi.ReadyCondition)
+			if r := at.Status.ChartInfo; r != nil {
+				if z := r.Details; z != nil {
+					svc.Version = z.Version
+				}
+			}
+
+			services[at.GetName()] = &svc
+			return nil
+		}, func(at *platformApi.ArangoPlatformService) bool {
+			return at.Spec.Deployment.GetName() == deploymentName
+		}); err != nil {
+			return nil, gateway.Config{}, errors.Wrapf(err, "Unable to iterate over ArangoPlatformServices")
+		}
+
+		inventory.Platform.Services = services
 	}
 
-	return cfg, nil
+	return &inventory, cfg, nil
 }

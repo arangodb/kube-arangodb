@@ -126,6 +126,28 @@ rules:
       - "get"
       - "list"
       - "watch"
+  - apiGroups:
+      - "networking.arangodb.com"
+    resources:
+      - "arangoroutes"
+      - "arangoroutes/status"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
+  - apiGroups:
+      - "platform.arangodb.com"
+    resources:
+      - "arangoplatformstorages"
+      - "arangoplatformstorages/status"
+      - "arangoplatformcharts"
+      - "arangoplatformcharts/status"
+      - "arangoplatformservices"
+      - "arangoplatformservices/status"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
 {{- if .Values.rbac.extensions.monitoring }}
   - apiGroups:
       - "monitoring.coreos.com"

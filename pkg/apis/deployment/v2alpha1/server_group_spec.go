@@ -190,8 +190,8 @@ type ServerGroupSpec struct {
 	ExternalPortEnabled *bool `json:"externalPortEnabled,omitempty"`
 	// AllowMemberRecreation allows to recreate member.
 	// This setting changes the member recreation logic based on group:
-	// - For Sync Masters, Sync Workers, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `true`)
-	// - For Agents and Single this value is hardcoded to `false` and the value provided in spec is ignored.
+	// - For Sync Masters, Sync Workers, Gateways, Coordinator and DB-Servers it determines if a member can be recreated in case of failure (default `false`)
+	// - For others this value is hardcoded to `false` and the value provided in spec is ignored.
 	AllowMemberRecreation *bool `json:"allowMemberRecreation,omitempty"`
 	// TerminationGracePeriodSeconds override default TerminationGracePeriodSeconds for pods - via silent rotation
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`

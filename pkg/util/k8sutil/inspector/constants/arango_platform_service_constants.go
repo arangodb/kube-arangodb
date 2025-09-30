@@ -24,19 +24,22 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
+	platformApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 )
 
 // ArangoPlatformService
 const (
-	ArangoPlatformServiceGroup           = platform.ArangoPlatformGroupName
-	ArangoPlatformServiceResource        = platform.ArangoPlatformServiceResourcePlural
-	ArangoPlatformServiceKind            = platform.ArangoPlatformServiceResourceKind
-	ArangoPlatformServiceVersionV1Alpha1 = platformApi.ArangoPlatformVersion
+	ArangoPlatformServiceGroup    = platform.ArangoPlatformGroupName
+	ArangoPlatformServiceResource = platform.ArangoPlatformServiceResourcePlural
+	ArangoPlatformServiceKind     = platform.ArangoPlatformServiceResourceKind
+	// deprecated: Use v1beta1 instead
+	ArangoPlatformServiceVersionV1Alpha1 = platformApiv1alpha1.ArangoPlatformVersion
+	ArangoPlatformServiceVersionV1Beta1  = platformApi.ArangoPlatformVersion
 )
 
 func init() {
-	register[*platformApi.ArangoPlatformService](ArangoPlatformServiceGKv1Alpha1(), ArangoPlatformServiceGRv1Alpha1())
+	register[*platformApi.ArangoPlatformService](ArangoPlatformServiceGKv1Beta1(), ArangoPlatformServiceGRv1Beta1())
 }
 
 func ArangoPlatformServiceGK() schema.GroupKind {
@@ -46,11 +49,20 @@ func ArangoPlatformServiceGK() schema.GroupKind {
 	}
 }
 
+// deprecated: Use v1beta1 instead
 func ArangoPlatformServiceGKv1Alpha1() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   ArangoPlatformServiceGroup,
 		Kind:    ArangoPlatformServiceKind,
 		Version: ArangoPlatformServiceVersionV1Alpha1,
+	}
+}
+
+func ArangoPlatformServiceGKv1Beta1() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   ArangoPlatformServiceGroup,
+		Kind:    ArangoPlatformServiceKind,
+		Version: ArangoPlatformServiceVersionV1Beta1,
 	}
 }
 
@@ -61,10 +73,19 @@ func ArangoPlatformServiceGR() schema.GroupResource {
 	}
 }
 
+// deprecated: Use v1beta1 instead
 func ArangoPlatformServiceGRv1Alpha1() schema.GroupVersionResource {
 	return schema.GroupVersionResource{
 		Group:    ArangoPlatformServiceGroup,
 		Resource: ArangoPlatformServiceResource,
 		Version:  ArangoPlatformServiceVersionV1Alpha1,
+	}
+}
+
+func ArangoPlatformServiceGRv1Beta1() schema.GroupVersionResource {
+	return schema.GroupVersionResource{
+		Group:    ArangoPlatformServiceGroup,
+		Resource: ArangoPlatformServiceResource,
+		Version:  ArangoPlatformServiceVersionV1Beta1,
 	}
 }
