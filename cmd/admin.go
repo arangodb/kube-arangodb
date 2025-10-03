@@ -29,9 +29,8 @@ import (
 	"net"
 	goHttp "net/http"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 	core "k8s.io/api/core/v1"
@@ -57,10 +56,14 @@ const (
 	ArgDeploymentName = "deployment-name"
 	ArgMemberName     = "member-name"
 	ArgAcceptedCode   = "accepted-code"
+	ArgTimeout        = "timeout"
 )
 
 func init() {
 	cmdMain.AddCommand(cmdAdmin)
+	cmdAdminAgencyDump.PersistentFlags().DurationP(ArgTimeout, "t", time.Minute,
+		"timeout of the request")
+
 	cmdAdmin.AddCommand(cmdAdminAgency)
 	cmdAdmin.AddCommand(cmdAdminMember)
 
@@ -126,6 +129,14 @@ var cmdAdminAgencyState = &cobra.Command{
 	RunE:  cmdAdminGetAgencyStateE,
 }
 
+func extractTimeout(cmd *cobra.Command) (context.Context, context.CancelFunc) {
+	if v, err := cmd.PersistentFlags().GetDuration(ArgTimeout); err == nil {
+		return context.WithTimeout(cmd.Context(), v)
+	}
+
+	return context.WithCancel(cmd.Context())
+}
+
 func cmdGetAdminMemberRequestGetE(cmd *cobra.Command, args []string) error {
 	deploymentName, err := cmd.Flags().GetString(ArgDeploymentName)
 	if err != nil {
@@ -139,7 +150,10 @@ func cmdGetAdminMemberRequestGetE(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	ctx := getInterruptionContext()
+
+	ctx, c := extractTimeout(cmd)
+	defer c()
+
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
 		logger.Err(err).Error("failed to create basic data for the connection")
@@ -175,7 +189,10 @@ func cmdAdminGetAgencyStateE(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	ctx := getInterruptionContext()
+
+	ctx, c := extractTimeout(cmd)
+	defer c()
+
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
 		logger.Err(err).Error("failed to create basic data for the connection")
@@ -220,7 +237,10 @@ func cmdAdminGetAgencyDumpE(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	ctx := getInterruptionContext()
+
+	ctx, c := extractTimeout(cmd)
+	defer c()
+
 	d, certCA, auth, err := getDeploymentAndCredentials(ctx, deploymentName)
 	if err != nil {
 		logger.Err(err).Error("failed to create basic data for the connection")
@@ -496,19 +516,4 @@ func getDeployment(ctx context.Context, namespace, deplName string) (api.ArangoD
 	}
 
 	return api.ArangoDeployment{}, errors.New(message)
-}
-
-// getInterruptionContext returns context which will be cancelled when the process is interrupted.
-func getInterruptionContext() context.Context {
-	c := make(chan os.Signal, 1)
-
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		// Block until SIGTERM or SIGINT occurs.
-		<-c
-		cancel()
-	}()
-
-	return ctx
 }
