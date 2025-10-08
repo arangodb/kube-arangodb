@@ -10,7 +10,7 @@ title: ArangoPlatformChart V1Beta1
 
 ### .spec.definition
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/chart_spec.go#L32)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/platform/v1beta1/chart_spec.go#L32)</sup>
 
 Definition keeps the Chart base64 encoded definition
 
@@ -18,7 +18,7 @@ Definition keeps the Chart base64 encoded definition
 
 ### .spec.overrides
 
-Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.0/pkg/apis/platform/v1beta1/chart_spec.go#L36)</sup>
+Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/platform/v1beta1/chart_spec.go#L36)</sup>
 
 Overrides keeps the Chart overrides
 

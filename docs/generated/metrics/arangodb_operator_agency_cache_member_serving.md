@@ -12,8 +12,8 @@ Determines if agency member is reachable
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| namespace | Deployment Namespace |
-| name | Deployment Name |
-| agent | Agent ID |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| namespace | Deployment Namespace | * |
+| name | Deployment Name | * |
+| agent | Agent ID | * |

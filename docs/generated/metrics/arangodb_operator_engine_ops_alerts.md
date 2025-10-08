@@ -12,10 +12,10 @@ Counter for actions which requires ops attention
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| namespace | Deployment Namespace |
-| name | Deployment Name |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| namespace | Deployment Namespace | * |
+| name | Deployment Name | * |
 
 
 ## Alerting

@@ -12,6 +12,6 @@ Duration of inspected ConfigMaps by Deployment in seconds
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| deployment | Deployment Name |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| deployment | Deployment Name | * |

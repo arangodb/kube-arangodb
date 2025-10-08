@@ -12,7 +12,7 @@ Determines if rebalancer is enabled
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| namespace | Deployment Namespace |
-| name | Deployment Name |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| namespace | Deployment Namespace | * |
+| name | Deployment Name | * |

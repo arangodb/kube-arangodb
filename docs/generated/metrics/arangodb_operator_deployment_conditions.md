@@ -12,8 +12,8 @@ Representation of the ArangoDeployment condition state (true/false)
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| namespace | Deployment Namespace |
-| name | Deployment Name |
-| condition | Condition Name |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| namespace | Deployment Namespace | * |
+| name | Deployment Name | * |
+| condition | Condition Name | SpecAccepted&lt;br/&gt;SpecPropagated&lt;br/&gt;UpToDate |

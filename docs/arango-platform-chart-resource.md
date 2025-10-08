@@ -6,4 +6,4 @@ title: ArangoPlatformChart
 
 # ArangoPlatformChart Custom Resource
 
-[Full CustomResourceDefinition reference ->](./api/ArangoPlatformChart.V1Alpha1.md)
+[Full CustomResourceDefinition reference ->](./api/ArangoPlatformChart.V1Beta1.md)
