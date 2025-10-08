@@ -12,6 +12,6 @@ Number of the processed objects
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| operator_name | Operator Name |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| operator_name | Operator Name | * |

@@ -9,4 +9,4 @@ parent: Integration Sidecars
 
 Definitions:
 
-- [Service](https://github.com/arangodb/kube-arangodb/blob/1.2.49/integrations/meta/v1/definition/definition.proto)
+- [Service](https://github.com/arangodb/kube-arangodb/blob/1.3.0/integrations/meta/v1/definition/definition.proto)

@@ -12,9 +12,9 @@ Number of assertions invoked during Operator runtime
 
 ## Labels
 
-| Label | Description |
-|:---:|:--- |
-| key | Assertion Key |
+| Label | Description | Values |
+|:---:|:--- |:---:|
+| key | Assertion Key | * |
 
 
 ## Alerting
