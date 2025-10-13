@@ -30,7 +30,7 @@ func license() (*cobra.Command, error) {
 	var cmd cobra.Command
 
 	cmd.Use = "license"
-	cmd.Short = "License Package related operations"
+	cmd.Short = "License related Operations"
 
 	if err := cli.RegisterFlags(&cmd); err != nil {
 		return nil, err
@@ -38,6 +38,9 @@ func license() (*cobra.Command, error) {
 
 	if err := withRegisterCommand(&cmd,
 		licenseInventory,
+		licenseSecret,
+		licenseActivate,
+		licenseGenerate,
 	); err != nil {
 		return nil, err
 	}

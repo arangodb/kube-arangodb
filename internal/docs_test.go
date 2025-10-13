@@ -78,8 +78,8 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 
 		els += 1
 
-		write(t, out, "### %s\n\n", el.Path)
-		write(t, out, "Type: `%s` <sup>[\\[ref\\]](%s/%s#L%d)</sup>\n\n", el.Type, repositoryPath, el.File, el.Line)
+		writef(t, out, "### %s\n\n", el.Path)
+		writef(t, out, "Type: `%s` <sup>[\\[ref\\]](%s/%s#L%d)</sup>\n\n", el.Type, repositoryPath, el.File, el.Line)
 
 		if grade := el.Grade; grade != nil {
 			switch grade.Grade {
@@ -88,7 +88,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 				write(t, out, "> ***DEPRECATED***\n")
 				write(t, out, "> \n")
 				for _, line := range grade.Message {
-					write(t, out, "> **%s**\n", line)
+					writef(t, out, "> **%s**\n", line)
 				}
 				write(t, out, "\n")
 			case DocDefinitionGradeAlpha:
@@ -96,7 +96,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 				write(t, out, "> ***ALPHA***\n")
 				write(t, out, "> \n")
 				for _, line := range grade.Message {
-					write(t, out, "> **%s**\n", line)
+					writef(t, out, "> **%s**\n", line)
 				}
 				write(t, out, "\n")
 			case DocDefinitionGradeBeta:
@@ -104,7 +104,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 				write(t, out, "> ***BETA***\n")
 				write(t, out, "> \n")
 				for _, line := range grade.Message {
-					write(t, out, "> **%s**\n", line)
+					writef(t, out, "> **%s**\n", line)
 				}
 				write(t, out, "\n")
 			}
@@ -112,20 +112,20 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 
 		if d := el.Important; d != nil {
 			write(t, out, "> [!IMPORTANT]\n")
-			write(t, out, "> **%s**\n\n", *d)
+			writef(t, out, "> **%s**\n\n", *d)
 		}
 
 		if d := el.Required; d != nil {
 			if *d == "" {
 				write(t, out, "This field is **required**\n\n")
 			} else {
-				write(t, out, "This field is **required**: %s\n\n", *d)
+				writef(t, out, "This field is **required**: %s\n\n", *d)
 			}
 		}
 
 		if len(el.Docs) > 0 {
 			for _, doc := range el.Docs {
-				write(t, out, "%s\n", doc)
+				writef(t, out, "%s\n", doc)
 			}
 			write(t, out, "\n")
 		}
@@ -136,9 +136,9 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 			for _, link := range el.Links {
 				z := goStrings.Split(link, "|")
 				if len(z) == 1 {
-					write(t, out, "* [Documentation](%s)\n", z[0])
+					writef(t, out, "* [Documentation](%s)\n", z[0])
 				} else if len(z) == 2 {
-					write(t, out, "* [%s](%s)\n", z[0], z[1])
+					writef(t, out, "* [%s](%s)\n", z[0], z[1])
 				} else {
 					require.Fail(t, "Invalid link format")
 				}
@@ -151,7 +151,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 			write(t, out, "Example:\n")
 			write(t, out, "```yaml\n")
 			for _, example := range el.Example {
-				write(t, out, "%s\n", example)
+				writef(t, out, "%s\n", example)
 			}
 			write(t, out, "```\n\n")
 		}
@@ -167,9 +167,9 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 				}
 
 				if len(z) == 1 {
-					write(t, out, "* %s\n", snip)
+					writef(t, out, "* %s\n", snip)
 				} else if len(z) == 2 {
-					write(t, out, "* %s - %s\n", snip, z[1])
+					writef(t, out, "* %s - %s\n", snip, z[1])
 				} else {
 					require.Fail(t, "Invalid enum format")
 				}
@@ -177,7 +177,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 			write(t, out, "\n")
 		} else {
 			if d := el.Default; d != nil {
-				write(t, out, "Default Value: `%s`\n\n", *d)
+				writef(t, out, "Default Value: `%s`\n\n", *d)
 			}
 		}
 
@@ -185,7 +185,7 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 			if *d == "" {
 				write(t, out, "This field is **immutable**\n\n")
 			} else {
-				write(t, out, "This field is **immutable**: %s\n\n", *d)
+				writef(t, out, "This field is **immutable**: %s\n\n", *d)
 			}
 		}
 	}
@@ -545,10 +545,10 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 				"title":  objName,
 				"parent": apiIndexPageTitle,
 			})
-			write(t, out, "# API Reference for %s\n\n", objName)
+			writef(t, out, "# API Reference for %s\n\n", objName)
 
 			util.IterateSorted(renderSections, func(name string, section []byte) {
-				write(t, out, "## %s\n\n", util.BoolSwitch(name == "", "Object", name))
+				writef(t, out, "## %s\n\n", util.BoolSwitch(name == "", "Object", name))
 
 				_, err = out.Write(section)
 				require.NoError(t, err)
@@ -558,7 +558,12 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 	return outPaths
 }
 
-func write(t *testing.T, out io.Writer, format string, args ...interface{}) {
+func write(t *testing.T, out io.Writer, format string) {
+	_, err := out.Write([]byte(format))
+	require.NoError(t, err)
+}
+
+func writef(t *testing.T, out io.Writer, format string, args ...interface{}) {
 	_, err := out.Write([]byte(fmt.Sprintf(format, args...)))
 	require.NoError(t, err)
 }

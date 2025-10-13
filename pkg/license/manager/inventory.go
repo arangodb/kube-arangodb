@@ -18,34 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package manager
 
-import (
-	"github.com/spf13/cobra"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-)
-
-func pkg() (*cobra.Command, error) {
-	var cmd cobra.Command
-
-	cmd.Use = "package"
-	cmd.Short = "Release Package related operations"
-
-	if err := cli.RegisterFlags(&cmd); err != nil {
-		return nil, err
-	}
-
-	if err := withRegisterCommand(&cmd,
-		packageDump,
-		packageInstall,
-		packageExport,
-		packageImport,
-		packageMerge,
-		packageRegistry,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
-}
+type Inventory struct{}

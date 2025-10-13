@@ -20,7 +20,11 @@
 
 package pack
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 type Proto struct {
 	Charts ProtoCharts `json:"charts,omitempty"`
@@ -36,17 +40,21 @@ type ProtoChart struct {
 	Images ProtoImages `json:"images,omitempty"`
 }
 
+type ProtoValues struct {
+	Images ProtoImages `json:"images,omitempty"`
+}
+
 type ProtoImages map[string]ProtoImage
 
 type ProtoImage struct {
 	Registry *string `json:"registry,omitempty"`
-	Image    string  `json:"image"`
-	Tag      string  `json:"tag"`
-	Kind     string  `json:"kind,omitempty"`
+	Image    *string `json:"image,omitempty"`
+	Tag      *string `json:"tag,omitempty"`
+	Kind     *string `json:"kind,omitempty"`
 }
 
 func (p ProtoImage) IsTest() bool {
-	return p.Kind == "Test"
+	return util.OptionalType(p.Kind, "") == "Test"
 }
 
 func (p ProtoImage) GetShortImage() string {

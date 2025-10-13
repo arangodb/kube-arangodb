@@ -22,6 +22,9 @@ package platform
 
 import (
 	"os"
+	"time"
+
+	"github.com/google/uuid"
 
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -45,6 +48,24 @@ var (
 		Persistent:  true,
 	}
 
+	flagSecret = cli.Flag[string]{
+		Name:        "secret",
+		Description: "Kubernetes Secret Name",
+		Default:     "",
+		Check: func(in string) error {
+			if in == "" {
+				return nil
+			}
+
+			if err := sharedApi.IsValidName(in); err != nil {
+				return errors.Errorf("Invalid deployment name: %s", err.Error())
+			}
+
+			return nil
+		},
+		Persistent: true,
+	}
+
 	flagPlatformName = cli.Flag[string]{
 		Name:        "platform.name",
 		Description: "Kubernetes Platform Name (name of the ArangoDeployment)",
@@ -53,6 +74,68 @@ var (
 		Check: func(in string) error {
 			if err := sharedApi.IsValidName(in); err != nil {
 				return errors.Errorf("Invalid deployment name: %s", err.Error())
+			}
+
+			return nil
+		},
+	}
+
+	flagLicenseManagerEndpoint = cli.Flag[string]{
+		Name:        "license.endpoint",
+		Description: "LicenseManager Endpoint",
+		Default:     "license.arangodb.com",
+		Persistent:  false,
+		Check: func(in string) error {
+			return nil
+		},
+	}
+
+	flagDeploymentID = cli.Flag[string]{
+		Name:        "deployment.id",
+		Description: "Deployment ID",
+		Default:     "",
+		Persistent:  false,
+		Check: func(in string) error {
+			return nil
+		},
+	}
+
+	flagLicenseManagerClientID = cli.Flag[string]{
+		Name:        "license.client.id",
+		Description: "LicenseManager Client ID",
+		Default:     "",
+		Persistent:  false,
+		Check: func(in string) error {
+			if in == "" {
+				return errors.New("Platform Client ID is required")
+			}
+
+			return nil
+		},
+	}
+
+	flagLicenseManagerStages = cli.Flag[[]string]{
+		Name:        "license.client.stage",
+		Description: "LicenseManager Stages",
+		Default:     []string{"prd"},
+		Persistent:  false,
+		Check: func(in []string) error {
+			if len(in) == 0 {
+				return errors.New("At least one stage needs to be defined")
+			}
+
+			return nil
+		},
+	}
+
+	flagLicenseManagerClientSecret = cli.Flag[string]{
+		Name:        "license.client.secret",
+		Description: "LicenseManager Client Secret",
+		Default:     "",
+		Persistent:  false,
+		Check: func(in string) error {
+			if _, err := uuid.Parse(in); err != nil {
+				return err
 			}
 
 			return nil
@@ -141,5 +224,18 @@ var (
 		Name:        "registry.docker.endpoint",
 		Description: "List of boosted registries",
 		Default:     nil,
+	}
+
+	flagActivateInterval = cli.Flag[time.Duration]{
+		Name:        "license.interval",
+		Description: "Interval of the license synchronization",
+		Default:     0,
+		Persistent:  false,
+		Check: func(in time.Duration) error {
+			if in < 0 {
+				return errors.New("License Generation Interval cannot be negative")
+			}
+			return nil
+		},
 	}
 )

@@ -23,29 +23,24 @@ package platform
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/license/manager"
 )
 
-func pkg() (*cobra.Command, error) {
-	var cmd cobra.Command
-
-	cmd.Use = "package"
-	cmd.Short = "Release Package related operations"
-
-	if err := cli.RegisterFlags(&cmd); err != nil {
+func getManagerClient(cmd *cobra.Command) (manager.Client, error) {
+	endpoint, err := flagLicenseManagerEndpoint.Get(cmd)
+	if err != nil {
 		return nil, err
 	}
 
-	if err := withRegisterCommand(&cmd,
-		packageDump,
-		packageInstall,
-		packageExport,
-		packageImport,
-		packageMerge,
-		packageRegistry,
-	); err != nil {
+	cid, err := flagLicenseManagerClientID.Get(cmd)
+	if err != nil {
 		return nil, err
 	}
 
-	return &cmd, nil
+	cs, err := flagLicenseManagerClientSecret.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	return manager.NewClient(endpoint, cid, cs)
 }
