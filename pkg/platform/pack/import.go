@@ -103,10 +103,6 @@ func (i *importPackageSet) run(p Proto) executor.RunFunc {
 			h.RunAsync(ctx, i.importManifest(src, v))
 		}
 
-		type valuesInterface struct {
-			Images ProtoImages `json:"images,omitempty"`
-		}
-
 		h.WaitForSubThreads(t)
 
 		for k, v := range p.Charts {
@@ -120,7 +116,7 @@ func (i *importPackageSet) run(p Proto) executor.RunFunc {
 			pkgS.Chart = data
 			pkgS.Version = v.Version
 
-			var versions valuesInterface
+			var versions ProtoValues
 
 			versions.Images = map[string]ProtoImage{}
 

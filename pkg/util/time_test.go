@@ -18,34 +18,24 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package util
 
 import (
-	"github.com/spf13/cobra"
+	"encoding/json"
+	"testing"
+	"time"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/stretchr/testify/require"
 )
 
-func pkg() (*cobra.Command, error) {
-	var cmd cobra.Command
+func Test_Duration_Parser(t *testing.T) {
+	w, err := json.Marshal(Duration(time.Hour))
+	require.NoError(t, err)
+	require.Equal(t, `"3600s"`, string(w))
 
-	cmd.Use = "package"
-	cmd.Short = "Release Package related operations"
+	var q Duration
 
-	if err := cli.RegisterFlags(&cmd); err != nil {
-		return nil, err
-	}
+	require.NoError(t, json.Unmarshal(w, &q))
 
-	if err := withRegisterCommand(&cmd,
-		packageDump,
-		packageInstall,
-		packageExport,
-		packageImport,
-		packageMerge,
-		packageRegistry,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
+	require.Equal(t, Duration(time.Hour), q)
 }

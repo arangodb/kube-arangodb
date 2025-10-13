@@ -18,34 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package client
 
 import (
-	"github.com/spf13/cobra"
+	"context"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
-func pkg() (*cobra.Command, error) {
-	var cmd cobra.Command
+type ClusterID struct {
+	Id string `json:"id"`
+}
 
-	cmd.Use = "package"
-	cmd.Short = "Release Package related operations"
-
-	if err := cli.RegisterFlags(&cmd); err != nil {
-		return nil, err
-	}
-
-	if err := withRegisterCommand(&cmd,
-		packageDump,
-		packageInstall,
-		packageExport,
-		packageImport,
-		packageMerge,
-		packageRegistry,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
+func (c *client) ClusterID(ctx context.Context) (ClusterID, error) {
+	return arangod.GetRequest[ClusterID](ctx, c.c, "_admin", "deployment", "id").AcceptCode(200).Response()
 }

@@ -44,6 +44,7 @@ func installer() (*cobra.Command, error) {
 
 	if err := withRegisterCommand(&cmd,
 		pkg,
+		license,
 	); err != nil {
 		return nil, err
 	}
