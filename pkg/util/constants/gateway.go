@@ -35,6 +35,7 @@ const (
 
 	GatewayConfigChecksum    = "gateway.checksum"
 	GatewayConfigFileName    = "gateway.yaml"
+	InventoryFileName        = "inventory.json"
 	GatewayConfigChecksumENV = "GATEWAY_CONFIG_CHECKSUM"
 
 	GatewayVolumeMountDir = "/etc/gateway/core/"

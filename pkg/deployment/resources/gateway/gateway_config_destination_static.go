@@ -29,6 +29,19 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
+type ConfigDestinationFileInterface interface {
+	StaticResponse() (string, uint32)
+}
+
+type ConfigDestinationFile struct {
+	File string
+	Code uint32
+}
+
+func (c ConfigDestinationFile) StaticResponse() (string, uint32) {
+	return c.File, c.Code
+}
+
 type ConfigDestinationStaticInterface interface {
 	Validate() error
 	StaticResponse() ([]byte, uint32, error)
