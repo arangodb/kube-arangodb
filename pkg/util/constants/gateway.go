@@ -53,4 +53,6 @@ const (
 
 	MemberAuthVolumeMountDir = "/etc/gateway/auth/"
 	MemberAuthVolumeName     = "member-auth"
+
+	MaxInventorySize uint32 = 4 * 1024 * 1024
 )

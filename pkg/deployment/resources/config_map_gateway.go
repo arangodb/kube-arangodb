@@ -147,13 +147,13 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway inventory"))
 	}
 
-	inventoryChecksum := util.SHA256FromStringArray(gatewayCfgYamlChecksum, util.SHA256(inventoryData))
+	gatewayChecksum := util.SHA256FromStringArray(gatewayCfgYamlChecksum, util.SHA256(inventoryData))
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName()), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgYaml),
 		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
 		utilConstants.InventoryFileName:     string(inventoryData),
-		utilConstants.InventoryChecksum:     inventoryChecksum,
+		utilConstants.InventoryChecksum:     gatewayChecksum,
 	}); err != nil {
 		return err
 	}

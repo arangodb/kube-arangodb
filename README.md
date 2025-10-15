@@ -231,6 +231,7 @@ Flags:
       --server.tls-secret-name string                          Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)
       --shutdown.delay duration                                The delay before running shutdown handlers (default 2s)
       --shutdown.timeout duration                              Timeout for shutdown handlers (default 30s)
+      --threads int                                            Number of the worker threads (default 16)
       --timeout.agency duration                                The Agency read timeout (default 10s)
       --timeout.arangod duration                               The request timeout to the ArangoDB (default 5s)
       --timeout.arangod-check duration                         The version check request timeout to the ArangoDB (default 2s)

@@ -57,6 +57,10 @@ func (r *rateLimiter) Accept() {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
+	if r.qps < 1 {
+		return
+	}
+
 	now := r.clock.Now()
 	r.clock.Sleep(r.limiter.ReserveN(now, 1).DelayFrom(now))
 }
@@ -68,6 +72,10 @@ func (r *rateLimiter) QPS() float32 {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
+	if r.qps < 1 {
+		return 0
+	}
+
 	return r.qps
 }
 
@@ -75,12 +83,20 @@ func (r *rateLimiter) Wait(ctx context.Context) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
+	if r.qps < 1 {
+		return nil
+	}
+
 	return r.limiter.Wait(ctx)
 }
 
 func (r *rateLimiter) TryAccept() bool {
 	r.lock.Lock()
 	defer r.lock.Unlock()
+
+	if r.qps < 1 {
+		return true
+	}
 
 	return r.limiter.AllowN(r.clock.Now(), 1)
 }
