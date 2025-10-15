@@ -147,26 +147,27 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway inventory"))
 	}
 
-	gatewayChecksum := util.SHA256FromStringArray(gatewayCfgYamlChecksum, util.SHA256(inventoryData))
+	inventoryChecksum := util.SHA256FromStringArray(gatewayCfgYamlChecksum, util.SHA256(inventoryData))
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName()), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgYaml),
-		utilConstants.GatewayConfigChecksum: gatewayChecksum,
+		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
 		utilConstants.InventoryFileName:     string(inventoryData),
+		utilConstants.InventoryChecksum:     inventoryChecksum,
 	}); err != nil {
 		return err
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "cds"), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgCDSYaml),
-		utilConstants.GatewayConfigChecksum: gatewayChecksum,
+		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "lds"), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgLDSYaml),
-		utilConstants.GatewayConfigChecksum: gatewayChecksum,
+		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
 	}
