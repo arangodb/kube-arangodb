@@ -187,6 +187,7 @@ var (
 	platformProbe              probe.ReadyProbe
 	schedulerProbe             probe.ReadyProbe
 	k2KClusterSyncProbe        probe.ReadyProbe
+	threads                    int
 )
 
 func init() {
@@ -258,6 +259,7 @@ func init() {
 	f.StringArrayVar(&metricsOptions.excludedMetricPrefixes, "metrics.excluded-prefixes", nil, "List of the excluded metrics prefixes")
 	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Discover Operator Image from Pod Status by default. When disabled Pod Spec is used.")
 	f.DurationVar(&operatorImageDiscovery.timeout, "image.discovery.timeout", time.Minute, "Timeout for image discovery process")
+	f.IntVar(&threads, "threads", 16, "Number of the worker threads")
 	if err := logging.Init(&cmdMain); err != nil {
 		panic(err.Error())
 	}
@@ -607,6 +609,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		ReconciliationDelay:         operatorOptions.reconciliationDelay,
 		ShutdownDelay:               shutdownOptions.delay,
 		ShutdownTimeout:             shutdownOptions.timeout,
+		Threads:                     threads,
 	}
 	deps := operator.Dependencies{
 		Client:                     client,
