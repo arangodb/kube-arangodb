@@ -21,31 +21,39 @@
 package platform
 
 import (
+	goHttp "net/http"
+
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/http"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
-func pkg() (*cobra.Command, error) {
-	var cmd cobra.Command
-
-	cmd.Use = "package"
-	cmd.Short = "Release Package related operations"
-
-	if err := cli.RegisterFlags(&cmd); err != nil {
+func arangoDBConnection(cmd *cobra.Command) (driver.Connection, error) {
+	endpoint, err := flagArangoDBEndpoint.Get(cmd)
+	if err != nil {
 		return nil, err
 	}
 
-	if err := withRegisterCommand(&cmd,
-		packageDump,
-		packageInstall,
-		packageExport,
-		packageImport,
-		packageMerge,
-		packageRegistry,
-	); err != nil {
+	var mods []util.Mod[goHttp.Transport]
+
+	transport := operatorHTTP.Transport(mods...)
+
+	stageEndpoint := endpoint
+
+	connConfig := http.ConnectionConfig{
+		Transport:          transport,
+		DontFollowRedirect: true,
+		Endpoints:          []string{stageEndpoint},
+	}
+
+	conn, err := http.NewConnection(connConfig)
+	if err != nil {
 		return nil, err
 	}
 
-	return &cmd, nil
+	return conn, nil
 }

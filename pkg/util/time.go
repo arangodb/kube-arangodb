@@ -18,34 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package util
 
 import (
-	"github.com/spf13/cobra"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"encoding/json"
+	"fmt"
+	"time"
 )
 
-func pkg() (*cobra.Command, error) {
-	var cmd cobra.Command
+type Duration time.Duration
 
-	cmd.Use = "package"
-	cmd.Short = "Release Package related operations"
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(fmt.Sprintf("%ds", time.Duration(d)/time.Second))
+}
 
-	if err := cli.RegisterFlags(&cmd); err != nil {
-		return nil, err
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var s string
+
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
 	}
 
-	if err := withRegisterCommand(&cmd,
-		packageDump,
-		packageInstall,
-		packageExport,
-		packageImport,
-		packageMerge,
-		packageRegistry,
-	); err != nil {
-		return nil, err
+	dur, err := time.ParseDuration(s)
+	if err != nil {
+		return err
 	}
 
-	return &cmd, nil
+	*d = Duration(dur)
+
+	return nil
 }

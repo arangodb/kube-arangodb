@@ -168,7 +168,6 @@ func (r *exportPackageSet) exportPackage(name string, spec helm.PackageSpec) exe
 			h.RunAsync(ctx, r.exportImage(v))
 
 			v.Registry = nil
-			v.Kind = ""
 
 			chartProto.Images[k] = v
 		}

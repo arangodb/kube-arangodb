@@ -26,23 +26,20 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 )
 
-func pkg() (*cobra.Command, error) {
+func license() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "package"
-	cmd.Short = "Release Package related operations"
+	cmd.Use = "license"
+	cmd.Short = "License related Operations"
 
 	if err := cli.RegisterFlags(&cmd); err != nil {
 		return nil, err
 	}
 
 	if err := withRegisterCommand(&cmd,
-		packageDump,
-		packageInstall,
-		packageExport,
-		packageImport,
-		packageMerge,
-		packageRegistry,
+		licenseSecret,
+		licenseActivate,
+		licenseGenerate,
 	); err != nil {
 		return nil, err
 	}
