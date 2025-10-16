@@ -73,7 +73,7 @@ func (r *rateLimiter) QPS() float32 {
 	defer r.lock.Unlock()
 
 	if r.qps < 1 {
-		return 0
+		return 256 * 256
 	}
 
 	return r.qps
