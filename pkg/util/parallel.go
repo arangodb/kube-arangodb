@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,39 @@
 
 package util
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
+
+func ParallelProcessErr[T any](caller func(in T) error, threads int, in []T) error {
+	errs := ParallelProcessOutput[T, error](caller, threads, in)
+
+	return errors.Errors(errs...)
+}
+
+func ParallelProcessOutput[T, O any](caller func(in T) O, threads int, in []T) []O {
+	r := ParallelInput(IntInput(len(in)))
+	ret := make([]O, len(in))
+	var wg sync.WaitGroup
+
+	for id := 0; id < threads; id++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			for id := range r {
+				ret[id] = caller(in[id])
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	return ret
+}
 
 func ParallelProcess[T any](caller func(in T), threads int, in []T) {
 	r := ParallelInput(in)
@@ -40,6 +72,14 @@ func ParallelProcess[T any](caller func(in T), threads int, in []T) {
 	}
 
 	wg.Wait()
+}
+
+func IntInput(count int) []int {
+	var r = make([]int, count)
+	for i := 0; i < count; i++ {
+		r[i] = i
+	}
+	return r
 }
 
 func ParallelInput[T any](in []T) <-chan T {

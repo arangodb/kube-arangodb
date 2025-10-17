@@ -26,7 +26,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"google.golang.org/protobuf/encoding/protojson"
 	core "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -108,18 +107,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
-	_, baseGatewayCfgYamlChecksum, _, err := cfg.RenderYAML()
-	if err != nil {
-		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
-	}
-
-	inventory.Arangodb = pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus())
-	inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
-		Hash: baseGatewayCfgYamlChecksum,
-	}
-
 	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
-		Type:  util.NewType(gateway.ConfigDestinationTypeStatic),
+		Type:  util.NewType(gateway.ConfigDestinationTypeFile),
 		Match: util.NewType(gateway.ConfigMatchPath),
 		AuthExtension: &gateway.ConfigAuthZExtension{
 			AuthZExtension: map[string]string{
@@ -127,18 +116,13 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
 			},
 		},
-		Static: &gateway.ConfigDestinationStatic[*pbInventoryV1.Inventory]{
-			Code:       util.NewType[uint32](200),
-			Response:   inventory,
-			Marshaller: ugrpc.Marshal[*pbInventoryV1.Inventory],
-			Options: []util.Mod[protojson.MarshalOptions]{
-				ugrpc.WithUseProtoNames(true),
-				ugrpc.WithEmitDefaultValues(true),
-			},
+		File: gateway.ConfigDestinationFile{
+			File: path.Join(utilConstants.GatewayVolumeMountDir, utilConstants.InventoryFileName),
+			Code: 200,
 		},
 	}
 
-	gatewayCfgYaml, _, _, err := cfg.RenderYAML()
+	gatewayCfgYaml, gatewayCfgYamlChecksum, _, err := cfg.RenderYAML()
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway config"))
 	}
@@ -153,23 +137,37 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway lds config"))
 	}
 
+	inventory.Arangodb = pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus())
+	inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
+		Hash: gatewayCfgYamlChecksum,
+	}
+
+	inventoryData, err := ugrpc.Marshal(inventory, ugrpc.WithUseProtoNames(true), ugrpc.WithEmitDefaultValues(true))
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway inventory"))
+	}
+
+	gatewayChecksum := util.SHA256FromStringArray(gatewayCfgYamlChecksum, util.SHA256(inventoryData))
+
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName()), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgYaml),
-		utilConstants.GatewayConfigChecksum: baseGatewayCfgYamlChecksum,
+		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
+		utilConstants.InventoryFileName:     string(inventoryData),
+		utilConstants.InventoryChecksum:     gatewayChecksum,
 	}); err != nil {
 		return err
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "cds"), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgCDSYaml),
-		utilConstants.GatewayConfigChecksum: baseGatewayCfgYamlChecksum,
+		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
 	}
 
 	if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "lds"), map[string]string{
 		utilConstants.GatewayConfigFileName: string(gatewayCfgLDSYaml),
-		utilConstants.GatewayConfigChecksum: baseGatewayCfgYamlChecksum,
+		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
 	}

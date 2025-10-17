@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,6 +57,10 @@ func (r *rateLimiter) Accept() {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
+	if r.qps < 1 {
+		return
+	}
+
 	now := r.clock.Now()
 	r.clock.Sleep(r.limiter.ReserveN(now, 1).DelayFrom(now))
 }
@@ -68,6 +72,10 @@ func (r *rateLimiter) QPS() float32 {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
+	if r.qps < 1 {
+		return 256 * 256
+	}
+
 	return r.qps
 }
 
@@ -75,12 +83,20 @@ func (r *rateLimiter) Wait(ctx context.Context) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
+	if r.qps < 1 {
+		return nil
+	}
+
 	return r.limiter.Wait(ctx)
 }
 
 func (r *rateLimiter) TryAccept() bool {
 	r.lock.Lock()
 	defer r.lock.Unlock()
+
+	if r.qps < 1 {
+		return true
+	}
 
 	return r.limiter.AllowN(r.clock.Now(), 1)
 }

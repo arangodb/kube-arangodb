@@ -45,6 +45,10 @@ func GetDefaultRateLimiter() flowcontrol.RateLimiter {
 }
 
 func GetRateLimiter(name string) flowcontrol.RateLimiter {
+	return getRateLimiter(name)
+}
+
+func getRateLimiter(name string) *rateLimiter {
 	rateLimitersLock.Lock()
 	defer rateLimitersLock.Unlock()
 

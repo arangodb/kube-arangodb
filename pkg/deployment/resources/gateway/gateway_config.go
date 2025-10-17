@@ -334,9 +334,11 @@ func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 		CodecType:                  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
 		ServerHeaderTransformation: httpConnectionManagerAPI.HttpConnectionManager_PASS_THROUGH,
 		MergeSlashes:               c.Options.GetMergeSlashes(),
+
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
 			RouteConfig: &pbEnvoyRouteV3.RouteConfiguration{
-				Name: "default",
+				Name:                           "default",
+				MaxDirectResponseBodySizeBytes: wrapperspb.UInt32(utilConstants.MaxInventorySize),
 				VirtualHosts: []*pbEnvoyRouteV3.VirtualHost{
 					{
 						Name:    "default",
@@ -431,7 +433,8 @@ func (c Config) HttpToHttpsChain() (*pbEnvoyListenerV3.FilterChain, error) {
 		CodecType:  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
 			RouteConfig: &pbEnvoyRouteV3.RouteConfiguration{
-				Name: "local_http",
+				Name:                           "local_http",
+				MaxDirectResponseBodySizeBytes: wrapperspb.UInt32(utilConstants.MaxInventorySize),
 				VirtualHosts: []*pbEnvoyRouteV3.VirtualHost{
 					{
 						Name:    "local_http",

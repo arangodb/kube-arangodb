@@ -35,6 +35,7 @@ const (
 	ConfigDestinationTypeHTTP ConfigDestinationType = iota
 	ConfigDestinationTypeHTTPS
 	ConfigDestinationTypeStatic
+	ConfigDestinationTypeFile
 )
 
 func (c *ConfigDestinationType) Get() ConfigDestinationType {
@@ -43,7 +44,7 @@ func (c *ConfigDestinationType) Get() ConfigDestinationType {
 	}
 
 	switch v := *c; v {
-	case ConfigDestinationTypeHTTP, ConfigDestinationTypeHTTPS, ConfigDestinationTypeStatic:
+	case ConfigDestinationTypeHTTP, ConfigDestinationTypeHTTPS, ConfigDestinationTypeStatic, ConfigDestinationTypeFile:
 		return v
 	default:
 		return ConfigDestinationTypeHTTP
@@ -79,7 +80,7 @@ func (c *ConfigDestinationType) RenderUpstreamTransportSocket(protocol *ConfigDe
 
 func (c *ConfigDestinationType) Validate() error {
 	switch c.Get() {
-	case ConfigDestinationTypeHTTP, ConfigDestinationTypeHTTPS, ConfigDestinationTypeStatic:
+	case ConfigDestinationTypeHTTP, ConfigDestinationTypeHTTPS, ConfigDestinationTypeStatic, ConfigDestinationTypeFile:
 		return nil
 	default:
 		return errors.Errorf("Invalid destination type")

@@ -187,6 +187,7 @@ var (
 	platformProbe              probe.ReadyProbe
 	schedulerProbe             probe.ReadyProbe
 	k2KClusterSyncProbe        probe.ReadyProbe
+	threads                    int
 )
 
 func init() {
@@ -248,7 +249,7 @@ func init() {
 	f.BoolVar(&operatorOptions.scalingIntegrationEnabled, "internal.scaling-integration", false, "Enable Scaling Integration")
 	f.DurationVar(&operatorOptions.reconciliationDelay, "reconciliation.delay", 0, "Delay between reconciliation loops (<= 0 -> Disabled)")
 	f.Int64Var(&operatorKubernetesOptions.maxBatchSize, "kubernetes.max-batch-size", globals.DefaultKubernetesRequestBatchSize, "Size of batch during objects read")
-	f.Float32Var(&operatorKubernetesOptions.qps, "kubernetes.qps", kclient.DefaultQPS, "Number of queries per second for k8s API")
+	f.Float32Var(&operatorKubernetesOptions.qps, "kubernetes.qps", kclient.DefaultQPS, "Number of queries per second for k8s API. If set to 0 or less, API calls won't be throttled")
 	f.IntVar(&operatorKubernetesOptions.burst, "kubernetes.burst", kclient.DefaultBurst, "Burst for the k8s API")
 	f.BoolVar(&crdOptions.install, "crd.install", true, "Install missing CRD if access is possible")
 	f.StringArrayVar(&crdOptions.preserveUnknownFields, "crd.preserve-unknown-fields", nil, "Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>. To apply for all, use crd-name 'all'.")
@@ -258,6 +259,7 @@ func init() {
 	f.StringArrayVar(&metricsOptions.excludedMetricPrefixes, "metrics.excluded-prefixes", nil, "List of the excluded metrics prefixes")
 	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Discover Operator Image from Pod Status by default. When disabled Pod Spec is used.")
 	f.DurationVar(&operatorImageDiscovery.timeout, "image.discovery.timeout", time.Minute, "Timeout for image discovery process")
+	f.IntVar(&threads, "threads", 16, "Number of the worker threads")
 	if err := logging.Init(&cmdMain); err != nil {
 		panic(err.Error())
 	}
@@ -607,6 +609,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		ReconciliationDelay:         operatorOptions.reconciliationDelay,
 		ShutdownDelay:               shutdownOptions.delay,
 		ShutdownTimeout:             shutdownOptions.timeout,
+		Threads:                     threads,
 	}
 	deps := operator.Dependencies{
 		Client:                     client,

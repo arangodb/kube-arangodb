@@ -35,6 +35,8 @@ const (
 
 	GatewayConfigChecksum    = "gateway.checksum"
 	GatewayConfigFileName    = "gateway.yaml"
+	InventoryChecksum        = "inventory.checksum"
+	InventoryFileName        = "inventory.json"
 	GatewayConfigChecksumENV = "GATEWAY_CONFIG_CHECKSUM"
 
 	GatewayVolumeMountDir = "/etc/gateway/core/"
@@ -51,4 +53,6 @@ const (
 
 	MemberAuthVolumeMountDir = "/etc/gateway/auth/"
 	MemberAuthVolumeName     = "member-auth"
+
+	MaxInventorySize uint32 = 4 * 1024 * 1024
 )

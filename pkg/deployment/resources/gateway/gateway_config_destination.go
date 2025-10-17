@@ -83,6 +83,8 @@ type ConfigDestination struct {
 	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"`
 
 	Static ConfigDestinationStaticInterface `json:"static,omitempty"`
+
+	File ConfigDestinationFileInterface `json:"file,omitempty"`
 }
 
 func (c *ConfigDestination) Validate() error {
@@ -91,6 +93,13 @@ func (c *ConfigDestination) Validate() error {
 	}
 
 	switch c.Type.Get() {
+	case ConfigDestinationTypeFile:
+		return shared.WithErrors(
+			shared.PrefixResourceError("type", c.Type.Validate()),
+			shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
+			shared.PrefixResourceError("pathType", shared.ValidateOptionalInterface(c.Match)),
+			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
+		)
 	case ConfigDestinationTypeStatic:
 		return shared.WithErrors(
 			shared.PrefixResourceError("type", c.Type.Validate()),
@@ -196,6 +205,25 @@ func (c *ConfigDestination) appendRouteAction(route *pbEnvoyRouteV3.Route, name 
 				Body: &pbEnvoyCoreV3.DataSource{
 					Specifier: &pbEnvoyCoreV3.DataSource_InlineBytes{
 						InlineBytes: data,
+					},
+				},
+			},
+		}
+		return nil
+	}
+	if c.Type.Get() == ConfigDestinationTypeFile {
+		if c.File == nil {
+			return errors.Errorf("File response is not defined!")
+		}
+		path, code := c.File.StaticResponse()
+
+		// Return static response
+		route.Action = &pbEnvoyRouteV3.Route_DirectResponse{
+			DirectResponse: &pbEnvoyRouteV3.DirectResponseAction{
+				Status: code,
+				Body: &pbEnvoyCoreV3.DataSource{
+					Specifier: &pbEnvoyCoreV3.DataSource_Filename{
+						Filename: path,
 					},
 				},
 			},
