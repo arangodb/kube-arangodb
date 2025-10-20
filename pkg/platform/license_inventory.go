@@ -22,6 +22,7 @@ package platform
 
 import (
 	goHttp "net/http"
+	"os"
 	"reflect"
 
 	"github.com/spf13/cobra"
@@ -41,7 +42,7 @@ import (
 func licenseInventory() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "inventory"
+	cmd.Use = "inventory [flags] output"
 	cmd.Short = "Inventory Generator"
 
 	if err := cli.RegisterFlags(&cmd, flagDeployment); err != nil {
@@ -54,6 +55,10 @@ func licenseInventory() (*cobra.Command, error) {
 }
 
 func licenseInventoryRun(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return errors.Errorf("Invalid arguments")
+	}
+
 	conn, err := flagDeployment.Connection(cmd)
 	if err != nil {
 		return err
@@ -109,5 +114,5 @@ func licenseInventoryRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return render(cmd, string(d))
+	return os.WriteFile(args[0], d, 0600)
 }

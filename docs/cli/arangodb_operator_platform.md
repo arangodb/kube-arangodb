@@ -122,7 +122,7 @@ Use "arangodb_operator_platform license [command] --help" for more information a
 Inventory Generator
 
 Usage:
-  arangodb_operator_platform license inventory [flags]
+  arangodb_operator_platform license inventory [flags] output
 
 Flags:
       --arango.authentication string   Arango Endpoint Auth Method. One of: Disabled, Basic, Token (default "Disabled")
