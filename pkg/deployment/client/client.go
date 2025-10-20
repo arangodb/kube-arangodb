@@ -59,6 +59,8 @@ type Client interface {
 	Compact(ctx context.Context, request *CompactRequest) error
 
 	Inventory(ctx context.Context) (*Inventory, error)
+
+	DeploymentID(ctx context.Context) (DeploymentID, error)
 }
 
 type client struct {

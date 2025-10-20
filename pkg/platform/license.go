@@ -24,42 +24,23 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
-func NewInstaller() (*cobra.Command, error) {
-	return installer()
-}
-
-func installer() (*cobra.Command, error) {
+func license() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "arangodb_operator_platform"
+	cmd.Use = "license"
+	cmd.Short = "License Package related operations"
 
-	cmd.SetContext(shutdown.Context())
-
-	if err := cli.RegisterFlags(&cmd, flagNamespace, flagKubeconfig); err != nil {
+	if err := cli.RegisterFlags(&cmd); err != nil {
 		return nil, err
 	}
 
 	if err := withRegisterCommand(&cmd,
-		pkg,
-		license,
+		licenseInventory,
 	); err != nil {
 		return nil, err
 	}
 
 	return &cmd, nil
-}
-
-func withRegisterCommand(parent *cobra.Command, calls ...func() (*cobra.Command, error)) error {
-	for _, call := range calls {
-		if c, err := call(); err != nil {
-			return err
-		} else {
-			parent.AddCommand(c)
-		}
-	}
-
-	return nil
 }

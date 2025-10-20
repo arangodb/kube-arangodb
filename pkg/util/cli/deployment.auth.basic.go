@@ -18,48 +18,49 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package cli
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/go-driver"
 )
 
-func NewInstaller() (*cobra.Command, error) {
-	return installer()
+type deploymentBasicAuth struct {
+	username Flag[string]
+	password Flag[string]
 }
 
-func installer() (*cobra.Command, error) {
-	var cmd cobra.Command
-
-	cmd.Use = "arangodb_operator_platform"
-
-	cmd.SetContext(shutdown.Context())
-
-	if err := cli.RegisterFlags(&cmd, flagNamespace, flagKubeconfig); err != nil {
-		return nil, err
-	}
-
-	if err := withRegisterCommand(&cmd,
-		pkg,
-		license,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
+func (d deploymentBasicAuth) GetName() string {
+	return "basic"
 }
 
-func withRegisterCommand(parent *cobra.Command, calls ...func() (*cobra.Command, error)) error {
-	for _, call := range calls {
-		if c, err := call(); err != nil {
-			return err
-		} else {
-			parent.AddCommand(c)
-		}
-	}
-
+func (d deploymentBasicAuth) Validate(cmd *cobra.Command) error {
 	return nil
+}
+
+func (d deploymentBasicAuth) Register(cmd *cobra.Command) error {
+	return RegisterFlags(
+		cmd,
+		d.username,
+		d.password,
+	)
+}
+
+func (d deploymentBasicAuth) Authentication(cmd *cobra.Command) (driver.Authentication, error) {
+	if err := ValidateFlags(d.username, d.password)(cmd, nil); err != nil {
+		return nil, err
+	}
+
+	username, err := d.username.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	password, err := d.password.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	return driver.BasicAuthentication(username, password), nil
 }

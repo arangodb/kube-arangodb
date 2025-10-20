@@ -100,6 +100,8 @@ var (
 		},
 	}
 
+	flagDeployment = cli.NewDeployment("arango")
+
 	flagValues = cli.Flag[[]string]{
 		Name:        "values",
 		Short:       "f",

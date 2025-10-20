@@ -1,0 +1,6 @@
+RETURN {
+    "type": "ARANGO_EXECUTION_TIMESTAMP",
+    "value": {
+        "time": DATE_ISO8601(DATE_NOW())
+    }
+}

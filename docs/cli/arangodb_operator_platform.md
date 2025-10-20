@@ -4,6 +4,28 @@ parent: Binaries
 title: arangodb_operator_platform
 ---
 
+# ArangoDB Operator Platform Command
+
+[START_INJECT]: # (arangodb_operator_platform_cmd)
+```
+Usage:
+  arangodb_operator_platform [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  license     License Package related operations
+  package     Release Package related operations
+
+Flags:
+  -h, --help                help for arangodb_operator_platform
+      --kubeconfig string   Kubernetes Config File
+  -n, --namespace string    Kubernetes Namespace (default "default")
+
+Use "arangodb_operator_platform [command] --help" for more information about a command.
+```
+[END_INJECT]: # (arangodb_operator_platform_cmd)
+
 # ArangoDB Operator Platform Package Command
 
 [START_INJECT]: # (arangodb_operator_platform_package_cmd)
@@ -70,3 +92,49 @@ Global Flags:
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_install_cmd)
 
+# ArangoDB Operator Platform License Command
+
+[START_INJECT]: # (arangodb_operator_platform_license_cmd)
+```
+License Package related operations
+
+Usage:
+  arangodb_operator_platform license [command]
+
+Available Commands:
+  inventory   Inventory Generator
+
+Flags:
+  -h, --help   help for license
+
+Global Flags:
+      --kubeconfig string   Kubernetes Config File
+  -n, --namespace string    Kubernetes Namespace (default "default")
+
+Use "arangodb_operator_platform license [command] --help" for more information about a command.
+```
+[END_INJECT]: # (arangodb_operator_platform_license_cmd)
+
+# ArangoDB Operator Platform License Inventory Command
+
+[START_INJECT]: # (arangodb_operator_platform_license_inventory_cmd)
+```
+Inventory Generator
+
+Usage:
+  arangodb_operator_platform license inventory [flags]
+
+Flags:
+      --arango.authentication string   Arango Endpoint Auth Method. One of: Disabled, Basic, Token (default "Disabled")
+      --arango.basic.password string   Arango Password for Basic Authentication
+      --arango.basic.username string   Arango Username for Basic Authentication
+      --arango.endpoint strings        Arango Endpoint
+      --arango.insecure                Arango Endpoint Insecure
+      --arango.token string            Arango JWT Token for Authentication
+  -h, --help                           help for inventory
+
+Global Flags:
+      --kubeconfig string   Kubernetes Config File
+  -n, --namespace string    Kubernetes Namespace (default "default")
+```
+[END_INJECT]: # (arangodb_operator_platform_license_inventory_cmd)

@@ -1,0 +1,69 @@
+//
+// DISCLAIMER
+//
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+// Inventory Type Definition
+
+syntax = "proto3";
+
+package types;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/pkg/platform/inventory";
+
+// Defines inventory spec
+message Spec {
+  // Deployment ID
+  string deployment_id = 1;
+  // Items
+  repeated Item items = 2;
+}
+
+// Defines inventory item
+message Item {
+  // Item Type
+  string type = 1;
+  // Dimensions
+  map<string, string> dimensions = 2;
+  // Value of the Item
+  ItemValue value = 3;
+}
+
+// Value of the Item
+message ItemValue {
+  // One of the Values
+  oneof value {
+    // String
+    string str = 1;
+    // Float64
+    float dec = 2;
+    // Int
+    int32 num = 3;
+    // Boolean
+    bool bool = 4;
+    // Time
+    google.protobuf.Timestamp time = 5;
+    // Duration
+    google.protobuf.Duration duration = 6;
+    // Int64
+    int64 long_num = 7;
+  }
+}
