@@ -200,6 +200,11 @@ func ValidateRequiredNotEmptyPath[T any](path string, in *T) error {
 	return PrefixResourceError(path, ValidateRequiredNotEmpty(in))
 }
 
+// ValidatePath Validates object
+func ValidatePath[T any](path string, in T, validator func(T) error) error {
+	return PrefixResourceErrors(path, validator(in))
+}
+
 // ValidateRequiredPath Validates object and required not nil value
 func ValidateRequiredPath[T any](path string, in *T, validator func(T) error) error {
 	return PrefixResourceErrors(path, ValidateRequired(in, validator))

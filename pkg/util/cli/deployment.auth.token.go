@@ -18,48 +18,44 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package cli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/go-driver"
 )
 
-func NewInstaller() (*cobra.Command, error) {
-	return installer()
+type deploymentTokenAuth struct {
+	token Flag[string]
 }
 
-func installer() (*cobra.Command, error) {
-	var cmd cobra.Command
-
-	cmd.Use = "arangodb_operator_platform"
-
-	cmd.SetContext(shutdown.Context())
-
-	if err := cli.RegisterFlags(&cmd, flagNamespace, flagKubeconfig); err != nil {
-		return nil, err
-	}
-
-	if err := withRegisterCommand(&cmd,
-		pkg,
-		license,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
+func (d deploymentTokenAuth) GetName() string {
+	return "token"
 }
 
-func withRegisterCommand(parent *cobra.Command, calls ...func() (*cobra.Command, error)) error {
-	for _, call := range calls {
-		if c, err := call(); err != nil {
-			return err
-		} else {
-			parent.AddCommand(c)
-		}
-	}
-
+func (d deploymentTokenAuth) Validate(cmd *cobra.Command) error {
 	return nil
+}
+
+func (d deploymentTokenAuth) Register(cmd *cobra.Command) error {
+	return RegisterFlags(
+		cmd,
+		d.token,
+	)
+}
+
+func (d deploymentTokenAuth) Authentication(cmd *cobra.Command) (driver.Authentication, error) {
+	if err := ValidateFlags(d.token)(cmd, nil); err != nil {
+		return nil, err
+	}
+
+	token, err := d.token.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	return driver.RawAuthentication(fmt.Sprintf("bearer %s", token)), nil
 }

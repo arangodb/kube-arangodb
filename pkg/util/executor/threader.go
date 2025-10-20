@@ -22,6 +22,7 @@ package executor
 
 import (
 	"sync"
+	"time"
 )
 
 func NewThreadManager(threads int) ThreadManager {
@@ -58,8 +59,8 @@ func (t *threadManager) Acquire() Thread {
 type Thread interface {
 	ID() ThreadID
 
+	Wait(dur time.Duration)
 	Release()
-	Wait()
 }
 
 type thread struct {
@@ -84,16 +85,22 @@ func (t *thread) Release() {
 		return
 	}
 
-	t.released = true
-
 	t.parent.threads <- t.id
+
+	t.released = true
 }
 
-func (t *thread) Wait() {
+func (t *thread) Wait(dur time.Duration) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 
+	if t.released {
+		return
+	}
+
 	t.parent.threads <- t.id
+
+	time.Sleep(dur)
 
 	t.id = <-t.parent.threads
 }

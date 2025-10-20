@@ -139,6 +139,18 @@ func GenerateCLIArangoDBOperatorPlatformReadme(root string) error {
 		readmeSections["arangodb_operator_platform_package_install_cmd"] = section
 	}
 
+	if section, err := GenerateHelpQuoted(cmd, "license"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_license_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "license", "inventory"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_license_inventory_cmd"] = section
+	}
+
 	if err := pretty.ReplaceSectionsInFile(path.Join(root, "docs", "cli", "arangodb_operator_platform.md"), readmeSections); err != nil {
 		return err
 	}

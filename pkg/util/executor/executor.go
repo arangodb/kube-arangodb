@@ -79,9 +79,6 @@ func (h *handler) Timeout(ctx context.Context, t Thread, f RunFunc, timeout, int
 	timeoutT := time.NewTimer(timeout)
 	defer timeoutT.Stop()
 
-	intervalT := time.NewTicker(interval)
-	defer intervalT.Stop()
-
 	for {
 		err := f(ctx, h.log, t, h)
 		if err != nil {
@@ -92,28 +89,24 @@ func (h *handler) Timeout(ctx context.Context, t Thread, f RunFunc, timeout, int
 			return err
 		}
 
-		t.Release()
+		t.Wait(interval)
 
 		select {
 		case <-timeoutT.C:
 			return os.ErrDeadlineExceeded
 		case <-ctx.Done():
 			return os.ErrDeadlineExceeded
-		case <-intervalT.C:
-			continue
 		}
 	}
 }
 
 func (h *handler) WaitForSubThreads(t Thread) {
 	for {
-		t.Release()
+		t.Wait(10 * time.Millisecond)
 
 		if h.subThreadsCompleted() {
 			return
 		}
-
-		time.Sleep(10 * time.Millisecond)
 	}
 }
 
