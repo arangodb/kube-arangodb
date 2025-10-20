@@ -22,6 +22,10 @@ package grpc
 
 import "google.golang.org/protobuf/proto"
 
+func NewObject[IN proto.Message](in IN) Object[IN] {
+	return Object[IN]{Object: in}
+}
+
 type Object[IN proto.Message] struct {
 	Object IN
 }

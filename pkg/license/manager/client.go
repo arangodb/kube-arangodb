@@ -29,8 +29,10 @@ import (
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
 
+	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
@@ -71,9 +73,9 @@ type Client interface {
 }
 
 type LicenseRequest struct {
-	DeploymentID *string        `json:"deployment_id,omitempty"`
-	TTL          *time.Duration `json:"ttl,omitempty"`
-	Inventory    *Inventory     `json:"inventory,omitempty"`
+	DeploymentID *string                       `json:"deployment_id,omitempty"`
+	TTL          *time.Duration                `json:"ttl,omitempty"`
+	Inventory    *grpc.Object[*inventory.Spec] `json:"inventory,omitempty"`
 }
 
 type LicenseResponse struct {

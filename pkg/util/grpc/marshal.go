@@ -21,6 +21,8 @@
 package grpc
 
 import (
+	"os"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"sigs.k8s.io/yaml"
@@ -78,4 +80,13 @@ func Unmarshal[T proto.Message](data []byte, opts ...util.Mod[protojson.Unmarsha
 	}
 
 	return v, nil
+}
+
+func UnmarshalFile[T proto.Message](path string, opts ...util.Mod[protojson.UnmarshalOptions]) (T, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return util.Default[T](), err
+	}
+
+	return Unmarshal[T](data, opts...)
 }

@@ -27,8 +27,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/license/manager"
+	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 func licenseGenerate() (*cobra.Command, error) {
@@ -37,7 +39,7 @@ func licenseGenerate() (*cobra.Command, error) {
 	cmd.Use = "generate"
 	cmd.Short = "Generate the License"
 
-	if err := cli.RegisterFlags(&cmd, flagLicenseManagerEndpoint, flagLicenseManagerClientID, flagLicenseManagerClientSecret, flagDeploymentID); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagLicenseManagerEndpoint, flagLicenseManagerClientID, flagLicenseManagerClientSecret, flagDeploymentID, flagInventory); err != nil {
 		return nil, err
 	}
 
@@ -57,12 +59,24 @@ func licenseGenerateRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var inv *inventory.Spec
+
+	if invFile, err := flagInventory.Get(cmd); err != nil {
+		return err
+	} else if invFile != "" {
+		inv, err = grpc.UnmarshalFile[*inventory.Spec](invFile)
+		if err != nil {
+			return err
+		}
+	}
+
 	l := logger.Str("ClusterID", did)
 
 	l.Info("Generating License")
 
 	lic, err := mc.License(cmd.Context(), manager.LicenseRequest{
 		DeploymentID: util.NewType(did),
+		Inventory:    util.NewType(grpc.NewObject(inv)),
 	})
 	if err != nil {
 		return err

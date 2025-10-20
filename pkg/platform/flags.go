@@ -80,10 +80,27 @@ var (
 		},
 	}
 
+	flagInventory = cli.Flag[string]{
+		Name:        "inventory",
+		Description: "Path to the Inventory File",
+		Default:     "",
+		Persistent:  true,
+		Check: func(in string) error {
+			if in == "" {
+				return nil
+			}
+			_, err := os.Stat(in)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+
 	flagLicenseManagerEndpoint = cli.Flag[string]{
 		Name:        "license.endpoint",
 		Description: "LicenseManager Endpoint",
-		Default:     "license.arangodb.com",
+		Default:     "license.arango.ai",
 		Persistent:  false,
 		Check: func(in string) error {
 			return nil

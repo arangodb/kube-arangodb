@@ -162,7 +162,7 @@ Flags:
   -h, --help                           help for activate
       --license.client.id string       LicenseManager Client ID
       --license.client.secret string   LicenseManager Client Secret
-      --license.endpoint string        LicenseManager Endpoint (default "license.arangodb.com")
+      --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --license.interval duration      Interval of the license synchronization
 
 Global Flags:
@@ -183,9 +183,10 @@ Usage:
 Flags:
       --deployment.id string           Deployment ID
   -h, --help                           help for generate
+      --inventory string               Path to the Inventory File
       --license.client.id string       LicenseManager Client ID
       --license.client.secret string   LicenseManager Client Secret
-      --license.endpoint string        LicenseManager Endpoint (default "license.arangodb.com")
+      --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
@@ -207,7 +208,7 @@ Flags:
       --license.client.id string       LicenseManager Client ID
       --license.client.secret string   LicenseManager Client Secret
       --license.client.stage strings   LicenseManager Stages (default [prd])
-      --license.endpoint string        LicenseManager Endpoint (default "license.arangodb.com")
+      --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --secret string                  Kubernetes Secret Name
 
 Global Flags:

@@ -21,7 +21,6 @@
 package platform
 
 import (
-	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -31,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 func licenseActivate() (*cobra.Command, error) {
@@ -54,13 +54,6 @@ func licenseActivateRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	conn, err := flagDeployment.Connection(cmd)
-	if err != nil {
-		return err
-	}
-
-	c := client.NewClient(conn, nil)
-
 	del, err := flagActivateInterval.Get(cmd)
 	if err != nil {
 		return err
@@ -69,7 +62,7 @@ func licenseActivateRun(cmd *cobra.Command, args []string) error {
 	if del == 0 {
 		logger.Info("Activate Once")
 
-		return licenseActivateExecute(cmd.Context(), logger, c, mc)
+		return licenseActivateExecute(cmd, logger, mc)
 	}
 
 	intervalT := time.NewTicker(del)
@@ -78,7 +71,7 @@ func licenseActivateRun(cmd *cobra.Command, args []string) error {
 	logger.Dur("interval", del).Info("Activate In interval")
 
 	for {
-		if err := licenseActivateExecute(cmd.Context(), logger, c, mc); err != nil {
+		if err := licenseActivateExecute(cmd, logger, mc); err != nil {
 			return err
 		}
 
@@ -91,21 +84,28 @@ func licenseActivateRun(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func licenseActivateExecute(ctx context.Context, logger logging.Logger, c client.Client, mc manager.Client) error {
-	logger.Info("Connecting to server...")
-	id, err := c.DeploymentID(ctx)
+func licenseActivateExecute(cmd *cobra.Command, logger logging.Logger, mc manager.Client) error {
+	conn, err := flagDeployment.Connection(cmd)
 	if err != nil {
 		return err
 	}
 
-	l := logger.Str("ClusterID", id.Id)
+	c := client.NewClient(conn, logger)
 
-	l.Info("Discovered ClusterID")
+	inv, err := buildInventory(cmd)
+	if err != nil {
+		return err
+	}
+
+	l := logger.Str("DeploymentID", inv.DeploymentId)
+
+	l.Info("Discovered DeploymentID")
 
 	l.Info("Generating License")
 
-	lic, err := mc.License(ctx, manager.LicenseRequest{
-		DeploymentID: util.NewType(id.Id),
+	lic, err := mc.License(cmd.Context(), manager.LicenseRequest{
+		DeploymentID: util.NewType(inv.DeploymentId),
+		Inventory:    util.NewType(grpc.NewObject(inv)),
 	})
 	if err != nil {
 		return err
@@ -115,11 +115,11 @@ func licenseActivateExecute(ctx context.Context, logger logging.Logger, c client
 
 	l.Info("Activating license...")
 
-	if err := c.SetLicense(ctx, lic.License, true); err != nil {
+	if err := c.SetLicense(cmd.Context(), lic.License, true); err != nil {
 		return err
 	}
 
-	nlic, err := c.GetLicense(ctx)
+	nlic, err := c.GetLicense(cmd.Context())
 	if err != nil {
 		return err
 	}
