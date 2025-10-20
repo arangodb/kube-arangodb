@@ -14,7 +14,7 @@ Usage:
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
-  license     License Package related operations
+  license     License related Operations
   package     Release Package related operations
 
 Flags:
@@ -97,13 +97,16 @@ Global Flags:
 
 [START_INJECT]: # (arangodb_operator_platform_license_cmd)
 ```
-License Package related operations
+License related Operations
 
 Usage:
   arangodb_operator_platform license [command]
 
 Available Commands:
+  activate    Activates the License on ArangoDB Endpoint
+  generate    Generate the License
   inventory   Inventory Generator
+  secret      Creates Platform Secret with Registry credentials
 
 Flags:
   -h, --help   help for license
@@ -150,7 +153,12 @@ Usage:
   arangodb_operator_platform license activate [flags]
 
 Flags:
-      --arangodb.endpoint string       ArangoDB Endpoint
+      --arango.authentication string   Arango Endpoint Auth Method. One of: Disabled, Basic, Token (default "Disabled")
+      --arango.basic.password string   Arango Password for Basic Authentication
+      --arango.basic.username string   Arango Username for Basic Authentication
+      --arango.endpoint strings        Arango Endpoint
+      --arango.insecure                Arango Endpoint Insecure
+      --arango.token string            Arango JWT Token for Authentication
   -h, --help                           help for activate
       --license.client.id string       LicenseManager Client ID
       --license.client.secret string   LicenseManager Client Secret
