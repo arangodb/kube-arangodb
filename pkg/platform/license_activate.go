@@ -30,7 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/grpc"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 func licenseActivate() (*cobra.Command, error) {
@@ -105,7 +105,7 @@ func licenseActivateExecute(cmd *cobra.Command, logger logging.Logger, mc manage
 
 	lic, err := mc.License(cmd.Context(), manager.LicenseRequest{
 		DeploymentID: util.NewType(inv.DeploymentId),
-		Inventory:    util.NewType(grpc.NewObject(inv)),
+		Inventory:    util.NewType(ugrpc.NewObject(inv)),
 	})
 	if err != nil {
 		return err

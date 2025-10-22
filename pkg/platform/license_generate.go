@@ -30,7 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/grpc"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
 func licenseGenerate() (*cobra.Command, error) {
@@ -64,7 +64,7 @@ func licenseGenerateRun(cmd *cobra.Command, args []string) error {
 	if invFile, err := flagInventory.Get(cmd); err != nil {
 		return err
 	} else if invFile != "" {
-		inv, err = grpc.UnmarshalFile[*inventory.Spec](invFile)
+		inv, err = ugrpc.UnmarshalFile[*inventory.Spec](invFile)
 		if err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func licenseGenerateRun(cmd *cobra.Command, args []string) error {
 
 	lic, err := mc.License(cmd.Context(), manager.LicenseRequest{
 		DeploymentID: util.NewType(did),
-		Inventory:    util.NewType(grpc.NewObject(inv)),
+		Inventory:    util.NewType(ugrpc.NewObject(inv)),
 	})
 	if err != nil {
 		return err

@@ -58,7 +58,7 @@ var (
 			}
 
 			if err := sharedApi.IsValidName(in); err != nil {
-				return errors.Errorf("Invalid deployment name: %s", err.Error())
+				return errors.Errorf("Invalid secret name: %s", err.Error())
 			}
 
 			return nil
