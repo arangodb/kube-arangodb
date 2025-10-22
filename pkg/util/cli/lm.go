@@ -34,7 +34,7 @@ func NewLicenseManager(prefix string) LicenseManager {
 	return licenseManager{
 		endpoint: Flag[string]{
 			Name:        fmt.Sprintf("%s.endpoint", prefix),
-			Default:     "license.arango.ai",
+			Default:     manager.ArangoLicenseManagerEndpoint,
 			Description: "LicenseManager Endpoint",
 			Check: func(in string) error {
 				if len(in) == 0 {
