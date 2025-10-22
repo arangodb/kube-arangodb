@@ -18,47 +18,46 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package manager
 
 import (
-	"os"
+	"encoding/base64"
+	"fmt"
 
-	"github.com/spf13/cobra"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
-func licenseInventory() (*cobra.Command, error) {
-	var cmd cobra.Command
-
-	cmd.Use = "inventory [flags] output"
-	cmd.Short = "Inventory Generator"
-
-	if err := cli.RegisterFlags(&cmd, flagDeployment); err != nil {
-		return nil, err
-	}
-
-	cmd.RunE = getRunner().With(licenseInventoryRun).Run
-
-	return &cmd, nil
+type Registry struct {
+	Auths map[string]RegistryAuth `json:"auths,omitempty"`
 }
 
-func licenseInventoryRun(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
-		return errors.Errorf("Invalid arguments")
+type RegistryAuth struct {
+	Client string `json:"client"`
+	Auth   string `json:"auth,omitempty"`
+}
+
+func NewRegistryAuth(endpoint, username, password string, stages ...Stage) (*Registry, error) {
+	if len(stages) == 0 {
+		return nil, errors.Errorf("Enable Auth for at least one stage")
 	}
 
-	inv, err := buildInventory(cmd)
-	if err != nil {
-		return err
+	var r Registry
+
+	r.Auths = map[string]RegistryAuth{}
+
+	ra := RegistryAuth{
+		Client: username,
+		Auth:   base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password))),
 	}
 
-	d, err := ugrpc.Marshal(inv)
-	if err != nil {
-		return err
+	for _, s := range stages {
+		domain, err := s.RegistryDomain(endpoint)
+		if err != nil {
+			return nil, err
+		}
+
+		r.Auths[domain] = ra
 	}
 
-	return os.WriteFile(args[0], d, 0600)
+	return &r, nil
 }

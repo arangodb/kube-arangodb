@@ -30,12 +30,15 @@ func getRunner() cli.Runner {
 		logging.Runner,
 		cli.ValidateFlags(
 			flagNamespace,
+			flagSecret,
 			flagPlatformName,
 			flagPlatformEndpoint,
 			flagOutput,
 			flagUpgradeVersions,
 			flagAll,
 			flagValues,
+			flagDeployment,
+			flagLicenseManager,
 		),
 	}
 }

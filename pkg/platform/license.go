@@ -21,16 +21,26 @@
 package platform
 
 import (
+	goHttp "net/http"
+	"reflect"
+
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/arangodb/go-driver"
+
+	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
 func license() (*cobra.Command, error) {
 	var cmd cobra.Command
 
 	cmd.Use = "license"
-	cmd.Short = "License Package related operations"
+	cmd.Short = "License related Operations"
 
 	if err := cli.RegisterFlags(&cmd); err != nil {
 		return nil, err
@@ -38,9 +48,68 @@ func license() (*cobra.Command, error) {
 
 	if err := withRegisterCommand(&cmd,
 		licenseInventory,
+		licenseSecret,
+		licenseActivate,
+		licenseGenerate,
 	); err != nil {
 		return nil, err
 	}
 
 	return &cmd, nil
+}
+
+func buildInventory(cmd *cobra.Command) (*inventory.Spec, error) {
+	logger.Info("Connecting to the server...")
+
+	conn, err := flagDeployment.Connection(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := arangod.GetRequestWithTimeout[driver.VersionInfo](cmd.Context(), globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_api", "version").
+		AcceptCode(goHttp.StatusOK).
+		Response()
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("Discovered Arango %s (%s)", resp.Version, resp.License)
+
+	obj, err := inventory.FetchInventory(cmd.Context(), logger, 8, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	obj = util.FilterList(obj, func(item *inventory.Item) bool {
+		return item != nil
+	})
+
+	did := util.FilterList(obj, util.MultiFilterList(
+		func(item *inventory.Item) bool {
+			return item.Type == "ARANGO_DEPLOYMENT"
+		},
+		func(item *inventory.Item) bool {
+			v, ok := item.Dimensions["detail"]
+			return ok && v == "id"
+		},
+	))
+
+	if len(did) != 1 {
+		return nil, errors.Errorf("Expected to find a single ARANGO_DEPLOYMENT ID")
+	}
+
+	tz, err := did[0].GetValue().Type()
+	if err != nil {
+		return nil, err
+	}
+
+	if tz != reflect.TypeFor[string]() {
+		return nil, errors.Errorf("Expected to find type for ARANGO_DEPLOYMENT ID")
+	}
+
+	return &inventory.Spec{
+		DeploymentId: did[0].GetValue().GetStr(),
+		Items:        obj,
+	}, nil
 }

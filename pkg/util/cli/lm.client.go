@@ -18,34 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package cli
 
-import (
-	"github.com/spf13/cobra"
+import "github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-)
+type licenseManagerClient struct {
+	clientID     Flag[string]
+	stages       Flag[[]string]
+	clientSecret Flag[string]
+}
 
-func pkg() (*cobra.Command, error) {
-	var cmd cobra.Command
+func (l licenseManagerClient) GetName() string {
+	return "client"
+}
 
-	cmd.Use = "package"
-	cmd.Short = "Release Package related operations"
+func (l licenseManagerClient) Register(cmd *cobra.Command) error {
+	return RegisterFlags(
+		cmd,
+		l.clientID,
+		l.clientSecret,
+		l.stages,
+	)
+}
 
-	if err := cli.RegisterFlags(&cmd); err != nil {
-		return nil, err
-	}
-
-	if err := withRegisterCommand(&cmd,
-		packageDump,
-		packageInstall,
-		packageExport,
-		packageImport,
-		packageMerge,
-		packageRegistry,
-	); err != nil {
-		return nil, err
-	}
-
-	return &cmd, nil
+func (l licenseManagerClient) Validate(cmd *cobra.Command) error {
+	return ValidateFlags(
+		l.clientID,
+		l.clientSecret,
+		l.stages,
+	)(cmd, nil)
 }

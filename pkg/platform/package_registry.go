@@ -21,44 +21,63 @@
 package platform
 
 import (
+	"bytes"
 	"os"
 
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 
+	"github.com/arangodb/kube-arangodb/pkg/platform/pack"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
-func licenseInventory() (*cobra.Command, error) {
+func packageRegistry() (*cobra.Command, error) {
 	var cmd cobra.Command
 
-	cmd.Use = "inventory [flags] output"
-	cmd.Short = "Inventory Generator"
+	cmd.Use = "registry [flags] registry package output"
+	cmd.Short = "Points all images to the new registry"
 
-	if err := cli.RegisterFlags(&cmd, flagDeployment); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint); err != nil {
 		return nil, err
 	}
 
-	cmd.RunE = getRunner().With(licenseInventoryRun).Run
+	cmd.RunE = getRunner().With(packageRegistryRun).Run
 
 	return &cmd, nil
 }
 
-func licenseInventoryRun(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
+func packageRegistryRun(cmd *cobra.Command, args []string) error {
+	if len(args) != 3 {
 		return errors.Errorf("Invalid arguments")
 	}
 
-	inv, err := buildInventory(cmd)
+	registry := args[0]
+
+	pkg, err := getHelmPackages(args[1])
+	if err != nil {
+		logger.Err(err).Error("Unable to read the file")
+		return err
+	}
+
+	out := args[2]
+
+	cm, err := getChartManager(cmd)
 	if err != nil {
 		return err
 	}
 
-	d, err := ugrpc.Marshal(inv)
+	p, err := pack.Registry(cmd.Context(), registry, cm, pkg)
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(args[0], d, 0600)
+	data, err := yaml.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	data = bytes.Join([][]byte{[]byte("---\n\n"), data}, nil)
+
+	return os.WriteFile(out, data, 0644)
 }

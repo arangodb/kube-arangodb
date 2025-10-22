@@ -22,6 +22,7 @@ package platform
 
 import (
 	"os"
+	"time"
 
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -45,6 +46,24 @@ var (
 		Persistent:  true,
 	}
 
+	flagSecret = cli.Flag[string]{
+		Name:        "secret",
+		Description: "Kubernetes Secret Name",
+		Default:     "",
+		Check: func(in string) error {
+			if in == "" {
+				return nil
+			}
+
+			if err := sharedApi.IsValidName(in); err != nil {
+				return errors.Errorf("Invalid secret name: %s", err.Error())
+			}
+
+			return nil
+		},
+		Persistent: true,
+	}
+
 	flagPlatformName = cli.Flag[string]{
 		Name:        "platform.name",
 		Description: "Kubernetes Platform Name (name of the ArangoDeployment)",
@@ -55,6 +74,33 @@ var (
 				return errors.Errorf("Invalid deployment name: %s", err.Error())
 			}
 
+			return nil
+		},
+	}
+
+	flagInventory = cli.Flag[string]{
+		Name:        "inventory",
+		Description: "Path to the Inventory File",
+		Default:     "",
+		Persistent:  true,
+		Check: func(in string) error {
+			if in == "" {
+				return nil
+			}
+			_, err := os.Stat(in)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+
+	flagDeploymentID = cli.Flag[string]{
+		Name:        "deployment.id",
+		Description: "Deployment ID",
+		Default:     "",
+		Persistent:  false,
+		Check: func(in string) error {
 			return nil
 		},
 	}
@@ -100,6 +146,8 @@ var (
 		},
 	}
 
+	flagLicenseManager = cli.NewLicenseManager("license")
+
 	flagDeployment = cli.NewDeployment("arango")
 
 	flagValues = cli.Flag[[]string]{
@@ -141,5 +189,18 @@ var (
 		Name:        "registry.docker.endpoint",
 		Description: "List of boosted registries",
 		Default:     nil,
+	}
+
+	flagActivateInterval = cli.Flag[time.Duration]{
+		Name:        "license.interval",
+		Description: "Interval of the license synchronization",
+		Default:     0,
+		Persistent:  false,
+		Check: func(in time.Duration) error {
+			if in < 0 {
+				return errors.New("License Generation Interval cannot be negative")
+			}
+			return nil
+		},
 	}
 )

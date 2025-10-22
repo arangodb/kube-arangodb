@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) (Platform) Increase memory limit for Inventory
 - (Feature) (LM) Inventory Generator
+- (Feature) (License) Activation CLI
 
 ## [1.3.1](https://github.com/arangodb/kube-arangodb/tree/1.3.1) (2025-10-07)
 - (Documentation) Add ArangoPlatformStorage Docs & Examples
