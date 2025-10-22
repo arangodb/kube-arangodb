@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	ArangoLicenseManagerEndpoint = "arango.license.ai"
+	ArangoLicenseManagerEndpoint = "license.arango.ai"
 )
 
 func NewClient(endpoint, id, key string, mods ...util.Mod[goHttp.Transport]) (Client, error) {
