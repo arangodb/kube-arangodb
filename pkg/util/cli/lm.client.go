@@ -18,29 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package platform
+package cli
 
-import (
-	"github.com/spf13/cobra"
+import "github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/license/manager"
-)
+type licenseManagerClient struct {
+	clientID     Flag[string]
+	stages       Flag[[]string]
+	clientSecret Flag[string]
+}
 
-func getManagerClient(cmd *cobra.Command) (manager.Client, error) {
-	endpoint, err := flagLicenseManagerEndpoint.Get(cmd)
-	if err != nil {
-		return nil, err
-	}
+func (l licenseManagerClient) GetName() string {
+	return "client"
+}
 
-	cid, err := flagLicenseManagerClientID.Get(cmd)
-	if err != nil {
-		return nil, err
-	}
+func (l licenseManagerClient) Register(cmd *cobra.Command) error {
+	return RegisterFlags(
+		cmd,
+		l.clientID,
+		l.clientSecret,
+		l.stages,
+	)
+}
 
-	cs, err := flagLicenseManagerClientSecret.Get(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	return manager.NewClient(endpoint, cid, cs)
+func (l licenseManagerClient) Validate(cmd *cobra.Command) error {
+	return ValidateFlags(
+		l.clientID,
+		l.clientSecret,
+		l.stages,
+	)(cmd, nil)
 }

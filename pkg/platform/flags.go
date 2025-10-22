@@ -24,8 +24,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/uuid"
-
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
@@ -97,64 +95,12 @@ var (
 		},
 	}
 
-	flagLicenseManagerEndpoint = cli.Flag[string]{
-		Name:        "license.endpoint",
-		Description: "LicenseManager Endpoint",
-		Default:     "license.arango.ai",
-		Persistent:  false,
-		Check: func(in string) error {
-			return nil
-		},
-	}
-
 	flagDeploymentID = cli.Flag[string]{
 		Name:        "deployment.id",
 		Description: "Deployment ID",
 		Default:     "",
 		Persistent:  false,
 		Check: func(in string) error {
-			return nil
-		},
-	}
-
-	flagLicenseManagerClientID = cli.Flag[string]{
-		Name:        "license.client.id",
-		Description: "LicenseManager Client ID",
-		Default:     "",
-		Persistent:  false,
-		Check: func(in string) error {
-			if in == "" {
-				return errors.New("Platform Client ID is required")
-			}
-
-			return nil
-		},
-	}
-
-	flagLicenseManagerStages = cli.Flag[[]string]{
-		Name:        "license.client.stage",
-		Description: "LicenseManager Stages",
-		Default:     []string{"prd"},
-		Persistent:  false,
-		Check: func(in []string) error {
-			if len(in) == 0 {
-				return errors.New("At least one stage needs to be defined")
-			}
-
-			return nil
-		},
-	}
-
-	flagLicenseManagerClientSecret = cli.Flag[string]{
-		Name:        "license.client.secret",
-		Description: "LicenseManager Client Secret",
-		Default:     "",
-		Persistent:  false,
-		Check: func(in string) error {
-			if _, err := uuid.Parse(in); err != nil {
-				return err
-			}
-
 			return nil
 		},
 	}
@@ -199,6 +145,8 @@ var (
 			return nil
 		},
 	}
+
+	flagLicenseManager = cli.NewLicenseManager("license")
 
 	flagDeployment = cli.NewDeployment("arango")
 

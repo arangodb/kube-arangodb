@@ -41,7 +41,7 @@ func licenseSecret() (*cobra.Command, error) {
 	cmd.Use = "secret"
 	cmd.Short = "Creates Platform Secret with Registry credentials"
 
-	if err := cli.RegisterFlags(&cmd, flagSecret, flagLicenseManagerEndpoint, flagLicenseManagerClientID, flagLicenseManagerClientSecret, flagLicenseManagerStages); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagSecret, flagLicenseManager); err != nil {
 		return nil, err
 	}
 
@@ -66,22 +66,22 @@ func licenseSecretRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	stages, err := flagLicenseManagerStages.Get(cmd)
+	stages, err := flagLicenseManager.Stages(cmd)
 	if err != nil {
 		return err
 	}
 
-	id, err := flagLicenseManagerClientID.Get(cmd)
+	id, err := flagLicenseManager.ClientID(cmd)
 	if err != nil {
 		return err
 	}
 
-	endpoint, err := flagLicenseManagerEndpoint.Get(cmd)
+	endpoint, err := flagLicenseManager.Endpoint(cmd)
 	if err != nil {
 		return err
 	}
 
-	mc, err := getManagerClient(cmd)
+	mc, err := flagLicenseManager.Client(cmd)
 	if err != nil {
 		return err
 	}

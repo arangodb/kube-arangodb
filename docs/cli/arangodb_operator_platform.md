@@ -162,6 +162,7 @@ Flags:
   -h, --help                           help for activate
       --license.client.id string       LicenseManager Client ID
       --license.client.secret string   LicenseManager Client Secret
+      --license.client.stage strings   LicenseManager Stages (default [prd])
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --license.interval duration      Interval of the license synchronization
 
@@ -186,6 +187,7 @@ Flags:
       --inventory string               Path to the Inventory File
       --license.client.id string       LicenseManager Client ID
       --license.client.secret string   LicenseManager Client Secret
+      --license.client.stage strings   LicenseManager Stages (default [prd])
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
 
 Global Flags:

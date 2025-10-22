@@ -39,7 +39,7 @@ func licenseActivate() (*cobra.Command, error) {
 	cmd.Use = "activate"
 	cmd.Short = "Activates the License on ArangoDB Endpoint"
 
-	if err := cli.RegisterFlags(&cmd, flagLicenseManagerEndpoint, flagLicenseManagerClientID, flagLicenseManagerClientSecret, flagActivateInterval, flagDeployment); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagLicenseManager, flagActivateInterval, flagDeployment); err != nil {
 		return nil, err
 	}
 
@@ -49,7 +49,7 @@ func licenseActivate() (*cobra.Command, error) {
 }
 
 func licenseActivateRun(cmd *cobra.Command, args []string) error {
-	mc, err := getManagerClient(cmd)
+	mc, err := flagLicenseManager.Client(cmd)
 	if err != nil {
 		return err
 	}

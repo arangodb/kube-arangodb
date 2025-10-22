@@ -37,10 +37,8 @@ func getRunner() cli.Runner {
 			flagUpgradeVersions,
 			flagAll,
 			flagValues,
-			flagLicenseManagerEndpoint,
-			flagLicenseManagerClientID,
-			flagLicenseManagerClientSecret,
-			flagLicenseManagerStages,
+			flagDeployment,
+			flagLicenseManager,
 		),
 	}
 }

@@ -48,8 +48,8 @@ type ProtoImages map[string]ProtoImage
 
 type ProtoImage struct {
 	Registry *string `json:"registry,omitempty"`
-	Image    *string `json:"image,omitempty"`
-	Tag      *string `json:"tag,omitempty"`
+	Image    string  `json:"image,omitempty"`
+	Tag      string  `json:"tag,omitempty"`
 	Kind     *string `json:"kind,omitempty"`
 }
 

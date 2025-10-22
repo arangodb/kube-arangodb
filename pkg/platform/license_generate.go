@@ -39,7 +39,7 @@ func licenseGenerate() (*cobra.Command, error) {
 	cmd.Use = "generate"
 	cmd.Short = "Generate the License"
 
-	if err := cli.RegisterFlags(&cmd, flagLicenseManagerEndpoint, flagLicenseManagerClientID, flagLicenseManagerClientSecret, flagDeploymentID, flagInventory); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagLicenseManager, flagDeploymentID, flagInventory); err != nil {
 		return nil, err
 	}
 
@@ -49,7 +49,7 @@ func licenseGenerate() (*cobra.Command, error) {
 }
 
 func licenseGenerateRun(cmd *cobra.Command, args []string) error {
-	mc, err := getManagerClient(cmd)
+	mc, err := flagLicenseManager.Client(cmd)
 	if err != nil {
 		return err
 	}
