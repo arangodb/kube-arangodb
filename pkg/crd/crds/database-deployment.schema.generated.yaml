@@ -10178,11 +10178,23 @@ v1:
           license:
             description: License holds license settings
             properties:
+              expirationGracePeriod:
+                description: ExpirationGracePeriod defines the expiration grace period for the license
+                type: string
+              mode:
+                description: Mode Defines the mode of license
+                enum:
+                  - key
+                  - master
+                type: string
               secretName:
                 description: |-
                   SecretName setting specifies the name of a kubernetes `Secret` that contains
-                  the license key token used for enterprise images. This value is not used for
+                  the license key token or master key used for enterprise images. This value is not used for
                   the Community Edition.
+                type: string
+              ttl:
+                description: TTL Sets the requested License TTL
                 type: string
             type: object
           lifecycle:
@@ -27492,11 +27504,23 @@ v2alpha1:
           license:
             description: License holds license settings
             properties:
+              expirationGracePeriod:
+                description: ExpirationGracePeriod defines the expiration grace period for the license
+                type: string
+              mode:
+                description: Mode Defines the mode of license
+                enum:
+                  - key
+                  - master
+                type: string
               secretName:
                 description: |-
                   SecretName setting specifies the name of a kubernetes `Secret` that contains
-                  the license key token used for enterprise images. This value is not used for
+                  the license key token or master key used for enterprise images. This value is not used for
                   the Community Edition.
+                type: string
+              ttl:
+                description: TTL Sets the requested License TTL
                 type: string
             type: object
           lifecycle:

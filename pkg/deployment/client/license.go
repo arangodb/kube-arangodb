@@ -23,6 +23,7 @@ package client
 import (
 	"context"
 	goHttp "net/http"
+	"time"
 )
 
 const AdminLicenseUrl = "/_admin/license"
@@ -34,6 +35,19 @@ type LicenseClient interface {
 
 type License struct {
 	Hash string `json:"hash,omitempty"`
+
+	Features *LicenseFeatures `json:"features,omitempty"`
+}
+
+type LicenseFeatures struct {
+	Expires *int64 `json:"expires,omitempty"`
+}
+
+func (l *License) Expires() time.Time {
+	if l == nil || l.Features == nil || l.Features.Expires == nil {
+		return time.Time{}
+	}
+	return time.Unix(*l.Features.Expires, 0).UTC()
 }
 
 func (c *client) GetLicense(ctx context.Context) (License, error) {

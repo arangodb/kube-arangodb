@@ -131,6 +131,9 @@ const (
 	// ActionKillMemberPodDefaultTimeout define default timeout for action ActionKillMemberPod
 	ActionKillMemberPodDefaultTimeout time.Duration = ActionsDefaultTimeout
 
+	// ActionLicenseGenerateDefaultTimeout define default timeout for action ActionLicenseGenerate
+	ActionLicenseGenerateDefaultTimeout time.Duration = ActionsDefaultTimeout
+
 	// ActionLicenseSetDefaultTimeout define default timeout for action ActionLicenseSet
 	ActionLicenseSetDefaultTimeout time.Duration = ActionsDefaultTimeout
 
@@ -401,6 +404,9 @@ const (
 	// ActionTypeKillMemberPod in scopes High and Normal. Execute Delete on Pod (put pod in Terminating state)
 	ActionTypeKillMemberPod ActionType = "KillMemberPod"
 
+	// ActionTypeLicenseGenerate in scopes Normal. Generates License using ArangoDB LicenseManager Endpoint
+	ActionTypeLicenseGenerate ActionType = "LicenseGenerate"
+
 	// ActionTypeLicenseSet in scopes Normal. Update Cluster license (3.9+)
 	ActionTypeLicenseSet ActionType = "LicenseSet"
 
@@ -639,6 +645,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionJWTStatusUpdateDefaultTimeout
 	case ActionTypeKillMemberPod:
 		return ActionKillMemberPodDefaultTimeout
+	case ActionTypeLicenseGenerate:
+		return ActionLicenseGenerateDefaultTimeout
 	case ActionTypeLicenseSet:
 		return ActionLicenseSetDefaultTimeout
 	case ActionTypeMarkToRemoveMember:
@@ -823,6 +831,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeKillMemberPod:
 		return ActionPriorityHigh
+	case ActionTypeLicenseGenerate:
+		return ActionPriorityNormal
 	case ActionTypeLicenseSet:
 		return ActionPriorityNormal
 	case ActionTypeMarkToRemoveMember:
@@ -1032,6 +1042,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeJWTStatusUpdate:
 		return false
 	case ActionTypeKillMemberPod:
+		return false
+	case ActionTypeLicenseGenerate:
 		return false
 	case ActionTypeLicenseSet:
 		return false

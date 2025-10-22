@@ -1869,6 +1869,21 @@ func (in *LicenseSpec) DeepCopyInto(out *LicenseSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Mode != nil {
+		in, out := &in.Mode, &out.Mode
+		*out = new(LicenseMode)
+		**out = **in
+	}
+	if in.TTL != nil {
+		in, out := &in.TTL, &out.TTL
+		*out = new(metav1.Duration)
+		**out = **in
+	}
+	if in.ExpirationGracePeriod != nil {
+		in, out := &in.ExpirationGracePeriod, &out.ExpirationGracePeriod
+		*out = new(metav1.Duration)
+		**out = **in
+	}
 	return
 }
 

@@ -386,6 +386,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("LicenseGenerate", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeLicenseGenerate)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeLicenseGenerate.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeLicenseGenerate.Optional())
+		})
+	})
+
 	t.Run("LicenseSet", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeLicenseSet)
 		t.Run("Internal", func(t *testing.T) {

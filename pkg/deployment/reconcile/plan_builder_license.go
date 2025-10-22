@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
@@ -39,6 +40,17 @@ func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil
 		return nil
 	}
 
+	switch spec.License.Mode.Get() {
+	case api.LicenseModeKey:
+		return r.updateClusterLicenseKey(ctx, spec, status, context)
+	case api.LicenseModeMaster:
+		return r.updateClusterLicenseMaster(ctx, spec, status, context)
+	}
+
+	return nil
+}
+
+func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
 	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
 	if err != nil {
 		r.log.Err(err).Error("License secret error")
@@ -89,4 +101,60 @@ func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil
 	}
 
 	return api.Plan{sharedReconcile.RemoveConditionActionV2("License is not set", api.ConditionTypeLicenseSet), actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Setting license")}
+}
+
+func (r *Reconciler) updateClusterLicenseMaster(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
+	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
+	if err != nil {
+		r.log.Err(err).Error("License secret error")
+		return nil
+	}
+
+	if l.Master == nil {
+		r.log.Str("secret", spec.License.GetSecretName()).Error("V2 License key is not set")
+		return nil
+	}
+
+	members := status.Members.AsListInGroups(api.ServerGroupCoordinators, api.ServerGroupSingle).Filter(func(a api.DeploymentStatusMemberElement) bool {
+		i := a.Member.Image
+		if i == nil {
+			return false
+		}
+
+		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0 && i.Enterprise
+	})
+
+	if len(members) == 0 {
+		// No member found to take this action
+		r.log.Trace("No enterprise member in version 3.9.0 or above")
+		return nil
+	}
+
+	member := members[0]
+
+	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	c, err := context.GetMembersState().GetMemberClient(member.Member.ID)
+	if err != nil {
+		r.log.Err(err).Error("Unable to get client")
+		return nil
+	}
+
+	internalClient := client.NewClient(c.Connection(), r.log)
+
+	currentLicense, err := internalClient.GetLicense(ctxChild)
+	if err != nil {
+		r.log.Err(err).Error("Unable to get current license")
+		return nil
+	}
+
+	if time.Until(currentLicense.Expires()) > spec.License.GetExpirationGracePeriod() {
+		if c, _ := status.Conditions.Get(api.ConditionTypeLicenseSet); !c.IsTrue() {
+			return api.Plan{sharedReconcile.UpdateConditionActionV2("License is set", api.ConditionTypeLicenseSet, true, "License UpToDate", "", currentLicense.Hash)}
+		}
+		return nil
+	}
+
+	return api.Plan{sharedReconcile.RemoveConditionActionV2("License is not set", api.ConditionTypeLicenseSet), actions.NewAction(api.ActionTypeLicenseGenerate, member.Group, member.Member, "Generating license")}
 }

@@ -126,6 +126,9 @@ var (
 	_ Action        = &actionKillMemberPod{}
 	_ actionFactory = newKillMemberPodAction
 
+	_ Action        = &actionLicenseGenerate{}
+	_ actionFactory = newLicenseGenerateAction
+
 	_ Action        = &actionLicenseSet{}
 	_ actionFactory = newLicenseSetAction
 
@@ -761,6 +764,20 @@ func init() {
 
 		// Get Action defition
 		function := newKillMemberPodAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// LicenseGenerate
+	{
+		// Get Action type
+		action := api.ActionTypeLicenseGenerate
+
+		// Get Action defition
+		function := newLicenseGenerateAction
 
 		// Wrap action main function
 

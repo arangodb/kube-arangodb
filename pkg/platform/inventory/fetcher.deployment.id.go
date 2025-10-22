@@ -58,7 +58,9 @@ func init() {
 			}
 
 			return errors.Errors(
-				Produce(out, "ARANGO_DEPLOYMENT_ID", nil, health.ID),
+				Produce(out, "ARANGO_DEPLOYMENT", map[string]string{
+					"detail": "id",
+				}, health.ID),
 			)
 		}
 	})
