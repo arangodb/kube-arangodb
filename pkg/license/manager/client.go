@@ -36,6 +36,10 @@ import (
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
+const (
+	ArangoLicenseManagerEndpoint = "arango.license.ai"
+)
+
 func NewClient(endpoint, id, key string, mods ...util.Mod[goHttp.Transport]) (Client, error) {
 	transport := operatorHTTP.Transport(mods...)
 

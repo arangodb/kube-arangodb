@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	DefaultLicenseExpirationGracePeriod = 7 * 24 * time.Hour
+	DefaultLicenseExpirationGracePeriod = 3 * 24 * time.Hour
 	DefaultLicenseTTL                   = 14 * 24 * time.Hour
 )
 
@@ -65,7 +65,7 @@ type LicenseSpec struct {
 	TTL *meta.Duration `json:"ttl,omitempty"`
 
 	// ExpirationGracePeriod defines the expiration grace period for the license
-	// +doc/default: 168h
+	// +doc/default: 72h
 	ExpirationGracePeriod *meta.Duration `json:"expirationGracePeriod,omitempty"`
 }
 

@@ -47,6 +47,7 @@ nav_order: 11
 | JWTSetActive | no | 10m0s | no | Enterprise Only | Change active JWT key on the cluster |
 | JWTStatusUpdate | no | 10m0s | no | Enterprise Only | Update status of JWT propagation |
 | KillMemberPod | no | 10m0s | no | Community & Enterprise | Execute Delete on Pod (put pod in Terminating state) |
+| LicenseGenerate | no | 10m0s | no | Community & Enterprise | Generates License using ArangoDB LicenseManager Endpoint |
 | LicenseSet | no | 10m0s | no | Community & Enterprise | Update Cluster license (3.9+) |
 | MarkToRemoveMember | no | 10m0s | no | Community & Enterprise | Marks member to be removed. Used when member Pod is annotated with replace annotation |
 | MemberPhaseUpdate | no | 10m0s | no | Community & Enterprise | Change member phase |
@@ -146,6 +147,7 @@ spec:
       JWTSetActive: 10m0s
       JWTStatusUpdate: 10m0s
       KillMemberPod: 10m0s
+      LicenseGenerate: 10m0s
       LicenseSet: 10m0s
       MarkToRemoveMember: 10m0s
       MemberPhaseUpdate: 10m0s
