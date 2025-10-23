@@ -25,7 +25,7 @@ import (
 	"fmt"
 	goHttp "net/http"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
@@ -78,9 +78,9 @@ type Client interface {
 }
 
 type LicenseRequest struct {
-	DeploymentID *string                        `json:"deployment_id,omitempty"`
-	TTL          *meta.Duration                 `json:"ttl,omitempty"`
-	Inventory    *ugrpc.Object[*inventory.Spec] `json:"inventory,omitempty"`
+	DeploymentID *string                             `json:"deployment_id,omitempty"`
+	TTL          *ugrpc.Object[*durationpb.Duration] `json:"ttl,omitempty"`
+	Inventory    *ugrpc.Object[*inventory.Spec]      `json:"inventory,omitempty"`
 }
 
 type LicenseResponse struct {

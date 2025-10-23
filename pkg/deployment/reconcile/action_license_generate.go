@@ -24,8 +24,8 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/protobuf/types/known/durationpb"
 	core "k8s.io/api/core/v1"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
@@ -95,7 +95,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 
 	license, err := lm.License(ctx, manager.LicenseRequest{
 		DeploymentID: util.NewType(inv.DeploymentId),
-		TTL:          util.NewType(meta.Duration{Duration: spec.License.GetTTL()}),
+		TTL:          util.NewType(ugrpc.NewObject(durationpb.New(spec.License.GetTTL()))),
 		Inventory:    util.NewType(ugrpc.NewObject(inv)),
 	})
 	if err != nil {
