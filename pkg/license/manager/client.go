@@ -23,8 +23,8 @@ package manager
 import (
 	"context"
 	"fmt"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	goHttp "net/http"
-	"time"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
@@ -78,7 +78,7 @@ type Client interface {
 
 type LicenseRequest struct {
 	DeploymentID *string                        `json:"deployment_id,omitempty"`
-	TTL          *time.Duration                 `json:"ttl,omitempty"`
+	TTL          *meta.Duration                 `json:"ttl,omitempty"`
 	Inventory    *ugrpc.Object[*inventory.Spec] `json:"inventory,omitempty"`
 }
 

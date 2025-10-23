@@ -23,6 +23,7 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	core "k8s.io/api/core/v1"
 
@@ -94,7 +95,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 
 	license, err := lm.License(ctx, manager.LicenseRequest{
 		DeploymentID: util.NewType(inv.DeploymentId),
-		TTL:          util.NewType(spec.License.GetTTL()),
+		TTL:          util.NewType(meta.Duration{Duration: spec.License.GetTTL()}),
 		Inventory:    util.NewType(ugrpc.NewObject(inv)),
 	})
 	if err != nil {
