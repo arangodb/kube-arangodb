@@ -86,9 +86,9 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 		} else {
 			l.V2 = License(v2)
 		}
-	} else {
-		return LicenseSecret{}, errors.Errorf("Key (%s, %s or %s) is missing in the license secret (%s)",
-			utilConstants.SecretKeyToken, utilConstants.SecretKeyV2License, utilConstants.SecretKeyV2Token, name)
+	} else if l.Master == nil {
+		return LicenseSecret{}, errors.Errorf("Key (%s, %s, %s, or %s+%s) is missing in the license secret (%s)",
+			utilConstants.SecretKeyToken, utilConstants.SecretKeyV2License, utilConstants.SecretKeyV2Token, utilConstants.SecretKeyMasterClientID, utilConstants.SecretKeyMasterClientSecret, name)
 	}
 
 	return l, nil
