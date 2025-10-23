@@ -115,7 +115,7 @@ func (r *Reconciler) updateClusterLicenseMaster(ctx context.Context, spec api.De
 		return nil
 	}
 
-	members := status.Members.AsListInGroups(arangod.GroupsWithLicenseV2()...).Filter(func(a api.DeploymentStatusMemberElement) bool {
+	members := status.Members.AsListInGroups(api.ServerGroupCoordinators, api.ServerGroupSingle).Filter(func(a api.DeploymentStatusMemberElement) bool {
 		i := a.Member.Image
 		if i == nil {
 			return false
