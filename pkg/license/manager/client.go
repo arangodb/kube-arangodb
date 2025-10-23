@@ -23,8 +23,9 @@ package manager
 import (
 	"context"
 	"fmt"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	goHttp "net/http"
+
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"

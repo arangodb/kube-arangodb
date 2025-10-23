@@ -23,9 +23,9 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
