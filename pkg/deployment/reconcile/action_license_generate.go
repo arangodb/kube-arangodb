@@ -80,7 +80,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	inv, err := inventory.FetchInventorySpec(ctx, logger, 4, c.Connection())
+	inv, err := inventory.FetchInventorySpec(ctx, a.log, 4, c.Connection())
 	if err != nil {
 		a.log.Err(err).Error("Unable to generate inventory")
 		return true, nil
