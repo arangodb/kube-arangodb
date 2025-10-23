@@ -81,10 +81,10 @@ func (s LicenseSpec) GetSecretName() string {
 
 // GetTTL returns the license TTL
 func (s LicenseSpec) GetTTL() time.Duration {
-	if s.ExpirationGracePeriod == nil {
+	if s.TTL == nil {
 		return DefaultLicenseTTL
 	}
-	return s.ExpirationGracePeriod.Duration
+	return s.TTL.Duration
 }
 
 // GetExpirationGracePeriod returns the expiration period
