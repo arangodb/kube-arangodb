@@ -48,6 +48,15 @@ func (i *ImageInfo) String() string {
 	return fmt.Sprintf("ArangoDB %s %s (%s)", e, string(i.ArangoDBVersion), i.Image)
 }
 
+// IsEnterprise returns true if image is enterprise
+func (i *ImageInfo) IsEnterprise() bool {
+	if i == nil {
+		return false
+	}
+
+	return i.Enterprise
+}
+
 // ImageInfoList is a list of image infos
 type ImageInfoList []ImageInfo
 
