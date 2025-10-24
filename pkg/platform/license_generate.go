@@ -26,7 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/license/manager"
+	"github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
@@ -74,7 +74,7 @@ func licenseGenerateRun(cmd *cobra.Command, args []string) error {
 
 	l.Info("Generating License")
 
-	lic, err := mc.License(cmd.Context(), manager.LicenseRequest{
+	lic, err := mc.License(cmd.Context(), license_manager.LicenseRequest{
 		DeploymentID: util.NewType(did),
 		Inventory:    util.NewType(ugrpc.NewObject(inv)),
 	})
