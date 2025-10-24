@@ -29,7 +29,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
-	"github.com/arangodb/kube-arangodb/pkg/license/manager"
+	"github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -87,13 +87,13 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	lm, err := manager.NewClient(manager.ArangoLicenseManagerEndpoint, l.Master.ClientID, l.Master.ClientSecret)
+	lm, err := license_manager.NewClient(license_manager.ArangoLicenseManagerEndpoint, l.Master.ClientID, l.Master.ClientSecret)
 	if err != nil {
 		a.log.Err(err).Error("Unable to create inventory client")
 		return true, nil
 	}
 
-	license, err := lm.License(ctx, manager.LicenseRequest{
+	license, err := lm.License(ctx, license_manager.LicenseRequest{
 		DeploymentID: util.NewType(inv.DeploymentId),
 		TTL:          util.NewType(ugrpc.NewObject(durationpb.New(spec.License.GetTTL()))),
 		Inventory:    util.NewType(ugrpc.NewObject(inv)),

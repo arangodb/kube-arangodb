@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package manager
+package license_manager
 
 import (
 	"fmt"
