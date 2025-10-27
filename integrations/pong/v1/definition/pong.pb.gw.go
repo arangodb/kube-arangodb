@@ -14,7 +14,7 @@ import (
 	"io"
 	"net/http"
 
-	definition_8 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	definition_9 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -38,7 +38,7 @@ var (
 
 func request_PongV1_Ping_0(ctx context.Context, marshaler runtime.Marshaler, client PongV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_8.Empty
+		protoReq definition_9.Empty
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -50,7 +50,7 @@ func request_PongV1_Ping_0(ctx context.Context, marshaler runtime.Marshaler, cli
 
 func local_request_PongV1_Ping_0(ctx context.Context, marshaler runtime.Marshaler, server PongV1Server, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_8.Empty
+		protoReq definition_9.Empty
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.Ping(ctx, &protoReq)

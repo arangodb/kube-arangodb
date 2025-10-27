@@ -293,7 +293,10 @@ func (c *configuration) startBackgroundersWithContext(ctx context.Context, healt
 	for _, handler := range allHandlers {
 		wg.Add(1)
 		z := svc.RunBackground(handler)
-		defer z()
+		defer func(in context.CancelFunc) {
+			defer wg.Done()
+			in()
+		}(z)
 	}
 
 	return c.startServerWithContext(ctx, health, internalConfig, externalConfig, internalHandlers, externalHandlers)

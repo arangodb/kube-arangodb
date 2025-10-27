@@ -18,24 +18,10 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package v1
 
 import (
-	"context"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-type Background interface {
-	Background(ctx context.Context)
-}
-
-func RunBackground(in any) context.CancelFunc {
-	if h, ok := in.(Background); ok {
-		return util.RunContextAsync(context.Background(), h.Background)
-	}
-
-	return func() {
-
-	}
-}
+var logger = logging.Global().RegisterAndGetLogger("integration-pong-v1", logging.Info)

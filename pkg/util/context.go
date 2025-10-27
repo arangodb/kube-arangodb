@@ -120,3 +120,19 @@ func WithKubernetesPatch[P1 meta.Object](ctx context.Context, obj string, client
 }
 
 type ContextKey string
+
+func RunContextAsync(ctx context.Context, in func(ctx context.Context)) context.CancelFunc {
+	ctx, cancel := context.WithCancel(ctx)
+
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		in(ctx)
+	}()
+
+	return func() {
+		cancel()
+		<-done
+	}
+}

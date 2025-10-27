@@ -48,22 +48,12 @@ type asyncRemoteWriter[IN proto.Message, H RemoteStore[IN]] struct {
 	delay   time.Duration
 }
 
-func (a *asyncRemoteWriter[IN, H]) Background() context.CancelFunc {
-	ctx, c := context.WithCancel(context.Background())
-
-	go func() {
-		logger.Info("Async background started")
-		defer func() {
-			logger.Info("Async background completed")
-		}()
-
-		a.run(ctx)
+func (a *asyncRemoteWriter[IN, H]) Background(ctx context.Context) {
+	logger.Info("Async background started")
+	defer func() {
+		logger.Info("Async background completed")
 	}()
 
-	return c
-}
-
-func (a *asyncRemoteWriter[IN, H]) run(ctx context.Context) {
 	go func() {
 		defer close(a.cache)
 		<-ctx.Done()

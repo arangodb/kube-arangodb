@@ -22,8 +22,8 @@ syntax = "proto3";
 
 package events;
 
-import "integrations/events/v1/definition/event.proto";
 import "google/protobuf/timestamp.proto";
+import "integrations/events/v1/definition/event.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/events/v1/definition";
 

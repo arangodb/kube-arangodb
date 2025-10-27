@@ -74,11 +74,33 @@ func New(services ...Service) (svc.Handler, error) {
 
 var _ pbPongV1.PongV1Server = &impl{}
 var _ svc.Handler = &impl{}
+var _ svc.Background = &impl{}
 
 type impl struct {
 	services []Service
 
 	pbPongV1.UnimplementedPongV1Server
+
+	ticks int32
+}
+
+func (i *impl) Background(ctx context.Context) {
+	logger.Info("Async background started")
+	defer func() {
+		logger.Info("Async background completed")
+	}()
+
+	tickerT := time.NewTicker(time.Second)
+	defer tickerT.Stop()
+
+	for {
+		select {
+		case <-tickerT.C:
+			i.ticks++
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func (i *impl) Name() string {
@@ -98,7 +120,7 @@ func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
 }
 
 func (i *impl) Ping(context.Context, *pbSharedV1.Empty) (*pbPongV1.PongV1PingResponse, error) {
-	return &pbPongV1.PongV1PingResponse{Time: timestamppb.New(time.Now().UTC())}, nil
+	return &pbPongV1.PongV1PingResponse{Time: timestamppb.New(time.Now().UTC()), Ticks: i.ticks}, nil
 }
 
 func (i *impl) Services(context.Context, *pbSharedV1.Empty) (*pbPongV1.PongV1ServicesResponse, error) {
