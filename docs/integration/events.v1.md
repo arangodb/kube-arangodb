@@ -5,8 +5,8 @@ grand_parent: ArangoDBPlatform
 parent: Integration Sidecars
 ---
 
-# Meta V1
+# Events V1
 
 Definitions:
 
-- [Service](https://github.com/arangodb/kube-arangodb/blob/1.3.1/integrations/meta/v1/definition/definition.proto)
+- [Service](https://github.com/arangodb/kube-arangodb/blob/1.3.1/integrations/events/v1/definition/definition.proto)

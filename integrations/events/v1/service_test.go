@@ -26,18 +26,19 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
+	pbEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	tcache "github.com/arangodb/kube-arangodb/pkg/util/tests/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func Handler(mods ...util.ModR[Configuration]) svc.Handler {
-	return newInternal(NewConfiguration().With(mods...), tcache.NewRemoteCache[*Object]())
+func Handler(remote RemoteStore[*pbEventsV1.Event], mods ...util.ModR[Configuration]) svc.Handler {
+	return newInternal(NewConfiguration().With(mods...), remote)
 }
 
-func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) svc.ServiceStarter {
+func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (svc.ServiceStarter, TestRemoteStore[*pbEventsV1.Event]) {
+	store := NewArangoTestStore[*pbEventsV1.Event]()
+
 	var currentMods []util.ModR[Configuration]
 
 	currentMods = append(currentMods, func(c Configuration) Configuration {
@@ -51,18 +52,18 @@ func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration])
 		Gateway: &svc.ConfigurationGateway{
 			Address: "127.0.0.1:0",
 		},
-	}, Handler(currentMods...))
+	}, Handler(store, currentMods...))
 	require.NoError(t, err)
 
-	return local.Start(ctx)
+	return local.Start(ctx), store
 }
 
-func Client(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) pbMetaV1.MetaV1Client {
-	start := Server(t, ctx, mods...)
+func Client(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (pbEventsV1.EventsV1Client, TestRemoteStore[*pbEventsV1.Event]) {
+	start, store := Server(t, ctx, mods...)
 
-	client := tgrpc.NewGRPCClient(t, ctx, pbMetaV1.NewMetaV1Client, start.Address())
+	client := tgrpc.NewGRPCClient(t, ctx, pbEventsV1.NewEventsV1Client, start.Address())
 
-	return client
+	return client, store
 }
 
 func Test_Service(t *testing.T) {

@@ -2,6 +2,7 @@
 layout: page
 title: Google Cloud Storage
 parent: Storage
+grand_parent: ArangoDBPlatform
 nav_order: 2
 ---
 

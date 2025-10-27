@@ -24,8 +24,10 @@ import (
 	"fmt"
 	"time"
 
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
@@ -61,5 +63,8 @@ func (c Configuration) Key(parts ...string) string {
 }
 
 func (c Configuration) Validate() error {
-	return nil
+	return errors.Errors(
+		shared.PrefixResourceError("endpoint", c.Endpoint.Validate()),
+		shared.PrefixResourceError("database", c.Database.Validate()),
+	)
 }

@@ -1,0 +1,54 @@
+//
+// DISCLAIMER
+//
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package events;
+
+import "integrations/events/v1/definition/event.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/events/v1/definition";
+
+// EventsV1 Service implementation
+service EventsV1 {
+  // Sends events to the server once the stream is closed
+  rpc Emit(stream EventsV1Request) returns (EventsV1Response);
+}
+
+// Responses
+
+// Event V1 Request
+message EventsV1Request {
+  // List of the Events to produce as batch
+  repeated Event events = 1;
+}
+
+// Event V1 Response
+message EventsV1Response {
+  // Number of the processed Events
+  int32 processed = 1;
+
+  // Defines if production was sync or async
+  bool completed = 2;
+
+  // Creation Timestamp of the events. Defaults to the current timestamp
+  optional google.protobuf.Timestamp created = 3;
+}

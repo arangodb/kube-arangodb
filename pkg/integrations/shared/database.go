@@ -184,6 +184,6 @@ func (d *Database) KVCollectionFromClient(clientO cache.Object[arangodb.Client],
 			return nil, 0, err
 		}
 
-		return col, 24 * time.Hour, nil
+		return col, time.Hour, nil
 	})
 }
