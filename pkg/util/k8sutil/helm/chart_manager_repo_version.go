@@ -59,7 +59,7 @@ func (m chartManagerRepoVersion) Get(ctx context.Context) (Chart, error) {
 	var errs = make([]error, len(m.chart.URLs))
 
 	for id, url := range m.chart.URLs {
-		data, err := operatorHTTP.Download(ctx, m.manager.client, url)
+		data, err := operatorHTTP.Download(ctx, m.manager.client, "%s", url)
 		if err != nil {
 			errs[id] = err
 			continue

@@ -100,7 +100,7 @@ func (m *manager) Reload(ctx context.Context) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	data, err := operatorHTTP.Download(ctx, m.client, m.url)
+	data, err := operatorHTTP.Download(ctx, m.client, "%s", m.url)
 	if err != nil {
 		return err
 	}

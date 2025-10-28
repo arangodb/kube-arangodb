@@ -134,7 +134,7 @@ func cleanStatusJob() updateStatusFunc {
 
 func setFailedState(backup *backupApi.ArangoBackup, err error) (*backupApi.ArangoBackupStatus, error) {
 	return wrapUpdateStatus(backup,
-		updateStatusState(backupApi.ArangoBackupStateFailed, createStateMessage(backup.Status.State, backupApi.ArangoBackupStateFailed, err.Error())),
+		updateStatusState(backupApi.ArangoBackupStateFailed, "%s", createStateMessage(backup.Status.State, backupApi.ArangoBackupStateFailed, err.Error())),
 		updateStatusAvailable(false))
 }
 

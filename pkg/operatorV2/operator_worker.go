@@ -104,7 +104,7 @@ func (o *operator) processObject(item operation.Item) error {
 		if !IsReconcile(err) {
 			message := fmt.Sprintf("error syncing '%s': %s, re-queuing", item.String(), err.Error())
 			loggerWorker.Debug(message)
-			return errors.Errorf(message)
+			return errors.New(message)
 		}
 
 		return nil

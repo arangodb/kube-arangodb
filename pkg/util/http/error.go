@@ -32,7 +32,7 @@ func WrapError(code int, err error) error {
 		return nil
 	}
 
-	return NewError(code, err.Error())
+	return NewError(code, "%s", err.Error())
 }
 
 func NewError(code int, format string, args ...any) error {

@@ -86,7 +86,7 @@ func Test_ACS_KubeConfigSpec(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			var err error
 			if tc.error != "" {
-				err = errors.Errorf(tc.error)
+				err = errors.New(tc.error)
 			}
 			test(t, tc.spec, err)
 		})
