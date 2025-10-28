@@ -23,10 +23,10 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoSchedulerBatchJobLister helps list ArangoSchedulerBatchJobs.
@@ -34,7 +34,7 @@ import (
 type ArangoSchedulerBatchJobLister interface {
 	// List lists all ArangoSchedulerBatchJobs in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerBatchJob, err error)
+	List(selector labels.Selector) (ret []*schedulerv1beta1.ArangoSchedulerBatchJob, err error)
 	// ArangoSchedulerBatchJobs returns an object that can list and get ArangoSchedulerBatchJobs.
 	ArangoSchedulerBatchJobs(namespace string) ArangoSchedulerBatchJobNamespaceLister
 	ArangoSchedulerBatchJobListerExpansion
@@ -42,17 +42,17 @@ type ArangoSchedulerBatchJobLister interface {
 
 // arangoSchedulerBatchJobLister implements the ArangoSchedulerBatchJobLister interface.
 type arangoSchedulerBatchJobLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoSchedulerBatchJob]
+	listers.ResourceIndexer[*schedulerv1beta1.ArangoSchedulerBatchJob]
 }
 
 // NewArangoSchedulerBatchJobLister returns a new ArangoSchedulerBatchJobLister.
 func NewArangoSchedulerBatchJobLister(indexer cache.Indexer) ArangoSchedulerBatchJobLister {
-	return &arangoSchedulerBatchJobLister{listers.New[*v1beta1.ArangoSchedulerBatchJob](indexer, v1beta1.Resource("arangoschedulerbatchjob"))}
+	return &arangoSchedulerBatchJobLister{listers.New[*schedulerv1beta1.ArangoSchedulerBatchJob](indexer, schedulerv1beta1.Resource("arangoschedulerbatchjob"))}
 }
 
 // ArangoSchedulerBatchJobs returns an object that can list and get ArangoSchedulerBatchJobs.
 func (s *arangoSchedulerBatchJobLister) ArangoSchedulerBatchJobs(namespace string) ArangoSchedulerBatchJobNamespaceLister {
-	return arangoSchedulerBatchJobNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoSchedulerBatchJob](s.ResourceIndexer, namespace)}
+	return arangoSchedulerBatchJobNamespaceLister{listers.NewNamespaced[*schedulerv1beta1.ArangoSchedulerBatchJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoSchedulerBatchJobNamespaceLister helps list and get ArangoSchedulerBatchJobs.
@@ -60,15 +60,15 @@ func (s *arangoSchedulerBatchJobLister) ArangoSchedulerBatchJobs(namespace strin
 type ArangoSchedulerBatchJobNamespaceLister interface {
 	// List lists all ArangoSchedulerBatchJobs in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerBatchJob, err error)
+	List(selector labels.Selector) (ret []*schedulerv1beta1.ArangoSchedulerBatchJob, err error)
 	// Get retrieves the ArangoSchedulerBatchJob from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.ArangoSchedulerBatchJob, error)
+	Get(name string) (*schedulerv1beta1.ArangoSchedulerBatchJob, error)
 	ArangoSchedulerBatchJobNamespaceListerExpansion
 }
 
 // arangoSchedulerBatchJobNamespaceLister implements the ArangoSchedulerBatchJobNamespaceLister
 // interface.
 type arangoSchedulerBatchJobNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoSchedulerBatchJob]
+	listers.ResourceIndexer[*schedulerv1beta1.ArangoSchedulerBatchJob]
 }

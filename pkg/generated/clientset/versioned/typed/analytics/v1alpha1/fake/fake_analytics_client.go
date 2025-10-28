@@ -33,7 +33,7 @@ type FakeAnalyticsV1alpha1 struct {
 }
 
 func (c *FakeAnalyticsV1alpha1) GraphAnalyticsEngines(namespace string) v1alpha1.GraphAnalyticsEngineInterface {
-	return &FakeGraphAnalyticsEngines{c, namespace}
+	return newFakeGraphAnalyticsEngines(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

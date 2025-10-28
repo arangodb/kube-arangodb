@@ -23,129 +23,34 @@
 package fake
 
 import (
-	"context"
-
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	analyticsv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/analytics/v1alpha1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeGraphAnalyticsEngines implements GraphAnalyticsEngineInterface
-type FakeGraphAnalyticsEngines struct {
+// fakeGraphAnalyticsEngines implements GraphAnalyticsEngineInterface
+type fakeGraphAnalyticsEngines struct {
+	*gentype.FakeClientWithList[*v1alpha1.GraphAnalyticsEngine, *v1alpha1.GraphAnalyticsEngineList]
 	Fake *FakeAnalyticsV1alpha1
-	ns   string
 }
 
-var graphanalyticsenginesResource = v1alpha1.SchemeGroupVersion.WithResource("graphanalyticsengines")
-
-var graphanalyticsenginesKind = v1alpha1.SchemeGroupVersion.WithKind("GraphAnalyticsEngine")
-
-// Get takes name of the graphAnalyticsEngine, and returns the corresponding graphAnalyticsEngine object, and an error if there is any.
-func (c *FakeGraphAnalyticsEngines) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GraphAnalyticsEngine, err error) {
-	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(graphanalyticsenginesResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeGraphAnalyticsEngines(fake *FakeAnalyticsV1alpha1, namespace string) analyticsv1alpha1.GraphAnalyticsEngineInterface {
+	return &fakeGraphAnalyticsEngines{
+		gentype.NewFakeClientWithList[*v1alpha1.GraphAnalyticsEngine, *v1alpha1.GraphAnalyticsEngineList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("graphanalyticsengines"),
+			v1alpha1.SchemeGroupVersion.WithKind("GraphAnalyticsEngine"),
+			func() *v1alpha1.GraphAnalyticsEngine { return &v1alpha1.GraphAnalyticsEngine{} },
+			func() *v1alpha1.GraphAnalyticsEngineList { return &v1alpha1.GraphAnalyticsEngineList{} },
+			func(dst, src *v1alpha1.GraphAnalyticsEngineList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.GraphAnalyticsEngineList) []*v1alpha1.GraphAnalyticsEngine {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.GraphAnalyticsEngineList, items []*v1alpha1.GraphAnalyticsEngine) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.GraphAnalyticsEngine), err
-}
-
-// List takes label and field selectors, and returns the list of GraphAnalyticsEngines that match those selectors.
-func (c *FakeGraphAnalyticsEngines) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GraphAnalyticsEngineList, err error) {
-	emptyResult := &v1alpha1.GraphAnalyticsEngineList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(graphanalyticsenginesResource, graphanalyticsenginesKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.GraphAnalyticsEngineList{ListMeta: obj.(*v1alpha1.GraphAnalyticsEngineList).ListMeta}
-	for _, item := range obj.(*v1alpha1.GraphAnalyticsEngineList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested graphAnalyticsEngines.
-func (c *FakeGraphAnalyticsEngines) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(graphanalyticsenginesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a graphAnalyticsEngine and creates it.  Returns the server's representation of the graphAnalyticsEngine, and an error, if there is any.
-func (c *FakeGraphAnalyticsEngines) Create(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.CreateOptions) (result *v1alpha1.GraphAnalyticsEngine, err error) {
-	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(graphanalyticsenginesResource, c.ns, graphAnalyticsEngine, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.GraphAnalyticsEngine), err
-}
-
-// Update takes the representation of a graphAnalyticsEngine and updates it. Returns the server's representation of the graphAnalyticsEngine, and an error, if there is any.
-func (c *FakeGraphAnalyticsEngines) Update(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (result *v1alpha1.GraphAnalyticsEngine, err error) {
-	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(graphanalyticsenginesResource, c.ns, graphAnalyticsEngine, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.GraphAnalyticsEngine), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGraphAnalyticsEngines) UpdateStatus(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (result *v1alpha1.GraphAnalyticsEngine, err error) {
-	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(graphanalyticsenginesResource, "status", c.ns, graphAnalyticsEngine, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.GraphAnalyticsEngine), err
-}
-
-// Delete takes name of the graphAnalyticsEngine and deletes it. Returns an error if one occurs.
-func (c *FakeGraphAnalyticsEngines) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(graphanalyticsenginesResource, c.ns, name, opts), &v1alpha1.GraphAnalyticsEngine{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeGraphAnalyticsEngines) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(graphanalyticsenginesResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.GraphAnalyticsEngineList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched graphAnalyticsEngine.
-func (c *FakeGraphAnalyticsEngines) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GraphAnalyticsEngine, err error) {
-	emptyResult := &v1alpha1.GraphAnalyticsEngine{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(graphanalyticsenginesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.GraphAnalyticsEngine), err
 }

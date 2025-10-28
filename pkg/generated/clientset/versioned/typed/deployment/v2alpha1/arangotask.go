@@ -23,9 +23,9 @@
 package v2alpha1
 
 import (
-	"context"
+	context "context"
 
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoTasksGetter interface {
 
 // ArangoTaskInterface has methods to work with ArangoTask resources.
 type ArangoTaskInterface interface {
-	Create(ctx context.Context, arangoTask *v2alpha1.ArangoTask, opts v1.CreateOptions) (*v2alpha1.ArangoTask, error)
-	Update(ctx context.Context, arangoTask *v2alpha1.ArangoTask, opts v1.UpdateOptions) (*v2alpha1.ArangoTask, error)
+	Create(ctx context.Context, arangoTask *deploymentv2alpha1.ArangoTask, opts v1.CreateOptions) (*deploymentv2alpha1.ArangoTask, error)
+	Update(ctx context.Context, arangoTask *deploymentv2alpha1.ArangoTask, opts v1.UpdateOptions) (*deploymentv2alpha1.ArangoTask, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoTask *v2alpha1.ArangoTask, opts v1.UpdateOptions) (*v2alpha1.ArangoTask, error)
+	UpdateStatus(ctx context.Context, arangoTask *deploymentv2alpha1.ArangoTask, opts v1.UpdateOptions) (*deploymentv2alpha1.ArangoTask, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v2alpha1.ArangoTask, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v2alpha1.ArangoTaskList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*deploymentv2alpha1.ArangoTask, error)
+	List(ctx context.Context, opts v1.ListOptions) (*deploymentv2alpha1.ArangoTaskList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2alpha1.ArangoTask, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *deploymentv2alpha1.ArangoTask, err error)
 	ArangoTaskExpansion
 }
 
 // arangoTasks implements ArangoTaskInterface
 type arangoTasks struct {
-	*gentype.ClientWithList[*v2alpha1.ArangoTask, *v2alpha1.ArangoTaskList]
+	*gentype.ClientWithList[*deploymentv2alpha1.ArangoTask, *deploymentv2alpha1.ArangoTaskList]
 }
 
 // newArangoTasks returns a ArangoTasks
 func newArangoTasks(c *DatabaseV2alpha1Client, namespace string) *arangoTasks {
 	return &arangoTasks{
-		gentype.NewClientWithList[*v2alpha1.ArangoTask, *v2alpha1.ArangoTaskList](
+		gentype.NewClientWithList[*deploymentv2alpha1.ArangoTask, *deploymentv2alpha1.ArangoTaskList](
 			"arangotasks",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v2alpha1.ArangoTask { return &v2alpha1.ArangoTask{} },
-			func() *v2alpha1.ArangoTaskList { return &v2alpha1.ArangoTaskList{} }),
+			func() *deploymentv2alpha1.ArangoTask { return &deploymentv2alpha1.ArangoTask{} },
+			func() *deploymentv2alpha1.ArangoTaskList { return &deploymentv2alpha1.ArangoTaskList{} },
+		),
 	}
 }

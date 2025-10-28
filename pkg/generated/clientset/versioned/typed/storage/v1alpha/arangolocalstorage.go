@@ -23,9 +23,9 @@
 package v1alpha
 
 import (
-	"context"
+	context "context"
 
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoLocalStoragesGetter interface {
 
 // ArangoLocalStorageInterface has methods to work with ArangoLocalStorage resources.
 type ArangoLocalStorageInterface interface {
-	Create(ctx context.Context, arangoLocalStorage *v1alpha.ArangoLocalStorage, opts v1.CreateOptions) (*v1alpha.ArangoLocalStorage, error)
-	Update(ctx context.Context, arangoLocalStorage *v1alpha.ArangoLocalStorage, opts v1.UpdateOptions) (*v1alpha.ArangoLocalStorage, error)
+	Create(ctx context.Context, arangoLocalStorage *storagev1alpha.ArangoLocalStorage, opts v1.CreateOptions) (*storagev1alpha.ArangoLocalStorage, error)
+	Update(ctx context.Context, arangoLocalStorage *storagev1alpha.ArangoLocalStorage, opts v1.UpdateOptions) (*storagev1alpha.ArangoLocalStorage, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoLocalStorage *v1alpha.ArangoLocalStorage, opts v1.UpdateOptions) (*v1alpha.ArangoLocalStorage, error)
+	UpdateStatus(ctx context.Context, arangoLocalStorage *storagev1alpha.ArangoLocalStorage, opts v1.UpdateOptions) (*storagev1alpha.ArangoLocalStorage, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha.ArangoLocalStorage, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha.ArangoLocalStorageList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*storagev1alpha.ArangoLocalStorage, error)
+	List(ctx context.Context, opts v1.ListOptions) (*storagev1alpha.ArangoLocalStorageList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha.ArangoLocalStorage, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *storagev1alpha.ArangoLocalStorage, err error)
 	ArangoLocalStorageExpansion
 }
 
 // arangoLocalStorages implements ArangoLocalStorageInterface
 type arangoLocalStorages struct {
-	*gentype.ClientWithList[*v1alpha.ArangoLocalStorage, *v1alpha.ArangoLocalStorageList]
+	*gentype.ClientWithList[*storagev1alpha.ArangoLocalStorage, *storagev1alpha.ArangoLocalStorageList]
 }
 
 // newArangoLocalStorages returns a ArangoLocalStorages
 func newArangoLocalStorages(c *StorageV1alphaClient) *arangoLocalStorages {
 	return &arangoLocalStorages{
-		gentype.NewClientWithList[*v1alpha.ArangoLocalStorage, *v1alpha.ArangoLocalStorageList](
+		gentype.NewClientWithList[*storagev1alpha.ArangoLocalStorage, *storagev1alpha.ArangoLocalStorageList](
 			"arangolocalstorages",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1alpha.ArangoLocalStorage { return &v1alpha.ArangoLocalStorage{} },
-			func() *v1alpha.ArangoLocalStorageList { return &v1alpha.ArangoLocalStorageList{} }),
+			func() *storagev1alpha.ArangoLocalStorage { return &storagev1alpha.ArangoLocalStorage{} },
+			func() *storagev1alpha.ArangoLocalStorageList { return &storagev1alpha.ArangoLocalStorageList{} },
+		),
 	}
 }

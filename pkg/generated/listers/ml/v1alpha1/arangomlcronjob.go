@@ -23,10 +23,10 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoMLCronJobLister helps list ArangoMLCronJobs.
@@ -34,7 +34,7 @@ import (
 type ArangoMLCronJobLister interface {
 	// List lists all ArangoMLCronJobs in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.ArangoMLCronJob, err error)
+	List(selector labels.Selector) (ret []*mlv1alpha1.ArangoMLCronJob, err error)
 	// ArangoMLCronJobs returns an object that can list and get ArangoMLCronJobs.
 	ArangoMLCronJobs(namespace string) ArangoMLCronJobNamespaceLister
 	ArangoMLCronJobListerExpansion
@@ -42,17 +42,17 @@ type ArangoMLCronJobLister interface {
 
 // arangoMLCronJobLister implements the ArangoMLCronJobLister interface.
 type arangoMLCronJobLister struct {
-	listers.ResourceIndexer[*v1alpha1.ArangoMLCronJob]
+	listers.ResourceIndexer[*mlv1alpha1.ArangoMLCronJob]
 }
 
 // NewArangoMLCronJobLister returns a new ArangoMLCronJobLister.
 func NewArangoMLCronJobLister(indexer cache.Indexer) ArangoMLCronJobLister {
-	return &arangoMLCronJobLister{listers.New[*v1alpha1.ArangoMLCronJob](indexer, v1alpha1.Resource("arangomlcronjob"))}
+	return &arangoMLCronJobLister{listers.New[*mlv1alpha1.ArangoMLCronJob](indexer, mlv1alpha1.Resource("arangomlcronjob"))}
 }
 
 // ArangoMLCronJobs returns an object that can list and get ArangoMLCronJobs.
 func (s *arangoMLCronJobLister) ArangoMLCronJobs(namespace string) ArangoMLCronJobNamespaceLister {
-	return arangoMLCronJobNamespaceLister{listers.NewNamespaced[*v1alpha1.ArangoMLCronJob](s.ResourceIndexer, namespace)}
+	return arangoMLCronJobNamespaceLister{listers.NewNamespaced[*mlv1alpha1.ArangoMLCronJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoMLCronJobNamespaceLister helps list and get ArangoMLCronJobs.
@@ -60,15 +60,15 @@ func (s *arangoMLCronJobLister) ArangoMLCronJobs(namespace string) ArangoMLCronJ
 type ArangoMLCronJobNamespaceLister interface {
 	// List lists all ArangoMLCronJobs in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.ArangoMLCronJob, err error)
+	List(selector labels.Selector) (ret []*mlv1alpha1.ArangoMLCronJob, err error)
 	// Get retrieves the ArangoMLCronJob from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.ArangoMLCronJob, error)
+	Get(name string) (*mlv1alpha1.ArangoMLCronJob, error)
 	ArangoMLCronJobNamespaceListerExpansion
 }
 
 // arangoMLCronJobNamespaceLister implements the ArangoMLCronJobNamespaceLister
 // interface.
 type arangoMLCronJobNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.ArangoMLCronJob]
+	listers.ResourceIndexer[*mlv1alpha1.ArangoMLCronJob]
 }

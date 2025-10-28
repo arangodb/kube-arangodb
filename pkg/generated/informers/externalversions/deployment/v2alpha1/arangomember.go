@@ -23,13 +23,13 @@
 package v2alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	apisdeploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v2alpha1"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v2alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoMembers.
 type ArangoMemberInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v2alpha1.ArangoMemberLister
+	Lister() deploymentv2alpha1.ArangoMemberLister
 }
 
 type arangoMemberInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoMemberInformer(client versioned.Interface, namespace strin
 				return client.DatabaseV2alpha1().ArangoMembers(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&deploymentv2alpha1.ArangoMember{},
+		&apisdeploymentv2alpha1.ArangoMember{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoMemberInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *arangoMemberInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&deploymentv2alpha1.ArangoMember{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisdeploymentv2alpha1.ArangoMember{}, f.defaultInformer)
 }
 
-func (f *arangoMemberInformer) Lister() v2alpha1.ArangoMemberLister {
-	return v2alpha1.NewArangoMemberLister(f.Informer().GetIndexer())
+func (f *arangoMemberInformer) Lister() deploymentv2alpha1.ArangoMemberLister {
+	return deploymentv2alpha1.NewArangoMemberLister(f.Informer().GetIndexer())
 }

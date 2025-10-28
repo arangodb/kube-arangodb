@@ -23,13 +23,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	apisdeploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v1"
+	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoMembers.
 type ArangoMemberInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.ArangoMemberLister
+	Lister() deploymentv1.ArangoMemberLister
 }
 
 type arangoMemberInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoMemberInformer(client versioned.Interface, namespace strin
 				return client.DatabaseV1().ArangoMembers(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&deploymentv1.ArangoMember{},
+		&apisdeploymentv1.ArangoMember{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoMemberInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *arangoMemberInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&deploymentv1.ArangoMember{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisdeploymentv1.ArangoMember{}, f.defaultInformer)
 }
 
-func (f *arangoMemberInformer) Lister() v1.ArangoMemberLister {
-	return v1.NewArangoMemberLister(f.Informer().GetIndexer())
+func (f *arangoMemberInformer) Lister() deploymentv1.ArangoMemberLister {
+	return deploymentv1.NewArangoMemberLister(f.Informer().GetIndexer())
 }

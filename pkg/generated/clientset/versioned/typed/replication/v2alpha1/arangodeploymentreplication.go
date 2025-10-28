@@ -23,9 +23,9 @@
 package v2alpha1
 
 import (
-	"context"
+	context "context"
 
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
+	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,38 @@ type ArangoDeploymentReplicationsGetter interface {
 
 // ArangoDeploymentReplicationInterface has methods to work with ArangoDeploymentReplication resources.
 type ArangoDeploymentReplicationInterface interface {
-	Create(ctx context.Context, arangoDeploymentReplication *v2alpha1.ArangoDeploymentReplication, opts v1.CreateOptions) (*v2alpha1.ArangoDeploymentReplication, error)
-	Update(ctx context.Context, arangoDeploymentReplication *v2alpha1.ArangoDeploymentReplication, opts v1.UpdateOptions) (*v2alpha1.ArangoDeploymentReplication, error)
+	Create(ctx context.Context, arangoDeploymentReplication *replicationv2alpha1.ArangoDeploymentReplication, opts v1.CreateOptions) (*replicationv2alpha1.ArangoDeploymentReplication, error)
+	Update(ctx context.Context, arangoDeploymentReplication *replicationv2alpha1.ArangoDeploymentReplication, opts v1.UpdateOptions) (*replicationv2alpha1.ArangoDeploymentReplication, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoDeploymentReplication *v2alpha1.ArangoDeploymentReplication, opts v1.UpdateOptions) (*v2alpha1.ArangoDeploymentReplication, error)
+	UpdateStatus(ctx context.Context, arangoDeploymentReplication *replicationv2alpha1.ArangoDeploymentReplication, opts v1.UpdateOptions) (*replicationv2alpha1.ArangoDeploymentReplication, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v2alpha1.ArangoDeploymentReplication, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v2alpha1.ArangoDeploymentReplicationList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*replicationv2alpha1.ArangoDeploymentReplication, error)
+	List(ctx context.Context, opts v1.ListOptions) (*replicationv2alpha1.ArangoDeploymentReplicationList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2alpha1.ArangoDeploymentReplication, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *replicationv2alpha1.ArangoDeploymentReplication, err error)
 	ArangoDeploymentReplicationExpansion
 }
 
 // arangoDeploymentReplications implements ArangoDeploymentReplicationInterface
 type arangoDeploymentReplications struct {
-	*gentype.ClientWithList[*v2alpha1.ArangoDeploymentReplication, *v2alpha1.ArangoDeploymentReplicationList]
+	*gentype.ClientWithList[*replicationv2alpha1.ArangoDeploymentReplication, *replicationv2alpha1.ArangoDeploymentReplicationList]
 }
 
 // newArangoDeploymentReplications returns a ArangoDeploymentReplications
 func newArangoDeploymentReplications(c *ReplicationV2alpha1Client, namespace string) *arangoDeploymentReplications {
 	return &arangoDeploymentReplications{
-		gentype.NewClientWithList[*v2alpha1.ArangoDeploymentReplication, *v2alpha1.ArangoDeploymentReplicationList](
+		gentype.NewClientWithList[*replicationv2alpha1.ArangoDeploymentReplication, *replicationv2alpha1.ArangoDeploymentReplicationList](
 			"arangodeploymentreplications",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v2alpha1.ArangoDeploymentReplication { return &v2alpha1.ArangoDeploymentReplication{} },
-			func() *v2alpha1.ArangoDeploymentReplicationList { return &v2alpha1.ArangoDeploymentReplicationList{} }),
+			func() *replicationv2alpha1.ArangoDeploymentReplication {
+				return &replicationv2alpha1.ArangoDeploymentReplication{}
+			},
+			func() *replicationv2alpha1.ArangoDeploymentReplicationList {
+				return &replicationv2alpha1.ArangoDeploymentReplicationList{}
+			},
+		),
 	}
 }

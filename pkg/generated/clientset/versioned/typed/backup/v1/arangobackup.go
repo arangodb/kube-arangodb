@@ -23,9 +23,9 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoBackupsGetter interface {
 
 // ArangoBackupInterface has methods to work with ArangoBackup resources.
 type ArangoBackupInterface interface {
-	Create(ctx context.Context, arangoBackup *v1.ArangoBackup, opts metav1.CreateOptions) (*v1.ArangoBackup, error)
-	Update(ctx context.Context, arangoBackup *v1.ArangoBackup, opts metav1.UpdateOptions) (*v1.ArangoBackup, error)
+	Create(ctx context.Context, arangoBackup *backupv1.ArangoBackup, opts metav1.CreateOptions) (*backupv1.ArangoBackup, error)
+	Update(ctx context.Context, arangoBackup *backupv1.ArangoBackup, opts metav1.UpdateOptions) (*backupv1.ArangoBackup, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoBackup *v1.ArangoBackup, opts metav1.UpdateOptions) (*v1.ArangoBackup, error)
+	UpdateStatus(ctx context.Context, arangoBackup *backupv1.ArangoBackup, opts metav1.UpdateOptions) (*backupv1.ArangoBackup, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.ArangoBackup, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.ArangoBackupList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*backupv1.ArangoBackup, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*backupv1.ArangoBackupList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoBackup, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *backupv1.ArangoBackup, err error)
 	ArangoBackupExpansion
 }
 
 // arangoBackups implements ArangoBackupInterface
 type arangoBackups struct {
-	*gentype.ClientWithList[*v1.ArangoBackup, *v1.ArangoBackupList]
+	*gentype.ClientWithList[*backupv1.ArangoBackup, *backupv1.ArangoBackupList]
 }
 
 // newArangoBackups returns a ArangoBackups
 func newArangoBackups(c *BackupV1Client, namespace string) *arangoBackups {
 	return &arangoBackups{
-		gentype.NewClientWithList[*v1.ArangoBackup, *v1.ArangoBackupList](
+		gentype.NewClientWithList[*backupv1.ArangoBackup, *backupv1.ArangoBackupList](
 			"arangobackups",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.ArangoBackup { return &v1.ArangoBackup{} },
-			func() *v1.ArangoBackupList { return &v1.ArangoBackupList{} }),
+			func() *backupv1.ArangoBackup { return &backupv1.ArangoBackup{} },
+			func() *backupv1.ArangoBackupList { return &backupv1.ArangoBackupList{} },
+		),
 	}
 }

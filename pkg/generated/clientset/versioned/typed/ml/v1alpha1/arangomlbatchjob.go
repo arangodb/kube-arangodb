@@ -23,9 +23,9 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoMLBatchJobsGetter interface {
 
 // ArangoMLBatchJobInterface has methods to work with ArangoMLBatchJob resources.
 type ArangoMLBatchJobInterface interface {
-	Create(ctx context.Context, arangoMLBatchJob *v1alpha1.ArangoMLBatchJob, opts v1.CreateOptions) (*v1alpha1.ArangoMLBatchJob, error)
-	Update(ctx context.Context, arangoMLBatchJob *v1alpha1.ArangoMLBatchJob, opts v1.UpdateOptions) (*v1alpha1.ArangoMLBatchJob, error)
+	Create(ctx context.Context, arangoMLBatchJob *mlv1alpha1.ArangoMLBatchJob, opts v1.CreateOptions) (*mlv1alpha1.ArangoMLBatchJob, error)
+	Update(ctx context.Context, arangoMLBatchJob *mlv1alpha1.ArangoMLBatchJob, opts v1.UpdateOptions) (*mlv1alpha1.ArangoMLBatchJob, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoMLBatchJob *v1alpha1.ArangoMLBatchJob, opts v1.UpdateOptions) (*v1alpha1.ArangoMLBatchJob, error)
+	UpdateStatus(ctx context.Context, arangoMLBatchJob *mlv1alpha1.ArangoMLBatchJob, opts v1.UpdateOptions) (*mlv1alpha1.ArangoMLBatchJob, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ArangoMLBatchJob, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ArangoMLBatchJobList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*mlv1alpha1.ArangoMLBatchJob, error)
+	List(ctx context.Context, opts v1.ListOptions) (*mlv1alpha1.ArangoMLBatchJobList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoMLBatchJob, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *mlv1alpha1.ArangoMLBatchJob, err error)
 	ArangoMLBatchJobExpansion
 }
 
 // arangoMLBatchJobs implements ArangoMLBatchJobInterface
 type arangoMLBatchJobs struct {
-	*gentype.ClientWithList[*v1alpha1.ArangoMLBatchJob, *v1alpha1.ArangoMLBatchJobList]
+	*gentype.ClientWithList[*mlv1alpha1.ArangoMLBatchJob, *mlv1alpha1.ArangoMLBatchJobList]
 }
 
 // newArangoMLBatchJobs returns a ArangoMLBatchJobs
 func newArangoMLBatchJobs(c *MlV1alpha1Client, namespace string) *arangoMLBatchJobs {
 	return &arangoMLBatchJobs{
-		gentype.NewClientWithList[*v1alpha1.ArangoMLBatchJob, *v1alpha1.ArangoMLBatchJobList](
+		gentype.NewClientWithList[*mlv1alpha1.ArangoMLBatchJob, *mlv1alpha1.ArangoMLBatchJobList](
 			"arangomlbatchjobs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.ArangoMLBatchJob { return &v1alpha1.ArangoMLBatchJob{} },
-			func() *v1alpha1.ArangoMLBatchJobList { return &v1alpha1.ArangoMLBatchJobList{} }),
+			func() *mlv1alpha1.ArangoMLBatchJob { return &mlv1alpha1.ArangoMLBatchJob{} },
+			func() *mlv1alpha1.ArangoMLBatchJobList { return &mlv1alpha1.ArangoMLBatchJobList{} },
+		),
 	}
 }

@@ -23,129 +23,34 @@
 package fake
 
 import (
-	"context"
-
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1beta1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeArangoSchedulerBatchJobs implements ArangoSchedulerBatchJobInterface
-type FakeArangoSchedulerBatchJobs struct {
+// fakeArangoSchedulerBatchJobs implements ArangoSchedulerBatchJobInterface
+type fakeArangoSchedulerBatchJobs struct {
+	*gentype.FakeClientWithList[*v1beta1.ArangoSchedulerBatchJob, *v1beta1.ArangoSchedulerBatchJobList]
 	Fake *FakeSchedulerV1beta1
-	ns   string
 }
 
-var arangoschedulerbatchjobsResource = v1beta1.SchemeGroupVersion.WithResource("arangoschedulerbatchjobs")
-
-var arangoschedulerbatchjobsKind = v1beta1.SchemeGroupVersion.WithKind("ArangoSchedulerBatchJob")
-
-// Get takes name of the arangoSchedulerBatchJob, and returns the corresponding arangoSchedulerBatchJob object, and an error if there is any.
-func (c *FakeArangoSchedulerBatchJobs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.ArangoSchedulerBatchJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerBatchJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(arangoschedulerbatchjobsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoSchedulerBatchJobs(fake *FakeSchedulerV1beta1, namespace string) schedulerv1beta1.ArangoSchedulerBatchJobInterface {
+	return &fakeArangoSchedulerBatchJobs{
+		gentype.NewFakeClientWithList[*v1beta1.ArangoSchedulerBatchJob, *v1beta1.ArangoSchedulerBatchJobList](
+			fake.Fake,
+			namespace,
+			v1beta1.SchemeGroupVersion.WithResource("arangoschedulerbatchjobs"),
+			v1beta1.SchemeGroupVersion.WithKind("ArangoSchedulerBatchJob"),
+			func() *v1beta1.ArangoSchedulerBatchJob { return &v1beta1.ArangoSchedulerBatchJob{} },
+			func() *v1beta1.ArangoSchedulerBatchJobList { return &v1beta1.ArangoSchedulerBatchJobList{} },
+			func(dst, src *v1beta1.ArangoSchedulerBatchJobList) { dst.ListMeta = src.ListMeta },
+			func(list *v1beta1.ArangoSchedulerBatchJobList) []*v1beta1.ArangoSchedulerBatchJob {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1beta1.ArangoSchedulerBatchJobList, items []*v1beta1.ArangoSchedulerBatchJob) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1beta1.ArangoSchedulerBatchJob), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoSchedulerBatchJobs that match those selectors.
-func (c *FakeArangoSchedulerBatchJobs) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.ArangoSchedulerBatchJobList, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerBatchJobList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(arangoschedulerbatchjobsResource, arangoschedulerbatchjobsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1beta1.ArangoSchedulerBatchJobList{ListMeta: obj.(*v1beta1.ArangoSchedulerBatchJobList).ListMeta}
-	for _, item := range obj.(*v1beta1.ArangoSchedulerBatchJobList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoSchedulerBatchJobs.
-func (c *FakeArangoSchedulerBatchJobs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(arangoschedulerbatchjobsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a arangoSchedulerBatchJob and creates it.  Returns the server's representation of the arangoSchedulerBatchJob, and an error, if there is any.
-func (c *FakeArangoSchedulerBatchJobs) Create(ctx context.Context, arangoSchedulerBatchJob *v1beta1.ArangoSchedulerBatchJob, opts v1.CreateOptions) (result *v1beta1.ArangoSchedulerBatchJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerBatchJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(arangoschedulerbatchjobsResource, c.ns, arangoSchedulerBatchJob, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerBatchJob), err
-}
-
-// Update takes the representation of a arangoSchedulerBatchJob and updates it. Returns the server's representation of the arangoSchedulerBatchJob, and an error, if there is any.
-func (c *FakeArangoSchedulerBatchJobs) Update(ctx context.Context, arangoSchedulerBatchJob *v1beta1.ArangoSchedulerBatchJob, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerBatchJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerBatchJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(arangoschedulerbatchjobsResource, c.ns, arangoSchedulerBatchJob, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerBatchJob), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoSchedulerBatchJobs) UpdateStatus(ctx context.Context, arangoSchedulerBatchJob *v1beta1.ArangoSchedulerBatchJob, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerBatchJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerBatchJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoschedulerbatchjobsResource, "status", c.ns, arangoSchedulerBatchJob, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerBatchJob), err
-}
-
-// Delete takes name of the arangoSchedulerBatchJob and deletes it. Returns an error if one occurs.
-func (c *FakeArangoSchedulerBatchJobs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangoschedulerbatchjobsResource, c.ns, name, opts), &v1beta1.ArangoSchedulerBatchJob{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoSchedulerBatchJobs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(arangoschedulerbatchjobsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1beta1.ArangoSchedulerBatchJobList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoSchedulerBatchJob.
-func (c *FakeArangoSchedulerBatchJobs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerBatchJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerBatchJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoschedulerbatchjobsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerBatchJob), err
 }

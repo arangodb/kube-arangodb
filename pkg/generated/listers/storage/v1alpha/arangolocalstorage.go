@@ -23,10 +23,10 @@
 package v1alpha
 
 import (
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoLocalStorageLister helps list ArangoLocalStorages.
@@ -34,19 +34,19 @@ import (
 type ArangoLocalStorageLister interface {
 	// List lists all ArangoLocalStorages in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha.ArangoLocalStorage, err error)
+	List(selector labels.Selector) (ret []*storagev1alpha.ArangoLocalStorage, err error)
 	// Get retrieves the ArangoLocalStorage from the index for a given name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha.ArangoLocalStorage, error)
+	Get(name string) (*storagev1alpha.ArangoLocalStorage, error)
 	ArangoLocalStorageListerExpansion
 }
 
 // arangoLocalStorageLister implements the ArangoLocalStorageLister interface.
 type arangoLocalStorageLister struct {
-	listers.ResourceIndexer[*v1alpha.ArangoLocalStorage]
+	listers.ResourceIndexer[*storagev1alpha.ArangoLocalStorage]
 }
 
 // NewArangoLocalStorageLister returns a new ArangoLocalStorageLister.
 func NewArangoLocalStorageLister(indexer cache.Indexer) ArangoLocalStorageLister {
-	return &arangoLocalStorageLister{listers.New[*v1alpha.ArangoLocalStorage](indexer, v1alpha.Resource("arangolocalstorage"))}
+	return &arangoLocalStorageLister{listers.New[*storagev1alpha.ArangoLocalStorage](indexer, storagev1alpha.Resource("arangolocalstorage"))}
 }

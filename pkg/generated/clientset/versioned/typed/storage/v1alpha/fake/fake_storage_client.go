@@ -33,7 +33,7 @@ type FakeStorageV1alpha struct {
 }
 
 func (c *FakeStorageV1alpha) ArangoLocalStorages() v1alpha.ArangoLocalStorageInterface {
-	return &FakeArangoLocalStorages{c}
+	return newFakeArangoLocalStorages(c)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

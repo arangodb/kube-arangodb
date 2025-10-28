@@ -23,9 +23,9 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoMLStoragesGetter interface {
 
 // ArangoMLStorageInterface has methods to work with ArangoMLStorage resources.
 type ArangoMLStorageInterface interface {
-	Create(ctx context.Context, arangoMLStorage *v1alpha1.ArangoMLStorage, opts v1.CreateOptions) (*v1alpha1.ArangoMLStorage, error)
-	Update(ctx context.Context, arangoMLStorage *v1alpha1.ArangoMLStorage, opts v1.UpdateOptions) (*v1alpha1.ArangoMLStorage, error)
+	Create(ctx context.Context, arangoMLStorage *mlv1alpha1.ArangoMLStorage, opts v1.CreateOptions) (*mlv1alpha1.ArangoMLStorage, error)
+	Update(ctx context.Context, arangoMLStorage *mlv1alpha1.ArangoMLStorage, opts v1.UpdateOptions) (*mlv1alpha1.ArangoMLStorage, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoMLStorage *v1alpha1.ArangoMLStorage, opts v1.UpdateOptions) (*v1alpha1.ArangoMLStorage, error)
+	UpdateStatus(ctx context.Context, arangoMLStorage *mlv1alpha1.ArangoMLStorage, opts v1.UpdateOptions) (*mlv1alpha1.ArangoMLStorage, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ArangoMLStorage, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ArangoMLStorageList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*mlv1alpha1.ArangoMLStorage, error)
+	List(ctx context.Context, opts v1.ListOptions) (*mlv1alpha1.ArangoMLStorageList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoMLStorage, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *mlv1alpha1.ArangoMLStorage, err error)
 	ArangoMLStorageExpansion
 }
 
 // arangoMLStorages implements ArangoMLStorageInterface
 type arangoMLStorages struct {
-	*gentype.ClientWithList[*v1alpha1.ArangoMLStorage, *v1alpha1.ArangoMLStorageList]
+	*gentype.ClientWithList[*mlv1alpha1.ArangoMLStorage, *mlv1alpha1.ArangoMLStorageList]
 }
 
 // newArangoMLStorages returns a ArangoMLStorages
 func newArangoMLStorages(c *MlV1alpha1Client, namespace string) *arangoMLStorages {
 	return &arangoMLStorages{
-		gentype.NewClientWithList[*v1alpha1.ArangoMLStorage, *v1alpha1.ArangoMLStorageList](
+		gentype.NewClientWithList[*mlv1alpha1.ArangoMLStorage, *mlv1alpha1.ArangoMLStorageList](
 			"arangomlstorages",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.ArangoMLStorage { return &v1alpha1.ArangoMLStorage{} },
-			func() *v1alpha1.ArangoMLStorageList { return &v1alpha1.ArangoMLStorageList{} }),
+			func() *mlv1alpha1.ArangoMLStorage { return &mlv1alpha1.ArangoMLStorage{} },
+			func() *mlv1alpha1.ArangoMLStorageList { return &mlv1alpha1.ArangoMLStorageList{} },
+		),
 	}
 }

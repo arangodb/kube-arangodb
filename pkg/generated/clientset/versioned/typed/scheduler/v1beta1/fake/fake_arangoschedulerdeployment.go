@@ -23,139 +23,48 @@
 package fake
 
 import (
-	"context"
+	context "context"
 
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1beta1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
+	gentype "k8s.io/client-go/gentype"
 	testing "k8s.io/client-go/testing"
 )
 
-// FakeArangoSchedulerDeployments implements ArangoSchedulerDeploymentInterface
-type FakeArangoSchedulerDeployments struct {
+// fakeArangoSchedulerDeployments implements ArangoSchedulerDeploymentInterface
+type fakeArangoSchedulerDeployments struct {
+	*gentype.FakeClientWithList[*v1beta1.ArangoSchedulerDeployment, *v1beta1.ArangoSchedulerDeploymentList]
 	Fake *FakeSchedulerV1beta1
-	ns   string
 }
 
-var arangoschedulerdeploymentsResource = v1beta1.SchemeGroupVersion.WithResource("arangoschedulerdeployments")
-
-var arangoschedulerdeploymentsKind = v1beta1.SchemeGroupVersion.WithKind("ArangoSchedulerDeployment")
-
-// Get takes name of the arangoSchedulerDeployment, and returns the corresponding arangoSchedulerDeployment object, and an error if there is any.
-func (c *FakeArangoSchedulerDeployments) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.ArangoSchedulerDeployment, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(arangoschedulerdeploymentsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoSchedulerDeployments(fake *FakeSchedulerV1beta1, namespace string) schedulerv1beta1.ArangoSchedulerDeploymentInterface {
+	return &fakeArangoSchedulerDeployments{
+		gentype.NewFakeClientWithList[*v1beta1.ArangoSchedulerDeployment, *v1beta1.ArangoSchedulerDeploymentList](
+			fake.Fake,
+			namespace,
+			v1beta1.SchemeGroupVersion.WithResource("arangoschedulerdeployments"),
+			v1beta1.SchemeGroupVersion.WithKind("ArangoSchedulerDeployment"),
+			func() *v1beta1.ArangoSchedulerDeployment { return &v1beta1.ArangoSchedulerDeployment{} },
+			func() *v1beta1.ArangoSchedulerDeploymentList { return &v1beta1.ArangoSchedulerDeploymentList{} },
+			func(dst, src *v1beta1.ArangoSchedulerDeploymentList) { dst.ListMeta = src.ListMeta },
+			func(list *v1beta1.ArangoSchedulerDeploymentList) []*v1beta1.ArangoSchedulerDeployment {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1beta1.ArangoSchedulerDeploymentList, items []*v1beta1.ArangoSchedulerDeployment) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1beta1.ArangoSchedulerDeployment), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoSchedulerDeployments that match those selectors.
-func (c *FakeArangoSchedulerDeployments) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.ArangoSchedulerDeploymentList, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerDeploymentList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(arangoschedulerdeploymentsResource, arangoschedulerdeploymentsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1beta1.ArangoSchedulerDeploymentList{ListMeta: obj.(*v1beta1.ArangoSchedulerDeploymentList).ListMeta}
-	for _, item := range obj.(*v1beta1.ArangoSchedulerDeploymentList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoSchedulerDeployments.
-func (c *FakeArangoSchedulerDeployments) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(arangoschedulerdeploymentsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a arangoSchedulerDeployment and creates it.  Returns the server's representation of the arangoSchedulerDeployment, and an error, if there is any.
-func (c *FakeArangoSchedulerDeployments) Create(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.CreateOptions) (result *v1beta1.ArangoSchedulerDeployment, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(arangoschedulerdeploymentsResource, c.ns, arangoSchedulerDeployment, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerDeployment), err
-}
-
-// Update takes the representation of a arangoSchedulerDeployment and updates it. Returns the server's representation of the arangoSchedulerDeployment, and an error, if there is any.
-func (c *FakeArangoSchedulerDeployments) Update(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerDeployment, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(arangoschedulerdeploymentsResource, c.ns, arangoSchedulerDeployment, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerDeployment), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoSchedulerDeployments) UpdateStatus(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerDeployment, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoschedulerdeploymentsResource, "status", c.ns, arangoSchedulerDeployment, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerDeployment), err
-}
-
-// Delete takes name of the arangoSchedulerDeployment and deletes it. Returns an error if one occurs.
-func (c *FakeArangoSchedulerDeployments) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangoschedulerdeploymentsResource, c.ns, name, opts), &v1beta1.ArangoSchedulerDeployment{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoSchedulerDeployments) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(arangoschedulerdeploymentsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1beta1.ArangoSchedulerDeploymentList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoSchedulerDeployment.
-func (c *FakeArangoSchedulerDeployments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerDeployment, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerDeployment{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoschedulerdeploymentsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerDeployment), err
 }
 
 // GetScale takes name of the arangoSchedulerDeployment, and returns the corresponding scale object, and an error if there is any.
-func (c *FakeArangoSchedulerDeployments) GetScale(ctx context.Context, arangoSchedulerDeploymentName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+func (c *fakeArangoSchedulerDeployments) GetScale(ctx context.Context, arangoSchedulerDeploymentName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
 	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetSubresourceActionWithOptions(arangoschedulerdeploymentsResource, c.ns, "scale", arangoSchedulerDeploymentName, options), emptyResult)
+		Invokes(testing.NewGetSubresourceActionWithOptions(c.Resource(), c.Namespace(), "scale", arangoSchedulerDeploymentName, options), emptyResult)
 
 	if obj == nil {
 		return emptyResult, err
@@ -164,10 +73,10 @@ func (c *FakeArangoSchedulerDeployments) GetScale(ctx context.Context, arangoSch
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
-func (c *FakeArangoSchedulerDeployments) UpdateScale(ctx context.Context, arangoSchedulerDeploymentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+func (c *fakeArangoSchedulerDeployments) UpdateScale(ctx context.Context, arangoSchedulerDeploymentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
 	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoschedulerdeploymentsResource, "scale", c.ns, scale, opts), &autoscalingv1.Scale{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(c.Resource(), "scale", c.Namespace(), scale, opts), &autoscalingv1.Scale{})
 
 	if obj == nil {
 		return emptyResult, err

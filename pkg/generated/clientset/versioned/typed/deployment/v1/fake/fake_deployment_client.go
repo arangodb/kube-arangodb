@@ -33,19 +33,19 @@ type FakeDatabaseV1 struct {
 }
 
 func (c *FakeDatabaseV1) ArangoClusterSynchronizations(namespace string) v1.ArangoClusterSynchronizationInterface {
-	return &FakeArangoClusterSynchronizations{c, namespace}
+	return newFakeArangoClusterSynchronizations(c, namespace)
 }
 
 func (c *FakeDatabaseV1) ArangoDeployments(namespace string) v1.ArangoDeploymentInterface {
-	return &FakeArangoDeployments{c, namespace}
+	return newFakeArangoDeployments(c, namespace)
 }
 
 func (c *FakeDatabaseV1) ArangoMembers(namespace string) v1.ArangoMemberInterface {
-	return &FakeArangoMembers{c, namespace}
+	return newFakeArangoMembers(c, namespace)
 }
 
 func (c *FakeDatabaseV1) ArangoTasks(namespace string) v1.ArangoTaskInterface {
-	return &FakeArangoTasks{c, namespace}
+	return newFakeArangoTasks(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

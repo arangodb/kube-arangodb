@@ -23,10 +23,10 @@
 package v1
 
 import (
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	appsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoJobLister helps list ArangoJobs.
@@ -34,7 +34,7 @@ import (
 type ArangoJobLister interface {
 	// List lists all ArangoJobs in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ArangoJob, err error)
+	List(selector labels.Selector) (ret []*appsv1.ArangoJob, err error)
 	// ArangoJobs returns an object that can list and get ArangoJobs.
 	ArangoJobs(namespace string) ArangoJobNamespaceLister
 	ArangoJobListerExpansion
@@ -42,17 +42,17 @@ type ArangoJobLister interface {
 
 // arangoJobLister implements the ArangoJobLister interface.
 type arangoJobLister struct {
-	listers.ResourceIndexer[*v1.ArangoJob]
+	listers.ResourceIndexer[*appsv1.ArangoJob]
 }
 
 // NewArangoJobLister returns a new ArangoJobLister.
 func NewArangoJobLister(indexer cache.Indexer) ArangoJobLister {
-	return &arangoJobLister{listers.New[*v1.ArangoJob](indexer, v1.Resource("arangojob"))}
+	return &arangoJobLister{listers.New[*appsv1.ArangoJob](indexer, appsv1.Resource("arangojob"))}
 }
 
 // ArangoJobs returns an object that can list and get ArangoJobs.
 func (s *arangoJobLister) ArangoJobs(namespace string) ArangoJobNamespaceLister {
-	return arangoJobNamespaceLister{listers.NewNamespaced[*v1.ArangoJob](s.ResourceIndexer, namespace)}
+	return arangoJobNamespaceLister{listers.NewNamespaced[*appsv1.ArangoJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoJobNamespaceLister helps list and get ArangoJobs.
@@ -60,15 +60,15 @@ func (s *arangoJobLister) ArangoJobs(namespace string) ArangoJobNamespaceLister 
 type ArangoJobNamespaceLister interface {
 	// List lists all ArangoJobs in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ArangoJob, err error)
+	List(selector labels.Selector) (ret []*appsv1.ArangoJob, err error)
 	// Get retrieves the ArangoJob from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.ArangoJob, error)
+	Get(name string) (*appsv1.ArangoJob, error)
 	ArangoJobNamespaceListerExpansion
 }
 
 // arangoJobNamespaceLister implements the ArangoJobNamespaceLister
 // interface.
 type arangoJobNamespaceLister struct {
-	listers.ResourceIndexer[*v1.ArangoJob]
+	listers.ResourceIndexer[*appsv1.ArangoJob]
 }

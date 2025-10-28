@@ -23,9 +23,9 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoMLCronJobsGetter interface {
 
 // ArangoMLCronJobInterface has methods to work with ArangoMLCronJob resources.
 type ArangoMLCronJobInterface interface {
-	Create(ctx context.Context, arangoMLCronJob *v1alpha1.ArangoMLCronJob, opts v1.CreateOptions) (*v1alpha1.ArangoMLCronJob, error)
-	Update(ctx context.Context, arangoMLCronJob *v1alpha1.ArangoMLCronJob, opts v1.UpdateOptions) (*v1alpha1.ArangoMLCronJob, error)
+	Create(ctx context.Context, arangoMLCronJob *mlv1alpha1.ArangoMLCronJob, opts v1.CreateOptions) (*mlv1alpha1.ArangoMLCronJob, error)
+	Update(ctx context.Context, arangoMLCronJob *mlv1alpha1.ArangoMLCronJob, opts v1.UpdateOptions) (*mlv1alpha1.ArangoMLCronJob, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoMLCronJob *v1alpha1.ArangoMLCronJob, opts v1.UpdateOptions) (*v1alpha1.ArangoMLCronJob, error)
+	UpdateStatus(ctx context.Context, arangoMLCronJob *mlv1alpha1.ArangoMLCronJob, opts v1.UpdateOptions) (*mlv1alpha1.ArangoMLCronJob, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ArangoMLCronJob, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ArangoMLCronJobList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*mlv1alpha1.ArangoMLCronJob, error)
+	List(ctx context.Context, opts v1.ListOptions) (*mlv1alpha1.ArangoMLCronJobList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoMLCronJob, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *mlv1alpha1.ArangoMLCronJob, err error)
 	ArangoMLCronJobExpansion
 }
 
 // arangoMLCronJobs implements ArangoMLCronJobInterface
 type arangoMLCronJobs struct {
-	*gentype.ClientWithList[*v1alpha1.ArangoMLCronJob, *v1alpha1.ArangoMLCronJobList]
+	*gentype.ClientWithList[*mlv1alpha1.ArangoMLCronJob, *mlv1alpha1.ArangoMLCronJobList]
 }
 
 // newArangoMLCronJobs returns a ArangoMLCronJobs
 func newArangoMLCronJobs(c *MlV1alpha1Client, namespace string) *arangoMLCronJobs {
 	return &arangoMLCronJobs{
-		gentype.NewClientWithList[*v1alpha1.ArangoMLCronJob, *v1alpha1.ArangoMLCronJobList](
+		gentype.NewClientWithList[*mlv1alpha1.ArangoMLCronJob, *mlv1alpha1.ArangoMLCronJobList](
 			"arangomlcronjobs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.ArangoMLCronJob { return &v1alpha1.ArangoMLCronJob{} },
-			func() *v1alpha1.ArangoMLCronJobList { return &v1alpha1.ArangoMLCronJobList{} }),
+			func() *mlv1alpha1.ArangoMLCronJob { return &mlv1alpha1.ArangoMLCronJob{} },
+			func() *mlv1alpha1.ArangoMLCronJobList { return &mlv1alpha1.ArangoMLCronJobList{} },
+		),
 	}
 }

@@ -23,13 +23,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	apisschedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1alpha1"
+	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoProfiles.
 type ArangoProfileInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ArangoProfileLister
+	Lister() schedulerv1alpha1.ArangoProfileLister
 }
 
 type arangoProfileInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoProfileInformer(client versioned.Interface, namespace stri
 				return client.SchedulerV1alpha1().ArangoProfiles(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&schedulerv1alpha1.ArangoProfile{},
+		&apisschedulerv1alpha1.ArangoProfile{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoProfileInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *arangoProfileInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&schedulerv1alpha1.ArangoProfile{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisschedulerv1alpha1.ArangoProfile{}, f.defaultInformer)
 }
 
-func (f *arangoProfileInformer) Lister() v1alpha1.ArangoProfileLister {
-	return v1alpha1.NewArangoProfileLister(f.Informer().GetIndexer())
+func (f *arangoProfileInformer) Lister() schedulerv1alpha1.ArangoProfileLister {
+	return schedulerv1alpha1.NewArangoProfileLister(f.Informer().GetIndexer())
 }

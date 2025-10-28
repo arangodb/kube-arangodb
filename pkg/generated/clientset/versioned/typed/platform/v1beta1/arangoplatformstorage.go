@@ -23,9 +23,9 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoPlatformStoragesGetter interface {
 
 // ArangoPlatformStorageInterface has methods to work with ArangoPlatformStorage resources.
 type ArangoPlatformStorageInterface interface {
-	Create(ctx context.Context, arangoPlatformStorage *v1beta1.ArangoPlatformStorage, opts v1.CreateOptions) (*v1beta1.ArangoPlatformStorage, error)
-	Update(ctx context.Context, arangoPlatformStorage *v1beta1.ArangoPlatformStorage, opts v1.UpdateOptions) (*v1beta1.ArangoPlatformStorage, error)
+	Create(ctx context.Context, arangoPlatformStorage *platformv1beta1.ArangoPlatformStorage, opts v1.CreateOptions) (*platformv1beta1.ArangoPlatformStorage, error)
+	Update(ctx context.Context, arangoPlatformStorage *platformv1beta1.ArangoPlatformStorage, opts v1.UpdateOptions) (*platformv1beta1.ArangoPlatformStorage, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoPlatformStorage *v1beta1.ArangoPlatformStorage, opts v1.UpdateOptions) (*v1beta1.ArangoPlatformStorage, error)
+	UpdateStatus(ctx context.Context, arangoPlatformStorage *platformv1beta1.ArangoPlatformStorage, opts v1.UpdateOptions) (*platformv1beta1.ArangoPlatformStorage, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.ArangoPlatformStorage, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ArangoPlatformStorageList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*platformv1beta1.ArangoPlatformStorage, error)
+	List(ctx context.Context, opts v1.ListOptions) (*platformv1beta1.ArangoPlatformStorageList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoPlatformStorage, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *platformv1beta1.ArangoPlatformStorage, err error)
 	ArangoPlatformStorageExpansion
 }
 
 // arangoPlatformStorages implements ArangoPlatformStorageInterface
 type arangoPlatformStorages struct {
-	*gentype.ClientWithList[*v1beta1.ArangoPlatformStorage, *v1beta1.ArangoPlatformStorageList]
+	*gentype.ClientWithList[*platformv1beta1.ArangoPlatformStorage, *platformv1beta1.ArangoPlatformStorageList]
 }
 
 // newArangoPlatformStorages returns a ArangoPlatformStorages
 func newArangoPlatformStorages(c *PlatformV1beta1Client, namespace string) *arangoPlatformStorages {
 	return &arangoPlatformStorages{
-		gentype.NewClientWithList[*v1beta1.ArangoPlatformStorage, *v1beta1.ArangoPlatformStorageList](
+		gentype.NewClientWithList[*platformv1beta1.ArangoPlatformStorage, *platformv1beta1.ArangoPlatformStorageList](
 			"arangoplatformstorages",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.ArangoPlatformStorage { return &v1beta1.ArangoPlatformStorage{} },
-			func() *v1beta1.ArangoPlatformStorageList { return &v1beta1.ArangoPlatformStorageList{} }),
+			func() *platformv1beta1.ArangoPlatformStorage { return &platformv1beta1.ArangoPlatformStorage{} },
+			func() *platformv1beta1.ArangoPlatformStorageList { return &platformv1beta1.ArangoPlatformStorageList{} },
+		),
 	}
 }

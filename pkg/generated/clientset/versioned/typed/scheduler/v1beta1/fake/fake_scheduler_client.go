@@ -33,23 +33,23 @@ type FakeSchedulerV1beta1 struct {
 }
 
 func (c *FakeSchedulerV1beta1) ArangoProfiles(namespace string) v1beta1.ArangoProfileInterface {
-	return &FakeArangoProfiles{c, namespace}
+	return newFakeArangoProfiles(c, namespace)
 }
 
 func (c *FakeSchedulerV1beta1) ArangoSchedulerBatchJobs(namespace string) v1beta1.ArangoSchedulerBatchJobInterface {
-	return &FakeArangoSchedulerBatchJobs{c, namespace}
+	return newFakeArangoSchedulerBatchJobs(c, namespace)
 }
 
 func (c *FakeSchedulerV1beta1) ArangoSchedulerCronJobs(namespace string) v1beta1.ArangoSchedulerCronJobInterface {
-	return &FakeArangoSchedulerCronJobs{c, namespace}
+	return newFakeArangoSchedulerCronJobs(c, namespace)
 }
 
 func (c *FakeSchedulerV1beta1) ArangoSchedulerDeployments(namespace string) v1beta1.ArangoSchedulerDeploymentInterface {
-	return &FakeArangoSchedulerDeployments{c, namespace}
+	return newFakeArangoSchedulerDeployments(c, namespace)
 }
 
 func (c *FakeSchedulerV1beta1) ArangoSchedulerPods(namespace string) v1beta1.ArangoSchedulerPodInterface {
-	return &FakeArangoSchedulerPods{c, namespace}
+	return newFakeArangoSchedulerPods(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

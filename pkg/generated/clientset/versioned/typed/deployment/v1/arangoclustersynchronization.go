@@ -23,9 +23,9 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,36 @@ type ArangoClusterSynchronizationsGetter interface {
 
 // ArangoClusterSynchronizationInterface has methods to work with ArangoClusterSynchronization resources.
 type ArangoClusterSynchronizationInterface interface {
-	Create(ctx context.Context, arangoClusterSynchronization *v1.ArangoClusterSynchronization, opts metav1.CreateOptions) (*v1.ArangoClusterSynchronization, error)
-	Update(ctx context.Context, arangoClusterSynchronization *v1.ArangoClusterSynchronization, opts metav1.UpdateOptions) (*v1.ArangoClusterSynchronization, error)
+	Create(ctx context.Context, arangoClusterSynchronization *deploymentv1.ArangoClusterSynchronization, opts metav1.CreateOptions) (*deploymentv1.ArangoClusterSynchronization, error)
+	Update(ctx context.Context, arangoClusterSynchronization *deploymentv1.ArangoClusterSynchronization, opts metav1.UpdateOptions) (*deploymentv1.ArangoClusterSynchronization, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoClusterSynchronization *v1.ArangoClusterSynchronization, opts metav1.UpdateOptions) (*v1.ArangoClusterSynchronization, error)
+	UpdateStatus(ctx context.Context, arangoClusterSynchronization *deploymentv1.ArangoClusterSynchronization, opts metav1.UpdateOptions) (*deploymentv1.ArangoClusterSynchronization, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.ArangoClusterSynchronization, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.ArangoClusterSynchronizationList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*deploymentv1.ArangoClusterSynchronization, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*deploymentv1.ArangoClusterSynchronizationList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoClusterSynchronization, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *deploymentv1.ArangoClusterSynchronization, err error)
 	ArangoClusterSynchronizationExpansion
 }
 
 // arangoClusterSynchronizations implements ArangoClusterSynchronizationInterface
 type arangoClusterSynchronizations struct {
-	*gentype.ClientWithList[*v1.ArangoClusterSynchronization, *v1.ArangoClusterSynchronizationList]
+	*gentype.ClientWithList[*deploymentv1.ArangoClusterSynchronization, *deploymentv1.ArangoClusterSynchronizationList]
 }
 
 // newArangoClusterSynchronizations returns a ArangoClusterSynchronizations
 func newArangoClusterSynchronizations(c *DatabaseV1Client, namespace string) *arangoClusterSynchronizations {
 	return &arangoClusterSynchronizations{
-		gentype.NewClientWithList[*v1.ArangoClusterSynchronization, *v1.ArangoClusterSynchronizationList](
+		gentype.NewClientWithList[*deploymentv1.ArangoClusterSynchronization, *deploymentv1.ArangoClusterSynchronizationList](
 			"arangoclustersynchronizations",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.ArangoClusterSynchronization { return &v1.ArangoClusterSynchronization{} },
-			func() *v1.ArangoClusterSynchronizationList { return &v1.ArangoClusterSynchronizationList{} }),
+			func() *deploymentv1.ArangoClusterSynchronization { return &deploymentv1.ArangoClusterSynchronization{} },
+			func() *deploymentv1.ArangoClusterSynchronizationList {
+				return &deploymentv1.ArangoClusterSynchronizationList{}
+			},
+		),
 	}
 }

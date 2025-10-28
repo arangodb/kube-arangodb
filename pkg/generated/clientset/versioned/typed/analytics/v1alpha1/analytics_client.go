@@ -23,10 +23,10 @@
 package v1alpha1
 
 import (
-	"net/http"
+	http "net/http"
 
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
-	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	analyticsv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
+	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -89,10 +89,10 @@ func New(c rest.Interface) *AnalyticsV1alpha1Client {
 }
 
 func setConfigDefaults(config *rest.Config) error {
-	gv := v1alpha1.SchemeGroupVersion
+	gv := analyticsv1alpha1.SchemeGroupVersion
 	config.GroupVersion = &gv
 	config.APIPath = "/apis"
-	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	config.NegotiatedSerializer = rest.CodecFactoryForGeneratedClient(scheme.Scheme, scheme.Codecs).WithoutConversion()
 
 	if config.UserAgent == "" {
 		config.UserAgent = rest.DefaultKubernetesUserAgent()

@@ -23,13 +23,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	apisdeploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v1"
+	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoDeployments.
 type ArangoDeploymentInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.ArangoDeploymentLister
+	Lister() deploymentv1.ArangoDeploymentLister
 }
 
 type arangoDeploymentInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoDeploymentInformer(client versioned.Interface, namespace s
 				return client.DatabaseV1().ArangoDeployments(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&deploymentv1.ArangoDeployment{},
+		&apisdeploymentv1.ArangoDeployment{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoDeploymentInformer) defaultInformer(client versioned.Interface, r
 }
 
 func (f *arangoDeploymentInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&deploymentv1.ArangoDeployment{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisdeploymentv1.ArangoDeployment{}, f.defaultInformer)
 }
 
-func (f *arangoDeploymentInformer) Lister() v1.ArangoDeploymentLister {
-	return v1.NewArangoDeploymentLister(f.Informer().GetIndexer())
+func (f *arangoDeploymentInformer) Lister() deploymentv1.ArangoDeploymentLister {
+	return deploymentv1.NewArangoDeploymentLister(f.Informer().GetIndexer())
 }

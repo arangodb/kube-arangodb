@@ -23,13 +23,13 @@
 package v2alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	apisdeploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v2alpha1"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v2alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoClusterSynchronizations.
 type ArangoClusterSynchronizationInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v2alpha1.ArangoClusterSynchronizationLister
+	Lister() deploymentv2alpha1.ArangoClusterSynchronizationLister
 }
 
 type arangoClusterSynchronizationInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoClusterSynchronizationInformer(client versioned.Interface,
 				return client.DatabaseV2alpha1().ArangoClusterSynchronizations(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&deploymentv2alpha1.ArangoClusterSynchronization{},
+		&apisdeploymentv2alpha1.ArangoClusterSynchronization{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoClusterSynchronizationInformer) defaultInformer(client versioned.
 }
 
 func (f *arangoClusterSynchronizationInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&deploymentv2alpha1.ArangoClusterSynchronization{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisdeploymentv2alpha1.ArangoClusterSynchronization{}, f.defaultInformer)
 }
 
-func (f *arangoClusterSynchronizationInformer) Lister() v2alpha1.ArangoClusterSynchronizationLister {
-	return v2alpha1.NewArangoClusterSynchronizationLister(f.Informer().GetIndexer())
+func (f *arangoClusterSynchronizationInformer) Lister() deploymentv2alpha1.ArangoClusterSynchronizationLister {
+	return deploymentv2alpha1.NewArangoClusterSynchronizationLister(f.Informer().GetIndexer())
 }

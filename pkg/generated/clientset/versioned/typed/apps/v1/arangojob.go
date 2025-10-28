@@ -23,9 +23,9 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
+	appsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoJobsGetter interface {
 
 // ArangoJobInterface has methods to work with ArangoJob resources.
 type ArangoJobInterface interface {
-	Create(ctx context.Context, arangoJob *v1.ArangoJob, opts metav1.CreateOptions) (*v1.ArangoJob, error)
-	Update(ctx context.Context, arangoJob *v1.ArangoJob, opts metav1.UpdateOptions) (*v1.ArangoJob, error)
+	Create(ctx context.Context, arangoJob *appsv1.ArangoJob, opts metav1.CreateOptions) (*appsv1.ArangoJob, error)
+	Update(ctx context.Context, arangoJob *appsv1.ArangoJob, opts metav1.UpdateOptions) (*appsv1.ArangoJob, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoJob *v1.ArangoJob, opts metav1.UpdateOptions) (*v1.ArangoJob, error)
+	UpdateStatus(ctx context.Context, arangoJob *appsv1.ArangoJob, opts metav1.UpdateOptions) (*appsv1.ArangoJob, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.ArangoJob, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.ArangoJobList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*appsv1.ArangoJob, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*appsv1.ArangoJobList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoJob, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *appsv1.ArangoJob, err error)
 	ArangoJobExpansion
 }
 
 // arangoJobs implements ArangoJobInterface
 type arangoJobs struct {
-	*gentype.ClientWithList[*v1.ArangoJob, *v1.ArangoJobList]
+	*gentype.ClientWithList[*appsv1.ArangoJob, *appsv1.ArangoJobList]
 }
 
 // newArangoJobs returns a ArangoJobs
 func newArangoJobs(c *AppsV1Client, namespace string) *arangoJobs {
 	return &arangoJobs{
-		gentype.NewClientWithList[*v1.ArangoJob, *v1.ArangoJobList](
+		gentype.NewClientWithList[*appsv1.ArangoJob, *appsv1.ArangoJobList](
 			"arangojobs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.ArangoJob { return &v1.ArangoJob{} },
-			func() *v1.ArangoJobList { return &v1.ArangoJobList{} }),
+			func() *appsv1.ArangoJob { return &appsv1.ArangoJob{} },
+			func() *appsv1.ArangoJobList { return &appsv1.ArangoJobList{} },
+		),
 	}
 }

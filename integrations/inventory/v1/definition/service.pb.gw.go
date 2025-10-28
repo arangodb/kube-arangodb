@@ -10,6 +10,7 @@ package definition
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 
@@ -25,29 +26,35 @@ import (
 )
 
 // Suppress "imported and not used" errors
-var _ codes.Code
-var _ io.Reader
-var _ status.Status
-var _ = runtime.String
-var _ = utilities.NewDoubleArray
-var _ = metadata.Join
+var (
+	_ codes.Code
+	_ io.Reader
+	_ status.Status
+	_ = errors.New
+	_ = runtime.String
+	_ = utilities.NewDoubleArray
+	_ = metadata.Join
+)
 
 func request_InventoryV1_Inventory_0(ctx context.Context, marshaler runtime.Marshaler, client InventoryV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq definition_8.Empty
-	var metadata runtime.ServerMetadata
-
+	var (
+		protoReq definition_8.Empty
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
 	msg, err := client.Inventory(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
-
 }
 
 func local_request_InventoryV1_Inventory_0(ctx context.Context, marshaler runtime.Marshaler, server InventoryV1Server, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq definition_8.Empty
-	var metadata runtime.ServerMetadata
-
+	var (
+		protoReq definition_8.Empty
+		metadata runtime.ServerMetadata
+	)
 	msg, err := server.Inventory(ctx, &protoReq)
 	return msg, metadata, err
-
 }
 
 // RegisterInventoryV1HandlerServer registers the http handlers for service InventoryV1 to "mux".
@@ -56,16 +63,13 @@ func local_request_InventoryV1_Inventory_0(ctx context.Context, marshaler runtim
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterInventoryV1HandlerFromEndpoint instead.
 // GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
 func RegisterInventoryV1HandlerServer(ctx context.Context, mux *runtime.ServeMux, server InventoryV1Server) error {
-
-	mux.Handle("GET", pattern_InventoryV1_Inventory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_InventoryV1_Inventory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/inventory.InventoryV1/Inventory", runtime.WithHTTPPathPattern("/_inventory"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/inventory.InventoryV1/Inventory", runtime.WithHTTPPathPattern("/_inventory"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -77,9 +81,7 @@ func RegisterInventoryV1HandlerServer(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_InventoryV1_Inventory_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
 
 	return nil
@@ -106,7 +108,6 @@ func RegisterInventoryV1HandlerFromEndpoint(ctx context.Context, mux *runtime.Se
 			}
 		}()
 	}()
-
 	return RegisterInventoryV1Handler(ctx, mux, conn)
 }
 
@@ -122,14 +123,11 @@ func RegisterInventoryV1Handler(ctx context.Context, mux *runtime.ServeMux, conn
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "InventoryV1Client" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterInventoryV1HandlerClient(ctx context.Context, mux *runtime.ServeMux, client InventoryV1Client) error {
-
-	mux.Handle("GET", pattern_InventoryV1_Inventory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_InventoryV1_Inventory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/inventory.InventoryV1/Inventory", runtime.WithHTTPPathPattern("/_inventory"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/inventory.InventoryV1/Inventory", runtime.WithHTTPPathPattern("/_inventory"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -140,11 +138,8 @@ func RegisterInventoryV1HandlerClient(ctx context.Context, mux *runtime.ServeMux
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-
 		forward_InventoryV1_Inventory_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
 	})
-
 	return nil
 }
 

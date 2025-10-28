@@ -23,10 +23,10 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoPlatformChartLister helps list ArangoPlatformCharts.
@@ -34,7 +34,7 @@ import (
 type ArangoPlatformChartLister interface {
 	// List lists all ArangoPlatformCharts in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoPlatformChart, err error)
+	List(selector labels.Selector) (ret []*platformv1beta1.ArangoPlatformChart, err error)
 	// ArangoPlatformCharts returns an object that can list and get ArangoPlatformCharts.
 	ArangoPlatformCharts(namespace string) ArangoPlatformChartNamespaceLister
 	ArangoPlatformChartListerExpansion
@@ -42,17 +42,17 @@ type ArangoPlatformChartLister interface {
 
 // arangoPlatformChartLister implements the ArangoPlatformChartLister interface.
 type arangoPlatformChartLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoPlatformChart]
+	listers.ResourceIndexer[*platformv1beta1.ArangoPlatformChart]
 }
 
 // NewArangoPlatformChartLister returns a new ArangoPlatformChartLister.
 func NewArangoPlatformChartLister(indexer cache.Indexer) ArangoPlatformChartLister {
-	return &arangoPlatformChartLister{listers.New[*v1beta1.ArangoPlatformChart](indexer, v1beta1.Resource("arangoplatformchart"))}
+	return &arangoPlatformChartLister{listers.New[*platformv1beta1.ArangoPlatformChart](indexer, platformv1beta1.Resource("arangoplatformchart"))}
 }
 
 // ArangoPlatformCharts returns an object that can list and get ArangoPlatformCharts.
 func (s *arangoPlatformChartLister) ArangoPlatformCharts(namespace string) ArangoPlatformChartNamespaceLister {
-	return arangoPlatformChartNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoPlatformChart](s.ResourceIndexer, namespace)}
+	return arangoPlatformChartNamespaceLister{listers.NewNamespaced[*platformv1beta1.ArangoPlatformChart](s.ResourceIndexer, namespace)}
 }
 
 // ArangoPlatformChartNamespaceLister helps list and get ArangoPlatformCharts.
@@ -60,15 +60,15 @@ func (s *arangoPlatformChartLister) ArangoPlatformCharts(namespace string) Arang
 type ArangoPlatformChartNamespaceLister interface {
 	// List lists all ArangoPlatformCharts in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoPlatformChart, err error)
+	List(selector labels.Selector) (ret []*platformv1beta1.ArangoPlatformChart, err error)
 	// Get retrieves the ArangoPlatformChart from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.ArangoPlatformChart, error)
+	Get(name string) (*platformv1beta1.ArangoPlatformChart, error)
 	ArangoPlatformChartNamespaceListerExpansion
 }
 
 // arangoPlatformChartNamespaceLister implements the ArangoPlatformChartNamespaceLister
 // interface.
 type arangoPlatformChartNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoPlatformChart]
+	listers.ResourceIndexer[*platformv1beta1.ArangoPlatformChart]
 }

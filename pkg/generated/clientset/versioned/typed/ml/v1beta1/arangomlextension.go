@@ -23,9 +23,9 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
+	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoMLExtensionsGetter interface {
 
 // ArangoMLExtensionInterface has methods to work with ArangoMLExtension resources.
 type ArangoMLExtensionInterface interface {
-	Create(ctx context.Context, arangoMLExtension *v1beta1.ArangoMLExtension, opts v1.CreateOptions) (*v1beta1.ArangoMLExtension, error)
-	Update(ctx context.Context, arangoMLExtension *v1beta1.ArangoMLExtension, opts v1.UpdateOptions) (*v1beta1.ArangoMLExtension, error)
+	Create(ctx context.Context, arangoMLExtension *mlv1beta1.ArangoMLExtension, opts v1.CreateOptions) (*mlv1beta1.ArangoMLExtension, error)
+	Update(ctx context.Context, arangoMLExtension *mlv1beta1.ArangoMLExtension, opts v1.UpdateOptions) (*mlv1beta1.ArangoMLExtension, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoMLExtension *v1beta1.ArangoMLExtension, opts v1.UpdateOptions) (*v1beta1.ArangoMLExtension, error)
+	UpdateStatus(ctx context.Context, arangoMLExtension *mlv1beta1.ArangoMLExtension, opts v1.UpdateOptions) (*mlv1beta1.ArangoMLExtension, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.ArangoMLExtension, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ArangoMLExtensionList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*mlv1beta1.ArangoMLExtension, error)
+	List(ctx context.Context, opts v1.ListOptions) (*mlv1beta1.ArangoMLExtensionList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoMLExtension, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *mlv1beta1.ArangoMLExtension, err error)
 	ArangoMLExtensionExpansion
 }
 
 // arangoMLExtensions implements ArangoMLExtensionInterface
 type arangoMLExtensions struct {
-	*gentype.ClientWithList[*v1beta1.ArangoMLExtension, *v1beta1.ArangoMLExtensionList]
+	*gentype.ClientWithList[*mlv1beta1.ArangoMLExtension, *mlv1beta1.ArangoMLExtensionList]
 }
 
 // newArangoMLExtensions returns a ArangoMLExtensions
 func newArangoMLExtensions(c *MlV1beta1Client, namespace string) *arangoMLExtensions {
 	return &arangoMLExtensions{
-		gentype.NewClientWithList[*v1beta1.ArangoMLExtension, *v1beta1.ArangoMLExtensionList](
+		gentype.NewClientWithList[*mlv1beta1.ArangoMLExtension, *mlv1beta1.ArangoMLExtensionList](
 			"arangomlextensions",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.ArangoMLExtension { return &v1beta1.ArangoMLExtension{} },
-			func() *v1beta1.ArangoMLExtensionList { return &v1beta1.ArangoMLExtensionList{} }),
+			func() *mlv1beta1.ArangoMLExtension { return &mlv1beta1.ArangoMLExtension{} },
+			func() *mlv1beta1.ArangoMLExtensionList { return &mlv1beta1.ArangoMLExtensionList{} },
+		),
 	}
 }

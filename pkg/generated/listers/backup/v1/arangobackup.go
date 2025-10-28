@@ -23,10 +23,10 @@
 package v1
 
 import (
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoBackupLister helps list ArangoBackups.
@@ -34,7 +34,7 @@ import (
 type ArangoBackupLister interface {
 	// List lists all ArangoBackups in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ArangoBackup, err error)
+	List(selector labels.Selector) (ret []*backupv1.ArangoBackup, err error)
 	// ArangoBackups returns an object that can list and get ArangoBackups.
 	ArangoBackups(namespace string) ArangoBackupNamespaceLister
 	ArangoBackupListerExpansion
@@ -42,17 +42,17 @@ type ArangoBackupLister interface {
 
 // arangoBackupLister implements the ArangoBackupLister interface.
 type arangoBackupLister struct {
-	listers.ResourceIndexer[*v1.ArangoBackup]
+	listers.ResourceIndexer[*backupv1.ArangoBackup]
 }
 
 // NewArangoBackupLister returns a new ArangoBackupLister.
 func NewArangoBackupLister(indexer cache.Indexer) ArangoBackupLister {
-	return &arangoBackupLister{listers.New[*v1.ArangoBackup](indexer, v1.Resource("arangobackup"))}
+	return &arangoBackupLister{listers.New[*backupv1.ArangoBackup](indexer, backupv1.Resource("arangobackup"))}
 }
 
 // ArangoBackups returns an object that can list and get ArangoBackups.
 func (s *arangoBackupLister) ArangoBackups(namespace string) ArangoBackupNamespaceLister {
-	return arangoBackupNamespaceLister{listers.NewNamespaced[*v1.ArangoBackup](s.ResourceIndexer, namespace)}
+	return arangoBackupNamespaceLister{listers.NewNamespaced[*backupv1.ArangoBackup](s.ResourceIndexer, namespace)}
 }
 
 // ArangoBackupNamespaceLister helps list and get ArangoBackups.
@@ -60,15 +60,15 @@ func (s *arangoBackupLister) ArangoBackups(namespace string) ArangoBackupNamespa
 type ArangoBackupNamespaceLister interface {
 	// List lists all ArangoBackups in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ArangoBackup, err error)
+	List(selector labels.Selector) (ret []*backupv1.ArangoBackup, err error)
 	// Get retrieves the ArangoBackup from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.ArangoBackup, error)
+	Get(name string) (*backupv1.ArangoBackup, error)
 	ArangoBackupNamespaceListerExpansion
 }
 
 // arangoBackupNamespaceLister implements the ArangoBackupNamespaceLister
 // interface.
 type arangoBackupNamespaceLister struct {
-	listers.ResourceIndexer[*v1.ArangoBackup]
+	listers.ResourceIndexer[*backupv1.ArangoBackup]
 }

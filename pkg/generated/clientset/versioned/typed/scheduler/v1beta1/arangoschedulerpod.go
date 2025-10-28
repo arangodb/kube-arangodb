@@ -23,9 +23,9 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoSchedulerPodsGetter interface {
 
 // ArangoSchedulerPodInterface has methods to work with ArangoSchedulerPod resources.
 type ArangoSchedulerPodInterface interface {
-	Create(ctx context.Context, arangoSchedulerPod *v1beta1.ArangoSchedulerPod, opts v1.CreateOptions) (*v1beta1.ArangoSchedulerPod, error)
-	Update(ctx context.Context, arangoSchedulerPod *v1beta1.ArangoSchedulerPod, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerPod, error)
+	Create(ctx context.Context, arangoSchedulerPod *schedulerv1beta1.ArangoSchedulerPod, opts v1.CreateOptions) (*schedulerv1beta1.ArangoSchedulerPod, error)
+	Update(ctx context.Context, arangoSchedulerPod *schedulerv1beta1.ArangoSchedulerPod, opts v1.UpdateOptions) (*schedulerv1beta1.ArangoSchedulerPod, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoSchedulerPod *v1beta1.ArangoSchedulerPod, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerPod, error)
+	UpdateStatus(ctx context.Context, arangoSchedulerPod *schedulerv1beta1.ArangoSchedulerPod, opts v1.UpdateOptions) (*schedulerv1beta1.ArangoSchedulerPod, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.ArangoSchedulerPod, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ArangoSchedulerPodList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*schedulerv1beta1.ArangoSchedulerPod, error)
+	List(ctx context.Context, opts v1.ListOptions) (*schedulerv1beta1.ArangoSchedulerPodList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerPod, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *schedulerv1beta1.ArangoSchedulerPod, err error)
 	ArangoSchedulerPodExpansion
 }
 
 // arangoSchedulerPods implements ArangoSchedulerPodInterface
 type arangoSchedulerPods struct {
-	*gentype.ClientWithList[*v1beta1.ArangoSchedulerPod, *v1beta1.ArangoSchedulerPodList]
+	*gentype.ClientWithList[*schedulerv1beta1.ArangoSchedulerPod, *schedulerv1beta1.ArangoSchedulerPodList]
 }
 
 // newArangoSchedulerPods returns a ArangoSchedulerPods
 func newArangoSchedulerPods(c *SchedulerV1beta1Client, namespace string) *arangoSchedulerPods {
 	return &arangoSchedulerPods{
-		gentype.NewClientWithList[*v1beta1.ArangoSchedulerPod, *v1beta1.ArangoSchedulerPodList](
+		gentype.NewClientWithList[*schedulerv1beta1.ArangoSchedulerPod, *schedulerv1beta1.ArangoSchedulerPodList](
 			"arangoschedulerpods",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.ArangoSchedulerPod { return &v1beta1.ArangoSchedulerPod{} },
-			func() *v1beta1.ArangoSchedulerPodList { return &v1beta1.ArangoSchedulerPodList{} }),
+			func() *schedulerv1beta1.ArangoSchedulerPod { return &schedulerv1beta1.ArangoSchedulerPod{} },
+			func() *schedulerv1beta1.ArangoSchedulerPodList { return &schedulerv1beta1.ArangoSchedulerPodList{} },
+		),
 	}
 }

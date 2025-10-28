@@ -23,10 +23,10 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoMLBatchJobLister helps list ArangoMLBatchJobs.
@@ -34,7 +34,7 @@ import (
 type ArangoMLBatchJobLister interface {
 	// List lists all ArangoMLBatchJobs in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.ArangoMLBatchJob, err error)
+	List(selector labels.Selector) (ret []*mlv1alpha1.ArangoMLBatchJob, err error)
 	// ArangoMLBatchJobs returns an object that can list and get ArangoMLBatchJobs.
 	ArangoMLBatchJobs(namespace string) ArangoMLBatchJobNamespaceLister
 	ArangoMLBatchJobListerExpansion
@@ -42,17 +42,17 @@ type ArangoMLBatchJobLister interface {
 
 // arangoMLBatchJobLister implements the ArangoMLBatchJobLister interface.
 type arangoMLBatchJobLister struct {
-	listers.ResourceIndexer[*v1alpha1.ArangoMLBatchJob]
+	listers.ResourceIndexer[*mlv1alpha1.ArangoMLBatchJob]
 }
 
 // NewArangoMLBatchJobLister returns a new ArangoMLBatchJobLister.
 func NewArangoMLBatchJobLister(indexer cache.Indexer) ArangoMLBatchJobLister {
-	return &arangoMLBatchJobLister{listers.New[*v1alpha1.ArangoMLBatchJob](indexer, v1alpha1.Resource("arangomlbatchjob"))}
+	return &arangoMLBatchJobLister{listers.New[*mlv1alpha1.ArangoMLBatchJob](indexer, mlv1alpha1.Resource("arangomlbatchjob"))}
 }
 
 // ArangoMLBatchJobs returns an object that can list and get ArangoMLBatchJobs.
 func (s *arangoMLBatchJobLister) ArangoMLBatchJobs(namespace string) ArangoMLBatchJobNamespaceLister {
-	return arangoMLBatchJobNamespaceLister{listers.NewNamespaced[*v1alpha1.ArangoMLBatchJob](s.ResourceIndexer, namespace)}
+	return arangoMLBatchJobNamespaceLister{listers.NewNamespaced[*mlv1alpha1.ArangoMLBatchJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoMLBatchJobNamespaceLister helps list and get ArangoMLBatchJobs.
@@ -60,15 +60,15 @@ func (s *arangoMLBatchJobLister) ArangoMLBatchJobs(namespace string) ArangoMLBat
 type ArangoMLBatchJobNamespaceLister interface {
 	// List lists all ArangoMLBatchJobs in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.ArangoMLBatchJob, err error)
+	List(selector labels.Selector) (ret []*mlv1alpha1.ArangoMLBatchJob, err error)
 	// Get retrieves the ArangoMLBatchJob from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.ArangoMLBatchJob, error)
+	Get(name string) (*mlv1alpha1.ArangoMLBatchJob, error)
 	ArangoMLBatchJobNamespaceListerExpansion
 }
 
 // arangoMLBatchJobNamespaceLister implements the ArangoMLBatchJobNamespaceLister
 // interface.
 type arangoMLBatchJobNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.ArangoMLBatchJob]
+	listers.ResourceIndexer[*mlv1alpha1.ArangoMLBatchJob]
 }

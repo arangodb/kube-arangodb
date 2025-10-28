@@ -23,9 +23,9 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,16 +42,16 @@ type ArangoSchedulerDeploymentsGetter interface {
 
 // ArangoSchedulerDeploymentInterface has methods to work with ArangoSchedulerDeployment resources.
 type ArangoSchedulerDeploymentInterface interface {
-	Create(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.CreateOptions) (*v1beta1.ArangoSchedulerDeployment, error)
-	Update(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerDeployment, error)
+	Create(ctx context.Context, arangoSchedulerDeployment *schedulerv1beta1.ArangoSchedulerDeployment, opts v1.CreateOptions) (*schedulerv1beta1.ArangoSchedulerDeployment, error)
+	Update(ctx context.Context, arangoSchedulerDeployment *schedulerv1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (*schedulerv1beta1.ArangoSchedulerDeployment, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoSchedulerDeployment *v1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerDeployment, error)
+	UpdateStatus(ctx context.Context, arangoSchedulerDeployment *schedulerv1beta1.ArangoSchedulerDeployment, opts v1.UpdateOptions) (*schedulerv1beta1.ArangoSchedulerDeployment, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.ArangoSchedulerDeployment, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ArangoSchedulerDeploymentList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*schedulerv1beta1.ArangoSchedulerDeployment, error)
+	List(ctx context.Context, opts v1.ListOptions) (*schedulerv1beta1.ArangoSchedulerDeploymentList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerDeployment, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *schedulerv1beta1.ArangoSchedulerDeployment, err error)
 	GetScale(ctx context.Context, arangoSchedulerDeploymentName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
 	UpdateScale(ctx context.Context, arangoSchedulerDeploymentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
 
@@ -60,19 +60,24 @@ type ArangoSchedulerDeploymentInterface interface {
 
 // arangoSchedulerDeployments implements ArangoSchedulerDeploymentInterface
 type arangoSchedulerDeployments struct {
-	*gentype.ClientWithList[*v1beta1.ArangoSchedulerDeployment, *v1beta1.ArangoSchedulerDeploymentList]
+	*gentype.ClientWithList[*schedulerv1beta1.ArangoSchedulerDeployment, *schedulerv1beta1.ArangoSchedulerDeploymentList]
 }
 
 // newArangoSchedulerDeployments returns a ArangoSchedulerDeployments
 func newArangoSchedulerDeployments(c *SchedulerV1beta1Client, namespace string) *arangoSchedulerDeployments {
 	return &arangoSchedulerDeployments{
-		gentype.NewClientWithList[*v1beta1.ArangoSchedulerDeployment, *v1beta1.ArangoSchedulerDeploymentList](
+		gentype.NewClientWithList[*schedulerv1beta1.ArangoSchedulerDeployment, *schedulerv1beta1.ArangoSchedulerDeploymentList](
 			"arangoschedulerdeployments",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.ArangoSchedulerDeployment { return &v1beta1.ArangoSchedulerDeployment{} },
-			func() *v1beta1.ArangoSchedulerDeploymentList { return &v1beta1.ArangoSchedulerDeploymentList{} }),
+			func() *schedulerv1beta1.ArangoSchedulerDeployment {
+				return &schedulerv1beta1.ArangoSchedulerDeployment{}
+			},
+			func() *schedulerv1beta1.ArangoSchedulerDeploymentList {
+				return &schedulerv1beta1.ArangoSchedulerDeploymentList{}
+			},
+		),
 	}
 }
 

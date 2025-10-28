@@ -2160,6 +2160,28 @@ v1beta1:
                           type: string
                       type: object
                     type: array
+                  resources:
+                    properties:
+                      claims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            request:
+                              type: string
+                          type: object
+                        type: array
+                      limits:
+                        additionalProperties:
+                          type: string
+                          x-kubernetes-int-or-string: true
+                        type: object
+                      requests:
+                        additionalProperties:
+                          type: string
+                          x-kubernetes-int-or-string: true
+                        type: object
+                    type: object
                   restartPolicy:
                     type: string
                   runtimeClassName:
@@ -2195,6 +2217,8 @@ v1beta1:
                       runAsUser:
                         format: int64
                         type: integer
+                      seLinuxChangePolicy:
+                        type: string
                       seLinuxOptions:
                         properties:
                           level:

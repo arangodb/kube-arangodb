@@ -731,7 +731,7 @@ func (s *s3impl) GetObjectInfo(ctx context.Context, req *pbStorage.PathRequest) 
 		return nil, err
 	}
 	if !result.Exists {
-		return nil, pbCommon.NotFound(path)
+		return nil, pbCommon.NotFound("%s", path)
 	}
 
 	lastUpdatedAt := timestamppb.New(result.LastUpdatedAt)

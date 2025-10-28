@@ -23,9 +23,9 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,36 @@ type ArangoSchedulerBatchJobsGetter interface {
 
 // ArangoSchedulerBatchJobInterface has methods to work with ArangoSchedulerBatchJob resources.
 type ArangoSchedulerBatchJobInterface interface {
-	Create(ctx context.Context, arangoSchedulerBatchJob *v1beta1.ArangoSchedulerBatchJob, opts v1.CreateOptions) (*v1beta1.ArangoSchedulerBatchJob, error)
-	Update(ctx context.Context, arangoSchedulerBatchJob *v1beta1.ArangoSchedulerBatchJob, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerBatchJob, error)
+	Create(ctx context.Context, arangoSchedulerBatchJob *schedulerv1beta1.ArangoSchedulerBatchJob, opts v1.CreateOptions) (*schedulerv1beta1.ArangoSchedulerBatchJob, error)
+	Update(ctx context.Context, arangoSchedulerBatchJob *schedulerv1beta1.ArangoSchedulerBatchJob, opts v1.UpdateOptions) (*schedulerv1beta1.ArangoSchedulerBatchJob, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoSchedulerBatchJob *v1beta1.ArangoSchedulerBatchJob, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerBatchJob, error)
+	UpdateStatus(ctx context.Context, arangoSchedulerBatchJob *schedulerv1beta1.ArangoSchedulerBatchJob, opts v1.UpdateOptions) (*schedulerv1beta1.ArangoSchedulerBatchJob, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.ArangoSchedulerBatchJob, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ArangoSchedulerBatchJobList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*schedulerv1beta1.ArangoSchedulerBatchJob, error)
+	List(ctx context.Context, opts v1.ListOptions) (*schedulerv1beta1.ArangoSchedulerBatchJobList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerBatchJob, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *schedulerv1beta1.ArangoSchedulerBatchJob, err error)
 	ArangoSchedulerBatchJobExpansion
 }
 
 // arangoSchedulerBatchJobs implements ArangoSchedulerBatchJobInterface
 type arangoSchedulerBatchJobs struct {
-	*gentype.ClientWithList[*v1beta1.ArangoSchedulerBatchJob, *v1beta1.ArangoSchedulerBatchJobList]
+	*gentype.ClientWithList[*schedulerv1beta1.ArangoSchedulerBatchJob, *schedulerv1beta1.ArangoSchedulerBatchJobList]
 }
 
 // newArangoSchedulerBatchJobs returns a ArangoSchedulerBatchJobs
 func newArangoSchedulerBatchJobs(c *SchedulerV1beta1Client, namespace string) *arangoSchedulerBatchJobs {
 	return &arangoSchedulerBatchJobs{
-		gentype.NewClientWithList[*v1beta1.ArangoSchedulerBatchJob, *v1beta1.ArangoSchedulerBatchJobList](
+		gentype.NewClientWithList[*schedulerv1beta1.ArangoSchedulerBatchJob, *schedulerv1beta1.ArangoSchedulerBatchJobList](
 			"arangoschedulerbatchjobs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.ArangoSchedulerBatchJob { return &v1beta1.ArangoSchedulerBatchJob{} },
-			func() *v1beta1.ArangoSchedulerBatchJobList { return &v1beta1.ArangoSchedulerBatchJobList{} }),
+			func() *schedulerv1beta1.ArangoSchedulerBatchJob { return &schedulerv1beta1.ArangoSchedulerBatchJob{} },
+			func() *schedulerv1beta1.ArangoSchedulerBatchJobList {
+				return &schedulerv1beta1.ArangoSchedulerBatchJobList{}
+			},
+		),
 	}
 }

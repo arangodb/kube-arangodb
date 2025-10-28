@@ -23,129 +23,34 @@
 package fake
 
 import (
-	"context"
-
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeArangoClusterSynchronizations implements ArangoClusterSynchronizationInterface
-type FakeArangoClusterSynchronizations struct {
+// fakeArangoClusterSynchronizations implements ArangoClusterSynchronizationInterface
+type fakeArangoClusterSynchronizations struct {
+	*gentype.FakeClientWithList[*v2alpha1.ArangoClusterSynchronization, *v2alpha1.ArangoClusterSynchronizationList]
 	Fake *FakeDatabaseV2alpha1
-	ns   string
 }
 
-var arangoclustersynchronizationsResource = v2alpha1.SchemeGroupVersion.WithResource("arangoclustersynchronizations")
-
-var arangoclustersynchronizationsKind = v2alpha1.SchemeGroupVersion.WithKind("ArangoClusterSynchronization")
-
-// Get takes name of the arangoClusterSynchronization, and returns the corresponding arangoClusterSynchronization object, and an error if there is any.
-func (c *FakeArangoClusterSynchronizations) Get(ctx context.Context, name string, options v1.GetOptions) (result *v2alpha1.ArangoClusterSynchronization, err error) {
-	emptyResult := &v2alpha1.ArangoClusterSynchronization{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(arangoclustersynchronizationsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoClusterSynchronizations(fake *FakeDatabaseV2alpha1, namespace string) deploymentv2alpha1.ArangoClusterSynchronizationInterface {
+	return &fakeArangoClusterSynchronizations{
+		gentype.NewFakeClientWithList[*v2alpha1.ArangoClusterSynchronization, *v2alpha1.ArangoClusterSynchronizationList](
+			fake.Fake,
+			namespace,
+			v2alpha1.SchemeGroupVersion.WithResource("arangoclustersynchronizations"),
+			v2alpha1.SchemeGroupVersion.WithKind("ArangoClusterSynchronization"),
+			func() *v2alpha1.ArangoClusterSynchronization { return &v2alpha1.ArangoClusterSynchronization{} },
+			func() *v2alpha1.ArangoClusterSynchronizationList { return &v2alpha1.ArangoClusterSynchronizationList{} },
+			func(dst, src *v2alpha1.ArangoClusterSynchronizationList) { dst.ListMeta = src.ListMeta },
+			func(list *v2alpha1.ArangoClusterSynchronizationList) []*v2alpha1.ArangoClusterSynchronization {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v2alpha1.ArangoClusterSynchronizationList, items []*v2alpha1.ArangoClusterSynchronization) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v2alpha1.ArangoClusterSynchronization), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoClusterSynchronizations that match those selectors.
-func (c *FakeArangoClusterSynchronizations) List(ctx context.Context, opts v1.ListOptions) (result *v2alpha1.ArangoClusterSynchronizationList, err error) {
-	emptyResult := &v2alpha1.ArangoClusterSynchronizationList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(arangoclustersynchronizationsResource, arangoclustersynchronizationsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v2alpha1.ArangoClusterSynchronizationList{ListMeta: obj.(*v2alpha1.ArangoClusterSynchronizationList).ListMeta}
-	for _, item := range obj.(*v2alpha1.ArangoClusterSynchronizationList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoClusterSynchronizations.
-func (c *FakeArangoClusterSynchronizations) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(arangoclustersynchronizationsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a arangoClusterSynchronization and creates it.  Returns the server's representation of the arangoClusterSynchronization, and an error, if there is any.
-func (c *FakeArangoClusterSynchronizations) Create(ctx context.Context, arangoClusterSynchronization *v2alpha1.ArangoClusterSynchronization, opts v1.CreateOptions) (result *v2alpha1.ArangoClusterSynchronization, err error) {
-	emptyResult := &v2alpha1.ArangoClusterSynchronization{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(arangoclustersynchronizationsResource, c.ns, arangoClusterSynchronization, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v2alpha1.ArangoClusterSynchronization), err
-}
-
-// Update takes the representation of a arangoClusterSynchronization and updates it. Returns the server's representation of the arangoClusterSynchronization, and an error, if there is any.
-func (c *FakeArangoClusterSynchronizations) Update(ctx context.Context, arangoClusterSynchronization *v2alpha1.ArangoClusterSynchronization, opts v1.UpdateOptions) (result *v2alpha1.ArangoClusterSynchronization, err error) {
-	emptyResult := &v2alpha1.ArangoClusterSynchronization{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(arangoclustersynchronizationsResource, c.ns, arangoClusterSynchronization, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v2alpha1.ArangoClusterSynchronization), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoClusterSynchronizations) UpdateStatus(ctx context.Context, arangoClusterSynchronization *v2alpha1.ArangoClusterSynchronization, opts v1.UpdateOptions) (result *v2alpha1.ArangoClusterSynchronization, err error) {
-	emptyResult := &v2alpha1.ArangoClusterSynchronization{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoclustersynchronizationsResource, "status", c.ns, arangoClusterSynchronization, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v2alpha1.ArangoClusterSynchronization), err
-}
-
-// Delete takes name of the arangoClusterSynchronization and deletes it. Returns an error if one occurs.
-func (c *FakeArangoClusterSynchronizations) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangoclustersynchronizationsResource, c.ns, name, opts), &v2alpha1.ArangoClusterSynchronization{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoClusterSynchronizations) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(arangoclustersynchronizationsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v2alpha1.ArangoClusterSynchronizationList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoClusterSynchronization.
-func (c *FakeArangoClusterSynchronizations) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2alpha1.ArangoClusterSynchronization, err error) {
-	emptyResult := &v2alpha1.ArangoClusterSynchronization{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoclustersynchronizationsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v2alpha1.ArangoClusterSynchronization), err
 }

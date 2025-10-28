@@ -11,10 +11,10 @@ ifeq ($(shell uname),Darwin)
 	REALPATH ?= grealpath
 endif
 
-KUBERNETES_VERSION_MINOR:=31
-KUBERNETES_VERSION_PATCH:=8
+KUBERNETES_VERSION_MINOR:=32
+KUBERNETES_VERSION_PATCH:=9
 
-ENVOY_IMAGE=envoyproxy/envoy:v1.32.5
+ENVOY_IMAGE=envoyproxy/envoy:v1.36.2
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -149,7 +149,7 @@ else
 	COMPILE_DEBUG_FLAGS :=
 endif
 
-PROTOC_VERSION := 21.1
+PROTOC_VERSION := 33.0
 ifeq ($(shell uname),Darwin)
 	PROTOC_ARCHIVE_SUFFIX := osx-universal_binary
 else
@@ -898,20 +898,18 @@ tools-min: update-vendor
 	@echo ">> Fetching golangci-lint linter"
 	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
 	@echo ">> Fetching goimports"
-	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@v0.19.0
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@v0.38.0
 	@echo ">> Fetching license check"
-	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@v1.1.1
+	@GOBIN=$(GOPATH)/bin go install github.com/google/addlicense@v1.2.0
 	@echo ">> Fetching yamlfmt"
-	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.10.0
+	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.20.0
 	@echo ">> Fetching protolinter"
-	@GOBIN=$(GOPATH)/bin go install github.com/yoheimuta/protolint/cmd/protolint@v0.47.5
+	@GOBIN=$(GOPATH)/bin go install github.com/yoheimuta/protolint/cmd/protolint@v0.56.4
 
 .PHONY: tools
 tools: tools-min
 	@echo ">> Fetching gci"
-	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.13.4
-	@echo ">> Fetching yamlfmt"
-	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.10.0
+	@GOBIN=$(GOPATH)/bin go install github.com/daixiang0/gci@v0.13.7
 	@echo ">> Downloading protobuf compiler..."
 	@curl -L ${PROTOC_URL} -o $(GOPATH)/protoc.zip
 	@echo ">> Unzipping protobuf compiler..."
@@ -922,9 +920,9 @@ tools: tools-min
 	@git clone --branch "master" --depth 1 https://github.com/googleapis/googleapis.git $(GOPATH)/include/googleapis
 	@rm -Rf $(VENDORDIR)/include/googleapis/.git
 	@echo ">> Fetching protoc go plugins..."
-	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
-	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-	@GOBIN=$(GOPATH)/bin go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.23.0
+	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.4
+	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
+	@GOBIN=$(GOPATH)/bin go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.27.3
 	@echo ">> Fetching govulncheck"
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
 
@@ -1041,7 +1039,7 @@ generate-internal:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
 
 generate-proto:
-	PATH="$(PATH):$(GOBUILDDIR)/bin" $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ -I.:$(GOBUILDDIR)/include/googleapis/ \
+	PATH="$(GOBUILDDIR)/bin:$(PATH)" $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ -I.:$(GOBUILDDIR)/include/googleapis/ \
 			--go_out=. --go_opt=paths=source_relative \
 			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 			--grpc-gateway_out=. --grpc-gateway_opt=paths=source_relative \
@@ -1085,7 +1083,7 @@ sync: sync-charts
 ci-check:
 	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint
 	@git checkout -- go.sum # ignore changes in go.sum
-	@if [ ! -z "$$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; exit 1; fi
+	@if [ ! -z "$$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; git diff; exit 1; fi
 
 .PHONY: reset
 reset:

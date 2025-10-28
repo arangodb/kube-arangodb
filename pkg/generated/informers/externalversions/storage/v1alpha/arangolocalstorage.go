@@ -23,13 +23,13 @@
 package v1alpha
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
+	apisstoragev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha "github.com/arangodb/kube-arangodb/pkg/generated/listers/storage/v1alpha"
+	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/listers/storage/v1alpha"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoLocalStorages.
 type ArangoLocalStorageInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha.ArangoLocalStorageLister
+	Lister() storagev1alpha.ArangoLocalStorageLister
 }
 
 type arangoLocalStorageInformer struct {
@@ -74,7 +74,7 @@ func NewFilteredArangoLocalStorageInformer(client versioned.Interface, resyncPer
 				return client.StorageV1alpha().ArangoLocalStorages().Watch(context.TODO(), options)
 			},
 		},
-		&storagev1alpha.ArangoLocalStorage{},
+		&apisstoragev1alpha.ArangoLocalStorage{},
 		resyncPeriod,
 		indexers,
 	)
@@ -85,9 +85,9 @@ func (f *arangoLocalStorageInformer) defaultInformer(client versioned.Interface,
 }
 
 func (f *arangoLocalStorageInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&storagev1alpha.ArangoLocalStorage{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisstoragev1alpha.ArangoLocalStorage{}, f.defaultInformer)
 }
 
-func (f *arangoLocalStorageInformer) Lister() v1alpha.ArangoLocalStorageLister {
-	return v1alpha.NewArangoLocalStorageLister(f.Informer().GetIndexer())
+func (f *arangoLocalStorageInformer) Lister() storagev1alpha.ArangoLocalStorageLister {
+	return storagev1alpha.NewArangoLocalStorageLister(f.Informer().GetIndexer())
 }

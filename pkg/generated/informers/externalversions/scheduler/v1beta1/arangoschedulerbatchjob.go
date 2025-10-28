@@ -23,13 +23,13 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	apisschedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoSchedulerBatchJobs.
 type ArangoSchedulerBatchJobInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.ArangoSchedulerBatchJobLister
+	Lister() schedulerv1beta1.ArangoSchedulerBatchJobLister
 }
 
 type arangoSchedulerBatchJobInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoSchedulerBatchJobInformer(client versioned.Interface, name
 				return client.SchedulerV1beta1().ArangoSchedulerBatchJobs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&schedulerv1beta1.ArangoSchedulerBatchJob{},
+		&apisschedulerv1beta1.ArangoSchedulerBatchJob{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoSchedulerBatchJobInformer) defaultInformer(client versioned.Inter
 }
 
 func (f *arangoSchedulerBatchJobInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&schedulerv1beta1.ArangoSchedulerBatchJob{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisschedulerv1beta1.ArangoSchedulerBatchJob{}, f.defaultInformer)
 }
 
-func (f *arangoSchedulerBatchJobInformer) Lister() v1beta1.ArangoSchedulerBatchJobLister {
-	return v1beta1.NewArangoSchedulerBatchJobLister(f.Informer().GetIndexer())
+func (f *arangoSchedulerBatchJobInformer) Lister() schedulerv1beta1.ArangoSchedulerBatchJobLister {
+	return schedulerv1beta1.NewArangoSchedulerBatchJobLister(f.Informer().GetIndexer())
 }

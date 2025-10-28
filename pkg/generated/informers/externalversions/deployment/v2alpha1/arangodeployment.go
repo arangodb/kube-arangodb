@@ -23,13 +23,13 @@
 package v2alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	apisdeploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v2alpha1"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v2alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoDeployments.
 type ArangoDeploymentInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v2alpha1.ArangoDeploymentLister
+	Lister() deploymentv2alpha1.ArangoDeploymentLister
 }
 
 type arangoDeploymentInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoDeploymentInformer(client versioned.Interface, namespace s
 				return client.DatabaseV2alpha1().ArangoDeployments(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&deploymentv2alpha1.ArangoDeployment{},
+		&apisdeploymentv2alpha1.ArangoDeployment{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoDeploymentInformer) defaultInformer(client versioned.Interface, r
 }
 
 func (f *arangoDeploymentInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&deploymentv2alpha1.ArangoDeployment{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisdeploymentv2alpha1.ArangoDeployment{}, f.defaultInformer)
 }
 
-func (f *arangoDeploymentInformer) Lister() v2alpha1.ArangoDeploymentLister {
-	return v2alpha1.NewArangoDeploymentLister(f.Informer().GetIndexer())
+func (f *arangoDeploymentInformer) Lister() deploymentv2alpha1.ArangoDeploymentLister {
+	return deploymentv2alpha1.NewArangoDeploymentLister(f.Informer().GetIndexer())
 }

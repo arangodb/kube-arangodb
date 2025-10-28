@@ -297,7 +297,7 @@ func ValidateAnyNotNil[T any](msg string, obj ...*T) error {
 		}
 	}
 
-	return errors.Errorf(msg)
+	return errors.New(msg)
 }
 
 // ValidateServiceType checks that service type is supported

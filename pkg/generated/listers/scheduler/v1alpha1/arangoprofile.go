@@ -23,10 +23,10 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoProfileLister helps list ArangoProfiles.
@@ -34,7 +34,7 @@ import (
 type ArangoProfileLister interface {
 	// List lists all ArangoProfiles in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.ArangoProfile, err error)
+	List(selector labels.Selector) (ret []*schedulerv1alpha1.ArangoProfile, err error)
 	// ArangoProfiles returns an object that can list and get ArangoProfiles.
 	ArangoProfiles(namespace string) ArangoProfileNamespaceLister
 	ArangoProfileListerExpansion
@@ -42,17 +42,17 @@ type ArangoProfileLister interface {
 
 // arangoProfileLister implements the ArangoProfileLister interface.
 type arangoProfileLister struct {
-	listers.ResourceIndexer[*v1alpha1.ArangoProfile]
+	listers.ResourceIndexer[*schedulerv1alpha1.ArangoProfile]
 }
 
 // NewArangoProfileLister returns a new ArangoProfileLister.
 func NewArangoProfileLister(indexer cache.Indexer) ArangoProfileLister {
-	return &arangoProfileLister{listers.New[*v1alpha1.ArangoProfile](indexer, v1alpha1.Resource("arangoprofile"))}
+	return &arangoProfileLister{listers.New[*schedulerv1alpha1.ArangoProfile](indexer, schedulerv1alpha1.Resource("arangoprofile"))}
 }
 
 // ArangoProfiles returns an object that can list and get ArangoProfiles.
 func (s *arangoProfileLister) ArangoProfiles(namespace string) ArangoProfileNamespaceLister {
-	return arangoProfileNamespaceLister{listers.NewNamespaced[*v1alpha1.ArangoProfile](s.ResourceIndexer, namespace)}
+	return arangoProfileNamespaceLister{listers.NewNamespaced[*schedulerv1alpha1.ArangoProfile](s.ResourceIndexer, namespace)}
 }
 
 // ArangoProfileNamespaceLister helps list and get ArangoProfiles.
@@ -60,15 +60,15 @@ func (s *arangoProfileLister) ArangoProfiles(namespace string) ArangoProfileName
 type ArangoProfileNamespaceLister interface {
 	// List lists all ArangoProfiles in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.ArangoProfile, err error)
+	List(selector labels.Selector) (ret []*schedulerv1alpha1.ArangoProfile, err error)
 	// Get retrieves the ArangoProfile from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.ArangoProfile, error)
+	Get(name string) (*schedulerv1alpha1.ArangoProfile, error)
 	ArangoProfileNamespaceListerExpansion
 }
 
 // arangoProfileNamespaceLister implements the ArangoProfileNamespaceLister
 // interface.
 type arangoProfileNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.ArangoProfile]
+	listers.ResourceIndexer[*schedulerv1alpha1.ArangoProfile]
 }

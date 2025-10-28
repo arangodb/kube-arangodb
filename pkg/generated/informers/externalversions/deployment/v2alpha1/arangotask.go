@@ -23,13 +23,13 @@
 package v2alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	apisdeploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v2alpha1"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v2alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoTasks.
 type ArangoTaskInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v2alpha1.ArangoTaskLister
+	Lister() deploymentv2alpha1.ArangoTaskLister
 }
 
 type arangoTaskInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoTaskInformer(client versioned.Interface, namespace string,
 				return client.DatabaseV2alpha1().ArangoTasks(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&deploymentv2alpha1.ArangoTask{},
+		&apisdeploymentv2alpha1.ArangoTask{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoTaskInformer) defaultInformer(client versioned.Interface, resyncP
 }
 
 func (f *arangoTaskInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&deploymentv2alpha1.ArangoTask{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisdeploymentv2alpha1.ArangoTask{}, f.defaultInformer)
 }
 
-func (f *arangoTaskInformer) Lister() v2alpha1.ArangoTaskLister {
-	return v2alpha1.NewArangoTaskLister(f.Informer().GetIndexer())
+func (f *arangoTaskInformer) Lister() deploymentv2alpha1.ArangoTaskLister {
+	return deploymentv2alpha1.NewArangoTaskLister(f.Informer().GetIndexer())
 }

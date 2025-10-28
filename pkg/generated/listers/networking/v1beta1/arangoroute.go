@@ -23,10 +23,10 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoRouteLister helps list ArangoRoutes.
@@ -34,7 +34,7 @@ import (
 type ArangoRouteLister interface {
 	// List lists all ArangoRoutes in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoRoute, err error)
+	List(selector labels.Selector) (ret []*networkingv1beta1.ArangoRoute, err error)
 	// ArangoRoutes returns an object that can list and get ArangoRoutes.
 	ArangoRoutes(namespace string) ArangoRouteNamespaceLister
 	ArangoRouteListerExpansion
@@ -42,17 +42,17 @@ type ArangoRouteLister interface {
 
 // arangoRouteLister implements the ArangoRouteLister interface.
 type arangoRouteLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoRoute]
+	listers.ResourceIndexer[*networkingv1beta1.ArangoRoute]
 }
 
 // NewArangoRouteLister returns a new ArangoRouteLister.
 func NewArangoRouteLister(indexer cache.Indexer) ArangoRouteLister {
-	return &arangoRouteLister{listers.New[*v1beta1.ArangoRoute](indexer, v1beta1.Resource("arangoroute"))}
+	return &arangoRouteLister{listers.New[*networkingv1beta1.ArangoRoute](indexer, networkingv1beta1.Resource("arangoroute"))}
 }
 
 // ArangoRoutes returns an object that can list and get ArangoRoutes.
 func (s *arangoRouteLister) ArangoRoutes(namespace string) ArangoRouteNamespaceLister {
-	return arangoRouteNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoRoute](s.ResourceIndexer, namespace)}
+	return arangoRouteNamespaceLister{listers.NewNamespaced[*networkingv1beta1.ArangoRoute](s.ResourceIndexer, namespace)}
 }
 
 // ArangoRouteNamespaceLister helps list and get ArangoRoutes.
@@ -60,15 +60,15 @@ func (s *arangoRouteLister) ArangoRoutes(namespace string) ArangoRouteNamespaceL
 type ArangoRouteNamespaceLister interface {
 	// List lists all ArangoRoutes in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoRoute, err error)
+	List(selector labels.Selector) (ret []*networkingv1beta1.ArangoRoute, err error)
 	// Get retrieves the ArangoRoute from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.ArangoRoute, error)
+	Get(name string) (*networkingv1beta1.ArangoRoute, error)
 	ArangoRouteNamespaceListerExpansion
 }
 
 // arangoRouteNamespaceLister implements the ArangoRouteNamespaceLister
 // interface.
 type arangoRouteNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoRoute]
+	listers.ResourceIndexer[*networkingv1beta1.ArangoRoute]
 }

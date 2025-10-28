@@ -33,7 +33,7 @@ type FakeAppsV1 struct {
 }
 
 func (c *FakeAppsV1) ArangoJobs(namespace string) v1.ArangoJobInterface {
-	return &FakeArangoJobs{c, namespace}
+	return newFakeArangoJobs(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate
