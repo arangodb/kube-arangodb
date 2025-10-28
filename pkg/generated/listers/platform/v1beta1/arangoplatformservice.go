@@ -23,10 +23,10 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoPlatformServiceLister helps list ArangoPlatformServices.
@@ -34,7 +34,7 @@ import (
 type ArangoPlatformServiceLister interface {
 	// List lists all ArangoPlatformServices in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoPlatformService, err error)
+	List(selector labels.Selector) (ret []*platformv1beta1.ArangoPlatformService, err error)
 	// ArangoPlatformServices returns an object that can list and get ArangoPlatformServices.
 	ArangoPlatformServices(namespace string) ArangoPlatformServiceNamespaceLister
 	ArangoPlatformServiceListerExpansion
@@ -42,17 +42,17 @@ type ArangoPlatformServiceLister interface {
 
 // arangoPlatformServiceLister implements the ArangoPlatformServiceLister interface.
 type arangoPlatformServiceLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoPlatformService]
+	listers.ResourceIndexer[*platformv1beta1.ArangoPlatformService]
 }
 
 // NewArangoPlatformServiceLister returns a new ArangoPlatformServiceLister.
 func NewArangoPlatformServiceLister(indexer cache.Indexer) ArangoPlatformServiceLister {
-	return &arangoPlatformServiceLister{listers.New[*v1beta1.ArangoPlatformService](indexer, v1beta1.Resource("arangoplatformservice"))}
+	return &arangoPlatformServiceLister{listers.New[*platformv1beta1.ArangoPlatformService](indexer, platformv1beta1.Resource("arangoplatformservice"))}
 }
 
 // ArangoPlatformServices returns an object that can list and get ArangoPlatformServices.
 func (s *arangoPlatformServiceLister) ArangoPlatformServices(namespace string) ArangoPlatformServiceNamespaceLister {
-	return arangoPlatformServiceNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoPlatformService](s.ResourceIndexer, namespace)}
+	return arangoPlatformServiceNamespaceLister{listers.NewNamespaced[*platformv1beta1.ArangoPlatformService](s.ResourceIndexer, namespace)}
 }
 
 // ArangoPlatformServiceNamespaceLister helps list and get ArangoPlatformServices.
@@ -60,15 +60,15 @@ func (s *arangoPlatformServiceLister) ArangoPlatformServices(namespace string) A
 type ArangoPlatformServiceNamespaceLister interface {
 	// List lists all ArangoPlatformServices in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoPlatformService, err error)
+	List(selector labels.Selector) (ret []*platformv1beta1.ArangoPlatformService, err error)
 	// Get retrieves the ArangoPlatformService from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.ArangoPlatformService, error)
+	Get(name string) (*platformv1beta1.ArangoPlatformService, error)
 	ArangoPlatformServiceNamespaceListerExpansion
 }
 
 // arangoPlatformServiceNamespaceLister implements the ArangoPlatformServiceNamespaceLister
 // interface.
 type arangoPlatformServiceNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoPlatformService]
+	listers.ResourceIndexer[*platformv1beta1.ArangoPlatformService]
 }

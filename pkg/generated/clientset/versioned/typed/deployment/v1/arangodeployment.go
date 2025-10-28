@@ -23,9 +23,9 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoDeploymentsGetter interface {
 
 // ArangoDeploymentInterface has methods to work with ArangoDeployment resources.
 type ArangoDeploymentInterface interface {
-	Create(ctx context.Context, arangoDeployment *v1.ArangoDeployment, opts metav1.CreateOptions) (*v1.ArangoDeployment, error)
-	Update(ctx context.Context, arangoDeployment *v1.ArangoDeployment, opts metav1.UpdateOptions) (*v1.ArangoDeployment, error)
+	Create(ctx context.Context, arangoDeployment *deploymentv1.ArangoDeployment, opts metav1.CreateOptions) (*deploymentv1.ArangoDeployment, error)
+	Update(ctx context.Context, arangoDeployment *deploymentv1.ArangoDeployment, opts metav1.UpdateOptions) (*deploymentv1.ArangoDeployment, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoDeployment *v1.ArangoDeployment, opts metav1.UpdateOptions) (*v1.ArangoDeployment, error)
+	UpdateStatus(ctx context.Context, arangoDeployment *deploymentv1.ArangoDeployment, opts metav1.UpdateOptions) (*deploymentv1.ArangoDeployment, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.ArangoDeployment, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.ArangoDeploymentList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*deploymentv1.ArangoDeployment, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*deploymentv1.ArangoDeploymentList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoDeployment, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *deploymentv1.ArangoDeployment, err error)
 	ArangoDeploymentExpansion
 }
 
 // arangoDeployments implements ArangoDeploymentInterface
 type arangoDeployments struct {
-	*gentype.ClientWithList[*v1.ArangoDeployment, *v1.ArangoDeploymentList]
+	*gentype.ClientWithList[*deploymentv1.ArangoDeployment, *deploymentv1.ArangoDeploymentList]
 }
 
 // newArangoDeployments returns a ArangoDeployments
 func newArangoDeployments(c *DatabaseV1Client, namespace string) *arangoDeployments {
 	return &arangoDeployments{
-		gentype.NewClientWithList[*v1.ArangoDeployment, *v1.ArangoDeploymentList](
+		gentype.NewClientWithList[*deploymentv1.ArangoDeployment, *deploymentv1.ArangoDeploymentList](
 			"arangodeployments",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.ArangoDeployment { return &v1.ArangoDeployment{} },
-			func() *v1.ArangoDeploymentList { return &v1.ArangoDeploymentList{} }),
+			func() *deploymentv1.ArangoDeployment { return &deploymentv1.ArangoDeployment{} },
+			func() *deploymentv1.ArangoDeploymentList { return &deploymentv1.ArangoDeploymentList{} },
+		),
 	}
 }

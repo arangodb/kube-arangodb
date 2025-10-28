@@ -23,13 +23,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	apismlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/ml/v1alpha1"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/ml/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoMLCronJobs.
 type ArangoMLCronJobInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ArangoMLCronJobLister
+	Lister() mlv1alpha1.ArangoMLCronJobLister
 }
 
 type arangoMLCronJobInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoMLCronJobInformer(client versioned.Interface, namespace st
 				return client.MlV1alpha1().ArangoMLCronJobs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&mlv1alpha1.ArangoMLCronJob{},
+		&apismlv1alpha1.ArangoMLCronJob{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoMLCronJobInformer) defaultInformer(client versioned.Interface, re
 }
 
 func (f *arangoMLCronJobInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&mlv1alpha1.ArangoMLCronJob{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismlv1alpha1.ArangoMLCronJob{}, f.defaultInformer)
 }
 
-func (f *arangoMLCronJobInformer) Lister() v1alpha1.ArangoMLCronJobLister {
-	return v1alpha1.NewArangoMLCronJobLister(f.Informer().GetIndexer())
+func (f *arangoMLCronJobInformer) Lister() mlv1alpha1.ArangoMLCronJobLister {
+	return mlv1alpha1.NewArangoMLCronJobLister(f.Informer().GetIndexer())
 }

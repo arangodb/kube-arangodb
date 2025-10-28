@@ -23,129 +23,34 @@
 package fake
 
 import (
-	"context"
-
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1beta1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeArangoSchedulerCronJobs implements ArangoSchedulerCronJobInterface
-type FakeArangoSchedulerCronJobs struct {
+// fakeArangoSchedulerCronJobs implements ArangoSchedulerCronJobInterface
+type fakeArangoSchedulerCronJobs struct {
+	*gentype.FakeClientWithList[*v1beta1.ArangoSchedulerCronJob, *v1beta1.ArangoSchedulerCronJobList]
 	Fake *FakeSchedulerV1beta1
-	ns   string
 }
 
-var arangoschedulercronjobsResource = v1beta1.SchemeGroupVersion.WithResource("arangoschedulercronjobs")
-
-var arangoschedulercronjobsKind = v1beta1.SchemeGroupVersion.WithKind("ArangoSchedulerCronJob")
-
-// Get takes name of the arangoSchedulerCronJob, and returns the corresponding arangoSchedulerCronJob object, and an error if there is any.
-func (c *FakeArangoSchedulerCronJobs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.ArangoSchedulerCronJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(arangoschedulercronjobsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoSchedulerCronJobs(fake *FakeSchedulerV1beta1, namespace string) schedulerv1beta1.ArangoSchedulerCronJobInterface {
+	return &fakeArangoSchedulerCronJobs{
+		gentype.NewFakeClientWithList[*v1beta1.ArangoSchedulerCronJob, *v1beta1.ArangoSchedulerCronJobList](
+			fake.Fake,
+			namespace,
+			v1beta1.SchemeGroupVersion.WithResource("arangoschedulercronjobs"),
+			v1beta1.SchemeGroupVersion.WithKind("ArangoSchedulerCronJob"),
+			func() *v1beta1.ArangoSchedulerCronJob { return &v1beta1.ArangoSchedulerCronJob{} },
+			func() *v1beta1.ArangoSchedulerCronJobList { return &v1beta1.ArangoSchedulerCronJobList{} },
+			func(dst, src *v1beta1.ArangoSchedulerCronJobList) { dst.ListMeta = src.ListMeta },
+			func(list *v1beta1.ArangoSchedulerCronJobList) []*v1beta1.ArangoSchedulerCronJob {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1beta1.ArangoSchedulerCronJobList, items []*v1beta1.ArangoSchedulerCronJob) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1beta1.ArangoSchedulerCronJob), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoSchedulerCronJobs that match those selectors.
-func (c *FakeArangoSchedulerCronJobs) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.ArangoSchedulerCronJobList, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerCronJobList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(arangoschedulercronjobsResource, arangoschedulercronjobsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1beta1.ArangoSchedulerCronJobList{ListMeta: obj.(*v1beta1.ArangoSchedulerCronJobList).ListMeta}
-	for _, item := range obj.(*v1beta1.ArangoSchedulerCronJobList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoSchedulerCronJobs.
-func (c *FakeArangoSchedulerCronJobs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(arangoschedulercronjobsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a arangoSchedulerCronJob and creates it.  Returns the server's representation of the arangoSchedulerCronJob, and an error, if there is any.
-func (c *FakeArangoSchedulerCronJobs) Create(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.CreateOptions) (result *v1beta1.ArangoSchedulerCronJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(arangoschedulercronjobsResource, c.ns, arangoSchedulerCronJob, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerCronJob), err
-}
-
-// Update takes the representation of a arangoSchedulerCronJob and updates it. Returns the server's representation of the arangoSchedulerCronJob, and an error, if there is any.
-func (c *FakeArangoSchedulerCronJobs) Update(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerCronJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(arangoschedulercronjobsResource, c.ns, arangoSchedulerCronJob, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerCronJob), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoSchedulerCronJobs) UpdateStatus(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (result *v1beta1.ArangoSchedulerCronJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoschedulercronjobsResource, "status", c.ns, arangoSchedulerCronJob, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerCronJob), err
-}
-
-// Delete takes name of the arangoSchedulerCronJob and deletes it. Returns an error if one occurs.
-func (c *FakeArangoSchedulerCronJobs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangoschedulercronjobsResource, c.ns, name, opts), &v1beta1.ArangoSchedulerCronJob{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoSchedulerCronJobs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(arangoschedulercronjobsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1beta1.ArangoSchedulerCronJobList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoSchedulerCronJob.
-func (c *FakeArangoSchedulerCronJobs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerCronJob, err error) {
-	emptyResult := &v1beta1.ArangoSchedulerCronJob{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoschedulercronjobsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoSchedulerCronJob), err
 }

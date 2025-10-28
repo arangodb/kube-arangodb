@@ -23,9 +23,9 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,36 @@ type ArangoDeploymentReplicationsGetter interface {
 
 // ArangoDeploymentReplicationInterface has methods to work with ArangoDeploymentReplication resources.
 type ArangoDeploymentReplicationInterface interface {
-	Create(ctx context.Context, arangoDeploymentReplication *v1.ArangoDeploymentReplication, opts metav1.CreateOptions) (*v1.ArangoDeploymentReplication, error)
-	Update(ctx context.Context, arangoDeploymentReplication *v1.ArangoDeploymentReplication, opts metav1.UpdateOptions) (*v1.ArangoDeploymentReplication, error)
+	Create(ctx context.Context, arangoDeploymentReplication *replicationv1.ArangoDeploymentReplication, opts metav1.CreateOptions) (*replicationv1.ArangoDeploymentReplication, error)
+	Update(ctx context.Context, arangoDeploymentReplication *replicationv1.ArangoDeploymentReplication, opts metav1.UpdateOptions) (*replicationv1.ArangoDeploymentReplication, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoDeploymentReplication *v1.ArangoDeploymentReplication, opts metav1.UpdateOptions) (*v1.ArangoDeploymentReplication, error)
+	UpdateStatus(ctx context.Context, arangoDeploymentReplication *replicationv1.ArangoDeploymentReplication, opts metav1.UpdateOptions) (*replicationv1.ArangoDeploymentReplication, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.ArangoDeploymentReplication, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.ArangoDeploymentReplicationList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*replicationv1.ArangoDeploymentReplication, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*replicationv1.ArangoDeploymentReplicationList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoDeploymentReplication, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *replicationv1.ArangoDeploymentReplication, err error)
 	ArangoDeploymentReplicationExpansion
 }
 
 // arangoDeploymentReplications implements ArangoDeploymentReplicationInterface
 type arangoDeploymentReplications struct {
-	*gentype.ClientWithList[*v1.ArangoDeploymentReplication, *v1.ArangoDeploymentReplicationList]
+	*gentype.ClientWithList[*replicationv1.ArangoDeploymentReplication, *replicationv1.ArangoDeploymentReplicationList]
 }
 
 // newArangoDeploymentReplications returns a ArangoDeploymentReplications
 func newArangoDeploymentReplications(c *ReplicationV1Client, namespace string) *arangoDeploymentReplications {
 	return &arangoDeploymentReplications{
-		gentype.NewClientWithList[*v1.ArangoDeploymentReplication, *v1.ArangoDeploymentReplicationList](
+		gentype.NewClientWithList[*replicationv1.ArangoDeploymentReplication, *replicationv1.ArangoDeploymentReplicationList](
 			"arangodeploymentreplications",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.ArangoDeploymentReplication { return &v1.ArangoDeploymentReplication{} },
-			func() *v1.ArangoDeploymentReplicationList { return &v1.ArangoDeploymentReplicationList{} }),
+			func() *replicationv1.ArangoDeploymentReplication { return &replicationv1.ArangoDeploymentReplication{} },
+			func() *replicationv1.ArangoDeploymentReplicationList {
+				return &replicationv1.ArangoDeploymentReplicationList{}
+			},
+		),
 	}
 }

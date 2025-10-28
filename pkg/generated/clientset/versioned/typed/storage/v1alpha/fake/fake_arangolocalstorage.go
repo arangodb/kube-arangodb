@@ -23,120 +23,34 @@
 package fake
 
 import (
-	"context"
-
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeArangoLocalStorages implements ArangoLocalStorageInterface
-type FakeArangoLocalStorages struct {
+// fakeArangoLocalStorages implements ArangoLocalStorageInterface
+type fakeArangoLocalStorages struct {
+	*gentype.FakeClientWithList[*v1alpha.ArangoLocalStorage, *v1alpha.ArangoLocalStorageList]
 	Fake *FakeStorageV1alpha
 }
 
-var arangolocalstoragesResource = v1alpha.SchemeGroupVersion.WithResource("arangolocalstorages")
-
-var arangolocalstoragesKind = v1alpha.SchemeGroupVersion.WithKind("ArangoLocalStorage")
-
-// Get takes name of the arangoLocalStorage, and returns the corresponding arangoLocalStorage object, and an error if there is any.
-func (c *FakeArangoLocalStorages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha.ArangoLocalStorage, err error) {
-	emptyResult := &v1alpha.ArangoLocalStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootGetActionWithOptions(arangolocalstoragesResource, name, options), emptyResult)
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoLocalStorages(fake *FakeStorageV1alpha) storagev1alpha.ArangoLocalStorageInterface {
+	return &fakeArangoLocalStorages{
+		gentype.NewFakeClientWithList[*v1alpha.ArangoLocalStorage, *v1alpha.ArangoLocalStorageList](
+			fake.Fake,
+			"",
+			v1alpha.SchemeGroupVersion.WithResource("arangolocalstorages"),
+			v1alpha.SchemeGroupVersion.WithKind("ArangoLocalStorage"),
+			func() *v1alpha.ArangoLocalStorage { return &v1alpha.ArangoLocalStorage{} },
+			func() *v1alpha.ArangoLocalStorageList { return &v1alpha.ArangoLocalStorageList{} },
+			func(dst, src *v1alpha.ArangoLocalStorageList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha.ArangoLocalStorageList) []*v1alpha.ArangoLocalStorage {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha.ArangoLocalStorageList, items []*v1alpha.ArangoLocalStorage) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha.ArangoLocalStorage), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoLocalStorages that match those selectors.
-func (c *FakeArangoLocalStorages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha.ArangoLocalStorageList, err error) {
-	emptyResult := &v1alpha.ArangoLocalStorageList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootListActionWithOptions(arangolocalstoragesResource, arangolocalstoragesKind, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha.ArangoLocalStorageList{ListMeta: obj.(*v1alpha.ArangoLocalStorageList).ListMeta}
-	for _, item := range obj.(*v1alpha.ArangoLocalStorageList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoLocalStorages.
-func (c *FakeArangoLocalStorages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewRootWatchActionWithOptions(arangolocalstoragesResource, opts))
-}
-
-// Create takes the representation of a arangoLocalStorage and creates it.  Returns the server's representation of the arangoLocalStorage, and an error, if there is any.
-func (c *FakeArangoLocalStorages) Create(ctx context.Context, arangoLocalStorage *v1alpha.ArangoLocalStorage, opts v1.CreateOptions) (result *v1alpha.ArangoLocalStorage, err error) {
-	emptyResult := &v1alpha.ArangoLocalStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateActionWithOptions(arangolocalstoragesResource, arangoLocalStorage, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha.ArangoLocalStorage), err
-}
-
-// Update takes the representation of a arangoLocalStorage and updates it. Returns the server's representation of the arangoLocalStorage, and an error, if there is any.
-func (c *FakeArangoLocalStorages) Update(ctx context.Context, arangoLocalStorage *v1alpha.ArangoLocalStorage, opts v1.UpdateOptions) (result *v1alpha.ArangoLocalStorage, err error) {
-	emptyResult := &v1alpha.ArangoLocalStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateActionWithOptions(arangolocalstoragesResource, arangoLocalStorage, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha.ArangoLocalStorage), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoLocalStorages) UpdateStatus(ctx context.Context, arangoLocalStorage *v1alpha.ArangoLocalStorage, opts v1.UpdateOptions) (result *v1alpha.ArangoLocalStorage, err error) {
-	emptyResult := &v1alpha.ArangoLocalStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(arangolocalstoragesResource, "status", arangoLocalStorage, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha.ArangoLocalStorage), err
-}
-
-// Delete takes name of the arangoLocalStorage and deletes it. Returns an error if one occurs.
-func (c *FakeArangoLocalStorages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteActionWithOptions(arangolocalstoragesResource, name, opts), &v1alpha.ArangoLocalStorage{})
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoLocalStorages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionActionWithOptions(arangolocalstoragesResource, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha.ArangoLocalStorageList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoLocalStorage.
-func (c *FakeArangoLocalStorages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha.ArangoLocalStorage, err error) {
-	emptyResult := &v1alpha.ArangoLocalStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceActionWithOptions(arangolocalstoragesResource, name, pt, data, opts, subresources...), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha.ArangoLocalStorage), err
 }

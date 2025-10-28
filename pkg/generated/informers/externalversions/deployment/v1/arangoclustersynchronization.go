@@ -23,13 +23,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	apisdeploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v1"
+	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/deployment/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoClusterSynchronizations.
 type ArangoClusterSynchronizationInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.ArangoClusterSynchronizationLister
+	Lister() deploymentv1.ArangoClusterSynchronizationLister
 }
 
 type arangoClusterSynchronizationInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoClusterSynchronizationInformer(client versioned.Interface,
 				return client.DatabaseV1().ArangoClusterSynchronizations(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&deploymentv1.ArangoClusterSynchronization{},
+		&apisdeploymentv1.ArangoClusterSynchronization{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoClusterSynchronizationInformer) defaultInformer(client versioned.
 }
 
 func (f *arangoClusterSynchronizationInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&deploymentv1.ArangoClusterSynchronization{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisdeploymentv1.ArangoClusterSynchronization{}, f.defaultInformer)
 }
 
-func (f *arangoClusterSynchronizationInformer) Lister() v1.ArangoClusterSynchronizationLister {
-	return v1.NewArangoClusterSynchronizationLister(f.Informer().GetIndexer())
+func (f *arangoClusterSynchronizationInformer) Lister() deploymentv1.ArangoClusterSynchronizationLister {
+	return deploymentv1.NewArangoClusterSynchronizationLister(f.Informer().GetIndexer())
 }

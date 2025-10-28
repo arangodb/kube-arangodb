@@ -23,129 +23,34 @@
 package fake
 
 import (
-	"context"
-
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeArangoMLStorages implements ArangoMLStorageInterface
-type FakeArangoMLStorages struct {
+// fakeArangoMLStorages implements ArangoMLStorageInterface
+type fakeArangoMLStorages struct {
+	*gentype.FakeClientWithList[*v1alpha1.ArangoMLStorage, *v1alpha1.ArangoMLStorageList]
 	Fake *FakeMlV1alpha1
-	ns   string
 }
 
-var arangomlstoragesResource = v1alpha1.SchemeGroupVersion.WithResource("arangomlstorages")
-
-var arangomlstoragesKind = v1alpha1.SchemeGroupVersion.WithKind("ArangoMLStorage")
-
-// Get takes name of the arangoMLStorage, and returns the corresponding arangoMLStorage object, and an error if there is any.
-func (c *FakeArangoMLStorages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ArangoMLStorage, err error) {
-	emptyResult := &v1alpha1.ArangoMLStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(arangomlstoragesResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoMLStorages(fake *FakeMlV1alpha1, namespace string) mlv1alpha1.ArangoMLStorageInterface {
+	return &fakeArangoMLStorages{
+		gentype.NewFakeClientWithList[*v1alpha1.ArangoMLStorage, *v1alpha1.ArangoMLStorageList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("arangomlstorages"),
+			v1alpha1.SchemeGroupVersion.WithKind("ArangoMLStorage"),
+			func() *v1alpha1.ArangoMLStorage { return &v1alpha1.ArangoMLStorage{} },
+			func() *v1alpha1.ArangoMLStorageList { return &v1alpha1.ArangoMLStorageList{} },
+			func(dst, src *v1alpha1.ArangoMLStorageList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.ArangoMLStorageList) []*v1alpha1.ArangoMLStorage {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.ArangoMLStorageList, items []*v1alpha1.ArangoMLStorage) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.ArangoMLStorage), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoMLStorages that match those selectors.
-func (c *FakeArangoMLStorages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ArangoMLStorageList, err error) {
-	emptyResult := &v1alpha1.ArangoMLStorageList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(arangomlstoragesResource, arangomlstoragesKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.ArangoMLStorageList{ListMeta: obj.(*v1alpha1.ArangoMLStorageList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ArangoMLStorageList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoMLStorages.
-func (c *FakeArangoMLStorages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(arangomlstoragesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a arangoMLStorage and creates it.  Returns the server's representation of the arangoMLStorage, and an error, if there is any.
-func (c *FakeArangoMLStorages) Create(ctx context.Context, arangoMLStorage *v1alpha1.ArangoMLStorage, opts v1.CreateOptions) (result *v1alpha1.ArangoMLStorage, err error) {
-	emptyResult := &v1alpha1.ArangoMLStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(arangomlstoragesResource, c.ns, arangoMLStorage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ArangoMLStorage), err
-}
-
-// Update takes the representation of a arangoMLStorage and updates it. Returns the server's representation of the arangoMLStorage, and an error, if there is any.
-func (c *FakeArangoMLStorages) Update(ctx context.Context, arangoMLStorage *v1alpha1.ArangoMLStorage, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLStorage, err error) {
-	emptyResult := &v1alpha1.ArangoMLStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(arangomlstoragesResource, c.ns, arangoMLStorage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ArangoMLStorage), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoMLStorages) UpdateStatus(ctx context.Context, arangoMLStorage *v1alpha1.ArangoMLStorage, opts v1.UpdateOptions) (result *v1alpha1.ArangoMLStorage, err error) {
-	emptyResult := &v1alpha1.ArangoMLStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangomlstoragesResource, "status", c.ns, arangoMLStorage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ArangoMLStorage), err
-}
-
-// Delete takes name of the arangoMLStorage and deletes it. Returns an error if one occurs.
-func (c *FakeArangoMLStorages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangomlstoragesResource, c.ns, name, opts), &v1alpha1.ArangoMLStorage{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoMLStorages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(arangomlstoragesResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.ArangoMLStorageList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoMLStorage.
-func (c *FakeArangoMLStorages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoMLStorage, err error) {
-	emptyResult := &v1alpha1.ArangoMLStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(arangomlstoragesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ArangoMLStorage), err
 }

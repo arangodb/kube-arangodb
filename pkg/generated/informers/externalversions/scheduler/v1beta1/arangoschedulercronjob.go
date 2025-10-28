@@ -23,13 +23,13 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	apisschedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoSchedulerCronJobs.
 type ArangoSchedulerCronJobInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.ArangoSchedulerCronJobLister
+	Lister() schedulerv1beta1.ArangoSchedulerCronJobLister
 }
 
 type arangoSchedulerCronJobInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoSchedulerCronJobInformer(client versioned.Interface, names
 				return client.SchedulerV1beta1().ArangoSchedulerCronJobs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&schedulerv1beta1.ArangoSchedulerCronJob{},
+		&apisschedulerv1beta1.ArangoSchedulerCronJob{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoSchedulerCronJobInformer) defaultInformer(client versioned.Interf
 }
 
 func (f *arangoSchedulerCronJobInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&schedulerv1beta1.ArangoSchedulerCronJob{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisschedulerv1beta1.ArangoSchedulerCronJob{}, f.defaultInformer)
 }
 
-func (f *arangoSchedulerCronJobInformer) Lister() v1beta1.ArangoSchedulerCronJobLister {
-	return v1beta1.NewArangoSchedulerCronJobLister(f.Informer().GetIndexer())
+func (f *arangoSchedulerCronJobInformer) Lister() schedulerv1beta1.ArangoSchedulerCronJobLister {
+	return schedulerv1beta1.NewArangoSchedulerCronJobLister(f.Informer().GetIndexer())
 }

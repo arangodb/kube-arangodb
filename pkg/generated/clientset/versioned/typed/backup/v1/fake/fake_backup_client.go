@@ -33,11 +33,11 @@ type FakeBackupV1 struct {
 }
 
 func (c *FakeBackupV1) ArangoBackups(namespace string) v1.ArangoBackupInterface {
-	return &FakeArangoBackups{c, namespace}
+	return newFakeArangoBackups(c, namespace)
 }
 
 func (c *FakeBackupV1) ArangoBackupPolicies(namespace string) v1.ArangoBackupPolicyInterface {
-	return &FakeArangoBackupPolicies{c, namespace}
+	return newFakeArangoBackupPolicies(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

@@ -33,7 +33,7 @@ type FakeReplicationV2alpha1 struct {
 }
 
 func (c *FakeReplicationV2alpha1) ArangoDeploymentReplications(namespace string) v2alpha1.ArangoDeploymentReplicationInterface {
-	return &FakeArangoDeploymentReplications{c, namespace}
+	return newFakeArangoDeploymentReplications(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

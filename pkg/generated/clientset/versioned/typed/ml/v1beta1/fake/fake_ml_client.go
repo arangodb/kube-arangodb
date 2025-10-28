@@ -33,11 +33,11 @@ type FakeMlV1beta1 struct {
 }
 
 func (c *FakeMlV1beta1) ArangoMLExtensions(namespace string) v1beta1.ArangoMLExtensionInterface {
-	return &FakeArangoMLExtensions{c, namespace}
+	return newFakeArangoMLExtensions(c, namespace)
 }
 
 func (c *FakeMlV1beta1) ArangoMLStorages(namespace string) v1beta1.ArangoMLStorageInterface {
-	return &FakeArangoMLStorages{c, namespace}
+	return newFakeArangoMLStorages(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

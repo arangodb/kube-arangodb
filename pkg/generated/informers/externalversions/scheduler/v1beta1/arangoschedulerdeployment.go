@@ -23,13 +23,13 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	apisschedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoSchedulerDeployments.
 type ArangoSchedulerDeploymentInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.ArangoSchedulerDeploymentLister
+	Lister() schedulerv1beta1.ArangoSchedulerDeploymentLister
 }
 
 type arangoSchedulerDeploymentInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoSchedulerDeploymentInformer(client versioned.Interface, na
 				return client.SchedulerV1beta1().ArangoSchedulerDeployments(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&schedulerv1beta1.ArangoSchedulerDeployment{},
+		&apisschedulerv1beta1.ArangoSchedulerDeployment{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoSchedulerDeploymentInformer) defaultInformer(client versioned.Int
 }
 
 func (f *arangoSchedulerDeploymentInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&schedulerv1beta1.ArangoSchedulerDeployment{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisschedulerv1beta1.ArangoSchedulerDeployment{}, f.defaultInformer)
 }
 
-func (f *arangoSchedulerDeploymentInformer) Lister() v1beta1.ArangoSchedulerDeploymentLister {
-	return v1beta1.NewArangoSchedulerDeploymentLister(f.Informer().GetIndexer())
+func (f *arangoSchedulerDeploymentInformer) Lister() schedulerv1beta1.ArangoSchedulerDeploymentLister {
+	return schedulerv1beta1.NewArangoSchedulerDeploymentLister(f.Informer().GetIndexer())
 }

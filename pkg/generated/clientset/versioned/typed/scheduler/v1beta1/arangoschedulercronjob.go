@@ -23,9 +23,9 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,36 @@ type ArangoSchedulerCronJobsGetter interface {
 
 // ArangoSchedulerCronJobInterface has methods to work with ArangoSchedulerCronJob resources.
 type ArangoSchedulerCronJobInterface interface {
-	Create(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.CreateOptions) (*v1beta1.ArangoSchedulerCronJob, error)
-	Update(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerCronJob, error)
+	Create(ctx context.Context, arangoSchedulerCronJob *schedulerv1beta1.ArangoSchedulerCronJob, opts v1.CreateOptions) (*schedulerv1beta1.ArangoSchedulerCronJob, error)
+	Update(ctx context.Context, arangoSchedulerCronJob *schedulerv1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (*schedulerv1beta1.ArangoSchedulerCronJob, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoSchedulerCronJob *v1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (*v1beta1.ArangoSchedulerCronJob, error)
+	UpdateStatus(ctx context.Context, arangoSchedulerCronJob *schedulerv1beta1.ArangoSchedulerCronJob, opts v1.UpdateOptions) (*schedulerv1beta1.ArangoSchedulerCronJob, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.ArangoSchedulerCronJob, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ArangoSchedulerCronJobList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*schedulerv1beta1.ArangoSchedulerCronJob, error)
+	List(ctx context.Context, opts v1.ListOptions) (*schedulerv1beta1.ArangoSchedulerCronJobList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoSchedulerCronJob, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *schedulerv1beta1.ArangoSchedulerCronJob, err error)
 	ArangoSchedulerCronJobExpansion
 }
 
 // arangoSchedulerCronJobs implements ArangoSchedulerCronJobInterface
 type arangoSchedulerCronJobs struct {
-	*gentype.ClientWithList[*v1beta1.ArangoSchedulerCronJob, *v1beta1.ArangoSchedulerCronJobList]
+	*gentype.ClientWithList[*schedulerv1beta1.ArangoSchedulerCronJob, *schedulerv1beta1.ArangoSchedulerCronJobList]
 }
 
 // newArangoSchedulerCronJobs returns a ArangoSchedulerCronJobs
 func newArangoSchedulerCronJobs(c *SchedulerV1beta1Client, namespace string) *arangoSchedulerCronJobs {
 	return &arangoSchedulerCronJobs{
-		gentype.NewClientWithList[*v1beta1.ArangoSchedulerCronJob, *v1beta1.ArangoSchedulerCronJobList](
+		gentype.NewClientWithList[*schedulerv1beta1.ArangoSchedulerCronJob, *schedulerv1beta1.ArangoSchedulerCronJobList](
 			"arangoschedulercronjobs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.ArangoSchedulerCronJob { return &v1beta1.ArangoSchedulerCronJob{} },
-			func() *v1beta1.ArangoSchedulerCronJobList { return &v1beta1.ArangoSchedulerCronJobList{} }),
+			func() *schedulerv1beta1.ArangoSchedulerCronJob { return &schedulerv1beta1.ArangoSchedulerCronJob{} },
+			func() *schedulerv1beta1.ArangoSchedulerCronJobList {
+				return &schedulerv1beta1.ArangoSchedulerCronJobList{}
+			},
+		),
 	}
 }

@@ -23,10 +23,10 @@
 package v1
 
 import (
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoDeploymentLister helps list ArangoDeployments.
@@ -34,7 +34,7 @@ import (
 type ArangoDeploymentLister interface {
 	// List lists all ArangoDeployments in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ArangoDeployment, err error)
+	List(selector labels.Selector) (ret []*deploymentv1.ArangoDeployment, err error)
 	// ArangoDeployments returns an object that can list and get ArangoDeployments.
 	ArangoDeployments(namespace string) ArangoDeploymentNamespaceLister
 	ArangoDeploymentListerExpansion
@@ -42,17 +42,17 @@ type ArangoDeploymentLister interface {
 
 // arangoDeploymentLister implements the ArangoDeploymentLister interface.
 type arangoDeploymentLister struct {
-	listers.ResourceIndexer[*v1.ArangoDeployment]
+	listers.ResourceIndexer[*deploymentv1.ArangoDeployment]
 }
 
 // NewArangoDeploymentLister returns a new ArangoDeploymentLister.
 func NewArangoDeploymentLister(indexer cache.Indexer) ArangoDeploymentLister {
-	return &arangoDeploymentLister{listers.New[*v1.ArangoDeployment](indexer, v1.Resource("arangodeployment"))}
+	return &arangoDeploymentLister{listers.New[*deploymentv1.ArangoDeployment](indexer, deploymentv1.Resource("arangodeployment"))}
 }
 
 // ArangoDeployments returns an object that can list and get ArangoDeployments.
 func (s *arangoDeploymentLister) ArangoDeployments(namespace string) ArangoDeploymentNamespaceLister {
-	return arangoDeploymentNamespaceLister{listers.NewNamespaced[*v1.ArangoDeployment](s.ResourceIndexer, namespace)}
+	return arangoDeploymentNamespaceLister{listers.NewNamespaced[*deploymentv1.ArangoDeployment](s.ResourceIndexer, namespace)}
 }
 
 // ArangoDeploymentNamespaceLister helps list and get ArangoDeployments.
@@ -60,15 +60,15 @@ func (s *arangoDeploymentLister) ArangoDeployments(namespace string) ArangoDeplo
 type ArangoDeploymentNamespaceLister interface {
 	// List lists all ArangoDeployments in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ArangoDeployment, err error)
+	List(selector labels.Selector) (ret []*deploymentv1.ArangoDeployment, err error)
 	// Get retrieves the ArangoDeployment from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.ArangoDeployment, error)
+	Get(name string) (*deploymentv1.ArangoDeployment, error)
 	ArangoDeploymentNamespaceListerExpansion
 }
 
 // arangoDeploymentNamespaceLister implements the ArangoDeploymentNamespaceLister
 // interface.
 type arangoDeploymentNamespaceLister struct {
-	listers.ResourceIndexer[*v1.ArangoDeployment]
+	listers.ResourceIndexer[*deploymentv1.ArangoDeployment]
 }

@@ -33,7 +33,7 @@ type FakeSchedulerV1alpha1 struct {
 }
 
 func (c *FakeSchedulerV1alpha1) ArangoProfiles(namespace string) v1alpha1.ArangoProfileInterface {
-	return &FakeArangoProfiles{c, namespace}
+	return newFakeArangoProfiles(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

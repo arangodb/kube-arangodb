@@ -23,129 +23,34 @@
 package fake
 
 import (
-	"context"
-
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeArangoPlatformCharts implements ArangoPlatformChartInterface
-type FakeArangoPlatformCharts struct {
+// fakeArangoPlatformCharts implements ArangoPlatformChartInterface
+type fakeArangoPlatformCharts struct {
+	*gentype.FakeClientWithList[*v1beta1.ArangoPlatformChart, *v1beta1.ArangoPlatformChartList]
 	Fake *FakePlatformV1beta1
-	ns   string
 }
 
-var arangoplatformchartsResource = v1beta1.SchemeGroupVersion.WithResource("arangoplatformcharts")
-
-var arangoplatformchartsKind = v1beta1.SchemeGroupVersion.WithKind("ArangoPlatformChart")
-
-// Get takes name of the arangoPlatformChart, and returns the corresponding arangoPlatformChart object, and an error if there is any.
-func (c *FakeArangoPlatformCharts) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.ArangoPlatformChart, err error) {
-	emptyResult := &v1beta1.ArangoPlatformChart{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(arangoplatformchartsResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoPlatformCharts(fake *FakePlatformV1beta1, namespace string) platformv1beta1.ArangoPlatformChartInterface {
+	return &fakeArangoPlatformCharts{
+		gentype.NewFakeClientWithList[*v1beta1.ArangoPlatformChart, *v1beta1.ArangoPlatformChartList](
+			fake.Fake,
+			namespace,
+			v1beta1.SchemeGroupVersion.WithResource("arangoplatformcharts"),
+			v1beta1.SchemeGroupVersion.WithKind("ArangoPlatformChart"),
+			func() *v1beta1.ArangoPlatformChart { return &v1beta1.ArangoPlatformChart{} },
+			func() *v1beta1.ArangoPlatformChartList { return &v1beta1.ArangoPlatformChartList{} },
+			func(dst, src *v1beta1.ArangoPlatformChartList) { dst.ListMeta = src.ListMeta },
+			func(list *v1beta1.ArangoPlatformChartList) []*v1beta1.ArangoPlatformChart {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1beta1.ArangoPlatformChartList, items []*v1beta1.ArangoPlatformChart) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1beta1.ArangoPlatformChart), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoPlatformCharts that match those selectors.
-func (c *FakeArangoPlatformCharts) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.ArangoPlatformChartList, err error) {
-	emptyResult := &v1beta1.ArangoPlatformChartList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(arangoplatformchartsResource, arangoplatformchartsKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1beta1.ArangoPlatformChartList{ListMeta: obj.(*v1beta1.ArangoPlatformChartList).ListMeta}
-	for _, item := range obj.(*v1beta1.ArangoPlatformChartList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoPlatformCharts.
-func (c *FakeArangoPlatformCharts) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(arangoplatformchartsResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a arangoPlatformChart and creates it.  Returns the server's representation of the arangoPlatformChart, and an error, if there is any.
-func (c *FakeArangoPlatformCharts) Create(ctx context.Context, arangoPlatformChart *v1beta1.ArangoPlatformChart, opts v1.CreateOptions) (result *v1beta1.ArangoPlatformChart, err error) {
-	emptyResult := &v1beta1.ArangoPlatformChart{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(arangoplatformchartsResource, c.ns, arangoPlatformChart, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoPlatformChart), err
-}
-
-// Update takes the representation of a arangoPlatformChart and updates it. Returns the server's representation of the arangoPlatformChart, and an error, if there is any.
-func (c *FakeArangoPlatformCharts) Update(ctx context.Context, arangoPlatformChart *v1beta1.ArangoPlatformChart, opts v1.UpdateOptions) (result *v1beta1.ArangoPlatformChart, err error) {
-	emptyResult := &v1beta1.ArangoPlatformChart{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(arangoplatformchartsResource, c.ns, arangoPlatformChart, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoPlatformChart), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoPlatformCharts) UpdateStatus(ctx context.Context, arangoPlatformChart *v1beta1.ArangoPlatformChart, opts v1.UpdateOptions) (result *v1beta1.ArangoPlatformChart, err error) {
-	emptyResult := &v1beta1.ArangoPlatformChart{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoplatformchartsResource, "status", c.ns, arangoPlatformChart, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoPlatformChart), err
-}
-
-// Delete takes name of the arangoPlatformChart and deletes it. Returns an error if one occurs.
-func (c *FakeArangoPlatformCharts) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangoplatformchartsResource, c.ns, name, opts), &v1beta1.ArangoPlatformChart{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoPlatformCharts) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(arangoplatformchartsResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1beta1.ArangoPlatformChartList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoPlatformChart.
-func (c *FakeArangoPlatformCharts) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoPlatformChart, err error) {
-	emptyResult := &v1beta1.ArangoPlatformChart{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoplatformchartsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1beta1.ArangoPlatformChart), err
 }

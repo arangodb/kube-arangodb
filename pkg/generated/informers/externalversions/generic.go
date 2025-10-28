@@ -23,7 +23,7 @@
 package externalversions
 
 import (
-	"fmt"
+	fmt "fmt"
 
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"

@@ -23,9 +23,9 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
+	analyticsv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,36 @@ type GraphAnalyticsEnginesGetter interface {
 
 // GraphAnalyticsEngineInterface has methods to work with GraphAnalyticsEngine resources.
 type GraphAnalyticsEngineInterface interface {
-	Create(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.CreateOptions) (*v1alpha1.GraphAnalyticsEngine, error)
-	Update(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (*v1alpha1.GraphAnalyticsEngine, error)
+	Create(ctx context.Context, graphAnalyticsEngine *analyticsv1alpha1.GraphAnalyticsEngine, opts v1.CreateOptions) (*analyticsv1alpha1.GraphAnalyticsEngine, error)
+	Update(ctx context.Context, graphAnalyticsEngine *analyticsv1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (*analyticsv1alpha1.GraphAnalyticsEngine, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, graphAnalyticsEngine *v1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (*v1alpha1.GraphAnalyticsEngine, error)
+	UpdateStatus(ctx context.Context, graphAnalyticsEngine *analyticsv1alpha1.GraphAnalyticsEngine, opts v1.UpdateOptions) (*analyticsv1alpha1.GraphAnalyticsEngine, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.GraphAnalyticsEngine, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.GraphAnalyticsEngineList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*analyticsv1alpha1.GraphAnalyticsEngine, error)
+	List(ctx context.Context, opts v1.ListOptions) (*analyticsv1alpha1.GraphAnalyticsEngineList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GraphAnalyticsEngine, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *analyticsv1alpha1.GraphAnalyticsEngine, err error)
 	GraphAnalyticsEngineExpansion
 }
 
 // graphAnalyticsEngines implements GraphAnalyticsEngineInterface
 type graphAnalyticsEngines struct {
-	*gentype.ClientWithList[*v1alpha1.GraphAnalyticsEngine, *v1alpha1.GraphAnalyticsEngineList]
+	*gentype.ClientWithList[*analyticsv1alpha1.GraphAnalyticsEngine, *analyticsv1alpha1.GraphAnalyticsEngineList]
 }
 
 // newGraphAnalyticsEngines returns a GraphAnalyticsEngines
 func newGraphAnalyticsEngines(c *AnalyticsV1alpha1Client, namespace string) *graphAnalyticsEngines {
 	return &graphAnalyticsEngines{
-		gentype.NewClientWithList[*v1alpha1.GraphAnalyticsEngine, *v1alpha1.GraphAnalyticsEngineList](
+		gentype.NewClientWithList[*analyticsv1alpha1.GraphAnalyticsEngine, *analyticsv1alpha1.GraphAnalyticsEngineList](
 			"graphanalyticsengines",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.GraphAnalyticsEngine { return &v1alpha1.GraphAnalyticsEngine{} },
-			func() *v1alpha1.GraphAnalyticsEngineList { return &v1alpha1.GraphAnalyticsEngineList{} }),
+			func() *analyticsv1alpha1.GraphAnalyticsEngine { return &analyticsv1alpha1.GraphAnalyticsEngine{} },
+			func() *analyticsv1alpha1.GraphAnalyticsEngineList {
+				return &analyticsv1alpha1.GraphAnalyticsEngineList{}
+			},
+		),
 	}
 }

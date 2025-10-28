@@ -23,10 +23,10 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoSchedulerCronJobLister helps list ArangoSchedulerCronJobs.
@@ -34,7 +34,7 @@ import (
 type ArangoSchedulerCronJobLister interface {
 	// List lists all ArangoSchedulerCronJobs in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerCronJob, err error)
+	List(selector labels.Selector) (ret []*schedulerv1beta1.ArangoSchedulerCronJob, err error)
 	// ArangoSchedulerCronJobs returns an object that can list and get ArangoSchedulerCronJobs.
 	ArangoSchedulerCronJobs(namespace string) ArangoSchedulerCronJobNamespaceLister
 	ArangoSchedulerCronJobListerExpansion
@@ -42,17 +42,17 @@ type ArangoSchedulerCronJobLister interface {
 
 // arangoSchedulerCronJobLister implements the ArangoSchedulerCronJobLister interface.
 type arangoSchedulerCronJobLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoSchedulerCronJob]
+	listers.ResourceIndexer[*schedulerv1beta1.ArangoSchedulerCronJob]
 }
 
 // NewArangoSchedulerCronJobLister returns a new ArangoSchedulerCronJobLister.
 func NewArangoSchedulerCronJobLister(indexer cache.Indexer) ArangoSchedulerCronJobLister {
-	return &arangoSchedulerCronJobLister{listers.New[*v1beta1.ArangoSchedulerCronJob](indexer, v1beta1.Resource("arangoschedulercronjob"))}
+	return &arangoSchedulerCronJobLister{listers.New[*schedulerv1beta1.ArangoSchedulerCronJob](indexer, schedulerv1beta1.Resource("arangoschedulercronjob"))}
 }
 
 // ArangoSchedulerCronJobs returns an object that can list and get ArangoSchedulerCronJobs.
 func (s *arangoSchedulerCronJobLister) ArangoSchedulerCronJobs(namespace string) ArangoSchedulerCronJobNamespaceLister {
-	return arangoSchedulerCronJobNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoSchedulerCronJob](s.ResourceIndexer, namespace)}
+	return arangoSchedulerCronJobNamespaceLister{listers.NewNamespaced[*schedulerv1beta1.ArangoSchedulerCronJob](s.ResourceIndexer, namespace)}
 }
 
 // ArangoSchedulerCronJobNamespaceLister helps list and get ArangoSchedulerCronJobs.
@@ -60,15 +60,15 @@ func (s *arangoSchedulerCronJobLister) ArangoSchedulerCronJobs(namespace string)
 type ArangoSchedulerCronJobNamespaceLister interface {
 	// List lists all ArangoSchedulerCronJobs in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerCronJob, err error)
+	List(selector labels.Selector) (ret []*schedulerv1beta1.ArangoSchedulerCronJob, err error)
 	// Get retrieves the ArangoSchedulerCronJob from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.ArangoSchedulerCronJob, error)
+	Get(name string) (*schedulerv1beta1.ArangoSchedulerCronJob, error)
 	ArangoSchedulerCronJobNamespaceListerExpansion
 }
 
 // arangoSchedulerCronJobNamespaceLister implements the ArangoSchedulerCronJobNamespaceLister
 // interface.
 type arangoSchedulerCronJobNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoSchedulerCronJob]
+	listers.ResourceIndexer[*schedulerv1beta1.ArangoSchedulerCronJob]
 }

@@ -23,8 +23,8 @@
 package versioned
 
 import (
-	"fmt"
-	"net/http"
+	fmt "fmt"
+	http "net/http"
 
 	analyticsv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/analytics/v1alpha1"
 	appsv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/apps/v1"

@@ -23,9 +23,9 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoRoutesGetter interface {
 
 // ArangoRouteInterface has methods to work with ArangoRoute resources.
 type ArangoRouteInterface interface {
-	Create(ctx context.Context, arangoRoute *v1alpha1.ArangoRoute, opts v1.CreateOptions) (*v1alpha1.ArangoRoute, error)
-	Update(ctx context.Context, arangoRoute *v1alpha1.ArangoRoute, opts v1.UpdateOptions) (*v1alpha1.ArangoRoute, error)
+	Create(ctx context.Context, arangoRoute *networkingv1alpha1.ArangoRoute, opts v1.CreateOptions) (*networkingv1alpha1.ArangoRoute, error)
+	Update(ctx context.Context, arangoRoute *networkingv1alpha1.ArangoRoute, opts v1.UpdateOptions) (*networkingv1alpha1.ArangoRoute, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoRoute *v1alpha1.ArangoRoute, opts v1.UpdateOptions) (*v1alpha1.ArangoRoute, error)
+	UpdateStatus(ctx context.Context, arangoRoute *networkingv1alpha1.ArangoRoute, opts v1.UpdateOptions) (*networkingv1alpha1.ArangoRoute, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ArangoRoute, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ArangoRouteList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*networkingv1alpha1.ArangoRoute, error)
+	List(ctx context.Context, opts v1.ListOptions) (*networkingv1alpha1.ArangoRouteList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoRoute, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *networkingv1alpha1.ArangoRoute, err error)
 	ArangoRouteExpansion
 }
 
 // arangoRoutes implements ArangoRouteInterface
 type arangoRoutes struct {
-	*gentype.ClientWithList[*v1alpha1.ArangoRoute, *v1alpha1.ArangoRouteList]
+	*gentype.ClientWithList[*networkingv1alpha1.ArangoRoute, *networkingv1alpha1.ArangoRouteList]
 }
 
 // newArangoRoutes returns a ArangoRoutes
 func newArangoRoutes(c *NetworkingV1alpha1Client, namespace string) *arangoRoutes {
 	return &arangoRoutes{
-		gentype.NewClientWithList[*v1alpha1.ArangoRoute, *v1alpha1.ArangoRouteList](
+		gentype.NewClientWithList[*networkingv1alpha1.ArangoRoute, *networkingv1alpha1.ArangoRouteList](
 			"arangoroutes",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.ArangoRoute { return &v1alpha1.ArangoRoute{} },
-			func() *v1alpha1.ArangoRouteList { return &v1alpha1.ArangoRouteList{} }),
+			func() *networkingv1alpha1.ArangoRoute { return &networkingv1alpha1.ArangoRoute{} },
+			func() *networkingv1alpha1.ArangoRouteList { return &networkingv1alpha1.ArangoRouteList{} },
+		),
 	}
 }

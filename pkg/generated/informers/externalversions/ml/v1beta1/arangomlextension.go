@@ -23,13 +23,13 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
+	apismlv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/ml/v1beta1"
+	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/ml/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoMLExtensions.
 type ArangoMLExtensionInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.ArangoMLExtensionLister
+	Lister() mlv1beta1.ArangoMLExtensionLister
 }
 
 type arangoMLExtensionInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoMLExtensionInformer(client versioned.Interface, namespace 
 				return client.MlV1beta1().ArangoMLExtensions(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&mlv1beta1.ArangoMLExtension{},
+		&apismlv1beta1.ArangoMLExtension{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoMLExtensionInformer) defaultInformer(client versioned.Interface, 
 }
 
 func (f *arangoMLExtensionInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&mlv1beta1.ArangoMLExtension{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismlv1beta1.ArangoMLExtension{}, f.defaultInformer)
 }
 
-func (f *arangoMLExtensionInformer) Lister() v1beta1.ArangoMLExtensionLister {
-	return v1beta1.NewArangoMLExtensionLister(f.Informer().GetIndexer())
+func (f *arangoMLExtensionInformer) Lister() mlv1beta1.ArangoMLExtensionLister {
+	return mlv1beta1.NewArangoMLExtensionLister(f.Informer().GetIndexer())
 }

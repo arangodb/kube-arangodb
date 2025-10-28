@@ -23,10 +23,10 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoPlatformStorageLister helps list ArangoPlatformStorages.
@@ -34,7 +34,7 @@ import (
 type ArangoPlatformStorageLister interface {
 	// List lists all ArangoPlatformStorages in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoPlatformStorage, err error)
+	List(selector labels.Selector) (ret []*platformv1beta1.ArangoPlatformStorage, err error)
 	// ArangoPlatformStorages returns an object that can list and get ArangoPlatformStorages.
 	ArangoPlatformStorages(namespace string) ArangoPlatformStorageNamespaceLister
 	ArangoPlatformStorageListerExpansion
@@ -42,17 +42,17 @@ type ArangoPlatformStorageLister interface {
 
 // arangoPlatformStorageLister implements the ArangoPlatformStorageLister interface.
 type arangoPlatformStorageLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoPlatformStorage]
+	listers.ResourceIndexer[*platformv1beta1.ArangoPlatformStorage]
 }
 
 // NewArangoPlatformStorageLister returns a new ArangoPlatformStorageLister.
 func NewArangoPlatformStorageLister(indexer cache.Indexer) ArangoPlatformStorageLister {
-	return &arangoPlatformStorageLister{listers.New[*v1beta1.ArangoPlatformStorage](indexer, v1beta1.Resource("arangoplatformstorage"))}
+	return &arangoPlatformStorageLister{listers.New[*platformv1beta1.ArangoPlatformStorage](indexer, platformv1beta1.Resource("arangoplatformstorage"))}
 }
 
 // ArangoPlatformStorages returns an object that can list and get ArangoPlatformStorages.
 func (s *arangoPlatformStorageLister) ArangoPlatformStorages(namespace string) ArangoPlatformStorageNamespaceLister {
-	return arangoPlatformStorageNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoPlatformStorage](s.ResourceIndexer, namespace)}
+	return arangoPlatformStorageNamespaceLister{listers.NewNamespaced[*platformv1beta1.ArangoPlatformStorage](s.ResourceIndexer, namespace)}
 }
 
 // ArangoPlatformStorageNamespaceLister helps list and get ArangoPlatformStorages.
@@ -60,15 +60,15 @@ func (s *arangoPlatformStorageLister) ArangoPlatformStorages(namespace string) A
 type ArangoPlatformStorageNamespaceLister interface {
 	// List lists all ArangoPlatformStorages in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoPlatformStorage, err error)
+	List(selector labels.Selector) (ret []*platformv1beta1.ArangoPlatformStorage, err error)
 	// Get retrieves the ArangoPlatformStorage from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.ArangoPlatformStorage, error)
+	Get(name string) (*platformv1beta1.ArangoPlatformStorage, error)
 	ArangoPlatformStorageNamespaceListerExpansion
 }
 
 // arangoPlatformStorageNamespaceLister implements the ArangoPlatformStorageNamespaceLister
 // interface.
 type arangoPlatformStorageNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoPlatformStorage]
+	listers.ResourceIndexer[*platformv1beta1.ArangoPlatformStorage]
 }

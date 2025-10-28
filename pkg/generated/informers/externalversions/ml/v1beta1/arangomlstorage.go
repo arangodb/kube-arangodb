@@ -23,13 +23,13 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
+	apismlv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/ml/v1beta1"
+	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/ml/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoMLStorages.
 type ArangoMLStorageInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.ArangoMLStorageLister
+	Lister() mlv1beta1.ArangoMLStorageLister
 }
 
 type arangoMLStorageInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoMLStorageInformer(client versioned.Interface, namespace st
 				return client.MlV1beta1().ArangoMLStorages(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&mlv1beta1.ArangoMLStorage{},
+		&apismlv1beta1.ArangoMLStorage{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoMLStorageInformer) defaultInformer(client versioned.Interface, re
 }
 
 func (f *arangoMLStorageInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&mlv1beta1.ArangoMLStorage{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismlv1beta1.ArangoMLStorage{}, f.defaultInformer)
 }
 
-func (f *arangoMLStorageInformer) Lister() v1beta1.ArangoMLStorageLister {
-	return v1beta1.NewArangoMLStorageLister(f.Informer().GetIndexer())
+func (f *arangoMLStorageInformer) Lister() mlv1beta1.ArangoMLStorageLister {
+	return mlv1beta1.NewArangoMLStorageLister(f.Informer().GetIndexer())
 }

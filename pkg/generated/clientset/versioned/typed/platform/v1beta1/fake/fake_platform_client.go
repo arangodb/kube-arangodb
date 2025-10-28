@@ -33,15 +33,15 @@ type FakePlatformV1beta1 struct {
 }
 
 func (c *FakePlatformV1beta1) ArangoPlatformCharts(namespace string) v1beta1.ArangoPlatformChartInterface {
-	return &FakeArangoPlatformCharts{c, namespace}
+	return newFakeArangoPlatformCharts(c, namespace)
 }
 
 func (c *FakePlatformV1beta1) ArangoPlatformServices(namespace string) v1beta1.ArangoPlatformServiceInterface {
-	return &FakeArangoPlatformServices{c, namespace}
+	return newFakeArangoPlatformServices(c, namespace)
 }
 
 func (c *FakePlatformV1beta1) ArangoPlatformStorages(namespace string) v1beta1.ArangoPlatformStorageInterface {
-	return &FakeArangoPlatformStorages{c, namespace}
+	return newFakeArangoPlatformStorages(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

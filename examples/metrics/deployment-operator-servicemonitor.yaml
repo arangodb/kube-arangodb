@@ -1,6 +1,5 @@
 # This example shows how to integrate with the Prometheus Operator
 # to bring metrics from kube-arangodb to Prometheus.
-
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

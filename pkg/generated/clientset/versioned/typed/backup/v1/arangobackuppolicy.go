@@ -23,9 +23,9 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoBackupPoliciesGetter interface {
 
 // ArangoBackupPolicyInterface has methods to work with ArangoBackupPolicy resources.
 type ArangoBackupPolicyInterface interface {
-	Create(ctx context.Context, arangoBackupPolicy *v1.ArangoBackupPolicy, opts metav1.CreateOptions) (*v1.ArangoBackupPolicy, error)
-	Update(ctx context.Context, arangoBackupPolicy *v1.ArangoBackupPolicy, opts metav1.UpdateOptions) (*v1.ArangoBackupPolicy, error)
+	Create(ctx context.Context, arangoBackupPolicy *backupv1.ArangoBackupPolicy, opts metav1.CreateOptions) (*backupv1.ArangoBackupPolicy, error)
+	Update(ctx context.Context, arangoBackupPolicy *backupv1.ArangoBackupPolicy, opts metav1.UpdateOptions) (*backupv1.ArangoBackupPolicy, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoBackupPolicy *v1.ArangoBackupPolicy, opts metav1.UpdateOptions) (*v1.ArangoBackupPolicy, error)
+	UpdateStatus(ctx context.Context, arangoBackupPolicy *backupv1.ArangoBackupPolicy, opts metav1.UpdateOptions) (*backupv1.ArangoBackupPolicy, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.ArangoBackupPolicy, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.ArangoBackupPolicyList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*backupv1.ArangoBackupPolicy, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*backupv1.ArangoBackupPolicyList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoBackupPolicy, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *backupv1.ArangoBackupPolicy, err error)
 	ArangoBackupPolicyExpansion
 }
 
 // arangoBackupPolicies implements ArangoBackupPolicyInterface
 type arangoBackupPolicies struct {
-	*gentype.ClientWithList[*v1.ArangoBackupPolicy, *v1.ArangoBackupPolicyList]
+	*gentype.ClientWithList[*backupv1.ArangoBackupPolicy, *backupv1.ArangoBackupPolicyList]
 }
 
 // newArangoBackupPolicies returns a ArangoBackupPolicies
 func newArangoBackupPolicies(c *BackupV1Client, namespace string) *arangoBackupPolicies {
 	return &arangoBackupPolicies{
-		gentype.NewClientWithList[*v1.ArangoBackupPolicy, *v1.ArangoBackupPolicyList](
+		gentype.NewClientWithList[*backupv1.ArangoBackupPolicy, *backupv1.ArangoBackupPolicyList](
 			"arangobackuppolicies",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.ArangoBackupPolicy { return &v1.ArangoBackupPolicy{} },
-			func() *v1.ArangoBackupPolicyList { return &v1.ArangoBackupPolicyList{} }),
+			func() *backupv1.ArangoBackupPolicy { return &backupv1.ArangoBackupPolicy{} },
+			func() *backupv1.ArangoBackupPolicyList { return &backupv1.ArangoBackupPolicyList{} },
+		),
 	}
 }

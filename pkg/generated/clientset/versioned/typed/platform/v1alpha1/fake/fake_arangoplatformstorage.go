@@ -23,129 +23,34 @@
 package fake
 
 import (
-	"context"
-
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeArangoPlatformStorages implements ArangoPlatformStorageInterface
-type FakeArangoPlatformStorages struct {
+// fakeArangoPlatformStorages implements ArangoPlatformStorageInterface
+type fakeArangoPlatformStorages struct {
+	*gentype.FakeClientWithList[*v1alpha1.ArangoPlatformStorage, *v1alpha1.ArangoPlatformStorageList]
 	Fake *FakePlatformV1alpha1
-	ns   string
 }
 
-var arangoplatformstoragesResource = v1alpha1.SchemeGroupVersion.WithResource("arangoplatformstorages")
-
-var arangoplatformstoragesKind = v1alpha1.SchemeGroupVersion.WithKind("ArangoPlatformStorage")
-
-// Get takes name of the arangoPlatformStorage, and returns the corresponding arangoPlatformStorage object, and an error if there is any.
-func (c *FakeArangoPlatformStorages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ArangoPlatformStorage, err error) {
-	emptyResult := &v1alpha1.ArangoPlatformStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(arangoplatformstoragesResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoPlatformStorages(fake *FakePlatformV1alpha1, namespace string) platformv1alpha1.ArangoPlatformStorageInterface {
+	return &fakeArangoPlatformStorages{
+		gentype.NewFakeClientWithList[*v1alpha1.ArangoPlatformStorage, *v1alpha1.ArangoPlatformStorageList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("arangoplatformstorages"),
+			v1alpha1.SchemeGroupVersion.WithKind("ArangoPlatformStorage"),
+			func() *v1alpha1.ArangoPlatformStorage { return &v1alpha1.ArangoPlatformStorage{} },
+			func() *v1alpha1.ArangoPlatformStorageList { return &v1alpha1.ArangoPlatformStorageList{} },
+			func(dst, src *v1alpha1.ArangoPlatformStorageList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.ArangoPlatformStorageList) []*v1alpha1.ArangoPlatformStorage {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.ArangoPlatformStorageList, items []*v1alpha1.ArangoPlatformStorage) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.ArangoPlatformStorage), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoPlatformStorages that match those selectors.
-func (c *FakeArangoPlatformStorages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ArangoPlatformStorageList, err error) {
-	emptyResult := &v1alpha1.ArangoPlatformStorageList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(arangoplatformstoragesResource, arangoplatformstoragesKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.ArangoPlatformStorageList{ListMeta: obj.(*v1alpha1.ArangoPlatformStorageList).ListMeta}
-	for _, item := range obj.(*v1alpha1.ArangoPlatformStorageList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoPlatformStorages.
-func (c *FakeArangoPlatformStorages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(arangoplatformstoragesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a arangoPlatformStorage and creates it.  Returns the server's representation of the arangoPlatformStorage, and an error, if there is any.
-func (c *FakeArangoPlatformStorages) Create(ctx context.Context, arangoPlatformStorage *v1alpha1.ArangoPlatformStorage, opts v1.CreateOptions) (result *v1alpha1.ArangoPlatformStorage, err error) {
-	emptyResult := &v1alpha1.ArangoPlatformStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(arangoplatformstoragesResource, c.ns, arangoPlatformStorage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ArangoPlatformStorage), err
-}
-
-// Update takes the representation of a arangoPlatformStorage and updates it. Returns the server's representation of the arangoPlatformStorage, and an error, if there is any.
-func (c *FakeArangoPlatformStorages) Update(ctx context.Context, arangoPlatformStorage *v1alpha1.ArangoPlatformStorage, opts v1.UpdateOptions) (result *v1alpha1.ArangoPlatformStorage, err error) {
-	emptyResult := &v1alpha1.ArangoPlatformStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(arangoplatformstoragesResource, c.ns, arangoPlatformStorage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ArangoPlatformStorage), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoPlatformStorages) UpdateStatus(ctx context.Context, arangoPlatformStorage *v1alpha1.ArangoPlatformStorage, opts v1.UpdateOptions) (result *v1alpha1.ArangoPlatformStorage, err error) {
-	emptyResult := &v1alpha1.ArangoPlatformStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangoplatformstoragesResource, "status", c.ns, arangoPlatformStorage, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ArangoPlatformStorage), err
-}
-
-// Delete takes name of the arangoPlatformStorage and deletes it. Returns an error if one occurs.
-func (c *FakeArangoPlatformStorages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangoplatformstoragesResource, c.ns, name, opts), &v1alpha1.ArangoPlatformStorage{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoPlatformStorages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(arangoplatformstoragesResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.ArangoPlatformStorageList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoPlatformStorage.
-func (c *FakeArangoPlatformStorages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ArangoPlatformStorage, err error) {
-	emptyResult := &v1alpha1.ArangoPlatformStorage{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(arangoplatformstoragesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1alpha1.ArangoPlatformStorage), err
 }

@@ -23,13 +23,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	apisplatformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/platform/v1alpha1"
+	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/platform/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoPlatformServices.
 type ArangoPlatformServiceInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ArangoPlatformServiceLister
+	Lister() platformv1alpha1.ArangoPlatformServiceLister
 }
 
 type arangoPlatformServiceInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoPlatformServiceInformer(client versioned.Interface, namesp
 				return client.PlatformV1alpha1().ArangoPlatformServices(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&platformv1alpha1.ArangoPlatformService{},
+		&apisplatformv1alpha1.ArangoPlatformService{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoPlatformServiceInformer) defaultInformer(client versioned.Interfa
 }
 
 func (f *arangoPlatformServiceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&platformv1alpha1.ArangoPlatformService{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisplatformv1alpha1.ArangoPlatformService{}, f.defaultInformer)
 }
 
-func (f *arangoPlatformServiceInformer) Lister() v1alpha1.ArangoPlatformServiceLister {
-	return v1alpha1.NewArangoPlatformServiceLister(f.Informer().GetIndexer())
+func (f *arangoPlatformServiceInformer) Lister() platformv1alpha1.ArangoPlatformServiceLister {
+	return platformv1alpha1.NewArangoPlatformServiceLister(f.Informer().GetIndexer())
 }

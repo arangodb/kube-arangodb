@@ -23,9 +23,9 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoPlatformServicesGetter interface {
 
 // ArangoPlatformServiceInterface has methods to work with ArangoPlatformService resources.
 type ArangoPlatformServiceInterface interface {
-	Create(ctx context.Context, arangoPlatformService *v1beta1.ArangoPlatformService, opts v1.CreateOptions) (*v1beta1.ArangoPlatformService, error)
-	Update(ctx context.Context, arangoPlatformService *v1beta1.ArangoPlatformService, opts v1.UpdateOptions) (*v1beta1.ArangoPlatformService, error)
+	Create(ctx context.Context, arangoPlatformService *platformv1beta1.ArangoPlatformService, opts v1.CreateOptions) (*platformv1beta1.ArangoPlatformService, error)
+	Update(ctx context.Context, arangoPlatformService *platformv1beta1.ArangoPlatformService, opts v1.UpdateOptions) (*platformv1beta1.ArangoPlatformService, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoPlatformService *v1beta1.ArangoPlatformService, opts v1.UpdateOptions) (*v1beta1.ArangoPlatformService, error)
+	UpdateStatus(ctx context.Context, arangoPlatformService *platformv1beta1.ArangoPlatformService, opts v1.UpdateOptions) (*platformv1beta1.ArangoPlatformService, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.ArangoPlatformService, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.ArangoPlatformServiceList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*platformv1beta1.ArangoPlatformService, error)
+	List(ctx context.Context, opts v1.ListOptions) (*platformv1beta1.ArangoPlatformServiceList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.ArangoPlatformService, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *platformv1beta1.ArangoPlatformService, err error)
 	ArangoPlatformServiceExpansion
 }
 
 // arangoPlatformServices implements ArangoPlatformServiceInterface
 type arangoPlatformServices struct {
-	*gentype.ClientWithList[*v1beta1.ArangoPlatformService, *v1beta1.ArangoPlatformServiceList]
+	*gentype.ClientWithList[*platformv1beta1.ArangoPlatformService, *platformv1beta1.ArangoPlatformServiceList]
 }
 
 // newArangoPlatformServices returns a ArangoPlatformServices
 func newArangoPlatformServices(c *PlatformV1beta1Client, namespace string) *arangoPlatformServices {
 	return &arangoPlatformServices{
-		gentype.NewClientWithList[*v1beta1.ArangoPlatformService, *v1beta1.ArangoPlatformServiceList](
+		gentype.NewClientWithList[*platformv1beta1.ArangoPlatformService, *platformv1beta1.ArangoPlatformServiceList](
 			"arangoplatformservices",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.ArangoPlatformService { return &v1beta1.ArangoPlatformService{} },
-			func() *v1beta1.ArangoPlatformServiceList { return &v1beta1.ArangoPlatformServiceList{} }),
+			func() *platformv1beta1.ArangoPlatformService { return &platformv1beta1.ArangoPlatformService{} },
+			func() *platformv1beta1.ArangoPlatformServiceList { return &platformv1beta1.ArangoPlatformServiceList{} },
+		),
 	}
 }

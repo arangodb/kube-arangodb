@@ -23,13 +23,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
+	apisplatformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/platform/v1alpha1"
+	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/platform/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoPlatformCharts.
 type ArangoPlatformChartInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ArangoPlatformChartLister
+	Lister() platformv1alpha1.ArangoPlatformChartLister
 }
 
 type arangoPlatformChartInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoPlatformChartInformer(client versioned.Interface, namespac
 				return client.PlatformV1alpha1().ArangoPlatformCharts(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&platformv1alpha1.ArangoPlatformChart{},
+		&apisplatformv1alpha1.ArangoPlatformChart{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoPlatformChartInformer) defaultInformer(client versioned.Interface
 }
 
 func (f *arangoPlatformChartInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&platformv1alpha1.ArangoPlatformChart{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisplatformv1alpha1.ArangoPlatformChart{}, f.defaultInformer)
 }
 
-func (f *arangoPlatformChartInformer) Lister() v1alpha1.ArangoPlatformChartLister {
-	return v1alpha1.NewArangoPlatformChartLister(f.Informer().GetIndexer())
+func (f *arangoPlatformChartInformer) Lister() platformv1alpha1.ArangoPlatformChartLister {
+	return platformv1alpha1.NewArangoPlatformChartLister(f.Informer().GetIndexer())
 }

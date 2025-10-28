@@ -23,10 +23,10 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoSchedulerDeploymentLister helps list ArangoSchedulerDeployments.
@@ -34,7 +34,7 @@ import (
 type ArangoSchedulerDeploymentLister interface {
 	// List lists all ArangoSchedulerDeployments in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerDeployment, err error)
+	List(selector labels.Selector) (ret []*schedulerv1beta1.ArangoSchedulerDeployment, err error)
 	// ArangoSchedulerDeployments returns an object that can list and get ArangoSchedulerDeployments.
 	ArangoSchedulerDeployments(namespace string) ArangoSchedulerDeploymentNamespaceLister
 	ArangoSchedulerDeploymentListerExpansion
@@ -42,17 +42,17 @@ type ArangoSchedulerDeploymentLister interface {
 
 // arangoSchedulerDeploymentLister implements the ArangoSchedulerDeploymentLister interface.
 type arangoSchedulerDeploymentLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoSchedulerDeployment]
+	listers.ResourceIndexer[*schedulerv1beta1.ArangoSchedulerDeployment]
 }
 
 // NewArangoSchedulerDeploymentLister returns a new ArangoSchedulerDeploymentLister.
 func NewArangoSchedulerDeploymentLister(indexer cache.Indexer) ArangoSchedulerDeploymentLister {
-	return &arangoSchedulerDeploymentLister{listers.New[*v1beta1.ArangoSchedulerDeployment](indexer, v1beta1.Resource("arangoschedulerdeployment"))}
+	return &arangoSchedulerDeploymentLister{listers.New[*schedulerv1beta1.ArangoSchedulerDeployment](indexer, schedulerv1beta1.Resource("arangoschedulerdeployment"))}
 }
 
 // ArangoSchedulerDeployments returns an object that can list and get ArangoSchedulerDeployments.
 func (s *arangoSchedulerDeploymentLister) ArangoSchedulerDeployments(namespace string) ArangoSchedulerDeploymentNamespaceLister {
-	return arangoSchedulerDeploymentNamespaceLister{listers.NewNamespaced[*v1beta1.ArangoSchedulerDeployment](s.ResourceIndexer, namespace)}
+	return arangoSchedulerDeploymentNamespaceLister{listers.NewNamespaced[*schedulerv1beta1.ArangoSchedulerDeployment](s.ResourceIndexer, namespace)}
 }
 
 // ArangoSchedulerDeploymentNamespaceLister helps list and get ArangoSchedulerDeployments.
@@ -60,15 +60,15 @@ func (s *arangoSchedulerDeploymentLister) ArangoSchedulerDeployments(namespace s
 type ArangoSchedulerDeploymentNamespaceLister interface {
 	// List lists all ArangoSchedulerDeployments in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.ArangoSchedulerDeployment, err error)
+	List(selector labels.Selector) (ret []*schedulerv1beta1.ArangoSchedulerDeployment, err error)
 	// Get retrieves the ArangoSchedulerDeployment from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.ArangoSchedulerDeployment, error)
+	Get(name string) (*schedulerv1beta1.ArangoSchedulerDeployment, error)
 	ArangoSchedulerDeploymentNamespaceListerExpansion
 }
 
 // arangoSchedulerDeploymentNamespaceLister implements the ArangoSchedulerDeploymentNamespaceLister
 // interface.
 type arangoSchedulerDeploymentNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.ArangoSchedulerDeployment]
+	listers.ResourceIndexer[*schedulerv1beta1.ArangoSchedulerDeployment]
 }

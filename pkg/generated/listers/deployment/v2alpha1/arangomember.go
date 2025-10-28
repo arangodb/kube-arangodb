@@ -23,10 +23,10 @@
 package v2alpha1
 
 import (
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoMemberLister helps list ArangoMembers.
@@ -34,7 +34,7 @@ import (
 type ArangoMemberLister interface {
 	// List lists all ArangoMembers in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v2alpha1.ArangoMember, err error)
+	List(selector labels.Selector) (ret []*deploymentv2alpha1.ArangoMember, err error)
 	// ArangoMembers returns an object that can list and get ArangoMembers.
 	ArangoMembers(namespace string) ArangoMemberNamespaceLister
 	ArangoMemberListerExpansion
@@ -42,17 +42,17 @@ type ArangoMemberLister interface {
 
 // arangoMemberLister implements the ArangoMemberLister interface.
 type arangoMemberLister struct {
-	listers.ResourceIndexer[*v2alpha1.ArangoMember]
+	listers.ResourceIndexer[*deploymentv2alpha1.ArangoMember]
 }
 
 // NewArangoMemberLister returns a new ArangoMemberLister.
 func NewArangoMemberLister(indexer cache.Indexer) ArangoMemberLister {
-	return &arangoMemberLister{listers.New[*v2alpha1.ArangoMember](indexer, v2alpha1.Resource("arangomember"))}
+	return &arangoMemberLister{listers.New[*deploymentv2alpha1.ArangoMember](indexer, deploymentv2alpha1.Resource("arangomember"))}
 }
 
 // ArangoMembers returns an object that can list and get ArangoMembers.
 func (s *arangoMemberLister) ArangoMembers(namespace string) ArangoMemberNamespaceLister {
-	return arangoMemberNamespaceLister{listers.NewNamespaced[*v2alpha1.ArangoMember](s.ResourceIndexer, namespace)}
+	return arangoMemberNamespaceLister{listers.NewNamespaced[*deploymentv2alpha1.ArangoMember](s.ResourceIndexer, namespace)}
 }
 
 // ArangoMemberNamespaceLister helps list and get ArangoMembers.
@@ -60,15 +60,15 @@ func (s *arangoMemberLister) ArangoMembers(namespace string) ArangoMemberNamespa
 type ArangoMemberNamespaceLister interface {
 	// List lists all ArangoMembers in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v2alpha1.ArangoMember, err error)
+	List(selector labels.Selector) (ret []*deploymentv2alpha1.ArangoMember, err error)
 	// Get retrieves the ArangoMember from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v2alpha1.ArangoMember, error)
+	Get(name string) (*deploymentv2alpha1.ArangoMember, error)
 	ArangoMemberNamespaceListerExpansion
 }
 
 // arangoMemberNamespaceLister implements the ArangoMemberNamespaceLister
 // interface.
 type arangoMemberNamespaceLister struct {
-	listers.ResourceIndexer[*v2alpha1.ArangoMember]
+	listers.ResourceIndexer[*deploymentv2alpha1.ArangoMember]
 }

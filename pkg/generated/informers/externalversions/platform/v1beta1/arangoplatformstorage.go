@@ -23,13 +23,13 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	apisplatformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/platform/v1beta1"
+	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/platform/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoPlatformStorages.
 type ArangoPlatformStorageInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.ArangoPlatformStorageLister
+	Lister() platformv1beta1.ArangoPlatformStorageLister
 }
 
 type arangoPlatformStorageInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoPlatformStorageInformer(client versioned.Interface, namesp
 				return client.PlatformV1beta1().ArangoPlatformStorages(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&platformv1beta1.ArangoPlatformStorage{},
+		&apisplatformv1beta1.ArangoPlatformStorage{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoPlatformStorageInformer) defaultInformer(client versioned.Interfa
 }
 
 func (f *arangoPlatformStorageInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&platformv1beta1.ArangoPlatformStorage{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisplatformv1beta1.ArangoPlatformStorage{}, f.defaultInformer)
 }
 
-func (f *arangoPlatformStorageInformer) Lister() v1beta1.ArangoPlatformStorageLister {
-	return v1beta1.NewArangoPlatformStorageLister(f.Informer().GetIndexer())
+func (f *arangoPlatformStorageInformer) Lister() platformv1beta1.ArangoPlatformStorageLister {
+	return platformv1beta1.NewArangoPlatformStorageLister(f.Informer().GetIndexer())
 }

@@ -23,13 +23,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
+	apisreplicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/replication/v1"
+	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/replication/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoDeploymentReplications.
 type ArangoDeploymentReplicationInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.ArangoDeploymentReplicationLister
+	Lister() replicationv1.ArangoDeploymentReplicationLister
 }
 
 type arangoDeploymentReplicationInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoDeploymentReplicationInformer(client versioned.Interface, 
 				return client.ReplicationV1().ArangoDeploymentReplications(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&replicationv1.ArangoDeploymentReplication{},
+		&apisreplicationv1.ArangoDeploymentReplication{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoDeploymentReplicationInformer) defaultInformer(client versioned.I
 }
 
 func (f *arangoDeploymentReplicationInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&replicationv1.ArangoDeploymentReplication{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisreplicationv1.ArangoDeploymentReplication{}, f.defaultInformer)
 }
 
-func (f *arangoDeploymentReplicationInformer) Lister() v1.ArangoDeploymentReplicationLister {
-	return v1.NewArangoDeploymentReplicationLister(f.Informer().GetIndexer())
+func (f *arangoDeploymentReplicationInformer) Lister() replicationv1.ArangoDeploymentReplicationLister {
+	return replicationv1.NewArangoDeploymentReplicationLister(f.Informer().GetIndexer())
 }

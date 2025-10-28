@@ -23,13 +23,13 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	apisschedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1beta1"
+	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/scheduler/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoSchedulerPods.
 type ArangoSchedulerPodInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1beta1.ArangoSchedulerPodLister
+	Lister() schedulerv1beta1.ArangoSchedulerPodLister
 }
 
 type arangoSchedulerPodInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoSchedulerPodInformer(client versioned.Interface, namespace
 				return client.SchedulerV1beta1().ArangoSchedulerPods(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&schedulerv1beta1.ArangoSchedulerPod{},
+		&apisschedulerv1beta1.ArangoSchedulerPod{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoSchedulerPodInformer) defaultInformer(client versioned.Interface,
 }
 
 func (f *arangoSchedulerPodInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&schedulerv1beta1.ArangoSchedulerPod{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisschedulerv1beta1.ArangoSchedulerPod{}, f.defaultInformer)
 }
 
-func (f *arangoSchedulerPodInformer) Lister() v1beta1.ArangoSchedulerPodLister {
-	return v1beta1.NewArangoSchedulerPodLister(f.Informer().GetIndexer())
+func (f *arangoSchedulerPodInformer) Lister() schedulerv1beta1.ArangoSchedulerPodLister {
+	return schedulerv1beta1.NewArangoSchedulerPodLister(f.Informer().GetIndexer())
 }

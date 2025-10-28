@@ -23,13 +23,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
+	apismlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/ml/v1alpha1"
+	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/ml/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoMLBatchJobs.
 type ArangoMLBatchJobInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ArangoMLBatchJobLister
+	Lister() mlv1alpha1.ArangoMLBatchJobLister
 }
 
 type arangoMLBatchJobInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoMLBatchJobInformer(client versioned.Interface, namespace s
 				return client.MlV1alpha1().ArangoMLBatchJobs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&mlv1alpha1.ArangoMLBatchJob{},
+		&apismlv1alpha1.ArangoMLBatchJob{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoMLBatchJobInformer) defaultInformer(client versioned.Interface, r
 }
 
 func (f *arangoMLBatchJobInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&mlv1alpha1.ArangoMLBatchJob{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismlv1alpha1.ArangoMLBatchJob{}, f.defaultInformer)
 }
 
-func (f *arangoMLBatchJobInformer) Lister() v1alpha1.ArangoMLBatchJobLister {
-	return v1alpha1.NewArangoMLBatchJobLister(f.Informer().GetIndexer())
+func (f *arangoMLBatchJobInformer) Lister() mlv1alpha1.ArangoMLBatchJobLister {
+	return mlv1alpha1.NewArangoMLBatchJobLister(f.Informer().GetIndexer())
 }

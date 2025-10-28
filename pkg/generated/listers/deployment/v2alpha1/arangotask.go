@@ -23,10 +23,10 @@
 package v2alpha1
 
 import (
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoTaskLister helps list ArangoTasks.
@@ -34,7 +34,7 @@ import (
 type ArangoTaskLister interface {
 	// List lists all ArangoTasks in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v2alpha1.ArangoTask, err error)
+	List(selector labels.Selector) (ret []*deploymentv2alpha1.ArangoTask, err error)
 	// ArangoTasks returns an object that can list and get ArangoTasks.
 	ArangoTasks(namespace string) ArangoTaskNamespaceLister
 	ArangoTaskListerExpansion
@@ -42,17 +42,17 @@ type ArangoTaskLister interface {
 
 // arangoTaskLister implements the ArangoTaskLister interface.
 type arangoTaskLister struct {
-	listers.ResourceIndexer[*v2alpha1.ArangoTask]
+	listers.ResourceIndexer[*deploymentv2alpha1.ArangoTask]
 }
 
 // NewArangoTaskLister returns a new ArangoTaskLister.
 func NewArangoTaskLister(indexer cache.Indexer) ArangoTaskLister {
-	return &arangoTaskLister{listers.New[*v2alpha1.ArangoTask](indexer, v2alpha1.Resource("arangotask"))}
+	return &arangoTaskLister{listers.New[*deploymentv2alpha1.ArangoTask](indexer, deploymentv2alpha1.Resource("arangotask"))}
 }
 
 // ArangoTasks returns an object that can list and get ArangoTasks.
 func (s *arangoTaskLister) ArangoTasks(namespace string) ArangoTaskNamespaceLister {
-	return arangoTaskNamespaceLister{listers.NewNamespaced[*v2alpha1.ArangoTask](s.ResourceIndexer, namespace)}
+	return arangoTaskNamespaceLister{listers.NewNamespaced[*deploymentv2alpha1.ArangoTask](s.ResourceIndexer, namespace)}
 }
 
 // ArangoTaskNamespaceLister helps list and get ArangoTasks.
@@ -60,15 +60,15 @@ func (s *arangoTaskLister) ArangoTasks(namespace string) ArangoTaskNamespaceList
 type ArangoTaskNamespaceLister interface {
 	// List lists all ArangoTasks in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v2alpha1.ArangoTask, err error)
+	List(selector labels.Selector) (ret []*deploymentv2alpha1.ArangoTask, err error)
 	// Get retrieves the ArangoTask from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v2alpha1.ArangoTask, error)
+	Get(name string) (*deploymentv2alpha1.ArangoTask, error)
 	ArangoTaskNamespaceListerExpansion
 }
 
 // arangoTaskNamespaceLister implements the ArangoTaskNamespaceLister
 // interface.
 type arangoTaskNamespaceLister struct {
-	listers.ResourceIndexer[*v2alpha1.ArangoTask]
+	listers.ResourceIndexer[*deploymentv2alpha1.ArangoTask]
 }

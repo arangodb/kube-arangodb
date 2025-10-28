@@ -33,19 +33,19 @@ type FakeMlV1alpha1 struct {
 }
 
 func (c *FakeMlV1alpha1) ArangoMLBatchJobs(namespace string) v1alpha1.ArangoMLBatchJobInterface {
-	return &FakeArangoMLBatchJobs{c, namespace}
+	return newFakeArangoMLBatchJobs(c, namespace)
 }
 
 func (c *FakeMlV1alpha1) ArangoMLCronJobs(namespace string) v1alpha1.ArangoMLCronJobInterface {
-	return &FakeArangoMLCronJobs{c, namespace}
+	return newFakeArangoMLCronJobs(c, namespace)
 }
 
 func (c *FakeMlV1alpha1) ArangoMLExtensions(namespace string) v1alpha1.ArangoMLExtensionInterface {
-	return &FakeArangoMLExtensions{c, namespace}
+	return newFakeArangoMLExtensions(c, namespace)
 }
 
 func (c *FakeMlV1alpha1) ArangoMLStorages(namespace string) v1alpha1.ArangoMLStorageInterface {
-	return &FakeArangoMLStorages{c, namespace}
+	return newFakeArangoMLStorages(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

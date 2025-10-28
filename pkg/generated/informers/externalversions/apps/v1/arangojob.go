@@ -23,13 +23,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	appsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
+	apisappsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/apps/v1"
+	appsv1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoJobs.
 type ArangoJobInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.ArangoJobLister
+	Lister() appsv1.ArangoJobLister
 }
 
 type arangoJobInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoJobInformer(client versioned.Interface, namespace string, 
 				return client.AppsV1().ArangoJobs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&appsv1.ArangoJob{},
+		&apisappsv1.ArangoJob{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoJobInformer) defaultInformer(client versioned.Interface, resyncPe
 }
 
 func (f *arangoJobInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&appsv1.ArangoJob{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisappsv1.ArangoJob{}, f.defaultInformer)
 }
 
-func (f *arangoJobInformer) Lister() v1.ArangoJobLister {
-	return v1.NewArangoJobLister(f.Informer().GetIndexer())
+func (f *arangoJobInformer) Lister() appsv1.ArangoJobLister {
+	return appsv1.NewArangoJobLister(f.Informer().GetIndexer())
 }

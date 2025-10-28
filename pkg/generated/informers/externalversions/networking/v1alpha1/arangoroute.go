@@ -23,13 +23,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	apisnetworkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/networking/v1alpha1"
+	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/networking/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoRoutes.
 type ArangoRouteInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ArangoRouteLister
+	Lister() networkingv1alpha1.ArangoRouteLister
 }
 
 type arangoRouteInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoRouteInformer(client versioned.Interface, namespace string
 				return client.NetworkingV1alpha1().ArangoRoutes(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&networkingv1alpha1.ArangoRoute{},
+		&apisnetworkingv1alpha1.ArangoRoute{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoRouteInformer) defaultInformer(client versioned.Interface, resync
 }
 
 func (f *arangoRouteInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&networkingv1alpha1.ArangoRoute{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisnetworkingv1alpha1.ArangoRoute{}, f.defaultInformer)
 }
 
-func (f *arangoRouteInformer) Lister() v1alpha1.ArangoRouteLister {
-	return v1alpha1.NewArangoRouteLister(f.Informer().GetIndexer())
+func (f *arangoRouteInformer) Lister() networkingv1alpha1.ArangoRouteLister {
+	return networkingv1alpha1.NewArangoRouteLister(f.Informer().GetIndexer())
 }

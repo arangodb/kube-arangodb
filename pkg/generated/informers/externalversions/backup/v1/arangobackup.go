@@ -23,13 +23,13 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	apisbackupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/backup/v1"
+	backupv1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/backup/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // ArangoBackups.
 type ArangoBackupInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.ArangoBackupLister
+	Lister() backupv1.ArangoBackupLister
 }
 
 type arangoBackupInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredArangoBackupInformer(client versioned.Interface, namespace strin
 				return client.BackupV1().ArangoBackups(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&backupv1.ArangoBackup{},
+		&apisbackupv1.ArangoBackup{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *arangoBackupInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *arangoBackupInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&backupv1.ArangoBackup{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisbackupv1.ArangoBackup{}, f.defaultInformer)
 }
 
-func (f *arangoBackupInformer) Lister() v1.ArangoBackupLister {
-	return v1.NewArangoBackupLister(f.Informer().GetIndexer())
+func (f *arangoBackupInformer) Lister() backupv1.ArangoBackupLister {
+	return backupv1.NewArangoBackupLister(f.Informer().GetIndexer())
 }

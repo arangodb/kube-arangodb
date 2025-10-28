@@ -33,7 +33,7 @@ type FakeNetworkingV1alpha1 struct {
 }
 
 func (c *FakeNetworkingV1alpha1) ArangoRoutes(namespace string) v1alpha1.ArangoRouteInterface {
-	return &FakeArangoRoutes{c, namespace}
+	return newFakeArangoRoutes(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

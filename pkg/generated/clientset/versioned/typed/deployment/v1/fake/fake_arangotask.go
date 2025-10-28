@@ -23,129 +23,30 @@
 package fake
 
 import (
-	"context"
-
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeArangoTasks implements ArangoTaskInterface
-type FakeArangoTasks struct {
+// fakeArangoTasks implements ArangoTaskInterface
+type fakeArangoTasks struct {
+	*gentype.FakeClientWithList[*v1.ArangoTask, *v1.ArangoTaskList]
 	Fake *FakeDatabaseV1
-	ns   string
 }
 
-var arangotasksResource = v1.SchemeGroupVersion.WithResource("arangotasks")
-
-var arangotasksKind = v1.SchemeGroupVersion.WithKind("ArangoTask")
-
-// Get takes name of the arangoTask, and returns the corresponding arangoTask object, and an error if there is any.
-func (c *FakeArangoTasks) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ArangoTask, err error) {
-	emptyResult := &v1.ArangoTask{}
-	obj, err := c.Fake.
-		Invokes(testing.NewGetActionWithOptions(arangotasksResource, c.ns, name, options), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
+func newFakeArangoTasks(fake *FakeDatabaseV1, namespace string) deploymentv1.ArangoTaskInterface {
+	return &fakeArangoTasks{
+		gentype.NewFakeClientWithList[*v1.ArangoTask, *v1.ArangoTaskList](
+			fake.Fake,
+			namespace,
+			v1.SchemeGroupVersion.WithResource("arangotasks"),
+			v1.SchemeGroupVersion.WithKind("ArangoTask"),
+			func() *v1.ArangoTask { return &v1.ArangoTask{} },
+			func() *v1.ArangoTaskList { return &v1.ArangoTaskList{} },
+			func(dst, src *v1.ArangoTaskList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.ArangoTaskList) []*v1.ArangoTask { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.ArangoTaskList, items []*v1.ArangoTask) { list.Items = gentype.FromPointerSlice(items) },
+		),
+		fake,
 	}
-	return obj.(*v1.ArangoTask), err
-}
-
-// List takes label and field selectors, and returns the list of ArangoTasks that match those selectors.
-func (c *FakeArangoTasks) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ArangoTaskList, err error) {
-	emptyResult := &v1.ArangoTaskList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewListActionWithOptions(arangotasksResource, arangotasksKind, c.ns, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.ArangoTaskList{ListMeta: obj.(*v1.ArangoTaskList).ListMeta}
-	for _, item := range obj.(*v1.ArangoTaskList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested arangoTasks.
-func (c *FakeArangoTasks) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchActionWithOptions(arangotasksResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a arangoTask and creates it.  Returns the server's representation of the arangoTask, and an error, if there is any.
-func (c *FakeArangoTasks) Create(ctx context.Context, arangoTask *v1.ArangoTask, opts metav1.CreateOptions) (result *v1.ArangoTask, err error) {
-	emptyResult := &v1.ArangoTask{}
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateActionWithOptions(arangotasksResource, c.ns, arangoTask, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.ArangoTask), err
-}
-
-// Update takes the representation of a arangoTask and updates it. Returns the server's representation of the arangoTask, and an error, if there is any.
-func (c *FakeArangoTasks) Update(ctx context.Context, arangoTask *v1.ArangoTask, opts metav1.UpdateOptions) (result *v1.ArangoTask, err error) {
-	emptyResult := &v1.ArangoTask{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateActionWithOptions(arangotasksResource, c.ns, arangoTask, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.ArangoTask), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeArangoTasks) UpdateStatus(ctx context.Context, arangoTask *v1.ArangoTask, opts metav1.UpdateOptions) (result *v1.ArangoTask, err error) {
-	emptyResult := &v1.ArangoTask{}
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceActionWithOptions(arangotasksResource, "status", c.ns, arangoTask, opts), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.ArangoTask), err
-}
-
-// Delete takes name of the arangoTask and deletes it. Returns an error if one occurs.
-func (c *FakeArangoTasks) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(arangotasksResource, c.ns, name, opts), &v1.ArangoTask{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeArangoTasks) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionActionWithOptions(arangotasksResource, c.ns, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.ArangoTaskList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched arangoTask.
-func (c *FakeArangoTasks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ArangoTask, err error) {
-	emptyResult := &v1.ArangoTask{}
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceActionWithOptions(arangotasksResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
-
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.ArangoTask), err
 }

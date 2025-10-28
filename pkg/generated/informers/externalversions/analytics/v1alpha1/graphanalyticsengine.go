@@ -23,13 +23,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	analyticsv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
+	apisanalyticsv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/analytics/v1alpha1"
+	analyticsv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/listers/analytics/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -40,7 +40,7 @@ import (
 // GraphAnalyticsEngines.
 type GraphAnalyticsEngineInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.GraphAnalyticsEngineLister
+	Lister() analyticsv1alpha1.GraphAnalyticsEngineLister
 }
 
 type graphAnalyticsEngineInformer struct {
@@ -75,7 +75,7 @@ func NewFilteredGraphAnalyticsEngineInformer(client versioned.Interface, namespa
 				return client.AnalyticsV1alpha1().GraphAnalyticsEngines(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&analyticsv1alpha1.GraphAnalyticsEngine{},
+		&apisanalyticsv1alpha1.GraphAnalyticsEngine{},
 		resyncPeriod,
 		indexers,
 	)
@@ -86,9 +86,9 @@ func (f *graphAnalyticsEngineInformer) defaultInformer(client versioned.Interfac
 }
 
 func (f *graphAnalyticsEngineInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&analyticsv1alpha1.GraphAnalyticsEngine{}, f.defaultInformer)
+	return f.factory.InformerFor(&apisanalyticsv1alpha1.GraphAnalyticsEngine{}, f.defaultInformer)
 }
 
-func (f *graphAnalyticsEngineInformer) Lister() v1alpha1.GraphAnalyticsEngineLister {
-	return v1alpha1.NewGraphAnalyticsEngineLister(f.Informer().GetIndexer())
+func (f *graphAnalyticsEngineInformer) Lister() analyticsv1alpha1.GraphAnalyticsEngineLister {
+	return analyticsv1alpha1.NewGraphAnalyticsEngineLister(f.Informer().GetIndexer())
 }

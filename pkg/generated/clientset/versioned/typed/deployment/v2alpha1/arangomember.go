@@ -23,9 +23,9 @@
 package v2alpha1
 
 import (
-	"context"
+	context "context"
 
-	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
+	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	scheme "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -41,33 +41,34 @@ type ArangoMembersGetter interface {
 
 // ArangoMemberInterface has methods to work with ArangoMember resources.
 type ArangoMemberInterface interface {
-	Create(ctx context.Context, arangoMember *v2alpha1.ArangoMember, opts v1.CreateOptions) (*v2alpha1.ArangoMember, error)
-	Update(ctx context.Context, arangoMember *v2alpha1.ArangoMember, opts v1.UpdateOptions) (*v2alpha1.ArangoMember, error)
+	Create(ctx context.Context, arangoMember *deploymentv2alpha1.ArangoMember, opts v1.CreateOptions) (*deploymentv2alpha1.ArangoMember, error)
+	Update(ctx context.Context, arangoMember *deploymentv2alpha1.ArangoMember, opts v1.UpdateOptions) (*deploymentv2alpha1.ArangoMember, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, arangoMember *v2alpha1.ArangoMember, opts v1.UpdateOptions) (*v2alpha1.ArangoMember, error)
+	UpdateStatus(ctx context.Context, arangoMember *deploymentv2alpha1.ArangoMember, opts v1.UpdateOptions) (*deploymentv2alpha1.ArangoMember, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v2alpha1.ArangoMember, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v2alpha1.ArangoMemberList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*deploymentv2alpha1.ArangoMember, error)
+	List(ctx context.Context, opts v1.ListOptions) (*deploymentv2alpha1.ArangoMemberList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v2alpha1.ArangoMember, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *deploymentv2alpha1.ArangoMember, err error)
 	ArangoMemberExpansion
 }
 
 // arangoMembers implements ArangoMemberInterface
 type arangoMembers struct {
-	*gentype.ClientWithList[*v2alpha1.ArangoMember, *v2alpha1.ArangoMemberList]
+	*gentype.ClientWithList[*deploymentv2alpha1.ArangoMember, *deploymentv2alpha1.ArangoMemberList]
 }
 
 // newArangoMembers returns a ArangoMembers
 func newArangoMembers(c *DatabaseV2alpha1Client, namespace string) *arangoMembers {
 	return &arangoMembers{
-		gentype.NewClientWithList[*v2alpha1.ArangoMember, *v2alpha1.ArangoMemberList](
+		gentype.NewClientWithList[*deploymentv2alpha1.ArangoMember, *deploymentv2alpha1.ArangoMemberList](
 			"arangomembers",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v2alpha1.ArangoMember { return &v2alpha1.ArangoMember{} },
-			func() *v2alpha1.ArangoMemberList { return &v2alpha1.ArangoMemberList{} }),
+			func() *deploymentv2alpha1.ArangoMember { return &deploymentv2alpha1.ArangoMember{} },
+			func() *deploymentv2alpha1.ArangoMemberList { return &deploymentv2alpha1.ArangoMemberList{} },
+		),
 	}
 }

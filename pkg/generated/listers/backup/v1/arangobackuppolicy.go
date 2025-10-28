@@ -23,10 +23,10 @@
 package v1
 
 import (
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ArangoBackupPolicyLister helps list ArangoBackupPolicies.
@@ -34,7 +34,7 @@ import (
 type ArangoBackupPolicyLister interface {
 	// List lists all ArangoBackupPolicies in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ArangoBackupPolicy, err error)
+	List(selector labels.Selector) (ret []*backupv1.ArangoBackupPolicy, err error)
 	// ArangoBackupPolicies returns an object that can list and get ArangoBackupPolicies.
 	ArangoBackupPolicies(namespace string) ArangoBackupPolicyNamespaceLister
 	ArangoBackupPolicyListerExpansion
@@ -42,17 +42,17 @@ type ArangoBackupPolicyLister interface {
 
 // arangoBackupPolicyLister implements the ArangoBackupPolicyLister interface.
 type arangoBackupPolicyLister struct {
-	listers.ResourceIndexer[*v1.ArangoBackupPolicy]
+	listers.ResourceIndexer[*backupv1.ArangoBackupPolicy]
 }
 
 // NewArangoBackupPolicyLister returns a new ArangoBackupPolicyLister.
 func NewArangoBackupPolicyLister(indexer cache.Indexer) ArangoBackupPolicyLister {
-	return &arangoBackupPolicyLister{listers.New[*v1.ArangoBackupPolicy](indexer, v1.Resource("arangobackuppolicy"))}
+	return &arangoBackupPolicyLister{listers.New[*backupv1.ArangoBackupPolicy](indexer, backupv1.Resource("arangobackuppolicy"))}
 }
 
 // ArangoBackupPolicies returns an object that can list and get ArangoBackupPolicies.
 func (s *arangoBackupPolicyLister) ArangoBackupPolicies(namespace string) ArangoBackupPolicyNamespaceLister {
-	return arangoBackupPolicyNamespaceLister{listers.NewNamespaced[*v1.ArangoBackupPolicy](s.ResourceIndexer, namespace)}
+	return arangoBackupPolicyNamespaceLister{listers.NewNamespaced[*backupv1.ArangoBackupPolicy](s.ResourceIndexer, namespace)}
 }
 
 // ArangoBackupPolicyNamespaceLister helps list and get ArangoBackupPolicies.
@@ -60,15 +60,15 @@ func (s *arangoBackupPolicyLister) ArangoBackupPolicies(namespace string) Arango
 type ArangoBackupPolicyNamespaceLister interface {
 	// List lists all ArangoBackupPolicies in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.ArangoBackupPolicy, err error)
+	List(selector labels.Selector) (ret []*backupv1.ArangoBackupPolicy, err error)
 	// Get retrieves the ArangoBackupPolicy from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.ArangoBackupPolicy, error)
+	Get(name string) (*backupv1.ArangoBackupPolicy, error)
 	ArangoBackupPolicyNamespaceListerExpansion
 }
 
 // arangoBackupPolicyNamespaceLister implements the ArangoBackupPolicyNamespaceLister
 // interface.
 type arangoBackupPolicyNamespaceLister struct {
-	listers.ResourceIndexer[*v1.ArangoBackupPolicy]
+	listers.ResourceIndexer[*backupv1.ArangoBackupPolicy]
 }
