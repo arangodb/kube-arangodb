@@ -57,11 +57,12 @@ const (
 	ArgMemberName     = "member-name"
 	ArgAcceptedCode   = "accepted-code"
 	ArgTimeout        = "timeout"
+	ArgTimeoutDefault = time.Minute
 )
 
 func init() {
 	cmdMain.AddCommand(cmdAdmin)
-	cmdAdminAgencyDump.PersistentFlags().DurationP(ArgTimeout, "t", time.Minute,
+	cmdAdmin.PersistentFlags().DurationP(ArgTimeout, "t", ArgTimeoutDefault,
 		"timeout of the request")
 
 	cmdAdmin.AddCommand(cmdAdminAgency)
@@ -134,7 +135,7 @@ func extractTimeout(cmd *cobra.Command) (context.Context, context.CancelFunc) {
 		return context.WithTimeout(cmd.Context(), v)
 	}
 
-	return context.WithCancel(cmd.Context())
+	return context.WithTimeout(cmd.Context(), ArgTimeoutDefault)
 }
 
 func cmdGetAdminMemberRequestGetE(cmd *cobra.Command, args []string) error {
