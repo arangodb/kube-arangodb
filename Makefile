@@ -1039,7 +1039,7 @@ generate-internal:
 	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
 
 generate-proto:
-	PATH="$(PATH):$(GOBUILDDIR)/bin" $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ -I.:$(GOBUILDDIR)/include/googleapis/ \
+	PATH="$(GOBUILDDIR)/bin:$(PATH)" $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ -I.:$(GOBUILDDIR)/include/googleapis/ \
 			--go_out=. --go_opt=paths=source_relative \
 			--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 			--grpc-gateway_out=. --grpc-gateway_opt=paths=source_relative \
