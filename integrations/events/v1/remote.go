@@ -32,6 +32,8 @@ import (
 )
 
 type RemoteStore[IN proto.Message] interface {
+	Init(ctx context.Context) error
+
 	Emit(ctx context.Context, events ...IN) error
 }
 
@@ -43,6 +45,10 @@ func NewArangoRemoteStore[IN proto.Message](client cache.Object[arangodb.Collect
 
 type arangoRemoteStore[IN proto.Message] struct {
 	client cache.Object[arangodb.Collection]
+}
+
+func (a *arangoRemoteStore[IN]) Init(ctx context.Context) error {
+	return a.client.Init(ctx)
 }
 
 func (a *arangoRemoteStore[IN]) Emit(ctx context.Context, events ...IN) error {

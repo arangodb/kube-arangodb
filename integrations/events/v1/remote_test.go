@@ -47,6 +47,10 @@ type testRemoteStore[IN proto.Message] struct {
 	events [][]byte
 }
 
+func (r *testRemoteStore[IN]) Init(ctx context.Context) error {
+	return nil
+}
+
 func (r *testRemoteStore[IN]) Events(t *testing.T) []IN {
 	r.lock.Lock()
 	defer r.lock.Unlock()

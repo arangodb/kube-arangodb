@@ -85,6 +85,9 @@ type RemoteCache[T RemoteCacheObject] interface {
 	// List lists the keys matching predicate from the server
 	// Always misses the cache
 	List(ctx context.Context, size int, prefix string) (util.NextIterator[[]string], error)
+
+	// Init inits the cache
+	Init(ctx context.Context) error
 }
 
 type remoteCache[T RemoteCacheObject] struct {
@@ -93,6 +96,10 @@ type remoteCache[T RemoteCacheObject] struct {
 	lock sync.RWMutex
 
 	cache Cache[string, T]
+}
+
+func (r *remoteCache[T]) Init(ctx context.Context) error {
+	return r.collection.Init(ctx)
 }
 
 func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {

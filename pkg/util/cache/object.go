@@ -37,6 +37,7 @@ func NewObject[T any](caller ObjectFetcher[T]) Object[T] {
 type ObjectFetcher[T any] func(ctx context.Context) (T, time.Duration, error)
 
 type Object[T any] interface {
+	Init(context.Context) error
 	Get(ctx context.Context) (T, error)
 }
 
@@ -47,6 +48,11 @@ type object[T any] struct {
 
 	eol time.Time
 	obj T
+}
+
+func (o *object[T]) Init(ctx context.Context) error {
+	_, err := o.Get(ctx)
+	return err
 }
 
 func (o *object[T]) Get(ctx context.Context) (T, error) {

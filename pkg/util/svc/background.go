@@ -30,6 +30,12 @@ type Background interface {
 	Background(ctx context.Context)
 }
 
+func RunBackgroundSync(ctx context.Context, in any) {
+	if h, ok := in.(Background); ok {
+		h.Background(ctx)
+	}
+}
+
 func RunBackground(in any) context.CancelFunc {
 	if h, ok := in.(Background); ok {
 		return util.RunContextAsync(context.Background(), h.Background)

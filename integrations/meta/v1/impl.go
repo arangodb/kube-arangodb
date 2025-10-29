@@ -42,16 +42,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
+func New(cfg Configuration) (svc.Handler, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
 	col := cfg.KVCollection(cfg.Endpoint, "_system", "_meta_store")
-
-	if _, err := col.Get(ctx); err != nil {
-		return nil, err
-	}
 
 	return newInternal(cfg, cache.NewRemoteCacheWithTTL[*Object](col, cfg.TTL)), nil
 }
@@ -86,6 +82,33 @@ func (i *implementation) Health() svc.HealthState {
 
 func (i *implementation) Register(registrar *grpc.Server) {
 	pbMetaV1.RegisterMetaV1Server(registrar, i)
+}
+
+func (i *implementation) Background(ctx context.Context) {
+	i.init(ctx)
+}
+
+func (i *implementation) init(ctx context.Context) {
+	time.Sleep(time.Second)
+
+	timerT := time.NewTicker(time.Second)
+	defer timerT.Stop()
+
+	for {
+		err := i.cache.Init(ctx)
+		if err == nil {
+			return
+		}
+
+		logger.Err(err).Warn("Unable to init collection")
+
+		select {
+		case <-timerT.C:
+			continue
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {

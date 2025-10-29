@@ -65,5 +65,5 @@ func (a *eventsV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler
 		return nil, err
 	}
 
-	return pbImplEventsV1.New(ctx, a.config)
+	return pbImplEventsV1.New(a.config)
 }

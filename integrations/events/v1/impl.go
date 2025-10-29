@@ -36,7 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
+func New(cfg Configuration) (svc.Handler, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -44,10 +44,6 @@ func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
 	col := cfg.KVCollection(cfg.Endpoint, "_system", "_events")
 
 	col = withTTLIndex(col)
-
-	if _, err := col.Get(ctx); err != nil {
-		return nil, err
-	}
 
 	return newInternal(cfg, NewArangoRemoteStore[*pbEventsV1.Event](col)), nil
 }
@@ -93,8 +89,33 @@ func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) err
 	return nil
 }
 
-func (a *implementation) Background() context.CancelFunc {
-	return svc.RunBackground(a.remote)
+func (i *implementation) Background(ctx context.Context) {
+	i.init(ctx)
+
+	svc.RunBackgroundSync(ctx, i.remote)
+}
+
+func (i *implementation) init(ctx context.Context) {
+	time.Sleep(time.Second)
+
+	timerT := time.NewTicker(time.Second)
+	defer timerT.Stop()
+
+	for {
+		err := i.remote.Init(ctx)
+		if err == nil {
+			return
+		}
+
+		logger.Err(err).Warn("Unable to init collection")
+
+		select {
+		case <-timerT.C:
+			continue
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func (i *implementation) Emit(server pbEventsV1.EventsV1_EmitServer) error {

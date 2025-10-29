@@ -48,6 +48,10 @@ type asyncRemoteWriter[IN proto.Message, H RemoteStore[IN]] struct {
 	delay   time.Duration
 }
 
+func (a *asyncRemoteWriter[IN, H]) Init(ctx context.Context) error {
+	return a.upstream.Init(ctx)
+}
+
 func (a *asyncRemoteWriter[IN, H]) Background(ctx context.Context) {
 	logger.Info("Async background started")
 	defer func() {

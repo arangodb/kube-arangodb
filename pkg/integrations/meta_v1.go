@@ -62,5 +62,5 @@ func (a *metaV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, 
 		return nil, err
 	}
 
-	return pbImplMetaV1.New(ctx, a.config)
+	return pbImplMetaV1.New(a.config)
 }
