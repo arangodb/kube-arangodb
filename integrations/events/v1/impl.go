@@ -36,7 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -44,6 +44,10 @@ func New(cfg Configuration) (svc.Handler, error) {
 	col := cfg.KVCollection(cfg.Endpoint, "_system", "_events")
 
 	col = withTTLIndex(col)
+
+	if _, err := col.Get(ctx); err != nil {
+		return nil, err
+	}
 
 	return newInternal(cfg, NewArangoRemoteStore[*pbEventsV1.Event](col)), nil
 }
