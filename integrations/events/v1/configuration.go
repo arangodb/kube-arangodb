@@ -85,7 +85,7 @@ func (c ConfigurationRetry) Validate() error {
 			return nil
 		}),
 		shared.PrefixResourceErrorFunc("delay", func() error {
-			if c.Timeout <= 0 {
+			if c.Delay <= 0 {
 				return errors.Errorf("delay must be greater than zero")
 			}
 
