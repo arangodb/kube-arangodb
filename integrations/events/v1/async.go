@@ -58,14 +58,18 @@ func (a *asyncRemoteWriter[IN, H]) Background(ctx context.Context) {
 		logger.Info("Async background completed")
 	}()
 
-	go func() {
-		defer close(a.cache)
-		<-ctx.Done()
-	}()
-
-	for events := range a.cache {
-		// Try to emit events
-		a.emitEvents(events...)
+	for {
+		select {
+		case <-ctx.Done():
+			close(a.cache)
+			for events := range a.cache {
+				// Cleanup the queue
+				a.emitEvents(events...)
+			}
+			return
+		case events := <-a.cache:
+			a.emitEvents(events...)
+		}
 	}
 }
 
