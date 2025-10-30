@@ -44,10 +44,11 @@ func ExecuteBasicAQL(db string, aql string, bind map[string]any) Executor {
 func ExecuteAQL(db string, aql string, bind map[string]any, telemetry bool) Executor {
 	return func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
-			if telemetry && !cfg.WithTelemetry() {
-				log.Info("Telemetry disabled")
-				return nil
-			} else {
+			if telemetry {
+				if !cfg.WithTelemetry() {
+					log.Info("Telemetry disabled")
+					return nil
+				}
 				log.Info("Collecting Telemetry details")
 			}
 

@@ -75,7 +75,7 @@ func buildInventory(cmd *cobra.Command) (*inventory.Spec, error) {
 
 	var cfg inventory.Configuration
 
-	if v, err := flagTelemetry.Get(cmd); !v || err != nil {
+	if v, err := flagTelemetry.Get(cmd); err != nil || !v {
 		cfg.Telemetry = util.NewType(false)
 	}
 
