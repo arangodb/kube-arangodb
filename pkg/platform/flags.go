@@ -170,6 +170,12 @@ var (
 		},
 	}
 
+	flagTelemetry = cli.Flag[bool]{
+		Name:        "telemetry",
+		Description: "Enables Telemetry",
+		Default:     true,
+	}
+
 	flagRegistryUseCredentials = cli.Flag[bool]{
 		Name:        "registry.docker.credentials",
 		Description: "Use Docker Credentials",

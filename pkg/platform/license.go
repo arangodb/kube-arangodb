@@ -73,9 +73,15 @@ func buildInventory(cmd *cobra.Command) (*inventory.Spec, error) {
 		return nil, err
 	}
 
+	var cfg inventory.Configuration
+
+	if v, err := flagTelemetry.Get(cmd); !v || err != nil {
+		cfg.Telemetry = util.NewType(false)
+	}
+
 	logger.Info("Discovered Arango %s (%s)", resp.Version, resp.License)
 
-	obj, err := inventory.FetchInventory(cmd.Context(), logger, 8, conn)
+	obj, err := inventory.FetchInventory(cmd.Context(), logger, 8, conn, &cfg)
 
 	if err != nil {
 		return nil, err

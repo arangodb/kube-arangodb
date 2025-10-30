@@ -33,9 +33,24 @@ import (
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
-func ExecuteAQL(db string, aql string, bind map[string]any) Executor {
-	return func(conn driver.Connection, out chan<- *Item) executor.RunFunc {
+func ExecuteTelemetryAQL(db string, aql string, bind map[string]any) Executor {
+	return ExecuteAQL(db, aql, bind, true)
+}
+
+func ExecuteBasicAQL(db string, aql string, bind map[string]any) Executor {
+	return ExecuteAQL(db, aql, bind, false)
+}
+
+func ExecuteAQL(db string, aql string, bind map[string]any, telemetry bool) Executor {
+	return func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+			if telemetry && !cfg.WithTelemetry() {
+				log.Info("Telemetry disabled")
+				return nil
+			} else {
+				log.Info("Collecting Telemetry details")
+			}
+
 			c, err := driver.NewClient(driver.ClientConfig{Connection: async.NewConnectionAsyncWrapper(conn)})
 			if err != nil {
 				return err

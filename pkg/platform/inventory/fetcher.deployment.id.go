@@ -35,7 +35,7 @@ import (
 )
 
 func init() {
-	global.MustRegister("deployment.id", func(conn driver.Connection, out chan<- *Item) executor.RunFunc {
+	global.MustRegister("deployment.id", func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 			if handler := arangod.GetRequestWithTimeout[client.DeploymentID](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "deployment", "id"); handler.Code() == goHttp.StatusOK {
 				resp, err := handler.Response()
