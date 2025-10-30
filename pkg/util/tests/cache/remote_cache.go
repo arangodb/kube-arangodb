@@ -42,6 +42,10 @@ type localRemoteCache[T cache.RemoteCacheObject] struct {
 	objects map[string]json.RawMessage
 }
 
+func (l *localRemoteCache[T]) Init(ctx context.Context) error {
+	return nil
+}
+
 func (l *localRemoteCache[T]) Put(ctx context.Context, key string, obj T) error {
 	l.lock.Lock()
 	defer l.lock.Unlock()

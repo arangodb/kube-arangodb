@@ -41,6 +41,7 @@ const (
 	ProfilesIntegrationStorage  = "storage"
 	ProfilesIntegrationShutdown = "shutdown"
 	ProfilesIntegrationMeta     = "meta"
+	ProfilesIntegrationEvents   = "events"
 )
 
 const (

@@ -30,7 +30,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/encoding/protojson"
 	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -144,36 +143,4 @@ func GRPCAnyCastAs[T proto.Message](in *anypb.Any, v T) error {
 	}
 
 	return nil
-}
-
-func NewGRPC[T proto.Message](in T) GRPC[T] {
-	return GRPC[T]{
-		Object: in,
-	}
-}
-
-type GRPC[T proto.Message] struct {
-	Object T
-}
-
-func (g *GRPC[T]) UnmarshalJSON(data []byte) error {
-	return g.UnmarshalJSONOpts(data)
-}
-
-func (g *GRPC[T]) UnmarshalJSONOpts(data []byte, opts ...util.Mod[protojson.UnmarshalOptions]) error {
-	o, err := Unmarshal[T](data, opts...)
-	if err != nil {
-		return err
-	}
-
-	g.Object = o
-	return nil
-}
-
-func (g GRPC[T]) MarshalJSON() ([]byte, error) {
-	return g.MarshalJSONOpts()
-}
-
-func (g GRPC[T]) MarshalJSONOpts(opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error) {
-	return Marshal[T](g.Object, opts...)
 }

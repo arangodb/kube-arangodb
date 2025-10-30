@@ -37,6 +37,10 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1
       - alias: pbMetaV1
         pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1/definition
+      - alias: pbImplEventsV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/events/v1
+      - alias: pbEventsV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/events/v1/definition
       - alias: pbImplAuthenticationV1
         pkg: github.com/arangodb/kube-arangodb/integrations/authentication/v1
       - alias: pbAuthenticationV1

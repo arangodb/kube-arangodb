@@ -22,45 +22,48 @@ package integrations
 
 import (
 	"context"
+	"time"
 
 	"github.com/spf13/cobra"
 
-	pbImplMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1"
-	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
+	pbImplEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1"
+	pbEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1/definition"
 	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func init() {
-	registerer.Register(pbMetaV1.Name, func() Integration {
-		return &metaV1{}
+	registerer.Register(pbEventsV1.Name, func() Integration {
+		return &eventsV1{}
 	})
 }
 
-type metaV1 struct {
-	config pbImplMetaV1.Configuration
+type eventsV1 struct {
+	config pbImplEventsV1.Configuration
 }
 
-func (a metaV1) Name() string {
-	return pbMetaV1.Name
+func (a eventsV1) Name() string {
+	return pbEventsV1.Name
 }
 
-func (a *metaV1) Description() string {
-	return "Enable MetaV1 Integration Service"
+func (a *eventsV1) Description() string {
+	return "Enable EventsV1 Integration Service"
 }
 
-func (a *metaV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
+func (a *eventsV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
-		fs.StringVar(&a.config.Prefix, "prefix", "", "Meta Key Prefix"),
-		fs.DurationVar(&a.config.TTL, "ttl", 0, "Cache Object TTL"),
+		fs.BoolVar(&a.config.Async.Enabled, "async", true, "Enables async injection of the events"),
+		fs.IntVar(&a.config.Async.Size, "async.size", 16, "Size of the async queue"),
+		fs.DurationVar(&a.config.Async.Retry.Delay, "async.retry.delay", time.Second, "Delay of the retries"),
+		fs.DurationVar(&a.config.Async.Retry.Timeout, "async.retry.timeout", time.Minute, "Timeout for the event injection"),
 	)
 }
 
-func (a *metaV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
+func (a *eventsV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
 	if err := integrationsShared.FillAll(cmd, &a.config.Endpoint, &a.config.Database); err != nil {
 		return nil, err
 	}
 
-	return pbImplMetaV1.New(a.config)
+	return pbImplEventsV1.New(a.config)
 }

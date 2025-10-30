@@ -50,6 +50,9 @@ service PongV1 {
 message PongV1PingResponse {
   // Current time in UTC
   google.protobuf.Timestamp time = 1;
+
+  // Ticks since the start
+  int32 ticks = 2;
 }
 
 // PongV1 Services Call Response

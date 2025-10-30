@@ -235,6 +235,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			return nil, false
 		}),
 		gen(utilConstants.ProfilesIntegrationMeta, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationMetaV1{})),
+		gen(utilConstants.ProfilesIntegrationEvents, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationEventsV1{})),
 		gen(utilConstants.ProfilesIntegrationStorage, utilConstants.ProfilesIntegrationV2, func() (integrationsSidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Beta1(); err == nil {
 				if p, ok := v.GetSimple(deploymentName); ok {

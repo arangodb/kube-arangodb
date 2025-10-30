@@ -203,7 +203,7 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 		return errors.Wrapf(err, "Unable to parse external config")
 	}
 
-	var internalHandlers, externalHandlers, healthHandlers []svc.Handler
+	var internalHandlers, externalHandlers, healthHandlers, allHandlers []svc.Handler
 
 	var services []pbImplPongV1.Service
 
@@ -215,6 +215,7 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 	internalHandlers = append(internalHandlers, pong)
 	externalHandlers = append(externalHandlers, pong)
 	healthHandlers = append(healthHandlers, pong)
+	allHandlers = append(allHandlers, pong)
 
 	for _, handler := range c.registered {
 		if ok, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s", handler.Name())); err != nil {
@@ -252,6 +253,8 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 				if svc, err := handler.Handler(ctx, cmd); err != nil {
 					return err
 				} else {
+					allHandlers = append(allHandlers, svc)
+
 					if internalEnabled {
 						internalHandlers = append(internalHandlers, svc)
 					}
@@ -280,6 +283,26 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 
 	logger.Str("address", healthHandler.Address()).Bool("ssl", healthConfig.TLSOptions != nil).Info("Health handler started")
 
+	return c.startBackgroundersWithContext(ctx, health, internalConfig, externalConfig, allHandlers, internalHandlers, externalHandlers)
+}
+func (c *configuration) startBackgroundersWithContext(ctx context.Context, health svc.HealthService, internalConfig, externalConfig svc.Configuration, allHandlers, internalHandlers, externalHandlers []svc.Handler) error {
+	var wg sync.WaitGroup
+
+	defer wg.Wait()
+
+	for _, handler := range allHandlers {
+		wg.Add(1)
+		z := svc.RunBackground(handler)
+		defer func(in context.CancelFunc) {
+			defer wg.Done()
+			in()
+		}(z)
+	}
+
+	return c.startServerWithContext(ctx, health, internalConfig, externalConfig, internalHandlers, externalHandlers)
+}
+
+func (c *configuration) startServerWithContext(ctx context.Context, health svc.HealthService, internalConfig, externalConfig svc.Configuration, internalHandlers, externalHandlers []svc.Handler) error {
 	var wg sync.WaitGroup
 
 	var internal, external error

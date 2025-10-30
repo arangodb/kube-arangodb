@@ -42,26 +42,21 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
-	return newInternal(ctx, cfg)
-}
-
-func newInternal(ctx context.Context, cfg Configuration) (*implementation, error) {
-	return newInternalWithRemoteCache(ctx, cfg, cache.NewRemoteCacheWithTTL[*Object](cfg.KVCollection(cfg.Endpoint, "_system", "_meta_store"), cfg.TTL))
-}
-
-func newInternalWithRemoteCache(ctx context.Context, cfg Configuration, c cache.RemoteCache[*Object]) (*implementation, error) {
+func New(cfg Configuration) (svc.Handler, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
-	obj := &implementation{
+	col := cfg.KVCollection(cfg.Endpoint, "_system", "_meta_store")
+
+	return newInternal(cfg, cache.NewRemoteCacheWithTTL[*Object](col, cfg.TTL)), nil
+}
+
+func newInternal(cfg Configuration, c cache.RemoteCache[*Object]) *implementation {
+	return &implementation{
 		cfg:   cfg,
-		ctx:   ctx,
 		cache: c,
 	}
-
-	return obj, nil
 }
 
 var _ pbMetaV1.MetaV1Server = &implementation{}
@@ -72,7 +67,6 @@ type implementation struct {
 
 	lock sync.RWMutex
 
-	ctx context.Context
 	cfg Configuration
 
 	cache cache.RemoteCache[*Object]
@@ -88,6 +82,33 @@ func (i *implementation) Health() svc.HealthState {
 
 func (i *implementation) Register(registrar *grpc.Server) {
 	pbMetaV1.RegisterMetaV1Server(registrar, i)
+}
+
+func (i *implementation) Background(ctx context.Context) {
+	i.init(ctx)
+}
+
+func (i *implementation) init(ctx context.Context) {
+	time.Sleep(time.Second)
+
+	timerT := time.NewTicker(time.Second)
+	defer timerT.Stop()
+
+	for {
+		err := i.cache.Init(ctx)
+		if err == nil {
+			return
+		}
+
+		logger.Err(err).Warn("Unable to init collection")
+
+		select {
+		case <-timerT.C:
+			continue
+		case <-ctx.Done():
+			return
+		}
+	}
 }
 
 func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {

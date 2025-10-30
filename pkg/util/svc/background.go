@@ -18,41 +18,30 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package grpc
+package svc
 
 import (
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
+	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func NewObject[IN proto.Message](in IN) Object[IN] {
-	return Object[IN]{Object: in}
+type Background interface {
+	Background(ctx context.Context)
 }
 
-type Object[IN proto.Message] struct {
-	Object IN
+func RunBackgroundSync(ctx context.Context, in any) {
+	if h, ok := in.(Background); ok {
+		h.Background(ctx)
+	}
 }
 
-func (g *Object[T]) UnmarshalJSON(data []byte) error {
-	return g.UnmarshalJSONOpts(data)
-}
-
-func (g *Object[T]) UnmarshalJSONOpts(data []byte, opts ...util.Mod[protojson.UnmarshalOptions]) error {
-	o, err := Unmarshal[T](data, opts...)
-	if err != nil {
-		return err
+func RunBackground(in any) context.CancelFunc {
+	if h, ok := in.(Background); ok {
+		return util.RunContextAsync(context.Background(), h.Background)
 	}
 
-	g.Object = o
-	return nil
-}
+	return func() {
 
-func (g Object[T]) MarshalJSON() ([]byte, error) {
-	return g.MarshalJSONOpts()
-}
-
-func (g Object[T]) MarshalJSONOpts(opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error) {
-	return Marshal[T](g.Object, opts...)
+	}
 }
