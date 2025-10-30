@@ -22,6 +22,8 @@ package v1
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/grpc"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -61,7 +63,9 @@ func (a *arangoRemoteStore[IN]) Emit(ctx context.Context, events ...IN) error {
 		return err
 	}
 
-	_, err = col.CreateDocuments(ctx, events)
+	_, err = col.CreateDocuments(ctx, util.FormatList(events, func(a IN) grpc.Object[IN] {
+		return grpc.NewObject(a)
+	}))
 	if err != nil {
 		return errors.Wrapf(err, "Unable to save events")
 	}

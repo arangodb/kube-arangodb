@@ -20,7 +20,11 @@
 
 package grpc
 
-import "google.golang.org/protobuf/proto"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+)
 
 func NewObject[IN proto.Message](in IN) Object[IN] {
 	return Object[IN]{Object: in}
@@ -30,17 +34,24 @@ type Object[IN proto.Message] struct {
 	Object IN
 }
 
-func (obj Object[IN]) MarshalJSON() ([]byte, error) {
-	return Marshal[IN](obj.Object)
+func (g *Object[T]) UnmarshalJSON(data []byte) error {
+	return g.UnmarshalJSONOpts(data)
 }
 
-func (obj *Object[IN]) UnmarshalJSON(data []byte) error {
-	z, err := Unmarshal[IN](data)
+func (g *Object[T]) UnmarshalJSONOpts(data []byte, opts ...util.Mod[protojson.UnmarshalOptions]) error {
+	o, err := Unmarshal[T](data, opts...)
 	if err != nil {
 		return err
 	}
 
-	obj.Object = z
-
+	g.Object = o
 	return nil
+}
+
+func (g Object[T]) MarshalJSON() ([]byte, error) {
+	return g.MarshalJSONOpts()
+}
+
+func (g Object[T]) MarshalJSONOpts(opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error) {
+	return Marshal[T](g.Object, opts...)
 }
