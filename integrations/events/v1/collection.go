@@ -37,7 +37,7 @@ func withTTLIndex(in cache.Object[arangodb.Collection]) cache.Object[arangodb.Co
 		}
 
 		if _, _, err := col.EnsureTTLIndex(ctx, []string{"created"}, int(DefaultTTL/time.Second), &arangodb.CreateTTLIndexOptions{
-			Name: "_system_events_created_ttl_index",
+			Name: "system_events_created_ttl_index",
 		}); err != nil {
 			return nil, 0, err
 		}
