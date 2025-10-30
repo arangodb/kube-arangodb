@@ -77,17 +77,23 @@ func (a *asyncRemoteWriter[IN, H]) emitEvents(events ...IN) {
 	timeoutTimer := time.NewTimer(a.timeout)
 	defer timeoutTimer.Stop()
 
+	delayTimer := time.NewTicker(a.delay)
+	defer delayTimer.Stop()
+
 	for {
-		select {
-		default:
-			err := globals.GetGlobals().Timeouts().ArangoD().RunWithTimeout(context.Background(), func(ctxChild context.Context) error {
-				return a.upstream.Emit(ctxChild, events...)
-			})
-			if err != nil {
-				logger.Err(err).Warn("Unable to send events batch, retry")
-				continue
-			}
+		err := globals.GetGlobals().Timeouts().ArangoD().RunWithTimeout(context.Background(), func(ctxChild context.Context) error {
+			return a.upstream.Emit(ctxChild, events...)
+		})
+		if err != nil {
+			logger.Err(err).Warn("Unable to send events batch, retry")
+		} else {
+			logger.Debug("Batch sent")
 			return
+		}
+
+		select {
+		case <-delayTimer.C:
+			continue
 		case <-timeoutTimer.C:
 			logger.Error("Unable to send events in expected time")
 			return

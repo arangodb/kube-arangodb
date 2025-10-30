@@ -21,9 +21,10 @@
 package grpc
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func NewObject[IN proto.Message](in IN) Object[IN] {
