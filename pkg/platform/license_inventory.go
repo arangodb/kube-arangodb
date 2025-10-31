@@ -36,7 +36,7 @@ func licenseInventory() (*cobra.Command, error) {
 	cmd.Use = "inventory [flags] output"
 	cmd.Short = "Inventory Generator"
 
-	if err := cli.RegisterFlags(&cmd, flagDeployment); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagDeployment, flagTelemetry); err != nil {
 		return nil, err
 	}
 

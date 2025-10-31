@@ -34,7 +34,7 @@ import (
 )
 
 func init() {
-	global.MustRegister("server.info", func(conn driver.Connection, out chan<- *Item) executor.RunFunc {
+	global.MustRegister("server.info", func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 			resp, err := arangod.GetRequestWithTimeout[driver.VersionInfo](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_api", "version").
 				AcceptCode(goHttp.StatusOK).

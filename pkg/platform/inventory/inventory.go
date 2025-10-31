@@ -33,7 +33,7 @@ import (
 
 type Items []*Item
 
-func FetchInventory(ctx context.Context, logger logging.Logger, threads int, conn driver.Connection) (Items, error) {
+func FetchInventory(ctx context.Context, logger logging.Logger, threads int, conn driver.Connection, cfg *Configuration) (Items, error) {
 	var out []*Item
 	done := make(chan struct{})
 	in := make(chan *Item)
@@ -50,7 +50,7 @@ func FetchInventory(ctx context.Context, logger logging.Logger, threads int, con
 		}
 	}()
 
-	if err := executor.Run(ctx, logger, threads, runExecution(conn, in)); err != nil {
+	if err := executor.Run(ctx, logger, threads, runExecution(conn, cfg, in)); err != nil {
 		return nil, err
 	}
 
@@ -61,11 +61,11 @@ func FetchInventory(ctx context.Context, logger logging.Logger, threads int, con
 	return out, nil
 }
 
-func runExecution(conn driver.Connection, out chan<- *Item) executor.RunFunc {
+func runExecution(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 	return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 		for _, executor := range global.Items() {
 			log.Str("name", executor.K).Info("Starting executor")
-			q := executor.V(conn, out)
+			q := executor.V(conn, cfg, out)
 
 			h.RunAsync(ctx, q)
 		}
@@ -76,7 +76,7 @@ func runExecution(conn driver.Connection, out chan<- *Item) executor.RunFunc {
 	}
 }
 
-type Executor func(conn driver.Connection, out chan<- *Item) executor.RunFunc
+type Executor func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc
 
 func (i *Item) Validate() error {
 	if i == nil {

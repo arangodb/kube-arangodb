@@ -20,11 +20,13 @@
 
 package inventory
 
-import _ "embed"
+type Configuration struct {
+	Telemetry *bool
+}
 
-//go:embed queries/timestamp.aql
-var queryTimestampAQL string
-
-func init() {
-	global.MustRegister("aql.timestamp", ExecuteBasicAQL("_system", queryTimestampAQL, nil))
+func (c *Configuration) WithTelemetry() bool {
+	if c == nil || c.Telemetry == nil {
+		return true
+	}
+	return *c.Telemetry
 }

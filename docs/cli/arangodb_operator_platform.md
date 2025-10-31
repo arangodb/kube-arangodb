@@ -136,6 +136,7 @@ Flags:
       --arango.insecure                Arango Endpoint Insecure
       --arango.token string            Arango JWT Token for Authentication
   -h, --help                           help for inventory
+      --telemetry                      Enables Telemetry (default true)
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
@@ -165,6 +166,7 @@ Flags:
       --license.client.stage strings   LicenseManager Stages (default [prd])
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --license.interval duration      Interval of the license synchronization
+      --telemetry                      Enables Telemetry (default true)
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
