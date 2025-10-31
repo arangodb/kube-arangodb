@@ -22,9 +22,7 @@ package platform
 
 import (
 	goHttp "net/http"
-	"reflect"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/go-driver"
@@ -81,41 +79,5 @@ func buildInventory(cmd *cobra.Command) (*inventory.Spec, error) {
 
 	logger.Info("Discovered Arango %s (%s)", resp.Version, resp.License)
 
-	obj, err := inventory.FetchInventory(cmd.Context(), logger, 8, conn, &cfg)
-
-	if err != nil {
-		return nil, err
-	}
-
-	obj = util.FilterList(obj, func(item *inventory.Item) bool {
-		return item != nil
-	})
-
-	did := util.FilterList(obj, util.MultiFilterList(
-		func(item *inventory.Item) bool {
-			return item.Type == "ARANGO_DEPLOYMENT"
-		},
-		func(item *inventory.Item) bool {
-			v, ok := item.Dimensions["detail"]
-			return ok && v == "id"
-		},
-	))
-
-	if len(did) != 1 {
-		return nil, errors.Errorf("Expected to find a single ARANGO_DEPLOYMENT ID")
-	}
-
-	tz, err := did[0].GetValue().Type()
-	if err != nil {
-		return nil, err
-	}
-
-	if tz != reflect.TypeFor[string]() {
-		return nil, errors.Errorf("Expected to find type for ARANGO_DEPLOYMENT ID")
-	}
-
-	return &inventory.Spec{
-		DeploymentId: did[0].GetValue().GetStr(),
-		Items:        obj,
-	}, nil
+	return inventory.FetchInventorySpec(cmd.Context(), logger, 8, conn, &cfg)
 }

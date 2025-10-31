@@ -247,6 +247,8 @@ actions:
       - High
   LicenseSet:
     description: Update Cluster license (3.9+)
+  LicenseGenerate:
+    description: Generates License using ArangoDB LicenseManager Endpoint
   RuntimeContainerImageUpdate:
     description: Update Container Image in runtime
   RuntimeContainerSyncTolerations:

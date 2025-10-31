@@ -18,13 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package manager
+package license_manager
 
 import (
 	"context"
 	"fmt"
 	goHttp "net/http"
-	"time"
+
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
@@ -34,6 +35,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
+)
+
+const (
+	ArangoLicenseManagerEndpoint = "license.arango.ai"
 )
 
 func NewClient(endpoint, id, key string, mods ...util.Mod[goHttp.Transport]) (Client, error) {
@@ -73,9 +78,9 @@ type Client interface {
 }
 
 type LicenseRequest struct {
-	DeploymentID *string                        `json:"deployment_id,omitempty"`
-	TTL          *time.Duration                 `json:"ttl,omitempty"`
-	Inventory    *ugrpc.Object[*inventory.Spec] `json:"inventory,omitempty"`
+	DeploymentID *string                             `json:"deployment_id,omitempty"`
+	TTL          *ugrpc.Object[*durationpb.Duration] `json:"ttl,omitempty"`
+	Inventory    *ugrpc.Object[*inventory.Spec]      `json:"inventory,omitempty"`
 }
 
 type LicenseResponse struct {
