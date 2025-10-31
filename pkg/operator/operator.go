@@ -109,7 +109,7 @@ type Config struct {
 	Namespace                   string
 	PodName                     string
 	ServiceAccount              string
-	OperatorImage               string
+	Image                       util.Image
 	SkipLeaderLabel             bool
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
@@ -321,7 +321,7 @@ func (o *Operator) onStartScheduler(stop <-chan struct{}) {
 // onStartOperatorV2 run the operatorV2 type
 func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan struct{}) {
 	operatorName := fmt.Sprintf("arangodb-%s-operator", operatorType)
-	operator := operatorV2.NewOperator(operatorName, o.Namespace, o.OperatorImage)
+	operator := operatorV2.NewOperator(operatorName, o.Namespace, o.Image)
 
 	util.Rand().Seed(time.Now().Unix())
 

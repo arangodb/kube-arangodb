@@ -84,7 +84,7 @@ func (d *Deployment) GetServerGroupIterator() reconciler.ServerGroupIterator {
 }
 
 func (d *Deployment) GetOperatorImage() string {
-	return d.config.OperatorImage
+	return d.config.Image.Get(d.GetSpec().ImageDiscoveryMode.Get() == api.DeploymentImageDiscoveryKubeletMode)
 }
 
 // GetNamespace returns the kubernetes namespace that contains

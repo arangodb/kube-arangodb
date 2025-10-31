@@ -32,6 +32,7 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient/external"
 )
@@ -39,7 +40,7 @@ import (
 func newFakeHandler(t *testing.T) (*handler, string, operator.Handler) {
 	client, ns := external.ExternalClient(t)
 
-	op := operator.NewOperator("mock", ns, "mock")
+	op := operator.NewOperator("mock", ns, util.Image{Image: "mock"})
 	recorder := event.NewEventRecorder("mock", client.Kubernetes())
 	h, err := helm.NewClient(helm.Configuration{
 		Namespace: ns,

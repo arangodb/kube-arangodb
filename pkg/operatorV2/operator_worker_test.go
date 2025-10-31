@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,13 +25,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
 func Test_Worker_Empty(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(false)
+	o := NewOperator(name, name, image)
 
 	stopCh := make(chan struct{})
 
@@ -50,8 +49,8 @@ func Test_Worker_Empty(t *testing.T) {
 
 func Test_Worker_CatchAll(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(false)
+	o := NewOperator(name, name, image)
 
 	stopCh := make(chan struct{})
 
@@ -79,8 +78,8 @@ func Test_Worker_CatchAll(t *testing.T) {
 
 func Test_Worker_EnsureFirstProcessStopLoop(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(false)
+	o := NewOperator(name, name, image)
 
 	stopCh := make(chan struct{})
 
@@ -113,8 +112,8 @@ func Test_Worker_EnsureFirstProcessStopLoop(t *testing.T) {
 
 func Test_Worker_EnsureObjectIsProcessedBySecondHandler(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(false)
+	o := NewOperator(name, name, image)
 
 	stopCh := make(chan struct{})
 

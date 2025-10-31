@@ -459,7 +459,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				},
 			},
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.currentObjectStatus = &api.DeploymentStatus{
@@ -690,7 +690,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				},
 			},
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			Helper: func(t *testing.T, deployment *Deployment, testCase *testCaseStruct) {
 				deployment.currentObjectStatus = &api.DeploymentStatus{
@@ -1237,7 +1237,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, authorization, shared.ServerPortName)
 			},
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{
@@ -1307,7 +1307,7 @@ func TestEnsurePod_ArangoDB_Core(t *testing.T) {
 				testCase.ExpectedPod.Spec.Containers[0].LivenessProbe = createTestLivenessProbe(httpProbe, false, authorization, shared.ServerPortName)
 			},
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ExpectedEvent: "member dbserver is created",
 			ExpectedPod: core.Pod{

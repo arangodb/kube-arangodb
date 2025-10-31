@@ -162,7 +162,8 @@ var (
 		podSchedulingGracePeriod    time.Duration
 	}
 	operatorImageDiscovery struct {
-		timeout                time.Duration
+		timeout time.Duration
+		// Deprecated: Do not use this flag, as discovery method changed
 		defaultStatusDiscovery bool
 	}
 	operatorReconciliationRetry struct {
@@ -191,6 +192,12 @@ var (
 )
 
 func init() {
+	if err := initE(); err != nil {
+		panic(err.Error())
+	}
+}
+
+func initE() error {
 	var deprecatedStr string
 
 	f := cmdMain.Flags()
@@ -217,20 +224,14 @@ func init() {
 	f.BoolVar(&operatorOptions.enablePlatform, "operator.platform", false, "Enable to run the Platform operator")
 	f.BoolVar(&operatorOptions.enableScheduler, "operator.scheduler", false, "Enable to run the Scheduler operator")
 	f.BoolVar(&operatorOptions.enableK2KClusterSync, "operator.k2k-cluster-sync", false, "Enable to run the ListSimple operator")
-	f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator")
 	f.BoolVar(&operatorOptions.versionOnly, "operator.version", false, "Enable only version endpoint in Operator")
 	f.StringVar(&deprecatedStr, "operator.alpine-image", "alpine:3.7", "Docker image used for alpine containers")
-	f.MarkDeprecated("operator.alpine-image", "Value is not used anymore")
 	f.StringVar(&deprecatedStr, "operator.metrics-exporter-image", "arangodb/arangodb-exporter:0.1.6", "Docker image used for metrics containers by default")
-	f.MarkDeprecated("operator.metrics-exporter-image", "Value is not used anymore")
 	f.StringVar(&deprecatedStr, "operator.arango-image", "arangodb/arangodb:latest", "Docker image used for arango by default")
-	f.MarkDeprecated("operator.arango-image", "Value is not used anymore")
 	f.BoolVar(&chaosOptions.allowed, "chaos.allowed", false, "Set to allow chaos in deployments. Only activated when allowed and enabled in deployment")
 	f.BoolVar(&operatorOptions.skipLeaderLabel, "leader.label.skip", false, "Skips Leader Label for the Pod")
 	f.BoolVar(&operatorOptions.singleMode, "mode.single", false, "Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions")
 	f.String("scope", "", "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
-	f.MarkDeprecated("scope", "Value is not used anymore")
-	f.MarkHidden("scope")
 	f.DurationVar(&operatorTimeouts.k8s, "timeout.k8s", globals.DefaultKubernetesTimeout, "The request timeout to the kubernetes")
 	f.DurationVar(&operatorTimeouts.arangoD, "timeout.arangod", globals.DefaultArangoDTimeout, "The request timeout to the ArangoDB")
 	f.DurationVar(&operatorTimeouts.arangoDCheck, "timeout.arangod-check", globals.DefaultArangoDCheckTimeout, "The version check request timeout to the ArangoDB")
@@ -257,24 +258,39 @@ func init() {
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
 	f.Uint64Var(&memoryLimit.hardLimit, "memory-limit", 0, "Define memory limit for hard shutdown and the dump of goroutines. Used for testing")
 	f.StringArrayVar(&metricsOptions.excludedMetricPrefixes, "metrics.excluded-prefixes", nil, "List of the excluded metrics prefixes")
-	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Discover Operator Image from Pod Status by default. When disabled Pod Spec is used.")
+	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Image discovery method is now determined by the deployment's ImageDiscoveryMode specification")
 	f.DurationVar(&operatorImageDiscovery.timeout, "image.discovery.timeout", time.Minute, "Timeout for image discovery process")
 	f.IntVar(&threads, "threads", 16, "Number of the worker threads")
-	if err := logging.Init(&cmdMain); err != nil {
-		panic(err.Error())
+
+	if err := errors.Errors(
+		f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator"),
+		f.MarkDeprecated("operator.alpine-image", "Value is not used anymore"),
+		f.MarkDeprecated("operator.metrics-exporter-image", "Value is not used anymore"),
+		f.MarkDeprecated("operator.arango-image", "Value is not used anymore"),
+		f.MarkDeprecated("scope", "Value is not used anymore"),
+		f.MarkDeprecated("image.discovery.status", "Value fetched from the Operator Spec"),
+	); err != nil {
+		return errors.Wrap(err, "Unable to mark flags as deprecated")
 	}
-	if err := features.Init(&cmdMain); err != nil {
-		panic(err.Error())
+
+	if err := errors.Errors(
+		f.MarkHidden("scope"),
+		f.MarkHidden("image.discovery.status"),
+	); err != nil {
+		return errors.Wrap(err, "Unable to mark flags as hidden")
 	}
-	if err := agencyConfig.Init(&cmdMain); err != nil {
-		panic(err.Error())
+
+	if err := errors.Errors(
+		logging.Init(&cmdMain),
+		features.Init(&cmdMain),
+		agencyConfig.Init(&cmdMain),
+		reconcile.ActionsConfigGlobal.Init(&cmdMain),
+		operatorHTTP.InitConfiguration(&cmdMain),
+	); err != nil {
+		return errors.Wrap(err, "Unable to register secondary commands")
 	}
-	if err := reconcile.ActionsConfigGlobal.Init(&cmdMain); err != nil {
-		panic(err.Error())
-	}
-	if err := operatorHTTP.InitConfiguration(&cmdMain); err != nil {
-		panic(err.Error())
-	}
+
+	return nil
 }
 
 func Command() *cobra.Command {
@@ -590,7 +606,7 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		Namespace:                   namespace,
 		PodName:                     name,
 		ServiceAccount:              serviceAccount,
-		OperatorImage:               image,
+		Image:                       image,
 		SkipLeaderLabel:             operatorOptions.skipLeaderLabel,
 		EnableDeployment:            operatorOptions.enableDeployment,
 		EnableDeploymentReplication: operatorOptions.enableDeploymentReplication,
@@ -633,18 +649,24 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 
 // getMyPodInfo looks up the image & service account of the pod with given name in given namespace
 // Returns image, serviceAccount, error.
-func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (string, string, error) {
-	if image, sa, ok := getMyPodInfoWrap(kubecli, namespace, name, getMyImageInfoFunc(operatorImageDiscovery.defaultStatusDiscovery)); ok {
-		return image, sa, nil
+func getMyPodInfo(kubecli kubernetes.Interface, namespace, name string) (util.Image, string, error) {
+	var ret util.Image
+	var serviceAccount string
+
+	if image, sa, ok := getMyPodInfoWrap(kubecli, namespace, name, getMyImageInfoFunc(false)); !ok {
+		return util.Image{}, "", errors.Errorf("Unable to discover Operator image from Spec")
+	} else {
+		ret.Image = image
+		serviceAccount = sa
 	}
 
-	logger.Warn("Unable to discover image, fallback to second method")
-
-	if image, sa, ok := getMyPodInfoWrap(kubecli, namespace, name, getMyImageInfoFunc(!operatorImageDiscovery.defaultStatusDiscovery)); ok {
-		return image, sa, nil
+	if image, _, ok := getMyPodInfoWrap(kubecli, namespace, name, getMyImageInfoFunc(true)); ok {
+		ret.StatusImage = util.NewType(image)
+	} else {
+		logger.Warn("Unable to discover image from status")
 	}
 
-	return "", "", errors.Errorf("Unable to discover image")
+	return ret, serviceAccount, nil
 }
 
 func getMyPodInfoWrap(kubecli kubernetes.Interface, namespace, name string, imageFunc func(in *core.Pod) (string, bool)) (string, string, bool) {

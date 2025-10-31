@@ -223,7 +223,7 @@ func EnsureRegistry(t *testing.T, client kclient.Client, ns string) string {
 func Test_Package(t *testing.T) {
 	client, ns := external.ExternalClient(t)
 
-	defer operator.NewTestingOperator(shutdown.Context(), t, ns, "operator:latest", client, platformChart.RegisterInformer, platformService.RegisterInformer)()
+	defer operator.NewTestingOperator(shutdown.Context(), t, ns, util.Image{Image: "operator:latest"}, client, platformChart.RegisterInformer, platformService.RegisterInformer)()
 
 	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, ns, "example",
 		func(t *testing.T, obj *api.ArangoDeployment) {})

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -116,4 +117,16 @@ func waitForItems(t *testing.T, i <-chan operation.Item, expectedSize int) []ope
 			require.Fail(t, "Timeout")
 		}
 	}
+}
+
+func newImage(hash bool) (string, util.Image) {
+	var i util.Image
+
+	i.Image = string(uuid.NewUUID())
+
+	if hash {
+		i.StatusImage = util.NewType(string(uuid.NewUUID()))
+	}
+
+	return string(uuid.NewUUID()), i
 }

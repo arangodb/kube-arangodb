@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import (
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -38,8 +37,8 @@ import (
 
 func Test_Operator_InformerProcessing(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(false)
+	o := NewOperator(name, name, image)
 	size := 64
 
 	objects := make([]string, size)
@@ -87,8 +86,8 @@ func Test_Operator_InformerProcessing(t *testing.T) {
 
 func Test_Operator_MultipleInformers(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(false)
+	o := NewOperator(name, name, image)
 	size := 16
 
 	objects := make([]string, size)
@@ -148,8 +147,8 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 
 func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(false)
+	o := NewOperator(name, name, image)
 	size := 16
 
 	objects := make([]string, size)
@@ -208,8 +207,8 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 
 func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(true)
+	o := NewOperator(name, name, image)
 	size := 16
 
 	objects := make([]string, size)
@@ -316,8 +315,8 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 
 func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 	// Arrange
-	name := string(uuid.NewUUID())
-	o := NewOperator(name, name, name)
+	name, image := newImage(false)
+	o := NewOperator(name, name, image)
 	size := 16
 
 	objects := make([]string, size)
