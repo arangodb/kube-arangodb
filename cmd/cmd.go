@@ -163,7 +163,7 @@ var (
 	}
 	operatorImageDiscovery struct {
 		timeout time.Duration
-		//deprecated: Do not use this flag, as discovery method changed
+		// Deprecated: Do not use this flag, as discovery method changed
 		defaultStatusDiscovery bool
 	}
 	operatorReconciliationRetry struct {
@@ -258,7 +258,7 @@ func initE() error {
 	f.IntVar(&operatorBackup.concurrentUploads, "backup-concurrent-uploads", globals.DefaultBackupConcurrentUploads, "Number of concurrent uploads per deployment")
 	f.Uint64Var(&memoryLimit.hardLimit, "memory-limit", 0, "Define memory limit for hard shutdown and the dump of goroutines. Used for testing")
 	f.StringArrayVar(&metricsOptions.excludedMetricPrefixes, "metrics.excluded-prefixes", nil, "List of the excluded metrics prefixes")
-	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Discover Operator Image from Pod Status by default. When disabled Pod Spec is used.")
+	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Image discovery method is now determined by the deployment's ImageDiscoveryMode specification")
 	f.DurationVar(&operatorImageDiscovery.timeout, "image.discovery.timeout", time.Minute, "Timeout for image discovery process")
 	f.IntVar(&threads, "threads", 16, "Number of the worker threads")
 
@@ -275,6 +275,7 @@ func initE() error {
 
 	if err := errors.Errors(
 		f.MarkHidden("scope"),
+		f.MarkHidden("image.discovery.status"),
 	); err != nil {
 		return errors.Wrap(err, "Unable to mark flags as hidden")
 	}
