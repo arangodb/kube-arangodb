@@ -54,8 +54,8 @@ func runTestCases(t *testing.T, testCases ...testCaseStruct) {
 func runTestCase(t *testing.T, testCase testCaseStruct) {
 	t.Run(testCase.Name, func(t *testing.T) {
 		// Arrange
-		if testCase.config.OperatorImage == "" {
-			testCase.config.OperatorImage = testImageOperator
+		if testCase.config.Image.Image == "" {
+			testCase.config.Image.Image = testImageOperator
 		}
 
 		d, eventRecorder := createTestDeployment(t, testCase.config, testCase.ArangoDeployment)

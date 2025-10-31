@@ -33,12 +33,13 @@ import (
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 type TestingOperatorRegisterer func(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) error
 
-func NewTestingOperator(ctx context.Context, t *testing.T, ns, image string, client kclient.Client, registers ...TestingOperatorRegisterer) context.CancelFunc {
+func NewTestingOperator(ctx context.Context, t *testing.T, ns string, image util.Image, client kclient.Client, registers ...TestingOperatorRegisterer) context.CancelFunc {
 	nctx, c := context.WithCancel(ctx)
 
 	operator := operator.NewOperator("test", ns, image)

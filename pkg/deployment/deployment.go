@@ -71,7 +71,7 @@ type Config struct {
 	ServiceAccount            string
 	AllowChaos                bool
 	ScalingIntegrationEnabled bool
-	OperatorImage             string
+	Image                     util.Image
 	ReconciliationDelay       time.Duration
 }
 

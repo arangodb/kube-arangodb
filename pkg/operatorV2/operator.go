@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -58,7 +59,7 @@ type Operator interface {
 }
 
 // NewOperator creates new operator
-func NewOperator(name, namespace, image string) Operator {
+func NewOperator(name, namespace string, image util.Image) Operator {
 	o := &operator{
 		name:      name,
 		namespace: namespace,
@@ -81,7 +82,7 @@ type operator struct {
 
 	name      string
 	namespace string
-	image     string
+	image     util.Image
 
 	informers []cache.SharedInformer
 	starters  []Starter
@@ -102,7 +103,7 @@ func (o *operator) Name() string {
 }
 
 func (o *operator) Image() string {
-	return o.image
+	return o.image.Get(true)
 }
 
 func (o *operator) ProcessItem(item operation.Item) error {

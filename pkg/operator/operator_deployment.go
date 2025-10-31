@@ -197,7 +197,7 @@ func (o *Operator) handleDeploymentEvent(event *Event) error {
 func (o *Operator) makeDeploymentConfigAndDeps() (deployment.Config, deployment.Dependencies) {
 	cfg := deployment.Config{
 		ServiceAccount:            o.Config.ServiceAccount,
-		OperatorImage:             o.Config.OperatorImage,
+		Image:                     o.Config.Image,
 		AllowChaos:                o.Config.AllowChaos,
 		ScalingIntegrationEnabled: o.Config.ScalingIntegrationEnabled,
 		ReconciliationDelay:       o.Config.ReconciliationDelay,

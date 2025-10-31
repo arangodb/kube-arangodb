@@ -289,7 +289,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod with lifecycle, license, monitoring without authentication and alpine",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -377,7 +377,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod alias - existing service, ClusterIP and valid name",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -489,7 +489,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod alias - missing service and valid name",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -582,7 +582,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod alias - existing service, missing ClusterIP and valid name",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -683,7 +683,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod alias - existing service, ClusterIP and invalid name",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -787,7 +787,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod alias - existing service, ClusterIP and missing name",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -886,7 +886,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod alias - existing service, ClusterIP and valid names",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -1002,7 +1002,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod alias - existing service, ClusterIP and valid names with different ports",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -1116,7 +1116,7 @@ func TestEnsurePod_Sync_Master(t *testing.T) {
 			DropInit: true,
 			Name:     "Sync Master Pod alias - existing service, ClusterIP and mixed names",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -1239,7 +1239,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 			Name: "Sync Worker Pod with monitoring, service account, node selector, lifecycle, license " +
 				"liveness probe, priority class name, resource requirements without alpine",
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{
@@ -1334,7 +1334,7 @@ func TestEnsurePod_Sync_Worker(t *testing.T) {
 				InitContainersCopyResources: util.NewType(false),
 			},
 			config: Config{
-				OperatorImage: testImageOperator,
+				Image: util.Image{Image: testImageOperator},
 			},
 			ArangoDeployment: &api.ArangoDeployment{
 				Spec: api.DeploymentSpec{

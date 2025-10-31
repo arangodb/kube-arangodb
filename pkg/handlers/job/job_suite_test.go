@@ -39,6 +39,7 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func newFakeHandler() *handler {
@@ -49,7 +50,7 @@ func newFakeHandler() *handler {
 		client:        f,
 		kubeClient:    k,
 		eventRecorder: newEventInstance(event.NewEventRecorder("mock", k)),
-		operator:      operator.NewOperator("mock", "mock", "mock"),
+		operator:      operator.NewOperator("mock", "mock", util.Image{Image: "mock"}),
 	}
 
 	return h

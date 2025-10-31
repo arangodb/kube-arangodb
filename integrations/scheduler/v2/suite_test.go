@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient/external"
@@ -102,7 +103,7 @@ func MockClient(t *testing.T, ctx context.Context, mods ...Mod) (pbSchedulerV2.S
 }
 
 func chartHandler(client kclient.Client, ns string) operator.Handler {
-	op := operator.NewOperator("mock", ns, "mock")
+	op := operator.NewOperator("mock", ns, util.Image{Image: "mock"})
 	recorder := event.NewEventRecorder("mock", client.Kubernetes())
 
 	return chart.Handler(op, recorder, client)

@@ -49,7 +49,8 @@ type Context interface {
 
 	// GetServerGroupIterator returns the deployment as ServerGroupIterator.
 	GetServerGroupIterator() reconciler.ServerGroupIterator
-	// GetOperatorImage returns the image name of operator image
+	// GetOperatorImage returns the full image name (including tag or hash) of the operator image used by the deployment.
+	// This may include the image hash if specified, or the image tag otherwise.
 	GetOperatorImage() string
 	// CreateEvent creates a given event.
 	// On error, the error is logged.

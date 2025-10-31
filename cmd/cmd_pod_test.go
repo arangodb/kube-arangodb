@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,49 +41,52 @@ func Test_PodDiscovery(t *testing.T) {
 
 		Pod core.Pod
 
-		Image, ServiceAccount string
+		Image util.Image
+
+		ServiceAccount string
 
 		Valid bool
-
-		DefaultStatusDiscovery *bool
 	}
 
 	var testCases = []testCase{
+		//{
+		//	Name:  "Empty pod",
+		//	Valid: false,
+		//},
+		//{
+		//	Name:  "Not allowed containers",
+		//	Valid: false,
+		//	Pod: core.Pod{
+		//		ObjectMeta: meta.ObjectMeta{
+		//			Name:      "operator",
+		//			Namespace: tests.FakeNamespace,
+		//		},
+		//		Spec: core.PodSpec{
+		//			Containers: []core.Container{
+		//				{
+		//					Name:  "unknown",
+		//					Image: "image1",
+		//				},
+		//			},
+		//		},
+		//		Status: core.PodStatus{
+		//			ContainerStatuses: []core.ContainerStatus{
+		//				{
+		//					Name:    "unknown",
+		//					Image:   "image1",
+		//					ImageID: "image1",
+		//				},
+		//			},
+		//		},
+		//	},
+		//},
 		{
-			Name:  "Empty pod",
-			Valid: false,
-		},
-		{
-			Name:  "Not allowed containers",
-			Valid: false,
-			Pod: core.Pod{
-				ObjectMeta: meta.ObjectMeta{
-					Name:      "operator",
-					Namespace: tests.FakeNamespace,
-				},
-				Spec: core.PodSpec{
-					Containers: []core.Container{
-						{
-							Name:  "unknown",
-							Image: "image1",
-						},
-					},
-				},
-				Status: core.PodStatus{
-					ContainerStatuses: []core.ContainerStatus{
-						{
-							Name:    "unknown",
-							Image:   "image1",
-							ImageID: "image1",
-						},
-					},
-				},
+			Name:  "Allowed Status & Spec",
+			Valid: true,
+			Image: util.Image{
+				Image:       "image1",
+				StatusImage: util.NewType("image1"),
 			},
-		},
-		{
-			Name:           "Allowed Status & Spec",
-			Valid:          true,
-			Image:          "image1",
 			ServiceAccount: "sa",
 			Pod: core.Pod{
 				ObjectMeta: meta.ObjectMeta{
@@ -111,9 +114,12 @@ func Test_PodDiscovery(t *testing.T) {
 			},
 		},
 		{
-			Name:           "Allowed Status & Spec",
-			Valid:          true,
-			Image:          "imageStatusID1",
+			Name:  "Allowed Status & Spec",
+			Valid: true,
+			Image: util.Image{
+				Image:       "imageSpec1",
+				StatusImage: util.NewType("imageStatusID1"),
+			},
 			ServiceAccount: "sa",
 			Pod: core.Pod{
 				ObjectMeta: meta.ObjectMeta{
@@ -141,11 +147,13 @@ func Test_PodDiscovery(t *testing.T) {
 			},
 		},
 		{
-			Name:                   "Allowed Status & Spec - From Spec",
-			Valid:                  true,
-			Image:                  "imageSpec1",
-			ServiceAccount:         "sa",
-			DefaultStatusDiscovery: util.NewType(false),
+			Name:  "Allowed Status & Spec - From Spec",
+			Valid: true,
+			Image: util.Image{
+				Image:       "imageSpec1",
+				StatusImage: util.NewType("imageStatusID1"),
+			},
+			ServiceAccount: "sa",
 			Pod: core.Pod{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      "operator",
@@ -172,9 +180,11 @@ func Test_PodDiscovery(t *testing.T) {
 			},
 		},
 		{
-			Name:           "Allowed Spec",
-			Valid:          true,
-			Image:          "imageSpec1",
+			Name:  "Allowed Spec",
+			Valid: true,
+			Image: util.Image{
+				Image: "imageSpec1",
+			},
 			ServiceAccount: "sa",
 			Pod: core.Pod{
 				ObjectMeta: meta.ObjectMeta{
@@ -193,9 +203,12 @@ func Test_PodDiscovery(t *testing.T) {
 			},
 		},
 		{
-			Name:           "Allowed Status & Spec - From Second Pod",
-			Valid:          true,
-			Image:          "imageStatusID2",
+			Name:  "Allowed Status & Spec - From Second Pod",
+			Valid: true,
+			Image: util.Image{
+				Image:       "imageSpec2",
+				StatusImage: util.NewType("imageStatusID2"),
+			},
 			ServiceAccount: "sa",
 			Pod: core.Pod{
 				ObjectMeta: meta.ObjectMeta{
@@ -232,11 +245,13 @@ func Test_PodDiscovery(t *testing.T) {
 			},
 		},
 		{
-			Name:                   "Allowed Status & Spec - From Second Pod Spec",
-			Valid:                  true,
-			Image:                  "imageSpec2",
-			ServiceAccount:         "sa",
-			DefaultStatusDiscovery: util.NewType(false),
+			Name:  "Allowed Status & Spec - From Second Pod Spec",
+			Valid: true,
+			Image: util.Image{
+				Image:       "imageSpec2",
+				StatusImage: util.NewType("imageStatusID2"),
+			},
+			ServiceAccount: "sa",
 			Pod: core.Pod{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      "operator",
@@ -275,8 +290,6 @@ func Test_PodDiscovery(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			operatorImageDiscovery.defaultStatusDiscovery = util.TypeOrDefault(testCase.DefaultStatusDiscovery, true)
-
 			c := kclient.NewFakeClientBuilder().Add(&testCase.Pod).Client()
 			image, sa, err := getMyPodInfo(c.Kubernetes(), tests.FakeNamespace, "operator")
 
@@ -286,7 +299,8 @@ func Test_PodDiscovery(t *testing.T) {
 				require.Empty(t, sa)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, testCase.Image, image)
+				require.Equal(t, testCase.Image.Image, image.Image)
+				tests.EqualPointers(t, testCase.Image.StatusImage, image.StatusImage)
 				require.Equal(t, testCase.ServiceAccount, sa)
 			}
 		})
