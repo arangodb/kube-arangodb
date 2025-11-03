@@ -84,10 +84,32 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	inv, err := inventory.FetchInventorySpec(ctx, a.log, 4, c.Connection(), &inventory.Configuration{Telemetry: util.NewType(spec.License.GetTelemetry())})
+	var req license_manager.LicenseRequest
+	did, err := inventory.ExtractDeploymentID(ctx, c.Connection())
 	if err != nil {
-		a.log.Err(err).Error("Unable to generate inventory")
+		a.log.Err(err).Error("Unable to get deployment id")
 		return true, nil
+	}
+
+	req.DeploymentID = util.NewType(did)
+
+	if spec.License.GetInventory() {
+		inv, err := inventory.FetchInventorySpec(ctx, a.log, 4, c.Connection(), &inventory.Configuration{Telemetry: util.NewType(spec.License.GetTelemetry())})
+		if err != nil {
+			a.log.Err(err).Error("Unable to generate inventory")
+			return true, nil
+		}
+
+		if inv.DeploymentId != did {
+			a.log.Err(err).Error("Invalid deployment ID in inventory")
+			return true, nil
+		}
+
+		req.Inventory = util.NewType(ugrpc.NewObject(inv))
+	}
+
+	if q := spec.License.TTL; q != nil {
+		req.TTL = util.NewType(ugrpc.NewObject(durationpb.New(q.Duration)))
 	}
 
 	lm, err := license_manager.NewClient(license_manager.ArangoLicenseManagerEndpoint, l.API.ClientID, l.API.ClientSecret)
@@ -96,11 +118,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	generatedLicense, err := lm.License(ctx, license_manager.LicenseRequest{
-		DeploymentID: util.NewType(inv.DeploymentId),
-		TTL:          util.NewType(ugrpc.NewObject(durationpb.New(spec.License.GetTTL()))),
-		Inventory:    util.NewType(ugrpc.NewObject(inv)),
-	})
+	generatedLicense, err := lm.License(ctx, req)
 	if err != nil {
 		a.log.Err(err).Error("Unable to create license")
 		a.actionCtx.CreateEvent(&k8sutil.Event{
@@ -126,7 +144,23 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	expires := time.Now().Add(spec.License.GetExpirationGracePeriod())
+	expiration := time.Until(license.Expires())
+	if expiration <= 0 {
+		a.log.Error("Unable to get license - invalid timestamp")
+		return true, nil
+	}
+
+	if q := spec.License.ExpirationGracePeriod; q != nil {
+		expiration = expiration - q.Duration
+	} else {
+		expiration = time.Duration(math.Round(api.LicenseExpirationGraceRatio * float64(expiration)))
+	}
+	if expiration <= 0 {
+		a.log.Error("Unable to get license - invalid after evaluation")
+		return true, nil
+	}
+
+	expires := time.Now().Add(expiration)
 
 	if expires.After(license.Expires()) {
 		// License will expire before grace period, reduce to 90%

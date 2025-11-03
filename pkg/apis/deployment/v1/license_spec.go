@@ -21,8 +21,6 @@
 package v1
 
 import (
-	"time"
-
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -31,9 +29,7 @@ import (
 )
 
 const (
-	LicenseExpirationGraceRatio         = 0.9
-	DefaultLicenseExpirationGracePeriod = 3 * 24 * time.Hour
-	DefaultLicenseTTL                   = 14 * 24 * time.Hour
+	LicenseExpirationGraceRatio = 0.75
 )
 
 type LicenseMode string
@@ -74,6 +70,10 @@ type LicenseSpec struct {
 	// Telemetry defines if telemetry is collected
 	// +doc/default: true
 	Telemetry *bool `json:"telemetry,omitempty"`
+
+	// Inventory defines if inventory is collected
+	// +doc/default: true
+	Inventory *bool `json:"inventory,omitempty"`
 }
 
 // HasSecretName returns true if a license key secret name was set
@@ -86,25 +86,14 @@ func (s LicenseSpec) GetSecretName() string {
 	return util.TypeOrDefault[string](s.SecretName)
 }
 
-// GetTTL returns the license TTL
-func (s LicenseSpec) GetTTL() time.Duration {
-	if s.TTL == nil {
-		return DefaultLicenseTTL
-	}
-	return s.TTL.Duration
-}
-
 // GetTelemetry returns the license Telemetry
 func (s LicenseSpec) GetTelemetry() bool {
 	return util.OptionalType(s.Telemetry, true)
 }
 
-// GetExpirationGracePeriod returns the expiration period
-func (s LicenseSpec) GetExpirationGracePeriod() time.Duration {
-	if s.ExpirationGracePeriod == nil {
-		return DefaultLicenseExpirationGracePeriod
-	}
-	return s.ExpirationGracePeriod.Duration
+// GetInventory returns the license Inventory
+func (s LicenseSpec) GetInventory() bool {
+	return util.OptionalType(s.Telemetry, true)
 }
 
 // Validate validates the LicenseSpec
@@ -119,20 +108,26 @@ func (s LicenseSpec) Validate() error {
 		}),
 		// Expiration
 		shared.PrefixResourceErrorFunc("expirationGracePeriod", func() error {
-			if s.GetExpirationGracePeriod() <= 0 {
-				return errors.Errorf("Expiration grace period must be greater than zero")
-			}
+			if v := s.ExpirationGracePeriod; v != nil {
+				if v.Duration <= 0 {
+					return errors.Errorf("Expiration grace period must be greater than zero")
+				}
 
-			if s.GetExpirationGracePeriod() >= s.GetTTL() {
-				return errors.Errorf("Expiration grace period must be less than TTL")
+				if t := s.TTL; t != nil {
+					if v.Duration >= t.Duration {
+						return errors.Errorf("Expiration grace period must be less than TTL")
+					}
+				}
 			}
 
 			return nil
 		}),
 		// TTL
 		shared.PrefixResourceErrorFunc("ttl", func() error {
-			if s.GetTTL() <= 0 {
-				return errors.Errorf("TTL must be greater than zero")
+			if t := s.TTL; t != nil {
+				if t.Duration <= 0 {
+					return errors.Errorf("TTL must be greater than zero")
+				}
 			}
 
 			return nil

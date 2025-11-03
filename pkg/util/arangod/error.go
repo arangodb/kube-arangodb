@@ -20,7 +20,13 @@
 
 package arangod
 
-import "github.com/arangodb/kube-arangodb/pkg/util/errors"
+import (
+	"fmt"
+	goStrings "strings"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
 
 var (
 	KeyNotFoundError = errors.New("Key not found")
@@ -49,4 +55,37 @@ func IsNotLeader(err error) (string, bool) {
 		return nlErr.Leader, true
 	}
 	return "", false
+}
+
+func IsInvalidCode(err error) (InvalidCode, bool) {
+	var v InvalidCode
+	if errors.As(err, &v) {
+		return v, true
+	}
+
+	return InvalidCode{}, false
+}
+
+func EvaluateCode(code int, accepted ...int) error {
+	for _, c := range accepted {
+		if c == code {
+			return nil
+		}
+	}
+
+	return InvalidCode{
+		Expected: accepted,
+		Got:      code,
+	}
+}
+
+type InvalidCode struct {
+	Expected []int
+	Got      int
+}
+
+func (i InvalidCode) Error() string {
+	return fmt.Sprintf("Code %d not allowed in expected status codes: %s", i.Got, goStrings.Join(util.FormatList(i.Expected, func(a int) string {
+		return fmt.Sprintf("%d", a)
+	}), ", "))
 }

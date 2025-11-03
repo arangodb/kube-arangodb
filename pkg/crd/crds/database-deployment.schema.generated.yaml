@@ -10181,6 +10181,9 @@ v1:
               expirationGracePeriod:
                 description: ExpirationGracePeriod defines the expiration grace period for the license
                 type: string
+              inventory:
+                description: Inventory defines if inventory is collected
+                type: boolean
               mode:
                 description: Mode Defines the mode of license
                 enum:

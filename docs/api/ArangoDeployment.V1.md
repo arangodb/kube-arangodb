@@ -4793,7 +4793,7 @@ Possible Values:
 
 ### .spec.license.expirationGracePeriod
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L72)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L68)</sup>
 
 ExpirationGracePeriod defines the expiration grace period for the license
 
@@ -4801,9 +4801,19 @@ Default Value: `72h`
 
 ***
 
+### .spec.license.inventory
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L76)</sup>
+
+Inventory defines if inventory is collected
+
+Default Value: `true`
+
+***
+
 ### .spec.license.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L64)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L60)</sup>
 
 Mode Defines the mode of license
 
@@ -4816,7 +4826,7 @@ Possible Values:
 
 ### .spec.license.secretName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L57)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L53)</sup>
 
 SecretName setting specifies the name of a kubernetes `Secret` that contains
 the license key token or master key used for enterprise images. This value is not used for
@@ -4826,7 +4836,7 @@ the Community Edition.
 
 ### .spec.license.telemetry
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L76)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L72)</sup>
 
 Telemetry defines if telemetry is collected
 
@@ -4836,7 +4846,7 @@ Default Value: `true`
 
 ### .spec.license.ttl
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L68)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L64)</sup>
 
 TTL Sets the requested License TTL
 

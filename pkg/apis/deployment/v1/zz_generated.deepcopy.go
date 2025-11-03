@@ -1912,6 +1912,11 @@ func (in *LicenseSpec) DeepCopyInto(out *LicenseSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Inventory != nil {
+		in, out := &in.Inventory, &out.Inventory
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

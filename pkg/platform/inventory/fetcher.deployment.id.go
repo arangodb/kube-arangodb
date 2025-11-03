@@ -37,31 +37,39 @@ import (
 func init() {
 	global.MustRegister("deployment.id", func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
-			if handler := arangod.GetRequestWithTimeout[client.DeploymentID](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "deployment", "id"); handler.Code() == goHttp.StatusOK {
-				resp, err := handler.Response()
-				if err != nil {
-					return err
-				}
-
-				return errors.Errors(
-					Produce(out, "ARANGO_DEPLOYMENT", map[string]string{
-						"detail": "id",
-					}, resp.Id),
-				)
-			}
-
-			log.Warn("Fallback to the ClusterHealth Endpoint")
-
-			health, err := arangod.GetRequestWithTimeout[driver.ClusterHealth](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "cluster", "health").AcceptCode(goHttp.StatusOK).Response()
+			did, err := ExtractDeploymentID(ctx, conn)
 			if err != nil {
-				log.Warn("ClusterHealth Endpoint does not work, fallback to the Fixed Single Deployment ID")
+				return err
 			}
 
 			return errors.Errors(
 				Produce(out, "ARANGO_DEPLOYMENT", map[string]string{
 					"detail": "id",
-				}, health.ID),
+				}, did),
 			)
 		}
 	})
+}
+
+func ExtractDeploymentID(ctx context.Context, conn driver.Connection) (string, error) {
+	if handler := arangod.GetRequestWithTimeout[client.DeploymentID](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "deployment", "id"); handler.Code() == goHttp.StatusOK {
+		resp, err := handler.Response()
+		if err != nil {
+			return "", err
+		}
+
+		return resp.Id, nil
+	}
+
+	health, err := arangod.GetRequestWithTimeout[driver.ClusterHealth](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "cluster", "health").AcceptCode(goHttp.StatusOK).Response()
+	if err == nil {
+		return health.ID, nil
+	} else {
+		if _, ok := arangod.IsInvalidCode(err); ok {
+			// Fallback to the Deployment ID Single
+			return FixedSingleDeploymentID, nil
+		}
+
+		return "", err
+	}
 }
