@@ -65,7 +65,7 @@ func ExtractDeploymentID(ctx context.Context, conn driver.Connection) (string, e
 	if err == nil {
 		return health.ID, nil
 	} else {
-		if c, ok := arangod.IsInvalidCode(err); ok && c.Got == goHttp.StatusNotFound {
+		if c, ok := arangod.IsInvalidCode(err); ok && c.Got == goHttp.StatusForbidden {
 			// Fallback to the Deployment ID Single
 			return FixedSingleDeploymentID, nil
 		}
