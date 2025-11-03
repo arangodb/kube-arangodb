@@ -131,6 +131,9 @@ const (
 	// ActionKillMemberPodDefaultTimeout define default timeout for action ActionKillMemberPod
 	ActionKillMemberPodDefaultTimeout time.Duration = ActionsDefaultTimeout
 
+	// ActionLicenseCleanDefaultTimeout define default timeout for action ActionLicenseClean
+	ActionLicenseCleanDefaultTimeout time.Duration = ActionsDefaultTimeout
+
 	// ActionLicenseGenerateDefaultTimeout define default timeout for action ActionLicenseGenerate
 	ActionLicenseGenerateDefaultTimeout time.Duration = ActionsDefaultTimeout
 
@@ -226,6 +229,9 @@ const (
 
 	// ActionRuntimeContainerSyncTolerationsDefaultTimeout define default timeout for action ActionRuntimeContainerSyncTolerations
 	ActionRuntimeContainerSyncTolerationsDefaultTimeout time.Duration = ActionsDefaultTimeout
+
+	// ActionSetAnnotationDefaultTimeout define default timeout for action ActionSetAnnotation
+	ActionSetAnnotationDefaultTimeout time.Duration = ActionsDefaultTimeout
 
 	// ActionSetConditionDefaultTimeout define default timeout for action ActionSetCondition
 	ActionSetConditionDefaultTimeout time.Duration = ActionsDefaultTimeout
@@ -404,6 +410,9 @@ const (
 	// ActionTypeKillMemberPod in scopes High and Normal. Execute Delete on Pod (put pod in Terminating state)
 	ActionTypeKillMemberPod ActionType = "KillMemberPod"
 
+	// ActionTypeLicenseClean in scopes Normal. Removes the License reference from the status
+	ActionTypeLicenseClean ActionType = "LicenseClean"
+
 	// ActionTypeLicenseGenerate in scopes Normal. Generates License using ArangoDB LicenseManager Endpoint
 	ActionTypeLicenseGenerate ActionType = "LicenseGenerate"
 
@@ -501,6 +510,9 @@ const (
 
 	// ActionTypeRuntimeContainerSyncTolerations in scopes Normal. Update Pod Tolerations in runtime
 	ActionTypeRuntimeContainerSyncTolerations ActionType = "RuntimeContainerSyncTolerations"
+
+	// ActionTypeSetAnnotation in scopes High. Set ArangoDeployment annotation
+	ActionTypeSetAnnotation ActionType = "SetAnnotation"
 
 	// ActionTypeSetCondition in scopes High. Set deployment condition
 	//
@@ -645,6 +657,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionJWTStatusUpdateDefaultTimeout
 	case ActionTypeKillMemberPod:
 		return ActionKillMemberPodDefaultTimeout
+	case ActionTypeLicenseClean:
+		return ActionLicenseCleanDefaultTimeout
 	case ActionTypeLicenseGenerate:
 		return ActionLicenseGenerateDefaultTimeout
 	case ActionTypeLicenseSet:
@@ -709,6 +723,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionRuntimeContainerImageUpdateDefaultTimeout
 	case ActionTypeRuntimeContainerSyncTolerations:
 		return ActionRuntimeContainerSyncTolerationsDefaultTimeout
+	case ActionTypeSetAnnotation:
+		return ActionSetAnnotationDefaultTimeout
 	case ActionTypeSetCondition:
 		return ActionSetConditionDefaultTimeout
 	case ActionTypeSetConditionV2:
@@ -831,6 +847,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeKillMemberPod:
 		return ActionPriorityHigh
+	case ActionTypeLicenseClean:
+		return ActionPriorityNormal
 	case ActionTypeLicenseGenerate:
 		return ActionPriorityNormal
 	case ActionTypeLicenseSet:
@@ -895,6 +913,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeRuntimeContainerSyncTolerations:
 		return ActionPriorityNormal
+	case ActionTypeSetAnnotation:
+		return ActionPriorityHigh
 	case ActionTypeSetCondition:
 		return ActionPriorityHigh
 	case ActionTypeSetConditionV2:
@@ -954,6 +974,8 @@ func (a ActionType) Internal() bool {
 	case ActionTypeRebalancerGenerate:
 		return true
 	case ActionTypeRebalancerGenerateV2:
+		return true
+	case ActionTypeSetAnnotation:
 		return true
 	case ActionTypeSetConditionV2:
 		return true
@@ -1043,6 +1065,8 @@ func (a ActionType) Optional() bool {
 		return false
 	case ActionTypeKillMemberPod:
 		return false
+	case ActionTypeLicenseClean:
+		return false
 	case ActionTypeLicenseGenerate:
 		return false
 	case ActionTypeLicenseSet:
@@ -1106,6 +1130,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeRuntimeContainerImageUpdate:
 		return false
 	case ActionTypeRuntimeContainerSyncTolerations:
+		return false
+	case ActionTypeSetAnnotation:
 		return false
 	case ActionTypeSetCondition:
 		return false

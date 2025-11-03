@@ -31,6 +31,7 @@ import (
 )
 
 const (
+	LicenseExpirationGraceRatio         = 0.9
 	DefaultLicenseExpirationGracePeriod = 3 * 24 * time.Hour
 	DefaultLicenseTTL                   = 14 * 24 * time.Hour
 )
@@ -38,9 +39,10 @@ const (
 type LicenseMode string
 
 const (
-	LicenseModeDefault             = LicenseModeKey
-	LicenseModeKey     LicenseMode = "key"
-	LicenseModeMaster  LicenseMode = "master"
+	LicenseModeDefault              = LicenseModeDiscover
+	LicenseModeDiscover LicenseMode = "discover"
+	LicenseModeKey      LicenseMode = "key"
+	LicenseModeAPI      LicenseMode = "api"
 )
 
 func (l *LicenseMode) Get() LicenseMode {
@@ -55,7 +57,8 @@ type LicenseSpec struct {
 	SecretName *string `json:"secretName,omitempty"`
 
 	// Mode Defines the mode of license
-	// +doc/default: key
+	// +doc/default: discover
+	// +doc/enum: discover|Discovers the LicenseMode based on the keys
 	// +doc/enum: key|Use License Key mechanism
 	// +doc/enum: master|Use License Master Key mechanism
 	Mode *LicenseMode `json:"mode,omitempty"`
@@ -67,6 +70,10 @@ type LicenseSpec struct {
 	// ExpirationGracePeriod defines the expiration grace period for the license
 	// +doc/default: 72h
 	ExpirationGracePeriod *meta.Duration `json:"expirationGracePeriod,omitempty"`
+
+	// Telemetry defines if telemetry is collected
+	// +doc/default: true
+	Telemetry *bool `json:"telemetry,omitempty"`
 }
 
 // HasSecretName returns true if a license key secret name was set
@@ -85,6 +92,11 @@ func (s LicenseSpec) GetTTL() time.Duration {
 		return DefaultLicenseTTL
 	}
 	return s.TTL.Duration
+}
+
+// GetTelemetry returns the license Telemetry
+func (s LicenseSpec) GetTelemetry() bool {
+	return util.OptionalType(s.Telemetry, true)
 }
 
 // GetExpirationGracePeriod returns the expiration period

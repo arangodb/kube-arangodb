@@ -29,6 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -36,18 +37,81 @@ import (
 func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
+	if l := status.License; l == nil {
+		// Cleanup the Condition
+		if status.Conditions.IsTrue(api.ConditionTypeLicenseSet) {
+			// Cleanup the old condition if we do not expect license
+			if !spec.License.HasSecretName() {
+				return api.Plan{sharedReconcile.RemoveConditionActionV2("License is not set", api.ConditionTypeLicenseSet)}
+			} else {
+				// Cleanup the old condition if we do not expect license
+				return api.Plan{sharedReconcile.UpdateConditionActionV2("License is not set", api.ConditionTypeLicenseSet, false, "License Pending", "", "")}
+
+			}
+		}
+	} else {
+		// Set the Condition
+		if !status.Conditions.IsTrue(api.ConditionTypeLicenseSet) {
+			// Cleanup the old condition
+			return api.Plan{sharedReconcile.UpdateConditionActionV2("License is set", api.ConditionTypeLicenseSet, true, "License UpToDate", "", l.Hash)}
+		}
+	}
+
 	if !spec.License.HasSecretName() {
+		if status.License != nil {
+			return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference")}
+		}
 		return nil
 	}
 
-	switch spec.License.Mode.Get() {
+	mode, err := r.updateClusterLicenseDiscover(spec, context)
+	if err != nil {
+		r.log.Err(err).Warn("Unable to discover license mode")
+	}
+
+	if l := status.License; l != nil {
+		if mode != l.Mode {
+			return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - invalid mode")}
+		}
+	}
+
+	switch mode {
 	case api.LicenseModeKey:
-		return r.updateClusterLicenseKey(ctx, spec, status, context)
-	case api.LicenseModeMaster:
-		return r.updateClusterLicenseMaster(ctx, spec, status, context)
+		if p := r.updateClusterLicenseKey(ctx, spec, status, context); len(p) > 0 {
+			return p
+		}
+	case api.LicenseModeAPI:
+		if p := r.updateClusterLicenseAPI(ctx, spec, status, context); len(p) > 0 {
+			return p
+		}
 	}
 
 	return nil
+}
+
+func (r *Reconciler) updateClusterLicenseDiscover(spec api.DeploymentSpec, context PlanBuilderContext) (api.LicenseMode, error) {
+	switch spec.License.Mode.Get() {
+	case api.LicenseModeKey:
+		return api.LicenseModeKey, nil
+	case api.LicenseModeAPI:
+		return api.LicenseModeAPI, nil
+	}
+
+	// Run the discovery
+	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
+	if err != nil {
+		return "", err
+	}
+
+	if l.V2.IsV2Set() {
+		return api.LicenseModeKey, nil
+	}
+
+	if l.API != nil {
+		return api.LicenseModeAPI, nil
+	}
+
+	return "", errors.Errorf("Unable to discover LicenseAPIKey mode")
 }
 
 func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
@@ -88,29 +152,34 @@ func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
+	if status.License == nil {
+		// Run the set
+		return api.Plan{actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Generating license")}
+	}
+
 	internalClient := client.NewClient(c.Connection(), r.log)
 
-	if ok, err := licenseV2Compare(ctxChild, internalClient, l.V2); err != nil {
-		r.log.Err(err).Error("Unable to verify license")
-		return nil
-	} else if ok {
-		if c, _ := status.Conditions.Get(api.ConditionTypeLicenseSet); !c.IsTrue() || c.Hash != l.V2.V2Hash() {
-			return api.Plan{sharedReconcile.UpdateConditionActionV2("License is set", api.ConditionTypeLicenseSet, true, "License UpToDate", "", l.V2.V2Hash())}
-		}
+	license, err := internalClient.GetLicense(ctxChild)
+	if err != nil {
+		r.log.Err(err).Error("Unable to get client")
 		return nil
 	}
 
-	return api.Plan{sharedReconcile.RemoveConditionActionV2("License is not set", api.ConditionTypeLicenseSet), actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Setting license")}
+	if status.License.Hash != license.Hash {
+		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Invalid Hash")}
+	}
+
+	return nil
 }
 
-func (r *Reconciler) updateClusterLicenseMaster(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
+func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
 	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
 	if err != nil {
 		r.log.Err(err).Error("License secret error")
 		return nil
 	}
 
-	if l.Master == nil {
+	if l.API == nil {
 		r.log.Str("secret", spec.License.GetSecretName()).Error("V2 License key is not set")
 		return nil
 	}
@@ -141,6 +210,11 @@ func (r *Reconciler) updateClusterLicenseMaster(ctx context.Context, spec api.De
 		return nil
 	}
 
+	if status.License == nil {
+		// Run the generation
+		return api.Plan{actions.NewAction(api.ActionTypeLicenseGenerate, member.Group, member.Member, "Generating license")}
+	}
+
 	internalClient := client.NewClient(c.Connection(), r.log)
 
 	currentLicense, err := internalClient.GetLicense(ctxChild)
@@ -149,12 +223,14 @@ func (r *Reconciler) updateClusterLicenseMaster(ctx context.Context, spec api.De
 		return nil
 	}
 
-	if time.Until(currentLicense.Expires()) > spec.License.GetExpirationGracePeriod() {
-		if c, _ := status.Conditions.Get(api.ConditionTypeLicenseSet); !c.IsTrue() {
-			return api.Plan{sharedReconcile.UpdateConditionActionV2("License is set", api.ConditionTypeLicenseSet, true, "License UpToDate", "", currentLicense.Hash)}
-		}
-		return nil
+	if currentLicense.Hash != status.License.Hash {
+		// Invalid hash, cleanup
+		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Invalid Hash")}
 	}
 
-	return api.Plan{sharedReconcile.RemoveConditionActionV2("License is not set", api.ConditionTypeLicenseSet), actions.NewAction(api.ActionTypeLicenseGenerate, member.Group, member.Member, "Generating license")}
+	if status.License.Regenerate.After(time.Now()) {
+		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Regeneration Required")}
+	}
+
+	return nil
 }

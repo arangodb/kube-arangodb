@@ -10184,6 +10184,7 @@ v1:
               mode:
                 description: Mode Defines the mode of license
                 enum:
+                  - discover
                   - key
                   - master
                 type: string
@@ -10193,6 +10194,9 @@ v1:
                   the license key token or master key used for enterprise images. This value is not used for
                   the Community Edition.
                 type: string
+              telemetry:
+                description: Telemetry defines if telemetry is collected
+                type: boolean
               ttl:
                 description: TTL Sets the requested License TTL
                 type: string
@@ -27510,6 +27514,7 @@ v2alpha1:
               mode:
                 description: Mode Defines the mode of license
                 enum:
+                  - discover
                   - key
                   - master
                 type: string
@@ -27519,6 +27524,9 @@ v2alpha1:
                   the license key token or master key used for enterprise images. This value is not used for
                   the Community Edition.
                 type: string
+              telemetry:
+                description: Telemetry defines if telemetry is collected
+                type: boolean
               ttl:
                 description: TTL Sets the requested License TTL
                 type: string

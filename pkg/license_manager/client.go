@@ -26,6 +26,7 @@ import (
 	goHttp "net/http"
 
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/http"
@@ -84,8 +85,9 @@ type LicenseRequest struct {
 }
 
 type LicenseResponse struct {
-	ID      string `json:"id"`
-	License string `json:"license"`
+	ID      string                                `json:"id"`
+	License string                                `json:"license"`
+	Expires *ugrpc.Object[*timestamppb.Timestamp] `json:"expires,omitempty"`
 }
 
 type RegistryResponse struct {

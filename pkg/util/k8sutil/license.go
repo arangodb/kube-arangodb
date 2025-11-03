@@ -41,9 +41,9 @@ func (l License) V2Hash() string {
 }
 
 type LicenseSecret struct {
-	V1     string
-	V2     License
-	Master *LicenseSecretMaster
+	V1  string
+	V2  License
+	API *LicenseSecretMaster
 }
 
 type LicenseSecretMaster struct {
@@ -63,9 +63,9 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 		l.V1 = string(v)
 	}
 
-	if cid, ok := s.Data[utilConstants.SecretKeyMasterClientID]; ok {
-		if cs, ok := s.Data[utilConstants.SecretKeyMasterClientSecret]; ok {
-			l.Master = &LicenseSecretMaster{
+	if cid, ok := s.Data[utilConstants.SecretKeyLicenseClientID]; ok {
+		if cs, ok := s.Data[utilConstants.SecretKeyLicenseClientSecret]; ok {
+			l.API = &LicenseSecretMaster{
 				ClientID:     string(cid),
 				ClientSecret: string(cs),
 			}
@@ -86,9 +86,9 @@ func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, 
 		} else {
 			l.V2 = License(v2)
 		}
-	} else if l.Master == nil {
+	} else if l.API == nil {
 		return LicenseSecret{}, errors.Errorf("Key (%s, %s, %s, or %s+%s) is missing in the license secret (%s)",
-			utilConstants.SecretKeyToken, utilConstants.SecretKeyV2License, utilConstants.SecretKeyV2Token, utilConstants.SecretKeyMasterClientID, utilConstants.SecretKeyMasterClientSecret, name)
+			utilConstants.SecretKeyToken, utilConstants.SecretKeyV2License, utilConstants.SecretKeyV2Token, utilConstants.SecretKeyLicenseClientID, utilConstants.SecretKeyLicenseClientSecret, name)
 	}
 
 	return l, nil

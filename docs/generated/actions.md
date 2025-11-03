@@ -47,6 +47,7 @@ nav_order: 11
 | JWTSetActive | no | 10m0s | no | Enterprise Only | Change active JWT key on the cluster |
 | JWTStatusUpdate | no | 10m0s | no | Enterprise Only | Update status of JWT propagation |
 | KillMemberPod | no | 10m0s | no | Community & Enterprise | Execute Delete on Pod (put pod in Terminating state) |
+| LicenseClean | no | 10m0s | no | Community & Enterprise | Removes the License reference from the status |
 | LicenseGenerate | no | 10m0s | no | Community & Enterprise | Generates License using ArangoDB LicenseManager Endpoint |
 | LicenseSet | no | 10m0s | no | Community & Enterprise | Update Cluster license (3.9+) |
 | MarkToRemoveMember | no | 10m0s | no | Community & Enterprise | Marks member to be removed. Used when member Pod is annotated with replace annotation |
@@ -79,6 +80,7 @@ nav_order: 11
 | RuntimeContainerArgsLogLevelUpdate | no | 10m0s | no | Community & Enterprise | Change ArangoDB Member log levels in runtime |
 | RuntimeContainerImageUpdate | no | 10m0s | no | Community & Enterprise | Update Container Image in runtime |
 | RuntimeContainerSyncTolerations | no | 10m0s | no | Community & Enterprise | Update Pod Tolerations in runtime |
+| SetAnnotation | yes | 10m0s | no | Community & Enterprise | Set ArangoDeployment annotation |
 | ~~SetCondition~~ | no | 10m0s | no | Community & Enterprise | Set deployment condition |
 | SetConditionV2 | yes | 10m0s | no | Community & Enterprise | Set deployment condition |
 | SetCurrentImage | no | 6h0m0s | no | Community & Enterprise | Update deployment current image after image discovery |
@@ -147,6 +149,7 @@ spec:
       JWTSetActive: 10m0s
       JWTStatusUpdate: 10m0s
       KillMemberPod: 10m0s
+      LicenseClean: 10m0s
       LicenseGenerate: 10m0s
       LicenseSet: 10m0s
       MarkToRemoveMember: 10m0s
@@ -179,6 +182,7 @@ spec:
       RuntimeContainerArgsLogLevelUpdate: 10m0s
       RuntimeContainerImageUpdate: 10m0s
       RuntimeContainerSyncTolerations: 10m0s
+      SetAnnotation: 10m0s
       SetCondition: 10m0s
       SetConditionV2: 10m0s
       SetCurrentImage: 6h0m0s

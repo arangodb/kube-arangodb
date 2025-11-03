@@ -23,9 +23,12 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	"math"
+	"time"
 
 	"google.golang.org/protobuf/types/known/durationpb"
 	core "k8s.io/api/core/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
@@ -65,7 +68,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, err
 	}
 
-	if l.Master == nil {
+	if l.API == nil {
 		return true, nil
 	}
 
@@ -81,19 +84,19 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	inv, err := inventory.FetchInventorySpec(ctx, a.log, 4, c.Connection(), &inventory.Configuration{Telemetry: util.NewType(true)})
+	inv, err := inventory.FetchInventorySpec(ctx, a.log, 4, c.Connection(), &inventory.Configuration{Telemetry: util.NewType(spec.License.GetTelemetry())})
 	if err != nil {
 		a.log.Err(err).Error("Unable to generate inventory")
 		return true, nil
 	}
 
-	lm, err := license_manager.NewClient(license_manager.ArangoLicenseManagerEndpoint, l.Master.ClientID, l.Master.ClientSecret)
+	lm, err := license_manager.NewClient(license_manager.ArangoLicenseManagerEndpoint, l.API.ClientID, l.API.ClientSecret)
 	if err != nil {
 		a.log.Err(err).Error("Unable to create inventory client")
 		return true, nil
 	}
 
-	license, err := lm.License(ctx, license_manager.LicenseRequest{
+	generatedLicense, err := lm.License(ctx, license_manager.LicenseRequest{
 		DeploymentID: util.NewType(inv.DeploymentId),
 		TTL:          util.NewType(ugrpc.NewObject(durationpb.New(spec.License.GetTTL()))),
 		Inventory:    util.NewType(ugrpc.NewObject(inv)),
@@ -108,12 +111,40 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		})
 		return true, nil
 	}
-	a.log.Str("id", license.ID).Info("License Generated")
+	a.log.Str("id", generatedLicense.ID).Info("License Generated")
 
-	if err := client.NewClient(c.Connection(), a.log).SetLicense(ctxChild, license.License, true); err != nil {
+	client := client.NewClient(c.Connection(), a.log)
+
+	if err := client.SetLicense(ctxChild, generatedLicense.License, true); err != nil {
 		a.log.Err(err).Error("Unable to set license")
 		return true, nil
 	}
 
+	license, err := client.GetLicense(ctxChild)
+	if err != nil {
+		a.log.Err(err).Error("Unable to get license")
+		return true, nil
+	}
+
+	expires := time.Now().Add(spec.License.GetExpirationGracePeriod())
+
+	if expires.After(license.Expires()) {
+		// License will expire before grace period, reduce to 90%
+		expires = time.Now().Add(time.Duration(math.Round(float64(time.Since(license.Expires())) * api.LicenseExpirationGraceRatio)))
+	}
+
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		s.License = &api.DeploymentStatusLicense{
+			ID:         generatedLicense.ID,
+			Hash:       license.Hash,
+			Expires:    meta.Time{Time: license.Expires()},
+			Mode:       api.LicenseModeAPI,
+			Regenerate: meta.Time{Time: expires},
+		}
+		return true
+	}); err != nil {
+		a.log.Err(err).Error("Unable to register license")
+		return true, nil
+	}
 	return true, nil
 }

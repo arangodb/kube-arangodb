@@ -4793,7 +4793,7 @@ Possible Values:
 
 ### .spec.license.expirationGracePeriod
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L69)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L72)</sup>
 
 ExpirationGracePeriod defines the expiration grace period for the license
 
@@ -4803,19 +4803,20 @@ Default Value: `72h`
 
 ### .spec.license.mode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L61)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L64)</sup>
 
 Mode Defines the mode of license
 
 Possible Values: 
-* `"key"` (default) - Use License Key mechanism
+* `"discover"` (default) - Discovers the LicenseMode based on the keys
+* `"key"` - Use License Key mechanism
 * `"master"` - Use License Master Key mechanism
 
 ***
 
 ### .spec.license.secretName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L55)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L57)</sup>
 
 SecretName setting specifies the name of a kubernetes `Secret` that contains
 the license key token or master key used for enterprise images. This value is not used for
@@ -4823,9 +4824,19 @@ the Community Edition.
 
 ***
 
+### .spec.license.telemetry
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L76)</sup>
+
+Telemetry defines if telemetry is collected
+
+Default Value: `true`
+
+***
+
 ### .spec.license.ttl
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L65)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/deployment/v1/license_spec.go#L68)</sup>
 
 TTL Sets the requested License TTL
 

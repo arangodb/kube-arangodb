@@ -54,7 +54,7 @@ func init() {
 
 			health, err := arangod.GetRequestWithTimeout[driver.ClusterHealth](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "cluster", "health").AcceptCode(goHttp.StatusOK).Response()
 			if err != nil {
-				return err
+				log.Warn("ClusterHealth Endpoint does not work, fallback to the Fixed Single Deployment ID")
 			}
 
 			return errors.Errors(

@@ -23,6 +23,8 @@ package reconcile
 import (
 	"context"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -75,32 +77,28 @@ func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
 
 	client := client.NewClient(c.Connection(), a.log)
 
-	if ok, err := licenseV2Compare(ctxChild, client, l.V2); err != nil {
-		a.log.Err(err).Error("Unable to verify license")
-		return true, nil
-	} else if ok {
-		// Already latest license
-		return true, nil
-	}
-
 	if err := client.SetLicense(ctxChild, string(l.V2), true); err != nil {
 		a.log.Err(err).Error("Unable to set license")
 		return true, nil
 	}
 
-	return true, nil
-}
-
-func licenseV2Compare(ctx context.Context, client client.Client, license k8sutil.License) (bool, error) {
-	currentLicense, err := client.GetLicense(ctx)
+	license, err := client.GetLicense(ctxChild)
 	if err != nil {
-		return false, err
-	}
-
-	if currentLicense.Hash == license.V2Hash() {
-		// Already latest license
+		a.log.Err(err).Error("Unable to get license")
 		return true, nil
 	}
 
-	return false, nil
+	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		s.License = &api.DeploymentStatusLicense{
+			Hash:    license.Hash,
+			Expires: meta.Time{Time: license.Expires()},
+			Mode:    api.LicenseModeKey,
+		}
+		return true
+	}); err != nil {
+		a.log.Err(err).Error("Unable to register license")
+		return true, nil
+	}
+
+	return true, nil
 }

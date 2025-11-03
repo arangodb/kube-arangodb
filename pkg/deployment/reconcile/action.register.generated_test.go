@@ -386,6 +386,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("LicenseClean", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeLicenseClean)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeLicenseClean.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeLicenseClean.Optional())
+		})
+	})
+
 	t.Run("LicenseGenerate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeLicenseGenerate)
 		t.Run("Internal", func(t *testing.T) {
@@ -708,6 +718,16 @@ func Test_Actions(t *testing.T) {
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeRuntimeContainerSyncTolerations.Optional())
+		})
+	})
+
+	t.Run("SetAnnotation", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeSetAnnotation)
+		t.Run("Internal", func(t *testing.T) {
+			require.True(t, api.ActionTypeSetAnnotation.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeSetAnnotation.Optional())
 		})
 	})
 
