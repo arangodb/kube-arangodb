@@ -20,4 +20,13 @@
 
 package inventory
 
-const FixedSingleDeploymentID = "00000000-0000-0000-0000-000000000000"
+import (
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+	"testing"
+)
+
+func Test_UUID(t *testing.T) {
+	_, err := uuid.Parse(FixedSingleDeploymentID)
+	require.NoError(t, err)
+}
