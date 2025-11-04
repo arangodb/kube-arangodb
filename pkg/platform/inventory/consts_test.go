@@ -21,9 +21,10 @@
 package inventory
 
 import (
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_UUID(t *testing.T) {
