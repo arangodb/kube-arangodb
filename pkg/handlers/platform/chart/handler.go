@@ -179,6 +179,8 @@ func (h *handler) HandleSpecData(ctx context.Context, item operation.Item, exten
 		Details:    chartInfoExtract(chart.Chart(), platform),
 	}
 
+	h.eventRecorder.Normal(extension, "Chart Accepted", "Chart Accepted with checksum: %s", checksum)
+
 	return true, operator.Reconcile("Spec changed")
 }
 

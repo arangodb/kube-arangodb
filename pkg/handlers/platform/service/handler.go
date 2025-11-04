@@ -368,10 +368,13 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 			in.Timeout = 20 * time.Minute
 		})
 		if err != nil {
+			h.eventRecorder.Warning(extension, "Release Install Failed", "Release Install failed: %s", err.Error())
 			return false, err
 		}
 
 		status.Release = extractReleaseStatus(release, expectedChecksum)
+
+		h.eventRecorder.Normal(extension, "Release Installed", "Release installed with version %d on chart %s (%s)", status.Release.Version, status.ChartInfo.Details.Name, status.ChartInfo.Details.Version)
 
 		return true, operator.Reconcile("Release Installed")
 	} else if !labels.IsPlatformManaged(release) {
@@ -398,10 +401,15 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 			in.Timeout = 20 * time.Minute
 		})
 		if err != nil {
+			h.eventRecorder.Warning(extension, "Release Upgrade Failed", "Release upgrade failed: %s", err.Error())
+
 			return false, err
 		}
 
 		status.Release = extractReleaseStatus(release, expectedChecksum)
+
+		h.eventRecorder.Normal(extension, "Release Upgraded", "Release upgraded with version %d on chart %s (%s)", status.Release.Version, status.ChartInfo.Details.Name, status.ChartInfo.Details.Version)
+
 		return true, operator.Reconcile("Release Upgraded")
 	}
 
