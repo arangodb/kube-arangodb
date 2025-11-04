@@ -101,7 +101,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		}
 
 		if inv.DeploymentId != did {
-			a.log.Err(err).Error("Invalid deployment ID in inventory")
+			a.log.Error("Invalid deployment ID in inventory")
 			return true, nil
 		}
 

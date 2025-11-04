@@ -111,7 +111,7 @@ func (r *Reconciler) updateClusterLicenseDiscover(spec api.DeploymentSpec, conte
 		return api.LicenseModeAPI, nil
 	}
 
-	return "", errors.Errorf("Unable to discover LicenseAPIKey mode")
+	return "", errors.Errorf("Unable to discover License mode")
 }
 
 func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
