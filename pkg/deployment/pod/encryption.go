@@ -108,6 +108,7 @@ func GetEncryptionFolderSecretName(name string) string {
 	return n
 }
 
+// GetLicenseRegistryCredentialsSecretName returns the secret name for storing registry credentials used to pull licensed images
 func GetLicenseRegistryCredentialsSecretName(name string) string {
 	n := fmt.Sprintf("%s-rlm", name)
 

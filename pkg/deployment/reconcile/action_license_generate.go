@@ -209,8 +209,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 				core.DockerConfigJsonKey:  token,
 				utilConstants.ChecksumKey: []byte(l.API.Hash()),
 			},
-			StringData: nil,
-			Type:       core.SecretTypeDockerConfigJson,
+			Type: core.SecretTypeDockerConfigJson,
 		}, meta.CreateOptions{}); err != nil {
 			a.log.Err(err).Debug("Failed to create License Secret")
 			return true, nil
