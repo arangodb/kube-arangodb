@@ -93,7 +93,7 @@ func (s LicenseSpec) GetTelemetry() bool {
 
 // GetInventory returns the license Inventory
 func (s LicenseSpec) GetInventory() bool {
-	return util.OptionalType(s.Telemetry, true)
+	return util.OptionalType(s.Inventory, true)
 }
 
 // Validate validates the LicenseSpec
