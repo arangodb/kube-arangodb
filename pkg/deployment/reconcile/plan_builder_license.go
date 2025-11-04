@@ -228,7 +228,7 @@ func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.Deplo
 		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Invalid Hash")}
 	}
 
-	if status.License.Regenerate.After(time.Now()) {
+	if status.License.Regenerate.Time.Before(time.Now()) {
 		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Regeneration Required")}
 	}
 

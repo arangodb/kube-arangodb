@@ -163,7 +163,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 	expires := time.Now().Add(expiration)
 
 	if expires.After(license.Expires()) {
-		// License will expire before grace period, reduce to 90%
+		// License will expire before grace period, reduce to 75%
 		expires = time.Now().Add(time.Duration(math.Round(float64(time.Until(license.Expires())) * api.LicenseExpirationGraceRatio)))
 	}
 
