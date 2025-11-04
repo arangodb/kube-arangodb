@@ -77,7 +77,7 @@ type Client interface {
 	License(ctx context.Context, req LicenseRequest) (LicenseResponse, error)
 
 	Registry(ctx context.Context) (RegistryResponse, error)
-	RegistryConfig(ctx context.Context, endpoint, id string, stages ...Stage) ([]byte, error)
+	RegistryConfig(ctx context.Context, endpoint, id string, token *string, stages ...Stage) ([]byte, error)
 }
 
 type LicenseRequest struct {
@@ -100,13 +100,20 @@ type client struct {
 	conn driver.Connection
 }
 
-func (c client) RegistryConfig(ctx context.Context, endpoint, id string, stages ...Stage) ([]byte, error) {
-	tk, err := c.Registry(ctx)
-	if err != nil {
-		return nil, err
+func (c client) RegistryConfig(ctx context.Context, endpoint, id string, token *string, stages ...Stage) ([]byte, error) {
+	var t string
+
+	if token != nil {
+		t = *token
+	} else {
+		tk, err := c.Registry(ctx)
+		if err != nil {
+			return nil, err
+		}
+		t = tk.Token
 	}
 
-	r, err := NewRegistryAuth(endpoint, id, tk.Token, stages...)
+	r, err := NewRegistryAuth(endpoint, id, t, stages...)
 	if err != nil {
 		return nil, err
 	}

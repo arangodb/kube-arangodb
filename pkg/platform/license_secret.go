@@ -87,7 +87,7 @@ func licenseSecretRun(cmd *cobra.Command, args []string) error {
 
 	logger.Info("Creating new Registry Token")
 
-	data, err := mc.RegistryConfig(cmd.Context(), endpoint, id, lmanager.ParseStages(stages...)...)
+	data, err := mc.RegistryConfig(cmd.Context(), endpoint, id, nil, lmanager.ParseStages(stages...)...)
 	if err != nil {
 		return err
 	}

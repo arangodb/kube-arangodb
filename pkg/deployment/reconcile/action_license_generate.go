@@ -176,7 +176,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		if string(util.Optional(s.Data, utilConstants.ChecksumKey, []byte{})) != l.API.Hash() {
 			// Update
 
-			token, err := lm.RegistryConfig(ctx, lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, lmanager.StageDev, lmanager.StageQA, lmanager.StagePrd)
+			token, err := lm.RegistryConfig(ctx, lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, &l.API.ClientSecret, lmanager.StageDev, lmanager.StageQA, lmanager.StagePrd)
 			if err != nil {
 				a.log.Err(err).Debug("Failed to generate License Registry")
 				return true, nil
@@ -192,7 +192,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 			}
 		}
 	} else {
-		token, err := lm.RegistryConfig(ctx, lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, lmanager.StageDev, lmanager.StageQA, lmanager.StagePrd)
+		token, err := lm.RegistryConfig(ctx, lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, &l.API.ClientSecret, lmanager.StageDev, lmanager.StageQA, lmanager.StagePrd)
 		if err != nil {
 			a.log.Err(err).Debug("Failed to generate License Registry")
 			return true, nil
