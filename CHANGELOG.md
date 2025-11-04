@@ -10,6 +10,7 @@
 - (Feature) (Platform) Allows to opt out in the Inventory Telemetry 
 - (Feature) Simplify Operator ID Process
 - (Feature) (License) Activation API Integration
+- (Feature) (Platform) Chart & Service Kubernetes Events
 - (Feature) (Platform) Registry Secret
 
 ## [1.3.1](https://github.com/arangodb/kube-arangodb/tree/1.3.1) (2025-10-07)
