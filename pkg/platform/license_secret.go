@@ -30,7 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/arangodb/kube-arangodb/pkg/license/manager"
+	manager2 "github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
@@ -93,7 +93,7 @@ func licenseSecretRun(cmd *cobra.Command, args []string) error {
 
 	logger.Info("Creating new Registry Token")
 
-	r, err := manager.NewRegistryAuth(endpoint, id, secret.Token, manager.ParseStages(stages...)...)
+	r, err := manager2.NewRegistryAuth(endpoint, id, secret.Token, manager2.ParseStages(stages...)...)
 	if err != nil {
 		return err
 	}

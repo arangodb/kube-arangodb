@@ -9,6 +9,7 @@
 - (Feature) (Platform) EventsV1 Integration
 - (Feature) (Platform) Allows to opt out in the Inventory Telemetry 
 - (Feature) Simplify Operator ID Process
+- (Feature) (License) Activation API Integration
 
 ## [1.3.1](https://github.com/arangodb/kube-arangodb/tree/1.3.1) (2025-10-07)
 - (Documentation) Add ArangoPlatformStorage Docs & Examples

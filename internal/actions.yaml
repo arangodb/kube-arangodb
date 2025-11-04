@@ -232,6 +232,11 @@ actions:
     scopes:
       - High
     isInternal: true
+  SetAnnotation:
+    description: Set ArangoDeployment annotation
+    scopes:
+      - High
+    isInternal: true
   MemberRIDUpdate:
     description: Update Run ID of member
     scopes:
@@ -247,6 +252,10 @@ actions:
       - High
   LicenseSet:
     description: Update Cluster license (3.9+)
+  LicenseGenerate:
+    description: Generates License using ArangoDB LicenseManager Endpoint
+  LicenseClean:
+    description: Removes the License reference from the status
   RuntimeContainerImageUpdate:
     description: Update Container Image in runtime
   RuntimeContainerSyncTolerations:

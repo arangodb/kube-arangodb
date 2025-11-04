@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,16 +21,59 @@
 package v2alpha1
 
 import (
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+const (
+	LicenseExpirationGraceRatio = 0.75
+)
+
+type LicenseMode string
+
+const (
+	LicenseModeDefault              = LicenseModeDiscover
+	LicenseModeDiscover LicenseMode = "discover"
+	LicenseModeKey      LicenseMode = "key"
+	LicenseModeAPI      LicenseMode = "api"
+)
+
+func (l *LicenseMode) Get() LicenseMode {
+	return util.OptionalType(l, LicenseModeDefault)
+}
 
 // LicenseSpec holds the license related information
 type LicenseSpec struct {
 	// SecretName setting specifies the name of a kubernetes `Secret` that contains
-	// the license key token used for enterprise images. This value is not used for
+	// the license key token or master key used for enterprise images. This value is not used for
 	// the Community Edition.
 	SecretName *string `json:"secretName,omitempty"`
+
+	// Mode Defines the mode of license
+	// +doc/default: discover
+	// +doc/enum: discover|Discovers the LicenseMode based on the keys
+	// +doc/enum: key|Use License Key mechanism
+	// +doc/enum: master|Use License Master Key mechanism
+	Mode *LicenseMode `json:"mode,omitempty"`
+
+	// TTL Sets the requested License TTL
+	// +doc/default: 336h
+	TTL *meta.Duration `json:"ttl,omitempty"`
+
+	// ExpirationGracePeriod defines the expiration grace period for the license
+	// +doc/default: 72h
+	ExpirationGracePeriod *meta.Duration `json:"expirationGracePeriod,omitempty"`
+
+	// Telemetry defines if telemetry is collected
+	// +doc/default: true
+	Telemetry *bool `json:"telemetry,omitempty"`
+
+	// Inventory defines if inventory is collected
+	// +doc/default: true
+	Inventory *bool `json:"inventory,omitempty"`
 }
 
 // HasSecretName returns true if a license key secret name was set
@@ -43,20 +86,60 @@ func (s LicenseSpec) GetSecretName() string {
 	return util.TypeOrDefault[string](s.SecretName)
 }
 
+// GetTelemetry returns the license Telemetry
+func (s LicenseSpec) GetTelemetry() bool {
+	return util.OptionalType(s.Telemetry, true)
+}
+
+// GetInventory returns the license Inventory
+func (s LicenseSpec) GetInventory() bool {
+	return util.OptionalType(s.Inventory, true)
+}
+
 // Validate validates the LicenseSpec
 func (s LicenseSpec) Validate() error {
-	if s.HasSecretName() {
-		if err := shared.ValidateResourceName(s.GetSecretName()); err != nil {
-			return err
-		}
+	if !s.HasSecretName() {
+		return nil
 	}
+	return shared.WithErrors(
+		// Secret
+		shared.PrefixResourceErrorFunc("secretName", func() error {
+			return shared.ValidateResourceName(s.GetSecretName())
+		}),
+		// Expiration
+		shared.PrefixResourceErrorFunc("expirationGracePeriod", func() error {
+			if v := s.ExpirationGracePeriod; v != nil {
+				if v.Duration <= 0 {
+					return errors.Errorf("Expiration grace period must be greater than zero")
+				}
 
-	return nil
+				if t := s.TTL; t != nil {
+					if v.Duration >= t.Duration {
+						return errors.Errorf("Expiration grace period must be less than TTL")
+					}
+				}
+			}
+
+			return nil
+		}),
+		// TTL
+		shared.PrefixResourceErrorFunc("ttl", func() error {
+			if t := s.TTL; t != nil {
+				if t.Duration <= 0 {
+					return errors.Errorf("TTL must be greater than zero")
+				}
+			}
+
+			return nil
+		}),
+	)
 }
 
 // SetDefaultsFrom fills all values not set in s with values from other
 func (s *LicenseSpec) SetDefaultsFrom(other LicenseSpec) {
 	if !s.HasSecretName() {
-		s.SecretName = util.NewTypeOrNil[string](other.SecretName)
+		s.SecretName = util.NewTypeOrNil(other.SecretName)
 	}
+	s.TTL = util.NewTypeOrNil(other.TTL)
+	s.ExpirationGracePeriod = util.NewTypeOrNil(other.ExpirationGracePeriod)
 }

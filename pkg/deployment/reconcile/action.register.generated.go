@@ -126,6 +126,12 @@ var (
 	_ Action        = &actionKillMemberPod{}
 	_ actionFactory = newKillMemberPodAction
 
+	_ Action        = &actionLicenseClean{}
+	_ actionFactory = newLicenseCleanAction
+
+	_ Action        = &actionLicenseGenerate{}
+	_ actionFactory = newLicenseGenerateAction
+
 	_ Action        = &actionLicenseSet{}
 	_ actionFactory = newLicenseSetAction
 
@@ -215,6 +221,9 @@ var (
 
 	_ Action        = &actionRuntimeContainerSyncTolerations{}
 	_ actionFactory = newRuntimeContainerSyncTolerationsAction
+
+	_ Action        = &actionSetAnnotation{}
+	_ actionFactory = newSetAnnotationAction
 
 	_ Action        = &actionSetConditionV2{}
 	_ actionFactory = newSetConditionV2Action
@@ -768,6 +777,34 @@ func init() {
 		registerAction(action, function)
 	}
 
+	// LicenseClean
+	{
+		// Get Action type
+		action := api.ActionTypeLicenseClean
+
+		// Get Action defition
+		function := newLicenseCleanAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// LicenseGenerate
+	{
+		// Get Action type
+		action := api.ActionTypeLicenseGenerate
+
+		// Get Action defition
+		function := newLicenseGenerateAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
 	// LicenseSet
 	{
 		// Get Action type
@@ -1200,6 +1237,20 @@ func init() {
 
 		// Get Action defition
 		function := newRuntimeContainerSyncTolerationsAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// SetAnnotation
+	{
+		// Get Action type
+		action := api.ActionTypeSetAnnotation
+
+		// Get Action defition
+		function := newSetAnnotationAction
 
 		// Wrap action main function
 

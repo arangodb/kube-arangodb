@@ -22,7 +22,6 @@ package arangod
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	goHttp "net/http"
 	goStrings "strings"
@@ -31,7 +30,6 @@ import (
 	"github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Response[OUT any] interface {
@@ -77,27 +75,11 @@ func (r response[OUT]) Code() int {
 }
 
 func (r response[OUT]) AcceptCode(codes ...int) Response[OUT] {
-	for _, code := range codes {
-		if r.resp.StatusCode() == code {
-			return r
-		}
+	if err := EvaluateCode(r.resp.StatusCode(), codes...); err != nil {
+		return NewResponseError[OUT](err)
 	}
 
-	var data string
-	var obj = map[string]interface{}{}
-	if err := r.resp.ParseBody("", &obj); err != nil {
-		data = fmt.Sprintf("Error: %s", err.Error())
-	} else {
-		if dz, err := json.Marshal(obj); err != nil {
-			data = fmt.Sprintf("Error: %s", err.Error())
-		} else {
-			data = fmt.Sprintf("Data: %s", string(dz))
-		}
-	}
-
-	return NewResponseError[OUT](errors.Errorf("Code %d not allowed in expected status codes: %s. Body: %s", r.resp.StatusCode(), goStrings.Join(util.FormatList(codes, func(a int) string {
-		return fmt.Sprintf("%d", a)
-	}), ", "), data))
+	return r
 }
 
 func (r response[OUT]) Response() (OUT, error) {

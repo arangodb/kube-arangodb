@@ -22,16 +22,58 @@ package inventory
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/arangodb/go-driver"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/executor"
 )
 
 type Items []*Item
+
+func FetchInventorySpec(ctx context.Context, logger logging.Logger, threads int, conn driver.Connection, cfg *Configuration) (*Spec, error) {
+	obj, err := FetchInventory(ctx, logger, threads, conn, cfg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	obj = util.FilterList(obj, func(item *Item) bool {
+		return item != nil
+	})
+
+	did := util.FilterList(obj, util.MultiFilterList(
+		func(item *Item) bool {
+			return item.Type == "ARANGO_DEPLOYMENT"
+		},
+		func(item *Item) bool {
+			v, ok := item.Dimensions["detail"]
+			return ok && v == "id"
+		},
+	))
+
+	if len(did) != 1 {
+		return nil, errors.Errorf("Expected to find a single ARANGO_DEPLOYMENT ID")
+	}
+
+	tz, err := did[0].GetValue().Type()
+	if err != nil {
+		return nil, err
+	}
+
+	if tz != reflect.TypeFor[string]() {
+		return nil, errors.Errorf("Expected to find type for ARANGO_DEPLOYMENT ID")
+	}
+
+	return &Spec{
+		DeploymentId: did[0].GetValue().GetStr(),
+		Items:        obj,
+	}, nil
+}
 
 func FetchInventory(ctx context.Context, logger logging.Logger, threads int, conn driver.Connection, cfg *Configuration) (Items, error) {
 	var out []*Item

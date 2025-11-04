@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import (
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -49,6 +50,7 @@ type ActionContext interface {
 	reconciler.DeploymentAgencyMaintenance
 	reconciler.DeploymentPodRenderer
 	reconciler.ArangoAgencyGet
+	reconciler.ArangoApplier
 	reconciler.DeploymentInfoGetter
 	reconciler.DeploymentDatabaseClient
 	reconciler.KubernetesEventGenerator
@@ -139,6 +141,14 @@ type actionContext struct {
 	locals       api.PlanLocals
 	Progress     string
 	metrics      *Metrics
+}
+
+func (ac *actionContext) ApplyPatchOnPod(ctx context.Context, pod *core.Pod, p ...patch.Item) error {
+	return ac.context.ApplyPatchOnPod(ctx, pod, p...)
+}
+
+func (ac *actionContext) ApplyPatch(ctx context.Context, p ...patch.Item) error {
+	return ac.context.ApplyPatch(ctx, p...)
 }
 
 func (ac *actionContext) IsSyncEnabled() bool {

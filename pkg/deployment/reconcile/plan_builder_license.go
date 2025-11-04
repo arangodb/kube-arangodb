@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,14 @@ package reconcile
 
 import (
 	"context"
+	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -35,10 +37,84 @@ import (
 func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
+	if l := status.License; l == nil {
+		// Cleanup the Condition
+		if status.Conditions.IsTrue(api.ConditionTypeLicenseSet) {
+			// Cleanup the old condition if we do not expect license
+			if !spec.License.HasSecretName() {
+				return api.Plan{sharedReconcile.RemoveConditionActionV2("License is not set", api.ConditionTypeLicenseSet)}
+			} else {
+				// Cleanup the old condition if we do not expect license
+				return api.Plan{sharedReconcile.UpdateConditionActionV2("License is not set", api.ConditionTypeLicenseSet, false, "License Pending", "", "")}
+
+			}
+		}
+	} else {
+		// Set the Condition
+		if !status.Conditions.IsTrue(api.ConditionTypeLicenseSet) {
+			// Cleanup the old condition
+			return api.Plan{sharedReconcile.UpdateConditionActionV2("License is set", api.ConditionTypeLicenseSet, true, "License UpToDate", "", l.Hash)}
+		}
+	}
+
 	if !spec.License.HasSecretName() {
+		if status.License != nil {
+			return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference")}
+		}
 		return nil
 	}
 
+	mode, err := r.updateClusterLicenseDiscover(spec, context)
+	if err != nil {
+		r.log.Err(err).Warn("Unable to discover license mode")
+	}
+
+	if l := status.License; l != nil {
+		if mode != l.Mode {
+			return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - invalid mode")}
+		}
+	}
+
+	switch mode {
+	case api.LicenseModeKey:
+		if p := r.updateClusterLicenseKey(ctx, spec, status, context); len(p) > 0 {
+			return p
+		}
+	case api.LicenseModeAPI:
+		if p := r.updateClusterLicenseAPI(ctx, spec, status, context); len(p) > 0 {
+			return p
+		}
+	}
+
+	return nil
+}
+
+func (r *Reconciler) updateClusterLicenseDiscover(spec api.DeploymentSpec, context PlanBuilderContext) (api.LicenseMode, error) {
+	switch spec.License.Mode.Get() {
+	case api.LicenseModeKey:
+		return api.LicenseModeKey, nil
+	case api.LicenseModeAPI:
+		return api.LicenseModeAPI, nil
+	}
+
+	// Run the discovery
+	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
+	if err != nil {
+		return "", err
+	}
+
+	if l.V2.IsV2Set() {
+		return api.LicenseModeKey, nil
+	}
+
+	if l.API != nil {
+		return api.LicenseModeAPI, nil
+	}
+
+	return "", errors.Errorf("Unable to discover License mode")
+}
+
+func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
 	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
 	if err != nil {
 		r.log.Err(err).Error("License secret error")
@@ -76,17 +152,85 @@ func (r *Reconciler) updateClusterLicense(ctx context.Context, apiObject k8sutil
 		return nil
 	}
 
+	if status.License == nil {
+		// Run the set
+		return api.Plan{actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Generating license")}
+	}
+
 	internalClient := client.NewClient(c.Connection(), r.log)
 
-	if ok, err := licenseV2Compare(ctxChild, internalClient, l.V2); err != nil {
-		r.log.Err(err).Error("Unable to verify license")
-		return nil
-	} else if ok {
-		if c, _ := status.Conditions.Get(api.ConditionTypeLicenseSet); !c.IsTrue() || c.Hash != l.V2.V2Hash() {
-			return api.Plan{sharedReconcile.UpdateConditionActionV2("License is set", api.ConditionTypeLicenseSet, true, "License UpToDate", "", l.V2.V2Hash())}
-		}
+	license, err := internalClient.GetLicense(ctxChild)
+	if err != nil {
+		r.log.Err(err).Error("Unable to get client")
 		return nil
 	}
 
-	return api.Plan{sharedReconcile.RemoveConditionActionV2("License is not set", api.ConditionTypeLicenseSet), actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Setting license")}
+	if status.License.Hash != license.Hash {
+		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Invalid Hash")}
+	}
+
+	return nil
+}
+
+func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
+	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
+	if err != nil {
+		r.log.Err(err).Error("License secret error")
+		return nil
+	}
+
+	if l.API == nil {
+		r.log.Str("secret", spec.License.GetSecretName()).Error("V2 License key is not set")
+		return nil
+	}
+
+	members := status.Members.AsListInGroups(api.ServerGroupCoordinators, api.ServerGroupSingle).Filter(func(a api.DeploymentStatusMemberElement) bool {
+		i := a.Member.Image
+		if i == nil {
+			return false
+		}
+
+		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0 && i.Enterprise
+	})
+
+	if len(members) == 0 {
+		// No member found to take this action
+		r.log.Trace("No enterprise member in version 3.9.0 or above")
+		return nil
+	}
+
+	member := members[0]
+
+	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
+
+	c, err := context.GetMembersState().GetMemberClient(member.Member.ID)
+	if err != nil {
+		r.log.Err(err).Error("Unable to get client")
+		return nil
+	}
+
+	if status.License == nil {
+		// Run the generation
+		return api.Plan{actions.NewAction(api.ActionTypeLicenseGenerate, member.Group, member.Member, "Generating license")}
+	}
+
+	internalClient := client.NewClient(c.Connection(), r.log)
+
+	currentLicense, err := internalClient.GetLicense(ctxChild)
+	if err != nil {
+		r.log.Err(err).Error("Unable to get current license")
+		return nil
+	}
+
+	if currentLicense.Hash != status.License.Hash {
+		// Invalid hash, cleanup
+		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Invalid Hash")}
+	}
+
+	if status.License.Regenerate.Time.Before(time.Now()) {
+		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Regeneration Required")}
+	}
+
+	return nil
 }
