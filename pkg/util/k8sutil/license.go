@@ -51,6 +51,14 @@ type LicenseSecretMaster struct {
 	ClientSecret string
 }
 
+func (l *LicenseSecretMaster) Hash() string {
+	if l == nil {
+		return ""
+	}
+
+	return util.SHA256FromStringArray(l.ClientID, l.ClientSecret)
+}
+
 func GetLicenseFromSecret(secret secret.Inspector, name string) (LicenseSecret, error) {
 	s, ok := secret.Secret().V1().GetSimple(name)
 	if !ok {

@@ -30,6 +30,9 @@ type DeploymentStatusLicense struct {
 	// Hash Defines the License Hash
 	Hash string `json:"hash,omitempty"`
 
+	// InputHash Defines the Input License Hash
+	InputHash string `json:"inputHash,omitempty"`
+
 	// Expires Defines the expiration time of the License
 	Expires meta.Time `json:"expires,omitempty"`
 

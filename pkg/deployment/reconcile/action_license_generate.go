@@ -32,12 +32,15 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
-	"github.com/arangodb/kube-arangodb/pkg/license_manager"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	lmanager "github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
 func newLicenseGenerateAction(action api.Action, actionCtx ActionContext) Action {
@@ -84,7 +87,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	var req license_manager.LicenseRequest
+	var req lmanager.LicenseRequest
 	did, err := inventory.ExtractDeploymentID(ctx, c.Connection())
 	if err != nil {
 		a.log.Err(err).Error("Unable to get deployment id")
@@ -112,7 +115,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		req.TTL = util.NewType(ugrpc.NewObject(durationpb.New(q.Duration)))
 	}
 
-	lm, err := license_manager.NewClient(license_manager.ArangoLicenseManagerEndpoint, l.API.ClientID, l.API.ClientSecret)
+	lm, err := lmanager.NewClient(lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, l.API.ClientSecret)
 	if err != nil {
 		a.log.Err(err).Error("Unable to create inventory client")
 		return true, nil
@@ -167,6 +170,53 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		expires = time.Now().Add(time.Duration(math.Round(float64(time.Until(license.Expires())) * api.LicenseExpirationGraceRatio)))
 	}
 
+	cache := a.actionCtx.ACS().CurrentClusterCache()
+
+	if s, ok := cache.Secret().V1().GetSimple(pod.GetLicenseRegistryCredentialsSecretName(a.actionCtx.GetName())); ok {
+		if string(util.Optional(s.Data, utilConstants.ChecksumKey, []byte{})) != l.API.Hash() {
+			// Update
+
+			token, err := lm.RegistryConfig(ctx, lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, lmanager.StageDev, lmanager.StageQA, lmanager.StagePrd)
+			if err != nil {
+				a.log.Err(err).Debug("Failed to generate License Registry")
+				return true, nil
+			}
+
+			if _, _, err := patcher.Patcher[*core.Secret](ctx, cache.Client().Kubernetes().CoreV1().Secrets(a.actionCtx.GetNamespace()), s, meta.PatchOptions{},
+				patcher.PatchSecretData(map[string][]byte{
+					core.DockerConfigJsonKey:  token,
+					utilConstants.ChecksumKey: []byte(l.API.Hash()),
+				})); err != nil {
+				a.log.Err(err).Debug("Failed to patch License Secret")
+				return true, nil
+			}
+		}
+	} else {
+		token, err := lm.RegistryConfig(ctx, lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, lmanager.StageDev, lmanager.StageQA, lmanager.StagePrd)
+		if err != nil {
+			a.log.Err(err).Debug("Failed to generate License Registry")
+			return true, nil
+		}
+
+		if _, err := cache.Client().Kubernetes().CoreV1().Secrets(a.actionCtx.GetNamespace()).Create(ctx, &core.Secret{
+			ObjectMeta: meta.ObjectMeta{
+				Name: pod.GetLicenseRegistryCredentialsSecretName(a.actionCtx.GetName()),
+				OwnerReferences: []meta.OwnerReference{
+					a.actionCtx.GetAPIObject().AsOwner(),
+				},
+			},
+			Data: map[string][]byte{
+				core.DockerConfigJsonKey:  token,
+				utilConstants.ChecksumKey: []byte(l.API.Hash()),
+			},
+			StringData: nil,
+			Type:       core.SecretTypeDockerConfigJson,
+		}, meta.CreateOptions{}); err != nil {
+			a.log.Err(err).Debug("Failed to create License Secret")
+			return true, nil
+		}
+	}
+
 	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		s.License = &api.DeploymentStatusLicense{
 			ID:         generatedLicense.ID,
@@ -174,6 +224,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 			Expires:    meta.Time{Time: license.Expires()},
 			Mode:       api.LicenseModeAPI,
 			Regenerate: meta.Time{Time: expires},
+			InputHash:  l.API.Hash(),
 		}
 		return true
 	}); err != nil {

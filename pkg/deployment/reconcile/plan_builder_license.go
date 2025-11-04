@@ -27,8 +27,11 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -165,7 +168,7 @@ func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
-	if status.License.Hash != license.Hash {
+	if status.License.Hash != license.Hash || status.License.InputHash != l.V2.V2Hash() {
 		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Invalid Hash")}
 	}
 
@@ -223,6 +226,11 @@ func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
+	if status.License.InputHash != l.API.Hash() {
+		// Invalid hash, cleanup
+		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Invalid Input")}
+	}
+
 	if currentLicense.Hash != status.License.Hash {
 		// Invalid hash, cleanup
 		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Invalid Hash")}
@@ -230,6 +238,16 @@ func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.Deplo
 
 	if status.License.Regenerate.Time.Before(time.Now()) {
 		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Regeneration Required")}
+	}
+
+	cache := r.context.ACS().CurrentClusterCache()
+
+	if s, ok := cache.Secret().V1().GetSimple(pod.GetLicenseRegistryCredentialsSecretName(r.context.GetName())); ok {
+		if string(util.Optional(s.Data, utilConstants.ChecksumKey, []byte{})) != l.API.Hash() {
+			return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Registry Change Required")}
+		}
+	} else {
+		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Registry Change Required")}
 	}
 
 	return nil

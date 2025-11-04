@@ -90,9 +90,10 @@ func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
 
 	if err := a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 		s.License = &api.DeploymentStatusLicense{
-			Hash:    license.Hash,
-			Expires: meta.Time{Time: license.Expires()},
-			Mode:    api.LicenseModeKey,
+			Hash:      license.Hash,
+			Expires:   meta.Time{Time: license.Expires()},
+			Mode:      api.LicenseModeKey,
+			InputHash: l.V2.V2Hash(),
 		}
 		return true
 	}); err != nil {

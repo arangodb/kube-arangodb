@@ -108,6 +108,12 @@ func GetEncryptionFolderSecretName(name string) string {
 	return n
 }
 
+func GetLicenseRegistryCredentialsSecretName(name string) string {
+	n := fmt.Sprintf("%s-rlm", name)
+
+	return n
+}
+
 func IsEncryptionEnabled(i Input) bool {
 	return i.Deployment.RocksDB.IsEncrypted()
 }
