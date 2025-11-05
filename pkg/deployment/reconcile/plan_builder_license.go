@@ -117,6 +117,41 @@ func (r *Reconciler) updateClusterLicenseDiscover(spec api.DeploymentSpec, conte
 	return "", errors.Errorf("Unable to discover License mode")
 }
 
+func (r *Reconciler) updateClusterLicenseMember(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) (api.DeploymentStatusMemberElement, bool) {
+	members := status.Members.AsListInGroups(arangod.GroupsWithLicenseV2()...).Filter(func(a api.DeploymentStatusMemberElement) bool {
+		i := a.Member.Image
+		if i == nil {
+			return false
+		}
+
+		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0 && i.Enterprise
+	})
+
+	if spec.Mode.Get() == api.DeploymentModeActiveFailover {
+		cache := context.ACS().CurrentClusterCache()
+
+		// For AF is different
+		members = members.Filter(func(a api.DeploymentStatusMemberElement) bool {
+			pod, ok := cache.Pod().V1().GetSimple(a.Member.Pod.GetName())
+			if !ok {
+				return false
+			}
+
+			if _, ok := pod.Labels[k8sutil.LabelKeyArangoLeader]; ok {
+				return true
+			}
+
+			return false
+		})
+	}
+
+	if len(members) == 0 {
+		return api.DeploymentStatusMemberElement{}, false
+	}
+
+	return members[0], true
+}
+
 func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
 	l, err := k8sutil.GetLicenseFromSecret(context.ACS().CurrentClusterCache(), spec.License.GetSecretName())
 	if err != nil {
@@ -129,22 +164,13 @@ func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
-	members := status.Members.AsListInGroups(arangod.GroupsWithLicenseV2()...).Filter(func(a api.DeploymentStatusMemberElement) bool {
-		i := a.Member.Image
-		if i == nil {
-			return false
-		}
+	member, ok := r.updateClusterLicenseMember(spec, status, context)
 
-		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0 && i.Enterprise
-	})
-
-	if len(members) == 0 {
+	if !ok {
 		// No member found to take this action
 		r.log.Trace("No enterprise member in version 3.9.0 or above")
 		return nil
 	}
-
-	member := members[0]
 
 	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
@@ -187,22 +213,13 @@ func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
-	members := status.Members.AsListInGroups(api.ServerGroupCoordinators, api.ServerGroupSingle).Filter(func(a api.DeploymentStatusMemberElement) bool {
-		i := a.Member.Image
-		if i == nil {
-			return false
-		}
+	member, ok := r.updateClusterLicenseMember(spec, status, context)
 
-		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0 && i.Enterprise
-	})
-
-	if len(members) == 0 {
+	if !ok {
 		// No member found to take this action
 		r.log.Trace("No enterprise member in version 3.9.0 or above")
 		return nil
 	}
-
-	member := members[0]
 
 	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
