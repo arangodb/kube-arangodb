@@ -94,11 +94,11 @@ rules:
   - apiGroups:
       - "networking.k8s.io"
     resources:
-        - "ingresses"
-        - "ingresses/status"
+      - "ingresses"
+      - "ingresses/status"
     verbs:
-        - "get"
-        - "list"
-        - "watch"
+      - "get"
+      - "list"
+      - "watch"
 {{- end }}
 {{- end }}
