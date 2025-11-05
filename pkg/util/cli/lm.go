@@ -26,7 +26,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/license_manager"
+	lmanager "github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -34,7 +34,7 @@ func NewLicenseManager(prefix string) LicenseManager {
 	return licenseManager{
 		endpoint: Flag[string]{
 			Name:        fmt.Sprintf("%s.endpoint", prefix),
-			Default:     license_manager.ArangoLicenseManagerEndpoint,
+			Default:     lmanager.ArangoLicenseManagerEndpoint,
 			Description: "LicenseManager Endpoint",
 			Check: func(in string) error {
 				if len(in) == 0 {
@@ -100,7 +100,7 @@ type LicenseManager interface {
 	ClientID(cmd *cobra.Command) (string, error)
 	ClientSecret(cmd *cobra.Command) (string, error)
 
-	Client(cmd *cobra.Command) (license_manager.Client, error)
+	Client(cmd *cobra.Command) (lmanager.Client, error)
 }
 
 type licenseManager struct {
@@ -129,7 +129,7 @@ func (l licenseManager) GetName() string {
 	return "lm"
 }
 
-func (l licenseManager) Client(cmd *cobra.Command) (license_manager.Client, error) {
+func (l licenseManager) Client(cmd *cobra.Command) (lmanager.Client, error) {
 	endpoint, err := l.endpoint.Get(cmd)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func (l licenseManager) Client(cmd *cobra.Command) (license_manager.Client, erro
 		return nil, err
 	}
 
-	return license_manager.NewClient(endpoint, cid, cs)
+	return lmanager.NewClient(endpoint, cid, cs)
 }
 
 func (l licenseManager) Register(cmd *cobra.Command) error {

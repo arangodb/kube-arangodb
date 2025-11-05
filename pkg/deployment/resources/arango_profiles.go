@@ -39,6 +39,7 @@ import (
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -190,6 +191,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				r.arangoDeploymentCATemplate(),
 				r.templateKubernetesEnvs(),
 				r.templateResourceEnvs(),
+				r.templateImagePullSecrets(),
 			)
 			if err != nil {
 				return "", nil, err
@@ -359,6 +361,22 @@ func (r *Resources) templateKubernetesEnvs() *schedulerApi.ProfileTemplate {
 			},
 		},
 	}
+}
+
+func (r *Resources) templateImagePullSecrets() *schedulerApi.ProfileTemplate {
+	if _, ok := r.context.ACS().CurrentClusterCache().Secret().V1().GetSimple(pod.GetLicenseRegistryCredentialsSecretName(r.name)); ok {
+		return &schedulerApi.ProfileTemplate{
+			Pod: &schedulerPodApi.Pod{
+				Image: &schedulerPodResourcesApi.Image{
+					ImagePullSecrets: []string{
+						pod.GetLicenseRegistryCredentialsSecretName(r.name),
+					},
+				},
+			},
+		}
+	}
+
+	return &schedulerApi.ProfileTemplate{}
 }
 
 func (r *Resources) templateResourceEnvs() *schedulerApi.ProfileTemplate {

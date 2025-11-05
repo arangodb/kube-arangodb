@@ -21,7 +21,6 @@
 package platform
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -30,7 +29,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
-	manager2 "github.com/arangodb/kube-arangodb/pkg/license_manager"
+	lmanager "github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 )
@@ -86,21 +85,9 @@ func licenseSecretRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	secret, err := mc.Registry(cmd.Context())
-	if err != nil {
-		return err
-	}
-
 	logger.Info("Creating new Registry Token")
 
-	r, err := manager2.NewRegistryAuth(endpoint, id, secret.Token, manager2.ParseStages(stages...)...)
-	if err != nil {
-		return err
-	}
-
-	logger.Info("New Registry Token Created")
-
-	data, err := json.Marshal(r)
+	data, err := mc.RegistryConfig(cmd.Context(), endpoint, id, nil, lmanager.ParseStages(stages...)...)
 	if err != nil {
 		return err
 	}

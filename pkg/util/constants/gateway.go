@@ -29,7 +29,8 @@ const (
 	MaxEnvoyUpstreamTimeout     = time.Hour
 	MinEnvoyUpstreamTimeout     = time.Duration(0)
 
-	ConfigMapChecksumKey = "CHECKSUM"
+	ConfigMapChecksumKey = ChecksumKey
+	ChecksumKey          = "CHECKSUM"
 
 	ArangoGatewayExecutor = "/usr/local/bin/envoy"
 

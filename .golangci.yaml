@@ -33,6 +33,8 @@ linters-settings:
   importas:
     no-unaliased: true
     alias:
+      - alias: lmanager
+        pkg: github.com/arangodb/kube-arangodb/pkg/license_manager
       - alias: pbImplMetaV1
         pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1
       - alias: pbMetaV1

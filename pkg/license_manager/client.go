@@ -22,6 +22,7 @@ package license_manager
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	goHttp "net/http"
 
@@ -76,6 +77,7 @@ type Client interface {
 	License(ctx context.Context, req LicenseRequest) (LicenseResponse, error)
 
 	Registry(ctx context.Context) (RegistryResponse, error)
+	RegistryConfig(ctx context.Context, endpoint, id string, token *string, stages ...Stage) ([]byte, error)
 }
 
 type LicenseRequest struct {
@@ -96,6 +98,32 @@ type RegistryResponse struct {
 
 type client struct {
 	conn driver.Connection
+}
+
+func (c client) RegistryConfig(ctx context.Context, endpoint, id string, token *string, stages ...Stage) ([]byte, error) {
+	var t string
+
+	if token != nil {
+		t = *token
+	} else {
+		tk, err := c.Registry(ctx)
+		if err != nil {
+			return nil, err
+		}
+		t = tk.Token
+	}
+
+	r, err := NewRegistryAuth(endpoint, id, t, stages...)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := json.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func (c client) License(ctx context.Context, req LicenseRequest) (LicenseResponse, error) {
