@@ -118,8 +118,8 @@ func (r *Reconciler) updateClusterLicenseDiscover(spec api.DeploymentSpec, conte
 	return "", errors.Errorf("Unable to discover License mode")
 }
 
-func (r *Reconciler) updateClusterLicenseMember(status api.DeploymentStatus) (api.DeploymentStatusMemberElement, bool) {
-	members := status.Members.AsListInGroups(arangod.GroupsWithLicenseV2()...).Filter(func(a api.DeploymentStatusMemberElement) bool {
+func (r *Reconciler) updateClusterLicenseMember(status api.DeploymentStatus, groups ...api.ServerGroup) (api.DeploymentStatusMemberElement, bool) {
+	members := status.Members.AsListInGroups(groups...).Filter(func(a api.DeploymentStatusMemberElement) bool {
 		i := a.Member.Image
 		if i == nil {
 			return false
@@ -153,7 +153,7 @@ func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
-	member, ok := r.updateClusterLicenseMember(status)
+	member, ok := r.updateClusterLicenseMember(status, arangod.GroupsWithLicenseV2()...)
 
 	if !ok {
 		// No member found to take this action
@@ -202,7 +202,7 @@ func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
-	member, ok := r.updateClusterLicenseMember(status)
+	member, ok := r.updateClusterLicenseMember(status, spec.Mode.ServingGroup())
 
 	if !ok {
 		// No member found to take this action
