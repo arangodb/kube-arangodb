@@ -12,6 +12,7 @@
 - (Feature) (License) Activation API Integration
 - (Feature) (Platform) Chart & Service Kubernetes Events
 - (Feature) (Platform) Registry Secret
+- (Bugfix) (Platform) Ensure Inventory picks active leader
 - (Bugfix) (Platform) Reload Config on Inventory Change
 
 ## [1.3.1](https://github.com/arangodb/kube-arangodb/tree/1.3.1) (2025-10-07)

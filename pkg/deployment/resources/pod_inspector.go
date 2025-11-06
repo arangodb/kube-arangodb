@@ -253,6 +253,25 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 			}
 		}
 
+		if spec.Mode.Get() == api.DeploymentModeActiveFailover && features.FailoverLeadership().Enabled() && group == api.ServerGroupSingle {
+			s, ok := r.context.GetMembersState().MemberState(memberStatus.ID)
+			if ok && s.IsServing() {
+				if v, ok := pod.Labels[k8sutil.LabelKeyArangoLeader]; !ok || v != k8sutil.LabelValueArangoActive {
+					pod.Labels[k8sutil.LabelKeyArangoLeader] = k8sutil.LabelValueArangoActive
+					if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), pod.Labels)); err != nil {
+						log.Str("pod-name", pod.GetName()).Err(err).Error("Unable to update labels")
+					}
+				}
+			} else {
+				if _, ok := pod.Labels[k8sutil.LabelKeyArangoLeader]; ok {
+					delete(pod.Labels, k8sutil.LabelKeyArangoLeader)
+					if err := r.context.ApplyPatchOnPod(ctx, pod, patch.ItemReplace(patch.NewPath("metadata", "labels"), pod.Labels)); err != nil {
+						log.Str("pod-name", pod.GetName()).Err(err).Error("Unable to update labels")
+					}
+				}
+			}
+		}
+
 		if memberStatus.Conditions.IsTrue(api.ConditionTypeActive) {
 			if v, ok := pod.Labels[k8sutil.LabelKeyArangoActive]; !ok || v != k8sutil.LabelValueArangoActive {
 				pod.Labels[k8sutil.LabelKeyArangoActive] = k8sutil.LabelValueArangoActive
