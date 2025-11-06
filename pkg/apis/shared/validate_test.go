@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ func Test_ValidateAPIPath(t *testing.T) {
 	require.NoError(t, ValidateAPIPath("/"))
 	require.Error(t, ValidateAPIPath("//"))
 	require.NoError(t, ValidateAPIPath("/api/zz"))
+	require.NoError(t, ValidateAPIPath("/api/zz.22"))
 	require.NoError(t, ValidateAPIPath("/api/"))
 	require.NoError(t, ValidateAPIPath("/api/test/qw/"))
 	require.NoError(t, ValidateAPIPath("/api/test/2/"))

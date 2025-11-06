@@ -36,7 +36,7 @@ import (
 
 var (
 	resourceNameRE = regexp.MustCompile(`^([0-9\-\.a-z])+$`)
-	apiPathRE      = regexp.MustCompile(`^(/[_A-Za-z0-9\-]+)*/?$`)
+	apiPathRE      = regexp.MustCompile(`^(/[_\.A-Za-z0-9\-]+)*/?$`)
 )
 
 const (

@@ -14,6 +14,7 @@
 - (Feature) (Platform) Registry Secret
 - (Bugfix) (Platform) Ensure Inventory picks active leader
 - (Bugfix) (Platform) Reload Config on Inventory Change
+- (Bugfix) (Platform) Ensure Inventory uses the serving group for license generation
 
 ## [1.3.1](https://github.com/arangodb/kube-arangodb/tree/1.3.1) (2025-10-07)
 - (Documentation) Add ArangoPlatformStorage Docs & Examples
