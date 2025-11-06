@@ -41,7 +41,6 @@ Available Commands:
   import      Imports the package from the ZIP format
   install     Installs the specified setup of the platform
   merge       Merges definitions into single file
-  registry    Points all images to the new registry
 
 Flags:
   -h, --help   help for package
@@ -83,9 +82,13 @@ Usage:
   arangodb_operator_platform package install [flags] ... packages
 
 Flags:
-  -h, --help                       help for install
-      --platform.endpoint string   Platform Repository URL (default "https://arangodb-platform-prd-chart-registry.s3.amazonaws.com")
-      --platform.name string       Kubernetes Platform Name (name of the ArangoDeployment)
+  -h, --help                               help for install
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
+      --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --platform.name string               Kubernetes Platform Name (name of the ArangoDeployment)
+      --registry.docker.credentials        Use Docker Credentials
+      --registry.docker.insecure strings   List of insecure registries
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
@@ -161,9 +164,8 @@ Flags:
       --arango.insecure                Arango Endpoint Insecure
       --arango.token string            Arango JWT Token for Authentication
   -h, --help                           help for activate
-      --license.client.id string       LicenseManager Client ID
-      --license.client.secret string   LicenseManager Client Secret
-      --license.client.stage strings   LicenseManager Stages (default [prd])
+      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --license.interval duration      Interval of the license synchronization
       --telemetry                      Enables Telemetry (default true)
@@ -187,9 +189,8 @@ Flags:
       --deployment.id string           Deployment ID
   -h, --help                           help for generate
       --inventory string               Path to the Inventory File
-      --license.client.id string       LicenseManager Client ID
-      --license.client.secret string   LicenseManager Client Secret
-      --license.client.stage strings   LicenseManager Stages (default [prd])
+      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
 
 Global Flags:
@@ -209,9 +210,8 @@ Usage:
 
 Flags:
   -h, --help                           help for secret
-      --license.client.id string       LicenseManager Client ID
-      --license.client.secret string   LicenseManager Client Secret
-      --license.client.stage strings   LicenseManager Stages (default [prd])
+      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --secret string                  Kubernetes Secret Name
 

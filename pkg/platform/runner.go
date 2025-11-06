@@ -32,13 +32,13 @@ func getRunner() cli.Runner {
 			flagNamespace,
 			flagSecret,
 			flagPlatformName,
-			flagPlatformEndpoint,
 			flagOutput,
 			flagUpgradeVersions,
 			flagAll,
 			flagValues,
 			flagDeployment,
 			flagLicenseManager,
+			flagRegistry,
 		),
 	}
 }

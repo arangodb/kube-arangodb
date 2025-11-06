@@ -44,7 +44,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
-func Export(ctx context.Context, path string, m helm.ChartManager, client *regclient.RegClient, p helm.Package, images ...ProtoImage) error {
+func Export(ctx context.Context, endpoint, path string, client *regclient.RegClient, p helm.Package, images ...ProtoImage) error {
 	out, err := os.Create(path)
 	if err != nil {
 		return err
@@ -53,9 +53,9 @@ func Export(ctx context.Context, path string, m helm.ChartManager, client *regcl
 	tw := zip.NewWriter(out)
 
 	var r = exportPackageSet{
-		m:         m,
 		images:    images,
 		client:    client,
+		endpoint:  endpoint,
 		wr:        tw,
 		existence: map[string]bool{},
 	}
@@ -82,9 +82,10 @@ func Export(ctx context.Context, path string, m helm.ChartManager, client *regcl
 type exportPackageSet struct {
 	lock sync.Mutex
 
+	endpoint string
+
 	proto Proto
 
-	m      helm.ChartManager
 	client *regclient.RegClient
 
 	images []ProtoImage
@@ -120,22 +121,17 @@ func (r *exportPackageSet) exportPackage(name string, spec helm.PackageSpec) exe
 		var chart helm.Chart
 
 		if spec.Chart.IsZero() {
-			repo, ok := r.m.Get(name)
-			if !ok {
-				return errors.Errorf("Chart `%s` not found", name)
-			}
-
-			ver, ok := repo.Get(spec.Version)
-			if !ok {
-				return errors.Errorf("Chart `%s=%s` not found", name, spec.Version)
-			}
-
-			c, err := ver.Get(ctx)
+			ref, err := ChartReference(r.endpoint, spec.GetStage(), name, spec.Version)
 			if err != nil {
 				return err
 			}
 
-			chart = c
+			loadedChart, err := ExportChart(ctx, r.client, ref)
+			if err != nil {
+				return err
+			}
+
+			chart = loadedChart
 		} else {
 			chart = helm.Chart(spec.Chart)
 		}

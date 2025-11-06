@@ -121,13 +121,6 @@ var (
 		},
 	}
 
-	flagPlatformEndpoint = cli.Flag[string]{
-		Name:        "platform.endpoint",
-		Description: "Platform Repository URL",
-		Default:     "https://arangodb-platform-prd-chart-registry.s3.amazonaws.com",
-		Persistent:  true,
-	}
-
 	flagUpgradeVersions = cli.Flag[bool]{
 		Name:        "upgrade",
 		Short:       "u",
@@ -176,26 +169,7 @@ var (
 		Default:     true,
 	}
 
-	flagRegistryUseCredentials = cli.Flag[bool]{
-		Name:        "registry.docker.credentials",
-		Description: "Use Docker Credentials",
-		Default:     false,
-		Check: func(in bool) error {
-			return nil
-		},
-	}
-
-	flagRegistryInsecure = cli.Flag[[]string]{
-		Name:        "registry.docker.insecure",
-		Description: "List of insecure registries",
-		Default:     nil,
-	}
-
-	flagRegistryList = cli.Flag[[]string]{
-		Name:        "registry.docker.endpoint",
-		Description: "List of boosted registries",
-		Default:     nil,
-	}
+	flagRegistry = cli.NewRegistry()
 
 	flagActivateInterval = cli.Flag[time.Duration]{
 		Name:        "license.interval",

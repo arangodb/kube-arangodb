@@ -25,6 +25,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/regclient/regclient"
 	"github.com/spf13/cobra"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -32,6 +33,7 @@ import (
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/platform/pack"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -47,7 +49,7 @@ func packageInstall() (*cobra.Command, error) {
 	cmd.Use = "install [flags] ... packages"
 	cmd.Short = "Installs the specified setup of the platform"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformEndpoint, flagPlatformName); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformName, flagLicenseManager, flagRegistry); err != nil {
 		return nil, err
 	}
 
@@ -62,17 +64,22 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	hm, err := getChartManager(cmd)
-	if err != nil {
-		return err
-	}
-
 	ns, err := flagNamespace.Get(cmd)
 	if err != nil {
 		return err
 	}
 
 	deployment, err := flagPlatformName.Get(cmd)
+	if err != nil {
+		return err
+	}
+
+	reg, err := flagRegistry.Client(cmd, flagLicenseManager)
+	if err != nil {
+		return err
+	}
+
+	endpoint, err := flagLicenseManager.Endpoint(cmd)
 	if err != nil {
 		return err
 	}
@@ -91,9 +98,13 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := packageInstallRunInstallCharts(cmd, client, hm, ns, r); err != nil {
+	logger.Info("Chart Update")
+
+	if err := packageInstallRunInstallCharts(cmd, client, reg, ns, endpoint, r); err != nil {
 		return err
 	}
+
+	logger.Info("Service Update")
 
 	if err := packageInstallRunInstallServices(cmd, client, dApi, r); err != nil {
 		return err
@@ -114,6 +125,10 @@ func packageInstallRunInstallServices(cmd *cobra.Command, client kclient.Client,
 
 func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, client kclient.Client, deployment *api.ArangoDeployment, name string, packageSpec helm.PackageRelease) {
 	h.RunAsync(cmd.Context(), func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+		log = log.Str("type", "release").Str("name", name)
+
+		log.Info("Calculating installation")
+
 		chart, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(deployment.GetNamespace()).Get(ctx, packageSpec.Package, meta.GetOptions{})
 		if err != nil {
 			return err
@@ -128,7 +143,7 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 				return err
 			}
 
-			logger.Debug("Installing Service: %s", name)
+			log.Debug("Installing Service")
 
 			// Prepare Object
 			if _, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Create(ctx, &platformApi.ArangoPlatformService{
@@ -150,7 +165,7 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 				return err
 			}
 
-			logger.Info("Installed Service: %s", name)
+			log.Info("Installed Service")
 		} else {
 			if svc.Spec.Deployment.GetName() != deployment.GetName() {
 				return errors.Errorf("Unable to change Deployment name for %s", name)
@@ -166,12 +181,14 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 				if err != nil {
 					return err
 				}
-				logger.Info("Updated Service: %s", name)
+				log.Info("Updated Service: %s", name)
 			}
 		}
 
 		// Ensure we wait for reconcile
 		time.Sleep(time.Second)
+
+		log.Info("Waiting...")
 
 		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 			svc, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
@@ -180,31 +197,35 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 			}
 
 			if svc.Status.ChartInfo == nil {
+				log.Warn("No chart info")
 				return nil
 			}
 
 			if svc.Status.ChartInfo.Checksum != chart.Status.Info.GetChecksum() {
+				log.Warn("Chart not yet updated")
 				return nil
 			}
 
 			if !svc.Status.Conditions.IsTrue(platformApi.ReleaseReadyCondition) {
+				log.Warn("Service not yet ready")
 				return nil
 			}
 
 			return io.EOF
-		}, 5*time.Minute, time.Second); err != nil {
+		}, 5*time.Minute, 15*time.Second); err != nil {
 			if errors.Is(err, io.EOF) {
 				return errors.Errorf("Service %s is not ready", name)
 			}
 
 			return err
 		}
+		log.Info("Ready Release")
 
 		return nil
 	})
 }
 
-func packageInstallRunInstallCharts(cmd *cobra.Command, client kclient.Client, hm helm.ChartManager, ns string, r helm.Package) error {
+func packageInstallRunInstallCharts(cmd *cobra.Command, client kclient.Client, reg *regclient.RegClient, ns, endpoint string, r helm.Package) error {
 	return executor.Run(cmd.Context(), logger, 8, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 		charts, err := fetchLocallyInstalledCharts(cmd)
 		if err != nil {
@@ -212,16 +233,25 @@ func packageInstallRunInstallCharts(cmd *cobra.Command, client kclient.Client, h
 		}
 
 		for name, packageSpec := range r.Packages {
-			packageInstallRunInstallChart(cmd, h, client, hm, ns, charts, name, packageSpec)
+			packageInstallRunInstallChart(cmd, h, client, reg, ns, endpoint, charts, name, packageSpec)
 		}
 
 		return nil
 	})
 }
 
-func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, client kclient.Client, hm helm.ChartManager, ns string, charts map[string]*platformApi.ArangoPlatformChart, name string, packageSpec helm.PackageSpec) {
+func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, client kclient.Client, reg *regclient.RegClient, ns, endpoint string, charts map[string]*platformApi.ArangoPlatformChart, name string, packageSpec helm.PackageSpec) {
 	h.RunAsync(cmd.Context(), func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
-		chart, err := packageInstallRunChartExtract(cmd, hm, name, packageSpec)
+		log = log.Str("type", "chart").Str("name", name)
+
+		log.Info("Calculating installation")
+
+		ref, err := pack.ChartReference(endpoint, packageSpec.GetStage(), name, packageSpec.Version)
+		if err != nil {
+			return err
+		}
+
+		chart, err := pack.ExportChart(cmd.Context(), reg, ref)
 		if err != nil {
 			return err
 		}
@@ -229,7 +259,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 		logger := logger.Str("chart", name).Str("version", packageSpec.Version)
 
 		if c, ok := charts[name]; !ok {
-			logger.Debug("Installing Chart: %s", name)
+			log.Debug("Installing Chart")
 
 			_, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns).Create(cmd.Context(), &platformApi.ArangoPlatformChart{
 				ObjectMeta: meta.ObjectMeta{
@@ -245,7 +275,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 				return err
 			}
 
-			logger.Info("Installed Chart: %s", name)
+			log.Info("Installed Chart: %s")
 		} else {
 			if c.Spec.Definition.SHA256() != chart.SHA256SUM() || !packageSpec.Overrides.Equals(helm.Values(c.Spec.Overrides)) {
 				c.Spec.Definition = sharedApi.Data(chart)
@@ -254,9 +284,11 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 				if err != nil {
 					return err
 				}
-				logger.Info("Updated Chart: %s", name)
+				log.Info("Updated Chart")
 			}
 		}
+
+		log.Info("Waiting...")
 
 		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 			c, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns).Get(ctx, name, meta.GetOptions{})
@@ -265,44 +297,25 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 			}
 
 			if !c.Ready() {
+				logger.Warn("Chart not yet ready")
 				return nil
 			}
 
 			if c.Status.Info == nil {
+				logger.Warn("Chart not yet accepted")
 				return nil
 			}
 
 			return io.EOF
-		}, 5*time.Minute, time.Second); err != nil {
+		}, 5*time.Minute, 5*time.Second); err != nil {
 			if errors.Is(err, io.EOF) {
 				return errors.Errorf("Chart %s is not ready", name)
 			}
 
 			return err
 		}
+		log.Info("Ready Chart")
 
 		return nil
 	})
-}
-
-func packageInstallRunChartExtract(cmd *cobra.Command, hm helm.ChartManager, name string, spec helm.PackageSpec) (helm.Chart, error) {
-	if !spec.Chart.IsZero() {
-		return helm.Chart(spec.Chart), nil
-	}
-	def, ok := hm.Get(name)
-	if !ok {
-		return helm.Chart{}, errors.Errorf("Unable to get '%s' chart", name)
-	}
-
-	ver, ok := def.Get(spec.Version)
-	if !ok {
-		return helm.Chart{}, errors.Errorf("Unable to get '%s' chart in version `%s`", name, spec.Version)
-	}
-
-	c, err := ver.Get(cmd.Context())
-	if err != nil {
-		return helm.Chart{}, errors.Wrapf(err, "Unable to download chart %s-%s", name, ver.Version())
-	}
-
-	return c, nil
 }

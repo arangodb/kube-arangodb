@@ -96,6 +96,8 @@ func (h *handler) Timeout(ctx context.Context, t Thread, f RunFunc, timeout, int
 			return os.ErrDeadlineExceeded
 		case <-ctx.Done():
 			return os.ErrDeadlineExceeded
+		default:
+			continue
 		}
 	}
 }
