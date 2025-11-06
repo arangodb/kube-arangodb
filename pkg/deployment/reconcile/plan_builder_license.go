@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -117,7 +118,7 @@ func (r *Reconciler) updateClusterLicenseDiscover(spec api.DeploymentSpec, conte
 	return "", errors.Errorf("Unable to discover License mode")
 }
 
-func (r *Reconciler) updateClusterLicenseMember(spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) (api.DeploymentStatusMemberElement, bool) {
+func (r *Reconciler) updateClusterLicenseMember(status api.DeploymentStatus) (api.DeploymentStatusMemberElement, bool) {
 	members := status.Members.AsListInGroups(arangod.GroupsWithLicenseV2()...).Filter(func(a api.DeploymentStatusMemberElement) bool {
 		i := a.Member.Image
 		if i == nil {
@@ -125,31 +126,19 @@ func (r *Reconciler) updateClusterLicenseMember(spec api.DeploymentSpec, status 
 		}
 
 		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0 && i.Enterprise
+	}).Filter(func(a api.DeploymentStatusMemberElement) bool {
+		return a.Member.Conditions.IsTrue(api.ConditionTypeReady)
 	})
-
-	if spec.Mode.Get() == api.DeploymentModeActiveFailover {
-		cache := context.ACS().CurrentClusterCache()
-
-		// For AF is different
-		members = members.Filter(func(a api.DeploymentStatusMemberElement) bool {
-			pod, ok := cache.Pod().V1().GetSimple(a.Member.Pod.GetName())
-			if !ok {
-				return false
-			}
-
-			if _, ok := pod.Labels[k8sutil.LabelKeyArangoLeader]; ok {
-				return true
-			}
-
-			return false
-		})
-	}
 
 	if len(members) == 0 {
 		return api.DeploymentStatusMemberElement{}, false
 	}
 
-	return members[0], true
+	if len(members) == 1 {
+		return members[0], true
+	}
+
+	return members[rand.Intn(len(members))], true
 }
 
 func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext) api.Plan {
@@ -164,7 +153,7 @@ func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
-	member, ok := r.updateClusterLicenseMember(spec, status, context)
+	member, ok := r.updateClusterLicenseMember(status)
 
 	if !ok {
 		// No member found to take this action
@@ -213,7 +202,7 @@ func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.Deplo
 		return nil
 	}
 
-	member, ok := r.updateClusterLicenseMember(spec, status, context)
+	member, ok := r.updateClusterLicenseMember(status)
 
 	if !ok {
 		// No member found to take this action

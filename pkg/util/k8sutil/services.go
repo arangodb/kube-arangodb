@@ -72,7 +72,7 @@ func CreateExporterClientServiceName(deploymentName string) string {
 
 // CreateAgentLeaderServiceName returns the name of the service used to access a leader agent.
 func CreateAgentLeaderServiceName(deploymentName string) string {
-	return deploymentName + "-agent"
+	return deploymentName + "-agent-leader"
 }
 
 // CreateExporterService
