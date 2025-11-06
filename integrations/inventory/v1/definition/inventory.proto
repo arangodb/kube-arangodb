@@ -36,6 +36,12 @@ message Inventory {
   optional InventoryPlatform platform = 4;
 }
 
+// Platform Inventory Hash
+message InventoryHash {
+  // Current Envoy Configuration hash
+  string hash = 1;
+}
+
 // Envoy Configuration details
 message InventoryConfiguration {
   // Configuration hash

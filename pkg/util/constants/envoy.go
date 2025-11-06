@@ -23,10 +23,11 @@ package constants
 const (
 	EnvoyRouteHeader = "arangodb-platform-route"
 
-	EnvoyInventoryConfigDestination = "/_inventory"
-	EnvoyIdentityDestination        = "/_identity"
-	EnvoyLoginDestination           = "/_login"
-	EnvoyLogoutDestination          = "/_logout"
+	EnvoyInventoryConfigDestination     = "/_inventory"
+	EnvoyInventoryHashConfigDestination = "/_inventory.hash"
+	EnvoyIdentityDestination            = "/_identity"
+	EnvoyLoginDestination               = "/_login"
+	EnvoyLogoutDestination              = "/_logout"
 
 	EnvoyIntegrationSidecarFilterName = "envoy.filters.http.ext_authz"
 
