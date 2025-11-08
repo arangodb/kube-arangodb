@@ -78,5 +78,9 @@ func ExportChart(ctx context.Context, client *regclient.RegClient, src ref.Ref) 
 		return nil, err
 	}
 
+	if err := o.Close(); err != nil {
+		return nil, err
+	}
+
 	return data, nil
 }

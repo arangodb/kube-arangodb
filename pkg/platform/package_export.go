@@ -66,5 +66,5 @@ func packageExportRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return pack.Export(cmd.Context(), endpoint, out, rc, pkg)
+	return pack.Export(cmd.Context(), pack.NewCache("cache"), endpoint, out, rc, pkg)
 }

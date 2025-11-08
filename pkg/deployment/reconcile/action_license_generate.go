@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"math"
 	"time"
@@ -32,6 +33,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	lmanager "github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
@@ -212,6 +214,25 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 			Type: core.SecretTypeDockerConfigJson,
 		}, meta.CreateOptions{}); err != nil {
 			a.log.Err(err).Debug("Failed to create License Secret")
+			return true, nil
+		}
+	}
+
+	if spec.Sync.IsEnabled() {
+		if !spec.License.HasSecretName() {
+			a.log.Debug("License Secret Gone")
+			return true, nil
+		}
+		s, ok := cache.Secret().V1().GetSimple(spec.License.GetSecretName())
+		if !ok {
+			a.log.Debug("License Secret Gone")
+			return true, nil
+		}
+
+		if _, _, err := patcher.Patcher[*core.Secret](ctx, cache.Client().Kubernetes().CoreV1().Secrets(a.actionCtx.GetNamespace()), s, meta.PatchOptions{}, func(in *core.Secret) []patch.Item {
+			return []patch.Item{patch.ItemReplace(patch.NewPath("data", utilConstants.SecretKeyToken), base64.StdEncoding.EncodeToString([]byte(generatedLicense.License)))}
+		}); err != nil {
+			a.log.Err(err).Debug("Failed to patch License Secret")
 			return true, nil
 		}
 	}
