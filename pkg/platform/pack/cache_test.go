@@ -55,6 +55,7 @@ func TestCache(t *testing.T) {
 	t.Run("Valid Sha", func(t *testing.T) {
 		out, err := c.CacheObject(util.SHA256(d), "some/file")
 		require.NoError(t, err)
+		require.NotNil(t, out)
 
 		z, err := out.Write(d)
 		require.NoError(t, err)
@@ -79,6 +80,6 @@ func TestCache(t *testing.T) {
 
 		require.NoError(t, out.Close())
 
-		require.EqualValues(t, 1, c.Saved())
+		require.EqualValues(t, 2, c.Saved())
 	})
 }

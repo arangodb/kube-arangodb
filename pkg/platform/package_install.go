@@ -275,7 +275,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 				return err
 			}
 
-			log.Info("Installed Chart: %s")
+			log.Info("Installed Chart")
 		} else {
 			if c.Spec.Definition.SHA256() != chart.SHA256SUM() || !packageSpec.Overrides.Equals(helm.Values(c.Spec.Overrides)) {
 				c.Spec.Definition = sharedApi.Data(chart)

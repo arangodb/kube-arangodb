@@ -140,6 +140,13 @@ func (c *cache) readChecksum(p string, args ...any) (string, error) {
 }
 
 func (c *cache) complete(z *cacheWriter) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	defer func() {
+		delete(c.writers, z.dest)
+	}()
+
 	if err := os.MkdirAll(path.Dir(path.Join(c.path, z.dest)), 0755); err != nil {
 		if !os.IsExist(err) {
 			return err
@@ -175,14 +182,9 @@ func (c *cache) complete(z *cacheWriter) error {
 		return err
 	}
 
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
 	c.saved += 1
 
 	c.files[z.dest] = hash
-
-	delete(c.writers, z.dest)
 
 	return nil
 }
