@@ -44,11 +44,21 @@ func (pkg *Package) Validate() error {
 }
 
 type PackageSpec struct {
+	Stage *string `json:"stage,omitempty"`
+
 	Version string `json:"version"`
 
 	Chart sharedApi.Data `json:"chart,omitempty"`
 
 	Overrides Values `json:"overrides,omitempty"`
+}
+
+func (p PackageSpec) GetStage() string {
+	if p.Stage == nil {
+		return "prd"
+	}
+
+	return *p.Stage
 }
 
 type PackageRelease struct {

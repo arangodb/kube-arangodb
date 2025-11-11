@@ -28,6 +28,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/regclient/regclient"
@@ -44,7 +45,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
-func Export(ctx context.Context, path string, m helm.ChartManager, client *regclient.RegClient, p helm.Package, images ...ProtoImage) error {
+func Export(ctx context.Context, cache Cache, endpoint, path string, client *regclient.RegClient, p helm.Package, images ...ProtoImage) error {
 	out, err := os.Create(path)
 	if err != nil {
 		return err
@@ -53,10 +54,11 @@ func Export(ctx context.Context, path string, m helm.ChartManager, client *regcl
 	tw := zip.NewWriter(out)
 
 	var r = exportPackageSet{
-		m:         m,
 		images:    images,
 		client:    client,
+		endpoint:  endpoint,
 		wr:        tw,
+		cache:     cache,
 		existence: map[string]bool{},
 	}
 
@@ -82,12 +84,15 @@ func Export(ctx context.Context, path string, m helm.ChartManager, client *regcl
 type exportPackageSet struct {
 	lock sync.Mutex
 
+	endpoint string
+
 	proto Proto
 
-	m      helm.ChartManager
 	client *regclient.RegClient
 
 	images []ProtoImage
+
+	cache Cache
 
 	existence map[string]bool
 
@@ -120,22 +125,17 @@ func (r *exportPackageSet) exportPackage(name string, spec helm.PackageSpec) exe
 		var chart helm.Chart
 
 		if spec.Chart.IsZero() {
-			repo, ok := r.m.Get(name)
-			if !ok {
-				return errors.Errorf("Chart `%s` not found", name)
-			}
-
-			ver, ok := repo.Get(spec.Version)
-			if !ok {
-				return errors.Errorf("Chart `%s=%s` not found", name, spec.Version)
-			}
-
-			c, err := ver.Get(ctx)
+			ref, err := ChartReference(r.endpoint, spec.GetStage(), name, spec.Version)
 			if err != nil {
 				return err
 			}
 
-			chart = c
+			loadedChart, err := ExportChart(ctx, r.client, ref)
+			if err != nil {
+				return err
+			}
+
+			chart = loadedChart
 		} else {
 			chart = helm.Chart(spec.Chart)
 		}
@@ -184,7 +184,9 @@ func (r *exportPackageSet) exportPackage(name string, spec helm.PackageSpec) exe
 			return in
 		})
 
-		return r.writeOutFile(bytes.NewReader(chart.Raw()), "chart/%s-%s.tgz", name, spec.Version)
+		return r.save(t, log, util.SHA256(chart.Raw()), wrapFromStatic(func() ([]byte, error) {
+			return chart.Raw(), nil
+		}), "chart/%s-%s.tgz", name, spec.Version)
 	}
 }
 
@@ -239,10 +241,6 @@ func (r *exportPackageSet) exportManifest(src ref.Ref) executor.RunFunc {
 			return err
 		}
 
-		if !r.once("manifests/%s", m.GetDescriptor().Digest.Hex()) {
-			return nil
-		}
-
 		if manifestIndex, ok := m.(manifest.Indexer); ok && m.IsSet() {
 			manifests, err := manifestIndex.GetManifestList()
 			if err != nil {
@@ -287,7 +285,7 @@ func (r *exportPackageSet) exportManifest(src ref.Ref) executor.RunFunc {
 
 		h.WaitForSubThreads(t)
 
-		return r.writeOutData(m.MarshalJSON, "manifests/%s", m.GetDescriptor().Digest.Hex())
+		return r.saveData(t, log, m.GetDescriptor().Digest.Hex(), m.MarshalJSON, "manifests/%s", m.GetDescriptor().Digest.Hex())
 	}
 }
 
@@ -300,54 +298,102 @@ func (r *exportPackageSet) exportBlob(src ref.Ref, desc descriptor.Descriptor) e
 			log.Info("Extracted blob")
 		}()
 
-		if o, err := r.client.BlobGet(ctx, src, desc); err != nil {
+		return r.exportBlobData(t, log, desc, func() (io.ReadCloser, error) {
+			return r.client.BlobGet(ctx, src, desc)
+		})
+	}
+}
+
+func (r *exportPackageSet) save(t executor.Thread, log logging.Logger, checksum string, factory func() (io.ReadCloser, error), p string, args ...any) error {
+	log.Info("Started Extraction")
+
+	for {
+		obj, err := r.cache.CacheObject(checksum, p, args...)
+		if err != nil {
+			if os.IsExist(err) {
+				log.Info("Exists")
+				break
+			}
 			return err
-		} else {
-			return r.exportBlobData(desc, o)
+		}
+
+		if obj == nil {
+			t.Wait(time.Second)
+			continue
+		}
+
+		log.Info("Downloading")
+
+		blob, err := factory()
+		if err != nil {
+			return err
+		}
+
+		defer blob.Close()
+
+		if _, err := io.Copy(obj, blob); err != nil {
+			return err
+		}
+
+		log.Info("Finalizing")
+
+		if err := obj.Close(); err != nil {
+			return err
+		}
+
+		if err := blob.Close(); err != nil {
+			return err
+		}
+
+		break
+	}
+
+	for {
+		if r.lock.TryLock() {
+			break
+		}
+
+		t.Wait(time.Second)
+	}
+
+	defer r.lock.Unlock()
+
+	pt := fmt.Sprintf(p, args...)
+
+	if _, ok := r.existence[pt]; ok {
+		return nil
+	}
+
+	f, err := r.cache.Get(checksum, p, args...)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	q, err := r.wr.Create(fmt.Sprintf(p, args...))
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(q, f); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *exportPackageSet) exportBlobData(t executor.Thread, log logging.Logger, desc descriptor.Descriptor, reader reader) error {
+	if err := r.save(t, log, desc.Digest.Hex(), reader, "blobs/%s", desc.Digest.Hex()); err != nil {
+		if !os.IsExist(err) {
+			return err
 		}
 	}
+	return nil
 }
 
-func (r *exportPackageSet) exportBlobData(desc descriptor.Descriptor, blob io.ReadCloser) error {
-	if !r.once("blobs/%s", desc.Digest.Hex()) {
-		return nil
-	}
-
-	f, err := os.CreateTemp("", "tmp-")
-	if err != nil {
-		return err
-	}
-
-	if _, err := io.Copy(f, blob); err != nil {
-		return nil
-	}
-
-	if err := blob.Close(); err != nil {
-		return err
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		return err
-	}
-
-	if err := r.writeOutFile(f, "blobs/%s", desc.Digest.Hex()); err != nil {
-		return err
-	}
-
-	if err := f.Close(); err != nil {
-		return err
-	}
-
-	return os.Remove(f.Name())
-}
-
-func (r *exportPackageSet) writeOutData(in func() ([]byte, error), f string, args ...any) error {
-	data, err := in()
-	if err != nil {
-		return err
-	}
-
-	return r.writeOutFile(bytes.NewReader(data), f, args...)
+func (r *exportPackageSet) saveData(t executor.Thread, log logging.Logger, checksum string, in func() ([]byte, error), f string, args ...any) error {
+	return r.save(t, log, checksum, wrapFromStatic(in), f, args...)
 }
 
 func (r *exportPackageSet) withProto(mod util.ModR[Proto]) {
@@ -355,22 +401,6 @@ func (r *exportPackageSet) withProto(mod util.ModR[Proto]) {
 	defer r.lock.Unlock()
 
 	r.proto = mod(r.proto)
-}
-
-func (r *exportPackageSet) writeOutFile(in io.Reader, f string, args ...any) error {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
-	q, err := r.wr.Create(fmt.Sprintf(f, args...))
-	if err != nil {
-		return err
-	}
-
-	if _, err := io.Copy(q, in); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (r *exportPackageSet) saveProto() error {
@@ -391,18 +421,15 @@ func (r *exportPackageSet) saveProto() error {
 	return nil
 }
 
-func (r *exportPackageSet) once(f string, args ...any) bool {
-	r.lock.Lock()
-	defer r.lock.Unlock()
+func wrapFromStatic(in func() ([]byte, error)) reader {
+	return func() (io.ReadCloser, error) {
+		d, err := in()
+		if err != nil {
+			return nil, err
+		}
 
-	k := fmt.Sprintf(f, args...)
-
-	_, ok := r.existence[k]
-	if !ok {
-		return true
+		return io.NopCloser(bytes.NewReader(d)), nil
 	}
-
-	r.existence[k] = true
-
-	return false
 }
+
+type reader func() (io.ReadCloser, error)

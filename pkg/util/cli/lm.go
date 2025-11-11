@@ -24,9 +24,11 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/regclient/regclient/config"
 	"github.com/spf13/cobra"
 
 	lmanager "github.com/arangodb/kube-arangodb/pkg/license_manager"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -50,6 +52,7 @@ func NewLicenseManager(prefix string) LicenseManager {
 				Name:        fmt.Sprintf("%s.client.id", prefix),
 				Description: "LicenseManager Client ID",
 				Default:     "",
+				EnvEnabled:  true,
 				Persistent:  false,
 				Check: func(in string) error {
 					if in == "" {
@@ -72,12 +75,14 @@ func NewLicenseManager(prefix string) LicenseManager {
 
 					return nil
 				},
+				Hidden: true,
 			},
 
 			clientSecret: Flag[string]{
 				Name:        "license.client.secret",
 				Description: "LicenseManager Client Secret",
 				Default:     "",
+				EnvEnabled:  true,
 				Persistent:  false,
 				Check: func(in string) error {
 					if _, err := uuid.Parse(in); err != nil {
@@ -101,12 +106,58 @@ type LicenseManager interface {
 	ClientSecret(cmd *cobra.Command) (string, error)
 
 	Client(cmd *cobra.Command) (lmanager.Client, error)
+
+	RegistryHosts(cmd *cobra.Command) (map[string]util.ModR[config.Host], error)
 }
 
 type licenseManager struct {
 	endpoint Flag[string]
 
 	client licenseManagerClient
+}
+
+func (l licenseManager) RegistryHosts(cmd *cobra.Command) (map[string]util.ModR[config.Host], error) {
+	clientID, err := l.client.clientID.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	clientSecret, err := l.client.clientSecret.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	stages, err := l.client.stages.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint, err := l.endpoint.Get(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	var apply util.ModR[config.Host] = func(in config.Host) config.Host {
+		in.User = clientID
+		in.Pass = clientSecret
+		in.ReqConcurrent = 8
+		in.ReqPerSec = 128
+		return in
+	}
+
+	ret := map[string]util.ModR[config.Host]{}
+
+	for _, stage := range stages {
+		ret[fmt.Sprintf("%s.registry.%s", stage, endpoint)] = apply
+		ret[fmt.Sprintf("%s.helm.%s", stage, endpoint)] = apply
+
+		if stage == "prd" {
+			ret[fmt.Sprintf("registry.%s", endpoint)] = apply
+			ret[fmt.Sprintf("helm.%s", endpoint)] = apply
+		}
+	}
+
+	return ret, nil
 }
 
 func (l licenseManager) Endpoint(cmd *cobra.Command) (string, error) {

@@ -107,12 +107,12 @@ func (r *Reconciler) updateClusterLicenseDiscover(spec api.DeploymentSpec, conte
 		return "", err
 	}
 
-	if l.V2.IsV2Set() {
-		return api.LicenseModeKey, nil
-	}
-
 	if l.API != nil {
 		return api.LicenseModeAPI, nil
+	}
+
+	if l.V2.IsV2Set() {
+		return api.LicenseModeKey, nil
 	}
 
 	return "", errors.Errorf("Unable to discover License mode")
@@ -254,6 +254,13 @@ func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.Deplo
 		}
 	} else {
 		return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Registry Change Required")}
+	}
+
+	if spec.Sync.IsEnabled() {
+		// Feedback of the token is required
+		if l.V2.V2Hash() != status.License.Hash {
+			return api.Plan{actions.NewClusterAction(api.ActionTypeLicenseClean, "Removing license reference - Sync Token Required")}
+		}
 	}
 
 	return nil

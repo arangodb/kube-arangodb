@@ -21,7 +21,11 @@
 package cli
 
 import (
+	"fmt"
+	"os"
 	"reflect"
+	"strconv"
+	goStrings "strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -66,6 +70,8 @@ type Flag[T any] struct {
 	Description string
 	Default     T
 
+	EnvEnabled bool
+
 	Persistent bool
 
 	Check func(in T) error
@@ -104,35 +110,46 @@ func (f Flag[T]) Register(cmd *cobra.Command) error {
 
 	v := reflect.TypeOf(f.Default)
 
-	z := reflect.ValueOf(f.Default).Interface()
+	desc := f.Description
+
+	if f.EnvEnabled {
+		desc = fmt.Sprintf("%s (ENV: %s)", f.Description, f.Env())
+	}
+
+	p, err := f.GetFromEnv()
+	if err != nil {
+		return err
+	}
+
+	z := any(p)
 
 	if v == util.TypeOf[string]() {
 		v := z.(string)
 		if short := f.Short; short == "" {
-			flags.String(f.Name, v, f.Description)
+			flags.String(f.Name, v, desc)
 		} else {
-			flags.StringP(f.Name, short, v, f.Description)
+			flags.StringP(f.Name, short, v, desc)
 		}
 	} else if v == util.TypeOf[bool]() {
 		v := z.(bool)
 		if short := f.Short; short == "" {
-			flags.Bool(f.Name, v, f.Description)
+			flags.Bool(f.Name, v, desc)
 		} else {
-			flags.BoolP(f.Name, short, v, f.Description)
+			flags.BoolP(f.Name, short, v, desc)
 		}
 	} else if v == util.TypeOf[[]string]() {
 		v := z.([]string)
 		if short := f.Short; short == "" {
-			flags.StringSlice(f.Name, v, f.Description)
+			flags.StringSlice(f.Name, v, desc)
 		} else {
-			flags.StringSliceP(f.Name, short, v, f.Description)
+			flags.StringSliceP(f.Name, short, v, desc)
 		}
 	} else if v == util.TypeOf[time.Duration]() {
 		v := z.(time.Duration)
 		if short := f.Short; short == "" {
-			flags.Duration(f.Name, v, f.Description)
+			flags.Duration(f.Name, v, desc)
 		} else {
-			flags.DurationP(f.Name, short, v, f.Description)
+			flags.DurationP(f.Name, short, v, desc)
 		}
 	} else {
 		return errors.Errorf("Unsupported type for kind: %s", reflect.ValueOf(f.Default).Type().String())
@@ -154,10 +171,8 @@ func (f Flag[T]) Register(cmd *cobra.Command) error {
 }
 
 func (f Flag[T]) Get(cmd *cobra.Command) (T, error) {
-
-	v := reflect.TypeOf(f.Default)
-
-	if v == util.TypeOf[string]() {
+	switch util.TypeOf[T]() {
+	case util.TypeOf[string]():
 		v, err := cmd.Flags().GetString(f.Name)
 		if err != nil {
 			return util.Default[T](), err
@@ -169,7 +184,7 @@ func (f Flag[T]) Get(cmd *cobra.Command) (T, error) {
 		}
 
 		return q, nil
-	} else if v == util.TypeOf[[]string]() {
+	case util.TypeOf[[]string]():
 		v, err := cmd.Flags().GetStringSlice(f.Name)
 		if err != nil {
 			return util.Default[T](), err
@@ -181,7 +196,7 @@ func (f Flag[T]) Get(cmd *cobra.Command) (T, error) {
 		}
 
 		return q, nil
-	} else if v == util.TypeOf[bool]() {
+	case util.TypeOf[bool]():
 		v, err := cmd.Flags().GetBool(f.Name)
 		if err != nil {
 			return util.Default[T](), err
@@ -193,7 +208,7 @@ func (f Flag[T]) Get(cmd *cobra.Command) (T, error) {
 		}
 
 		return q, nil
-	} else if v == util.TypeOf[time.Duration]() {
+	case util.TypeOf[time.Duration]():
 		v, err := cmd.Flags().GetDuration(f.Name)
 		if err != nil {
 			return util.Default[T](), err
@@ -205,11 +220,67 @@ func (f Flag[T]) Get(cmd *cobra.Command) (T, error) {
 		}
 
 		return q, nil
-	} else {
+	default:
 		return util.Default[T](), errors.Errorf("Unsupported type for kind: %s", reflect.ValueOf(f.Default).Type().String())
 	}
 }
 
 func (f Flag[T]) AsInterface() FlagInterface[T] {
 	return f
+}
+
+func (f Flag[T]) Env() string {
+	return goStrings.Join(goStrings.Split(goStrings.ToUpper(f.Name), "."), "_")
+}
+
+func (f Flag[T]) GetFromEnv() (T, error) {
+	v, ok := os.LookupEnv(f.Env())
+	if !ok {
+		return f.Default, nil
+	}
+
+	switch util.TypeOf[T]() {
+	case util.TypeOf[string]():
+		q, ok := reflect.ValueOf(v).Interface().(T)
+		if !ok {
+			return util.Default[T](), errors.Errorf("Unable to parse type for kind: %s", reflect.ValueOf(f.Default).Type().String())
+		}
+
+		return q, nil
+	case util.TypeOf[[]string]():
+		v := goStrings.Split(v, ",")
+
+		q, ok := reflect.ValueOf(v).Interface().(T)
+		if !ok {
+			return util.Default[T](), errors.Errorf("Unable to parse type for kind: %s", reflect.ValueOf(f.Default).Type().String())
+		}
+
+		return q, nil
+	case util.TypeOf[bool]():
+		v, err := strconv.ParseBool(v)
+		if err != nil {
+			return util.Default[T](), err
+		}
+
+		q, ok := reflect.ValueOf(v).Interface().(T)
+		if !ok {
+			return util.Default[T](), errors.Errorf("Unable to parse type for kind: %s", reflect.ValueOf(f.Default).Type().String())
+		}
+
+		return q, nil
+	case util.TypeOf[time.Duration]():
+		v, err := time.ParseDuration(v)
+		if err != nil {
+			return util.Default[T](), err
+		}
+
+		q, ok := reflect.ValueOf(v).Interface().(T)
+		if !ok {
+			return util.Default[T](), errors.Errorf("Unable to parse type for kind: %s", reflect.ValueOf(f.Default).Type().String())
+		}
+
+		return q, nil
+	default:
+		return util.Default[T](), errors.Errorf("Unsupported type for kind: %s", reflect.ValueOf(f.Default).Type().String())
+	}
 }

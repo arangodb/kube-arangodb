@@ -42,7 +42,6 @@ func pkg() (*cobra.Command, error) {
 		packageExport,
 		packageImport,
 		packageMerge,
-		packageRegistry,
 	); err != nil {
 		return nil, err
 	}
