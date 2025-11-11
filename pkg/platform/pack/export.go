@@ -26,7 +26,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"sync"
 	"time"
@@ -429,7 +428,7 @@ func wrapFromStatic(in func() ([]byte, error)) reader {
 			return nil, err
 		}
 
-		return ioutil.NopCloser(bytes.NewReader(d)), nil
+		return io.NopCloser(bytes.NewReader(d)), nil
 	}
 }
 
