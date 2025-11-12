@@ -1,0 +1,12 @@
+packages:
+  arangodb-platform-ui:
+    stage: prd
+    version: v1.1.0
+  platform-monitoring-prometheus:
+    stage: dev
+    version: v0.0.0-c2bcb091
+releases:
+  arangodb-platform-ui:
+    package: arangodb-platform-ui
+  platform-monitoring-prometheus:
+    package: platform-monitoring-prometheus
