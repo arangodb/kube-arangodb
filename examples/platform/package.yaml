@@ -1,0 +1,7 @@
+packages:
+  arangodb-platform-ui:
+    stage: prd
+    version: v1.1.0
+releases:
+  arangodb-platform-ui:
+    package: arangodb-platform-ui
