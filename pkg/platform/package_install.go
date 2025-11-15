@@ -246,12 +246,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 
 		log.Info("Calculating installation")
 
-		ref, err := pack.ChartReference(endpoint, packageSpec.GetStage(), name, packageSpec.Version)
-		if err != nil {
-			return err
-		}
-
-		chart, err := pack.ExportChart(cmd.Context(), reg, ref)
+		chart, err := pack.ResolvePackageSpec(ctx, endpoint, name, packageSpec, reg, nil)
 		if err != nil {
 			return err
 		}

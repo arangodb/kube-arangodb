@@ -22,7 +22,6 @@ package internal
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"go/ast"
 	"go/token"
@@ -51,6 +50,7 @@ import (
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	storageApi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
 const (
@@ -58,9 +58,7 @@ const (
 	apiIndexPageTitle = "CRD reference"
 )
 
-func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []byte {
-	out := bytes.NewBuffer(nil)
-
+func (d DocDefinitions) RenderMarkdown(t *testing.T, out io.Writer, repositoryPath string) {
 	els := 0
 
 	for _, el := range d {
@@ -189,8 +187,55 @@ func (d DocDefinitions) RenderMarkdown(t *testing.T, repositoryPath string) []by
 			}
 		}
 	}
+}
 
-	return out.Bytes()
+func Test_GenerateSecondaryAPIDocs(t *testing.T) {
+	root := os.Getenv("ROOT")
+	require.NotEmpty(t, root)
+
+	fset := token.NewFileSet()
+
+	fields := parseSourceFiles(t, root, fset, path.Join(root, "pkg/util/k8sutil/helm"))
+
+	out, err := os.OpenFile(path.Join(root, "docs/platform.install.md"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	require.NoError(t, err)
+
+	defer func() {
+		require.NoError(t, out.Close())
+	}()
+
+	writeFrontMatter(t, out, map[string]string{
+		"layout": "page",
+		"title":  "Platform Installation File Schema",
+		"parent": "ArangoDBPlatform",
+	})
+	writef(t, out, "# Installation Definition\n\n")
+	writef(t, out, "## Example\n\n")
+	writef(t, out, "```yaml\n")
+	writef(t, out, `packages:
+  nginx: # OCI
+    chart: "oci://ghcr.io/nginx/charts/nginx-ingress:2.3.1"
+    version: 2.3.1
+  prometheus: # Helm Index
+    chart: "index://prometheus-community.github.io/helm-charts"
+    version: 1.3.1
+  alertmanager: # Remote Chart
+    chart: "https://github.com/prometheus-community/helm-charts/releases/download/alertmanager-0.1.0/alertmanager-0.1.0.tgz"
+    version: "0.1.0"
+  local: # Local File
+    chart: "file:///tmp/local-0.1.0.tgz"
+    version: "0.1.0"
+  inline: # Inline
+    chart: "<base64 string>"
+    version: "0.2.5"
+  platform: # Platform LicenseManager
+    version: v3.0.11
+`)
+	writef(t, out, "```\n\n")
+
+	generateDocsOut(t, "Package", map[string]interface{}{
+		"Package": helm.Package{},
+	}, fields, fset, out)
 }
 
 func Test_GenerateAPIDocs(t *testing.T) {
@@ -503,36 +548,41 @@ func prepareGitHubTreePath(t *testing.T, root string) string {
 	return fmt.Sprintf("https://github.com/arangodb/kube-arangodb/blob/%s", ref)
 }
 
-func generateDocs(t *testing.T, objects map[string]map[string]interface{}, fields map[string]*ast.Field, fs *token.FileSet) map[string]string {
+func generateDocsOut(t *testing.T, objectName string, sections map[string]interface{}, fields map[string]*ast.Field, fs *token.FileSet, out io.Writer) {
 	root := os.Getenv("ROOT")
 	require.NotEmpty(t, root)
 
-	outPaths := make(map[string]string)
-
 	repositoryPath := prepareGitHubTreePath(t, root)
+
+	t.Run(objectName, func(t *testing.T) {
+		for _, section := range util.SortKeys(sections) {
+			writef(t, out, "## %s\n\n", util.BoolSwitch(section == "", "Object", section))
+
+			t.Run(section, func(t *testing.T) {
+				fieldInstance := sections[section]
+
+				sectionParsed := iterateOverObject(t, fields, "", goStrings.ToLower(section), reflect.TypeOf(fieldInstance), "")
+
+				defs := make(DocDefinitions, 0, len(sectionParsed))
+				for _, el := range sectionParsed {
+					defs = append(defs, parseDocDefinition(t, root, cleanPrefixPath(el.K.path), el.K.typ, el.K, el.V, fs))
+				}
+				defs.Sort()
+
+				defs.RenderMarkdown(t, out, repositoryPath)
+			})
+		}
+	})
+}
+
+func generateDocs(t *testing.T, objects map[string]map[string]interface{}, fields map[string]*ast.Field, fs *token.FileSet) {
+	root := os.Getenv("ROOT")
+	require.NotEmpty(t, root)
 
 	for objectName, sections := range objects {
 		t.Run(objectName, func(t *testing.T) {
-			renderSections := map[string][]byte{}
-			for section, fieldInstance := range sections {
-				t.Run(section, func(t *testing.T) {
-
-					sectionParsed := iterateOverObject(t, fields, "", goStrings.ToLower(section), reflect.TypeOf(fieldInstance), "")
-
-					defs := make(DocDefinitions, 0, len(sectionParsed))
-					for _, el := range sectionParsed {
-						defs = append(defs, parseDocDefinition(t, root, cleanPrefixPath(el.K.path), el.K.typ, el.K, el.V, fs))
-					}
-					defs.Sort()
-
-					renderSections[section] = defs.RenderMarkdown(t, repositoryPath)
-				})
-			}
-
-			fileName := fmt.Sprintf("%s.md", objectName)
-			outPaths[objectName] = fileName
 			outPath := path.Join(root, "docs/api", fmt.Sprintf("%s.md", objectName))
-			out, err := os.OpenFile(outPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+			out, err := os.OpenFile(outPath, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
 			require.NoError(t, err)
 
 			defer func() {
@@ -540,6 +590,7 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 			}()
 
 			objName := goStrings.ReplaceAll(objectName, ".", " ")
+
 			writeFrontMatter(t, out, map[string]string{
 				"layout": "page",
 				"title":  objName,
@@ -547,15 +598,9 @@ func generateDocs(t *testing.T, objects map[string]map[string]interface{}, field
 			})
 			writef(t, out, "# API Reference for %s\n\n", objName)
 
-			util.IterateSorted(renderSections, func(name string, section []byte) {
-				writef(t, out, "## %s\n\n", util.BoolSwitch(name == "", "Object", name))
-
-				_, err = out.Write(section)
-				require.NoError(t, err)
-			})
+			generateDocsOut(t, objectName, sections, fields, fs, out)
 		})
 	}
-	return outPaths
 }
 
 func write(t *testing.T, out io.Writer, format string) {

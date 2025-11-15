@@ -23,7 +23,7 @@ package pack
 import (
 	"archive/zip"
 	"context"
-	"errors"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -38,6 +38,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/executor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
@@ -113,7 +114,7 @@ func (i *importPackageSet) run(p Proto) executor.RunFunc {
 				return err
 			}
 
-			pkgS.Chart = data
+			pkgS.Chart = util.NewType(base64.StdEncoding.EncodeToString(data))
 			pkgS.Version = v.Version
 
 			var versions ProtoValues
@@ -242,6 +243,11 @@ func (i *importPackageSet) importBlob(src ref.Ref, desc descriptor.Descriptor) e
 		qs, err := i.Open("blobs/%s", desc.Digest.Hex())
 		if err != nil {
 			return err
+		}
+
+		if _, err := i.client.BlobHead(ctx, src, desc); err == nil {
+			log.Info("Blob exists")
+			return nil
 		}
 
 		if _, err := i.client.BlobPut(ctx, src, desc, qs); err != nil {

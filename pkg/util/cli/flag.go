@@ -85,20 +85,31 @@ func (f Flag[T]) GetName() string {
 }
 
 func (f Flag[T]) Validate(cmd *cobra.Command) error {
-	if cmd.Flags().Lookup(f.Name) == nil {
-		return nil
-	}
-
-	v, err := f.Get(cmd)
-	if err != nil {
+	if _, err := f.Get(cmd); err != nil {
 		return err
 	}
 
-	if f.Check != nil {
-		return f.Check(v)
+	return nil
+}
+
+func (f Flag[T]) Get(cmd *cobra.Command) (T, error) {
+	if cmd.Flags().Lookup(f.Name) == nil {
+		return util.Default[T](), nil
 	}
 
-	return nil
+	v, err := f.get(cmd)
+	if err != nil {
+		return util.Default[T](), err
+	}
+
+	if f.Check != nil {
+		if err := f.Check(v); err != nil {
+			return util.Default[T](), err
+		}
+		return v, nil
+	}
+
+	return v, nil
 }
 
 func (f Flag[T]) Register(cmd *cobra.Command) error {
@@ -170,7 +181,7 @@ func (f Flag[T]) Register(cmd *cobra.Command) error {
 	return nil
 }
 
-func (f Flag[T]) Get(cmd *cobra.Command) (T, error) {
+func (f Flag[T]) get(cmd *cobra.Command) (T, error) {
 	switch util.TypeOf[T]() {
 	case util.TypeOf[string]():
 		v, err := cmd.Flags().GetString(f.Name)

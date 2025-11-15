@@ -22,35 +22,134 @@ package helm
 
 import (
 	"context"
+	"encoding/base64"
+	goStrings "strings"
 
 	"helm.sh/helm/v3/pkg/action"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
+type PackageType int
+
+const (
+	PackageTypePlatform PackageType = iota
+	PackageTypeFile
+	PackageTypeRemote
+	PackageTypeOCI
+	PackageTypeInline
+	PackageTypeIndex
+)
+
 type Package struct {
+	// Packages keeps the map of Packages to be installed
 	Packages map[string]PackageSpec `json:"packages,omitempty"`
 
+	// Releases keeps the map of Releases to be installed
 	Releases map[string]PackageRelease `json:"releases,omitempty"`
 }
 
 func (pkg *Package) Validate() error {
-	return nil
+	if pkg == nil {
+		return nil
+	}
+	return errors.Errors(
+		shared.PrefixResourceErrors("packages", shared.ValidateMap(pkg.Packages, func(s string, spec PackageSpec) error {
+			return spec.Validate()
+		})),
+		shared.PrefixResourceErrors("releases", shared.ValidateMap(pkg.Releases, func(s string, spec PackageRelease) error {
+			return spec.Validate()
+		})),
+	)
 }
 
 type PackageSpec struct {
+	// Stage defines stage used in the fetch from LicenseManager
 	Stage *string `json:"stage,omitempty"`
 
+	// Version keeps the version of the PackageSpec
 	Version string `json:"version"`
 
-	Chart sharedApi.Data `json:"chart,omitempty"`
+	// Chart defines override of the PackageSpec
+	// It supports multiple modes:
+	// - If undefined, LicenseManager OCI Repository is used
+	// - If starts with `file://` chart is fetched from local FileSystem
+	// - If starts with `http://` or `https://` chart is fetched from the remote URL
+	// - If starts with `index://` chart is fetched using Helm YAML Index File stricture (using version and name)
+	// - If Starts with `oci://` chart is fetched from Registry Compatible OCI Repository
+	// - If none above match, chart is decoded using Base64 encoding
+	Chart *string `json:"chart,omitempty"`
 
+	// Overrides defines Values to override the Helm Chart Defaults (merged with Service Overrides)
 	Overrides Values `json:"overrides,omitempty"`
+}
+
+func (p PackageSpec) PackageType() PackageType {
+	if c := p.Chart; c != nil {
+		// File
+		if goStrings.HasPrefix(*c, "file://") {
+			return PackageTypeFile
+		}
+
+		// HTTP
+		if goStrings.HasPrefix(*c, "https://") || goStrings.HasPrefix(*c, "http://") {
+			return PackageTypeRemote
+		}
+
+		// OCI
+		if goStrings.HasPrefix(*c, "oci://") {
+			return PackageTypeOCI
+		}
+
+		// Helm Index File
+		if goStrings.HasPrefix(*c, "index://") {
+			return PackageTypeIndex
+		}
+
+		return PackageTypeInline
+	}
+	return PackageTypePlatform
+}
+
+func (p PackageSpec) Validate() error {
+	if c := p.Chart; c != nil {
+		// File
+		if goStrings.HasPrefix(*c, "file://") {
+			return nil
+		}
+
+		// HTTP
+		if goStrings.HasPrefix(*c, "https://") || goStrings.HasPrefix(*c, "http://") {
+			return nil
+		}
+
+		// OCI
+		if goStrings.HasPrefix(*c, "oci://") {
+			return nil
+		}
+
+		// Helm Index File
+		if goStrings.HasPrefix(*c, "index://") {
+			return nil
+		}
+
+		// Base64
+		if _, err := base64.StdEncoding.DecodeString(*c); err != nil {
+			return errors.Wrapf(err, "Unable to decode chart data")
+		}
+	} else {
+		if p.Version == "" {
+			return errors.Errorf("Version is required if chart is not provided")
+		}
+	}
+
+	return nil
 }
 
 func (p PackageSpec) GetStage() string {
@@ -62,9 +161,16 @@ func (p PackageSpec) GetStage() string {
 }
 
 type PackageRelease struct {
+	// Package keeps the name of the Chart used from the installation script.
+	// References to value provided in Packages
 	Package string `json:"package"`
 
+	// Overrides defines Values to override the Helm Chart Defaults during installation
 	Overrides Values `json:"overrides,omitempty"`
+}
+
+func (p PackageRelease) Validate() error {
+	return nil
 }
 
 func NewPackage(ctx context.Context, client kclient.Client, namespace, deployment string) (*Package, error) {
@@ -98,7 +204,7 @@ func NewPackage(ctx context.Context, client kclient.Client, namespace, deploymen
 				out.Packages[name] = PackageSpec{
 					Version:   det.GetVersion(),
 					Overrides: Values(info.Overrides),
-					Chart:     c.Status.Info.Definition,
+					Chart:     util.NewType(base64.StdEncoding.EncodeToString(c.Status.Info.Definition)),
 				}
 			}
 		}

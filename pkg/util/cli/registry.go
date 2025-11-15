@@ -21,7 +21,6 @@
 package cli
 
 import (
-	"log/slog"
 	goHttp "net/http"
 
 	"github.com/regclient/regclient"
@@ -89,11 +88,9 @@ func (r registry) Validate(cmd *cobra.Command) error {
 func (r registry) Client(cmd *cobra.Command, lm LicenseManager) (*regclient.RegClient, error) {
 	var flags = make([]regclient.Opt, 0, 3)
 
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-
 	flags = append(flags, regclient.WithConfigHostDefault(config.Host{
 		ReqConcurrent: 8,
-	}), regclient.WithSlog(slog.Default()))
+	}))
 
 	flags = append(flags, regclient.WithRegOpts(reg.WithTransport(&goHttp.Transport{
 		MaxConnsPerHost: 64,
