@@ -73,7 +73,7 @@ Port defines Port or Port Name used as destination
 
 ### .spec.destination.path
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination.go#L52)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination.go#L57)</sup>
 
 Path defines service path used for overrides
 
@@ -81,7 +81,7 @@ Path defines service path used for overrides
 
 ### .spec.destination.protocol
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination.go#L46)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination.go#L51)</sup>
 
 Protocol defines http protocol used for the route
 
@@ -91,9 +91,19 @@ Possible Values:
 
 ***
 
+### .spec.destination.redirect.code
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination_redirect.go#L33)</sup>
+
+Code the redirection response status code
+
+Default Value: `307`
+
+***
+
 ### .spec.destination.schema
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination.go#L41)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination.go#L45)</sup>
 
 Schema defines HTTP/S schema used for connection
 
@@ -133,7 +143,7 @@ Port defines Port or Port Name used as destination
 
 ### .spec.destination.timeout
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination.go#L60)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/networking/v1beta1/route_spec_destination.go#L65)</sup>
 
 Timeout specify the upstream request timeout
 

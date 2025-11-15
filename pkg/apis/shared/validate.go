@@ -205,6 +205,13 @@ func ValidatePath[T any](path string, in T, validator func(T) error) error {
 	return PrefixResourceErrors(path, validator(in))
 }
 
+// ValidateMultiPath Validates object
+func ValidateMultiPath[T any](path string, in T, validators ...func(T) error) error {
+	return PrefixResourceErrors(path, util.FormatList(validators, func(a func(T) error) error {
+		return a(in)
+	})...)
+}
+
 // ValidateRequiredPath Validates object and required not nil value
 func ValidateRequiredPath[T any](path string, in *T, validator func(T) error) error {
 	return PrefixResourceErrors(path, ValidateRequired(in, validator))

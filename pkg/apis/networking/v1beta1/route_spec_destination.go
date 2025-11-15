@@ -35,12 +35,17 @@ type ArangoRouteSpecDestination struct {
 	// Endpoints defines service upstream reference - which is used to find endpoints
 	Endpoints *ArangoRouteSpecDestinationEndpoints `json:"endpoints,omitempty"`
 
+	// Redirect defines redirect instruction
+	Redirect *ArangoRouteSpecDestinationRedirect `json:"redirect,omitempty"`
+
 	// Schema defines HTTP/S schema used for connection
+	// +doc/default: http
 	// +doc/enum: http|HTTP Connection
 	// +doc/enum: https|HTTPS Connection (HTTP with TLS)
 	Schema *ArangoRouteSpecDestinationSchema `json:"schema,omitempty"`
 
 	// Protocol defines http protocol used for the route
+	// +doc/default: http1
 	// +doc/enum: http1|HTTP 1.1 Protocol
 	// +doc/enum: http2|HTTP 2 Protocol
 	Protocol *ArangoRouteDestinationProtocol `json:"protocol,omitempty"`
@@ -66,6 +71,14 @@ func (a *ArangoRouteSpecDestination) GetService() *ArangoRouteSpecDestinationSer
 	}
 
 	return a.Service
+}
+
+func (a *ArangoRouteSpecDestination) GetRedirect() *ArangoRouteSpecDestinationRedirect {
+	if a == nil || a.Redirect == nil {
+		return nil
+	}
+
+	return a.Redirect
 }
 
 func (a *ArangoRouteSpecDestination) GetEndpoints() *ArangoRouteSpecDestinationEndpoints {
@@ -132,9 +145,10 @@ func (a *ArangoRouteSpecDestination) Validate() error {
 	}
 
 	if err := shared.WithErrors(
-		shared.ValidateExclusiveFields(a, 1, "Service", "Endpoints"),
+		shared.ValidateExclusiveFields(a, 1, "Service", "Endpoints", "Redirect"),
 		shared.ValidateOptionalInterfacePath("service", a.Service),
 		shared.ValidateOptionalInterfacePath("endpoints", a.Endpoints),
+		shared.ValidateOptionalInterfacePath("redirect", a.Redirect),
 		shared.ValidateOptionalInterfacePath("schema", a.Schema),
 		shared.ValidateOptionalInterfacePath("protocol", a.Protocol),
 		shared.ValidateOptionalInterfacePath("tls", a.TLS),

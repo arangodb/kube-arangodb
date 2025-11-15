@@ -21,6 +21,7 @@
 package gateway
 
 import (
+	goHttp "net/http"
 	"time"
 
 	pbEnvoyClusterV3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -45,7 +46,7 @@ func (c ConfigDestinations) Validate() error {
 	return shared.WithErrors(
 		shared.ValidateMap(c, func(k string, destination ConfigDestination) error {
 			var errs []error
-			if k == "/" {
+			if k == "/" && destination.Type.Get() != ConfigDestinationTypeRedirect {
 				errs = append(errs, errors.Errorf("Route for `/` is reserved"))
 			}
 			if err := shared.ValidateAPIPath(k); err != nil {
@@ -85,6 +86,8 @@ type ConfigDestination struct {
 	Static ConfigDestinationStaticInterface `json:"static,omitempty"`
 
 	File ConfigDestinationFileInterface `json:"file,omitempty"`
+
+	Redirect *ConfigDestinationRedirect `json:"redirect,omitempty"`
 }
 
 func (c *ConfigDestination) Validate() error {
@@ -99,6 +102,13 @@ func (c *ConfigDestination) Validate() error {
 			shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
 			shared.PrefixResourceError("pathType", shared.ValidateOptionalInterface(c.Match)),
 			shared.PrefixResourceError("authExtension", c.AuthExtension.Validate()),
+		)
+	case ConfigDestinationTypeRedirect:
+		return shared.WithErrors(
+			shared.PrefixResourceError("type", c.Type.Validate()),
+			shared.PrefixResourceError("path", shared.ValidateAPIPath(c.GetPath())),
+			shared.PrefixResourceError("pathType", shared.ValidateOptionalInterface(c.Match)),
+			shared.PrefixResourceError("redirect", c.Redirect.Validate()),
 		)
 	case ConfigDestinationTypeStatic:
 		return shared.WithErrors(
@@ -229,6 +239,36 @@ func (c *ConfigDestination) appendRouteAction(route *pbEnvoyRouteV3.Route, name 
 			},
 		}
 		return nil
+	}
+	if c.Type.Get() == ConfigDestinationTypeRedirect {
+		if c.Redirect == nil {
+			return errors.Errorf("Redirect response is not defined!")
+		}
+		switch c.Redirect.Code {
+		case goHttp.StatusTemporaryRedirect:
+			route.Action = &pbEnvoyRouteV3.Route_Redirect{
+				Redirect: &pbEnvoyRouteV3.RedirectAction{
+					PathRewriteSpecifier: &pbEnvoyRouteV3.RedirectAction_PathRedirect{
+						PathRedirect: c.GetPath(),
+					},
+					ResponseCode: pbEnvoyRouteV3.RedirectAction_TEMPORARY_REDIRECT,
+					StripQuery:   false,
+				},
+			}
+			return nil
+		case goHttp.StatusMovedPermanently:
+			route.Action = &pbEnvoyRouteV3.Route_Redirect{
+				Redirect: &pbEnvoyRouteV3.RedirectAction{
+					PathRewriteSpecifier: &pbEnvoyRouteV3.RedirectAction_PathRedirect{
+						PathRedirect: c.GetPath(),
+					},
+					ResponseCode: pbEnvoyRouteV3.RedirectAction_MOVED_PERMANENTLY,
+					StripQuery:   false,
+				},
+			}
+			return nil
+		}
+		return errors.Errorf("Unable to render redirection action")
 	}
 
 	route.Action = &pbEnvoyRouteV3.Route_Route{

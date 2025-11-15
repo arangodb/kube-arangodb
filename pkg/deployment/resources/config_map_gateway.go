@@ -347,50 +347,76 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 			}
 
 			if target := at.Status.Target; target != nil {
+				var dest gateway.ConfigDestination
+
 				if target.Route.Path == "" {
 					log.Warn("ArangoRoute Route Path not defined")
 					return nil
 				}
-				var dest gateway.ConfigDestination
-				if destinations := target.Destinations; len(destinations) > 0 {
-					for _, destination := range destinations {
-						var t gateway.ConfigDestinationTarget
 
-						t.Host = destination.Host
-						t.Port = destination.Port
+				switch target.Type {
+				case networkingApi.ArangoRouteStatusTargetRedirectType:
+					dest.Redirect = &gateway.ConfigDestinationRedirect{
+						Code: target.Redirect.Code,
+					}
+					dest.Path = util.NewType(target.Path)
+					dest.Match = util.NewType(gateway.ConfigMatchPath)
+					dest.Type = util.NewType(gateway.ConfigDestinationTypeRedirect)
+					dest.ResponseHeaders = map[string]string{
+						utilConstants.EnvoyRouteHeader: at.GetName(),
+					}
+					dest.AuthExtension = &gateway.ConfigAuthZExtension{
+						AuthZExtension: map[string]string{
+							pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse,
+							pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
+						},
+					}
+				case networkingApi.ArangoRouteStatusTargetEndpointsType, networkingApi.ArangoRouteStatusTargetServiceType:
+					if destinations := target.Destinations; len(destinations) > 0 {
+						for _, destination := range destinations {
+							var t gateway.ConfigDestinationTarget
 
-						dest.Targets = append(dest.Targets, t)
+							t.Host = destination.Host
+							t.Port = destination.Port
+
+							dest.Targets = append(dest.Targets, t)
+						}
 					}
-				}
-				if tls := target.TLS; tls != nil {
-					dest.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
-					dest.TLS.Insecure = util.NewType(tls.IsInsecure())
-				}
-				switch target.Protocol {
-				case networkingApi.ArangoRouteDestinationProtocolHTTP1:
-					dest.Protocol = util.NewType(gateway.ConfigDestinationProtocolHTTP1)
-				case networkingApi.ArangoRouteDestinationProtocolHTTP2:
-					dest.Protocol = util.NewType(gateway.ConfigDestinationProtocolHTTP2)
-				}
-				if opts := target.Options; opts != nil {
-					for _, upgrade := range opts.Upgrade {
-						dest.UpgradeConfigs = append(dest.UpgradeConfigs, gateway.ConfigDestinationUpgrade{
-							Type:    string(upgrade.Type),
-							Enabled: util.NewType(util.WithDefault(upgrade.Enabled)),
-						})
+					dest.Match = util.NewType(gateway.ConfigMatchPrefix)
+					dest.Type = util.NewType(gateway.ConfigDestinationTypeHTTP)
+					if tls := target.TLS; tls != nil {
+						dest.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
+						dest.TLS.Insecure = util.NewType(tls.IsInsecure())
 					}
+					switch target.Protocol {
+					case networkingApi.ArangoRouteDestinationProtocolHTTP1:
+						dest.Protocol = util.NewType(gateway.ConfigDestinationProtocolHTTP1)
+					case networkingApi.ArangoRouteDestinationProtocolHTTP2:
+						dest.Protocol = util.NewType(gateway.ConfigDestinationProtocolHTTP2)
+					}
+					if opts := target.Options; opts != nil {
+						for _, upgrade := range opts.Upgrade {
+							dest.UpgradeConfigs = append(dest.UpgradeConfigs, gateway.ConfigDestinationUpgrade{
+								Type:    string(upgrade.Type),
+								Enabled: util.NewType(util.WithDefault(upgrade.Enabled)),
+							})
+						}
+					}
+					dest.Path = util.NewType(target.Path)
+					dest.Timeout = target.Timeout.DeepCopy()
+					dest.AuthExtension = &gateway.ConfigAuthZExtension{
+						AuthZExtension: map[string]string{
+							pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: util.BoolSwitch[string](target.Authentication.Type.Get() == networkingApi.ArangoRouteSpecAuthenticationTypeRequired, pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue, pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse),
+							pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(target.Authentication.PassMode),
+						},
+					}
+					dest.ResponseHeaders = map[string]string{
+						utilConstants.EnvoyRouteHeader: at.GetName(),
+					}
+				default:
+					return errors.Errorf("Unknown route destination type %s", target.Type)
 				}
-				dest.Path = util.NewType(target.Path)
-				dest.Timeout = target.Timeout.DeepCopy()
-				dest.AuthExtension = &gateway.ConfigAuthZExtension{
-					AuthZExtension: map[string]string{
-						pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: util.BoolSwitch[string](target.Authentication.Type.Get() == networkingApi.ArangoRouteSpecAuthenticationTypeRequired, pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue, pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse),
-						pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(target.Authentication.PassMode),
-					},
-				}
-				dest.ResponseHeaders = map[string]string{
-					utilConstants.EnvoyRouteHeader: at.GetName(),
-				}
+
 				cfg.Destinations[target.Route.Path] = dest
 
 				routes[at.GetName()] = &pbInventoryV1.InventoryNetworkingRoute{

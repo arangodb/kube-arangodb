@@ -38,6 +38,15 @@ func SHA256FromHashArray[T Hash](data []T) string {
 		return t.Hash()
 	}, data...)
 }
+func SHA256FromNonEmptyStringArray(data ...string) string {
+	return SHA256FromFilteredStringArray(func(in string) bool {
+		return in != ""
+	}, data...)
+}
+
+func SHA256FromFilteredStringArray(filter func(in string) bool, data ...string) string {
+	return SHA256FromStringArray(FilterList(data, filter)...)
+}
 
 func SHA256FromStringArray(data ...string) string {
 	return SHA256FromString(goStrings.Join(data, "|"))

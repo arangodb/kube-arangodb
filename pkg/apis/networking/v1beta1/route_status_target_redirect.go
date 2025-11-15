@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,16 +20,16 @@
 
 package v1beta1
 
-import "github.com/arangodb/kube-arangodb/pkg/util"
+import (
+	"fmt"
 
-type ArangoRouteStatusTargetType string
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
-func (a ArangoRouteStatusTargetType) Hash() string {
-	return util.SHA256FromString(string(a))
+type ArangoRouteStatusTargetRedirect struct {
+	Code int `json:"code,omitempty"`
 }
 
-const (
-	ArangoRouteStatusTargetServiceType   ArangoRouteStatusTargetType = "service"
-	ArangoRouteStatusTargetEndpointsType ArangoRouteStatusTargetType = "endpoints"
-	ArangoRouteStatusTargetRedirectType  ArangoRouteStatusTargetType = "redirect"
-)
+func (a ArangoRouteStatusTargetRedirect) Hash() string {
+	return util.SHA256FromStringArray(fmt.Sprintf("%d", a.Code))
+}
