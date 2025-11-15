@@ -417,6 +417,18 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					return errors.Errorf("Unknown route destination type %s", target.Type)
 				}
 
+				dest.Path = util.NewType(target.Path)
+				dest.Timeout = target.Timeout.DeepCopy()
+				dest.AuthExtension = &gateway.ConfigAuthZExtension{
+					AuthZExtension: map[string]string{
+						pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: util.BoolSwitch[string](target.Authentication.Type.Get() == networkingApi.ArangoRouteSpecAuthenticationTypeRequired, pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue, pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse),
+						pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(target.Authentication.PassMode),
+					},
+				}
+				dest.ResponseHeaders = map[string]string{
+					utilConstants.EnvoyRouteHeader:   at.GetName(),
+					utilConstants.EnvoyRouteHeaderV2: at.GetName(),
+				}
 				cfg.Destinations[target.Route.Path] = dest
 
 				routes[at.GetName()] = &pbInventoryV1.InventoryNetworkingRoute{
