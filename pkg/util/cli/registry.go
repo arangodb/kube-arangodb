@@ -36,9 +36,6 @@ func NewRegistry() Registry {
 			Name:        "registry.docker.credentials",
 			Description: "Use Docker Credentials",
 			Default:     false,
-			Check: func(in bool) error {
-				return nil
-			},
 		},
 
 		flagRegistryInsecure: Flag[[]string]{
@@ -143,20 +140,20 @@ func (r registry) Client(cmd *cobra.Command, lm LicenseManager) (*regclient.RegC
 	// Hosts
 	if lm != nil {
 		registryConfigs, err := lm.RegistryHosts(cmd)
-		if err != nil {
-			return nil, err
-		}
+		if err == nil {
+			for n, m := range registryConfigs {
+				v, ok := configs[n]
+				if !ok {
+					v.Name = n
+					v.Hostname = n
+				}
 
-		for n, m := range registryConfigs {
-			v, ok := configs[n]
-			if !ok {
-				v.Name = n
-				v.Hostname = n
+				v = m(v)
+
+				configs[n] = v
 			}
-
-			v = m(v)
-
-			configs[n] = v
+		} else {
+			logger.Err(err).Debug("Failed to initialize license manager, continuing...")
 		}
 	}
 

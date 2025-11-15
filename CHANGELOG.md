@@ -17,6 +17,7 @@
 - (Bugfix) (Platform) Ensure Inventory uses the serving group for license generation
 - (Bugfix) (Platform) Installer move to OCI
 - (Bugfix) (Platform) Fix Monitoring RBAC
+- (Feature) (Platform) Do not require LM during install commands
 
 ## [1.3.1](https://github.com/arangodb/kube-arangodb/tree/1.3.1) (2025-10-07)
 - (Documentation) Add ArangoPlatformStorage Docs & Examples
