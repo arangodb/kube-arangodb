@@ -783,10 +783,11 @@ func CreateDefaultContainerTemplate(image *schedulerContainerResourcesApi.Image)
 		},
 		Security: &schedulerContainerResourcesApi.Security{
 			SecurityContext: &core.SecurityContext{
-				RunAsUser:              util.NewType[int64](shared.DefaultRunAsUser),
-				RunAsGroup:             util.NewType[int64](shared.DefaultRunAsGroup),
-				RunAsNonRoot:           util.NewType(true),
-				ReadOnlyRootFilesystem: util.NewType(true),
+				RunAsUser:                util.NewType[int64](shared.DefaultRunAsUser),
+				RunAsGroup:               util.NewType[int64](shared.DefaultRunAsGroup),
+				RunAsNonRoot:             util.NewType(true),
+				ReadOnlyRootFilesystem:   util.NewType(true),
+				AllowPrivilegeEscalation: util.NewType(false),
 				Capabilities: &core.Capabilities{
 					Drop: []core.Capability{
 						"ALL",
