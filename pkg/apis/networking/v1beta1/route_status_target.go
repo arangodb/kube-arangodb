@@ -55,6 +55,9 @@ type ArangoRouteStatusTarget struct {
 
 	// Timeout specify the upstream request timeout
 	Timeout meta.Duration `json:"timeout,omitempty"`
+
+	// Redirect defines the route status
+	Redirect ArangoRouteStatusTargetRedirect `json:"redirect,omitempty"`
 }
 
 func (a *ArangoRouteStatusTarget) RenderURLs() []string {
@@ -81,5 +84,5 @@ func (a *ArangoRouteStatusTarget) Hash() string {
 	if a == nil {
 		return ""
 	}
-	return util.SHA256FromStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Protocol.String(), a.Path, a.Authentication.Hash(), a.Options.Hash(), a.Timeout.String(), a.Route.Hash())
+	return util.SHA256FromNonEmptyStringArray(a.Destinations.Hash(), a.Type.Hash(), a.TLS.Hash(), a.Protocol.String(), a.Path, a.Authentication.Hash(), a.Options.Hash(), a.Timeout.String(), a.Route.Hash(), a.Redirect.Hash())
 }

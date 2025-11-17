@@ -22,6 +22,7 @@ package gateway
 
 import (
 	"fmt"
+	goHttp "net/http"
 	"testing"
 
 	pbEnvoyBootstrapV3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
@@ -460,6 +461,30 @@ func Test_GatewayConfig(t *testing.T) {
 							Data: "TEST",
 						},
 					},
+				},
+			},
+		})
+	})
+
+	t.Run("Default", func(t *testing.T) {
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Targets: []ConfigDestinationTarget{
+					{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				Path: util.NewType("/test/path/"),
+				Type: util.NewType(ConfigDestinationTypeHTTPS),
+			},
+			Destinations: ConfigDestinations{
+				"/_test/": {
+					Redirect: &ConfigDestinationRedirect{
+						Code: goHttp.StatusTemporaryRedirect,
+					},
+					Path: util.NewType("/test/path/"),
+					Type: util.NewType(ConfigDestinationTypeRedirect),
 				},
 			},
 		})

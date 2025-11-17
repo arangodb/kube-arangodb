@@ -37,6 +37,9 @@ func (h *handler) HandleArangoDestination(ctx context.Context, item operation.It
 		if endpoints := dest.GetEndpoints(); endpoints != nil {
 			return h.HandleArangoDestinationEndpoints(ctx, item, extension, status, deployment, dest, endpoints)
 		}
+		if redirect := dest.GetRedirect(); redirect != nil {
+			return h.HandleArangoDestinationRedirect(ctx, item, extension, status, deployment, dest, redirect)
+		}
 	}
 
 	return &operator.Condition{
