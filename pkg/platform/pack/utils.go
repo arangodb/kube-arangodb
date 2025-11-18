@@ -22,25 +22,104 @@ package pack
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
+	goHttp "net/http"
+	"os"
+	goStrings "strings"
 
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/types/mediatype"
 	"github.com/regclient/regclient/types/ref"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
-func ChartReference(endpoint, stage, name, version string) (ref.Ref, error) {
-	if stage == "prd" {
-		endpoint = fmt.Sprintf("helm.%s", endpoint)
-	} else {
-		endpoint = fmt.Sprintf("%s.helm.%s", stage, endpoint)
+func ResolvePackageSpec(ctx context.Context, endpoint, name string, in helm.PackageSpec, reg *regclient.RegClient, chttp *goHttp.Client) (helm.Chart, error) {
+	if err := in.Validate(); err != nil {
+		return helm.Chart{}, err
 	}
 
-	return ref.New(fmt.Sprintf("%s/%s:%s", endpoint, name, version))
+	switch in.PackageType() {
+	case helm.PackageTypePlatform:
+		if in.GetStage() == "prd" {
+			endpoint = fmt.Sprintf("helm.%s", endpoint)
+		} else {
+			endpoint = fmt.Sprintf("%s.helm.%s", in.GetStage(), endpoint)
+		}
+
+		r, err := ref.New(fmt.Sprintf("%s/%s:%s", endpoint, name, in.Version))
+		if err != nil {
+			return helm.Chart{}, err
+		}
+
+		return ExportChart(ctx, reg, r)
+	case helm.PackageTypeInline:
+		return base64.StdEncoding.DecodeString(util.WithDefault(in.Chart))
+	case helm.PackageTypeRemote:
+		e := util.WithDefault(in.Chart)
+
+		if chttp == nil {
+			chttp = goHttp.DefaultClient
+		}
+
+		req, err := goHttp.NewRequestWithContext(ctx, "GET", e, nil)
+		if err != nil {
+			return helm.Chart{}, err
+		}
+
+		resp, err := chttp.Do(req)
+		if err != nil {
+			return helm.Chart{}, err
+		}
+
+		defer resp.Body.Close()
+
+		return io.ReadAll(resp.Body)
+
+	case helm.PackageTypeFile:
+		e := util.WithDefault(in.Chart)
+
+		e = goStrings.TrimPrefix(e, "file://")
+
+		return os.ReadFile(e)
+
+	case helm.PackageTypeOCI:
+		e := util.WithDefault(in.Chart)
+		e = goStrings.TrimPrefix(e, "oci://")
+
+		r, err := ref.New(e)
+		if err != nil {
+			return helm.Chart{}, err
+		}
+
+		return ExportChart(ctx, reg, r)
+	case helm.PackageTypeIndex:
+		e := util.WithDefault(in.Chart)
+		e = goStrings.TrimPrefix(e, "index://")
+
+		hm, err := helm.NewChartManager(ctx, chttp, "https://%s/index.yaml", e)
+		if err != nil {
+			return helm.Chart{}, err
+		}
+
+		p, ok := hm.Get(name)
+		if !ok {
+			return nil, errors.Errorf("Package %s not found", name)
+		}
+
+		v, ok := p.Get(in.Version)
+		if !ok {
+			return nil, errors.Errorf("Package %s version %s not found", name, in.Version)
+		}
+
+		return v.Get(ctx)
+	default:
+		return helm.Chart{}, fmt.Errorf("invalid package type")
+	}
 }
 
 func ExportChart(ctx context.Context, client *regclient.RegClient, src ref.Ref) (helm.Chart, error) {

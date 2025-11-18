@@ -30,7 +30,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/types/descriptor"
 	"github.com/regclient/regclient/types/errs"
@@ -41,6 +40,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/executor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
@@ -122,22 +122,9 @@ func (r *exportPackageSet) exportPackage(name string, spec helm.PackageSpec) exe
 			log.Info("Extracted chart")
 		}()
 
-		var chart helm.Chart
-
-		if spec.Chart.IsZero() {
-			ref, err := ChartReference(r.endpoint, spec.GetStage(), name, spec.Version)
-			if err != nil {
-				return err
-			}
-
-			loadedChart, err := ExportChart(ctx, r.client, ref)
-			if err != nil {
-				return err
-			}
-
-			chart = loadedChart
-		} else {
-			chart = helm.Chart(spec.Chart)
+		chart, err := ResolvePackageSpec(ctx, r.endpoint, name, spec, r.client, nil)
+		if err != nil {
+			return err
 		}
 
 		var chartProto ProtoChart

@@ -29,7 +29,7 @@ import (
 	"path"
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func NewCache(path string) Cache {

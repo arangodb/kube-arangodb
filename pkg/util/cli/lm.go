@@ -196,7 +196,19 @@ func (l licenseManager) Client(cmd *cobra.Command) (lmanager.Client, error) {
 		return nil, err
 	}
 
-	return lmanager.NewClient(endpoint, cid, cs)
+	c, err := lmanager.NewClient(endpoint, cid, cs)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := c.Identity(cmd.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	logger.JSON("identity", id).Info("Using identity for client")
+
+	return c, nil
 }
 
 func (l licenseManager) Register(cmd *cobra.Command) error {
@@ -210,6 +222,5 @@ func (l licenseManager) Register(cmd *cobra.Command) error {
 func (l licenseManager) Validate(cmd *cobra.Command) error {
 	return ValidateFlags(
 		l.endpoint,
-		l.client,
 	)(cmd, nil)
 }

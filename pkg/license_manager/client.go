@@ -74,6 +74,8 @@ func NewClientFromConn(conn driver.Connection) Client {
 }
 
 type Client interface {
+	Identity(ctx context.Context) (Identity, error)
+
 	License(ctx context.Context, req LicenseRequest) (LicenseResponse, error)
 
 	Registry(ctx context.Context) (RegistryResponse, error)
@@ -92,12 +94,19 @@ type LicenseResponse struct {
 	Expires *ugrpc.Object[*timestamppb.Timestamp] `json:"expires,omitempty"`
 }
 
+type Identity struct {
+}
+
 type RegistryResponse struct {
 	Token string `json:"token"`
 }
 
 type client struct {
 	conn driver.Connection
+}
+
+func (c client) Identity(ctx context.Context) (Identity, error) {
+	return arangod.GetRequest[Identity](ctx, c.conn, "_api", "v1", "identity").AcceptCode(200).Response()
 }
 
 func (c client) RegistryConfig(ctx context.Context, endpoint, id string, token *string, stages ...Stage) ([]byte, error) {

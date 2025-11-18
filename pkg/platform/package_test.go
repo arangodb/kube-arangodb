@@ -23,6 +23,7 @@ package platform
 import (
 	"bytes"
 	_ "embed"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -238,7 +239,7 @@ func Test_Package(t *testing.T) {
 			Packages: map[string]helm.PackageSpec{
 				"sample": {
 					Version: "1.0.0",
-					Chart:   sample_1_0_0,
+					Chart:   util.NewType(base64.StdEncoding.EncodeToString(sample_1_0_0)),
 				},
 			},
 		})
@@ -249,7 +250,7 @@ func Test_Package(t *testing.T) {
 			Packages: map[string]helm.PackageSpec{
 				"sample": {
 					Version: "1.0.0",
-					Chart:   sample_1_0_0,
+					Chart:   util.NewType(base64.StdEncoding.EncodeToString(sample_1_0_0)),
 				},
 			},
 			Releases: map[string]helm.PackageRelease{
@@ -281,7 +282,7 @@ func Test_Package(t *testing.T) {
 			Packages: map[string]helm.PackageSpec{
 				"sample": {
 					Version: "1.0.0",
-					Chart:   sample_1_0_0,
+					Chart:   util.NewType(base64.StdEncoding.EncodeToString(sample_1_0_0)),
 				},
 			},
 			Releases: map[string]helm.PackageRelease{
@@ -331,7 +332,7 @@ func Test_Package(t *testing.T) {
 			Packages: map[string]helm.PackageSpec{
 				"sample": {
 					Version: "1.0.0",
-					Chart:   sample_1_0_0,
+					Chart:   util.NewType(base64.StdEncoding.EncodeToString(sample_1_0_0)),
 					Overrides: helm.Values(sharedApi.NewAnyT(t, map[string]string{
 						"data": "Ov2",
 					})),
