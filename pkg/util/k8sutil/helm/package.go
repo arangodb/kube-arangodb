@@ -87,6 +87,7 @@ type PackageSpec struct {
 	Chart *string `json:"chart,omitempty"`
 
 	// Overrides defines Values to override the Helm Chart Defaults (merged with Service Overrides)
+	// +doc/type: Object
 	Overrides Values `json:"overrides,omitempty"`
 }
 
@@ -166,6 +167,7 @@ type PackageRelease struct {
 	Package string `json:"package"`
 
 	// Overrides defines Values to override the Helm Chart Defaults during installation
+	// +doc/type: Object
 	Overrides Values `json:"overrides,omitempty"`
 }
 
