@@ -21,7 +21,10 @@
 package constants
 
 const (
-	EnvoyRouteHeader = "arangodb-platform-route"
+	// Deprecated: Use EnvoyRouteHeaderV2 instead
+	EnvoyRouteHeader     = "arangodb-platform-route"
+	EnvoyRouteHeaderV2   = "X-Arango-Platform-Route"
+	EnvoyRequestIDHeader = "X-Arango-Platform-Request-Id"
 
 	EnvoyInventoryConfigDestination     = "/_inventory"
 	EnvoyInventoryHashConfigDestination = "/_inventory.hash"
@@ -32,6 +35,4 @@ const (
 	EnvoyIntegrationSidecarFilterName = "envoy.filters.http.ext_authz"
 
 	EnvoyIntegrationSidecarCluster = "integration_sidecar"
-
-	EnvoyIntegrationSidecarClusterHTTP = "integration_sidecar_http"
 )

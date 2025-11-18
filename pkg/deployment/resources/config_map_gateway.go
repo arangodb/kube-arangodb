@@ -363,7 +363,8 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					dest.Match = util.NewType(gateway.ConfigMatchPath)
 					dest.Type = util.NewType(gateway.ConfigDestinationTypeRedirect)
 					dest.ResponseHeaders = map[string]string{
-						utilConstants.EnvoyRouteHeader: at.GetName(),
+						utilConstants.EnvoyRouteHeader:   at.GetName(),
+						utilConstants.EnvoyRouteHeaderV2: at.GetName(),
 					}
 					dest.AuthExtension = &gateway.ConfigAuthZExtension{
 						AuthZExtension: map[string]string{
@@ -411,12 +412,12 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 						},
 					}
 					dest.ResponseHeaders = map[string]string{
-						utilConstants.EnvoyRouteHeader: at.GetName(),
+						utilConstants.EnvoyRouteHeader:   at.GetName(),
+						utilConstants.EnvoyRouteHeaderV2: at.GetName(),
 					}
 				default:
 					return errors.Errorf("Unknown route destination type %s", target.Type)
 				}
-
 				cfg.Destinations[target.Route.Path] = dest
 
 				routes[at.GetName()] = &pbInventoryV1.InventoryNetworkingRoute{
