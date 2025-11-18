@@ -40,7 +40,7 @@ It supports multiple modes:
 - If undefined, LicenseManager OCI Repository is used
 - If starts with `file://` chart is fetched from local FileSystem
 - If starts with `http://` or `https://` chart is fetched from the remote URL
-- If starts with `index://` chart is fetched using Helm YAML Index File stricture (using version and name)
+- If starts with `index://` chart is fetched using Helm YAML Index File structure (using version and name)
 - If Starts with `oci://` chart is fetched from Registry Compatible OCI Repository
 - If none above match, chart is decoded using Base64 encoding
 
