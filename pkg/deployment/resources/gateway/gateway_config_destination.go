@@ -33,6 +33,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -163,7 +164,8 @@ func (c *ConfigDestination) RenderRoute(name, prefix string) (*pbEnvoyRouteV3.Ro
 	}
 	var headers []*pbEnvoyCoreV3.HeaderValueOption
 
-	for k, v := range c.ResponseHeaders {
+	for _, k := range util.SortKeys(c.ResponseHeaders) {
+		v := c.ResponseHeaders[k]
 		headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
 			Header: &pbEnvoyCoreV3.HeaderValue{
 				Key:   k,

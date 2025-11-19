@@ -21,6 +21,7 @@
 - (Feature) (Platform) ArangoRoute Redirect
 - (Feature) (Platform) Request ID & Header Standardization
 - (Feature) (Platform) Install multi type support
+- (Bugfix) (Platform) Sort Headers in Envoy
 
 ## [1.3.1](https://github.com/arangodb/kube-arangodb/tree/1.3.1) (2025-10-07)
 - (Documentation) Add ArangoPlatformStorage Docs & Examples
