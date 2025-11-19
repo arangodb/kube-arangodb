@@ -33,7 +33,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap)) {
+func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap)) string {
 	require.NoError(t, cfg.Validate())
 
 	data, checksum, obj, err := cfg.RenderYAML()
@@ -47,6 +47,8 @@ func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *
 			validates[id](t, obj)
 		})
 	}
+
+	return checksum
 }
 
 func Test_GatewayConfig(t *testing.T) {
@@ -467,15 +469,23 @@ func Test_GatewayConfig(t *testing.T) {
 	})
 
 	t.Run("Default", func(t *testing.T) {
-		renderAndPrintGatewayConfig(t, Config{
+		cfg := Config{
 			DefaultDestination: ConfigDestination{
 				Targets: []ConfigDestinationTarget{
 					{
 						Host: "127.0.0.1",
 						Port: 12345,
 					},
+					{
+						Host: "127.0.0.1",
+						Port: 12346,
+					},
+					{
+						Host: "127.0.0.1",
+						Port: 12347,
+					},
 				},
-				Path: util.NewType("/test/path/"),
+				Path: util.NewType("/"),
 				Type: util.NewType(ConfigDestinationTypeHTTPS),
 			},
 			Destinations: ConfigDestinations{
@@ -485,8 +495,20 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 					Path: util.NewType("/test/path/"),
 					Type: util.NewType(ConfigDestinationTypeRedirect),
+					ResponseHeaders: map[string]string{
+						"A": "B",
+						"C": "C",
+						"D": "D",
+					},
 				},
 			},
-		})
+		}
+		a := renderAndPrintGatewayConfig(t, cfg)
+
+		for id := 0; id < 128; id++ {
+			t.Run(fmt.Sprintf("id:%d", id), func(t *testing.T) {
+				require.Equal(t, a, renderAndPrintGatewayConfig(t, cfg))
+			})
+		}
 	})
 }
