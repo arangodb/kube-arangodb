@@ -440,7 +440,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: f4689148bdeeccf7d328a760d1c5d2cd
+    arangodb.com/schema: e8dbe5bb4de09bcb634bf0b32f80e99c
     arangodb.com/version: 3da979e8cc522c84fa8d7bf3d04599a4
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangomlbatchjobs.ml.arangodb.com
@@ -2655,6 +2655,28 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        resources:
+                          properties:
+                            claims:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  request:
+                                    type: string
+                                type: object
+                              type: array
+                            limits:
+                              additionalProperties:
+                                type: string
+                                x-kubernetes-int-or-string: true
+                              type: object
+                            requests:
+                              additionalProperties:
+                                type: string
+                                x-kubernetes-int-or-string: true
+                              type: object
+                          type: object
                         restartPolicy:
                           type: string
                         runtimeClassName:
@@ -2690,6 +2712,8 @@ spec:
                             runAsUser:
                               format: int64
                               type: integer
+                            seLinuxChangePolicy:
+                              type: string
                             seLinuxOptions:
                               properties:
                                 level:
@@ -3520,7 +3544,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: d897a965ea923b9d36d81f2dc89ae13e
+    arangodb.com/schema: c43cb0b30ecddeaebfedc6bbec5b2883
     arangodb.com/version: 071152afd23e0c6212e6ff16de3ec2fb
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangomlcronjobs.ml.arangodb.com
@@ -5820,6 +5844,28 @@ spec:
                                         type: string
                                     type: object
                                   type: array
+                                resources:
+                                  properties:
+                                    claims:
+                                      items:
+                                        properties:
+                                          name:
+                                            type: string
+                                          request:
+                                            type: string
+                                        type: object
+                                      type: array
+                                    limits:
+                                      additionalProperties:
+                                        type: string
+                                        x-kubernetes-int-or-string: true
+                                      type: object
+                                    requests:
+                                      additionalProperties:
+                                        type: string
+                                        x-kubernetes-int-or-string: true
+                                      type: object
+                                  type: object
                                 restartPolicy:
                                   type: string
                                 runtimeClassName:
@@ -5855,6 +5901,8 @@ spec:
                                     runAsUser:
                                       format: int64
                                       type: integer
+                                    seLinuxChangePolicy:
+                                      type: string
                                     seLinuxOptions:
                                       properties:
                                         level:
@@ -6699,7 +6747,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 80f1ab672ea61752d68fb4785947399a
+    arangodb.com/schema: 85ef8c8914631640d41037993204bb43
     arangodb.com/version: 53cff97ca37fa8e1878e879386a41cc3
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangomlextensions.ml.arangodb.com
@@ -7356,6 +7404,8 @@ spec:
                         runAsUser:
                           format: int64
                           type: integer
+                        seLinuxChangePolicy:
+                          type: string
                         seLinuxOptions:
                           properties:
                             level:
@@ -9041,6 +9091,8 @@ spec:
                         runAsUser:
                           format: int64
                           type: integer
+                        seLinuxChangePolicy:
+                          type: string
                         seLinuxOptions:
                           properties:
                             level:
@@ -10699,6 +10751,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -12351,6 +12405,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -14007,6 +14063,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -15659,6 +15717,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -17315,6 +17375,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -18967,6 +19029,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -20674,6 +20738,8 @@ spec:
                         runAsUser:
                           format: int64
                           type: integer
+                        seLinuxChangePolicy:
+                          type: string
                         seLinuxOptions:
                           properties:
                             level:
@@ -22361,6 +22427,8 @@ spec:
                         runAsUser:
                           format: int64
                           type: integer
+                        seLinuxChangePolicy:
+                          type: string
                         seLinuxOptions:
                           properties:
                             level:
@@ -24530,6 +24598,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -26184,6 +26254,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -27842,6 +27914,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -29496,6 +29570,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -31154,6 +31230,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -32808,6 +32886,8 @@ spec:
                                 runAsUser:
                                   format: int64
                                   type: integer
+                                seLinuxChangePolicy:
+                                  type: string
                                 seLinuxOptions:
                                   properties:
                                     level:
@@ -35005,7 +35085,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: a27d2620a4ca39cd4c67306f2a06bfa9
+    arangodb.com/schema: 3d6fa0f863c5b5434137762d8eeb367e
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoprofiles.scheduler.arangodb.com
@@ -36040,6 +36120,8 @@ spec:
                             runAsUser:
                               format: int64
                               type: integer
+                            seLinuxChangePolicy:
+                              type: string
                             seLinuxOptions:
                               properties:
                                 level:
@@ -38343,6 +38425,8 @@ spec:
                             runAsUser:
                               format: int64
                               type: integer
+                            seLinuxChangePolicy:
+                              type: string
                             seLinuxOptions:
                               properties:
                                 level:
@@ -39126,7 +39210,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 7eac6c97a296e736cdcd6faff999415f
+    arangodb.com/schema: 0aecc742a097984d7a5b193eb6f2fb30
     arangodb.com/version: ed2f810b803d33ebf147bc1c5d4ff3aa
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoroutes.networking.arangodb.com
@@ -39347,6 +39431,14 @@ spec:
                         - http1
                         - http2
                       type: string
+                    redirect:
+                      description: Redirect defines redirect instruction
+                      properties:
+                        code:
+                          description: Code the redirection response status code
+                          format: int32
+                          type: integer
+                      type: object
                     schema:
                       description: Schema defines HTTP/S schema used for connection
                       enum:
@@ -39424,7 +39516,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: adf91041dc93b33409d2704af4cfa288
+    arangodb.com/schema: f6cb501d1dce91b4fd080c8d74be490f
     arangodb.com/version: 3a84787f93098eaa4c16cdf2a22a8e75
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerbatchjobs.scheduler.arangodb.com
@@ -41644,6 +41736,28 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        resources:
+                          properties:
+                            claims:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  request:
+                                    type: string
+                                type: object
+                              type: array
+                            limits:
+                              additionalProperties:
+                                type: string
+                                x-kubernetes-int-or-string: true
+                              type: object
+                            requests:
+                              additionalProperties:
+                                type: string
+                                x-kubernetes-int-or-string: true
+                              type: object
+                          type: object
                         restartPolicy:
                           type: string
                         runtimeClassName:
@@ -41679,6 +41793,8 @@ spec:
                             runAsUser:
                               format: int64
                               type: integer
+                            seLinuxChangePolicy:
+                              type: string
                             seLinuxOptions:
                               properties:
                                 level:
@@ -42509,7 +42625,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 39ae7c2a4af81a69f5c1c7984c4f5b26
+    arangodb.com/schema: 3f2bde3253c1fec8abad3d33f1b6b1f3
     arangodb.com/version: 843d96cd15169630a12f575b515d93bc
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulercronjobs.scheduler.arangodb.com
@@ -44809,6 +44925,28 @@ spec:
                                         type: string
                                     type: object
                                   type: array
+                                resources:
+                                  properties:
+                                    claims:
+                                      items:
+                                        properties:
+                                          name:
+                                            type: string
+                                          request:
+                                            type: string
+                                        type: object
+                                      type: array
+                                    limits:
+                                      additionalProperties:
+                                        type: string
+                                        x-kubernetes-int-or-string: true
+                                      type: object
+                                    requests:
+                                      additionalProperties:
+                                        type: string
+                                        x-kubernetes-int-or-string: true
+                                      type: object
+                                  type: object
                                 restartPolicy:
                                   type: string
                                 runtimeClassName:
@@ -44844,6 +44982,8 @@ spec:
                                     runAsUser:
                                       format: int64
                                       type: integer
+                                    seLinuxChangePolicy:
+                                      type: string
                                     seLinuxOptions:
                                       properties:
                                         level:
@@ -45693,7 +45833,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 140ff5928fabf4b84e73e3cce9d72d83
+    arangodb.com/schema: 6b1cc5b26c9cd4ac1671c6e574eed1d3
     arangodb.com/version: c810d7d13258ab790de55a136c8baffc
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerdeployments.scheduler.arangodb.com
@@ -47869,6 +48009,28 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        resources:
+                          properties:
+                            claims:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  request:
+                                    type: string
+                                type: object
+                              type: array
+                            limits:
+                              additionalProperties:
+                                type: string
+                                x-kubernetes-int-or-string: true
+                              type: object
+                            requests:
+                              additionalProperties:
+                                type: string
+                                x-kubernetes-int-or-string: true
+                              type: object
+                          type: object
                         restartPolicy:
                           type: string
                         runtimeClassName:
@@ -47904,6 +48066,8 @@ spec:
                             runAsUser:
                               format: int64
                               type: integer
+                            seLinuxChangePolicy:
+                              type: string
                             seLinuxOptions:
                               properties:
                                 level:
@@ -48734,7 +48898,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 9183981ef83267e76b6594a962b08edc
+    arangodb.com/schema: 2a82a24c7dba8dc208be40d31ac0ce2f
     arangodb.com/version: 338fb8407ae44a030186b06db2f80722
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerpods.scheduler.arangodb.com
@@ -50782,6 +50946,28 @@ spec:
                         type: string
                     type: object
                   type: array
+                resources:
+                  properties:
+                    claims:
+                      items:
+                        properties:
+                          name:
+                            type: string
+                          request:
+                            type: string
+                        type: object
+                      type: array
+                    limits:
+                      additionalProperties:
+                        type: string
+                        x-kubernetes-int-or-string: true
+                      type: object
+                    requests:
+                      additionalProperties:
+                        type: string
+                        x-kubernetes-int-or-string: true
+                      type: object
+                  type: object
                 restartPolicy:
                   type: string
                 runtimeClassName:
@@ -50817,6 +51003,8 @@ spec:
                     runAsUser:
                       format: int64
                       type: integer
+                    seLinuxChangePolicy:
+                      type: string
                     seLinuxOptions:
                       properties:
                         level:
@@ -51707,7 +51895,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 5d762c1ea7ea17c2ede6a3705df7e053
+    arangodb.com/schema: ae9c0adbe594a8cb533cd848bc810ae7
     arangodb.com/version: a7cd6bb879625020634bea59274db2e4
     arangodb.com/x-preserve-unknown-fields: "false"
   name: graphanalyticsengines.analytics.arangodb.com
@@ -52363,6 +52551,8 @@ spec:
                         runAsUser:
                           format: int64
                           type: integer
+                        seLinuxChangePolicy:
+                          type: string
                         seLinuxOptions:
                           properties:
                             level:

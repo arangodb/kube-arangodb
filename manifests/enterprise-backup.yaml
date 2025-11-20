@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -18,7 +18,7 @@ metadata:
   name: arango-backup-operator-rbac-backup
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -39,7 +39,7 @@ metadata:
   name: arango-backup-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -61,7 +61,7 @@ metadata:
   name: arango-backup-operator-rbac-backup
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -81,7 +81,7 @@ metadata:
   name: arango-backup-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -102,7 +102,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -173,7 +173,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -194,7 +194,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -228,7 +228,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.1
+    helm.sh/chart: kube-arangodb-1.3.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: backup
     release: backup
@@ -246,7 +246,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.3.1
+        helm.sh/chart: kube-arangodb-1.3.2
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: backup
         release: backup
@@ -285,8 +285,9 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb-enterprise:1.3.1
+          image: arangodb/kube-arangodb-enterprise:1.3.2
           args:
+            - --threads=8
             - --operator.backup
             - --mode.single
             - --chaos.allowed=false

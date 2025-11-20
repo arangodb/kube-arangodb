@@ -10,7 +10,7 @@ title: ArangoMLCronJob V1Alpha1
 
 ### .spec
 
-Type: `batch.CronJobSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.1/pkg/apis/ml/v1alpha1/cronjob_spec.go#L33)</sup>
+Type: `batch.CronJobSpec` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/apis/ml/v1alpha1/cronjob_spec.go#L33)</sup>
 
 Links:
 * [Kubernetes Documentation](https://godoc.org/k8s.io/api/batch/v1#CronJobSpec)
