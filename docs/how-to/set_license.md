@@ -10,7 +10,11 @@ After deploying the ArangoDB Kubernetes operator, use the command below to deplo
 as a secret which is required for the Enterprise Edition starting with version 3.9:
 
 ```bash
+# For the License Key
 kubectl create secret generic arango-license-key --from-literal=token-v2="<license-string>"
+
+# For the License Manager Key
+kubectl create secret generic arango-license-key --from-literal=license-client-id="<license-client-id>" --from-literal=license-client-secret="<license-client-secret>"
 ```
 
 

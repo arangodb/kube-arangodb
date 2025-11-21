@@ -12,14 +12,9 @@ nav_order: 2
 
 ### Resource Types
 
-Integration Sidecar is supported in a few resources managed by Operator:
+Integration Sidecar is supported in a basic resources managed by Kubernetes:
 
-- ArangoSchedulerDeployment (scheduler.arangodb.com/v1beta1)
-- ArangoSchedulerBatchJob (scheduler.arangodb.com/v1beta1)
-- ArangoSchedulerCronJob (scheduler.arangodb.com/v1beta1)
-- ArangoSchedulerPod (scheduler.arangodb.com/v1beta1)
-
-Standard Kubernetes Resources (like Pod) are also supported with Webhook extension is enabled.
+- Pod
 
 To enable integration sidecar for specific deployment label needs to be defined:
 
@@ -138,6 +133,18 @@ To enable:
 metadata:
   labels:
     integration.profiles.arangodb.com/meta: v1
+```
+
+#### [Events V1](./integration/events.v1.md)
+
+Events Integration Sidecar
+
+To enable:
+
+```yaml
+metadata:
+  labels:
+    integration.profiles.arangodb.com/events: v1
 ```
 
 ### Envs
