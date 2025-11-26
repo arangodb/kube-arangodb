@@ -32,6 +32,7 @@ import (
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -68,6 +69,8 @@ func (m *MemberGatewayPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 
 	pod.AppendPodAntiAffinityDefault(m, a)
 
+	a = kresources.MergePodAntiAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.Status, m.Group, m.Member).PodAntiAffinity)
+
 	a = kresources.MergePodAntiAffinity(a, m.GroupSpec.AntiAffinity)
 
 	return kresources.OptionalPodAntiAffinity(a)
@@ -76,9 +79,11 @@ func (m *MemberGatewayPod) GetPodAntiAffinity() *core.PodAntiAffinity {
 func (m *MemberGatewayPod) GetPodAffinity() *core.PodAffinity {
 	a := &core.PodAffinity{}
 
-	pod.AppendAffinityWithRole(m, a, api.ServerGroupDBServers.AsRole())
+	pod.AppendAffinityWithRole(m, a, api.ServerGroupCoordinators.AsRole())
 
 	a = kresources.MergePodAffinity(a, m.GroupSpec.Affinity)
+
+	a = kresources.MergePodAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.Status, m.Group, m.Member).PodAffinity)
 
 	return kresources.OptionalPodAffinity(a)
 }
@@ -89,6 +94,8 @@ func (m *MemberGatewayPod) GetNodeAffinity() *core.NodeAffinity {
 	pod.AppendArchSelector(a, m.Member.Architecture.Default(m.Deployment.Architecture.GetDefault()).AsNodeSelectorRequirement())
 
 	a = kresources.MergeNodeAffinity(a, m.GroupSpec.NodeAffinity)
+
+	a = kresources.MergeNodeAffinity(a, topology.GetTopologyAffinityRules(m.context.GetName(), m.Status, m.Group, m.Member).NodeAffinity)
 
 	return kresources.OptionalNodeAffinity(a)
 }

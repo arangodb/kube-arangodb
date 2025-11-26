@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) (Platform) Fix Container Resource Adjustments
 - (Bugfix) (Platform) Fix LM CLI Option
+- (Bugfix) (Platform) Fix topology for Gateways
 
 ## [1.3.2](https://github.com/arangodb/kube-arangodb/tree/1.3.2) (2025-11-20)
 - (Bugfix) (Platform) Increase memory limit for Inventory
