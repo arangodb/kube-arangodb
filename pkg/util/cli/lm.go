@@ -79,7 +79,7 @@ func NewLicenseManager(prefix string) LicenseManager {
 			},
 
 			clientSecret: Flag[string]{
-				Name:        "license.client.secret",
+				Name:        fmt.Sprintf("%s.client.secret", prefix),
 				Description: "LicenseManager Client Secret",
 				Default:     "",
 				EnvEnabled:  true,
