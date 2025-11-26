@@ -207,4 +207,30 @@ func Test_Resources(t *testing.T) {
 			require.EqualValues(t, v8Mi, container.Resources.Requests[core.ResourceCPU])
 		})
 	})
+	t.Run("Downscale", func(t *testing.T) {
+		applyResources(t, &core.PodTemplateSpec{}, &core.Container{
+			Resources: core.ResourceRequirements{
+				Requests: core.ResourceList{
+					core.ResourceCPU: v8Mi,
+				},
+			},
+		}, &Resources{
+			Resources: &core.ResourceRequirements{
+				Limits: core.ResourceList{
+					core.ResourceCPU: v1Mi,
+				},
+				Requests: core.ResourceList{
+					core.ResourceCPU: v1Mi,
+				},
+			},
+		})(func(t *testing.T, pod *core.PodTemplateSpec, container *core.Container) {
+			require.Len(t, container.Resources.Limits, 1)
+			require.Contains(t, container.Resources.Limits, core.ResourceCPU)
+			require.EqualValues(t, v1Mi, container.Resources.Limits[core.ResourceCPU])
+
+			require.Len(t, container.Resources.Requests, 1)
+			require.Contains(t, container.Resources.Requests, core.ResourceCPU)
+			require.EqualValues(t, v1Mi, container.Resources.Requests[core.ResourceCPU])
+		})
+	})
 }
