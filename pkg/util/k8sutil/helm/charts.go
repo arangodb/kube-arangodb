@@ -47,3 +47,22 @@ func GetLocalCharts(ctx context.Context, client kclient.Client, namespace string
 		return in.GetName()
 	}), nil
 }
+
+func GetLocalServices(ctx context.Context, client kclient.Client, namespace string) (map[string]*platformApi.ArangoPlatformService, error) {
+	l, err := list.ListObjects[*platformApi.ArangoPlatformServiceList, *platformApi.ArangoPlatformService](ctx, client.Arango().PlatformV1beta1().ArangoPlatformServices(namespace), func(result *platformApi.ArangoPlatformServiceList) []*platformApi.ArangoPlatformService {
+		q := make([]*platformApi.ArangoPlatformService, len(result.Items))
+
+		for id, e := range result.Items {
+			q[id] = e.DeepCopy()
+		}
+
+		return q
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return util.ListAsMap(l, func(in *platformApi.ArangoPlatformService) string {
+		return in.GetName()
+	}), nil
+}
