@@ -554,14 +554,16 @@ func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
 func (m *MemberArangoDPod) Annotations() map[string]string {
 	// Merge deployment and group annotations and add hardcoded scrape annotation for ArangoD pods
 	result := collection.MergeAnnotations(m.Deployment.Annotations, m.GroupSpec.Annotations)
-	if result == nil {
-		result = map[string]string{}
-
-	}
 
 	// Enable scraping via platform by default for ArangoD (requires metrics sidecar to be enabled)
-	result[MetricsScrapeLabel] = "true"
-	result[MetricsScrapePort] = fmt.Sprintf("%d", m.GroupSpec.GetExporterPort())
+	if m.Deployment.Metrics.IsEnabled() {
+		if result == nil {
+			result = map[string]string{}
+
+		}
+		result[MetricsScrapeLabel] = "true"
+		result[MetricsScrapePort] = fmt.Sprintf("%d", m.GroupSpec.GetExporterPort())
+	}
 	return result
 }
 
