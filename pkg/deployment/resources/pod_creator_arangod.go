@@ -52,6 +52,9 @@ const (
 	ArangoDBOverrideVersionEnv               = "ARANGODB_OVERRIDE_VERSION"
 	ArangoDBOverrideEnterpriseEnv            = "ARANGODB_OVERRIDE_ENTERPRISE"
 	ArangoDBServerPortEnv                    = "ARANGODB_SERVER_PORT"
+
+	MetricsScrapeLabel = "platform.arangodb.com/scrape"
+	MetricsScrapePort  = "platform.arangodb.com/port"
 )
 
 var _ interfaces.PodCreator = &MemberArangoDPod{}
@@ -549,7 +552,17 @@ func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
 }
 
 func (m *MemberArangoDPod) Annotations() map[string]string {
-	return collection.MergeAnnotations(m.Deployment.Annotations, m.GroupSpec.Annotations)
+	// Merge deployment and group annotations and add hardcoded scrape annotation for ArangoD pods
+	result := collection.MergeAnnotations(m.Deployment.Annotations, m.GroupSpec.Annotations)
+	if result == nil {
+		result = map[string]string{}
+
+	}
+
+	// Enable scraping via platform by default for ArangoD (requires metrics sidecar to be enabled)
+	result[MetricsScrapeLabel] = "true"
+	result[MetricsScrapePort] = fmt.Sprintf("%d", m.GroupSpec.GetExporterPort())
+	return result
 }
 
 func (m *MemberArangoDPod) Profiles() (schedulerApi.ProfileTemplates, error) {
