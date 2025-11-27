@@ -33,7 +33,7 @@ packages:
 
 ### .package.packages.\<string\>.chart
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L87)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L83)</sup>
 
 Chart defines override of the PackageSpec
 It supports multiple modes:
@@ -48,7 +48,7 @@ It supports multiple modes:
 
 ### .package.packages.\<string\>.overrides
 
-Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L91)</sup>
+Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L87)</sup>
 
 Overrides defines Values to override the Helm Chart Defaults (merged with Service Overrides)
 
@@ -56,7 +56,7 @@ Overrides defines Values to override the Helm Chart Defaults (merged with Servic
 
 ### .package.packages.\<string\>.stage
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L74)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L70)</sup>
 
 Stage defines stage used in the fetch from LicenseManager
 
@@ -64,7 +64,7 @@ Stage defines stage used in the fetch from LicenseManager
 
 ### .package.packages.\<string\>.version
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L77)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L73)</sup>
 
 Version keeps the version of the PackageSpec
 
@@ -72,7 +72,7 @@ Version keeps the version of the PackageSpec
 
 ### .package.releases.\<string\>.overrides
 
-Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L171)</sup>
+Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L167)</sup>
 
 Overrides defines Values to override the Helm Chart Defaults during installation
 
@@ -80,7 +80,7 @@ Overrides defines Values to override the Helm Chart Defaults during installation
 
 ### .package.releases.\<string\>.package
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L167)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.2/pkg/util/k8sutil/helm/package.go#L163)</sup>
 
 Package keeps the name of the Chart used from the installation script.
 References to value provided in Packages
