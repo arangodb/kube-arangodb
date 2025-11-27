@@ -25,13 +25,9 @@ import (
 	"encoding/base64"
 	goStrings "strings"
 
-	"helm.sh/helm/v3/pkg/action"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
@@ -176,16 +172,12 @@ func (p PackageRelease) Validate() error {
 }
 
 func NewPackage(ctx context.Context, client kclient.Client, namespace, deployment string) (*Package, error) {
-	hclient, err := NewClient(Configuration{
-		Namespace: namespace,
-		Config:    client.Config(),
-		Driver:    nil,
-	})
+	charts, err := GetLocalCharts(ctx, client, namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	charts, err := GetLocalCharts(ctx, client, namespace)
+	services, err := GetLocalServices(ctx, client, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +190,8 @@ func NewPackage(ctx context.Context, client kclient.Client, namespace, deploymen
 
 	for name, c := range charts {
 		if !c.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
-			return nil, errors.Errorf("Chart `%s` is not in ready condition", name)
+			logger.Warn("Chart %s is not ready", name)
+			continue
 		}
 
 		if info := c.Status.Info; info != nil {
@@ -210,46 +203,17 @@ func NewPackage(ctx context.Context, client kclient.Client, namespace, deploymen
 				}
 			}
 		}
+	}
 
-		existingReleases, err := hclient.List(ctx, func(in *action.List) {
-			in.Selector = meta.FormatLabelSelector(&meta.LabelSelector{
-				MatchLabels: map[string]string{
-					utilConstants.HelmLabelArangoDBManaged:    "true",
-					utilConstants.HelmLabelArangoDBDeployment: deployment,
-					utilConstants.HelmLabelArangoDBChart:      name,
-					utilConstants.HelmLabelArangoDBType:       "platform",
-				},
-			})
-		})
-		if err != nil {
-			logger.Err(err).Error("Unable to list releases")
-			return nil, err
+	for name, c := range services {
+		if !c.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
+			logger.Warn("Service %s is not ready", name)
+			continue
 		}
 
-		for _, release := range existingReleases {
-			var r PackageRelease
-
-			r.Package = name
-
-			data, err := release.Values.Marshal()
-			if err != nil {
-				logger.Err(err).Error("Unable to unmarshal values")
-				return nil, err
-			}
-
-			delete(data, "arangodb_platform")
-
-			if len(data) != 0 {
-				values, err := NewValues(data)
-				if err != nil {
-					logger.Err(err).Error("Unable to marshal values")
-					return nil, err
-				}
-
-				r.Overrides = values
-			}
-
-			out.Releases[release.Name] = r
+		out.Releases[name] = PackageRelease{
+			Package:   c.Status.Chart.GetName(),
+			Overrides: Values(c.Spec.Values),
 		}
 	}
 
