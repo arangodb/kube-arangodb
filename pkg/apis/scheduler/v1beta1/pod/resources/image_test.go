@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,6 +83,25 @@ func Test_Image(t *testing.T) {
 		})(func(t *testing.T, pod *core.PodTemplateSpec) {
 			require.Len(t, pod.Spec.ImagePullSecrets, 1)
 			require.Equal(t, "secret", pod.Spec.ImagePullSecrets[0].Name)
+		})
+	})
+	t.Run("With Merge", func(t *testing.T) {
+		applyImage(t, &core.PodTemplateSpec{}, &Image{
+			ImagePullSecrets: []string{
+				"secret",
+			},
+		}, &Image{
+			ImagePullSecrets: []string{
+				"secret2",
+			},
+		}, &Image{
+			ImagePullSecrets: []string{
+				"secret",
+			},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Len(t, pod.Spec.ImagePullSecrets, 2)
+			require.Equal(t, "secret", pod.Spec.ImagePullSecrets[0].Name)
+			require.Equal(t, "secret2", pod.Spec.ImagePullSecrets[1].Name)
 		})
 	})
 }
