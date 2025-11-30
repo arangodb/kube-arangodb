@@ -717,8 +717,8 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 	metrics := deployment.GetSpec().Metrics
 	if metrics.IsEnabled() {
 		testCase.ExpectedPod.ObjectMeta.Annotations = map[string]string{
-			resources.MetricsScrapeLabel: "true",
-			resources.MetricsScrapePort:  strconv.Itoa(shared.ArangoExporterPort),
+			utilConstants.AnnotationMetricsScrapeLabel: "true",
+			utilConstants.AnnotationMetricsScrapePort:  strconv.Itoa(shared.ArangoExporterPort),
 		}
 	}
 

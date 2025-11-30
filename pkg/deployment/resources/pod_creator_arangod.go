@@ -52,9 +52,6 @@ const (
 	ArangoDBOverrideVersionEnv               = "ARANGODB_OVERRIDE_VERSION"
 	ArangoDBOverrideEnterpriseEnv            = "ARANGODB_OVERRIDE_ENTERPRISE"
 	ArangoDBServerPortEnv                    = "ARANGODB_SERVER_PORT"
-
-	MetricsScrapeLabel = "platform.arangodb.com/scrape"
-	MetricsScrapePort  = "platform.arangodb.com/port"
 )
 
 var _ interfaces.PodCreator = &MemberArangoDPod{}
@@ -561,8 +558,8 @@ func (m *MemberArangoDPod) Annotations() map[string]string {
 			result = map[string]string{}
 
 		}
-		result[MetricsScrapeLabel] = "true"
-		result[MetricsScrapePort] = fmt.Sprintf("%d", m.GroupSpec.GetExporterPort())
+		result[utilConstants.AnnotationMetricsScrapeLabel] = "true"
+		result[utilConstants.AnnotationMetricsScrapePort] = fmt.Sprintf("%d", m.GroupSpec.GetExporterPort())
 	}
 	return result
 }
