@@ -22,7 +22,7 @@ package definition
 
 import (
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/release"
+	helmRelease "helm.sh/helm/v3/pkg/release"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/selection"
@@ -31,50 +31,50 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
-func (i SchedulerV2ReleaseInfoStatus) AsHelmStatus() release.Status {
+func (i SchedulerV2ReleaseInfoStatus) AsHelmStatus() helmRelease.Status {
 	switch i {
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_UNKNOWN_UNSPECIFIED:
-		return release.StatusUnknown
+		return helmRelease.StatusUnknown
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_DEPLOYED:
-		return release.StatusDeployed
+		return helmRelease.StatusDeployed
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_UNINSTALLED:
-		return release.StatusUninstalled
+		return helmRelease.StatusUninstalled
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_SUPERSEDED:
-		return release.StatusSuperseded
+		return helmRelease.StatusSuperseded
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_FAILED:
-		return release.StatusFailed
+		return helmRelease.StatusFailed
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_UNINSTALLING:
-		return release.StatusUninstalling
+		return helmRelease.StatusUninstalling
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGINSTALL:
-		return release.StatusPendingInstall
+		return helmRelease.StatusPendingInstall
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGUPGRADE:
-		return release.StatusPendingUpgrade
+		return helmRelease.StatusPendingUpgrade
 	case SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGROLLBACK:
-		return release.StatusPendingRollback
+		return helmRelease.StatusPendingRollback
 	default:
-		return release.StatusUnknown
+		return helmRelease.StatusUnknown
 	}
 }
 
-func FromHelmStatus(in release.Status) SchedulerV2ReleaseInfoStatus {
+func FromHelmStatus(in helmRelease.Status) SchedulerV2ReleaseInfoStatus {
 	switch in {
-	case release.StatusUnknown:
+	case helmRelease.StatusUnknown:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_UNKNOWN_UNSPECIFIED
-	case release.StatusDeployed:
+	case helmRelease.StatusDeployed:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_DEPLOYED
-	case release.StatusUninstalled:
+	case helmRelease.StatusUninstalled:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_UNINSTALLED
-	case release.StatusSuperseded:
+	case helmRelease.StatusSuperseded:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_SUPERSEDED
-	case release.StatusFailed:
+	case helmRelease.StatusFailed:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_FAILED
-	case release.StatusUninstalling:
+	case helmRelease.StatusUninstalling:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_UNINSTALLING
-	case release.StatusPendingInstall:
+	case helmRelease.StatusPendingInstall:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGINSTALL
-	case release.StatusPendingUpgrade:
+	case helmRelease.StatusPendingUpgrade:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGUPGRADE
-	case release.StatusPendingRollback:
+	case helmRelease.StatusPendingRollback:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_PENDINGROLLBACK
 	default:
 		return SchedulerV2ReleaseInfoStatus_SCHEDULER_V2_RELEASE_INFO_STATUS_UNKNOWN_UNSPECIFIED
