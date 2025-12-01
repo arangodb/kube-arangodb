@@ -21,7 +21,7 @@
 package v1alpha1
 
 import (
-	"helm.sh/helm/v3/pkg/release"
+	helmRelease "helm.sh/helm/v3/pkg/release"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,7 +33,7 @@ type ArangoPlatformServiceStatusRelease struct {
 }
 
 type ArangoPlatformServiceStatusReleaseInfo struct {
-	FirstDeployed *meta.Time     `json:"first_deployed,omitempty"`
-	LastDeployed  *meta.Time     `json:"last_deployed,omitempty"`
-	Status        release.Status `json:"status,omitempty"`
+	FirstDeployed *meta.Time         `json:"first_deployed,omitempty"`
+	LastDeployed  *meta.Time         `json:"last_deployed,omitempty"`
+	Status        helmRelease.Status `json:"status,omitempty"`
 }

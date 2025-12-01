@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"helm.sh/helm/v3/pkg/action"
+	helmRelease "helm.sh/helm/v3/pkg/release"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -413,7 +414,41 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 		return true, operator.Reconcile("Release Upgraded")
 	}
 
-	return false, nil
+	if s := extractReleaseStatus(release, expectedChecksum); !s.Compare(status.Release) {
+		logger.WrapObj(item).Info("Release Update")
+		status.Release = s
+		return true, operator.Reconcile("Release Updated")
+	}
+
+	switch status.Release.Info.Status {
+	case helmRelease.StatusDeployed:
+		return false, nil
+
+	case helmRelease.StatusFailed:
+		// Try to upgrade
+		logger.WrapObj(item).Info("Upgrade Helm Release")
+
+		_, err = h.helm.Upgrade(ctx, extension.GetName(), helm.Chart(status.ChartInfo.Definition), helm.Values(status.Values), func(in *action.Upgrade) {
+			in.Namespace = extension.GetNamespace()
+
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
+
+			in.Timeout = 20 * time.Minute
+		})
+		if err != nil {
+			h.eventRecorder.Warning(extension, "Release Upgrade Failed", "Release upgrade failed: %s", err.Error())
+
+			return false, err
+		}
+
+		status.Release = extractReleaseStatus(release, expectedChecksum)
+
+		h.eventRecorder.Normal(extension, "Release Upgraded", "Release upgraded with version %d on chart %s (%s)", status.Release.Version, status.ChartInfo.Details.Name, status.ChartInfo.Details.Version)
+
+		return true, operator.Reconcile("Release Upgraded")
+	}
+
+	return false, operator.Stop("Invalid release status: %s", status.Release.Info.Status)
 }
 
 func extractReleaseStatus(in *helm.Release, hash string) *platformApi.ArangoPlatformServiceStatusRelease {

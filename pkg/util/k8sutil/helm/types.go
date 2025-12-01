@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/release"
+	helmRelease "helm.sh/helm/v3/pkg/release"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -34,7 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func fromHelmRelease(in *release.Release) (Release, error) {
+func fromHelmRelease(in *helmRelease.Release) (Release, error) {
 	var r Release
 
 	if in == nil {
@@ -88,7 +88,7 @@ func fromHelmReleaseChartMetadata(in *chart.Metadata) *ReleaseChartMetadata {
 	return &r
 }
 
-func fromHelmReleaseInfo(in *release.Info) (ReleaseInfo, error) {
+func fromHelmReleaseInfo(in *helmRelease.Info) (ReleaseInfo, error) {
 	var r ReleaseInfo
 
 	if in == nil {
@@ -191,13 +191,13 @@ func (r *ReleaseChartMetadata) GetVersion() string {
 }
 
 type ReleaseInfo struct {
-	FirstDeployed time.Time      `json:"first_deployed,omitempty"`
-	LastDeployed  time.Time      `json:"last_deployed,omitempty"`
-	Deleted       time.Time      `json:"deleted,omitempty"`
-	Description   string         `json:"description,omitempty"`
-	Status        release.Status `json:"status,omitempty"`
-	Notes         string         `json:"notes,omitempty"`
-	Resources     Resources      `json:"resources,omitempty"`
+	FirstDeployed time.Time          `json:"first_deployed,omitempty"`
+	LastDeployed  time.Time          `json:"last_deployed,omitempty"`
+	Deleted       time.Time          `json:"deleted,omitempty"`
+	Description   string             `json:"description,omitempty"`
+	Status        helmRelease.Status `json:"status,omitempty"`
+	Notes         string             `json:"notes,omitempty"`
+	Resources     Resources          `json:"resources,omitempty"`
 }
 
 type Resources []Resource

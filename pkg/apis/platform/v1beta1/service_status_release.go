@@ -21,8 +21,10 @@
 package v1beta1
 
 import (
-	"helm.sh/helm/v3/pkg/release"
+	helmRelease "helm.sh/helm/v3/pkg/release"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type ArangoPlatformServiceStatusRelease struct {
@@ -32,8 +34,35 @@ type ArangoPlatformServiceStatusRelease struct {
 	Info    ArangoPlatformServiceStatusReleaseInfo `json:"info"`
 }
 
+func (a *ArangoPlatformServiceStatusRelease) Compare(o *ArangoPlatformServiceStatusRelease) bool {
+	if a == nil && o == nil {
+		return true
+	}
+	if a == nil || o == nil {
+		return false
+	}
+
+	return a.Name == o.Name &&
+		a.Version == o.Version &&
+		a.Hash == o.Hash &&
+		a.Info.Compare(&o.Info)
+}
+
 type ArangoPlatformServiceStatusReleaseInfo struct {
-	FirstDeployed *meta.Time     `json:"first_deployed,omitempty"`
-	LastDeployed  *meta.Time     `json:"last_deployed,omitempty"`
-	Status        release.Status `json:"status,omitempty"`
+	FirstDeployed *meta.Time         `json:"first_deployed,omitempty"`
+	LastDeployed  *meta.Time         `json:"last_deployed,omitempty"`
+	Status        helmRelease.Status `json:"status,omitempty"`
+}
+
+func (a *ArangoPlatformServiceStatusReleaseInfo) Compare(o *ArangoPlatformServiceStatusReleaseInfo) bool {
+	if a == nil && o == nil {
+		return true
+	}
+	if a == nil || o == nil {
+		return false
+	}
+
+	return util.TimeCompareEqualPointer(a.FirstDeployed, o.FirstDeployed) &&
+		util.TimeCompareEqualPointer(a.LastDeployed, o.LastDeployed) &&
+		a.Status == o.Status
 }

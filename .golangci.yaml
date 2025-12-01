@@ -195,6 +195,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/util/constants
       - alias: tcache
         pkg: github.com/arangodb/kube-arangodb/pkg/util/tests/cache
+      - alias: helmRelease
+        pkg: helm.sh/helm/v3/pkg/release
       - alias: apps
         pkg: k8s.io/api/apps/v1
       - alias: batch
