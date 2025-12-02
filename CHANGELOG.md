@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.3.3](https://github.com/arangodb/kube-arangodb/tree/1.3.3) (2025-12-02)
 - (Bugfix) (Platform) Fix Container Resource Adjustments
 - (Bugfix) (Platform) Fix LM CLI Option
 - (Bugfix) (Platform) Fix topology for Gateways
