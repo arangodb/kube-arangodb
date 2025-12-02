@@ -48,6 +48,7 @@ spec:
       annotations:
         platform.arangodb.com/port: "8528"
         platform.arangodb.com/scrape: "true"
+        platform.arangodb.com/scheme: "https"
 {{- if .Values.operator.annotations }}
 {{ toYaml .Values.operator.annotations | indent 8 }}
 {{- end }}
