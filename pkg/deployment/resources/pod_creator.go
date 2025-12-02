@@ -381,7 +381,6 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 	switch group.Type() {
 	case api.ServerGroupTypeArangoD:
 		// Prepare arguments
-		// todo annotations
 		podCreator = &MemberArangoDPod{
 			Input:        input,
 			podName:      podName,
