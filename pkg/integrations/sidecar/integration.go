@@ -215,9 +215,7 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 		},
 		Pod: &schedulerPodApi.Pod{
 			Metadata: &schedulerPodResourcesApi.Metadata{
-				Annotations: map[string]string{
-					utilConstants.AnnotationMetricsScrapeLabel: "true",
-				},
+				Annotations: map[string]string{},
 			},
 		},
 	}
