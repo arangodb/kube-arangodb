@@ -45,8 +45,11 @@ spec:
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         release: {{ .Release.Name }}
-{{- if .Values.operator.annotations }}
       annotations:
+        platform.arangodb.com/port: "8528"
+        platform.arangodb.com/scrape: "true"
+        platform.arangodb.com/scheme: "https"
+{{- if .Values.operator.annotations }}
 {{ toYaml .Values.operator.annotations | indent 8 }}
 {{- end }}
     spec:

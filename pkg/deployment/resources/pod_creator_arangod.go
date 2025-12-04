@@ -549,7 +549,19 @@ func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {
 }
 
 func (m *MemberArangoDPod) Annotations() map[string]string {
-	return collection.MergeAnnotations(m.Deployment.Annotations, m.GroupSpec.Annotations)
+	// Merge deployment and group annotations and add hardcoded scrape annotation for ArangoD pods
+	result := collection.MergeAnnotations(m.Deployment.Annotations, m.GroupSpec.Annotations)
+
+	// Enable scraping via platform by default for ArangoD (requires metrics sidecar to be enabled)
+	if m.Deployment.Metrics.IsEnabled() {
+		if result == nil {
+			result = map[string]string{}
+
+		}
+		result[utilConstants.AnnotationMetricsScrapeLabel] = "true"
+		result[utilConstants.AnnotationMetricsScrapePort] = fmt.Sprintf("%d", m.GroupSpec.GetExporterPort())
+	}
+	return result
 }
 
 func (m *MemberArangoDPod) Profiles() (schedulerApi.ProfileTemplates, error) {

@@ -714,6 +714,14 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 		Finalizers: finalizers(group),
 	}
 
+	metrics := deployment.GetSpec().Metrics
+	if metrics.IsEnabled() {
+		testCase.ExpectedPod.ObjectMeta.Annotations = map[string]string{
+			utilConstants.AnnotationMetricsScrapeLabel: "true",
+			utilConstants.AnnotationMetricsScrapePort:  strconv.Itoa(shared.ArangoExporterPort),
+		}
+	}
+
 	groupSpec := testCase.ArangoDeployment.Spec.GetServerGroupSpec(group)
 	testCase.ExpectedPod.Spec.Tolerations = deployment.resources.CreatePodTolerations(group, groupSpec)
 

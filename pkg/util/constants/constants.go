@@ -82,6 +82,9 @@ const (
 
 	AnnotationEnforceAntiAffinity = "database.arangodb.com/enforce-anti-affinity" // Key of annotation added to PVC. Value is a boolean "true" or "false"
 
+	AnnotationMetricsScrapeLabel = "platform.arangodb.com/scrape"
+	AnnotationMetricsScrapePort  = "platform.arangodb.com/port"
+
 	BackupLabelRole      = "backup/role"
 	MLLabelRole          = "ml/role"
 	AnalyticsLabelRole   = "analytics/role"
