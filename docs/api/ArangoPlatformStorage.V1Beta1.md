@@ -8,6 +8,65 @@ title: ArangoPlatformStorage V1Beta1
 
 ## Spec
 
+### .spec.backend.azureBlobStorage.accountName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L39)</sup>
+
+This field is **required**
+
+AccountName specifies the Azure Storage AccountName
+used in format https://<account>.blob.core.windows.net/
+
+***
+
+### .spec.backend.azureBlobStorage.bucketName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L47)</sup>
+
+This field is **required**
+
+BucketName specifies the name of the bucket
+
+***
+
+### .spec.backend.azureBlobStorage.bucketPath
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L51)</sup>
+
+BucketPath specifies the Prefix within the bucket
+
+***
+
+### .spec.backend.azureBlobStorage.credentialsSecret.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
+
+Name of the object
+
+***
+
+### .spec.backend.azureBlobStorage.endpoint
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L43)</sup>
+
+This field is **required**
+
+Endpoint specifies the Azure Storage custom endpoint
+
+***
+
+### .spec.backend.azureBlobStorage.tenantID
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L34)</sup>
+
+This field is **required**
+
+TenantID specifies the Azure TenantID
+
+***
+
 ### .spec.backend.gcs.bucketName
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_gcs.go#L35)</sup>

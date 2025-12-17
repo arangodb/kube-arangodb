@@ -95,6 +95,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared
       - alias: pbImplStorageV2SharedGCS
         pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/gcs
+      - alias: pbImplStorageV2SharedAzureBlobStorage
+        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/abs
       - alias: pbImplStorageV2SharedS3
         pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3
       - alias: pbStorageV2

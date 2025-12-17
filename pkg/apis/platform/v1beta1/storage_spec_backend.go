@@ -22,6 +22,7 @@ package v1beta1
 
 import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -31,6 +32,9 @@ type ArangoPlatformStorageSpecBackend struct {
 
 	// GCS backend implements storage as a proxy to the provided GCS API endpoint
 	GCS *ArangoPlatformStorageSpecBackendGCS `json:"gcs,omitempty"`
+
+	// AzureBlobStorage backend implements storage as a proxy to the provided AzureBlobStorage
+	AzureBlobStorage *ArangoPlatformStorageSpecBackendAzureBlobStorage `json:"azureBlobStorage,omitempty"`
 }
 
 func (s *ArangoPlatformStorageSpecBackend) GetS3() *ArangoPlatformStorageSpecBackendS3 {
@@ -38,6 +42,13 @@ func (s *ArangoPlatformStorageSpecBackend) GetS3() *ArangoPlatformStorageSpecBac
 		return nil
 	}
 	return s.S3
+}
+
+func (s *ArangoPlatformStorageSpecBackend) GetAzureBlobStorage() *ArangoPlatformStorageSpecBackendAzureBlobStorage {
+	if s == nil || s.AzureBlobStorage == nil {
+		return nil
+	}
+	return s.AzureBlobStorage
 }
 
 func (s *ArangoPlatformStorageSpecBackend) GetGCS() *ArangoPlatformStorageSpecBackendGCS {
@@ -52,11 +63,16 @@ func (s *ArangoPlatformStorageSpecBackend) Validate() error {
 		return errors.Errorf("Backend is not specified")
 	}
 
-	if s.S3 == nil && s.GCS == nil {
+	if s.S3 == nil && s.GCS == nil && s.AzureBlobStorage == nil {
 		return errors.Errorf("At least one backend needs to be defined")
 	}
 
-	if s.S3 != nil && s.GCS != nil {
+	switch util.Count(true, s.S3 != nil, s.GCS != nil, s.AzureBlobStorage != nil) {
+	case 0:
+		return errors.Errorf("At least one backend needs to be defined")
+	case 1:
+		break
+	default:
 		return errors.Errorf("Only one backend can be defined")
 	}
 
@@ -66,6 +82,10 @@ func (s *ArangoPlatformStorageSpecBackend) Validate() error {
 
 	if s.GCS != nil {
 		return shared.WithErrors(shared.PrefixResourceError("gcs", s.GCS.Validate()))
+	}
+
+	if s.AzureBlobStorage != nil {
+		return shared.WithErrors(shared.PrefixResourceError("azureBlobStorage", s.AzureBlobStorage.Validate()))
 	}
 
 	return nil

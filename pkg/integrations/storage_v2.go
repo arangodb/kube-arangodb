@@ -28,6 +28,7 @@ import (
 	pbImplStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2"
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	awsHelper "github.com/arangodb/kube-arangodb/pkg/util/aws"
+	"github.com/arangodb/kube-arangodb/pkg/util/azure"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/gcs"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
@@ -72,6 +73,15 @@ func (b *storageV2) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 		fs.StringVar((*string)(&b.Configuration.GCS.Client.Provider.Type), "gcs.provider.type", string(gcs.ProviderTypeServiceAccount), "Type of the provided credentials"),
 		fs.StringVar(&b.Configuration.GCS.Client.Provider.ServiceAccount.File, "gcs.provider.sa.file", "", "Path to the file with ServiceAccount JSON"),
 		fs.StringVar(&b.Configuration.GCS.Client.Provider.ServiceAccount.JSON, "gcs.provider.sa.json", "", "ServiceAccount JSON"),
+
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.TenantID, "azure-blob-storage.client.tenant-id", "", "Azure Client Tenant ID"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.AccountName, "azure-blob-storage.account-name", "", "AzureBlobStorage Account ID"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Endpoint, "azure-blob-storage.endpoint", "", "AzureBlobStorage Endpoint"),
+		fs.StringVar((*string)(&b.Configuration.AzureBlobStorage.Client.Provider.Type), "azure-blob-storage.client.type", string(azure.ProviderTypeSecret), "Azure Client Provider"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientID, "azure-blob-storage.client.secret.client-id", "", "Azure ClientID"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientIDFile, "azure-blob-storage.client.secret.client-id-file", "", "Azure ClientID File"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientSecret, "azure-blob-storage.client.secret.client-secret", "", "Azure ClientSecret"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientSecretFile, "azure-blob-storage.client.secret.client-secret-file", "", "Azure ClientSecret File"),
 	)
 }
 

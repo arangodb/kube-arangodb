@@ -24,6 +24,7 @@ import (
 	"context"
 
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
+	pbImplStorageV2SharedAzureBlobStorage "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/abs"
 	pbImplStorageV2SharedGCS "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/gcs"
 	pbImplStorageV2SharedS3 "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -33,8 +34,9 @@ import (
 type ConfigurationType string
 
 const (
-	ConfigurationTypeS3  ConfigurationType = "s3"
-	ConfigurationTypeGCS ConfigurationType = "gcs"
+	ConfigurationTypeS3    ConfigurationType = "s3"
+	ConfigurationTypeGCS   ConfigurationType = "gcs"
+	ConfigurationTypeAzure ConfigurationType = "azureBlobStorage"
 )
 
 func NewConfiguration(mods ...util.ModR[Configuration]) Configuration {
@@ -46,8 +48,9 @@ func NewConfiguration(mods ...util.ModR[Configuration]) Configuration {
 type Configuration struct {
 	Type ConfigurationType
 
-	S3  pbImplStorageV2SharedS3.Configuration
-	GCS pbImplStorageV2SharedGCS.Configuration
+	S3               pbImplStorageV2SharedS3.Configuration
+	GCS              pbImplStorageV2SharedGCS.Configuration
+	AzureBlobStorage pbImplStorageV2SharedAzureBlobStorage.Configuration
 }
 
 func (c Configuration) IO(ctx context.Context) (pbImplStorageV2Shared.IO, error) {
@@ -56,6 +59,8 @@ func (c Configuration) IO(ctx context.Context) (pbImplStorageV2Shared.IO, error)
 		return c.S3.New()
 	case ConfigurationTypeGCS:
 		return c.GCS.New(ctx)
+	case ConfigurationTypeAzure:
+		return c.AzureBlobStorage.New()
 	default:
 		return nil, errors.Errorf("Unknown Type: %s", c.Type)
 	}
