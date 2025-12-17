@@ -21,7 +21,7 @@ used in format https://<account>.blob.core.windows.net/
 
 ### .spec.backend.azureBlobStorage.bucketName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L47)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L46)</sup>
 
 This field is **required**
 
@@ -31,7 +31,7 @@ BucketName specifies the name of the bucket
 
 ### .spec.backend.azureBlobStorage.bucketPath
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L51)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L50)</sup>
 
 BucketPath specifies the Prefix within the bucket
 
@@ -49,9 +49,7 @@ Name of the object
 
 ### .spec.backend.azureBlobStorage.endpoint
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L43)</sup>
-
-This field is **required**
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.3/pkg/apis/platform/v1beta1/storage_spec_backend_abs.go#L42)</sup>
 
 Endpoint specifies the Azure Storage custom endpoint
 

@@ -125,7 +125,6 @@ v1beta1:
                   - accountName
                   - bucketName
                   - credentialsSecret
-                  - endpoint
                   - tenantID
                 type: object
               gcs:

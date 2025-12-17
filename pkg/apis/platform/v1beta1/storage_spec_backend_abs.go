@@ -39,7 +39,6 @@ type ArangoPlatformStorageSpecBackendAzureBlobStorage struct {
 	AccountName *string `json:"accountName,omitempty"`
 
 	// Endpoint specifies the Azure Storage custom endpoint
-	// +doc/required
 	Endpoint *string `json:"endpoint,omitempty"`
 
 	// BucketName specifies the name of the bucket
