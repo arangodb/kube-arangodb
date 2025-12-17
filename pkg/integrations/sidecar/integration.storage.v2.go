@@ -155,6 +155,41 @@ func (i IntegrationStorageV2) Envs() ([]core.EnvVar, error) {
 				Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsServiceAccount),
 			},
 		)
+	} else if azureBlobStorage := i.Storage.Spec.GetBackend().GetAzureBlobStorage(); azureBlobStorage != nil {
+		envs = append(envs,
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_TYPE",
+				Value: string(pbImplStorageV2.ConfigurationTypeAzure),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_ID_FILE",
+				Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAzureBlobStorageClientID),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_SECRET_FILE",
+				Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAzureBlobStorageClientSecret),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_TENANT_ID",
+				Value: azureBlobStorage.GetTenantID(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_ACCOUNT_NAME",
+				Value: azureBlobStorage.GetAccountName(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_ENDPOINT",
+				Value: azureBlobStorage.GetEndpoint(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_BUCKET_NAME",
+				Value: azureBlobStorage.GetBucketName(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_BUCKET_PREFIX",
+				Value: azureBlobStorage.GetBucketPrefix(),
+			},
+		)
 	}
 
 	return i.Core.Envs(i, envs...), nil
@@ -191,6 +226,16 @@ func (i IntegrationStorageV2) Volumes() ([]core.Volume, []core.VolumeMount, erro
 		}
 	} else if gcs := i.Storage.Spec.GetBackend().GetGCS(); gcs != nil {
 		secretObj := gcs.GetCredentialsSecret()
+		if secretObj.GetNamespace(i.Storage) != i.Storage.GetNamespace() {
+			return nil, nil, errors.New("secrets from different namespace are not supported yet")
+		}
+		volumes = append(volumes, k8sutil.CreateVolumeWithSecret(mountNameStorageCredentials, secretObj.GetName()))
+		volumeMounts = append(volumeMounts, core.VolumeMount{
+			Name:      mountNameStorageCredentials,
+			MountPath: mountPathStorageCredentials,
+		})
+	} else if azureBlobStorage := i.Storage.Spec.GetBackend().GetAzureBlobStorage(); azureBlobStorage != nil {
+		secretObj := azureBlobStorage.GetCredentialsSecret()
 		if secretObj.GetNamespace(i.Storage) != i.Storage.GetNamespace() {
 			return nil, nil, errors.New("secrets from different namespace are not supported yet")
 		}

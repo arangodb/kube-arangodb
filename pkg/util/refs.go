@@ -238,3 +238,15 @@ func InitOptional[T any](in *T, ok bool) *T {
 	var z T
 	return &z
 }
+
+func Count[T comparable](value T, values ...T) int {
+	r := 0
+
+	for _, v := range values {
+		if value == v {
+			r++
+		}
+	}
+
+	return r
+}

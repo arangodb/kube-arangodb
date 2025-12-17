@@ -3,7 +3,7 @@ layout: page
 title: MinIO
 parent: Storage
 grand_parent: ArangoDBPlatform
-nav_order: 3
+nav_order: 4
 ---
 
 # Integration

@@ -15,7 +15,7 @@ In order to connect to the GCS (Google Cloud Storage):
 ServiceAccount with access to the storage needs to be saved in the secret.
 
 ```shell
-kubectl create secret generic ca --from-file 'serviceAccount=<ServiceAccount JSON File>'
+kubectl create secret generic credentials --from-file 'serviceAccount=<ServiceAccount JSON File>'
 ```
 
 ## Object
@@ -36,6 +36,6 @@ spec:
       bucketPath: <Bucket Path>
       credentialsSecret:
         name: credentials
-      projectID: gcr-for-testing
+      projectID: <Google Project ID>
 " | kubectl apply -f -
 ```

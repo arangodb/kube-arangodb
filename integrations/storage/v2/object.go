@@ -27,10 +27,12 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
+	pbImplStorageV2SharedAzureBlobStorage "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/abs"
 	pbImplStorageV2SharedGCS "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/gcs"
 	pbImplStorageV2SharedS3 "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	awsHelper "github.com/arangodb/kube-arangodb/pkg/util/aws"
+	"github.com/arangodb/kube-arangodb/pkg/util/azure"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	gcsHelper "github.com/arangodb/kube-arangodb/pkg/util/gcs"
@@ -137,6 +139,42 @@ func NewIOFromObject(ctx context.Context, client kclient.Client, in *platformApi
 			cfg.Client = config
 
 			return cfg.New(ctx)
+		}
+
+		if azureBlobStorage := backend.AzureBlobStorage; azureBlobStorage != nil {
+			var config azure.Config
+
+			if v := azureBlobStorage.CredentialsSecret; v != nil {
+				secret, err := client.Kubernetes().CoreV1().Secrets(v.GetNamespace(in)).Get(ctx, v.GetName(), meta.GetOptions{})
+				if err != nil {
+					return nil, errors.WithMessage(err, "Failed to get AzureBlobStorage secret")
+				}
+
+				cid, ok := secret.Data[utilConstants.SecretCredentialsAzureBlobStorageClientID]
+				if !ok {
+					return nil, errors.Errorf("Failed to get AzureBlobStorage secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsAzureBlobStorageClientID)
+				}
+
+				cs, ok := secret.Data[utilConstants.SecretCredentialsAzureBlobStorageClientSecret]
+				if !ok {
+					return nil, errors.Errorf("Failed to get AzureBlobStorage secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsAzureBlobStorageClientSecret)
+				}
+
+				config.Provider.Secret.ClientID = string(cid)
+				config.Provider.Secret.ClientSecret = string(cs)
+				config.Provider.Type = azure.ProviderTypeSecret
+			}
+
+			config.AccountName = azureBlobStorage.GetAccountName()
+			config.Provider.TenantID = azureBlobStorage.GetTenantID()
+
+			var cfg pbImplStorageV2SharedAzureBlobStorage.Configuration
+
+			cfg.BucketName = azureBlobStorage.GetBucketName()
+			cfg.BucketPrefix = azureBlobStorage.GetBucketPrefix()
+			cfg.Client = config
+
+			return cfg.New()
 		}
 	}
 

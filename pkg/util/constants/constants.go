@@ -65,6 +65,9 @@ const (
 
 	SecretCredentialsServiceAccount = "serviceAccount" // Key in Secret used to store an GCS ServiceAccount File
 
+	SecretCredentialsAzureBlobStorageClientID     = "clientId"     // Key in Secret used to store an AzureBlobStorage ClientID
+	SecretCredentialsAzureBlobStorageClientSecret = "clientSecret" // Key in Secret used to store an AzureBlobStorage ClientSecret
+
 	SecretAccessPackageYaml = "accessPackage.yaml" // Key in Secret.data used to store a YAML encoded access package
 
 	FinalizerDeplRemoveChildFinalizers = "database.arangodb.com/remove-child-finalizers" // Finalizer added to ArangoDeployment, indicating the need to remove finalizers from all children
