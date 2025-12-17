@@ -63,10 +63,6 @@ func (s *ArangoPlatformStorageSpecBackend) Validate() error {
 		return errors.Errorf("Backend is not specified")
 	}
 
-	if s.S3 == nil && s.GCS == nil && s.AzureBlobStorage == nil {
-		return errors.Errorf("At least one backend needs to be defined")
-	}
-
 	switch util.Count(true, s.S3 != nil, s.GCS != nil, s.AzureBlobStorage != nil) {
 	case 0:
 		return errors.Errorf("At least one backend needs to be defined")
