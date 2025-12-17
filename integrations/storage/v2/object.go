@@ -147,17 +147,17 @@ func NewIOFromObject(ctx context.Context, client kclient.Client, in *platformApi
 			if v := azureBlobStorage.CredentialsSecret; v != nil {
 				secret, err := client.Kubernetes().CoreV1().Secrets(v.GetNamespace(in)).Get(ctx, v.GetName(), meta.GetOptions{})
 				if err != nil {
-					return nil, errors.WithMessage(err, "Failed to get AzureBlueStorage secret")
+					return nil, errors.WithMessage(err, "Failed to get AzureBlobStorage secret")
 				}
 
 				cid, ok := secret.Data[utilConstants.SecretCredentialsAzureBlobStorageClientID]
 				if !ok {
-					return nil, errors.Errorf("Failed to get AzureBlueStorage secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsAzureBlobStorageClientID)
+					return nil, errors.Errorf("Failed to get AzureBlobStorage secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsAzureBlobStorageClientID)
 				}
 
 				cs, ok := secret.Data[utilConstants.SecretCredentialsAzureBlobStorageClientSecret]
 				if !ok {
-					return nil, errors.Errorf("Failed to get AzureBlueStorage secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsAzureBlobStorageClientSecret)
+					return nil, errors.Errorf("Failed to get AzureBlobStorage secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsAzureBlobStorageClientSecret)
 				}
 
 				config.Provider.Secret.ClientID = string(cid)
