@@ -12,7 +12,7 @@ In order to connect to the Azure Blob storage:
 
 ## Azure Credentials
 
-Client ID & Secret with access to the storage container and accounts needs to be saved in the secret.
+Client ID & Secret with access to the storage container and accounts need to be saved in the secret.
 
 ```shell
 kubectl create secret generic credentials --from-literal 'clientId=<Azure Client ID>' --from-literal 'clientSecret=<Azure Client Secret>'
