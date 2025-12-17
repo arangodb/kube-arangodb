@@ -36,7 +36,7 @@ spec:
       bucketPath: <Bucket Path>
       credentialsSecret:
         name: credentials
-      tenantID: gcr-for-testing
+      tenantID: <Azure Tenant ID>
       accountName: <Azure Storage Account Name>
       endpoint: <Azure Storage Endpoint in case of Private Connection>
 " | kubectl apply -f -

@@ -36,6 +36,6 @@ spec:
       bucketPath: <Bucket Path>
       credentialsSecret:
         name: credentials
-      projectID: gcr-for-testing
+      projectID: <Google Project ID>
 " | kubectl apply -f -
 ```
