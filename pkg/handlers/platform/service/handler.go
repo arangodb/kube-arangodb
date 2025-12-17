@@ -475,6 +475,7 @@ func extractReleaseStatusInfo(in helm.ReleaseInfo) platformApi.ArangoPlatformSer
 		i.LastDeployed = util.NewType(meta.NewTime(in.LastDeployed))
 	}
 	i.Status = in.Status
+	i.Description = in.Description
 	return i
 }
 
