@@ -12,7 +12,6 @@
 - (Feature) (Platform) Dump CLI switch to Services
 - (Feature) (Platform) Fix ImagePullSecrets Merge
 - (Feature) (Platform) Update Failed Releases
-- (Feature) Add scrape annotations for ArangoD pods
 
 ## [1.3.2](https://github.com/arangodb/kube-arangodb/tree/1.3.2) (2025-11-20)
 - (Bugfix) (Platform) Increase memory limit for Inventory
