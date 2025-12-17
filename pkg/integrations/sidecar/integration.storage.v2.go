@@ -181,6 +181,18 @@ func (i IntegrationStorageV2) Envs() ([]core.EnvVar, error) {
 				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_ENDPOINT",
 				Value: azureBlobStorage.GetEndpoint(),
 			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_ACCOUNT_NAME",
+				Value: azureBlobStorage.GetAccountName(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_BUCKET_NAME",
+				Value: azureBlobStorage.GetBucketName(),
+			},
+			core.EnvVar{
+				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_BUCKET_PREFIX",
+				Value: azureBlobStorage.GetBucketPrefix(),
+			},
 		)
 	}
 

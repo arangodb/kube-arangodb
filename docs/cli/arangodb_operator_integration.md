@@ -89,6 +89,8 @@ Flags:
       --integration.shutdown.v1.internal                                                    Defines if Internal access to service shutdown.v1 is enabled (Env: INTEGRATION_SHUTDOWN_V1_INTERNAL) (default true)
       --integration.storage.v2                                                              StorageBucket V2 Integration (Env: INTEGRATION_STORAGE_V2)
       --integration.storage.v2.azure-blob-storage.account-name string                       AzureBlobStorage Account ID (Env: INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_ACCOUNT_NAME)
+      --integration.storage.v2.azure-blob-storage.bucket.name string                        Bucket name (Env: INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_BUCKET_NAME)
+      --integration.storage.v2.azure-blob-storage.bucket.prefix string                      Bucket Prefix (Env: INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_BUCKET_PREFIX)
       --integration.storage.v2.azure-blob-storage.client.secret.client-id string            Azure ClientID (Env: INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_ID)
       --integration.storage.v2.azure-blob-storage.client.secret.client-id-file string       Azure ClientID File (Env: INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_ID_FILE)
       --integration.storage.v2.azure-blob-storage.client.secret.client-secret string        Azure ClientSecret (Env: INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_SECRET)

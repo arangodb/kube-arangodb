@@ -77,6 +77,8 @@ func (b *storageV2) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.TenantID, "azure-blob-storage.client.tenant-id", "", "Azure Client Tenant ID"),
 		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.AccountName, "azure-blob-storage.account-name", "", "AzureBlobStorage Account ID"),
 		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Endpoint, "azure-blob-storage.endpoint", "", "AzureBlobStorage Endpoint"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.BucketName, "azure-blob-storage.bucket.name", "", "Bucket name"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.BucketPrefix, "azure-blob-storage.bucket.prefix", "", "Bucket Prefix"),
 		fs.StringVar((*string)(&b.Configuration.AzureBlobStorage.Client.Provider.Type), "azure-blob-storage.client.type", string(azure.ProviderTypeSecret), "Azure Client Provider"),
 		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientID, "azure-blob-storage.client.secret.client-id", "", "Azure ClientID"),
 		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientIDFile, "azure-blob-storage.client.secret.client-id-file", "", "Azure ClientID File"),
