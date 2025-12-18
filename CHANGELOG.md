@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Add scrape annotations for ArangoD pods
 - (Feature) (Platform) Azure Storage Integration
+- (Feature) (Platform) Enable ArangoPlatformService Description pass
 
 ## [1.3.3](https://github.com/arangodb/kube-arangodb/tree/1.3.3) (2025-12-02)
 - (Bugfix) (Platform) Fix Container Resource Adjustments

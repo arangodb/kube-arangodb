@@ -215,20 +215,6 @@ func (c *client) Upgrade(ctx context.Context, name string, chart Chart, values V
 		return nil, err
 	}
 
-	if release != nil {
-		if meta := chartData.Chart().Metadata; meta != nil {
-			if release.GetChart().GetMetadata().GetVersion() == meta.Version {
-				// We are on the same version
-				if release.Values.Equals(values) {
-					// We provide same values
-					return &UpgradeResponse{
-						Before: release,
-					}, nil
-				}
-			}
-		}
-	}
-
 	result, err := act.RunWithContext(ctx, name, chartData.Chart(), valuesData)
 	if err != nil {
 		return nil, err

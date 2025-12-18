@@ -52,6 +52,7 @@ type ArangoPlatformServiceStatusReleaseInfo struct {
 	FirstDeployed *meta.Time         `json:"first_deployed,omitempty"`
 	LastDeployed  *meta.Time         `json:"last_deployed,omitempty"`
 	Status        helmRelease.Status `json:"status,omitempty"`
+	Description   string             `json:"description,omitempty"`
 }
 
 func (a *ArangoPlatformServiceStatusReleaseInfo) Compare(o *ArangoPlatformServiceStatusReleaseInfo) bool {
@@ -64,5 +65,6 @@ func (a *ArangoPlatformServiceStatusReleaseInfo) Compare(o *ArangoPlatformServic
 
 	return util.TimeCompareEqualPointer(a.FirstDeployed, o.FirstDeployed) &&
 		util.TimeCompareEqualPointer(a.LastDeployed, o.LastDeployed) &&
-		a.Status == o.Status
+		a.Status == o.Status &&
+		a.Description == o.Description
 }
