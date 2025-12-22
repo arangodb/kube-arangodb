@@ -34875,7 +34875,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: e004c23ce11b58f1ee3c6b13ef99dc2b
+    arangodb.com/schema: 85df51b46b63b4307553db7c18b2e300
     arangodb.com/version: aff966efc3d295c26e2e1207c5b1a2a5
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoplatformstorages.platform.arangodb.com
@@ -34998,6 +34998,41 @@ spec:
                 backend:
                   description: Backend defines how storage is implemented
                   properties:
+                    azureBlobStorage:
+                      description: AzureBlobStorage backend implements storage as a proxy to the provided AzureBlobStorage
+                      properties:
+                        accountName:
+                          description: |-
+                            AccountName specifies the Azure Storage AccountName
+                            used in format https://<account>.blob.core.windows.net/
+                          type: string
+                        bucketName:
+                          description: BucketName specifies the name of the bucket
+                          type: string
+                        bucketPath:
+                          description: BucketPath specifies the Prefix within the bucket
+                          type: string
+                        credentialsSecret:
+                          description: CredentialsSecret specifies the Kubernetes Secret containing ClientID and ClientSecret for Azure API authorization
+                          properties:
+                            name:
+                              description: Name of the object
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        endpoint:
+                          description: Endpoint specifies the Azure Storage custom endpoint
+                          type: string
+                        tenantID:
+                          description: TenantID specifies the Azure TenantID
+                          type: string
+                      required:
+                        - accountName
+                        - bucketName
+                        - credentialsSecret
+                        - tenantID
+                      type: object
                     gcs:
                       description: GCS backend implements storage as a proxy to the provided GCS API endpoint
                       properties:
