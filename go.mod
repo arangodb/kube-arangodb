@@ -41,7 +41,6 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.6.0
-	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
 	github.com/josephburnett/jd v1.6.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/magiconair/properties v1.8.7
