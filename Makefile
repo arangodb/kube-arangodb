@@ -41,7 +41,6 @@ CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
 VBINDIR := $(BINDIR)/$(RELEASE_MODE)
 VENDORDIR := $(ROOTDIR)/deps
-DASHBOARDDIR := $(ROOTDIR)/dashboard
 LOCALDIR := $(ROOT)/local
 
 ORGPATH := github.com/arangodb
@@ -234,7 +233,6 @@ endif
 ifndef ENTERPRISELICENSE
 	ENTERPRISELICENSE := $(DEFAULTENTERPRISELICENSE)
 endif
-DASHBOARDBUILDIMAGE := kube-arangodb-dashboard-builder
 
 ifndef ALLOWCHAOS
 	ALLOWCHAOS := true
@@ -267,7 +265,7 @@ VBIN_OPERATOR_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BINNAME)$3
 
 .PHONY: $$(VBIN_OPERATOR_$(_OS)_$(_ARCH))
 
-$$(VBIN_OPERATOR_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+$$(VBIN_OPERATOR_$(_OS)_$(_ARCH)): $$(SOURCES) VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main
 
@@ -282,7 +280,7 @@ VBIN_INT_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_INT_NAME)$3
 
 .PHONY: $$(VBIN_INT_$(_OS)_$(_ARCH))
 
-$$(VBIN_INT_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+$$(VBIN_INT_$(_OS)_$(_ARCH)): $$(SOURCES) VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-int
 
@@ -297,7 +295,7 @@ VBIN_OPS_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_OPS_NAME)$3
 
 .PHONY: $$(VBIN_OPS_$(_OS)_$(_ARCH))
 
-$$(VBIN_OPS_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+$$(VBIN_OPS_$(_OS)_$(_ARCH)): $$(SOURCES) VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-ops
 
@@ -312,7 +310,7 @@ VBIN_PLATFORM_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_PLATFORM_
 
 .PHONY: $$(VBIN_PLATFORM_$(_OS)_$(_ARCH))
 
-$$(VBIN_PLATFORM_$(_OS)_$(_ARCH)): $$(SOURCES) dashboard/assets.go VERSION
+$$(VBIN_PLATFORM_$(_OS)_$(_ARCH)): $$(SOURCES) VERSION
 	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-platform
 
@@ -351,7 +349,6 @@ DOCS_EXCLUDE_FILES :=
 DOCS_QUERY := find ./docs/ -type f -name '*.md' $(foreach EXCLUDE_DIR,$(DOCS_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(DOCS_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 DOCS := $(shell $(DOCS_QUERY))
 
-DASHBOARDSOURCES := $(shell find $(DASHBOARDDIR)/src -name '*.js') $(DASHBOARDDIR)/package.json
 LINT_EXCLUDES:=
 ifeq ($(RELEASE_MODE),enterprise)
 LINT_EXCLUDES+=.*\.community\.go$$
@@ -449,7 +446,7 @@ endif
 
 .PHONY: clean
 clean:
-	rm -Rf $(BIN) $(BINDIR) $(DASHBOARDDIR)/build $(DASHBOARDDIR)/node_modules $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPERATOR_LINUX_ARM64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_OPS_LINUX_ARM64) $(VBIN_OPS_DARWIN_AMD64) $(VBIN_OPS_DARWIN_ARM64) $(VBIN_OPS_WIN_AMD64)
+	rm -Rf $(BIN) $(BINDIR) $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPERATOR_LINUX_ARM64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_OPS_LINUX_ARM64) $(VBIN_OPS_DARWIN_AMD64) $(VBIN_OPS_DARWIN_ARM64) $(VBIN_OPS_WIN_AMD64)
 
 .PHONY: check-vars
 check-vars:
@@ -501,17 +498,6 @@ update-vendor:
 update-generated:
 	@$(SED) -e 's/^/\/\/ /' -e 's/ *$$//' $(ROOTDIR)/tools/codegen/license-header.txt > $(ROOTDIR)/tools/codegen/boilerplate.go.txt
 	bash "${ROOTDIR}/scripts/codegen.sh" "${ROOTDIR}"
-
-dashboard/assets.go:
-	cd $(DASHBOARDDIR) && docker build -t $(DASHBOARDBUILDIMAGE) -f Dockerfile.build $(DASHBOARDDIR)
-	@mkdir -p $(DASHBOARDDIR)/build
-	docker run --rm \
-		-u $(shell id -u):$(shell id -g) \
-		-v $(DASHBOARDDIR)/build:/usr/code/build \
-		-v $(DASHBOARDDIR)/public:/usr/code/public:ro \
-		-v $(DASHBOARDDIR)/src:/usr/code/src:ro \
-		$(DASHBOARDBUILDIMAGE)
-	$(GOASSETSBUILDER) -s /dashboard/build/ -o dashboard/assets.go -p dashboard dashboard/build
 
 # Binaries
 
