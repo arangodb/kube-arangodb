@@ -150,11 +150,8 @@ Flags:
       --agency.refresh-delay duration                          The Agency refresh delay (0 = no delay) (default 500ms)
       --agency.refresh-interval duration                       The Agency refresh interval (0 = do not refresh)
       --agency.retries int                                     The Agency retries (0 = no retries) (default 1)
-      --api.enabled                                            Enable operator HTTP and gRPC API (default true)
       --api.grpc-port int                                      gRPC API port to listen on (default 8728)
-      --api.http-port int                                      HTTP API port to listen on (default 8628)
-      --api.jwt-key-secret-name string                         Name of secret containing key used to sign JWT. If there is no such secret present, value will be saved here (default "arangodb-operator-api-jwt-key")
-      --api.jwt-secret-name string                             Name of secret which will contain JWT to authenticate API requests. (default "arangodb-operator-api-jwt")
+      --api.http-port int                                      HTTP API port to listen on (default 8528)
       --api.tls-secret-name string                             Name of secret containing tls.crt & tls.key for HTTPS API (if empty, self-signed certificate is used)
       --backup-concurrent-uploads int                          Number of concurrent uploads per deployment (default 4)
       --chaos.allowed                                          Set to allow chaos in deployments. Only activated when allowed and enabled in deployment
@@ -203,7 +200,7 @@ Flags:
       --kubernetes.qps float32                                 Number of queries per second for k8s API. If set to 0 or less, API calls won't be throttled (default 32)
       --leader.label.skip                                      Skips Leader Label for the Pod
       --log.format string                                      Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
-      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, api-server, assertion, backup-operator, backup-policy-operator, chaos-monkey, cli-utils, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, helm, http, inspector, integration-authn-v1, integration-config-v1, integration-envoy-auth-v3, integration-envoy-auth-v3-impl-auth-bearer, integration-envoy-auth-v3-impl-auth-cookie, integration-envoy-auth-v3-impl-custom-openid, integration-envoy-auth-v3-impl-pass-mode, integration-events-v1, integration-meta-v1, integration-pong-v1, integration-scheduler-v2, integration-shutdown-v1, integration-storage-v1-s3, integration-storage-v2, integrations, k8s-client, kubernetes, kubernetes-access, kubernetes-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, platform-chart-operator, platform-pod-shutdown, platform-service-operator, platform-storage-operator, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, server, server-authentication, webhook (default [info])
+      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, assertion, backup-operator, backup-policy-operator, chaos-monkey, cli-utils, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, helm, http, inspector, integration-authn-v1, integration-config-v1, integration-envoy-auth-v3, integration-envoy-auth-v3-impl-auth-bearer, integration-envoy-auth-v3-impl-auth-cookie, integration-envoy-auth-v3-impl-custom-openid, integration-envoy-auth-v3-impl-pass-mode, integration-events-v1, integration-meta-v1, integration-pong-v1, integration-scheduler-v2, integration-shutdown-v1, integration-storage-v1-s3, integration-storage-v2, integrations, k8s-client, kubernetes, kubernetes-access, kubernetes-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-arangojob-handler, operator-v2, operator-v2-event, operator-v2-worker, panics, platform-chart-operator, platform-pod-shutdown, platform-service-operator, platform-storage-operator, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, webhook (default [info])
       --log.sampling                                           If true, operator will try to minimize duplication of logging events (default true)
       --log.stdout                                             If true, operator will log to the stdout (default true)
       --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
@@ -223,11 +220,6 @@ Flags:
       --operator.storage                                       Enable to run the ArangoLocalStorage operator
       --operator.version                                       Enable only version endpoint in Operator
       --reconciliation.delay duration                          Delay between reconciliation loops (<= 0 -> Disabled)
-      --server.admin-secret-name string                        Name of secret containing username + password for login to the dashboard (default "arangodb-operator-dashboard")
-      --server.allow-anonymous-access                          Allow anonymous access to the dashboard
-      --server.host string                                     Host to listen on (default "0.0.0.0")
-      --server.port int                                        Port to listen on (default 8528)
-      --server.tls-secret-name string                          Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)
       --shutdown.delay duration                                The delay before running shutdown handlers (default 2s)
       --shutdown.timeout duration                              Timeout for shutdown handlers (default 30s)
       --threads int                                            Number of the worker threads (default 16)

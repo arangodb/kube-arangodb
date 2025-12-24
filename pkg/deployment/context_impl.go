@@ -65,6 +65,26 @@ import (
 
 var _ resources.Context = &Deployment{}
 
+// Name returns the name of the deployment.
+func (d *Deployment) Name() string {
+	return d.currentObject.Name
+}
+
+// Namespace returns the namespace that contains the deployment.
+func (d *Deployment) Namespace() string {
+	return d.currentObject.Namespace
+}
+
+// GetMode returns the mode of the deployment.
+func (d *Deployment) GetMode() api.DeploymentMode {
+	return d.GetSpec().GetMode()
+}
+
+// Environment returns the environment used in the deployment.
+func (d *Deployment) Environment() api.Environment {
+	return d.GetSpec().GetEnvironment()
+}
+
 // GetBackup receives information about a backup resource
 func (d *Deployment) GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)

@@ -101,11 +101,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 	}
 
 	if keyfile := s.tls.keyfile; keyfile != "" {
-		if tls, err := tlsServerOptions(keyfile); err != nil {
-			return svc.Configuration{}, err
-		} else {
-			cfg.TLSOptions = tls
-		}
+		cfg.TLSOptions = util.NewKeyfileTLSConfig(s.tls.keyfile)
 	}
 
 	if s.gateway.enabled {

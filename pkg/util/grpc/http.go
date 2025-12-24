@@ -36,6 +36,7 @@ import (
 type HTTPResponse[T proto.Message] interface {
 	WithCode(codes ...int) HTTPResponse[T]
 	Get() (T, error)
+	Validate() error
 }
 
 type httpErrorResponse[T proto.Message] struct {
@@ -50,10 +51,18 @@ func (h httpErrorResponse[T]) Get() (T, error) {
 	return util.Default[T](), h.err
 }
 
+func (h httpErrorResponse[T]) Validate() error {
+	return h.err
+}
+
 type httpResponse[T proto.Message] struct {
 	code int
 
 	data []byte
+}
+
+func (h httpResponse[T]) Validate() error {
+	return nil
 }
 
 func (h httpResponse[T]) WithCode(codes ...int) HTTPResponse[T] {

@@ -100,3 +100,10 @@ func (p *LivenessProbe) LivenessHandler(w goHttp.ResponseWriter, r *goHttp.Reque
 		w.WriteHeader(goHttp.StatusInternalServerError)
 	}
 }
+
+func (p *LivenessProbe) IsAlive() bool {
+	if p.waitUntilNotLocked(time.Millisecond) {
+		return true
+	}
+	return false
+}

@@ -40,9 +40,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Operator_GetVersion_FullMethodName  = "/server.Operator/GetVersion"
-	Operator_GetLogLevel_FullMethodName = "/server.Operator/GetLogLevel"
-	Operator_SetLogLevel_FullMethodName = "/server.Operator/SetLogLevel"
+	Operator_GetVersion_FullMethodName               = "/server.Operator/GetVersion"
+	Operator_GetLogLevel_FullMethodName              = "/server.Operator/GetLogLevel"
+	Operator_SetLogLevel_FullMethodName              = "/server.Operator/SetLogLevel"
+	Operator_OperatorLiveness_FullMethodName         = "/server.Operator/OperatorLiveness"
+	Operator_OperatorReadiness_FullMethodName        = "/server.Operator/OperatorReadiness"
+	Operator_OperatorServiceReadiness_FullMethodName = "/server.Operator/OperatorServiceReadiness"
 )
 
 // OperatorClient is the client API for Operator service.
@@ -57,6 +60,12 @@ type OperatorClient interface {
 	GetLogLevel(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*LogLevelConfig, error)
 	// SetLogLevel sets Operator LogLevels
 	SetLogLevel(ctx context.Context, in *LogLevelConfig, opts ...grpc.CallOption) (*definition.Empty, error)
+	// Returns health details
+	OperatorLiveness(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error)
+	// Returns Ready details
+	OperatorReadiness(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error)
+	// Returns health details
+	OperatorServiceReadiness(ctx context.Context, in *OperatorService, opts ...grpc.CallOption) (*definition.Empty, error)
 }
 
 type operatorClient struct {
@@ -97,6 +106,36 @@ func (c *operatorClient) SetLogLevel(ctx context.Context, in *LogLevelConfig, op
 	return out, nil
 }
 
+func (c *operatorClient) OperatorLiveness(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(definition.Empty)
+	err := c.cc.Invoke(ctx, Operator_OperatorLiveness_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *operatorClient) OperatorReadiness(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(definition.Empty)
+	err := c.cc.Invoke(ctx, Operator_OperatorReadiness_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *operatorClient) OperatorServiceReadiness(ctx context.Context, in *OperatorService, opts ...grpc.CallOption) (*definition.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(definition.Empty)
+	err := c.cc.Invoke(ctx, Operator_OperatorServiceReadiness_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OperatorServer is the server API for Operator service.
 // All implementations must embed UnimplementedOperatorServer
 // for forward compatibility.
@@ -109,6 +148,12 @@ type OperatorServer interface {
 	GetLogLevel(context.Context, *definition.Empty) (*LogLevelConfig, error)
 	// SetLogLevel sets Operator LogLevels
 	SetLogLevel(context.Context, *LogLevelConfig) (*definition.Empty, error)
+	// Returns health details
+	OperatorLiveness(context.Context, *definition.Empty) (*definition.Empty, error)
+	// Returns Ready details
+	OperatorReadiness(context.Context, *definition.Empty) (*definition.Empty, error)
+	// Returns health details
+	OperatorServiceReadiness(context.Context, *OperatorService) (*definition.Empty, error)
 	mustEmbedUnimplementedOperatorServer()
 }
 
@@ -127,6 +172,15 @@ func (UnimplementedOperatorServer) GetLogLevel(context.Context, *definition.Empt
 }
 func (UnimplementedOperatorServer) SetLogLevel(context.Context, *LogLevelConfig) (*definition.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetLogLevel not implemented")
+}
+func (UnimplementedOperatorServer) OperatorLiveness(context.Context, *definition.Empty) (*definition.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OperatorLiveness not implemented")
+}
+func (UnimplementedOperatorServer) OperatorReadiness(context.Context, *definition.Empty) (*definition.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OperatorReadiness not implemented")
+}
+func (UnimplementedOperatorServer) OperatorServiceReadiness(context.Context, *OperatorService) (*definition.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OperatorServiceReadiness not implemented")
 }
 func (UnimplementedOperatorServer) mustEmbedUnimplementedOperatorServer() {}
 func (UnimplementedOperatorServer) testEmbeddedByValue()                  {}
@@ -203,6 +257,60 @@ func _Operator_SetLogLevel_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Operator_OperatorLiveness_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(definition.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OperatorServer).OperatorLiveness(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Operator_OperatorLiveness_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OperatorServer).OperatorLiveness(ctx, req.(*definition.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Operator_OperatorReadiness_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(definition.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OperatorServer).OperatorReadiness(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Operator_OperatorReadiness_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OperatorServer).OperatorReadiness(ctx, req.(*definition.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Operator_OperatorServiceReadiness_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OperatorService)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OperatorServer).OperatorServiceReadiness(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Operator_OperatorServiceReadiness_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OperatorServer).OperatorServiceReadiness(ctx, req.(*OperatorService))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Operator_ServiceDesc is the grpc.ServiceDesc for Operator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -221,6 +329,18 @@ var Operator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetLogLevel",
 			Handler:    _Operator_SetLogLevel_Handler,
+		},
+		{
+			MethodName: "OperatorLiveness",
+			Handler:    _Operator_OperatorLiveness_Handler,
+		},
+		{
+			MethodName: "OperatorReadiness",
+			Handler:    _Operator_OperatorReadiness_Handler,
+		},
+		{
+			MethodName: "OperatorServiceReadiness",
+			Handler:    _Operator_OperatorServiceReadiness_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

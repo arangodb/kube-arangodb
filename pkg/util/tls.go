@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,12 @@ func (t TLSConfigFetcher) Eval(ctx context.Context) (*tls.Config, error) {
 
 func EmptyTLSConfig(ctx context.Context) (*tls.Config, error) {
 	return nil, nil
+}
+
+func NewStatisTLSConfig(cfg *tls.Config) TLSConfigFetcher {
+	return func(ctx context.Context) (*tls.Config, error) {
+		return cfg, nil
+	}
 }
 
 func NewSelfSignedTLSConfig(cn string, names ...string) TLSConfigFetcher {
