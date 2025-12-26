@@ -24,14 +24,11 @@ import (
 	"context"
 	"crypto/tls"
 	goHttp "net/http"
-	goStrings "strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jessevdk/go-assets"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	"github.com/arangodb/kube-arangodb/dashboard"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -202,22 +199,9 @@ func NewServer(cli typedCore.CoreV1Interface, cfg Config, deps Dependencies) (*S
 		api.GET("/storage/:name", s.handleGetLocalStorageDetails)
 	}
 	// Dashboard
-	r.GET("/", createAssetFileHandler(dashboard.Assets.Files["index.html"]))
-	for path, file := range dashboard.Assets.Files {
-		localPath := "/" + goStrings.TrimPrefix(path, "/")
-		r.GET(localPath, createAssetFileHandler(file))
-	}
 	httpServer.Handler = r
 
 	return s, nil
-}
-
-// createAssetFileHandler creates a gin handler to serve the content
-// of the given asset file.
-func createAssetFileHandler(file *assets.File) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		goHttp.ServeContent(c.Writer, c.Request, file.Name(), file.ModTime(), file)
-	}
 }
 
 // Run the server until the program stops.
