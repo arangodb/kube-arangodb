@@ -220,5 +220,11 @@ func (i *SchedulerV2UpgradeV2RequestOptions) Options() []util.Mod[action.Upgrade
 		})
 	}
 
+	opts = append(opts, func(in *action.Upgrade) {
+		if v := i.MaxHistory; v != nil {
+			in.MaxHistory = int(*v)
+		}
+	})
+
 	return opts
 }
