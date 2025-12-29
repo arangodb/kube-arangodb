@@ -167,6 +167,9 @@ message SchedulerV2UpgradeV2RequestOptions {
 
   // Waits for the upgrade to be completed
   optional bool wait = 2;
+
+  // Helm Max History (defaults to 10)
+  optional int32 max_history=3;
 }
 
 // Response
@@ -202,6 +205,9 @@ message SchedulerV2UpgradeRequestOptions {
 
   // Waits for the upgrade to be completed
   optional bool wait = 2;
+
+  // Helm Max History (defaults to 10)
+  optional int32 max_history=3;
 }
 
 // Response

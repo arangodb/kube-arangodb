@@ -159,6 +159,10 @@ func (i *implementation) Upgrade(ctx context.Context, in *pbSchedulerV2.Schedule
 
 	var mods []util.Mod[action.Upgrade]
 
+	mods = append(mods, func(in *action.Upgrade) {
+		// Defaults
+		in.MaxHistory = i.cfg.MaxHistory
+	})
 	mods = append(mods, in.GetOptions().Options()...)
 	mods = append(mods, func(action *action.Upgrade) {
 		action.Namespace = i.cfg.Namespace
@@ -315,6 +319,10 @@ func (i *implementation) UpgradeV2(ctx context.Context, in *pbSchedulerV2.Schedu
 
 	var mods []util.Mod[action.Upgrade]
 
+	mods = append(mods, func(in *action.Upgrade) {
+		// Defaults
+		in.MaxHistory = i.cfg.MaxHistory
+	})
 	mods = append(mods, in.GetOptions().Options()...)
 	mods = append(mods, func(action *action.Upgrade) {
 		action.Namespace = i.cfg.Namespace
