@@ -112,6 +112,12 @@ func (i *SchedulerV2UpgradeRequestOptions) Options() []util.Mod[action.Upgrade] 
 		})
 	}
 
+	opts = append(opts, func(in *action.Upgrade) {
+		if v := i.MaxHistory; v != nil {
+			in.MaxHistory = int(*v)
+		}
+	})
+
 	return opts
 }
 
@@ -213,6 +219,12 @@ func (i *SchedulerV2UpgradeV2RequestOptions) Options() []util.Mod[action.Upgrade
 			in.Wait = util.OptionalType(i.Wait, true)
 		})
 	}
+
+	opts = append(opts, func(in *action.Upgrade) {
+		if v := i.MaxHistory; v != nil {
+			in.MaxHistory = int(*v)
+		}
+	})
 
 	return opts
 }

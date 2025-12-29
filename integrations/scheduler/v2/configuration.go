@@ -26,7 +26,8 @@ type Mod func(c Configuration) Configuration
 
 func NewConfiguration() Configuration {
 	return Configuration{
-		Namespace: "default",
+		Namespace:  "default",
+		MaxHistory: 10,
 	}
 }
 
@@ -34,6 +35,8 @@ type Configuration struct {
 	Namespace string
 
 	Deployment string
+
+	MaxHistory int
 }
 
 func (c Configuration) Validate() error {
