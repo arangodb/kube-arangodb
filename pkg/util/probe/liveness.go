@@ -102,5 +102,5 @@ func (p *LivenessProbe) LivenessHandler(w goHttp.ResponseWriter, r *goHttp.Reque
 }
 
 func (p *LivenessProbe) IsAlive() bool {
-	return p.waitUntilNotLocked(time.Millisecond)
+	return p.waitUntilNotLocked(livenessHandlerTimeout)
 }

@@ -27,6 +27,8 @@ import (
 	goHttp "net/http"
 	"testing"
 
+	dto "github.com/prometheus/client_model/go"
+	"github.com/prometheus/prom2json"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 
@@ -63,4 +65,54 @@ func Test_Version(t *testing.T) {
 
 	_, err = gclient.GetVersion(AuthenticatedContext(t, "root", "test"), &pbSharedV1.Empty{})
 	require.NoError(t, err)
+}
+
+func Test_Metrics(t *testing.T) {
+	ctx, c := context.WithCancel(t.Context())
+	defer c()
+
+	q := Server(t, ctx)
+
+	resp, err := goHttp.Get(fmt.Sprintf("http://%s/metrics", q.HTTPAddress()))
+	require.NoError(t, err)
+
+	require.Equal(t, 200, resp.StatusCode)
+
+	defer resp.Body.Close()
+
+	mfChan := make(chan *dto.MetricFamily, 2048)
+
+	go func() {
+		if err := prom2json.ParseReader(resp.Body, mfChan); err != nil {
+			require.NoError(t, err)
+		}
+	}()
+
+	for mf := range mfChan {
+		prom2json.NewFamily(mf)
+	}
+}
+
+func Test_Health(t *testing.T) {
+	ctx, c := context.WithCancel(t.Context())
+	defer c()
+
+	q := Server(t, ctx)
+
+	resp, err := goHttp.Get(fmt.Sprintf("http://%s/health", q.HTTPAddress()))
+	require.NoError(t, err)
+
+	require.Equal(t, 200, resp.StatusCode)
+}
+
+func Test_Ready(t *testing.T) {
+	ctx, c := context.WithCancel(t.Context())
+	defer c()
+
+	q := Server(t, ctx)
+
+	resp, err := goHttp.Get(fmt.Sprintf("http://%s/ready", q.HTTPAddress()))
+	require.NoError(t, err)
+
+	require.Equal(t, 200, resp.StatusCode)
 }

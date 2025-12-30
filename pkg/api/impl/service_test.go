@@ -32,6 +32,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
@@ -60,7 +61,7 @@ func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration])
 			Address: "127.0.0.1:0",
 		},
 		Wrap: svc.RequestWraps{
-			prometheusHandler,
+			metrics.Wrapper,
 		},
 	}, handler(m...))
 	require.NoError(t, err)

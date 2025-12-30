@@ -460,6 +460,9 @@ func executeMain(cmd *cobra.Command, args []string) {
 			var c = svc.Configuration{
 				Address: net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.grpcPort)),
 				Gateway: &svc.ConfigurationGateway{Address: net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.httpPort))},
+				Wrap: svc.RequestWraps{
+					metrics.Wrapper,
+				},
 			}
 
 			svcConfig := impl.NewConfiguration().With(func(in impl.Configuration) impl.Configuration {
