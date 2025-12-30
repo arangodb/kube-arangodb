@@ -199,6 +199,7 @@ func initE() error {
 	f.Int("server.port", defaultServerPort, "Port to listen on")
 	f.String("server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
 	f.String("server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
+	f.StringVar(&apiOptions.basicSecretName, "api.basic-secret-name", defaultBasicSecretName, "Name of secret containing username + password for login to the dashboard")
 	f.Bool("server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
 	f.Bool("api.enabled", true, "Enable operator HTTP and gRPC API")
 	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultServerPort, "HTTP API port to listen on")
@@ -470,7 +471,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 				WithReadinessProbe("Storage", cfg.EnableStorage, &storageProbe).
 				WithReadinessProbe("Backup", cfg.EnableBackup, &backupProbe).
 				WithReadinessProbe("Apps", cfg.EnableApps, &appsProbe).
-				WithReadinessProbe("ML", cfg.EnableDeployment, &mlProbe).
+				WithReadinessProbe("ML", cfg.EnableML, &mlProbe).
 				WithReadinessProbe("Analytics", cfg.EnableAnalytics, &analyticsProbe).
 				WithReadinessProbe("Networking", cfg.EnableNetworking, &networkingProbe).
 				WithReadinessProbe("Platform", cfg.EnablePlatform, &platformProbe).

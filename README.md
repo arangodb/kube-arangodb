@@ -150,6 +150,7 @@ Flags:
       --agency.refresh-delay duration                          The Agency refresh delay (0 = no delay) (default 500ms)
       --agency.refresh-interval duration                       The Agency refresh interval (0 = do not refresh)
       --agency.retries int                                     The Agency retries (0 = no retries) (default 1)
+      --api.basic-secret-name string                           Name of secret containing username + password for login to the dashboard (default "arangodb-operator-credentials")
       --api.grpc-port int                                      gRPC API port to listen on (default 8728)
       --api.http-port int                                      HTTP API port to listen on (default 8528)
       --api.tls-secret-name string                             Name of secret containing tls.crt & tls.key for HTTPS API (if empty, self-signed certificate is used)

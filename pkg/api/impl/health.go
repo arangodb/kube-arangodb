@@ -40,7 +40,7 @@ func (i *implementation) OperatorLiveness(ctx context.Context, empty *definition
 	return &definition.Empty{}, nil
 }
 
-func (i *implementation) ServiceReadiness(ctx context.Context, empty *definition.Empty) (*definition.Empty, error) {
+func (i *implementation) OperatorReadiness(ctx context.Context, empty *definition.Empty) (*definition.Empty, error) {
 	for _, v := range i.cfg.ReadinessProbes {
 		if !v.IsReady() {
 			return nil, status.Error(codes.Unavailable, "NotReady")
