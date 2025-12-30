@@ -36,11 +36,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
-func handler(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) *implementation {
-	handler, err := newInternal(ctx, NewConfiguration().With(mods...))
-	require.NoError(t, err)
-
-	return handler
+func handler(mods ...util.ModR[Configuration]) *implementation {
+	return newInternal(NewConfiguration().With(mods...))
 }
 
 func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) svc.ServiceStarter {
@@ -65,7 +62,7 @@ func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration])
 		Wrap: svc.RequestWraps{
 			prometheusHandler,
 		},
-	}, handler(t, ctx, m...))
+	}, handler(m...))
 	require.NoError(t, err)
 
 	return local.Start(ctx)

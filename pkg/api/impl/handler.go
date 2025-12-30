@@ -30,14 +30,14 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
-	return newInternal(ctx, cfg)
+func New(cfg Configuration) svc.Handler {
+	return newInternal(cfg)
 }
 
-func newInternal(ctx context.Context, cfg Configuration) (*implementation, error) {
+func newInternal(cfg Configuration) *implementation {
 	return &implementation{
 		cfg: cfg,
-	}, nil
+	}
 }
 
 var _ server.OperatorServer = &implementation{}

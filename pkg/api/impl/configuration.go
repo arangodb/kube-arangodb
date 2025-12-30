@@ -49,9 +49,7 @@ func (c Configuration) With(mods ...util.ModR[Configuration]) Configuration {
 
 func (c Configuration) WithReadinessProbe(name string, enabled bool, p *probe.ReadyProbe) Configuration {
 	if !enabled {
-		if _, ok := c.ReadinessProbes[name]; ok {
-			delete(c.ReadinessProbes, name)
-		}
+		delete(c.ReadinessProbes, name)
 		return c
 	}
 

@@ -83,7 +83,7 @@ func (i *implementation) SetLogLevel(ctx context.Context, cfg *pb.LogLevelConfig
 	for topic, grpcLevel := range cfg.Topics {
 		level, ok := loglevelMap[grpcLevel]
 		if !ok {
-			return &pbSharedV1.Empty{}, fmt.Errorf("unknown log level %s for topic %s", grpcLevel, topic)
+			return &pbSharedV1.Empty{}, status.Error(codes.NotFound, fmt.Sprintf("unknown log level %s for topic %s", grpcLevel, topic))
 		}
 		l[topic] = level
 	}

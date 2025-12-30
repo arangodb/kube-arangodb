@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 
-	"github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -55,12 +55,12 @@ func Test_Version(t *testing.T) {
 
 	gclient := tgrpc.NewGRPCClient(t, ctx, server.NewOperatorClient, q.Address())
 
-	_, err := gclient.GetVersion(t.Context(), &definition.Empty{})
+	_, err := gclient.GetVersion(t.Context(), &pbSharedV1.Empty{})
 	tgrpc.AsGRPCError(t, err).Code(t, codes.Unauthenticated)
 
-	_, err = gclient.GetVersion(AuthenticatedContext(t, "root2", "test"), &definition.Empty{})
+	_, err = gclient.GetVersion(AuthenticatedContext(t, "root2", "test"), &pbSharedV1.Empty{})
 	tgrpc.AsGRPCError(t, err).Code(t, codes.Unauthenticated)
 
-	_, err = gclient.GetVersion(AuthenticatedContext(t, "root", "test"), &definition.Empty{})
+	_, err = gclient.GetVersion(AuthenticatedContext(t, "root", "test"), &pbSharedV1.Empty{})
 	require.NoError(t, err)
 }

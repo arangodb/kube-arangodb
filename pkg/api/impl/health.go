@@ -26,36 +26,36 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
 )
 
-func (i *implementation) OperatorLiveness(ctx context.Context, empty *definition.Empty) (*definition.Empty, error) {
+func (i *implementation) OperatorLiveness(ctx context.Context, empty *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
 	if v := i.cfg.LivenessProbe; v != nil {
 		if !v.IsAlive() {
 			return nil, status.Error(codes.Unavailable, "NotReady")
 		}
 	}
 
-	return &definition.Empty{}, nil
+	return &pbSharedV1.Empty{}, nil
 }
 
-func (i *implementation) OperatorReadiness(ctx context.Context, empty *definition.Empty) (*definition.Empty, error) {
+func (i *implementation) OperatorReadiness(ctx context.Context, empty *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
 	for _, v := range i.cfg.ReadinessProbes {
 		if !v.IsReady() {
 			return nil, status.Error(codes.Unavailable, "NotReady")
 		}
 	}
 
-	return &definition.Empty{}, nil
+	return &pbSharedV1.Empty{}, nil
 }
 
-func (i *implementation) OperatorServiceReadiness(ctx context.Context, health *server.OperatorService) (*definition.Empty, error) {
+func (i *implementation) OperatorServiceReadiness(ctx context.Context, health *server.OperatorService) (*pbSharedV1.Empty, error) {
 	if v, ok := i.cfg.ReadinessProbes[health.GetName()]; !ok {
 		return nil, status.Error(codes.NotFound, "Not Found")
 	} else if !v.IsReady() {
 		return nil, status.Error(codes.Unavailable, "NotReady")
 	}
 
-	return &definition.Empty{}, nil
+	return &pbSharedV1.Empty{}, nil
 }

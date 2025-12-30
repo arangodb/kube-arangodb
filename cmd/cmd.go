@@ -498,7 +498,14 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 							secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Create(ctx, secret, meta.CreateOptions{})
 							if err != nil {
-								return nil, 0, err
+								if !apiErrors.IsAlreadyExists(err) {
+									return nil, 0, err
+								}
+
+								secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
+								if err != nil {
+									return nil, 0, err
+								}
 							}
 						}
 					}
@@ -515,12 +522,8 @@ func executeMain(cmd *cobra.Command, args []string) {
 			} else {
 				c.TLSOptions = util.NewSelfSignedTLSConfig(name, ip)
 			}
-			s, err := impl.New(shutdown.Context(), svcConfig)
-			if err != nil {
-				logger.Err(err).Fatal("Failed to create API")
-			}
 
-			svc, err := svc.NewService(c, s)
+			svc, err := svc.NewService(c, impl.New(svcConfig))
 			if err != nil {
 				logger.Err(err).Fatal("Failed to create API")
 			}

@@ -26,12 +26,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
-func (i *implementation) GetVersion(ctx context.Context, empty *definition.Empty) (*server.Version, error) {
+func (i *implementation) GetVersion(ctx context.Context, empty *pbSharedV1.Empty) (*server.Version, error) {
 	if i.authenticate(ctx) != nil {
 		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
 	}

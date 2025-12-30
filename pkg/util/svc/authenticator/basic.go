@@ -23,7 +23,7 @@ package authenticator
 import (
 	"context"
 	"encoding/base64"
-	"strings"
+	goStrings "strings"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -54,11 +54,11 @@ func (b *basicAuthenticator) ValidateGRPC(ctx context.Context) error {
 
 	case 1:
 		h := v[0]
-		if strings.HasPrefix(h, "Basic ") {
-			h = strings.TrimPrefix(h, "Basic ")
+		if goStrings.HasPrefix(h, "Basic ") {
+			h = goStrings.TrimPrefix(h, "Basic ")
 			c, err := base64.StdEncoding.DecodeString(h)
 			if err == nil {
-				if n := strings.SplitN(string(c), ":", 2); len(n) == 2 {
+				if n := goStrings.SplitN(string(c), ":", 2); len(n) == 2 {
 					if b.validate(ctx, n[0], n[1]) == nil {
 						break
 					}

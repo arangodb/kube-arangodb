@@ -23,7 +23,7 @@ package svc
 import (
 	"context"
 	"crypto/tls"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -32,14 +32,14 @@ import (
 )
 
 // RequestWrap if returns true execution is stopped
-type RequestWrap func(w http.ResponseWriter, r *http.Request) bool
+type RequestWrap func(w goHttp.ResponseWriter, r *goHttp.Request) bool
 
-func (r RequestWrap) Wrap(handler http.Handler) http.Handler {
+func (r RequestWrap) Wrap(handler goHttp.Handler) goHttp.Handler {
 	if r == nil {
 		return handler
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	return goHttp.HandlerFunc(func(w goHttp.ResponseWriter, req *goHttp.Request) {
 		if r(w, req) {
 			return
 		}
@@ -50,7 +50,7 @@ func (r RequestWrap) Wrap(handler http.Handler) http.Handler {
 
 type RequestWraps []RequestWrap
 
-func (r RequestWraps) Wrap(handler http.Handler) http.Handler {
+func (r RequestWraps) Wrap(handler goHttp.Handler) goHttp.Handler {
 	for id := len(r) - 1; id >= 0; id-- {
 		handler = r[id].Wrap(handler)
 	}

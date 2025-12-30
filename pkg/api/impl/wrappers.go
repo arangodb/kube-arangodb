@@ -21,14 +21,14 @@
 package impl
 
 import (
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
-func prometheusHandler(w http.ResponseWriter, r *http.Request) bool {
-	if strings.ToUpper(r.Method) == http.MethodGet && r.URL.Path == "/metrics" {
+func prometheusHandler(w goHttp.ResponseWriter, r *goHttp.Request) bool {
+	if goStrings.ToUpper(r.Method) == goHttp.MethodGet && r.URL.Path == "/metrics" {
 		metrics.Handler()(w, r)
 		return true
 	}
