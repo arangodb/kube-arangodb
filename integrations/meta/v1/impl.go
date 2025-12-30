@@ -47,7 +47,7 @@ func New(cfg Configuration) (svc.Handler, error) {
 		return nil, err
 	}
 
-	col := cfg.KVCollection(cfg.Endpoint, "_system", "_meta_store")
+	col := cfg.KVCollection(cfg.Endpoint, "_meta_store")
 
 	return newInternal(cfg, cache.NewRemoteCacheWithTTL[*Object](col, cfg.TTL)), nil
 }

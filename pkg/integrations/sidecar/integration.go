@@ -139,23 +139,6 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 	options.Add("--database.endpoint", k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", name, spec.GetMode().ServingGroup().AsRole()), spec.ClusterDomain))
 	options.Addf("--database.port", "%d", shared.ArangoPort)
 	options.Add("--database.proto", util.BoolSwitch(spec.IsSecure(), "https", "http"))
-	if spec.Mode.IsCluster() {
-		dbs := spec.DBServers.GetCount()
-
-		if dbs < 1 {
-			dbs = 1
-		}
-
-		if dbs > 3 {
-			dbs = 3
-		}
-
-		options.Addf("--database.rf", "%d", dbs)
-		options.Addf("--database.wc", "%d", util.BoolSwitch(dbs == 1, 1, dbs-1))
-	} else {
-		options.Addf("--database.rf", "%d", 1)
-		options.Addf("--database.wc", "%d", 1)
-	}
 	options.Add("--services.gateway.enabled", true)
 
 	// Envs
