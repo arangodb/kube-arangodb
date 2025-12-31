@@ -145,7 +145,7 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Clien
 }
 
 func (d *Database) databaseSourceCollection(ctx context.Context, db arangodb.Database) (arangodb.CollectionProperties, error) {
-	col, err := db.Collection(ctx, d.Source.Collection)
+	col, err := db.GetCollection(ctx, d.Source.Collection, &arangodb.GetCollectionOptions{SkipExistCheck: true})
 	if err != nil {
 		return arangodb.CollectionProperties{}, err
 	}
