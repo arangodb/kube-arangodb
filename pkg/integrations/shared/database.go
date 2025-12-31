@@ -95,7 +95,7 @@ func (d *Database) New(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	dbName, err := f.GetString("database.database")
+	dbName, err := f.GetString("database.name")
 	if err != nil {
 		return err
 	}
