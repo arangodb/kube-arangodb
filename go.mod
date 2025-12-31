@@ -30,7 +30,7 @@ require (
 	github.com/arangodb-helper/go-helper v0.4.2
 	github.com/arangodb/arangosync-client v0.9.1
 	github.com/arangodb/go-driver v1.6.6
-	github.com/arangodb/go-driver/v2 v2.1.4
+	github.com/arangodb/go-driver/v2 v2.1.6
 	github.com/arangodb/go-upgrade-rules v0.0.0-20180809110947-031b4774ff21
 	//github.com/arangodb/rebalancer v0.1.1
 	//github.com/arangodb/go-agency-helper v0.3.0
@@ -51,12 +51,12 @@ require (
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/prom2json v1.3.3
 	github.com/robfig/cron v1.2.0
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/sync v0.17.0
-	golang.org/x/sys v0.38.0
+	golang.org/x/sys v0.39.0
 	golang.org/x/text v0.30.0
 	golang.org/x/time v0.11.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8
@@ -194,7 +194,7 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect

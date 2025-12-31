@@ -19,10 +19,10 @@ Available Commands:
 
 Flags:
       --database.endpoint string                                                            Endpoint of ArangoDB (Env: DATABASE_ENDPOINT) (default "localhost")
+      --database.name string                                                                Database Name (Env: DATABASE_NAME) (default "_system")
       --database.port int                                                                   Port of ArangoDB (Env: DATABASE_PORT) (default 8529)
       --database.proto string                                                               Proto of the ArangoDB endpoint (Env: DATABASE_PROTO) (default "http")
-      --database.rf int                                                                     ArangoDB ReplicationFactor (Env: DATABASE_RF) (default 1)
-      --database.wc int                                                                     ArangoDB WriteConcern (Env: DATABASE_WC) (default 1)
+      --database.source string                                                              Database Source Collection (Env: DATABASE_SOURCE) (default "_statistics")
       --health.address string                                                               Address to expose health service (Env: HEALTH_ADDRESS) (default "0.0.0.0:9091")
       --health.auth.token string                                                            Token for health service (when auth service is token) (Env: HEALTH_AUTH_TOKEN)
       --health.auth.type string                                                             Auth type for health service (Env: HEALTH_AUTH_TYPE) (default "None")

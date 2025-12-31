@@ -59,7 +59,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		}),
 	}
 
-	i.session = session.NewManager[*Session](ctx, "Auth_Custom_OpenID", configuration.KVCollection(configuration.Endpoint, "_system", "_gateway_session"))
+	i.session = session.NewManager[*Session](ctx, "Auth_Custom_OpenID", configuration.KVCollection(configuration.Endpoint, "_gateway_session"))
 
 	i.id = cache.NewCache(func(ctx context.Context, in string) (*oidc.IDToken, time.Time, error) {
 		verifier, err := i.verifier.Get(ctx)

@@ -41,7 +41,7 @@ func New(cfg Configuration) (svc.Handler, error) {
 		return nil, err
 	}
 
-	col := cfg.KVCollection(cfg.Endpoint, "_system", "_events")
+	col := cfg.KVCollection(cfg.Endpoint, "_events")
 
 	col = withTTLIndex(col)
 

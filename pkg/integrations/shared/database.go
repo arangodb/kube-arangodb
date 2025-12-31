@@ -42,9 +42,13 @@ type Database struct {
 	Proto    string
 	Endpoint string
 	Port     int
+	Database string
 
-	ReplicationFactor int
-	WriteConcern      int
+	Source DatabaseSource
+}
+
+type DatabaseSource struct {
+	Collection string
 }
 
 func (d *Database) Validate() error {
@@ -56,20 +60,15 @@ func (d *Database) Validate() error {
 		return errors.Errorf("Database Endpoint is empty")
 	}
 
-	if d.Endpoint == "" {
-		return errors.Errorf("Database Endpoint is empty")
+	if d.Proto == "" {
+		return errors.Errorf("Database Proto is empty")
 	}
 
-	if d.Endpoint == "" {
-		return errors.Errorf("Database Endpoint is empty")
+	if d.Database == "" {
+		return errors.Errorf("Database Database is empty")
 	}
-
-	if d.WriteConcern < 1 || d.WriteConcern > d.ReplicationFactor {
-		return errors.Errorf("Database WriteConcern is invalid")
-	}
-
-	if d.ReplicationFactor < 1 {
-		return errors.Errorf("Database ReplicationFactor is invalid")
+	if d.Source.Collection == "" {
+		return errors.Errorf("Database Source Collection is empty")
 	}
 
 	return nil
@@ -96,21 +95,23 @@ func (d *Database) New(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	dbWC, err := f.GetInt("database.wc")
+	dbName, err := f.GetString("database.name")
 	if err != nil {
 		return err
 	}
-	dbRF, err := f.GetInt("database.rf")
+	dbSource, err := f.GetString("database.source")
 	if err != nil {
 		return err
 	}
 
 	*d = Database{
-		Proto:             dbP,
-		Endpoint:          dbE,
-		Port:              dbPort,
-		ReplicationFactor: dbRF,
-		WriteConcern:      dbWC,
+		Proto:    dbP,
+		Endpoint: dbE,
+		Port:     dbPort,
+		Database: dbName,
+		Source: DatabaseSource{
+			Collection: dbSource,
+		},
 	}
 
 	return d.Validate()
@@ -143,11 +144,25 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Clien
 	})
 }
 
-func (d *Database) KVCollection(endpoint Endpoint, database, collection string) cache.Object[arangodb.Collection] {
-	return d.KVCollectionFromClient(d.DatabaseClient(endpoint), database, collection)
+func (d *Database) databaseSourceCollection(ctx context.Context, db arangodb.Database) (arangodb.CollectionProperties, error) {
+	col, err := db.GetCollection(ctx, d.Source.Collection, &arangodb.GetCollectionOptions{SkipExistCheck: true})
+	if err != nil {
+		return arangodb.CollectionProperties{}, err
+	}
+
+	prop, err := col.Properties(ctx)
+	if err != nil {
+		return arangodb.CollectionProperties{}, err
+	}
+
+	return prop, nil
 }
 
-func (d *Database) KVCollectionFromClient(clientO cache.Object[arangodb.Client], database, collection string) cache.Object[arangodb.Collection] {
+func (d *Database) KVCollection(endpoint Endpoint, collection string) cache.Object[arangodb.Collection] {
+	return d.KVCollectionFromClient(d.DatabaseClient(endpoint), collection)
+}
+
+func (d *Database) KVCollectionFromClient(clientO cache.Object[arangodb.Client], collection string) cache.Object[arangodb.Collection] {
 	return cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
 		if d == nil {
 			return nil, 0, errors.Errorf("Database Ref is empty")
@@ -158,7 +173,7 @@ func (d *Database) KVCollectionFromClient(clientO cache.Object[arangodb.Client],
 			return nil, 0, err
 		}
 
-		db, err := client.GetDatabase(ctx, database, nil)
+		db, err := client.GetDatabase(ctx, d.Database, nil)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -168,10 +183,15 @@ func (d *Database) KVCollectionFromClient(clientO cache.Object[arangodb.Client],
 				return nil, 0, err
 			}
 
+			sourceColProps, err := d.databaseSourceCollection(ctx, db)
+			if err != nil {
+				return nil, 0, err
+			}
+
 			if _, err := db.CreateCollectionV2(ctx, collection, &arangodb.CreateCollectionPropertiesV2{
 				IsSystem:          util.NewType(true),
-				WriteConcern:      util.NewType(d.WriteConcern),
-				ReplicationFactor: util.NewType(arangodb.ReplicationFactor(d.ReplicationFactor)),
+				WriteConcern:      util.NewType(sourceColProps.WriteConcern),
+				ReplicationFactor: util.NewType(sourceColProps.ReplicationFactor),
 			}); err != nil {
 				if !shared.IsConflict(err) {
 					return nil, 0, err
