@@ -108,8 +108,14 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 			s.service.http.Close()
 		}()
 
-		if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
-			serveError = err
+		if s.service.cfg.TLSOptions == nil {
+			if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+				serveError = err
+			}
+		} else {
+			if err := s.service.http.ServeTLS(http, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+				serveError = err
+			}
 		}
 	}()
 
