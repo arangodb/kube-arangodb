@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ func Generate(cmd *cobra.Command, out io.Writer, factories ...shared.Factory) er
 	go func() {
 		defer close(done)
 		for file := range files {
-			log.Info().Msgf("Fetching file %s", file.Path())
+			logger.Info("Fetching file %s", file.Path())
 			data, err := file.Write()
 			if err != nil {
 				fileErrors[file.Path()] = err
@@ -116,11 +116,11 @@ func Generate(cmd *cobra.Command, out io.Writer, factories ...shared.Factory) er
 		ok, _ := cmd.Flags().GetBool(fmt.Sprintf("generator.%s", f.Name()))
 
 		if !ok {
-			log.Info().Msgf("Factory %s disabled", f.Name())
+			logger.Info("Factory %s disabled", f.Name())
 			continue
 		}
 
-		log.Info().Msgf("Fetching factory %s", f.Name())
+		logger.Info("Fetching factory %s", f.Name())
 
 		if err := f.Generate(log, files); err != nil {
 			factoryErrors[f.Name()] = err

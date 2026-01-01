@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -39,15 +38,12 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
-
-var logger = logging.Global().RegisterAndGetLogger("backup-operator", logging.Info)
 
 const (
 	// StateChange name of the event send when state changed
@@ -86,7 +82,7 @@ func (h *handler) start(stopCh <-chan struct{}) {
 		case <-t.C:
 			logger.Debug("Refreshing database objects")
 			if err := h.refresh(); err != nil {
-				log.Error().Err(err).Msgf("Unable to refresh database objects")
+				logger.Err(err).Error("Unable to refresh database objects")
 			}
 			logger.Debug("Database objects refreshed")
 		}
@@ -271,7 +267,7 @@ func (h *handler) Handle(_ context.Context, item operation.Item) error {
 	// Add finalizers
 	if !hasFinalizers(b) {
 		b.Finalizers = appendFinalizers(b)
-		log.Info().Msgf("Updating finalizers %s %s/%s",
+		logger.Info("Updating finalizers %s %s/%s",
 			item.Kind,
 			item.Namespace,
 			item.Name)
@@ -313,7 +309,7 @@ func (h *handler) Handle(_ context.Context, item operation.Item) error {
 
 	status, err := h.processArangoBackup(b.DeepCopy())
 	if err != nil {
-		log.Warn().Err(err).Msgf("Fail for %s %s/%s",
+		logger.Err(err).Warn("Fail for %s %s/%s",
 			item.Kind,
 			item.Namespace,
 			item.Name)

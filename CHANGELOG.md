@@ -4,6 +4,7 @@
 - (Feature) Deprecate Dashboard
 - (Bugfix) (Platform) Ensure Helm History limit
 - (Bugfix) (Platform) Increase MetaStore RF
+- (Maintenance) Unify Loggers
 
 ## [1.3.4](https://github.com/arangodb/kube-arangodb/tree/1.3.4) (2025-12-22)
 - (Feature) Add scrape annotations for ArangoD pods
