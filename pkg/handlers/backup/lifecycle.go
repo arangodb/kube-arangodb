@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
@@ -36,17 +35,17 @@ var _ operator.LifecyclePreStart = &handler{}
 // LifecyclePreStart is executed before operator starts to work, additional checks can be placed here
 // Wait for CR to be present
 func (h *handler) LifecyclePreStart() error {
-	log.Info().Msgf("Starting Lifecycle PreStart for %s", h.Name())
+	logger.Info("Starting Lifecycle PreStart for %s", h.Name())
 
 	defer func() {
-		log.Info().Msgf("Lifecycle PreStart for %s completed", h.Name())
+		logger.Info("Lifecycle PreStart for %s completed", h.Name())
 	}()
 
 	for {
 		_, err := h.client.BackupV1().ArangoBackups(h.operator.Namespace()).List(context.Background(), meta.ListOptions{})
 
 		if err != nil {
-			log.Warn().Err(err).Msgf("CR for %s not found", backup.ArangoBackupResourceKind)
+			logger.Err(err).Warn("CR for %s not found", backup.ArangoBackupResourceKind)
 
 			time.Sleep(250 * time.Millisecond)
 			continue

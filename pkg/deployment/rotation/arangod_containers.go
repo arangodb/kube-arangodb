@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ package rotation
 import (
 	goStrings "strings"
 
-	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 
@@ -70,7 +69,7 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 					g := compare.NewFuncGenP2(ds, g, specContainer, statusContainer)
 
 					if m, p, err := compare.Evaluate(builder, g(compareServerContainerVolumeMounts), g(compareServerContainerProbes), g(compareServerContainerEnvs)); err != nil {
-						log.Err(err).Msg("Error while getting pod diff")
+						logger.Err(err).Error("Error while getting pod diff")
 						return compare.SkippedRotation, nil, err
 					} else {
 						mode = mode.And(m)
@@ -108,7 +107,7 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 					g := compare.NewFuncGenP2(ds, g, specContainer, statusContainer)
 
 					if m, p, err := compare.Evaluate(builder, g(compareAnyContainerVolumeMounts), g(compareAnyContainerEnvs)); err != nil {
-						log.Err(err).Msg("Error while getting pod diff")
+						logger.Err(err).Error("Error while getting pod diff")
 						return compare.SkippedRotation, nil, err
 					} else {
 						mode = mode.And(m)
