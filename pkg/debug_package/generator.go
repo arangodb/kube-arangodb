@@ -84,7 +84,7 @@ func Generate(cmd *cobra.Command, out io.Writer, factories ...shared.Factory) er
 	go func() {
 		defer close(done)
 		for file := range files {
-			logger.Info("Fetching file %s", file.Path())
+			log.Info().Msgf("Fetching file %s", file.Path())
 			data, err := file.Write()
 			if err != nil {
 				fileErrors[file.Path()] = err
@@ -116,11 +116,11 @@ func Generate(cmd *cobra.Command, out io.Writer, factories ...shared.Factory) er
 		ok, _ := cmd.Flags().GetBool(fmt.Sprintf("generator.%s", f.Name()))
 
 		if !ok {
-			logger.Info("Factory %s disabled", f.Name())
+			log.Info().Msgf("Factory %s disabled", f.Name())
 			continue
 		}
 
-		logger.Info("Fetching factory %s", f.Name())
+		log.Info().Msgf("Fetching factory %s", f.Name())
 
 		if err := f.Generate(log, files); err != nil {
 			factoryErrors[f.Name()] = err
