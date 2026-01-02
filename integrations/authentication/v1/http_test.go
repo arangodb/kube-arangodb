@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,8 @@ func Test_Authentication_HTTP(t *testing.T) {
 	reSaveJWTTokens(t, directory, token1)
 
 	client := operatorHTTP.NewHTTPClient()
+
+	// TODO: Fix Tests
 
 	t.Run("Without header", func(t *testing.T) {
 		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()))

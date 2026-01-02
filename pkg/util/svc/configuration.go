@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,19 +21,50 @@
 package svc
 
 import (
+	"context"
 	"crypto/tls"
+	goHttp "net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+// RequestWrap if returns true execution is stopped
+type RequestWrap func(w goHttp.ResponseWriter, r *goHttp.Request) bool
+
+func (r RequestWrap) Wrap(handler goHttp.Handler) goHttp.Handler {
+	if r == nil {
+		return handler
+	}
+
+	return goHttp.HandlerFunc(func(w goHttp.ResponseWriter, req *goHttp.Request) {
+		if r(w, req) {
+			return
+		}
+
+		handler.ServeHTTP(w, req)
+	})
+}
+
+type RequestWraps []RequestWrap
+
+func (r RequestWraps) Wrap(handler goHttp.Handler) goHttp.Handler {
+	for id := len(r) - 1; id >= 0; id-- {
+		handler = r[id].Wrap(handler)
+	}
+	return handler
+}
 
 type Configuration struct {
 	Address string
 
-	TLSOptions *tls.Config
+	TLSOptions util.TLSConfigFetcher
 
 	Options []grpc.ServerOption
+
+	Wrap RequestWraps
 
 	MuxExtensions []runtime.ServeMuxOption
 
@@ -44,17 +75,24 @@ type ConfigurationGateway struct {
 	Address string
 }
 
-func (c *Configuration) RenderOptions() []grpc.ServerOption {
+func (c *Configuration) GetTLSOptions(ctx context.Context) (*tls.Config, error) {
+	if z := c.TLSOptions; z != nil {
+		if tls, err := z.Eval(ctx); err != nil {
+			return nil, err
+		} else if tls != nil {
+			return tls, nil
+		}
+	}
+	return nil, nil
+}
+
+func (c *Configuration) RenderOptions() ([]grpc.ServerOption, error) {
 	if c == nil {
-		return nil
+		return nil, nil
 	}
 
 	ret := make([]grpc.ServerOption, len(c.Options))
 	copy(ret, c.Options)
 
-	if tls := c.TLSOptions; tls != nil {
-		ret = append(ret, grpc.Creds(credentials.NewTLS(tls)))
-	}
-
-	return ret
+	return ret, nil
 }

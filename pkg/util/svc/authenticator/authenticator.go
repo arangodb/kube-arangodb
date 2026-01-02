@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,16 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package api
+package authenticator
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"context"
 )
 
-func (s *Server) getLogLevelsByTopics() map[string]logging.Level {
-	return logging.Global().LogLevels()
-}
-
-func (s *Server) setLogLevelsByTopics(logLevels map[string]logging.Level) {
-	logging.Global().ApplyLogLevels(logLevels)
+type Authenticator interface {
+	ValidateGRPC(ctx context.Context) error
 }

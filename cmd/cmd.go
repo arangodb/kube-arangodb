@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 	goStrings "strings"
 	"time"
 
+	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -45,7 +46,7 @@ import (
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/arangodb/kube-arangodb/pkg/api"
+	"github.com/arangodb/kube-arangodb/pkg/api/impl"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	agencyConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/config"
@@ -55,8 +56,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
-	"github.com/arangodb/kube-arangodb/pkg/server"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -68,19 +69,20 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 const (
-	defaultServerHost          = "0.0.0.0"
-	defaultServerPort          = 8528
-	defaultAPIHTTPPort         = 8628
-	defaultAPIGRPCPort         = 8728
-	defaultAdminSecretName     = "arangodb-operator-dashboard"
-	defaultAPIJWTSecretName    = "arangodb-operator-api-jwt"
-	defaultAPIJWTKeySecretName = "arangodb-operator-api-jwt-key"
-	defaultShutdownDelay       = 2 * time.Second
-	defaultShutdownTimeout     = 30 * time.Second
+	defaultServerHost      = "0.0.0.0"
+	defaultServerPort      = 8528
+	defaultAPIHTTPPort     = 8628
+	defaultAPIGRPCPort     = 8728
+	defaultAdminSecretName = "arangodb-operator-dashboard"
+	defaultBasicSecretName = "arangodb-operator-credentials"
+	defaultShutdownDelay   = 2 * time.Second
+	defaultShutdownTimeout = 30 * time.Second
 )
 
 var (
@@ -92,21 +94,11 @@ var (
 	memoryLimit struct {
 		hardLimit uint64
 	}
-
-	serverOptions struct {
-		host            string
-		port            int
-		tlsSecretName   string
-		adminSecretName string // Name of basic authentication secret containing the admin username+password of the dashboard
-		allowAnonymous  bool   // If set, anonymous access to dashboard is allowed
-	}
 	apiOptions struct {
-		enabled          bool
-		httpPort         int
-		grpcPort         int
-		jwtSecretName    string
-		jwtKeySecretName string
-		tlsSecretName    string
+		httpPort        int
+		grpcPort        int
+		basicSecretName string
+		tlsSecretName   string
 	}
 	operatorOptions struct {
 		enableDeployment            bool // Run deployment operator
@@ -202,17 +194,18 @@ func initE() error {
 
 	f := cmdMain.Flags()
 
-	f.StringVar(&serverOptions.host, "server.host", defaultServerHost, "Host to listen on")
-	f.IntVar(&serverOptions.port, "server.port", defaultServerPort, "Port to listen on")
-	f.StringVar(&serverOptions.tlsSecretName, "server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
-	f.StringVar(&serverOptions.adminSecretName, "server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
-	f.BoolVar(&serverOptions.allowAnonymous, "server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
-	f.BoolVar(&apiOptions.enabled, "api.enabled", true, "Enable operator HTTP and gRPC API")
-	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultAPIHTTPPort, "HTTP API port to listen on")
+	f.String("server.host", defaultServerHost, "Host to listen on")
+	f.Int("server.port", defaultServerPort, "Port to listen on")
+	f.String("server.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS server (if empty, self-signed certificate is used)")
+	f.String("server.admin-secret-name", defaultAdminSecretName, "Name of secret containing username + password for login to the dashboard")
+	f.StringVar(&apiOptions.basicSecretName, "api.basic-secret-name", defaultBasicSecretName, "Name of secret containing username + password for login to the dashboard")
+	f.Bool("server.allow-anonymous-access", false, "Allow anonymous access to the dashboard")
+	f.Bool("api.enabled", true, "Enable operator HTTP and gRPC API")
+	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultServerPort, "HTTP API port to listen on")
 	f.IntVar(&apiOptions.grpcPort, "api.grpc-port", defaultAPIGRPCPort, "gRPC API port to listen on")
 	f.StringVar(&apiOptions.tlsSecretName, "api.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS API (if empty, self-signed certificate is used)")
-	f.StringVar(&apiOptions.jwtSecretName, "api.jwt-secret-name", defaultAPIJWTSecretName, "Name of secret which will contain JWT to authenticate API requests.")
-	f.StringVar(&apiOptions.jwtKeySecretName, "api.jwt-key-secret-name", defaultAPIJWTKeySecretName, "Name of secret containing key used to sign JWT. If there is no such secret present, value will be saved here")
+	f.String("api.jwt-secret-name", "", "Name of secret which will contain JWT to authenticate API requests.")
+	f.String("api.jwt-key-secret-name", "", "Name of secret containing key used to sign JWT. If there is no such secret present, value will be saved here")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
@@ -269,6 +262,14 @@ func initE() error {
 		f.MarkDeprecated("operator.arango-image", "Value is not used anymore"),
 		f.MarkDeprecated("scope", "Value is not used anymore"),
 		f.MarkDeprecated("image.discovery.status", "Value fetched from the Operator Spec"),
+		f.MarkDeprecated("api.jwt-secret-name", "Value is not used anymore"),
+		f.MarkDeprecated("api.jwt-key-secret-name", "Value is not used anymore"),
+		f.MarkDeprecated("api.enabled", "API always enabled"),
+		f.MarkDeprecated("server.host", "Value is not used anymore"),
+		f.MarkDeprecated("server.port", "Value is not used anymore"),
+		f.MarkDeprecated("server.tls-secret-name", "Value is not used anymore"),
+		f.MarkDeprecated("server.admin-secret-name", "Value is not used anymore"),
+		f.MarkDeprecated("server.allow-anonymous-access", "Value is not used anymore"),
 	); err != nil {
 		return errors.Wrap(err, "Unable to mark flags as deprecated")
 	}
@@ -276,6 +277,14 @@ func initE() error {
 	if err := errors.Errors(
 		f.MarkHidden("scope"),
 		f.MarkHidden("image.discovery.status"),
+		f.MarkHidden("api.jwt-secret-name"),
+		f.MarkHidden("api.jwt-key-secret-name"),
+		f.MarkHidden("api.enabled"),
+		f.MarkHidden("server.host"),
+		f.MarkHidden("server.port"),
+		f.MarkHidden("server.tls-secret-name"),
+		f.MarkHidden("server.admin-secret-name"),
+		f.MarkHidden("server.allow-anonymous-access"),
 	); err != nil {
 		return errors.Wrap(err, "Unable to mark flags as hidden")
 	}
@@ -433,8 +442,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 			_ = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: true, CRDOptions: crdOpts})
 		}
 
-		secrets := client.Kubernetes().CoreV1().Secrets(namespace)
-
 		// Create operator
 		cfg, deps, err := newOperatorConfigAndDeps(id+"-"+name, namespace, name)
 		if err != nil {
@@ -448,106 +455,82 @@ func executeMain(cmd *cobra.Command, args []string) {
 			logger.Err(err).Fatal("Failed to create operator")
 		}
 
-		if apiOptions.enabled {
-			apiServerCfg := api.ServerConfig{
-				Namespace:        namespace,
-				ServerName:       name,
-				ServerAltNames:   []string{ip},
-				HTTPAddress:      net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.httpPort)),
-				GRPCAddress:      net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.grpcPort)),
-				TLSSecretName:    apiOptions.tlsSecretName,
-				JWTSecretName:    apiOptions.jwtSecretName,
-				JWTKeySecretName: apiOptions.jwtKeySecretName,
-				LivelinessProbe:  &livenessProbe,
-				ProbeDeployment: api.ReadinessProbeConfig{
-					Enabled: cfg.EnableDeployment,
-					Probe:   &deploymentProbe,
-				},
-				ProbeDeploymentReplication: api.ReadinessProbeConfig{
-					Enabled: cfg.EnableDeploymentReplication,
-					Probe:   &deploymentReplicationProbe,
-				},
-				ProbeStorage: api.ReadinessProbeConfig{
-					Enabled: cfg.EnableStorage,
-					Probe:   &storageProbe,
+		{
+			var c = svc.Configuration{
+				Address: net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.grpcPort)),
+				Gateway: &svc.ConfigurationGateway{Address: net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.httpPort))},
+				Wrap: svc.RequestWraps{
+					metrics.Wrapper,
 				},
 			}
-			apiServer, err := api.NewServer(client.Kubernetes().CoreV1(), apiServerCfg)
-			if err != nil {
-				logger.Err(err).Fatal("Failed to create API server")
-			}
-			go func() {
-				if err := apiServer.Run(); err != nil {
-					logger.Err(err).Error("while running API server")
+
+			svcConfig := impl.NewConfiguration().With(func(in impl.Configuration) impl.Configuration {
+				in.LivenessProbe = &livenessProbe
+				return in
+			}).
+				WithReadinessProbe("deployment", cfg.EnableDeployment, &deploymentProbe).
+				WithReadinessProbe("deployment-replication", cfg.EnableDeploymentReplication, &deploymentReplicationProbe).
+				WithReadinessProbe("storage", cfg.EnableStorage, &storageProbe).
+				WithReadinessProbe("backup", cfg.EnableBackup, &backupProbe).
+				WithReadinessProbe("apps", cfg.EnableApps, &appsProbe).
+				WithReadinessProbe("ml", cfg.EnableML, &mlProbe).
+				WithReadinessProbe("analytics", cfg.EnableAnalytics, &analyticsProbe).
+				WithReadinessProbe("networking", cfg.EnableNetworking, &networkingProbe).
+				WithReadinessProbe("platform", cfg.EnablePlatform, &platformProbe).
+				WithReadinessProbe("scheduler", cfg.EnableScheduler, &schedulerProbe).
+				WithReadinessProbe("cluster-sync", cfg.EnableK2KClusterSync, &k2KClusterSyncProbe)
+
+			svcConfig.Authenticator = authenticator.NewBasicAuthenticator(cache.NewObject(func(ctx context.Context) (map[string]string, time.Duration, error) {
+				secret, err := client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
+				if err != nil {
+					if !apiErrors.IsNotFound(err) {
+						return nil, 0, err
+					} else {
+						// Create one
+						secret = &core.Secret{
+							ObjectMeta: meta.ObjectMeta{
+								Name:      apiOptions.basicSecretName,
+								Namespace: namespace,
+							},
+							Data: map[string][]byte{
+								"admin": []byte(uniuri.NewLen(12)),
+							},
+						}
+
+						secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Create(ctx, secret, meta.CreateOptions{})
+						if err != nil {
+							if !apiErrors.IsAlreadyExists(err) {
+								return nil, 0, err
+							}
+
+							secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
+							if err != nil {
+								return nil, 0, err
+							}
+						}
+					}
 				}
-			}()
-		}
+				return util.FormatMap(secret.Data, func(k string, a []byte) string {
+					return string(a)
+				}), 15 * time.Second, nil
+			}))
 
-		listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
-		if svr, err := server.NewServer(client.Kubernetes().CoreV1(), server.Config{
-			Namespace:          namespace,
-			Address:            listenAddr,
-			TLSSecretName:      serverOptions.tlsSecretName,
-			TLSSecretNamespace: namespace,
-			PodName:            name,
-			PodIP:              ip,
-			AdminSecretName:    serverOptions.adminSecretName,
-			AllowAnonymous:     serverOptions.allowAnonymous,
-		}, server.Dependencies{
-			LivenessProbe: &livenessProbe,
-			Deployment: server.OperatorDependency{
-				Enabled: cfg.EnableDeployment,
-				Probe:   &deploymentProbe,
-			},
-			DeploymentReplication: server.OperatorDependency{
-				Enabled: cfg.EnableDeploymentReplication,
-				Probe:   &deploymentReplicationProbe,
-			},
-			Storage: server.OperatorDependency{
-				Enabled: cfg.EnableStorage,
-				Probe:   &storageProbe,
-			},
-			Backup: server.OperatorDependency{
-				Enabled: cfg.EnableBackup,
-				Probe:   &backupProbe,
-			},
-			Apps: server.OperatorDependency{
-				Enabled: cfg.EnableApps,
-				Probe:   &appsProbe,
-			},
-			ML: server.OperatorDependency{
-				Enabled: cfg.EnableML,
-				Probe:   &mlProbe,
-			},
-			Analytics: server.OperatorDependency{
-				Enabled: cfg.EnableAnalytics,
-				Probe:   &analyticsProbe,
-			},
-			Networking: server.OperatorDependency{
-				Enabled: cfg.EnableNetworking,
-				Probe:   &networkingProbe,
-			},
-			Platform: server.OperatorDependency{
-				Enabled: cfg.EnablePlatform,
-				Probe:   &platformProbe,
-			},
-			Scheduler: server.OperatorDependency{
-				Enabled: cfg.EnableScheduler,
-				Probe:   &schedulerProbe,
-			},
-			ClusterSync: server.OperatorDependency{
-				Enabled: cfg.EnableK2KClusterSync,
-				Probe:   &k2KClusterSyncProbe,
-			},
-			Operators: o,
+			if apiOptions.tlsSecretName != "" {
+				c.TLSOptions = util.NewSecretTLSConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsSecretName)
+			} else {
+				c.TLSOptions = util.NewSelfSignedTLSConfig(name, ip)
+			}
 
-			Secrets: secrets,
-		}); err != nil {
-			logger.Err(err).Fatal("Failed to create HTTP server")
-		} else {
+			svc, err := svc.NewService(c, impl.New(svcConfig))
+			if err != nil {
+				logger.Err(err).Fatal("Failed to create API")
+			}
+
+			svcHandler := svc.Start(shutdown.Context())
+
 			go func() {
-				if err := svr.Run(); err != nil {
-					logger.Err(err).Error("error while starting server")
+				if err := svcHandler.Wait(); err != nil {
+					logger.Err(err).Error("while running API server")
 				}
 			}()
 		}
@@ -565,7 +548,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 func startVersionProcess() error {
 	// Just expose version
-	listenAddr := net.JoinHostPort(serverOptions.host, strconv.Itoa(serverOptions.port))
+	listenAddr := net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.httpPort))
 	logger.Str("addr", listenAddr).Info("Starting version endpoint")
 
 	gin.SetMode(gin.ReleaseMode)

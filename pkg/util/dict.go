@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,4 +129,14 @@ func Optional[K comparable, V any](m map[K]V, key K, def V) V {
 	}
 
 	return def
+}
+
+func FormatMap[K comparable, A, B any](in map[K]A, format func(K, A) B) map[K]B {
+	var r = make(map[K]B, len(in))
+
+	for k, a := range in {
+		r[k] = format(k, a)
+	}
+
+	return r
 }

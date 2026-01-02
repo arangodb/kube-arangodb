@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,28 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package api
+package impl
 
 import (
 	"context"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	pb "github.com/arangodb/kube-arangodb/pkg/api/server"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/version"
 )
-
-func (s *Server) GetVersion(ctx context.Context, _ *pbSharedV1.Empty) (*pb.Version, error) {
-	v := version.GetVersionV1()
-	return &pb.Version{
-		Version:   string(v.Version),
-		Build:     v.Build,
-		Edition:   string(v.Edition),
-		GoVersion: v.GoVersion,
-		BuildDate: v.BuildDate,
-	}, nil
-}
 
 var loglevelMap = map[pb.LogLevel]logging.Level{
 	pb.LogLevel_LOG_LEVEL_TRACE_UNSPECIFIED: logging.Trace,
@@ -59,8 +50,20 @@ func logLevelToGRPC(l logging.Level) pb.LogLevel {
 	return pb.LogLevel_LOG_LEVEL_DEBUG
 }
 
-func (s *Server) GetLogLevel(ctx context.Context, _ *pbSharedV1.Empty) (*pb.LogLevelConfig, error) {
-	l := s.getLogLevelsByTopics()
+func (i *implementation) getLogLevelsByTopics() map[string]logging.Level {
+	return logging.Global().LogLevels()
+}
+
+func (i *implementation) setLogLevelsByTopics(logLevels map[string]logging.Level) {
+	logging.Global().ApplyLogLevels(logLevels)
+}
+
+func (i *implementation) GetLogLevel(ctx context.Context, _ *pbSharedV1.Empty) (*pb.LogLevelConfig, error) {
+	if i.authenticate(ctx) != nil {
+		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
+	}
+
+	l := i.getLogLevelsByTopics()
 
 	topics := make(map[string]pb.LogLevel, len(l))
 	for topic, level := range l {
@@ -71,15 +74,19 @@ func (s *Server) GetLogLevel(ctx context.Context, _ *pbSharedV1.Empty) (*pb.LogL
 	}, nil
 }
 
-func (s *Server) SetLogLevel(ctx context.Context, cfg *pb.LogLevelConfig) (*pbSharedV1.Empty, error) {
+func (i *implementation) SetLogLevel(ctx context.Context, cfg *pb.LogLevelConfig) (*pbSharedV1.Empty, error) {
+	if i.authenticate(ctx) != nil {
+		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
+	}
+
 	l := make(map[string]logging.Level, len(cfg.Topics))
 	for topic, grpcLevel := range cfg.Topics {
 		level, ok := loglevelMap[grpcLevel]
 		if !ok {
-			return &pbSharedV1.Empty{}, fmt.Errorf("unknown log level %s for topic %s", grpcLevel, topic)
+			return &pbSharedV1.Empty{}, status.Error(codes.NotFound, fmt.Sprintf("unknown log level %s for topic %s", grpcLevel, topic))
 		}
 		l[topic] = level
 	}
-	s.setLogLevelsByTopics(l)
+	i.setLogLevelsByTopics(l)
 	return &pbSharedV1.Empty{}, nil
 }

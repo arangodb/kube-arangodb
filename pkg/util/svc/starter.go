@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -108,8 +108,14 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 			s.service.http.Close()
 		}()
 
-		if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
-			serveError = err
+		if s.service.http.TLSConfig == nil {
+			if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+				serveError = err
+			}
+		} else {
+			if err := s.service.http.ServeTLS(http, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+				serveError = err
+			}
 		}
 	}()
 

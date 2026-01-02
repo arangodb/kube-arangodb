@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,11 +101,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 	}
 
 	if keyfile := s.tls.keyfile; keyfile != "" {
-		if tls, err := tlsServerOptions(keyfile); err != nil {
-			return svc.Configuration{}, err
-		} else {
-			cfg.TLSOptions = tls
-		}
+		cfg.TLSOptions = util.NewKeyfileTLSConfig(s.tls.keyfile)
 	}
 
 	if s.gateway.enabled {

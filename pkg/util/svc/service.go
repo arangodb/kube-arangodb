@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
@@ -60,8 +61,26 @@ func NewService(cfg Configuration, handlers ...Handler) (Service, error) {
 func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	var q service
 
+	var opts []grpc.ServerOption
+
+	tls, err := cfg.GetTLSOptions(shutdown.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	if tls != nil {
+		opts = append(opts, grpc.Creds(credentials.NewTLS(tls)))
+	}
+
+	nopts, err := cfg.RenderOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	opts = append(opts, nopts...)
+
 	q.cfg = cfg
-	q.server = grpc.NewServer(cfg.RenderOptions()...)
+	q.server = grpc.NewServer(opts...)
 	q.handlers = handlers
 
 	for _, handler := range q.handlers {
@@ -77,9 +96,13 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 			}
 		}
 
+		var handler goHttp.Handler = mux
+
+		handler = cfg.Wrap.Wrap(handler)
+
 		q.http = &goHttp.Server{
-			Handler:   mux,
-			TLSConfig: cfg.TLSOptions,
+			Handler:   handler,
+			TLSConfig: tls,
 		}
 	}
 

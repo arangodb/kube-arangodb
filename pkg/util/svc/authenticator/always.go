@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,22 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package integrations
+package authenticator
 
 import (
-	"crypto/tls"
-
-	"github.com/arangodb-helper/go-certificates"
+	"context"
 )
 
-func tlsServerOptions(keyfile string) (*tls.Config, error) {
-	cert, err := certificates.LoadKeyFile(keyfile)
-	if err != nil {
-		return nil, err
-	}
+func NewAlwaysAuthenticator() Authenticator {
+	return &alwaysAuthenticator{}
+}
 
-	return &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ClientAuth:   tls.NoClientCert,
-	}, nil
+type alwaysAuthenticator struct {
+}
+
+func (b *alwaysAuthenticator) ValidateGRPC(ctx context.Context) error {
+	return nil
 }

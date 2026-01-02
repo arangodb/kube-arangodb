@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import (
 type HTTPResponse[T proto.Message] interface {
 	WithCode(codes ...int) HTTPResponse[T]
 	Get() (T, error)
+	Validate() error
 }
 
 type httpErrorResponse[T proto.Message] struct {
@@ -50,10 +51,18 @@ func (h httpErrorResponse[T]) Get() (T, error) {
 	return util.Default[T](), h.err
 }
 
+func (h httpErrorResponse[T]) Validate() error {
+	return h.err
+}
+
 type httpResponse[T proto.Message] struct {
 	code int
 
 	data []byte
+}
+
+func (h httpResponse[T]) Validate() error {
+	return nil
 }
 
 func (h httpResponse[T]) WithCode(codes ...int) HTTPResponse[T] {

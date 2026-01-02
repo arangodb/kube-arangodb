@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package metrics
 
 import (
 	goHttp "net/http"
+	goStrings "strings"
 
 	prometheus "github.com/prometheus/client_golang/prometheus/promhttp"
 
@@ -32,4 +33,13 @@ const MaxMetricsBufferedSize = 1024 * 1024
 
 func Handler() goHttp.HandlerFunc {
 	return operatorHTTP.WithTextContentType(operatorHTTP.WithNoContent(operatorHTTP.WithBuffer(MaxMetricsBufferedSize, operatorHTTP.WithEncoding(prometheus.Handler().ServeHTTP))))
+}
+
+func Wrapper(w goHttp.ResponseWriter, r *goHttp.Request) bool {
+	if goStrings.ToUpper(r.Method) == goHttp.MethodGet && r.URL.Path == "/metrics" {
+		Handler()(w, r)
+		return true
+	}
+
+	return false
 }

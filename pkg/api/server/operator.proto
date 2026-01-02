@@ -24,18 +24,44 @@ package server;
 
 import "integrations/shared/v1/definition/empty.proto";
 
+import "google/api/annotations.proto";
+
 option go_package = "github.com/arangodb/kube-arangodb/pkg/api/server";
 
 // Operator defined Operator service
 service Operator {
   // GetVersion returns Operator version
-  rpc GetVersion (shared.Empty) returns (Version) {}
+  rpc GetVersion (shared.Empty) returns (Version) {
+    option (google.api.http) = {
+      get: "/_api/version"
+    };
+  }
 
   // GetLogLevel returns Operator LogLevels
   rpc GetLogLevel (shared.Empty) returns (LogLevelConfig) {}
 
   // SetLogLevel sets Operator LogLevels
   rpc SetLogLevel (LogLevelConfig) returns (shared.Empty) {}
+
+  // Returns health details
+  rpc OperatorLiveness (shared.Empty) returns (shared.Empty) {
+    option (google.api.http) = {
+      get: "/health"
+    };
+  }
+
+  // Returns Ready details
+  rpc OperatorReadiness (shared.Empty) returns (shared.Empty) {
+    option (google.api.http) = {
+      get: "/ready"
+    };
+  }
+  // Returns health details
+  rpc OperatorServiceReadiness (OperatorService) returns (shared.Empty) {
+    option (google.api.http) = {
+      get: "/ready/{name}"
+    };
+  }
 }
 
 // Version define the version details
@@ -72,4 +98,10 @@ enum LogLevel {
 message LogLevelConfig {
   // topics define map of the topics and corresponding log levels
   map<string, LogLevel> topics = 1;
+}
+
+// Operator Internal Service
+message OperatorService {
+  // Name of the service
+  string name = 1;
 }
