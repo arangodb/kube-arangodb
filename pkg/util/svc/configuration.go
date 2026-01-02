@@ -28,7 +28,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
-	tls2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 // RequestWrap if returns true execution is stopped
@@ -60,7 +60,7 @@ func (r RequestWraps) Wrap(handler goHttp.Handler) goHttp.Handler {
 type Configuration struct {
 	Address string
 
-	TLSOptions tls2.TLSConfigFetcher
+	TLSOptions ktls.TLSConfigFetcher
 
 	Options []grpc.ServerOption
 

@@ -62,7 +62,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
@@ -489,7 +489,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 				logger.Fatal("CA Secret NAme cannot be empty")
 			}
 
-			c.TLSOptions = tls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, ip)
+			c.TLSOptions = ktls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, ip)
 
 			svc, err := svc.NewService(c, impl.New(svcConfig))
 			if err != nil {

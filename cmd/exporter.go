@@ -32,7 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 var (
@@ -125,9 +125,9 @@ func cmdExporterCheckE() error {
              </html>`))
 			})
 		}),
-		operatorHTTP.WithTLSConfigFetcherGen(func() tls.TLSConfigFetcher {
+		ktls.WithTLSConfigFetcherGen(func() ktls.TLSConfigFetcher {
 			if exporterInput.keyfile != "" {
-				return tls.NewKeyfileTLSConfig(exporterInput.keyfile)
+				return ktls.NewKeyfileTLSConfig(exporterInput.keyfile)
 			}
 
 			return nil

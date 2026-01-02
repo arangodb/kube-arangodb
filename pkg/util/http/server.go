@@ -29,7 +29,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	tls2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 func DefaultHTTPServerSettings(in *goHttp.Server, _ context.Context) error {
@@ -39,23 +38,6 @@ func DefaultHTTPServerSettings(in *goHttp.Server, _ context.Context) error {
 	in.TLSNextProto = make(map[string]func(*goHttp.Server, *tls.Conn, goHttp.Handler))
 
 	return nil
-}
-
-func WithTLSConfigFetcherGen(gen func() tls2.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
-	return WithTLSConfigFetcher(gen())
-}
-
-func WithTLSConfigFetcher(fetcher tls2.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
-	return func(in *goHttp.Server, p1 context.Context) error {
-		v, err := fetcher.Eval(p1)
-		if err != nil {
-			return err
-		}
-
-		in.TLSConfig = v
-
-		return nil
-	}
 }
 
 func WithServeMux(mods ...util.Mod[goHttp.ServeMux]) util.ModEP1[goHttp.Server, context.Context] {

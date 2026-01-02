@@ -32,7 +32,7 @@ import (
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/webhook"
 )
@@ -92,12 +92,12 @@ func cmdWebhookCheckE() error {
 func webhookServer(ctx context.Context, client kclient.Client, admissions ...webhook.Admission) (http.Server, error) {
 	return http.NewServer(ctx,
 		http.DefaultHTTPServerSettings,
-		http.WithTLSConfigFetcherGen(func() tls.TLSConfigFetcher {
+		ktls.WithTLSConfigFetcherGen(func() ktls.TLSConfigFetcher {
 			if webhookInput.secretName != "" && webhookInput.secretNamespace != "" {
-				return tls.NewSecretTLSConfig(client.Kubernetes().CoreV1().Secrets(webhookInput.secretNamespace), webhookInput.secretName)
+				return ktls.NewSecretTLSConfig(client.Kubernetes().CoreV1().Secrets(webhookInput.secretNamespace), webhookInput.secretName)
 			}
 
-			return tls.NewSelfSignedTLSConfig("operator")
+			return ktls.NewSelfSignedTLSConfig("operator")
 		}),
 		http.WithServeMux(
 			func(in *goHttp.ServeMux) {

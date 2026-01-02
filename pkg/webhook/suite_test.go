@@ -38,7 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
-	tls2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
@@ -122,7 +122,7 @@ func request(t *testing.T, addr string, gvs meta.GroupVersionResource, name stri
 func startHTTPServer(t *testing.T, ctx context.Context, admissions ...Admission) string {
 	return tests.NewHTTPServer(ctx, t,
 		http.DefaultHTTPServerSettings,
-		http.WithTLSConfigFetcher(tls2.NewSelfSignedTLSConfig("localhost", "127.0.0.1")),
+		ktls.WithTLSConfigFetcher(ktls.NewSelfSignedTLSConfig("localhost", "127.0.0.1")),
 		http.WithServeMux(
 			Admissions(admissions).Register(),
 		),

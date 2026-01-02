@@ -31,7 +31,7 @@ import (
 
 	"github.com/arangodb-helper/go-certificates"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/constants"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
@@ -166,8 +166,8 @@ func getOrCreateTLSCAConfig(ctx context.Context, client generic.Client[*core.Sec
 				Name: name,
 			},
 			Data: map[string][]byte{
-				constants.SecretCACertificate: []byte(cert),
-				constants.SecretCAKey:         []byte(key),
+				utilConstants.SecretCACertificate: []byte(cert),
+				utilConstants.SecretCAKey:         []byte(key),
 			},
 		}, meta.CreateOptions{})
 		if err != nil {
@@ -185,14 +185,14 @@ func getOrCreateTLSCAConfig(ctx context.Context, client generic.Client[*core.Sec
 		return nil, errors.Errorf("Secret %s not found", name)
 	}
 
-	cert, ok := secret.Data[constants.SecretCACertificate]
+	cert, ok := secret.Data[utilConstants.SecretCACertificate]
 	if !ok {
-		return nil, errors.Errorf("Secret %s not valid: Key %s not found", name, constants.SecretCACertificate)
+		return nil, errors.Errorf("Secret %s not valid: Key %s not found", name, utilConstants.SecretCACertificate)
 	}
 
-	key, ok := secret.Data[constants.SecretCAKey]
+	key, ok := secret.Data[utilConstants.SecretCAKey]
 	if !ok {
-		return nil, errors.Errorf("Secret %s not valid: Key %s not found", name, constants.SecretCAKey)
+		return nil, errors.Errorf("Secret %s not valid: Key %s not found", name, utilConstants.SecretCAKey)
 	}
 
 	certObj, keyObj, err := certificates.LoadFromPEM(string(cert), string(key))
