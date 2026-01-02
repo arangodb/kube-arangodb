@@ -468,17 +468,17 @@ func executeMain(cmd *cobra.Command, args []string) {
 				in.LivenessProbe = &livenessProbe
 				return in
 			}).
-				WithReadinessProbe("Deployment", cfg.EnableDeployment, &deploymentProbe).
-				WithReadinessProbe("DeploymentReplication", cfg.EnableDeploymentReplication, &deploymentReplicationProbe).
-				WithReadinessProbe("Storage", cfg.EnableStorage, &storageProbe).
-				WithReadinessProbe("Backup", cfg.EnableBackup, &backupProbe).
-				WithReadinessProbe("Apps", cfg.EnableApps, &appsProbe).
-				WithReadinessProbe("ML", cfg.EnableML, &mlProbe).
-				WithReadinessProbe("Analytics", cfg.EnableAnalytics, &analyticsProbe).
-				WithReadinessProbe("Networking", cfg.EnableNetworking, &networkingProbe).
-				WithReadinessProbe("Platform", cfg.EnablePlatform, &platformProbe).
-				WithReadinessProbe("Scheduler", cfg.EnableScheduler, &schedulerProbe).
-				WithReadinessProbe("ClusterSync", cfg.EnableK2KClusterSync, &k2KClusterSyncProbe)
+				WithReadinessProbe("deployment", cfg.EnableDeployment, &deploymentProbe).
+				WithReadinessProbe("deployment-replication", cfg.EnableDeploymentReplication, &deploymentReplicationProbe).
+				WithReadinessProbe("storage", cfg.EnableStorage, &storageProbe).
+				WithReadinessProbe("backup", cfg.EnableBackup, &backupProbe).
+				WithReadinessProbe("apps", cfg.EnableApps, &appsProbe).
+				WithReadinessProbe("ml", cfg.EnableML, &mlProbe).
+				WithReadinessProbe("analytics", cfg.EnableAnalytics, &analyticsProbe).
+				WithReadinessProbe("networking", cfg.EnableNetworking, &networkingProbe).
+				WithReadinessProbe("platform", cfg.EnablePlatform, &platformProbe).
+				WithReadinessProbe("scheduler", cfg.EnableScheduler, &schedulerProbe).
+				WithReadinessProbe("cluster-sync", cfg.EnableK2KClusterSync, &k2KClusterSyncProbe)
 
 			svcConfig.Authenticator = authenticator.NewBasicAuthenticator(cache.NewObject(func(ctx context.Context) (map[string]string, time.Duration, error) {
 				secret, err := client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
