@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,6 +84,11 @@ type ModClient[S meta.Object] interface {
 	UpdateInterface[S]
 	PatchInterface[S]
 	DeleteInterface[S]
+}
+
+type Client[S meta.Object] interface {
+	ReadClient[S]
+	ModClient[S]
 }
 
 type ModStatusClient[S meta.Object] interface {

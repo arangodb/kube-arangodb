@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	tls2 "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 )
 
 func DefaultHTTPServerSettings(in *goHttp.Server, _ context.Context) error {
@@ -40,11 +41,11 @@ func DefaultHTTPServerSettings(in *goHttp.Server, _ context.Context) error {
 	return nil
 }
 
-func WithTLSConfigFetcherGen(gen func() util.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
+func WithTLSConfigFetcherGen(gen func() tls2.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
 	return WithTLSConfigFetcher(gen())
 }
 
-func WithTLSConfigFetcher(fetcher util.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
+func WithTLSConfigFetcher(fetcher tls2.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
 	return func(in *goHttp.Server, p1 context.Context) error {
 		v, err := fetcher.Eval(p1)
 		if err != nil {

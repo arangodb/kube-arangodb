@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/webhook"
 )
@@ -91,12 +92,12 @@ func cmdWebhookCheckE() error {
 func webhookServer(ctx context.Context, client kclient.Client, admissions ...webhook.Admission) (http.Server, error) {
 	return http.NewServer(ctx,
 		http.DefaultHTTPServerSettings,
-		http.WithTLSConfigFetcherGen(func() util.TLSConfigFetcher {
+		http.WithTLSConfigFetcherGen(func() tls.TLSConfigFetcher {
 			if webhookInput.secretName != "" && webhookInput.secretNamespace != "" {
-				return util.NewSecretTLSConfig(client.Kubernetes().CoreV1().Secrets(webhookInput.secretNamespace), webhookInput.secretName)
+				return tls.NewSecretTLSConfig(client.Kubernetes().CoreV1().Secrets(webhookInput.secretNamespace), webhookInput.secretName)
 			}
 
-			return util.NewSelfSignedTLSConfig("operator")
+			return tls.NewSelfSignedTLSConfig("operator")
 		}),
 		http.WithServeMux(
 			func(in *goHttp.ServeMux) {
