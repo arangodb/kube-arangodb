@@ -99,7 +99,6 @@ var (
 		grpcPort        int
 		basicSecretName string
 		tlsSecretName   string
-		allowAnonymous  bool
 	}
 	operatorOptions struct {
 		enableDeployment            bool // Run deployment operator
@@ -481,44 +480,40 @@ func executeMain(cmd *cobra.Command, args []string) {
 				WithReadinessProbe("Scheduler", cfg.EnableScheduler, &schedulerProbe).
 				WithReadinessProbe("ClusterSync", cfg.EnableK2KClusterSync, &k2KClusterSyncProbe)
 
-			if !apiOptions.allowAnonymous {
-				svcConfig.Authenticator = authenticator.NewBasicAuthenticator(cache.NewObject(func(ctx context.Context) (map[string]string, time.Duration, error) {
-					secret, err := client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
-					if err != nil {
-						if !apiErrors.IsNotFound(err) {
-							return nil, 0, err
-						} else {
-							// Create one
-							secret = &core.Secret{
-								ObjectMeta: meta.ObjectMeta{
-									Name:      apiOptions.basicSecretName,
-									Namespace: namespace,
-								},
-								Data: map[string][]byte{
-									"admin": []byte(uniuri.NewLen(12)),
-								},
+			svcConfig.Authenticator = authenticator.NewBasicAuthenticator(cache.NewObject(func(ctx context.Context) (map[string]string, time.Duration, error) {
+				secret, err := client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
+				if err != nil {
+					if !apiErrors.IsNotFound(err) {
+						return nil, 0, err
+					} else {
+						// Create one
+						secret = &core.Secret{
+							ObjectMeta: meta.ObjectMeta{
+								Name:      apiOptions.basicSecretName,
+								Namespace: namespace,
+							},
+							Data: map[string][]byte{
+								"admin": []byte(uniuri.NewLen(12)),
+							},
+						}
+
+						secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Create(ctx, secret, meta.CreateOptions{})
+						if err != nil {
+							if !apiErrors.IsAlreadyExists(err) {
+								return nil, 0, err
 							}
 
-							secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Create(ctx, secret, meta.CreateOptions{})
+							secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
 							if err != nil {
-								if !apiErrors.IsAlreadyExists(err) {
-									return nil, 0, err
-								}
-
-								secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
-								if err != nil {
-									return nil, 0, err
-								}
+								return nil, 0, err
 							}
 						}
 					}
-					return util.FormatMap(secret.Data, func(k string, a []byte) string {
-						return string(a)
-					}), 15 * time.Second, nil
-				}))
-			} else {
-				svcConfig.Authenticator = authenticator.NewAlwaysAuthenticator()
-			}
+				}
+				return util.FormatMap(secret.Data, func(k string, a []byte) string {
+					return string(a)
+				}), 15 * time.Second, nil
+			}))
 
 			if apiOptions.tlsSecretName != "" {
 				c.TLSOptions = util.NewSecretTLSConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsSecretName)
