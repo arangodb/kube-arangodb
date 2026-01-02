@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
@@ -121,7 +122,7 @@ func request(t *testing.T, addr string, gvs meta.GroupVersionResource, name stri
 func startHTTPServer(t *testing.T, ctx context.Context, admissions ...Admission) string {
 	return tests.NewHTTPServer(ctx, t,
 		http.DefaultHTTPServerSettings,
-		http.WithTLSConfigFetcher(util.NewSelfSignedTLSConfig("localhost", "127.0.0.1")),
+		ktls.WithTLSConfigFetcher(ktls.NewSelfSignedTLSConfig("localhost", "127.0.0.1")),
 		http.WithServeMux(
 			Admissions(admissions).Register(),
 		),

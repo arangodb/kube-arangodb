@@ -35,6 +35,7 @@ import (
 	integrationsClients "github.com/arangodb/kube-arangodb/pkg/integrations/clients"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -101,7 +102,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 	}
 
 	if keyfile := s.tls.keyfile; keyfile != "" {
-		cfg.TLSOptions = util.NewKeyfileTLSConfig(s.tls.keyfile)
+		cfg.TLSOptions = ktls.NewKeyfileTLSConfig(s.tls.keyfile)
 	}
 
 	if s.gateway.enabled {

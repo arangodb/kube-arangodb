@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,23 +38,6 @@ func DefaultHTTPServerSettings(in *goHttp.Server, _ context.Context) error {
 	in.TLSNextProto = make(map[string]func(*goHttp.Server, *tls.Conn, goHttp.Handler))
 
 	return nil
-}
-
-func WithTLSConfigFetcherGen(gen func() util.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
-	return WithTLSConfigFetcher(gen())
-}
-
-func WithTLSConfigFetcher(fetcher util.TLSConfigFetcher) util.ModEP1[goHttp.Server, context.Context] {
-	return func(in *goHttp.Server, p1 context.Context) error {
-		v, err := fetcher.Eval(p1)
-		if err != nil {
-			return err
-		}
-
-		in.TLSConfig = v
-
-		return nil
-	}
 }
 
 func WithServeMux(mods ...util.Mod[goHttp.ServeMux]) util.ModEP1[goHttp.Server, context.Context] {

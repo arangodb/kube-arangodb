@@ -32,7 +32,6 @@ import (
 	goStrings "strings"
 	"time"
 
-	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
@@ -57,13 +56,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
@@ -81,6 +80,7 @@ const (
 	defaultAPIGRPCPort     = 8728
 	defaultAdminSecretName = "arangodb-operator-dashboard"
 	defaultBasicSecretName = "arangodb-operator-credentials"
+	defaultCASecretName    = "arangodb-operator-ca"
 	defaultShutdownDelay   = 2 * time.Second
 	defaultShutdownTimeout = 30 * time.Second
 )
@@ -98,7 +98,7 @@ var (
 		httpPort        int
 		grpcPort        int
 		basicSecretName string
-		tlsSecretName   string
+		tlsCASecretName string
 	}
 	operatorOptions struct {
 		enableDeployment            bool // Run deployment operator
@@ -203,7 +203,8 @@ func initE() error {
 	f.Bool("api.enabled", true, "Enable operator HTTP and gRPC API")
 	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultServerPort, "HTTP API port to listen on")
 	f.IntVar(&apiOptions.grpcPort, "api.grpc-port", defaultAPIGRPCPort, "gRPC API port to listen on")
-	f.StringVar(&apiOptions.tlsSecretName, "api.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS API (if empty, self-signed certificate is used)")
+	f.String("api.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS API (if empty, self-signed certificate is used)")
+	f.StringVar(&apiOptions.tlsCASecretName, "api.tls-ca-secret-name", defaultCASecretName, "Name of secret containing ca.crt & ca.key for HTTPS API (if does not exist, new one is generated)")
 	f.String("api.jwt-secret-name", "", "Name of secret which will contain JWT to authenticate API requests.")
 	f.String("api.jwt-key-secret-name", "", "Name of secret containing key used to sign JWT. If there is no such secret present, value will be saved here")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
@@ -270,6 +271,7 @@ func initE() error {
 		f.MarkDeprecated("server.tls-secret-name", "Value is not used anymore"),
 		f.MarkDeprecated("server.admin-secret-name", "Value is not used anymore"),
 		f.MarkDeprecated("server.allow-anonymous-access", "Value is not used anymore"),
+		f.MarkDeprecated("api.tls-secret-name", "Value is not used anymore"),
 	); err != nil {
 		return errors.Wrap(err, "Unable to mark flags as deprecated")
 	}
@@ -285,6 +287,7 @@ func initE() error {
 		f.MarkHidden("server.tls-secret-name"),
 		f.MarkHidden("server.admin-secret-name"),
 		f.MarkHidden("server.allow-anonymous-access"),
+		f.MarkHidden("api.tls-secret-name"),
 	); err != nil {
 		return errors.Wrap(err, "Unable to mark flags as hidden")
 	}
@@ -480,46 +483,13 @@ func executeMain(cmd *cobra.Command, args []string) {
 				WithReadinessProbe("scheduler", cfg.EnableScheduler, &schedulerProbe).
 				WithReadinessProbe("cluster-sync", cfg.EnableK2KClusterSync, &k2KClusterSyncProbe)
 
-			svcConfig.Authenticator = authenticator.NewBasicAuthenticator(cache.NewObject(func(ctx context.Context) (map[string]string, time.Duration, error) {
-				secret, err := client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
-				if err != nil {
-					if !apiErrors.IsNotFound(err) {
-						return nil, 0, err
-					} else {
-						// Create one
-						secret = &core.Secret{
-							ObjectMeta: meta.ObjectMeta{
-								Name:      apiOptions.basicSecretName,
-								Namespace: namespace,
-							},
-							Data: map[string][]byte{
-								"admin": []byte(uniuri.NewLen(12)),
-							},
-						}
+			svcConfig.Authenticator = authenticator.NewBasicAuthenticator(newBasicAuthCacheObject(client, namespace, apiOptions.basicSecretName))
 
-						secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Create(ctx, secret, meta.CreateOptions{})
-						if err != nil {
-							if !apiErrors.IsAlreadyExists(err) {
-								return nil, 0, err
-							}
-
-							secret, err = client.Kubernetes().CoreV1().Secrets(namespace).Get(ctx, apiOptions.basicSecretName, meta.GetOptions{})
-							if err != nil {
-								return nil, 0, err
-							}
-						}
-					}
-				}
-				return util.FormatMap(secret.Data, func(k string, a []byte) string {
-					return string(a)
-				}), 15 * time.Second, nil
-			}))
-
-			if apiOptions.tlsSecretName != "" {
-				c.TLSOptions = util.NewSecretTLSConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsSecretName)
-			} else {
-				c.TLSOptions = util.NewSelfSignedTLSConfig(name, ip)
+			if apiOptions.tlsCASecretName == "" {
+				logger.Fatal("CA Secret NAme cannot be empty")
 			}
+
+			c.TLSOptions = ktls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, ip)
 
 			svc, err := svc.NewService(c, impl.New(svcConfig))
 			if err != nil {

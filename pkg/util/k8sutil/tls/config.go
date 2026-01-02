@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package util
+package tls
 
 import (
 	"context"
@@ -26,10 +26,12 @@ import (
 	"time"
 
 	core "k8s.io/api/core/v1"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb-helper/go-certificates"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
@@ -111,6 +113,97 @@ func NewSecretTLSConfig(client generic.GetInterface[*core.Secret], name string) 
 		}
 		return result, nil
 	}
+}
+
+func NewLocalSecretTLSCAConfig(client generic.Client[*core.Secret], name, cn string, names ...string) TLSConfigFetcher {
+	return func(ctx context.Context) (*tls.Config, error) {
+		ca, err := getOrCreateTLSCAConfig(ctx, client, name, "arangodb-operator")
+		if err != nil {
+			return nil, err
+		}
+
+		options := certificates.CreateCertificateOptions{
+			CommonName: cn,
+			Hosts:      append([]string{cn}, names...),
+			ValidFrom:  time.Now(),
+			ValidFor:   time.Hour * 24 * 365,
+			IsCA:       false,
+			ECDSACurve: "P256",
+		}
+
+		cert, priv, err := certificates.CreateCertificate(options, ca)
+		if err != nil {
+			return nil, err
+		}
+
+		var result *tls.Config
+		c, err := tls.X509KeyPair([]byte(cert), []byte(priv))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		result = &tls.Config{
+			Certificates: []tls.Certificate{c},
+		}
+		return result, nil
+	}
+}
+
+func getOrCreateTLSCAConfig(ctx context.Context, client generic.Client[*core.Secret], name, cn string) (*certificates.CA, error) {
+	secret, err := client.Get(ctx, name, meta.GetOptions{})
+
+	if err != nil {
+		if !apiErrors.IsNotFound(err) {
+			return nil, errors.WithStack(err)
+		}
+
+		cert, key, err := CreateTLSCACertificate(cn)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		secret, err = client.Create(ctx, &core.Secret{
+			ObjectMeta: meta.ObjectMeta{
+				Name: name,
+			},
+			Data: map[string][]byte{
+				utilConstants.SecretCACertificate: []byte(cert),
+				utilConstants.SecretCAKey:         []byte(key),
+			},
+		}, meta.CreateOptions{})
+		if err != nil {
+			if !apiErrors.IsConflict(err) {
+				return nil, errors.WithStack(err)
+			}
+
+			if secret, err = client.Get(ctx, name, meta.GetOptions{}); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if secret == nil {
+		return nil, errors.Errorf("Secret %s not found", name)
+	}
+
+	cert, ok := secret.Data[utilConstants.SecretCACertificate]
+	if !ok {
+		return nil, errors.Errorf("Secret %s not valid: Key %s not found", name, utilConstants.SecretCACertificate)
+	}
+
+	key, ok := secret.Data[utilConstants.SecretCAKey]
+	if !ok {
+		return nil, errors.Errorf("Secret %s not valid: Key %s not found", name, utilConstants.SecretCAKey)
+	}
+
+	certObj, keyObj, err := certificates.LoadFromPEM(string(cert), string(key))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &certificates.CA{
+		Certificate: certObj,
+		PrivateKey:  keyObj,
+	}, nil
 }
 
 func NewKeyfileTLSConfig(keyfile string) TLSConfigFetcher {
