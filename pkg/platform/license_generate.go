@@ -75,8 +75,8 @@ func licenseGenerateRun(cmd *cobra.Command, args []string) error {
 	l.Info("Generating License")
 
 	lic, err := mc.License(cmd.Context(), lmanager.LicenseRequest{
-		DeploymentID: util.NewType(did),
-		Inventory:    util.NewType(ugrpc.NewObject(inv)),
+		DeploymentID: util.BoolSwitch(did == "", nil, util.NewType(did)),
+		Inventory:    util.BoolSwitch(inv == nil, nil, util.NewType(ugrpc.NewObject(inv))),
 	})
 	if err != nil {
 		return err
