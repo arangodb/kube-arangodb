@@ -41,6 +41,11 @@ type basicAuthenticator struct {
 	object cache.Object[map[string]string]
 }
 
+func (b *basicAuthenticator) Init(ctx context.Context) error {
+	_, err := b.object.Get(ctx)
+	return err
+}
+
 func (b *basicAuthenticator) ValidateGRPC(ctx context.Context) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

@@ -31,6 +31,10 @@ func NewAlwaysAuthenticator() Authenticator {
 type alwaysAuthenticator struct {
 }
 
+func (b *alwaysAuthenticator) Init(ctx context.Context) error {
+	return nil
+}
+
 func (b *alwaysAuthenticator) ValidateGRPC(ctx context.Context) error {
 	return nil
 }
