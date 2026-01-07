@@ -23,6 +23,7 @@ package authenticator
 import (
 	"context"
 	"encoding/base64"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 	goStrings "strings"
 
 	"github.com/pkg/errors"
@@ -59,17 +60,24 @@ func (b *basicAuthenticator) ValidateGRPC(ctx context.Context) error {
 
 	case 1:
 		h := v[0]
-		if goStrings.HasPrefix(h, "Basic ") {
-			h = goStrings.TrimPrefix(h, "Basic ")
-			c, err := base64.StdEncoding.DecodeString(h)
-			if err == nil {
-				if n := goStrings.SplitN(string(c), ":", 2); len(n) == 2 {
-					if b.validate(ctx, n[0], n[1]) == nil {
-						break
-					}
+		z := strings.SplitN(h, " ", 2)
+		if len(z) != 2 {
+			return status.Errorf(codes.Unauthenticated, "authorization token is not provided")
+		}
+
+		if strings.ToLower(z[0]) != "basic" {
+			return status.Errorf(codes.Unauthenticated, "authorization token is not provided")
+		}
+
+		c, err := base64.StdEncoding.DecodeString(z[1])
+		if err == nil {
+			if n := goStrings.SplitN(string(c), ":", 2); len(n) == 2 {
+				if b.validate(ctx, n[0], n[1]) == nil {
+					break
 				}
 			}
 		}
+
 		return status.Errorf(codes.Unauthenticated, "authorization token is invalid")
 
 	default:
