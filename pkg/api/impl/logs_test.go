@@ -24,16 +24,18 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	goHttp "net/http"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	goHttp "net/http"
-	"testing"
 )
 
 const loggerName = "testing-internal"

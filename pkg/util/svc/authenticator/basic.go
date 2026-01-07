@@ -23,7 +23,6 @@ package authenticator
 import (
 	"context"
 	"encoding/base64"
-	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 	goStrings "strings"
 
 	"github.com/pkg/errors"
@@ -32,6 +31,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
 func NewBasicAuthenticator(object cache.Object[map[string]string]) Authenticator {
