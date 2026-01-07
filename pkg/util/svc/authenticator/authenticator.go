@@ -25,5 +25,6 @@ import (
 )
 
 type Authenticator interface {
+	Init(ctx context.Context) error
 	ValidateGRPC(ctx context.Context) error
 }

@@ -485,8 +485,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 			svcConfig.Authenticator = authenticator.NewBasicAuthenticator(newBasicAuthCacheObject(client, namespace, apiOptions.basicSecretName))
 
+			if err := svcConfig.Authenticator.Init(shutdown.Context()); err != nil {
+				logger.Err(err).Fatal("Unable to init authentication secret")
+			}
+
 			if apiOptions.tlsCASecretName == "" {
-				logger.Fatal("CA Secret NAme cannot be empty")
+				logger.Fatal("CA Secret Name cannot be empty")
 			}
 
 			c.TLSOptions = ktls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, ip)

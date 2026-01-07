@@ -27,8 +27,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -59,6 +61,17 @@ func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration])
 		Address: "127.0.0.1:0",
 		Gateway: &svc.ConfigurationGateway{
 			Address: "127.0.0.1:0",
+			MuxExtensions: []runtime.ServeMuxOption{
+				runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+					MarshalOptions: protojson.MarshalOptions{
+						UseProtoNames:   false,
+						EmitUnpopulated: false,
+					},
+					UnmarshalOptions: protojson.UnmarshalOptions{
+						DiscardUnknown: true,
+					},
+				}),
+			},
 		},
 		Wrap: svc.RequestWraps{
 			metrics.Wrapper,

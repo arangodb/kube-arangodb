@@ -33,12 +33,12 @@ import (
 )
 
 var loglevelMap = map[pb.LogLevel]logging.Level{
-	pb.LogLevel_LOG_LEVEL_TRACE_UNSPECIFIED: logging.Trace,
-	pb.LogLevel_LOG_LEVEL_DEBUG:             logging.Debug,
-	pb.LogLevel_LOG_LEVEL_INFO:              logging.Info,
-	pb.LogLevel_LOG_LEVEL_WARN:              logging.Warn,
-	pb.LogLevel_LOG_LEVEL_ERROR:             logging.Error,
-	pb.LogLevel_LOG_LEVEL_FATAL:             logging.Fatal,
+	pb.LogLevel_trace: logging.Trace,
+	pb.LogLevel_debug: logging.Debug,
+	pb.LogLevel_info:  logging.Info,
+	pb.LogLevel_warn:  logging.Warn,
+	pb.LogLevel_error: logging.Error,
+	pb.LogLevel_fatal: logging.Fatal,
 }
 
 func logLevelToGRPC(l logging.Level) pb.LogLevel {
@@ -47,7 +47,7 @@ func logLevelToGRPC(l logging.Level) pb.LogLevel {
 			return grpcVal
 		}
 	}
-	return pb.LogLevel_LOG_LEVEL_DEBUG
+	return pb.LogLevel_debug
 }
 
 func (i *implementation) getLogLevelsByTopics() map[string]logging.Level {

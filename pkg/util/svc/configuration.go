@@ -66,13 +66,13 @@ type Configuration struct {
 
 	Wrap RequestWraps
 
-	MuxExtensions []runtime.ServeMuxOption
-
 	Gateway *ConfigurationGateway
 }
 
 type ConfigurationGateway struct {
 	Address string
+
+	MuxExtensions []runtime.ServeMuxOption
 }
 
 func (c *Configuration) GetTLSOptions(ctx context.Context) (*tls.Config, error) {

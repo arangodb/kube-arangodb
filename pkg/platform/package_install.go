@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -191,6 +191,8 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 		log.Info("Waiting...")
 
 		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+			log = log.Str("type", "release").Str("name", name)
+
 			svc, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
 			if err != nil {
 				return err
@@ -251,7 +253,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 			return err
 		}
 
-		logger := logger.Str("chart", name).Str("version", packageSpec.Version)
+		log = logger.Str("chart", name).Str("version", packageSpec.Version)
 
 		if c, ok := charts[name]; !ok {
 			log.Debug("Installing Chart")
@@ -286,18 +288,20 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 		log.Info("Waiting...")
 
 		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+			log = log.Str("type", "chart").Str("name", name)
+
 			c, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns).Get(ctx, name, meta.GetOptions{})
 			if err != nil {
 				return err
 			}
 
 			if !c.Ready() {
-				logger.Warn("Chart not yet ready")
+				log.Warn("Chart not yet ready")
 				return nil
 			}
 
 			if c.Status.Info == nil {
-				logger.Warn("Chart not yet accepted")
+				log.Warn("Chart not yet accepted")
 				return nil
 			}
 

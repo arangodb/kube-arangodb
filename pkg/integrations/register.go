@@ -106,12 +106,13 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 	}
 
 	if s.gateway.enabled {
-		cfg.Gateway = &svc.ConfigurationGateway{Address: s.gateway.address}
-	}
-
-	cfg.MuxExtensions = []runtime.ServeMuxOption{
-		runtime.WithOutgoingHeaderMatcher(outgoingHeaderMatcher),
-		runtime.WithForwardResponseOption(forwardResponseOption),
+		cfg.Gateway = &svc.ConfigurationGateway{
+			Address: s.gateway.address,
+			MuxExtensions: []runtime.ServeMuxOption{
+				runtime.WithOutgoingHeaderMatcher(outgoingHeaderMatcher),
+				runtime.WithForwardResponseOption(forwardResponseOption),
+			},
+		}
 	}
 
 	return cfg, nil

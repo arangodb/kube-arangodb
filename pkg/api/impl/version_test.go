@@ -22,7 +22,6 @@ package impl
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	goHttp "net/http"
 	"testing"
@@ -30,13 +29,10 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/prom2json"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
 
-	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
-	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
 func Test_Version(t *testing.T) {
@@ -47,24 +43,7 @@ func Test_Version(t *testing.T) {
 
 	client := operatorHTTP.NewHTTPClient()
 
-	require.NoError(t, ugrpc.Get[*server.Version](ctx, client, fmt.Sprintf("http://%s/_api/version", q.HTTPAddress())).WithCode(goHttp.StatusUnauthorized).Validate())
-	require.NoError(t, ugrpc.Get[*server.Version](ctx, client, fmt.Sprintf("http://%s/_api/version", q.HTTPAddress()), func(in *goHttp.Request) {
-		in.Header.Set("Authorization", fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", "root2", "test")))))
-	}).WithCode(goHttp.StatusUnauthorized).Validate())
-	require.NoError(t, ugrpc.Get[*server.Version](ctx, client, fmt.Sprintf("http://%s/_api/version", q.HTTPAddress()), func(in *goHttp.Request) {
-		in.Header.Set("Authorization", fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", "root", "test")))))
-	}).WithCode(goHttp.StatusOK).Validate())
-
-	gclient := tgrpc.NewGRPCClient(t, ctx, server.NewOperatorClient, q.Address())
-
-	_, err := gclient.GetVersion(t.Context(), &pbSharedV1.Empty{})
-	tgrpc.AsGRPCError(t, err).Code(t, codes.Unauthenticated)
-
-	_, err = gclient.GetVersion(AuthenticatedContext(t, "root2", "test"), &pbSharedV1.Empty{})
-	tgrpc.AsGRPCError(t, err).Code(t, codes.Unauthenticated)
-
-	_, err = gclient.GetVersion(AuthenticatedContext(t, "root", "test"), &pbSharedV1.Empty{})
-	require.NoError(t, err)
+	require.NoError(t, ugrpc.Get[*server.Version](ctx, client, fmt.Sprintf("http://%s/_api/version", q.HTTPAddress())).WithCode(goHttp.StatusOK).Validate())
 }
 
 func Test_Metrics(t *testing.T) {

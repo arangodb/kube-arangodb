@@ -38,10 +38,19 @@ service Operator {
   }
 
   // GetLogLevel returns Operator LogLevels
-  rpc GetLogLevel (shared.Empty) returns (LogLevelConfig) {}
+  rpc GetLogLevel (shared.Empty) returns (LogLevelConfig) {
+    option (google.api.http) = {
+      get: "/log/level"
+    };
+  }
 
   // SetLogLevel sets Operator LogLevels
-  rpc SetLogLevel (LogLevelConfig) returns (shared.Empty) {}
+  rpc SetLogLevel (LogLevelConfig) returns (shared.Empty) {
+    option (google.api.http) = {
+      post: "/log/level"
+      body: "*"
+    };
+  }
 
   // Returns health details
   rpc OperatorLiveness (shared.Empty) returns (shared.Empty) {
@@ -80,18 +89,18 @@ message Version {
 
 // LogLevel defined the Log Levels
 enum LogLevel {
-  // LOG_LEVEL_TRACE_UNSPECIFIED defines Trace or Undefined log level
-  LOG_LEVEL_TRACE_UNSPECIFIED = 0;
-  // LOG_LEVEL_DEBUG defines Debug log level
-  LOG_LEVEL_DEBUG = 1;
-  // LOG_LEVEL_INFO defines Info log level
-  LOG_LEVEL_INFO = 2;
-  // LOG_LEVEL_WARN defines Warn log level
-  LOG_LEVEL_WARN = 3;
-  // LOG_LEVEL_ERROR defines Error log level
-  LOG_LEVEL_ERROR = 4;
-  // LOG_LEVEL_FATAL defines Fatal log level
-  LOG_LEVEL_FATAL = 5;
+  // trace defines Trace or Undefined log level
+  trace = 0;
+  // debug defines Debug log level
+  debug = 1;
+  // info defines Info log level
+  info = 2;
+  // warn defines Warn log level
+  warn = 3;
+  // error defines Error log level
+  error = 4;
+  // fatal defines Fatal log level
+  fatal = 5;
 }
 
 // LogLevelConfig define the LogLevel Configs

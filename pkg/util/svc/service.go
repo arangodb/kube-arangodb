@@ -88,7 +88,7 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	}
 
 	if gateway := cfg.Gateway; gateway != nil {
-		mux := runtime.NewServeMux(cfg.MuxExtensions...)
+		mux := runtime.NewServeMux(gateway.MuxExtensions...)
 
 		for _, handler := range q.handlers {
 			if err := handler.Gateway(shutdown.Context(), mux); err != nil {
