@@ -23,6 +23,7 @@ package grpc
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	goHttp "net/http"
 
@@ -33,14 +34,34 @@ import (
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
+func AsJSON[T proto.Message, O any](r HTTPResponse[T]) (O, error) {
+	data, err := r.Data()
+	if err != nil {
+		return util.Default[O](), err
+	}
+
+	var q O
+
+	if err := json.Unmarshal(data, &q); err != nil {
+		return util.Default[O](), err
+	}
+
+	return q, nil
+}
+
 type HTTPResponse[T proto.Message] interface {
 	WithCode(codes ...int) HTTPResponse[T]
+	Data() ([]byte, error)
 	Get() (T, error)
 	Validate() error
 }
 
 type httpErrorResponse[T proto.Message] struct {
 	err error
+}
+
+func (h httpErrorResponse[T]) Data() ([]byte, error) {
+	return nil, h.err
 }
 
 func (h httpErrorResponse[T]) WithCode(codes ...int) HTTPResponse[T] {
@@ -59,6 +80,10 @@ type httpResponse[T proto.Message] struct {
 	code int
 
 	data []byte
+}
+
+func (h httpResponse[T]) Data() ([]byte, error) {
+	return h.data, nil
 }
 
 func (h httpResponse[T]) Validate() error {
