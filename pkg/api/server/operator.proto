@@ -38,10 +38,19 @@ service Operator {
   }
 
   // GetLogLevel returns Operator LogLevels
-  rpc GetLogLevel (shared.Empty) returns (LogLevelConfig) {}
+  rpc GetLogLevel (shared.Empty) returns (LogLevelConfig) {
+    option (google.api.http) = {
+      get: "/log/level"
+    };
+  }
 
   // SetLogLevel sets Operator LogLevels
-  rpc SetLogLevel (LogLevelConfig) returns (shared.Empty) {}
+  rpc SetLogLevel (LogLevelConfig) returns (shared.Empty) {
+    option (google.api.http) = {
+      post: "/log/level"
+      body: "*"
+    };
+  }
 
   // Returns health details
   rpc OperatorLiveness (shared.Empty) returns (shared.Empty) {
