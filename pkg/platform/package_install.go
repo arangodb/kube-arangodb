@@ -191,6 +191,8 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 		log.Info("Waiting...")
 
 		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+			log = log.Str("type", "release").Str("name", name)
+
 			svc, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Get(ctx, name, meta.GetOptions{})
 			if err != nil {
 				return err
@@ -286,6 +288,8 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 		log.Info("Waiting...")
 
 		if err := h.Timeout(ctx, t, func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+			log = log.Str("type", "chart").Str("name", name)
+
 			c, err := client.Arango().PlatformV1beta1().ArangoPlatformCharts(ns).Get(ctx, name, meta.GetOptions{})
 			if err != nil {
 				return err
