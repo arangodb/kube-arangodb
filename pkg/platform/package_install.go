@@ -253,7 +253,7 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 			return err
 		}
 
-		logger := logger.Str("chart", name).Str("version", packageSpec.Version)
+		log = logger.Str("chart", name).Str("version", packageSpec.Version)
 
 		if c, ok := charts[name]; !ok {
 			log.Debug("Installing Chart")
@@ -296,12 +296,12 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 			}
 
 			if !c.Ready() {
-				logger.Warn("Chart not yet ready")
+				log.Warn("Chart not yet ready")
 				return nil
 			}
 
 			if c.Status.Info == nil {
-				logger.Warn("Chart not yet accepted")
+				log.Warn("Chart not yet accepted")
 				return nil
 			}
 

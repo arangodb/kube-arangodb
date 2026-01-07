@@ -40,7 +40,7 @@ import (
 
 const loggerName = "testing-internal"
 
-var logger = logging.Global().RegisterAndGetLogger(loggerName, logging.Info)
+var _ = logging.Global().RegisterAndGetLogger(loggerName, logging.Info)
 
 func Test_Logs(t *testing.T) {
 	ctx, c := context.WithCancel(t.Context())
