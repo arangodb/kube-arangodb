@@ -101,6 +101,10 @@ func (a *MemberGatewayContainer) GetProbes() (*core.Probe, *core.Probe, *core.Pr
 	return liveness, readiness, startup, nil
 }
 
+// GetResourceRequirements returns resource requirements for the main gateway container.
+// Note: We intentionally scale the accepted pod resources by 0.75 here. The remaining
+// 0.25 portion is assigned to the sidecar container (see pod_creator_gateway_pod.go),
+// resulting in an overall 3:1 resource split between the gateway and its sidecar.
 func (a *MemberGatewayContainer) GetResourceRequirements() core.ResourceRequirements {
 	return kresources.ScaleResources(kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec)), 0.75)
 }

@@ -25,6 +25,21 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// DefaultResourceList adds the Quantity under Resource Name if it does not exist
+func DefaultResourceList(in core.ResourceList, quantity resource.Quantity, resources ...core.ResourceName) core.ResourceList {
+	out := core.ResourceList{}
+
+	for _, v := range resources {
+		if _, ok := in[v]; !ok {
+			out[v] = quantity.DeepCopy()
+		}
+	}
+
+	return out
+}
+
+// ScaleResources scales supported ResourceNames by ratio in the provided Linits & Requests. If ResourceName is not supported Zero is returned
+// Supported: Memory, CPU & EphemeralStorage
 func ScaleResources(in core.ResourceRequirements, ratio float64) core.ResourceRequirements {
 	var r = core.ResourceRequirements{}
 
@@ -39,20 +54,8 @@ func ScaleResources(in core.ResourceRequirements, ratio float64) core.ResourceRe
 	return r
 }
 
-func DefaultResourceList(in core.ResourceList, quantity resource.Quantity, resources ...core.ResourceName) core.ResourceList {
-	if in == nil {
-		in = core.ResourceList{}
-	}
-
-	for _, v := range resources {
-		if _, ok := in[v]; !ok {
-			in[v] = quantity.DeepCopy()
-		}
-	}
-
-	return in
-}
-
+// ScaleResourceList scales supported ResourceNames by ratio in the provided ResourceList. If ResourceName is not supported Zero is returned
+// Supported: Memory, CPU & EphemeralStorage
 func ScaleResourceList(in core.ResourceList, ratio float64) core.ResourceList {
 	var r = core.ResourceList{}
 
@@ -68,9 +71,11 @@ func ScaleResourceList(in core.ResourceList, ratio float64) core.ResourceList {
 	return r
 }
 
+// ScaleQuantity scales supported ResourceName by ratio. If ResourceName is not supported Zero is returned
+// Supported: Memory, CPU & EphemeralStorage
 func ScaleQuantity(in resource.Quantity, t core.ResourceName, ratio float64) resource.Quantity {
 	switch t {
-	case core.ResourceMemory:
+	case core.ResourceMemory, core.ResourceEphemeralStorage:
 		return *resource.NewQuantity(int64(float64(in.Value())*ratio), in.Format)
 	case core.ResourceCPU:
 		return *resource.NewMilliQuantity(int64(float64(in.MilliValue())*ratio), in.Format)
