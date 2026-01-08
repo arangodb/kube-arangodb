@@ -246,7 +246,7 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 	// Build the Resources
 	resources := kresources.ScaleResources(m.GetContainerCreator().GetResourceRequirements(), 0.25)
 
-	resources = kresources.UpscaleOptionalResourceRequirements(*k8sutil.CreateBasicContainerResources(), resources)
+	resources = kresources.UpscaleOptionalResourceRequirements(resources, *k8sutil.CreateBasicContainerResources())
 
 	// Ensure we drop limits if required
 	resources.Limits = kresources.DefaultResourceList(resources.Limits, *resource.NewQuantity(0, resource.DecimalSI), core.ResourceCPU, core.ResourceMemory)
