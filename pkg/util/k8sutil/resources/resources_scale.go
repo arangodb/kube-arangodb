@@ -44,7 +44,7 @@ func DefaultResourceList(in core.ResourceList, quantity resource.Quantity, resou
 	return out
 }
 
-// ScaleResources scales supported ResourceNames by ratio in the provided Linits & Requests. If ResourceName is not supported Zero is returned
+// ScaleResources scales supported ResourceNames by ratio in the provided Limits & Requests. If ResourceName is not supported Zero is returned
 // Supported: Memory, CPU & EphemeralStorage
 func ScaleResources(in core.ResourceRequirements, ratio float64) core.ResourceRequirements {
 	if ratio == 1 {
