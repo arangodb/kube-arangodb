@@ -73,12 +73,12 @@ func Test_ScaleResources(t *testing.T) {
 		require.True(t, resource.MustParse("4").Equal(generated.Limits[core.ResourceCPU]))
 		require.True(t, resource.MustParse("4Gi").Equal(generated.Limits[core.ResourceEphemeralStorage]))
 		require.True(t, resource.MustParse("2Gi").Equal(generated.Limits[core.ResourceMemory]))
-		require.True(t, resource.MustParse("0").Equal(generated.Limits[core.ResourcePods]))
+		require.True(t, resource.MustParse("3").Equal(generated.Limits[core.ResourcePods]))
 
 		require.True(t, resource.MustParse("8").Equal(generated.Requests[core.ResourceCPU]))
 		require.True(t, resource.MustParse("8Gi").Equal(generated.Requests[core.ResourceEphemeralStorage]))
 		require.True(t, resource.MustParse("4Gi").Equal(generated.Requests[core.ResourceMemory]))
-		require.True(t, resource.MustParse("0").Equal(generated.Requests[core.ResourcePods]))
+		require.True(t, resource.MustParse("6").Equal(generated.Requests[core.ResourcePods]))
 	})
 
 	t.Run("Scale 0.5", func(t *testing.T) {

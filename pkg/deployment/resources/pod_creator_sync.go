@@ -143,7 +143,7 @@ func (a *ArangoSyncContainer) GetResourceRequirements(scale float64) core.Resour
 }
 
 func (a *ArangoSyncContainer) GetResourceRequirementsDefaultScale() float64 {
-	return 0.75
+	return 1
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {

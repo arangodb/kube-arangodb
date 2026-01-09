@@ -36,6 +36,7 @@ func CleanContainerResource(to core.ResourceRequirements) core.ResourceRequireme
 // CleanContainerResourceList removes zero values fro mlist
 func CleanContainerResourceList(to core.ResourceList) core.ResourceList {
 	r := core.ResourceList{}
+	
 	for k, v := range to {
 		if !v.IsZero() {
 			r[k] = v

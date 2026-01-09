@@ -29,6 +29,10 @@ import (
 func DefaultResourceList(in core.ResourceList, quantity resource.Quantity, resources ...core.ResourceName) core.ResourceList {
 	out := core.ResourceList{}
 
+	for k, v := range in {
+		out[k] = v
+	}
+
 	for _, v := range resources {
 		if z, ok := in[v]; !ok {
 			out[v] = quantity.DeepCopy()
@@ -43,7 +47,14 @@ func DefaultResourceList(in core.ResourceList, quantity resource.Quantity, resou
 // ScaleResources scales supported ResourceNames by ratio in the provided Linits & Requests. If ResourceName is not supported Zero is returned
 // Supported: Memory, CPU & EphemeralStorage
 func ScaleResources(in core.ResourceRequirements, ratio float64) core.ResourceRequirements {
-	var r = core.ResourceRequirements{}
+	if ratio == 1 {
+		return *in.DeepCopy()
+	}
+
+	var r = core.ResourceRequirements{
+		Limits:   core.ResourceList{},
+		Requests: core.ResourceList{},
+	}
 
 	if l := in.Limits; len(l) > 0 {
 		r.Limits = ScaleResourceList(l, ratio)
