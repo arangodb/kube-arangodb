@@ -148,7 +148,7 @@ func (m *MemberGatewayPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		initContainers = append(initContainers, c)
 	}
 
-	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())
+	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements(m.GetContainerCreator().GetResourceRequirementsDefaultScale()))
 
 	initContainers = applyInitContainersResourceResources(initContainers, res)
 	initContainers = upscaleInitContainersResourceResources(initContainers, res)
@@ -244,7 +244,7 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 	}
 
 	// Build the Resources
-	resources := kresources.ScaleResources(m.GetContainerCreator().GetResourceRequirements(), 0.25)
+	resources := m.GetContainerCreator().GetResourceRequirements(0.25)
 
 	resources = kresources.UpscaleOptionalResourceRequirements(resources, *k8sutil.CreateBasicContainerResources())
 

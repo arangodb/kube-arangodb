@@ -443,8 +443,12 @@ func (a *ContainerIdentity) GetProbes() (*core.Probe, *core.Probe, *core.Probe, 
 	return nil, nil, nil, nil
 }
 
-func (a *ContainerIdentity) GetResourceRequirements() core.ResourceRequirements {
-	return a.ID.GetResources()
+func (a *ContainerIdentity) GetResourceRequirements(scale float64) core.ResourceRequirements {
+	return kresources.ScaleResources(kresources.ExtractPodAcceptedResourceRequirement(a.ID.GetResources()), scale)
+}
+
+func (a *ContainerIdentity) GetResourceRequirementsDefaultScale() float64 {
+	return 1
 }
 
 func (a *ContainerIdentity) GetSecurityContext() *core.SecurityContext {

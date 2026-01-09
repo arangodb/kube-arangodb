@@ -271,8 +271,12 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	return envs.GetEnvList(), envFromSource
 }
 
-func (a *ArangoDContainer) GetResourceRequirements() core.ResourceRequirements {
-	return kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec))
+func (a *ArangoDContainer) GetResourceRequirements(scale float64) core.ResourceRequirements {
+	return kresources.ScaleResources(kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec)), scale)
+}
+
+func (a *ArangoDContainer) GetResourceRequirementsDefaultScale() float64 {
+	return 1
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -488,7 +492,7 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		}
 	}
 
-	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())
+	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements(m.GetContainerCreator().GetResourceRequirementsDefaultScale()))
 
 	initContainers = applyInitContainersResourceResources(initContainers, res)
 	initContainers = upscaleInitContainersResourceResources(initContainers, res)
