@@ -128,7 +128,7 @@ func UpscaleOptionalContainerResourceList(to core.ResourceList, from core.Resour
 
 	for k, v := range from {
 		if n, ok := to[k]; ok {
-			if n.Cmp(v) < 0 {
+			if n.Cmp(v) < 0 && !n.IsZero() {
 				to[k] = v
 			} else if v.IsZero() {
 				delete(to, k)
