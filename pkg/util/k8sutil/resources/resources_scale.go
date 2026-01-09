@@ -78,7 +78,6 @@ func ScaleResourceList(in core.ResourceList, ratio float64) core.ResourceList {
 func ScaleQuantity(in resource.Quantity, t core.ResourceName, ratio float64) resource.Quantity {
 	switch t {
 	case core.ResourceMemory, core.ResourceEphemeralStorage:
-		println(int64(float64(in.Value()) * ratio))
 		return *resource.NewQuantity(int64(float64(in.Value())*ratio), in.Format)
 	case core.ResourceCPU:
 		return *resource.NewMilliQuantity(int64(float64(in.MilliValue())*ratio), in.Format)
