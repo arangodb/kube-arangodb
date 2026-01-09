@@ -270,5 +270,5 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 
 	shutdownAnnotation := integrationsSidecar.NewShutdownAnnotations([]string{shared.ServerContainerName})
 
-	return []*schedulerApi.ProfileTemplate{integration.Status.Accepted.Template, integrations, integrationsSidecar.NewResourceAppend(resources), shutdownAnnotation}, nil
+	return []*schedulerApi.ProfileTemplate{integrationsSidecar.NewResourceAppend(resources), integration.Status.Accepted.Template, integrations, shutdownAnnotation}, nil
 }
