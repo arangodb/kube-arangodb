@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,8 @@ func New(cfg Configuration) (svc.Handler, error) {
 	}
 
 	col := cfg.KVCollection(cfg.Endpoint, "_meta_store")
+
+	col = withTTLIndex(col)
 
 	return newInternal(cfg, cache.NewRemoteCacheWithTTL[*Object](col, cfg.TTL)), nil
 }
@@ -152,6 +154,10 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 	obj.Meta = &objMeta
 	obj.Key = key
 	obj.Rev = req.Revision
+
+	if obj.Meta.Expires != nil {
+		obj.TTL = *obj.Meta.Expires
+	}
 
 	obj.Object.Object = req.GetObject()
 
