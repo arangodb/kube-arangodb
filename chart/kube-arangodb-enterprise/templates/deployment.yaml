@@ -141,9 +141,9 @@ spec:
 {{- end }}
 {{ if and .Values.webhooks.enabled .Values.webhooks.inline }}
             - --webhook.enabled
-            - -webhook.mutating
+            - --webhook.mutating
             - "{{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com"
-            - -webhook.validating
+            - --webhook.validating
             - "{{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com"
 {{- end }}
             - --chaos.allowed={{ .Values.operator.allowChaos }}
