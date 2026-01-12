@@ -20,7 +20,7 @@ spec:
     - name: webhooks
       port: 443
       protocol: TCP
-{{- .Values.webhooks.inline }}
+{{- if .Values.webhooks.inline }}
       targetPort: metrics
 {{- else }}
       targetPort: webhooks
