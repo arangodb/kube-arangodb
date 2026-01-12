@@ -96,8 +96,8 @@ spec:
           image: {{ .Values.operator.image }}
           args:
             - --threads={{ .Values.operator.threads }}
-            - --api.server={{ template "kube-arangodb.operatorName" . }}
-            - --api.server={{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.svc
+            - --api.secondary-name={{ template "kube-arangodb.operatorName" . }}
+            - --api.secondary-name={{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.svc
 {{- if .Values.certificate.enabled }}
             - --server.tls-secret-name={{ template "kube-arangodb.operatorName" . }}-cert
             - --api.tls-secret-name={{ template "kube-arangodb.operatorName" . }}-cert
@@ -143,8 +143,8 @@ spec:
 {{- end }}
 {{ if and .Values.webhooks.enabled .Values.webhooks.inline }}
             - --webhook.enabled
-            - --api.server={{ template "kube-arangodb.operatorName" . }}-webhook
-            - --api.server={{ template "kube-arangodb.operatorName" . }}-webhook.{{ .Release.Namespace }}.svc
+            - --api.secondary-name={{ template "kube-arangodb.operatorName" . }}-webhook
+            - --api.secondary-name={{ template "kube-arangodb.operatorName" . }}-webhook.{{ .Release.Namespace }}.svc
             - --webhook.mutating={{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com
             - --webhook.validating="{{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com
 {{- end }}
