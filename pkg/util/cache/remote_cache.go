@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package cache
 
 import (
 	"context"
+	"net/url"
 	"sync"
 	"time"
 
@@ -115,7 +116,7 @@ func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {
 		return err
 	}
 
-	if _, err := client.UpdateDocumentWithOptions(ctx, key, obj, &arangodb.CollectionDocumentUpdateOptions{
+	if _, err := client.UpdateDocumentWithOptions(ctx, url.QueryEscape(key), obj, &arangodb.CollectionDocumentUpdateOptions{
 		// Ignore the revision if it is not set
 		IgnoreRevs: util.NewType(GetRemoteCacheObjectRev(obj) == ""),
 	}); err != nil {
@@ -138,7 +139,7 @@ func (r *remoteCache[T]) cacheRead(ctx context.Context, key string) (T, time.Tim
 	}
 
 	var z T
-	if _, err := client.ReadDocument(ctx, key, &z); err != nil {
+	if _, err := client.ReadDocument(ctx, url.QueryEscape(key), &z); err != nil {
 		return util.Default[T](), util.Default[time.Time](), err
 	}
 
@@ -177,7 +178,7 @@ func (r *remoteCache[T]) Remove(ctx context.Context, key string) (bool, error) {
 		return false, err
 	}
 
-	if _, err := client.DeleteDocumentWithOptions(ctx, key, &arangodb.CollectionDocumentDeleteOptions{}); err != nil {
+	if _, err := client.DeleteDocumentWithOptions(ctx, url.QueryEscape(key), &arangodb.CollectionDocumentDeleteOptions{}); err != nil {
 		if !shared.IsNotFound(err) {
 			return false, err
 		}

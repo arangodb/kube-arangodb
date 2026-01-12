@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,16 +28,17 @@ import (
 
 	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	tcache "github.com/arangodb/kube-arangodb/pkg/util/tests/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func Handler(mods ...util.ModR[Configuration]) svc.Handler {
-	return newInternal(NewConfiguration().With(mods...), tcache.NewRemoteCache[*Object]())
+func Handler(cache cache.RemoteCache[*Object], mods ...util.ModR[Configuration]) svc.Handler {
+	return newInternal(NewConfiguration().With(mods...), cache)
 }
 
-func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) svc.ServiceStarter {
+func Server(t *testing.T, cache cache.RemoteCache[*Object], ctx context.Context, mods ...util.ModR[Configuration]) svc.ServiceStarter {
 	var currentMods []util.ModR[Configuration]
 
 	currentMods = append(currentMods, func(c Configuration) Configuration {
@@ -51,14 +52,14 @@ func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration])
 		Gateway: &svc.ConfigurationGateway{
 			Address: "127.0.0.1:0",
 		},
-	}, Handler(currentMods...))
+	}, Handler(cache, currentMods...))
 	require.NoError(t, err)
 
 	return local.Start(ctx)
 }
 
-func Client(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) pbMetaV1.MetaV1Client {
-	start := Server(t, ctx, mods...)
+func Client(t *testing.T, cache cache.RemoteCache[*Object], ctx context.Context, mods ...util.ModR[Configuration]) pbMetaV1.MetaV1Client {
+	start := Server(t, cache, ctx, mods...)
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbMetaV1.NewMetaV1Client, start.Address())
 
@@ -69,5 +70,5 @@ func Test_Service(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	Client(t, ctx)
+	Client(t, tcache.NewRemoteCache[*Object](), ctx)
 }

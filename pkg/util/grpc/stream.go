@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,27 @@ import (
 type RecvInterface[T any] interface {
 	Recv() (T, error)
 	grpc.ClientStream
+}
+
+func RecvAll[T any](recv RecvInterface[T]) ([]T, error) {
+	var r []T
+
+	for {
+		resp, err := recv.Recv()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return r, nil
+			}
+
+			if cerr := recv.CloseSend(); cerr != nil {
+				return nil, errors.Errors(err, cerr)
+			}
+
+			return nil, err
+		}
+
+		r = append(r, resp)
+	}
 }
 
 func Recv[T any](recv RecvInterface[T], parser func(T) error) error {
