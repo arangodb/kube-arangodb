@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	goflag "flag"
 	"fmt"
@@ -64,6 +63,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/admission"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
@@ -485,7 +485,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 			}
 
 			if webhookOptions.enabled {
-				_, caBytes, err := ktls.GetOrCreateTLSCAConfig(shutdown.Context(), client.Kubernetes().CoreV1().Secrets(namespace), name)
+				_, caBytes, err := ktls.GetOrCreateTLSCAConfig(shutdown.Context(), client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName)
 				if err != nil {
 					logger.Err(err).Fatal("CA Secret Name cannot be created")
 				}
@@ -765,82 +765,12 @@ func ensureFeaturesConfigMap(ctx context.Context, client typedCore.ConfigMapInte
 }
 
 func updateAdmissionHookCA(ctx context.Context, client kclient.Client, caBundle []byte) error {
-	for _, n := range webhookOptions.webhooks.validating {
-		logger := logger.Str("type", "validating").Str("name", n)
-
-		logger.Debug("Reading current webhook")
-		v, err := client.Kubernetes().AdmissionregistrationV1().ValidatingWebhookConfigurations().Get(ctx, n, meta.GetOptions{})
-		if err != nil {
-			logger.Err(err).Warn("Failed to get validating webhook")
-			return err
-		}
-
-		changed := false
-
-		for id := range v.Webhooks {
-			w := v.Webhooks[id].DeepCopy()
-
-			if !bytes.Equal(caBundle, w.ClientConfig.CABundle) {
-				w.ClientConfig.CABundle = caBundle
-
-				logger.Str("webhook", w.Name).Debug("Updating ca")
-
-				changed = true
-
-				w.DeepCopyInto(&v.Webhooks[id])
-			}
-		}
-
-		if !changed {
-			continue
-		}
-
-		logger.Info("Updating webhook")
-
-		_, err = client.Kubernetes().AdmissionregistrationV1().ValidatingWebhookConfigurations().Update(ctx, v, meta.UpdateOptions{})
-		if err != nil {
-			logger.Err(err).Warn("Failed to update validating webhook")
-			return err
-		}
+	if err := admission.UpdateValidatingAdmissionHookCA(ctx, client, caBundle, webhookOptions.webhooks.validating...); err != nil {
+		return err
 	}
 
-	for _, n := range webhookOptions.webhooks.mutating {
-		logger := logger.Str("type", "mutating").Str("name", n)
-
-		logger.Debug("Reading current webhook")
-		v, err := client.Kubernetes().AdmissionregistrationV1().MutatingWebhookConfigurations().Get(ctx, n, meta.GetOptions{})
-		if err != nil {
-			logger.Err(err).Warn("Failed to get validating webhook")
-			return err
-		}
-
-		changed := false
-
-		for id := range v.Webhooks {
-			w := v.Webhooks[id].DeepCopy()
-
-			if !bytes.Equal(caBundle, w.ClientConfig.CABundle) {
-				w.ClientConfig.CABundle = caBundle
-
-				logger.Str("webhook", w.Name).Debug("Updating ca")
-
-				changed = true
-
-				w.DeepCopyInto(&v.Webhooks[id])
-			}
-		}
-
-		if !changed {
-			continue
-		}
-
-		logger.Info("Updating webhook")
-
-		_, err = client.Kubernetes().AdmissionregistrationV1().MutatingWebhookConfigurations().Update(ctx, v, meta.UpdateOptions{})
-		if err != nil {
-			logger.Err(err).Warn("Failed to update mutating webhook")
-			return err
-		}
+	if err := admission.UpdateMutatingAdmissionHookCA(ctx, client, caBundle, webhookOptions.webhooks.validating...); err != nil {
+		return err
 	}
 
 	return nil

@@ -22,6 +22,7 @@ package v1
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	goHttp "net/http"
 	"testing"
@@ -33,11 +34,14 @@ import (
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
+	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
-func Server(t *testing.T, ctx context.Context, services ...Service) svc.ServiceStarter {
+func Server(t *testing.T, ctx context.Context, f ktls.TLSConfigFetcher, services ...Service) svc.ServiceStarter {
 	h, err := New(services...)
 	require.NoError(t, err)
 
@@ -46,14 +50,15 @@ func Server(t *testing.T, ctx context.Context, services ...Service) svc.ServiceS
 		Gateway: &svc.ConfigurationGateway{
 			Address: "127.0.0.1:0",
 		},
+		TLSOptions: f,
 	}, h)
 	require.NoError(t, err)
 
 	return local.Start(ctx)
 }
 
-func Client(t *testing.T, ctx context.Context, services ...Service) pbPongV1.PongV1Client {
-	start := Server(t, ctx, services...)
+func Client(t *testing.T, ctx context.Context, f ktls.TLSConfigFetcher, services ...Service) pbPongV1.PongV1Client {
+	start := Server(t, ctx, f, services...)
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbPongV1.NewPongV1Client, start.Address())
 
@@ -64,7 +69,7 @@ func Test_Ping(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	client := Client(t, ctx)
+	client := Client(t, ctx, nil)
 
 	r1, err := client.Ping(ctx, &pbSharedV1.Empty{})
 	require.NoError(t, err)
@@ -81,13 +86,44 @@ func Test_Ping_HTTP(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	server := Server(t, ctx)
+	server := Server(t, ctx, nil)
 
 	client := operatorHTTP.NewHTTPClient()
 
 	resp := ugrpc.Get[*pbPongV1.PongV1PingResponse](ctx, client, fmt.Sprintf("http://%s/_integration/pong/v1/ping", server.HTTPAddress()))
 
 	_, err := resp.WithCode(goHttp.StatusOK).Get()
+	require.NoError(t, err)
+}
+
+func Test_Ping_HTTPS(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	kc := kclient.NewFakeClientBuilder().Client()
+
+	ft := ktls.NewLocalSecretTLSCAConfig(kc.Kubernetes().CoreV1().Secrets(tests.FakeNamespace), "secret", "localhost", "127.0.0.1")
+
+	server := Server(t, ctx, ft)
+
+	ca, caData, err := ktls.GetOrCreateTLSCAConfig(ctx, kc.Kubernetes().CoreV1().Secrets(tests.FakeNamespace), "secret")
+	require.NoError(t, err)
+
+	println(string(caData))
+
+	cp := x509.NewCertPool()
+
+	for _, c := range ca.Certificate {
+		cp.AddCert(c)
+	}
+
+	client := operatorHTTP.NewHTTPClient(func(in *goHttp.Client) {
+		in.Transport = operatorHTTP.RoundTripper(operatorHTTP.WithTransportTLS(operatorHTTP.WithRootCA(cp)))
+	})
+
+	resp := ugrpc.Get[*pbPongV1.PongV1PingResponse](ctx, client, fmt.Sprintf("https://%s/_integration/pong/v1/ping", server.HTTPAddress()))
+
+	_, err = resp.WithCode(goHttp.StatusOK).Get()
 	require.NoError(t, err)
 }
 
@@ -107,7 +143,7 @@ func Test_Services(t *testing.T) {
 		Enabled: false,
 	}
 
-	client := Client(t, ctx,
+	client := Client(t, ctx, nil,
 		v3,
 		v2,
 	)
