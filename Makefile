@@ -169,6 +169,7 @@ ifeq ($(RELEASE_MODE),community)
 MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDBASIC := manifests/arango-crd-basic$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDALL := manifests/arango-crd-all$(MANIFESTSUFFIX).yaml
+MANIFESTPATHDEFAULT := manifests/arango$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
@@ -180,6 +181,7 @@ MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRD := manifests/kustomize/crd/arango-crd$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRDBASIC := manifests/kustomize/crd/arango-crd-basic$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRDALL := manifests/kustomize/crd/arango-crd-all$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHDEFAULT := manifests/kustomize/deployment/arango$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
@@ -192,6 +194,7 @@ else
 MANIFESTPATHCRD := manifests/enterprise-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDBASIC := manifests/enterprise-crd-basic$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDALL := manifests/enterprise-crd-all$(MANIFESTSUFFIX).yaml
+MANIFESTPATHDEFAULT := manifests/enterprise$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/enterprise-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/enterprise-backup$(MANIFESTSUFFIX).yaml
@@ -203,6 +206,7 @@ MANIFESTPATHALL := manifests/enterprise-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRD := manifests/kustomize-enterprise/crd/enterprise-crd$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRDBASIC := manifests/kustomize-enterprise/crd/enterprise-crd-basic$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHCRDALL := manifests/kustomize-enterprise/crd/enterprise-crd-all$(MANIFESTSUFFIX).yaml
+KUSTOMIZEPATHDEFAULT := manifests/kustomize/deployment/enterprise$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize-enterprise/deployment/enterprise-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize-enterprise/deployment-replication/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize-enterprise/backup/enterprise-backup$(MANIFESTSUFFIX).yaml
@@ -596,6 +600,8 @@ manifests-crd-all-kustomize: manifests-crd-all-file
 manifests-crd: manifests-crd-all-kustomize
 
 manifests: manifests-crd
+
+$(eval $(call manifest-generator, default, kube-arangodb))
 
 $(eval $(call manifest-generator, deployment, kube-arangodb, \
 		--set "operator.features.deployment=true" \
