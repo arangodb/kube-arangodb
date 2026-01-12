@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 	"fmt"
 	goHttp "net/http"
 	"reflect"
+	goStrings "strings"
 	"time"
 
 	admission "k8s.io/api/admission/v1"
@@ -57,6 +58,48 @@ const (
 )
 
 type Admissions []Admission
+
+func (a Admissions) CanHandle(req *goHttp.Request) bool {
+	if goStrings.ToUpper(req.Method) != goHttp.MethodPost {
+		return false
+	}
+	for _, handler := range a {
+		if endpoint := fmt.Sprintf("/webhook/%s/%s/validate", gvsAsPath(handler.Resource()), handler.Name()); endpoint != "" {
+			return true
+		}
+
+		if endpoint := fmt.Sprintf("/webhook/%s/%s/mutate", gvsAsPath(handler.Resource()), handler.Name()); endpoint != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func (a Admissions) Handle(w goHttp.ResponseWriter, r *goHttp.Request) bool {
+	if goStrings.ToUpper(r.Method) != goHttp.MethodPost {
+		return false
+	}
+
+	for _, handler := range a {
+		log := logger.Str("name", handler.Name())
+
+		log.Info("Registering handler")
+
+		if endpoint := fmt.Sprintf("/webhook/%s/%s/validate", gvsAsPath(handler.Resource()), handler.Name()); endpoint != "" {
+			log.Str("endpoint", endpoint).Info("Handling Validate handler")
+			handler.Validate(w, r)
+			return true
+		}
+
+		if endpoint := fmt.Sprintf("/webhook/%s/%s/mutate", gvsAsPath(handler.Resource()), handler.Name()); endpoint != "" {
+			log.Str("endpoint", endpoint).Info("Handling Mutate handler")
+			handler.Mutate(w, r)
+			return true
+		}
+	}
+
+	return false
+}
 
 func (a Admissions) Register() util.Mod[goHttp.ServeMux] {
 	return func(in *goHttp.ServeMux) {

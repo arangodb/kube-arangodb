@@ -20,7 +20,11 @@ spec:
     - name: webhooks
       port: 443
       protocol: TCP
+{{- .Values.webhooks.inline }}
+      targetPort: metrics
+{{- else }}
       targetPort: webhooks
+{{- end }}
   selector:
     app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}

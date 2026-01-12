@@ -139,6 +139,13 @@ spec:
 {{ if .Values.operator.features.k8sToK8sClusterSync }}
             - --operator.k2k-cluster-sync
 {{- end }}
+{{ if and .Values.webhooks.enabled .Values.webhooks.inline }}
+            - --webhook.enabled
+            - -webhook.mutating
+            - "{{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com"
+            - -webhook.validating
+            - "{{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com"
+{{- end }}
             - --chaos.allowed={{ .Values.operator.allowChaos }}
 {{- if .Values.operator.args }}
 {{- range .Values.operator.args }}
@@ -198,7 +205,7 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
 {{- end }}
-{{ if .Values.webhooks.enabled }}
+{{ if and .Values.webhooks.enabled (not .Values.webhooks.inline) }}
         - name: webhooks
           imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
           image: {{ .Values.operator.image }}

@@ -117,7 +117,7 @@ func NewSecretTLSConfig(client generic.GetInterface[*core.Secret], name string) 
 
 func NewLocalSecretTLSCAConfig(client generic.Client[*core.Secret], name, cn string, names ...string) TLSConfigFetcher {
 	return func(ctx context.Context) (*tls.Config, error) {
-		ca, err := getOrCreateTLSCAConfig(ctx, client, name, "arangodb-operator")
+		ca, _, err := GetOrCreateTLSCAConfig(ctx, client, name)
 		if err != nil {
 			return nil, err
 		}
@@ -148,17 +148,17 @@ func NewLocalSecretTLSCAConfig(client generic.Client[*core.Secret], name, cn str
 	}
 }
 
-func getOrCreateTLSCAConfig(ctx context.Context, client generic.Client[*core.Secret], name, cn string) (*certificates.CA, error) {
+func GetOrCreateTLSCAConfig(ctx context.Context, client generic.Client[*core.Secret], name string) (*certificates.CA, []byte, error) {
 	secret, err := client.Get(ctx, name, meta.GetOptions{})
 
 	if err != nil {
 		if !apiErrors.IsNotFound(err) {
-			return nil, errors.WithStack(err)
+			return nil, nil, errors.WithStack(err)
 		}
 
-		cert, key, err := CreateTLSCACertificate(cn)
+		cert, key, err := CreateTLSCACertificate("arangodb-operator")
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, nil, errors.WithStack(err)
 		}
 
 		secret, err = client.Create(ctx, &core.Secret{
@@ -172,38 +172,38 @@ func getOrCreateTLSCAConfig(ctx context.Context, client generic.Client[*core.Sec
 		}, meta.CreateOptions{})
 		if err != nil {
 			if !apiErrors.IsConflict(err) {
-				return nil, errors.WithStack(err)
+				return nil, nil, errors.WithStack(err)
 			}
 
 			if secret, err = client.Get(ctx, name, meta.GetOptions{}); err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		}
 	}
 
 	if secret == nil {
-		return nil, errors.Errorf("Secret %s not found", name)
+		return nil, nil, errors.Errorf("Secret %s not found", name)
 	}
 
 	cert, ok := secret.Data[utilConstants.SecretCACertificate]
 	if !ok {
-		return nil, errors.Errorf("Secret %s not valid: Key %s not found", name, utilConstants.SecretCACertificate)
+		return nil, nil, errors.Errorf("Secret %s not valid: Key %s not found", name, utilConstants.SecretCACertificate)
 	}
 
 	key, ok := secret.Data[utilConstants.SecretCAKey]
 	if !ok {
-		return nil, errors.Errorf("Secret %s not valid: Key %s not found", name, utilConstants.SecretCAKey)
+		return nil, nil, errors.Errorf("Secret %s not valid: Key %s not found", name, utilConstants.SecretCAKey)
 	}
 
 	certObj, keyObj, err := certificates.LoadFromPEM(string(cert), string(key))
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 
 	return &certificates.CA{
 		Certificate: certObj,
 		PrivateKey:  keyObj,
-	}, nil
+	}, cert, nil
 }
 
 func NewKeyfileTLSConfig(keyfile string) TLSConfigFetcher {

@@ -4,8 +4,10 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: "{{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com"
+{{- if not .Values.webhooks.inline }}
   annotations:
     cert-manager.io/inject-ca-from: "{{ .Release.Namespace }}/{{ template "kube-arangodb.operatorName" . }}-ca"
+{{- end }}
   labels:
     app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}

@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	goflag "flag"
 	"fmt"
@@ -52,6 +53,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
@@ -71,6 +73,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 	"github.com/arangodb/kube-arangodb/pkg/version"
+	"github.com/arangodb/kube-arangodb/pkg/webhook"
 )
 
 const (
@@ -99,6 +102,13 @@ var (
 		grpcPort        int
 		basicSecretName string
 		tlsCASecretName string
+	}
+	webhookOptions struct {
+		enabled  bool
+		webhooks struct {
+			validating []string
+			mutating   []string
+		}
 	}
 	operatorOptions struct {
 		enableDeployment            bool // Run deployment operator
@@ -255,6 +265,9 @@ func initE() error {
 	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Image discovery method is now determined by the deployment's ImageDiscoveryMode specification")
 	f.DurationVar(&operatorImageDiscovery.timeout, "image.discovery.timeout", time.Minute, "Timeout for image discovery process")
 	f.IntVar(&threads, "threads", 16, "Number of the worker threads")
+	f.BoolVar(&webhookOptions.enabled, "webhook.enabled", false, "Enable integrated webhook server")
+	f.StringArrayVar(&webhookOptions.webhooks.mutating, "webhook.mutating", nil, "Mutating webhook which should have injected internal CA")
+	f.StringArrayVar(&webhookOptions.webhooks.validating, "webhook.validating", nil, "Validating webhook which should have injected internal CA")
 
 	if err := errors.Errors(
 		f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator"),
@@ -459,12 +472,33 @@ func executeMain(cmd *cobra.Command, args []string) {
 		}
 
 		{
+			admission := buildAdmissionsHooks(client)
+
+			wrap := svc.RequestWraps{
+				metrics.Wrapper,
+			}
+
+			if apiOptions.tlsCASecretName == "" {
+				logger.Fatal("CA Secret Name cannot be empty")
+			}
+
+			if webhookOptions.enabled {
+				_, caBytes, err := ktls.GetOrCreateTLSCAConfig(shutdown.Context(), client.Kubernetes().CoreV1().Secrets(namespace), name)
+				if err != nil {
+					logger.Err(err).Fatal("CA Secret Name cannot be created")
+				}
+
+				if err := updateAdmissionHookCA(shutdown.Context(), client, caBytes); err != nil {
+					logger.Err(err).Fatal("Failed to update Admission Hook CA")
+				}
+
+				wrap = append(wrap, admission.Handle)
+			}
+
 			var c = svc.Configuration{
 				Address: net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.grpcPort)),
 				Gateway: &svc.ConfigurationGateway{Address: net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.httpPort))},
-				Wrap: svc.RequestWraps{
-					metrics.Wrapper,
-				},
+				Wrap:    wrap,
 			}
 
 			svcConfig := impl.NewConfiguration().With(func(in impl.Configuration) impl.Configuration {
@@ -487,10 +521,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 			if err := svcConfig.Authenticator.Init(shutdown.Context()); err != nil {
 				logger.Err(err).Fatal("Unable to init authentication secret")
-			}
-
-			if apiOptions.tlsCASecretName == "" {
-				logger.Fatal("CA Secret Name cannot be empty")
 			}
 
 			c.TLSOptions = ktls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, ip)
@@ -721,4 +751,94 @@ func ensureFeaturesConfigMap(ctx context.Context, client typedCore.ConfigMapInte
 	}
 
 	return nil
+}
+
+func updateAdmissionHookCA(ctx context.Context, client kclient.Client, caBundle []byte) error {
+	for _, n := range webhookOptions.webhooks.validating {
+		logger := logger.Str("type", "validating").Str("name", n)
+
+		logger.Debug("Reading current webhook")
+		v, err := client.Kubernetes().AdmissionregistrationV1().ValidatingWebhookConfigurations().Get(ctx, n, meta.GetOptions{})
+		if err != nil {
+			logger.Err(err).Warn("Failed to get validating webhook")
+			return err
+		}
+
+		changed := false
+
+		for id := range v.Webhooks {
+			w := v.Webhooks[id].DeepCopy()
+
+			if !bytes.Equal(caBundle, w.ClientConfig.CABundle) {
+				w.ClientConfig.CABundle = caBundle
+
+				logger.Str("webhook", w.Name).Debug("Updating ca")
+
+				changed = true
+
+				w.DeepCopyInto(&v.Webhooks[id])
+			}
+		}
+
+		if !changed {
+			continue
+		}
+
+		logger.Info("Updating webhook")
+
+		_, err = client.Kubernetes().AdmissionregistrationV1().ValidatingWebhookConfigurations().Update(ctx, v, meta.UpdateOptions{})
+		if err != nil {
+			logger.Err(err).Warn("Failed to update validating webhook")
+			return err
+		}
+	}
+
+	for _, n := range webhookOptions.webhooks.mutating {
+		logger := logger.Str("type", "mutating").Str("name", n)
+
+		logger.Debug("Reading current webhook")
+		v, err := client.Kubernetes().AdmissionregistrationV1().MutatingWebhookConfigurations().Get(ctx, n, meta.GetOptions{})
+		if err != nil {
+			logger.Err(err).Warn("Failed to get validating webhook")
+			return err
+		}
+
+		changed := false
+
+		for id := range v.Webhooks {
+			w := v.Webhooks[id].DeepCopy()
+
+			if !bytes.Equal(caBundle, w.ClientConfig.CABundle) {
+				w.ClientConfig.CABundle = caBundle
+
+				logger.Str("webhook", w.Name).Debug("Updating ca")
+
+				changed = true
+
+				w.DeepCopyInto(&v.Webhooks[id])
+			}
+		}
+
+		if !changed {
+			continue
+		}
+
+		logger.Info("Updating webhook")
+
+		_, err = client.Kubernetes().AdmissionregistrationV1().MutatingWebhookConfigurations().Update(ctx, v, meta.UpdateOptions{})
+		if err != nil {
+			logger.Err(err).Warn("Failed to update validating webhook")
+			return err
+		}
+	}
+
+	return nil
+}
+
+func buildAdmissionsHooks(client kclient.Client) webhook.Admissions {
+	var admissions webhook.Admissions
+
+	admissions = append(admissions, scheduler.WebhookAdmissions(client)...)
+
+	return admissions
 }
