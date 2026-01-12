@@ -827,7 +827,7 @@ func updateAdmissionHookCA(ctx context.Context, client kclient.Client, caBundle 
 
 		_, err = client.Kubernetes().AdmissionregistrationV1().MutatingWebhookConfigurations().Update(ctx, v, meta.UpdateOptions{})
 		if err != nil {
-			logger.Err(err).Warn("Failed to update validating webhook")
+			logger.Err(err).Warn("Failed to update mutating webhook")
 			return err
 		}
 	}

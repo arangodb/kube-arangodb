@@ -59,22 +59,6 @@ const (
 
 type Admissions []Admission
 
-func (a Admissions) CanHandle(req *goHttp.Request) bool {
-	if goStrings.ToUpper(req.Method) != goHttp.MethodPost {
-		return false
-	}
-	for _, handler := range a {
-		if endpoint := fmt.Sprintf("/webhook/%s/%s/validate", gvsAsPath(handler.Resource()), handler.Name()); endpoint != "" {
-			return true
-		}
-
-		if endpoint := fmt.Sprintf("/webhook/%s/%s/mutate", gvsAsPath(handler.Resource()), handler.Name()); endpoint != "" {
-			return true
-		}
-	}
-	return false
-}
-
 func (a Admissions) Handle(w goHttp.ResponseWriter, r *goHttp.Request) bool {
 	if goStrings.ToUpper(r.Method) != goHttp.MethodPost {
 		return false
@@ -83,15 +67,15 @@ func (a Admissions) Handle(w goHttp.ResponseWriter, r *goHttp.Request) bool {
 	for _, handler := range a {
 		log := logger.Str("name", handler.Name())
 
-		log.Info("Registering handler")
+		log.Info("Handling request")
 
-		if endpoint := fmt.Sprintf("/webhook/%s/%s/validate", gvsAsPath(handler.Resource()), handler.Name()); endpoint != "" {
+		if endpoint := fmt.Sprintf("/webhook/%s/%s/validate", gvsAsPath(handler.Resource()), handler.Name()); endpoint == r.URL.Path {
 			log.Str("endpoint", endpoint).Info("Handling Validate handler")
 			handler.Validate(w, r)
 			return true
 		}
 
-		if endpoint := fmt.Sprintf("/webhook/%s/%s/mutate", gvsAsPath(handler.Resource()), handler.Name()); endpoint != "" {
+		if endpoint := fmt.Sprintf("/webhook/%s/%s/mutate", gvsAsPath(handler.Resource()), handler.Name()); endpoint == r.URL.Path {
 			log.Str("endpoint", endpoint).Info("Handling Mutate handler")
 			handler.Mutate(w, r)
 			return true

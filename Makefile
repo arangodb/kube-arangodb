@@ -936,7 +936,6 @@ set-typed-api-version/%:
 	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
-	      "$(ROOT)/pkg/server/" \
 	      "$(ROOT)/pkg/util/" \
 	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
@@ -955,7 +954,6 @@ set-api-version/%:
 	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
-	      "$(ROOT)/pkg/server/" \
 	      "$(ROOT)/pkg/util/" \
 	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
@@ -972,7 +970,6 @@ set-api-version/%:
 	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
-	      "$(ROOT)/pkg/server/" \
 		  "$(ROOT)/pkg/util/" \
 	      "$(ROOT)/pkg/handlers/" \
 	      "$(ROOT)/pkg/apis/backup/" \
@@ -989,7 +986,6 @@ set-api-version/%:
 	      "$(ROOT)/pkg/integrations/" \
 		  "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
-		  "$(ROOT)/pkg/server/" \
 		  "$(ROOT)/pkg/util/" \
 		  "$(ROOT)/pkg/handlers" \
 		  "$(ROOT)/pkg/apis/backup/" \
