@@ -235,6 +235,9 @@ Flags:
       --timeout.reconciliation duration                        The reconciliation timeout to the ArangoDB CR (default 1m0s)
       --timeout.shard-rebuild duration                         Timeout after which particular out-synced shard is considered as failed and rebuild is triggered (default 1h0m0s)
       --timeout.shard-rebuild-retry duration                   Timeout after which rebuild shards retry flow is triggered (default 4h0m0s)
+      --webhook.enabled                                        Enable integrated webhook server
+      --webhook.mutating stringArray                           Mutating webhook which should have injected internal CA
+      --webhook.validating stringArray                         Validating webhook which should have injected internal CA
 ```
 
 [END_INJECT]: # (operatorArguments)
