@@ -156,7 +156,7 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 	obj.Rev = req.Revision
 
 	if obj.Meta.Expires != nil {
-		obj.TTL = *obj.Meta.Expires
+		obj.TTL = obj.Meta.Expires
 	}
 
 	obj.Object.Object = req.GetObject()

@@ -35,7 +35,7 @@ type Object struct {
 	ID  string  `json:"_id,omitempty"`
 	Rev *string `json:"_rev,omitempty"`
 
-	TTL meta.Time `json:"ttl,omitempty"`
+	TTL *meta.Time `json:"ttl,omitempty"`
 
 	Meta *ObjectMeta `json:"meta,omitempty"`
 
