@@ -34,6 +34,7 @@ Flags:
       --api.basic-secret-name string                           Name of secret containing username + password for login to the dashboard (default "arangodb-operator-credentials")
       --api.grpc-port int                                      gRPC API port to listen on (default 8728)
       --api.http-port int                                      HTTP API port to listen on (default 8528)
+      --api.secondary-name stringArray                         Secondary names for a certificate
       --api.tls-ca-secret-name string                          Name of secret containing ca.crt & ca.key for HTTPS API (if does not exist, new one is generated) (default "arangodb-operator-ca")
       --backup-concurrent-uploads int                          Number of concurrent uploads per deployment (default 4)
       --chaos.allowed                                          Set to allow chaos in deployments. Only activated when allowed and enabled in deployment

@@ -102,6 +102,7 @@ var (
 		grpcPort        int
 		basicSecretName string
 		tlsCASecretName string
+		secondaryNames  []string
 	}
 	webhookOptions struct {
 		enabled  bool
@@ -213,6 +214,7 @@ func initE() error {
 	f.Bool("api.enabled", true, "Enable operator HTTP and gRPC API")
 	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultServerPort, "HTTP API port to listen on")
 	f.IntVar(&apiOptions.grpcPort, "api.grpc-port", defaultAPIGRPCPort, "gRPC API port to listen on")
+	f.StringArrayVar(&apiOptions.secondaryNames, "api.secondary-name", nil, "Secondary names for a certificate")
 	f.String("api.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS API (if empty, self-signed certificate is used)")
 	f.StringVar(&apiOptions.tlsCASecretName, "api.tls-ca-secret-name", defaultCASecretName, "Name of secret containing ca.crt & ca.key for HTTPS API (if does not exist, new one is generated)")
 	f.String("api.jwt-secret-name", "", "Name of secret which will contain JWT to authenticate API requests.")
@@ -523,7 +525,16 @@ func executeMain(cmd *cobra.Command, args []string) {
 				logger.Err(err).Fatal("Unable to init authentication secret")
 			}
 
-			c.TLSOptions = ktls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, ip)
+			names := []string{
+				name,
+				ip,
+			}
+
+			names = append(names, apiOptions.secondaryNames...)
+
+			names = util.UniqueList(names)
+
+			c.TLSOptions = ktls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, names...)
 
 			svc, err := svc.NewService(c, impl.New(svcConfig))
 			if err != nil {
