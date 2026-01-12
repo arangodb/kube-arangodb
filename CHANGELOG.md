@@ -9,6 +9,7 @@
 - (Maintenance) Switch to 2026
 - (Feature) Operator SelfSigned CA Management
 - (Feature) Init Operator Auth Secret
+- (Feature) (Platform) Share gateway resources
 
 ## [1.3.4](https://github.com/arangodb/kube-arangodb/tree/1.3.4) (2025-12-22)
 - (Feature) Add scrape annotations for ArangoD pods

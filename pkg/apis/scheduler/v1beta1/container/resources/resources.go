@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,9 +42,7 @@ func (r *Resources) Apply(_ *core.PodTemplateSpec, template *core.Container) err
 		return nil
 	}
 
-	res := r.GetResources()
-
-	template.Resources = kresources.MergeContainerResource(template.Resources, res)
+	template.Resources = kresources.CleanContainerResource(kresources.MergeContainerResource(template.Resources, r.GetResources()))
 
 	return nil
 }

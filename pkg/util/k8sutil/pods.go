@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -548,7 +548,7 @@ func NewContainer(containerCreator interfaces.ContainerCreator) (core.Container,
 		Ports:           containerCreator.GetPorts(),
 		Env:             env,
 		EnvFrom:         envFrom,
-		Resources:       containerCreator.GetResourceRequirements(),
+		Resources:       containerCreator.GetResourceRequirements(containerCreator.GetResourceRequirementsDefaultScale()),
 		LivenessProbe:   liveness,
 		ReadinessProbe:  readiness,
 		StartupProbe:    startup,
@@ -766,20 +766,24 @@ func GetFinalizers(spec api.ServerGroupSpec, group api.ServerGroup) []string {
 	return finalizers
 }
 
+func CreateBasicContainerResources() *core.ResourceRequirements {
+	return &core.ResourceRequirements{
+		Requests: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse("100m"),
+			core.ResourceMemory: resource.MustParse("128Mi"),
+		},
+		Limits: core.ResourceList{
+			core.ResourceCPU:    resource.MustParse("200m"),
+			core.ResourceMemory: resource.MustParse("256Mi"),
+		},
+	}
+}
+
 func CreateDefaultContainerTemplate(image *schedulerContainerResourcesApi.Image) *schedulerContainerApi.Container {
 	return &schedulerContainerApi.Container{
 		Image: image.DeepCopy(),
 		Resources: &schedulerContainerResourcesApi.Resources{
-			Resources: &core.ResourceRequirements{
-				Requests: core.ResourceList{
-					core.ResourceCPU:    resource.MustParse("100m"),
-					core.ResourceMemory: resource.MustParse("128Mi"),
-				},
-				Limits: core.ResourceList{
-					core.ResourceCPU:    resource.MustParse("200m"),
-					core.ResourceMemory: resource.MustParse("256Mi"),
-				},
-			},
+			Resources: CreateBasicContainerResources(),
 		},
 		Security: &schedulerContainerResourcesApi.Security{
 			SecurityContext: &core.SecurityContext{

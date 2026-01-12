@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,8 +101,12 @@ func (a *MemberGatewayContainer) GetProbes() (*core.Probe, *core.Probe, *core.Pr
 	return liveness, readiness, startup, nil
 }
 
-func (a *MemberGatewayContainer) GetResourceRequirements() core.ResourceRequirements {
-	return kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec))
+func (a *MemberGatewayContainer) GetResourceRequirements(scale float64) core.ResourceRequirements {
+	return kresources.ScaleResources(kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec)), scale)
+}
+
+func (a *MemberGatewayContainer) GetResourceRequirementsDefaultScale() float64 {
+	return 0.75
 }
 
 func (a *MemberGatewayContainer) GetLifecycle() (*core.Lifecycle, error) {

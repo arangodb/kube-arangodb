@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -138,8 +138,12 @@ func (a *ArangoSyncContainer) GetProbes() (*core.Probe, *core.Probe, *core.Probe
 	return liveness, readiness, startup, nil
 }
 
-func (a *ArangoSyncContainer) GetResourceRequirements() core.ResourceRequirements {
-	return kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec))
+func (a *ArangoSyncContainer) GetResourceRequirements(scale float64) core.ResourceRequirements {
+	return kresources.ScaleResources(kresources.ExtractPodAcceptedResourceRequirement(a.ArangoMember.Spec.Overrides.GetResources(&a.GroupSpec)), scale)
+}
+
+func (a *ArangoSyncContainer) GetResourceRequirementsDefaultScale() float64 {
+	return 1
 }
 
 func (a *ArangoSyncContainer) GetLifecycle() (*core.Lifecycle, error) {
@@ -295,7 +299,7 @@ func (m *MemberSyncPod) GetInitContainers(cachedStatus interfaces.Inspector) ([]
 		initContainers = append(initContainers, c)
 	}
 
-	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())
+	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements(m.GetContainerCreator().GetResourceRequirementsDefaultScale()))
 
 	initContainers = applyInitContainersResourceResources(initContainers, res)
 	initContainers = upscaleInitContainersResourceResources(initContainers, res)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,7 +76,8 @@ type ContainerCreator interface {
 	GetName() string
 	GetExecutor() string
 	GetProbes() (*core.Probe, *core.Probe, *core.Probe, error)
-	GetResourceRequirements() core.ResourceRequirements
+	GetResourceRequirements(scale float64) core.ResourceRequirements
+	GetResourceRequirementsDefaultScale() float64
 	GetLifecycle() (*core.Lifecycle, error)
 	GetImagePullPolicy() core.PullPolicy
 	GetImage() string

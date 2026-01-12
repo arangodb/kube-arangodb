@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 
 package sidecar
 
@@ -30,6 +30,20 @@ const (
 	ListenPortName       = "integration"
 	ListenPortHealthName = "health"
 )
+
+func NewResourceAppend(res core.ResourceRequirements) *schedulerApi.ProfileTemplate {
+	return &schedulerApi.ProfileTemplate{
+		Container: &schedulerApi.ProfileContainerTemplate{
+			Containers: map[string]schedulerContainerApi.Container{
+				ContainerName: {
+					Resources: &schedulerContainerResourcesApi.Resources{
+						Resources: res.DeepCopy(),
+					},
+				},
+			},
+		},
+	}
+}
 
 func NewShutdownAnnotations(coreContainers []string) *schedulerApi.ProfileTemplate {
 	pt := schedulerApi.ProfileTemplate{

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	"os"
 
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
@@ -147,7 +148,7 @@ func (m *MemberGatewayPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 		initContainers = append(initContainers, c)
 	}
 
-	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements())
+	res := kresources.ExtractPodInitContainerAcceptedResourceRequirement(m.GetContainerCreator().GetResourceRequirements(m.GetContainerCreator().GetResourceRequirementsDefaultScale()))
 
 	initContainers = applyInitContainersResourceResources(initContainers, res)
 	initContainers = upscaleInitContainersResourceResources(initContainers, res)
@@ -242,6 +243,14 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 		return nil, errors.Errorf("Unable to find deployment integration")
 	}
 
+	// Build the Resources
+	resources := m.GetContainerCreator().GetResourceRequirements(0.25)
+
+	resources = kresources.UpscaleOptionalResourceRequirements(resources, *k8sutil.CreateBasicContainerResources())
+
+	// Ensure we drop limits if required
+	resources.Limits = kresources.DefaultResourceList(resources.Limits, *resource.NewQuantity(0, resource.DecimalSI), core.ResourceCPU, core.ResourceMemory)
+
 	if integration.Status.Accepted == nil {
 		return nil, errors.Errorf("Unable to find accepted integration")
 	}
@@ -261,5 +270,5 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 
 	shutdownAnnotation := integrationsSidecar.NewShutdownAnnotations([]string{shared.ServerContainerName})
 
-	return []*schedulerApi.ProfileTemplate{integration.Status.Accepted.Template, integrations, shutdownAnnotation}, nil
+	return []*schedulerApi.ProfileTemplate{integrationsSidecar.NewResourceAppend(resources), integration.Status.Accepted.Template, integrations, shutdownAnnotation}, nil
 }

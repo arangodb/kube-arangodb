@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,28 @@ package resources
 import (
 	core "k8s.io/api/core/v1"
 )
+
+// CleanContainerResource removes zero values
+func CleanContainerResource(to core.ResourceRequirements) core.ResourceRequirements {
+	return core.ResourceRequirements{
+		Limits:   CleanContainerResourceList(to.Limits),
+		Requests: CleanContainerResourceList(to.Requests),
+		Claims:   to.Claims,
+	}
+}
+
+// CleanContainerResourceList removes zero values fro mlist
+func CleanContainerResourceList(to core.ResourceList) core.ResourceList {
+	r := core.ResourceList{}
+
+	for k, v := range to {
+		if !v.IsZero() {
+			r[k] = v
+		}
+	}
+
+	return r
+}
 
 func ApplyContainerResourceRequirements(container *core.Container, resources core.ResourceRequirements) {
 	if container == nil {
@@ -64,11 +86,7 @@ func MergeContainerResourceList(to core.ResourceList, from core.ResourceList) co
 	}
 
 	for k, v := range from {
-		if v.IsZero() {
-			delete(to, k)
-		} else {
-			to[k] = v
-		}
+		to[k] = v
 	}
 
 	return to
@@ -105,6 +123,17 @@ func UpscaleContainerResourceRequirements(container *core.Container, resources c
 	container.Resources.Limits = UpscaleOptionalContainerResourceList(container.Resources.Limits, container.Resources.Requests)
 }
 
+func UpscaleOptionalResourceRequirements(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
+	var r core.ResourceRequirements
+
+	r.Limits = UpscaleOptionalContainerResourceList(to.Limits, from.Limits)
+	r.Requests = UpscaleOptionalContainerResourceList(to.Requests, from.Requests)
+
+	r.Limits = UpscaleOptionalContainerResourceList(r.Limits, r.Requests)
+
+	return r
+}
+
 // UpscaleOptionalContainerResourceList scales up resources from `from` to `to` ResourceList if they exists in `to`
 func UpscaleOptionalContainerResourceList(to core.ResourceList, from core.ResourceList) core.ResourceList {
 	if len(from) == 0 {
@@ -117,7 +146,7 @@ func UpscaleOptionalContainerResourceList(to core.ResourceList, from core.Resour
 
 	for k, v := range from {
 		if n, ok := to[k]; ok {
-			if n.Cmp(v) < 0 {
+			if n.Cmp(v) < 0 && !n.IsZero() {
 				to[k] = v
 			}
 		}
