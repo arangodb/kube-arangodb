@@ -19,16 +19,7 @@ rules:
       - "validatingwebhookconfigurations"
     verbs:
       - "get"
-      - "list"
-      - "watch"
-  - apiGroups:
-      - "admissionregistration.k8s.io"
-    resources:
-      - "mutatingwebhookconfigurations"
-      - "validatingwebhookconfigurations"
-    verbs:
       - "update"
-      - "patch"
     resourceNames:
       - "{{ template "kube-arangodb.operatorName" . }}.{{ .Release.Namespace }}.operator.arangodb.com"
 {{- end }}
