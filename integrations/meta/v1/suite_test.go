@@ -31,6 +31,7 @@ import (
 
 	"github.com/arangodb/go-driver/v2/arangodb"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
@@ -43,7 +44,9 @@ func GetCacheObjectForKVStore(t *testing.T) cache.Object[arangodb.Collection] {
 			return nil, 0, err
 		}
 
-		col, err := db.CreateCollectionV2(t.Context(), "meta", &arangodb.CreateCollectionPropertiesV2{})
+		col, err := db.CreateCollectionV2(t.Context(), "_meta", &arangodb.CreateCollectionPropertiesV2{
+			IsSystem: util.NewType(true),
+		})
 		if err != nil {
 			return nil, 0, err
 		}
@@ -58,5 +61,5 @@ func GetCacheObjectForKVStore(t *testing.T) cache.Object[arangodb.Collection] {
 }
 
 func GetInternalRemoteCache(t *testing.T) cache.RemoteCache[*Object] {
-	return cache.NewRemoteCache[*Object](GetCacheObjectForKVStore(t))
+	return cache.NewRemoteCache[*Object](withTTLIndex(GetCacheObjectForKVStore(t)))
 }

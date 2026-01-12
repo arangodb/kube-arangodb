@@ -37,8 +37,9 @@ func withTTLIndex(in cache.Object[arangodb.Collection]) cache.Object[arangodb.Co
 		}
 
 		if _, _, err := col.EnsureTTLIndex(ctx, []string{"ttl"}, 0, &arangodb.CreateTTLIndexOptions{
-			Name: "_meta_store_object_ttl",
+			Name: "system_meta_store_object_ttl",
 		}); err != nil {
+			println(err.Error())
 			return nil, 0, err
 		}
 
