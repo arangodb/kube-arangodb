@@ -41,24 +41,24 @@ type authorizationV1 struct {
 	config pbImplAuthorizationV1.Configuration
 }
 
-func (a authorizationV1) Name() string {
+func (a *authorizationV1) Name() string {
 	return pbAuthorizationV1.Name
 }
 
-func (a authorizationV1) Description() string {
+func (a *authorizationV1) Description() string {
 	return "Enable AuthorizationV1 Integration Service"
 }
 
-func (a authorizationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
+func (a *authorizationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
 		fs.StringVar((*string)(&a.config.Type), "type", string(pbImplAuthorizationV1.ConfigurationTypeAlways), "Type of the Authorization Integration"),
 	)
 }
 
-func (a authorizationV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
+func (a *authorizationV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
 	return pbImplAuthorizationV1.New(a.config)
 }
 
-func (a authorizationV1) Init(ctx context.Context, cmd *cobra.Command) error {
+func (a *authorizationV1) Init(ctx context.Context, cmd *cobra.Command) error {
 	return nil
 }
