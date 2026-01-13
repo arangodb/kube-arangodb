@@ -39,7 +39,7 @@ func (i IntegrationAuthorizationV1) Validate() error {
 func (i IntegrationAuthorizationV1) Envs() ([]core.EnvVar, error) {
 	var envs = []core.EnvVar{
 		{
-			Name:  "INTEGRATION_AUTHENTICATION_V1",
+			Name:  "INTEGRATION_AUTHORIZATION_V1",
 			Value: "true",
 		},
 	}
