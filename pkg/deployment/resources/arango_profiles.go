@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -214,6 +214,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			}, nil
 		},
 		gen(utilConstants.ProfilesIntegrationAuthz, utilConstants.ProfilesIntegrationV0, always(integrationsSidecar.IntegrationAuthorizationV0{})),
+		gen(utilConstants.ProfilesIntegrationAuthz, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationAuthorizationV1{})),
 		gen(utilConstants.ProfilesIntegrationAuthn, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()})),
 		gen(utilConstants.ProfilesIntegrationSched, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationSchedulerV1{})),
 		gen(utilConstants.ProfilesIntegrationSched, utilConstants.ProfilesIntegrationV2, always(integrationsSidecar.IntegrationSchedulerV2{

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ func (s *s3impl) Name() string {
 	return pbStorageV1.Name
 }
 
-func (s *s3impl) Health() svc.HealthState {
+func (s *s3impl) Health(ctx context.Context) svc.HealthState {
 	return svc.Healthy
 }
 

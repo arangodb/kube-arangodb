@@ -53,7 +53,7 @@ func (i *implementation) Name() string {
 	return "operator"
 }
 
-func (i *implementation) Health() svc.HealthState {
+func (i *implementation) Health(ctx context.Context) svc.HealthState {
 	return svc.Healthy
 }
 

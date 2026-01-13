@@ -140,3 +140,13 @@ func FormatMap[K comparable, A, B any](in map[K]A, format func(K, A) B) map[K]B 
 
 	return r
 }
+
+func ExtractMap[K comparable, A, B any](in map[K]A, format func(K, A) B) []B {
+	var r = make([]B, len(in))
+
+	for k, a := range in {
+		r = append(r, format(k, a))
+	}
+
+	return r
+}

@@ -24,22 +24,22 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-type IntegrationAuthorizationV0 struct {
+type IntegrationAuthorizationV1 struct {
 	Core *Core
 }
 
-func (i IntegrationAuthorizationV0) Name() []string {
-	return []string{"AUTHORIZATION", "V0"}
+func (i IntegrationAuthorizationV1) Name() []string {
+	return []string{"AUTHORIZATION", "V1"}
 }
 
-func (i IntegrationAuthorizationV0) Validate() error {
+func (i IntegrationAuthorizationV1) Validate() error {
 	return nil
 }
 
-func (i IntegrationAuthorizationV0) Envs() ([]core.EnvVar, error) {
+func (i IntegrationAuthorizationV1) Envs() ([]core.EnvVar, error) {
 	var envs = []core.EnvVar{
 		{
-			Name:  "INTEGRATION_AUTHORIZATION_V0",
+			Name:  "INTEGRATION_AUTHORIZATION_V1",
 			Value: "true",
 		},
 	}
@@ -47,10 +47,10 @@ func (i IntegrationAuthorizationV0) Envs() ([]core.EnvVar, error) {
 	return i.Core.Envs(i, envs...), nil
 }
 
-func (i IntegrationAuthorizationV0) GlobalEnvs() ([]core.EnvVar, error) {
+func (i IntegrationAuthorizationV1) GlobalEnvs() ([]core.EnvVar, error) {
 	return nil, nil
 }
 
-func (i IntegrationAuthorizationV0) Volumes() ([]core.Volume, []core.VolumeMount, error) {
+func (i IntegrationAuthorizationV1) Volumes() ([]core.Volume, []core.VolumeMount, error) {
 	return nil, nil, nil
 }
