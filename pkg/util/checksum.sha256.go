@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,11 +33,22 @@ func SHA256FromExtract[T any](extract func(T) string, obj ...T) string {
 	return SHA256FromStringArray(goStrings.Join(FormatList(obj, extract), "|"))
 }
 
+func SHA256FromExtractMap[K comparable, T any](extract func(K, T) string, obj map[K]T) string {
+	return SHA256FromStringArray(goStrings.Join(ExtractMap(obj, extract), "|"))
+}
+
+func SHA256FromHashStringMap[T Hash](data map[string]T) string {
+	return SHA256FromExtractMap(func(k string, t T) string {
+		return fmt.Sprintf("%s:%s", k, t.Hash())
+	}, data)
+}
+
 func SHA256FromHashArray[T Hash](data []T) string {
 	return SHA256FromExtract(func(t T) string {
 		return t.Hash()
 	}, data...)
 }
+
 func SHA256FromNonEmptyStringArray(data ...string) string {
 	return SHA256FromFilteredStringArray(func(in string) bool {
 		return in != ""

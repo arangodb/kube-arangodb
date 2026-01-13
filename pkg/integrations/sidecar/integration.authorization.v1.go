@@ -18,21 +18,39 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package sidecar
 
 import (
-	"context"
-
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
+	core "k8s.io/api/core/v1"
 )
 
-type Handler interface {
-	Name() string
+type IntegrationAuthorizationV1 struct {
+	Core *Core
+}
 
-	Health(ctx context.Context) HealthState
+func (i IntegrationAuthorizationV1) Name() []string {
+	return []string{"AUTHORIZATION", "V1"}
+}
 
-	Register(registrar *grpc.Server)
+func (i IntegrationAuthorizationV1) Validate() error {
+	return nil
+}
 
-	Gateway(ctx context.Context, mux *runtime.ServeMux) error
+func (i IntegrationAuthorizationV1) Envs() ([]core.EnvVar, error) {
+	var envs = []core.EnvVar{
+		{
+			Name:  "INTEGRATION_AUTHENTICATION_V1",
+			Value: "true",
+		},
+	}
+
+	return i.Core.Envs(i, envs...), nil
+}
+
+func (i IntegrationAuthorizationV1) GlobalEnvs() ([]core.EnvVar, error) {
+	return nil, nil
+}
+
+func (i IntegrationAuthorizationV1) Volumes() ([]core.Volume, []core.VolumeMount, error) {
+	return nil, nil, nil
 }

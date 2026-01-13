@@ -12,6 +12,7 @@
 - (Feature) (Platform) Share gateway resources
 - (Bugfix) (Platform) Escape URL in Meta Integration
 - (Feature) Unify Webhooks
+- (Feature) (Platform) AuthzV1 Integration Service
 
 ## [1.3.4](https://github.com/arangodb/kube-arangodb/tree/1.3.4) (2025-12-22)
 - (Feature) Add scrape annotations for ArangoD pods

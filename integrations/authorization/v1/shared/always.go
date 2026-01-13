@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,21 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package shared
 
 import (
 	"context"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
+	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 )
 
-type Handler interface {
-	Name() string
-
-	Health(ctx context.Context) HealthState
-
-	Register(registrar *grpc.Server)
-
-	Gateway(ctx context.Context, mux *runtime.ServeMux) error
+func NewAlwaysPlugin() Plugin {
+	return PluginFunc(func(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
+		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
+			Message: "Allowed by always plugin",
+			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+		}, nil
+	})
 }

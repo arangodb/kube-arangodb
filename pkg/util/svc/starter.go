@@ -136,7 +136,7 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 			return serveError
 		default:
 			for _, h := range s.service.handlers {
-				health.Update(h.Name(), h.Health())
+				health.Update(h.Name(), h.Health(ctx))
 			}
 			break
 		}

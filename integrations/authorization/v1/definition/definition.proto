@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,37 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package definition
+syntax = "proto3";
 
-import (
-	"testing"
+package authorization;
 
-	"github.com/stretchr/testify/require"
-)
+import "google/api/annotations.proto";
 
-func Test_ValidateActionName(t *testing.T) {
-	validate := func(valid bool, name string) {
-		t.Run(name, func(t *testing.T) {
-			if err := validateActionName(name); valid {
-				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-			}
-		})
-	}
+import "integrations/authorization/v1/definition/request.proto";
 
-	valid := func(name string) {
-		validate(true, name)
-	}
+option go_package = "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition";
 
-	invalid := func(name string) {
-		validate(false, name)
-	}
-
-	invalid("")
-	valid("test")
-	invalid("test.")
-	invalid(".test")
-	invalid(".test.")
-	invalid("x6z")
+// AuthorizationV1 Service implementation
+service AuthorizationV1 {
+  // Sends ping to the server
+  rpc Evaluate(AuthorizationV1PermissionRequest) returns (AuthorizationV1PermissionResponse) {
+    option (google.api.http) = {
+      post: "/_integration/authorization/v1/evaluate"
+      body: '*'
+    };
+  }
 }

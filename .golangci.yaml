@@ -33,6 +33,12 @@ linters-settings:
   importas:
     no-unaliased: true
     alias:
+      - alias: pbImplAuthorizationV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1
+      - alias: pbImplAuthorizationV1Shared
+        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared
+      - alias: pbAuthorizationV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition
       - alias: lmanager
         pkg: github.com/arangodb/kube-arangodb/pkg/license_manager
       - alias: pbImplMetaV1

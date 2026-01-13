@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,21 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package definition
 
-import (
-	"context"
-
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
-)
-
-type Handler interface {
-	Name() string
-
-	Health(ctx context.Context) HealthState
-
-	Register(registrar *grpc.Server)
-
-	Gateway(ctx context.Context, mux *runtime.ServeMux) error
+func (a AuthorizationV1Effect) Hash() string {
+	return a.String()
 }

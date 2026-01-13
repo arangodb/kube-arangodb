@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ func (h *health) Name() string {
 	return "health"
 }
 
-func (h *health) Health() HealthState {
+func (h *health) Health(ctx context.Context) HealthState {
 	return Healthy
 }
 
