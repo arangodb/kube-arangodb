@@ -50,6 +50,7 @@ rbac:
     debug: false
 webhooks:
   enabled: false
+  inline: true
   args: []
   resources:
     limits:

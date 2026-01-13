@@ -52,6 +52,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
 	"github.com/arangodb/kube-arangodb/pkg/operator"
@@ -62,6 +63,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/admission"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
@@ -71,6 +73,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 	"github.com/arangodb/kube-arangodb/pkg/version"
+	"github.com/arangodb/kube-arangodb/pkg/webhook"
 )
 
 const (
@@ -99,6 +102,14 @@ var (
 		grpcPort        int
 		basicSecretName string
 		tlsCASecretName string
+		secondaryNames  []string
+	}
+	webhookOptions struct {
+		enabled  bool
+		webhooks struct {
+			validating []string
+			mutating   []string
+		}
 	}
 	operatorOptions struct {
 		enableDeployment            bool // Run deployment operator
@@ -203,6 +214,7 @@ func initE() error {
 	f.Bool("api.enabled", true, "Enable operator HTTP and gRPC API")
 	f.IntVar(&apiOptions.httpPort, "api.http-port", defaultServerPort, "HTTP API port to listen on")
 	f.IntVar(&apiOptions.grpcPort, "api.grpc-port", defaultAPIGRPCPort, "gRPC API port to listen on")
+	f.StringArrayVar(&apiOptions.secondaryNames, "api.secondary-name", nil, "Secondary names for a certificate")
 	f.String("api.tls-secret-name", "", "Name of secret containing tls.crt & tls.key for HTTPS API (if empty, self-signed certificate is used)")
 	f.StringVar(&apiOptions.tlsCASecretName, "api.tls-ca-secret-name", defaultCASecretName, "Name of secret containing ca.crt & ca.key for HTTPS API (if does not exist, new one is generated)")
 	f.String("api.jwt-secret-name", "", "Name of secret which will contain JWT to authenticate API requests.")
@@ -255,6 +267,9 @@ func initE() error {
 	f.BoolVar(&operatorImageDiscovery.defaultStatusDiscovery, "image.discovery.status", true, "Image discovery method is now determined by the deployment's ImageDiscoveryMode specification")
 	f.DurationVar(&operatorImageDiscovery.timeout, "image.discovery.timeout", time.Minute, "Timeout for image discovery process")
 	f.IntVar(&threads, "threads", 16, "Number of the worker threads")
+	f.BoolVar(&webhookOptions.enabled, "webhook.enabled", false, "Enable integrated webhook server")
+	f.StringArrayVar(&webhookOptions.webhooks.mutating, "webhook.mutating", nil, "Mutating webhook which should have injected internal CA")
+	f.StringArrayVar(&webhookOptions.webhooks.validating, "webhook.validating", nil, "Validating webhook which should have injected internal CA")
 
 	if err := errors.Errors(
 		f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator"),
@@ -459,12 +474,33 @@ func executeMain(cmd *cobra.Command, args []string) {
 		}
 
 		{
+			admission := buildAdmissionsHooks(client)
+
+			wrap := svc.RequestWraps{
+				metrics.Wrapper,
+			}
+
+			if apiOptions.tlsCASecretName == "" {
+				logger.Fatal("CA Secret Name cannot be empty")
+			}
+
+			if webhookOptions.enabled {
+				_, caBytes, err := ktls.GetOrCreateTLSCAConfig(shutdown.Context(), client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName)
+				if err != nil {
+					logger.Err(err).Fatal("CA Secret Name cannot be created")
+				}
+
+				if err := updateAdmissionHookCA(shutdown.Context(), client, caBytes); err != nil {
+					logger.Err(err).Fatal("Failed to update Admission Hook CA")
+				}
+
+				wrap = append(wrap, admission.Handle)
+			}
+
 			var c = svc.Configuration{
 				Address: net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.grpcPort)),
 				Gateway: &svc.ConfigurationGateway{Address: net.JoinHostPort("0.0.0.0", strconv.Itoa(apiOptions.httpPort))},
-				Wrap: svc.RequestWraps{
-					metrics.Wrapper,
-				},
+				Wrap:    wrap,
 			}
 
 			svcConfig := impl.NewConfiguration().With(func(in impl.Configuration) impl.Configuration {
@@ -489,11 +525,16 @@ func executeMain(cmd *cobra.Command, args []string) {
 				logger.Err(err).Fatal("Unable to init authentication secret")
 			}
 
-			if apiOptions.tlsCASecretName == "" {
-				logger.Fatal("CA Secret Name cannot be empty")
+			names := []string{
+				name,
+				ip,
 			}
 
-			c.TLSOptions = ktls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, ip)
+			names = append(names, apiOptions.secondaryNames...)
+
+			names = util.UniqueList(names)
+
+			c.TLSOptions = ktls.NewLocalSecretTLSCAConfig(client.Kubernetes().CoreV1().Secrets(namespace), apiOptions.tlsCASecretName, name, names...)
 
 			svc, err := svc.NewService(c, impl.New(svcConfig))
 			if err != nil {
@@ -721,4 +762,24 @@ func ensureFeaturesConfigMap(ctx context.Context, client typedCore.ConfigMapInte
 	}
 
 	return nil
+}
+
+func updateAdmissionHookCA(ctx context.Context, client kclient.Client, caBundle []byte) error {
+	if err := admission.UpdateValidatingAdmissionHookCA(ctx, client, caBundle, webhookOptions.webhooks.validating...); err != nil {
+		return err
+	}
+
+	if err := admission.UpdateMutatingAdmissionHookCA(ctx, client, caBundle, webhookOptions.webhooks.validating...); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func buildAdmissionsHooks(client kclient.Client) webhook.Admissions {
+	var admissions webhook.Admissions
+
+	admissions = append(admissions, scheduler.WebhookAdmissions(client)...)
+
+	return admissions
 }

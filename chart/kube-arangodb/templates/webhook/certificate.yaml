@@ -1,4 +1,4 @@
-{{ if .Values.certificate.enabled -}}
+{{- if and .Values.certificate.enabled (not .Values.webhooks.inline) -}}
 
 apiVersion: cert-manager.io/v1
 kind: Certificate
