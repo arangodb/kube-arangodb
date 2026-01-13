@@ -28,12 +28,13 @@ import (
 )
 
 var (
-	actionNameRE = regexp.MustCompile(`^[a-z]+(\.[a-z]+)*$`)
+	actionName   = `^[a-z_]+(\.[a-z_]+)*$`
+	actionNameRE = regexp.MustCompile(actionName)
 )
 
 func validateActionName(name string) error {
 	if !actionNameRE.MatchString(name) {
-		return errors.Errorf("Action `%s` does not match the regex", name)
+		return errors.Errorf("Action `%s` does not match the regex `%s`", name, actionName)
 	}
 
 	return nil
@@ -70,7 +71,7 @@ func (x *AuthorizationV1Statement) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.ValidateRequiredInterfacePath("effect", x.Effect),
+		shared.ValidateOptionalInterfacePath("effect", x.Effect),
 		shared.ValidateRequiredNotEmptyPath("description", &x.Description),
 		shared.PrefixResourceError("actions", shared.ValidateList(x.Actions, func(s string) error {
 			return validateActionName(s)
