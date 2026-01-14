@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -196,10 +196,7 @@ func (l licenseManager) Client(cmd *cobra.Command) (lmanager.Client, error) {
 		return nil, err
 	}
 
-	c, err := lmanager.NewClient(endpoint, cid, cs)
-	if err != nil {
-		return nil, err
-	}
+	c := lmanager.NewClient(endpoint, cid, cs)
 
 	id, err := c.Identity(cmd.Context())
 	if err != nil {

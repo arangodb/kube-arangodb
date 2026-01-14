@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,12 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+func WithTransport(mods ...util.Mod[goHttp.Transport]) util.Mod[goHttp.Client] {
+	return func(in *goHttp.Client) {
+		in.Transport = Transport(mods...)
+	}
+}
 
 func Transport(mods ...util.Mod[goHttp.Transport]) goHttp.RoundTripper {
 	var c goHttp.Transport

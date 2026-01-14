@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -117,11 +117,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		req.TTL = util.NewType(ugrpc.NewObject(durationpb.New(q.Duration)))
 	}
 
-	lm, err := lmanager.NewClient(lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, l.API.ClientSecret)
-	if err != nil {
-		a.log.Err(err).Error("Unable to create inventory client")
-		return true, nil
-	}
+	lm := lmanager.NewClient(lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, l.API.ClientSecret)
 
 	generatedLicense, err := lm.License(ctx, req)
 	if err != nil {
