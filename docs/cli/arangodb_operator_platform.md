@@ -83,6 +83,7 @@ Usage:
 
 Flags:
   -h, --help                               help for install
+      --license.client.discover            Discovers the LicenseSecret from ArangoDeployment (default true)
       --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
       --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
@@ -109,7 +110,6 @@ Available Commands:
   activate    Activates the License on ArangoDB Endpoint
   generate    Generate the License
   inventory   Inventory Generator
-  secret      Creates Platform Secret with Registry credentials
 
 Flags:
   -h, --help   help for license
@@ -198,25 +198,3 @@ Global Flags:
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_license_generate_cmd)
-
-# ArangoDB Operator Platform License Secret Command
-
-[START_INJECT]: # (arangodb_operator_platform_license_secret_cmd)
-```
-Creates Platform Secret with Registry credentials
-
-Usage:
-  arangodb_operator_platform license secret [flags]
-
-Flags:
-  -h, --help                           help for secret
-      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
-      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
-      --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
-      --secret string                  Kubernetes Secret Name
-
-Global Flags:
-      --kubeconfig string   Kubernetes Config File
-  -n, --namespace string    Kubernetes Namespace (default "default")
-```
-[END_INJECT]: # (arangodb_operator_platform_license_secret_cmd)

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import (
 	"github.com/regclient/regclient/config"
 	"github.com/regclient/regclient/scheme/reg"
 	"github.com/spf13/cobra"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func NewRegistry() Registry {
@@ -55,7 +57,7 @@ func NewRegistry() Registry {
 type Registry interface {
 	FlagRegisterer
 
-	Client(cmd *cobra.Command, lm LicenseManager) (*regclient.RegClient, error)
+	Client(cmd *cobra.Command, hosts map[string]util.ModR[config.Host]) (*regclient.RegClient, error)
 }
 
 type registry struct {
@@ -85,7 +87,7 @@ func (r registry) Validate(cmd *cobra.Command) error {
 	)(cmd, nil)
 }
 
-func (r registry) Client(cmd *cobra.Command, lm LicenseManager) (*regclient.RegClient, error) {
+func (r registry) Client(cmd *cobra.Command, hosts map[string]util.ModR[config.Host]) (*regclient.RegClient, error) {
 	var flags = make([]regclient.Opt, 0, 3)
 
 	flags = append(flags, regclient.WithConfigHostDefault(config.Host{
@@ -135,23 +137,16 @@ func (r registry) Client(cmd *cobra.Command, lm LicenseManager) (*regclient.RegC
 	}
 
 	// Hosts
-	if lm != nil {
-		registryConfigs, err := lm.RegistryHosts(cmd)
-		if err == nil {
-			for n, m := range registryConfigs {
-				v, ok := configs[n]
-				if !ok {
-					v.Name = n
-					v.Hostname = n
-				}
-
-				v = m(v)
-
-				configs[n] = v
-			}
-		} else {
-			logger.Err(err).Debug("Failed to initialize license manager, continuing...")
+	for n, m := range hosts {
+		v, ok := configs[n]
+		if !ok {
+			v.Name = n
+			v.Hostname = n
 		}
+
+		v = m(v)
+
+		configs[n] = v
 	}
 
 	if creds, err := r.flagRegistryUseCredentials.Get(cmd); err != nil {

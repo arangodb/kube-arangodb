@@ -87,7 +87,7 @@ func Test_Authentication_HTTP(t *testing.T) {
 		require.NoError(t, err)
 
 		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *goHttp.Request) {
-			in.Header.Add("Authorization", token.Token)
+			in.Header.Add("Authorization", token.Object.Token)
 		})
 
 		resp.WithCode(goHttp.StatusUnauthorized)
@@ -108,13 +108,13 @@ func Test_Authentication_HTTP(t *testing.T) {
 		require.NoError(t, err)
 
 		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *goHttp.Request) {
-			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
+			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Object.Token))
 		})
 
 		data, err := resp.WithCode(goHttp.StatusOK).Get()
 		require.NoError(t, err)
 
-		require.EqualValues(t, DefaultUser, data.GetUser())
+		require.EqualValues(t, DefaultUser, data.Object.GetUser())
 	})
 
 	t.Run("With multi header", func(t *testing.T) {
@@ -132,8 +132,8 @@ func Test_Authentication_HTTP(t *testing.T) {
 		require.NoError(t, err)
 
 		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()), func(in *goHttp.Request) {
-			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
-			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Token))
+			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Object.Token))
+			in.Header.Add("Authorization", fmt.Sprintf("bearer %s", token.Object.Token))
 		})
 
 		resp.WithCode(goHttp.StatusUnauthorized)
@@ -157,7 +157,7 @@ func Test_Authentication_HTTP(t *testing.T) {
 			ctx,
 			client,
 			&pbAuthenticationV1.ValidateRequest{
-				Token: token.Token,
+				Token: token.Object.Token,
 			},
 			fmt.Sprintf("http://%s/_integration/authn/v1/validate", server.HTTPAddress()),
 		).
@@ -165,6 +165,6 @@ func Test_Authentication_HTTP(t *testing.T) {
 			Get()
 		require.NoError(t, err)
 
-		require.True(t, validate.GetIsValid())
+		require.True(t, validate.Object.GetIsValid())
 	})
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@
 package platform
 
 import (
+	"github.com/regclient/regclient/config"
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/platform/pack"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -56,7 +58,13 @@ func packageExportRun(cmd *cobra.Command, args []string) error {
 
 	out := args[1]
 
-	rc, err := flagRegistry.Client(cmd, flagLicenseManager)
+	var hosts map[string]util.ModR[config.Host]
+
+	if newHosts, err := cli.LicenseManagerRegistryHosts(cmd, flagLicenseManager, flagLicenseManager); err != nil {
+		hosts = newHosts
+	}
+
+	rc, err := flagRegistry.Client(cmd, hosts)
 	if err != nil {
 		return err
 	}

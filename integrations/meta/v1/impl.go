@@ -78,7 +78,7 @@ func (i *implementation) Name() string {
 	return pbMetaV1.Name
 }
 
-func (i *implementation) Health() svc.HealthState {
+func (i *implementation) Health(ctx context.Context) svc.HealthState {
 	return svc.Healthy
 }
 

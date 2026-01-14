@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,6 +56,12 @@ func RoundTripperWithShortTransport(mods ...util.Mod[goHttp.Transport]) goHttp.R
 	}, mods...)
 
 	return Transport(df...)
+}
+
+func DoNotFollowRedirects(client *goHttp.Client) {
+	client.CheckRedirect = func(req *goHttp.Request, via []*goHttp.Request) error {
+		return goHttp.ErrUseLastResponse // Do not wrap, standard library will not understand
+	}
 }
 
 func Insecure(in *tls.Config) {

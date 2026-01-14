@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,21 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+syntax = "proto3";
 
-import (
-	"context"
+package authorization;
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
-)
+option go_package = "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition";
 
-type Handler interface {
-	Name() string
+// AuthorizationV1Effect defines the Statement Effect
+enum AuthorizationV1Effect {
+  // Deny definition
+  Deny = 0;
 
-	Health(ctx context.Context) HealthState
-
-	Register(registrar *grpc.Server)
-
-	Gateway(ctx context.Context, mux *runtime.ServeMux) error
+  // Allow definition
+  Allow = 1;
 }
