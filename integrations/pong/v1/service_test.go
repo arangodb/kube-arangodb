@@ -106,10 +106,8 @@ func Test_Ping_HTTPS(t *testing.T) {
 
 	server := Server(t, ctx, ft)
 
-	ca, caData, err := ktls.GetOrCreateTLSCAConfig(ctx, kc.Kubernetes().CoreV1().Secrets(tests.FakeNamespace), "secret")
+	ca, _, err := ktls.GetOrCreateTLSCAConfig(ctx, kc.Kubernetes().CoreV1().Secrets(tests.FakeNamespace), "secret")
 	require.NoError(t, err)
-
-	println(string(caData))
 
 	cp := x509.NewCertPool()
 

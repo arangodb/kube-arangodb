@@ -21,20 +21,20 @@
 package grpc
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	goHttp "net/http"
 
+	rstatus "google.golang.org/genproto/googleapis/rpc/status"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
-func AsJSON[T proto.Message, O any](r HTTPResponse[T]) (O, error) {
+func AsJSON[T proto.Message, O any](r operatorHTTP.Response[Object[T]]) (O, error) {
 	data, err := r.Data()
 	if err != nil {
 		return util.Default[O](), err
@@ -49,100 +49,32 @@ func AsJSON[T proto.Message, O any](r HTTPResponse[T]) (O, error) {
 	return q, nil
 }
 
-type HTTPResponse[T proto.Message] interface {
-	WithCode(codes ...int) HTTPResponse[T]
-	Data() ([]byte, error)
-	Get() (T, error)
-	Validate() error
+func Get[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, url string, mods ...util.Mod[goHttp.Request]) operatorHTTP.Response[Object[T]] {
+	return operatorHTTP.Get[Object[T], *RequestError](ctx, client, url, mods...)
 }
 
-type httpErrorResponse[T proto.Message] struct {
+func Post[IN, T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, in IN, url string, mods ...util.Mod[goHttp.Request]) operatorHTTP.Response[Object[T]] {
+
+	return operatorHTTP.Post[Object[IN], Object[T], *RequestError](ctx, client, NewObject(in), url, mods...)
+}
+
+type RequestError struct {
 	err error
 }
 
-func (h httpErrorResponse[T]) Data() ([]byte, error) {
-	return nil, h.err
-}
+func (d *RequestError) UnmarshalJSON(i []byte) error {
+	var st rstatus.Status
 
-func (h httpErrorResponse[T]) WithCode(codes ...int) HTTPResponse[T] {
-	return h
-}
+	if err := json.Unmarshal(i, &st); err != nil {
+		d.err = status.Errorf(codes.Internal, "invalid grpc status json: %v", err)
+		return nil
+	}
 
-func (h httpErrorResponse[T]) Get() (T, error) {
-	return util.Default[T](), h.err
-}
+	d.err = status.FromProto(&st).Err()
 
-func (h httpErrorResponse[T]) Validate() error {
-	return h.err
-}
-
-type httpResponse[T proto.Message] struct {
-	code int
-
-	data []byte
-}
-
-func (h httpResponse[T]) Data() ([]byte, error) {
-	return h.data, nil
-}
-
-func (h httpResponse[T]) Validate() error {
 	return nil
 }
 
-func (h httpResponse[T]) WithCode(codes ...int) HTTPResponse[T] {
-	for _, code := range codes {
-		if h.code == code {
-			return h
-		}
-	}
-
-	return httpErrorResponse[T]{err: errors.Errorf("Unexpected code: %d", h.code)}
-}
-
-func (h httpResponse[T]) Get() (T, error) {
-	return Unmarshal[T](h.data)
-}
-
-func request[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, method, url string, body io.Reader, mods ...util.Mod[goHttp.Request]) HTTPResponse[T] {
-	if client == nil {
-		client = goHttp.DefaultClient
-	}
-
-	req, err := goHttp.NewRequestWithContext(ctx, method, url, body)
-	if err != nil {
-		return httpErrorResponse[T]{err: err}
-	}
-
-	util.ApplyMods(req, mods...)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return httpErrorResponse[T]{err: err}
-	}
-
-	defer resp.Body.Close()
-
-	nData, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return httpErrorResponse[T]{err: err}
-	}
-
-	return httpResponse[T]{
-		code: resp.StatusCode,
-		data: nData,
-	}
-}
-
-func Get[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, url string, mods ...util.Mod[goHttp.Request]) HTTPResponse[T] {
-	return request[T](ctx, client, goHttp.MethodGet, url, nil, mods...)
-}
-
-func Post[IN, T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, in IN, url string, mods ...util.Mod[goHttp.Request]) HTTPResponse[T] {
-	data, err := Marshal(in, WithUseProtoNames(true))
-	if err != nil {
-		return httpErrorResponse[T]{err: err}
-	}
-
-	return request[T](ctx, client, goHttp.MethodPost, url, bytes.NewReader(data), mods...)
+func (d *RequestError) Error() string {
+	return d.err.Error()
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,19 +22,17 @@ package license_manager
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	goHttp "net/http"
+	"path"
 
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/http"
-
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
@@ -43,34 +41,43 @@ const (
 	ArangoLicenseManagerEndpoint = "license.arango.ai"
 )
 
-func NewClient(endpoint, id, key string, mods ...util.Mod[goHttp.Transport]) (Client, error) {
-	transport := operatorHTTP.Transport(mods...)
+func NewClient(endpoint, id, key string, mods ...util.Mod[goHttp.Transport]) Client {
+	c := operatorHTTP.NewHTTPClient(
+		operatorHTTP.WithTransport(mods...),
+		operatorHTTP.DoNotFollowRedirects,
+	)
 
-	stageEndpoint := fmt.Sprintf("https://%s", endpoint)
-
-	connConfig := http.ConnectionConfig{
-		Transport:          transport,
-		DontFollowRedirect: true,
-		Endpoints:          []string{stageEndpoint},
+	return client{
+		endpoint: fmt.Sprintf("https://%s", endpoint),
+		client:   c,
+		creds: clientCredentials{
+			username: id,
+			password: key,
+		},
 	}
-
-	conn, err := http.NewConnection(connConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err = conn.SetAuthentication(driver.BasicAuthentication(id, key))
-	if err != nil {
-		return nil, err
-	}
-
-	return NewClientFromConn(conn), nil
 }
 
-func NewClientFromConn(conn driver.Connection) Client {
-	return client{
-		conn: conn,
+type client struct {
+	endpoint string
+
+	client operatorHTTP.HTTPClient
+
+	creds clientCredentials
+}
+
+func (c client) url(parts ...string) string {
+	if len(parts) == 0 {
+		return c.endpoint
 	}
+	return path.Join(c.endpoint, path.Join(parts...))
+}
+
+type clientCredentials struct {
+	username, password string
+}
+
+func (c clientCredentials) Authenticate(in *goHttp.Request) {
+	in.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(c.username+":"+c.password)))
 }
 
 type Client interface {
@@ -101,12 +108,8 @@ type RegistryResponse struct {
 	Token string `json:"token"`
 }
 
-type client struct {
-	conn driver.Connection
-}
-
 func (c client) Identity(ctx context.Context) (Identity, error) {
-	return arangod.GetRequest[Identity](ctx, c.conn, "_api", "v1", "identity").AcceptCode(200).Response()
+	return operatorHTTP.Get[Identity, *ugrpc.RequestError](ctx, c.client, c.url("_api", "v1", "identity"), c.creds.Authenticate).WithCode(200).Get()
 }
 
 func (c client) RegistryConfig(ctx context.Context, endpoint, id string, token *string, stages ...Stage) ([]byte, error) {
@@ -136,9 +139,9 @@ func (c client) RegistryConfig(ctx context.Context, endpoint, id string, token *
 }
 
 func (c client) License(ctx context.Context, req LicenseRequest) (LicenseResponse, error) {
-	return arangod.PostRequest[LicenseRequest, LicenseResponse](ctx, c.conn, req, "_api", "v1", "license").AcceptCode(200).Response()
+	return operatorHTTP.Post[LicenseRequest, LicenseResponse, *ugrpc.RequestError](ctx, c.client, req, c.url("_api", "v1", "license"), c.creds.Authenticate).WithCode(200).Get()
 }
 
 func (c client) Registry(ctx context.Context) (RegistryResponse, error) {
-	return arangod.GetRequest[RegistryResponse](ctx, c.conn, "_api", "v1", "registry", "token").AcceptCode(200).Response()
+	return operatorHTTP.Get[RegistryResponse, *ugrpc.RequestError](ctx, c.client, c.url("_api", "v1", "token"), c.creds.Authenticate).WithCode(200).Get()
 }
