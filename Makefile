@@ -873,7 +873,7 @@ patch-chart:
 	@$(ROOTDIR)/scripts/patch_chart.sh $(VERSION_MAJOR_MINOR_PATCH)
 
 .PHONY: patch
-patch: patch-chart patch-release patch-examples patch-readme
+patch: patch-chart patch-release patch-examples patch-readme patch-docs
 
 .PHONY: tidy
 tidy:
