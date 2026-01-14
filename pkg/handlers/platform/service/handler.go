@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -424,7 +424,10 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 	case helmRelease.StatusDeployed:
 		return false, nil
 
-	case helmRelease.StatusFailed:
+	case helmRelease.StatusUnknown:
+		return false, operator.Stop("Invalid release status: %s", status.Release.Info.Status)
+
+	default:
 		// Try to upgrade
 		logger.WrapObj(item).Info("Upgrade Helm Release")
 
@@ -447,8 +450,6 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 
 		return true, operator.Reconcile("Release Upgraded")
 	}
-
-	return false, operator.Stop("Invalid release status: %s", status.Release.Info.Status)
 }
 
 func extractReleaseStatus(in *helm.Release, hash string) *platformApi.ArangoPlatformServiceStatusRelease {
