@@ -219,10 +219,7 @@ func LicenseManagerClient(cmd *cobra.Command, endpoint LicenseManagerEndpointPro
 		return nil, err
 	}
 
-	c, err := lmanager.NewClient(host, clientID, clientSecret)
-	if err != nil {
-		return nil, err
-	}
+	c := lmanager.NewClient(host, clientID, clientSecret)
 
 	id, err := c.Identity(cmd.Context())
 	if err != nil {
