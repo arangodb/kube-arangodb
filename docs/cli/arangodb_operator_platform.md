@@ -19,7 +19,7 @@ Available Commands:
 
 Flags:
   -h, --help                help for arangodb_operator_platform
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 
 Use "arangodb_operator_platform [command] --help" for more information about a command.
@@ -46,7 +46,7 @@ Flags:
   -h, --help   help for package
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 
 Use "arangodb_operator_platform package [command] --help" for more information about a command.
@@ -67,7 +67,7 @@ Flags:
       --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_dump_cmd)
@@ -83,6 +83,7 @@ Usage:
 
 Flags:
   -h, --help                               help for install
+      --license.client.discover            Discovers the LicenseSecret from ArangoDeployment (default true)
       --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
       --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
@@ -91,7 +92,7 @@ Flags:
       --registry.docker.insecure strings   List of insecure registries
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_install_cmd)
@@ -109,13 +110,12 @@ Available Commands:
   activate    Activates the License on ArangoDB Endpoint
   generate    Generate the License
   inventory   Inventory Generator
-  secret      Creates Platform Secret with Registry credentials
 
 Flags:
   -h, --help   help for license
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 
 Use "arangodb_operator_platform license [command] --help" for more information about a command.
@@ -142,7 +142,7 @@ Flags:
       --telemetry                      Enables Telemetry (default true)
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_license_inventory_cmd)
@@ -171,7 +171,7 @@ Flags:
       --telemetry                      Enables Telemetry (default true)
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_license_activate_cmd)
@@ -194,29 +194,7 @@ Flags:
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_license_generate_cmd)
-
-# ArangoDB Operator Platform License Secret Command
-
-[START_INJECT]: # (arangodb_operator_platform_license_secret_cmd)
-```
-Creates Platform Secret with Registry credentials
-
-Usage:
-  arangodb_operator_platform license secret [flags]
-
-Flags:
-  -h, --help                           help for secret
-      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
-      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
-      --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
-      --secret string                  Kubernetes Secret Name
-
-Global Flags:
-      --kubeconfig string   Kubernetes Config File
-  -n, --namespace string    Kubernetes Namespace (default "default")
-```
-[END_INJECT]: # (arangodb_operator_platform_license_secret_cmd)

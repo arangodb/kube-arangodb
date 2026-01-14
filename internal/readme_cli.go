@@ -139,12 +139,6 @@ func GenerateCLIArangoDBOperatorPlatformReadme(root string) error {
 		readmeSections["arangodb_operator_platform_license_generate_cmd"] = section
 	}
 
-	if section, err := GenerateHelpQuoted(cmd, "license", "secret"); err != nil {
-		return err
-	} else {
-		readmeSections["arangodb_operator_platform_license_secret_cmd"] = section
-	}
-
 	if section, err := GenerateHelpQuoted(cmd, "package"); err != nil {
 		return err
 	} else {

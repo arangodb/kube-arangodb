@@ -99,15 +99,28 @@ func NewLicenseManager(prefix string) LicenseManager {
 type LicenseManager interface {
 	FlagRegisterer
 
+	LicenseManagerAuthProvider
+	LicenseManagerEndpointProvider
+}
+
+type LicenseManagerEndpointProvider interface {
 	Endpoint(cmd *cobra.Command) (string, error)
 	Stages(cmd *cobra.Command) ([]string, error)
+}
 
-	ClientID(cmd *cobra.Command) (string, error)
-	ClientSecret(cmd *cobra.Command) (string, error)
+type LicenseManagerAuthProvider interface {
+	ClientCredentials(cmd *cobra.Command) (string, string, error)
+}
 
-	Client(cmd *cobra.Command) (lmanager.Client, error)
+type LicenseManagerStaticAuthProvider func(cmd *cobra.Command) (string, string, error)
 
-	RegistryHosts(cmd *cobra.Command) (map[string]util.ModR[config.Host], error)
+func (l LicenseManagerStaticAuthProvider) ClientCredentials(cmd *cobra.Command) (string, string, error) {
+	return l(cmd)
+}
+
+func (l LicenseManagerStaticAuthProvider) ClientSecret(cmd *cobra.Command) (string, error) {
+	_, value, err := l(cmd)
+	return value, err
 }
 
 type licenseManager struct {
@@ -116,23 +129,58 @@ type licenseManager struct {
 	client licenseManagerClient
 }
 
-func (l licenseManager) RegistryHosts(cmd *cobra.Command) (map[string]util.ModR[config.Host], error) {
+func (l licenseManager) Endpoint(cmd *cobra.Command) (string, error) {
+	return l.endpoint.Get(cmd)
+}
+
+func (l licenseManager) Stages(cmd *cobra.Command) ([]string, error) {
+	return l.client.stages.Get(cmd)
+}
+
+func (l licenseManager) ClientCredentials(cmd *cobra.Command) (string, string, error) {
 	clientID, err := l.client.clientID.Get(cmd)
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 
 	clientSecret, err := l.client.clientSecret.Get(cmd)
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 
-	stages, err := l.client.stages.Get(cmd)
+	return clientID, clientSecret, nil
+}
+
+func (l licenseManager) GetName() string {
+	return "lm"
+}
+
+func (l licenseManager) Register(cmd *cobra.Command) error {
+	return RegisterFlags(
+		cmd,
+		l.endpoint,
+		l.client,
+	)
+}
+
+func (l licenseManager) Validate(cmd *cobra.Command) error {
+	return ValidateFlags(
+		l.endpoint,
+	)(cmd, nil)
+}
+
+func LicenseManagerRegistryHosts(cmd *cobra.Command, endpoint LicenseManagerEndpointProvider, auth LicenseManagerAuthProvider) (map[string]util.ModR[config.Host], error) {
+	clientID, clientSecret, err := auth.ClientCredentials(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	endpoint, err := l.endpoint.Get(cmd)
+	stages, err := endpoint.Stages(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := endpoint.Endpoint(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -148,55 +196,33 @@ func (l licenseManager) RegistryHosts(cmd *cobra.Command) (map[string]util.ModR[
 	ret := map[string]util.ModR[config.Host]{}
 
 	for _, stage := range stages {
-		ret[fmt.Sprintf("%s.registry.%s", stage, endpoint)] = apply
-		ret[fmt.Sprintf("%s.helm.%s", stage, endpoint)] = apply
+		ret[fmt.Sprintf("%s.registry.%s", stage, host)] = apply
+		ret[fmt.Sprintf("%s.helm.%s", stage, host)] = apply
 
 		if stage == "prd" {
-			ret[fmt.Sprintf("registry.%s", endpoint)] = apply
-			ret[fmt.Sprintf("helm.%s", endpoint)] = apply
+			ret[fmt.Sprintf("registry.%s", host)] = apply
+			ret[fmt.Sprintf("helm.%s", host)] = apply
 		}
 	}
 
 	return ret, nil
 }
 
-func (l licenseManager) Endpoint(cmd *cobra.Command) (string, error) {
-	return l.endpoint.Get(cmd)
-}
-
-func (l licenseManager) Stages(cmd *cobra.Command) ([]string, error) {
-	return l.client.stages.Get(cmd)
-}
-
-func (l licenseManager) ClientID(cmd *cobra.Command) (string, error) {
-	return l.client.clientID.Get(cmd)
-}
-
-func (l licenseManager) ClientSecret(cmd *cobra.Command) (string, error) {
-	return l.client.clientSecret.Get(cmd)
-}
-
-func (l licenseManager) GetName() string {
-	return "lm"
-}
-
-func (l licenseManager) Client(cmd *cobra.Command) (lmanager.Client, error) {
-	endpoint, err := l.endpoint.Get(cmd)
+func LicenseManagerClient(cmd *cobra.Command, endpoint LicenseManagerEndpointProvider, auth LicenseManagerAuthProvider) (lmanager.Client, error) {
+	host, err := endpoint.Endpoint(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	cid, err := l.client.clientID.Get(cmd)
+	clientID, clientSecret, err := auth.ClientCredentials(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	cs, err := l.client.clientSecret.Get(cmd)
+	c, err := lmanager.NewClient(host, clientID, clientSecret)
 	if err != nil {
 		return nil, err
 	}
-
-	c := lmanager.NewClient(endpoint, cid, cs)
 
 	id, err := c.Identity(cmd.Context())
 	if err != nil {
@@ -206,18 +232,4 @@ func (l licenseManager) Client(cmd *cobra.Command) (lmanager.Client, error) {
 	logger.JSON("identity", id).Info("Using identity for client")
 
 	return c, nil
-}
-
-func (l licenseManager) Register(cmd *cobra.Command) error {
-	return RegisterFlags(
-		cmd,
-		l.endpoint,
-		l.client,
-	)
-}
-
-func (l licenseManager) Validate(cmd *cobra.Command) error {
-	return ValidateFlags(
-		l.endpoint,
-	)(cmd, nil)
 }
