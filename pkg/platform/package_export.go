@@ -61,6 +61,8 @@ func packageExportRun(cmd *cobra.Command, args []string) error {
 	var hosts map[string]util.ModR[config.Host]
 
 	if newHosts, err := cli.LicenseManagerRegistryHosts(cmd, flagLicenseManager, flagLicenseManager); err != nil {
+		logger.Err(err).Warn("Unable to fetch credentials")
+	} else {
 		hosts = newHosts
 	}
 

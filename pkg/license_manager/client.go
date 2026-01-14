@@ -69,7 +69,7 @@ func (c client) url(parts ...string) string {
 	if len(parts) == 0 {
 		return c.endpoint
 	}
-	return path.Join(c.endpoint, path.Join(parts...))
+	return fmt.Sprintf("%s/%s", c.endpoint, path.Join(parts...))
 }
 
 type clientCredentials struct {
