@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/regclient/regclient"
+	"github.com/regclient/regclient/config"
 	"github.com/spf13/cobra"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -36,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/platform/pack"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/executor"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
@@ -49,7 +51,7 @@ func packageInstall() (*cobra.Command, error) {
 	cmd.Use = "install [flags] ... packages"
 	cmd.Short = "Installs the specified setup of the platform"
 
-	if err := cli.RegisterFlags(&cmd, flagPlatformName, flagLicenseManager, flagRegistry); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagPlatformName, flagLicenseManager, flagRegistry, flagLicenseManagerDiscoverCredentials); err != nil {
 		return nil, err
 	}
 
@@ -74,7 +76,15 @@ func packageInstallRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	reg, err := flagRegistry.Client(cmd, flagLicenseManager)
+	var hosts map[string]util.ModR[config.Host]
+
+	if newHosts, err := cli.LicenseManagerRegistryHosts(cmd, flagLicenseManager, newDeploymentSecretLicenseProviderWrap(client, ns, deployment, flagLicenseManager)); err != nil {
+		logger.Err(err).Warn("Unable to fetch credentials")
+	} else {
+		hosts = newHosts
+	}
+
+	reg, err := flagRegistry.Client(cmd, hosts)
 	if err != nil {
 		return err
 	}
@@ -316,5 +326,51 @@ func packageInstallRunInstallChart(cmd *cobra.Command, h executor.Handler, clien
 		log.Info("Ready Chart")
 
 		return nil
+	})
+}
+
+func newDeploymentSecretLicenseProviderWrap(client kclient.Client, namespace, name string, parent cli.LicenseManagerAuthProvider) cli.LicenseManagerAuthProvider {
+	return cli.LicenseManagerStaticAuthProvider(func(cmd *cobra.Command) (string, string, error) {
+		if clientID, clientSecret, err := parent.ClientCredentials(cmd); err == nil {
+			return clientID, clientSecret, nil
+		} else {
+			discover, err := flagLicenseManagerDiscoverCredentials.Get(cmd)
+			if err != nil || !discover {
+				logger.Debug("Deployment Discovery of credentials disabled")
+				return "", "", err
+			}
+		}
+
+		logger.Info("Fetching external client credentials")
+
+		depl, err := client.Arango().DatabaseV1().ArangoDeployments(namespace).Get(cmd.Context(), name, meta.GetOptions{})
+		if err != nil {
+			return "", "", err
+		}
+
+		accepted := depl.GetAcceptedSpec()
+
+		if !accepted.License.HasSecretName() {
+			return "", "", errors.Errorf("License Secret not provided in ArangoDeployment")
+		}
+
+		secret, err := client.Kubernetes().CoreV1().Secrets(namespace).Get(cmd.Context(), accepted.License.GetSecretName(), meta.GetOptions{})
+		if err != nil {
+			return "", "", err
+		}
+
+		clientID, ok := secret.Data[utilConstants.SecretKeyLicenseClientID]
+		if !ok {
+			return "", "", errors.Errorf("Secret %s does not have a client id", secret.Name)
+		}
+
+		clientSecret, ok := secret.Data[utilConstants.SecretKeyLicenseClientSecret]
+		if !ok {
+			return "", "", errors.Errorf("Secret %s does not have a client id", secret.Name)
+		}
+
+		logger.Str("ClientID", string(clientID)).Info("Using Client License Secret")
+
+		return string(clientID), string(clientSecret), nil
 	})
 }
