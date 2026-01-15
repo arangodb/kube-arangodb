@@ -27,7 +27,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/go-logr/zerologr"
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/cli"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/arango"
@@ -35,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/prometheus"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -71,6 +74,8 @@ func Generate(cmd *cobra.Command, out io.Writer, factories ...shared.Factory) er
 	data := bytes.NewBuffer(nil)
 
 	log := NewLogger(data)
+	logging.Global().SetRoot(log)
+	klog.SetLogger(zerologr.New(&log))
 
 	files := make(chan shared.File)
 

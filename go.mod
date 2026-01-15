@@ -10,19 +10,19 @@ replace (
 	github.com/stretchr/testify => github.com/stretchr/testify v1.9.0
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
-	k8s.io/api => k8s.io/api v0.32.9
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.32.9
-	k8s.io/apimachinery => k8s.io/apimachinery v0.32.9
-	k8s.io/apiserver => k8s.io/apiserver v0.32.9
+	k8s.io/api => k8s.io/api v0.32.11
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.32.11
+	k8s.io/apimachinery => k8s.io/apimachinery v0.32.11
+	k8s.io/apiserver => k8s.io/apiserver v0.32.11
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.32.9
-	k8s.io/client-go => k8s.io/client-go v0.32.9
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.32.9
-	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.32.9
+	k8s.io/client-go => k8s.io/client-go v0.32.11
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.32.11
+	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.32.11
 	k8s.io/code-generator => ./deps/k8s.io/code-generator
-	k8s.io/component-base => k8s.io/component-base v0.32.9
+	k8s.io/component-base => k8s.io/component-base v0.32.11
 	k8s.io/kubectl => k8s.io/kubectl v0.32.9
-	k8s.io/kubernetes => k8s.io/kubernetes v0.32.9
-	k8s.io/metrics => k8s.io/metrics v0.32.9
+	k8s.io/kubernetes => k8s.io/kubernetes v0.32.11
+	k8s.io/metrics => k8s.io/metrics v0.32.11
 )
 
 require (
@@ -63,10 +63,10 @@ require (
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.32.9
-	k8s.io/apiextensions-apiserver v0.32.9
-	k8s.io/apimachinery v0.32.9
-	k8s.io/client-go v0.32.9
+	k8s.io/api v0.32.11
+	k8s.io/apiextensions-apiserver v0.32.11
+	k8s.io/apimachinery v0.32.11
+	k8s.io/client-go v0.32.11
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -81,10 +81,11 @@ require (
 	github.com/arangodb-managed/integration-apis v0.2.1
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/coreos/go-oidc/v3 v3.14.1
-	github.com/envoyproxy/go-control-plane/envoy v1.35.0
+	github.com/envoyproxy/go-control-plane/envoy v1.36.0
+	github.com/go-logr/logr v1.4.3
 	github.com/go-logr/zerologr v1.2.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1
 	github.com/jedib0t/go-pretty/v6 v6.6.5
 	github.com/regclient/regclient v0.10.0
 	golang.org/x/oauth2 v0.30.0
@@ -153,7 +154,6 @@ require (
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.2 // indirect
-	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
@@ -249,13 +249,14 @@ require (
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/term v0.36.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	google.golang.org/genproto v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apiserver v0.32.9 // indirect
+	k8s.io/apiserver v0.32.11 // indirect
 	k8s.io/cli-runtime v0.32.9 // indirect
-	k8s.io/component-base v0.32.9 // indirect
+	k8s.io/component-base v0.32.11 // indirect
 	k8s.io/kubectl v0.32.9 // indirect
 	oras.land/oras-go v1.2.5 // indirect
 	sigs.k8s.io/controller-runtime v0.16.3 // indirect

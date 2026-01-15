@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package k8sutil
 
 import (
-	"github.com/go-logr/zerologr"
+	"github.com/go-logr/logr"
 	"k8s.io/klog/v2"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -30,5 +30,5 @@ import (
 var logger = logging.Global().RegisterAndGetLogger("kubernetes", logging.Info)
 
 func init() {
-	klog.SetLogger(zerologr.New(logger.Logger()))
+	klog.SetLogger(logr.New(logging.NewKLogSink(logger)))
 }
