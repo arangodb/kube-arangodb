@@ -12,9 +12,9 @@ ifeq ($(shell uname),Darwin)
 endif
 
 KUBERNETES_VERSION_MINOR:=32
-KUBERNETES_VERSION_PATCH:=9
+KUBERNETES_VERSION_PATCH:=11
 
-ENVOY_IMAGE=envoyproxy/envoy:v1.36.2
+ENVOY_IMAGE=envoyproxy/envoy:v1.36.4
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -470,7 +470,10 @@ KUBERNETES_APIS := k8s.io/api \
 					k8s.io/code-generator \
 					k8s.io/component-base \
 					k8s.io/kubernetes \
-					k8s.io/metrics
+					k8s.io/metrics \
+					k8s.io/cli-runtime \
+					k8s.io/kubectl
+
 
 KUBERNETES_MODS := k8s.io/api \
 					k8s.io/apiextensions-apiserver \
@@ -481,7 +484,9 @@ KUBERNETES_MODS := k8s.io/api \
 					k8s.io/cluster-bootstrap \
 					k8s.io/code-generator \
 					k8s.io/component-base \
-					k8s.io/metrics
+					k8s.io/metrics \
+					k8s.io/cli-runtime \
+					k8s.io/kubectl
 
 .PHONY: update-kubernetes-version
 update-kubernetes-version:

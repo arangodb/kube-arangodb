@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -259,6 +259,9 @@ type Logger interface {
 	Wrap(w Wrap) Logger
 	WrapObj(w WrapObj) Logger
 
+	Name() string
+
+	Fields(fields interface{}) Logger
 	Bool(key string, i bool) Logger
 	Str(key, value string) Logger
 	JSON(key string, value any) Logger
@@ -287,7 +290,28 @@ type Logger interface {
 	ErrorIO() LoggerIO
 	FatalIO() LoggerIO
 
+	LevelOutput(l Level, msg string, args ...interface{})
+
 	Logger() *zerolog.Logger
+}
+
+func extractLevel(l Logger, level Level) func(msg string, args ...interface{}) {
+	switch level {
+	case Trace:
+		return l.Trace
+	case Debug:
+		return l.Debug
+	case Info:
+		return l.Info
+	case Warn:
+		return l.Warn
+	case Error:
+		return l.Error
+	case Fatal:
+		return l.Fatal
+	default:
+		return func(msg string, args ...interface{}) {}
+	}
 }
 
 type logger struct {
@@ -302,6 +326,20 @@ type chain struct {
 	parent  *chain
 	sampler Sampler
 	wrap    Wrap
+}
+
+func (c *chain) Name() string {
+	return c.name
+}
+
+func (c *chain) Fields(fields interface{}) Logger {
+	return c.Wrap(func(in *zerolog.Event) *zerolog.Event {
+		return in.Fields(fields)
+	})
+}
+
+func (c *chain) LevelOutput(l Level, msg string, args ...interface{}) {
+	extractLevel(c, l)(msg, args...)
 }
 
 func (c *chain) Logger() *zerolog.Logger {

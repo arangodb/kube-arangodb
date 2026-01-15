@@ -35,6 +35,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/kubernetes"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/generators/prometheus"
 	"github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -71,6 +72,7 @@ func Generate(cmd *cobra.Command, out io.Writer, factories ...shared.Factory) er
 	data := bytes.NewBuffer(nil)
 
 	log := NewLogger(data)
+	logging.Global().SetRoot(log)
 
 	files := make(chan shared.File)
 
