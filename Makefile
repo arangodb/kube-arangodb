@@ -470,7 +470,10 @@ KUBERNETES_APIS := k8s.io/api \
 					k8s.io/code-generator \
 					k8s.io/component-base \
 					k8s.io/kubernetes \
-					k8s.io/metrics
+					k8s.io/metrics \
+					k8s.io/cli-runtime \
+					k8s.io/kubectl
+
 
 KUBERNETES_MODS := k8s.io/api \
 					k8s.io/apiextensions-apiserver \
@@ -481,7 +484,9 @@ KUBERNETES_MODS := k8s.io/api \
 					k8s.io/cluster-bootstrap \
 					k8s.io/code-generator \
 					k8s.io/component-base \
-					k8s.io/metrics
+					k8s.io/metrics \
+					k8s.io/cli-runtime \
+					k8s.io/kubectl
 
 .PHONY: update-kubernetes-version
 update-kubernetes-version:

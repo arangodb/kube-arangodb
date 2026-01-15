@@ -734,6 +734,8 @@ k8s.io/apiserver v0.32.11 h1:t3Czai78uwJIYjxi2cNtGoLi5MdfpkK9UwZndszBWjU=
 k8s.io/apiserver v0.32.11/go.mod h1:o9+cuhAphvbfmWrZRiZTfl2SYP8noQ5h3SSRkZmnoBs=
 k8s.io/cli-runtime v0.32.9 h1:ncnXK7KD1b9yp57TIAULicpsTKQ6hRcQ2sXdQEYppAo=
 k8s.io/cli-runtime v0.32.9/go.mod h1:FwIfQ6++cyk6CN+ds2wSGx7OOHHEI0dy+R3YDkVBKbg=
+k8s.io/cli-runtime v0.32.11 h1:cdD55A0U9Lg9FJ8z5s+h3hQDrS6Id/nseBCA1AEJY+Y=
+k8s.io/cli-runtime v0.32.11/go.mod h1:IV0KfIqfV2ncNx8+xv/nHzLKSXGqHraQgImCiJy19LM=
 k8s.io/client-go v0.32.9 h1:ZMyIQ1TEpTDAQni3L2gH1NZzyOA/gHfNcAazzCxMJ0c=
 k8s.io/client-go v0.32.9/go.mod h1:2OT8aFSYvUjKGadaeT+AVbhkXQSpMAkiSb88Kz2WggI=
 k8s.io/client-go v0.32.11 h1:HHcSUf+wuiQ+2kpM0CbzhXQ3mhHOmnzw6ctGbLre+ho=
@@ -756,6 +758,8 @@ k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f h1:GA7//TjRY9yWGy1poLzYYJ
 k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f/go.mod h1:R/HEjbvWI0qdfb8viZUeVZm0X6IZnxAydC7YU42CMw4=
 k8s.io/kubectl v0.32.9 h1:y5D3bdJnenD6bFJ05NwhCa6eSBcPvLcUlgAW6Y4O4zs=
 k8s.io/kubectl v0.32.9/go.mod h1:2Gb580dhhqMztWWdE+iIFPWcDAel4/FMOwYPOTL51DY=
+k8s.io/kubectl v0.32.11 h1:oQOLU+Uk+QkHNWpQ/3m703ddrcmzg2jjVV4vHoyPUVU=
+k8s.io/kubectl v0.32.11/go.mod h1:l0QUbHOekiFpeCaEXI93YvAzfRM4n1bud4Eu1+FcB5M=
 k8s.io/metrics v0.32.11 h1:F03AuWDW0VURl7+VEB8RRe9y1q4X25rX1s6oQJEL2zU=
 k8s.io/metrics v0.32.11/go.mod h1:RdtTbtMMFNbfgAa17dcR0gHY7xwN3YzEsorepmT6sKE=
 k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 h1:M3sRQVHv7vB20Xc2ybTt7ODCeFj6JSWYFzOFnYeS6Ro=
