@@ -71,8 +71,11 @@ func (k *klogSink) Error(err error, msg string, keysAndValues ...any) {
 }
 
 func (k *klogSink) WithValues(keysAndValues ...any) logr.LogSink {
-	//TODO implement me
-	panic("implement me")
+	return &klogSink{
+		l:     k.l.Fields(keysAndValues),
+		name:  k.name,
+		depth: k.depth,
+	}
 }
 
 func (k *klogSink) WithName(name string) logr.LogSink {
