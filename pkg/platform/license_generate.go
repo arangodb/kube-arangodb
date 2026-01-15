@@ -70,14 +70,25 @@ func licenseGenerateRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	l := logger.Str("ClusterID", did)
+	l := logger
+
+	var lr lmanager.LicenseRequest
+
+	if did != "" {
+		l = l.Str("ClusterID", did)
+		lr.DeploymentID = util.NewType(did)
+	}
+
+	if inv != nil {
+		lr.Inventory = util.NewType(ugrpc.NewObject(inv))
+		l = l.Bool("Inventory", true)
+	} else {
+		l = l.Bool("Inventory", true)
+	}
 
 	l.Info("Generating License")
 
-	lic, err := mc.License(cmd.Context(), lmanager.LicenseRequest{
-		DeploymentID: util.NewType(did),
-		Inventory:    util.NewType(ugrpc.NewObject(inv)),
-	})
+	lic, err := mc.License(cmd.Context(), lr)
 	if err != nil {
 		return err
 	}
