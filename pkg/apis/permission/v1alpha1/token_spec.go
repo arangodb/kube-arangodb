@@ -21,7 +21,18 @@
 package v1alpha1
 
 import (
+	"time"
+
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
+
+const (
+	ArangoPermissionTokenMinTTL      = 15 * time.Minute
+	ArangoPermissionTokenGracePeriod = 10 * time.Minute
 )
 
 type ArangoPermissionTokenSpec struct {
@@ -30,5 +41,37 @@ type ArangoPermissionTokenSpec struct {
 	// +doc/skip: namespace
 	// +doc/skip: uid
 	// +doc/skip: checksum
-	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+	Deployment *sharedApi.Object `json:"deployment"`
+
+	// Roles keeps the roles assigned to the token
+	Roles []string `json:"roles,omitempty"`
+
+	// TTL Defines the TTL of the token.
+	// +doc/default: 1h
+	TTL *meta.Duration `json:"ttl,omitempty"`
+}
+
+func (c *ArangoPermissionTokenSpec) GetTTL() time.Duration {
+	if t := c.TTL; t != nil {
+		return t.Duration
+	}
+
+	return time.Hour
+}
+
+func (c *ArangoPermissionTokenSpec) Validate() error {
+	if c == nil {
+		return errors.Errorf("Nil spec not allowed")
+	}
+
+	return shared.WithErrors(
+		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
+		shared.ValidateOptionalPath("ttl", c.TTL, func(duration meta.Duration) error {
+			if duration.Duration < ArangoPermissionTokenMinTTL {
+				return errors.Errorf("MinTTL is %s, while TTL has been set to %s", ArangoPermissionTokenMinTTL.String(), duration.Duration.String())
+			}
+
+			return nil
+		}),
+	)
 }

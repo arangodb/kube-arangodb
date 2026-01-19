@@ -24,7 +24,10 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
+
+// Legacy
 
 type HandleP6Func[P1, P2, P3, P4, P5, P6 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6) (bool, error)
 
@@ -66,5 +69,50 @@ func HandleP6Condition[P1, P2, P3, P4, P5, P6 any](extract HandleP6ConditionExtr
 	return func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6) (bool, error) {
 		c, changed, err := handler(ctx, p1, p2, p3, p4, p5, p6)
 		return WithConditionChange(extract(ctx, p1, p2, p3, p4, p5, p6), condition, c, changed, err)
+	}
+}
+
+// New
+
+type HandleSharedP6Func[P1, P2, P3, P4, P5, P6 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6) (bool, error)
+
+type HandleSharedP6ConditionFunc[P1, P2, P3, P4, P5, P6 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6) (*Condition, bool, error)
+
+type HandleSharedP6ConditionExtract[P1, P2, P3, P4, P5, P6 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6) *sharedApi.ConditionList
+
+func HandleSharedP6[P1, P2, P3, P4, P5, P6 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, handler ...HandleSharedP6Func[P1, P2, P3, P4, P5, P6]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3, p4, p5, p6)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleSharedP6WithStop[P1, P2, P3, P4, P5, P6 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, handler ...HandleSharedP6Func[P1, P2, P3, P4, P5, P6]) (bool, error) {
+	changed, err := HandleSharedP6[P1, P2, P3, P4, P5, P6](ctx, p1, p2, p3, p4, p5, p6, handler...)
+	if IsStop(err) {
+		return changed, nil
+	}
+
+	return changed, err
+}
+
+func HandleSharedP6WithCondition[P1, P2, P3, P4, P5, P6 any](ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, handler ...HandleSharedP6Func[P1, P2, P3, P4, P5, P6]) (bool, error) {
+	changed, err := HandleSharedP6[P1, P2, P3, P4, P5, P6](ctx, p1, p2, p3, p4, p5, p6, handler...)
+	return WithSharedCondition(conditions, condition, changed, err)
+}
+
+func HandleSharedP6Condition[P1, P2, P3, P4, P5, P6 any](extract HandleSharedP6ConditionExtract[P1, P2, P3, P4, P5, P6], condition sharedApi.ConditionType, handler HandleSharedP6ConditionFunc[P1, P2, P3, P4, P5, P6]) HandleSharedP6Func[P1, P2, P3, P4, P5, P6] {
+	return func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6) (bool, error) {
+		c, changed, err := handler(ctx, p1, p2, p3, p4, p5, p6)
+		return WithSharedConditionChange(extract(ctx, p1, p2, p3, p4, p5, p6), condition, c, changed, err)
 	}
 }

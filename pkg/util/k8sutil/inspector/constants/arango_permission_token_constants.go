@@ -25,7 +25,6 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
-	platformApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 )
 
 // ArangoPermissionToken
@@ -33,7 +32,7 @@ const (
 	ArangoPermissionTokenGroup           = permission.ArangoPermissionGroupName
 	ArangoPermissionTokenResource        = permission.ArangoPermissionTokenResourcePlural
 	ArangoPermissionTokenKind            = permission.ArangoPermissionTokenResourceKind
-	ArangoPermissionTokenVersionV1Alpha1 = platformApiv1alpha1.ArangoPlatformVersion
+	ArangoPermissionTokenVersionV1Alpha1 = permissionApi.ArangoPermissionVersion
 )
 
 func init() {

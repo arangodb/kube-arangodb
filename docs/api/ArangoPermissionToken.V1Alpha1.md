@@ -10,9 +10,27 @@ title: ArangoPermissionToken V1Alpha1
 
 ### .spec.deployment.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.3.4/pkg/apis/shared/v1/object.go#L53)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/shared/v1/object.go#L53)</sup>
 
 This field is **required**
 
 Name of the object
+
+***
+
+### .spec.roles
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/permission/v1alpha1/token_spec.go#L47)</sup>
+
+Roles keeps the roles assigned to the token
+
+***
+
+### .spec.ttl
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/permission/v1alpha1/token_spec.go#L51)</sup>
+
+TTL Defines the TTL of the token.
+
+Default Value: `1h`
 

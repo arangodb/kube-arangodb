@@ -24,7 +24,10 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
+
+// Legacy
 
 type HandleP3Func[P1, P2, P3 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3) (bool, error)
 
@@ -66,5 +69,50 @@ func HandleP3Condition[P1, P2, P3 any](extract HandleP3ConditionExtract[P1, P2, 
 	return func(ctx context.Context, p1 P1, p2 P2, p3 P3) (bool, error) {
 		c, changed, err := handler(ctx, p1, p2, p3)
 		return WithConditionChange(extract(ctx, p1, p2, p3), condition, c, changed, err)
+	}
+}
+
+// New
+
+type HandleSharedP3Func[P1, P2, P3 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3) (bool, error)
+
+type HandleSharedP3ConditionFunc[P1, P2, P3 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3) (*Condition, bool, error)
+
+type HandleSharedP3ConditionExtract[P1, P2, P3 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3) *sharedApi.ConditionList
+
+func HandleSharedP3[P1, P2, P3 any](ctx context.Context, p1 P1, p2 P2, p3 P3, handler ...HandleSharedP3Func[P1, P2, P3]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleSharedP3WithStop[P1, P2, P3 any](ctx context.Context, p1 P1, p2 P2, p3 P3, handler ...HandleSharedP3Func[P1, P2, P3]) (bool, error) {
+	changed, err := HandleSharedP3[P1, P2, P3](ctx, p1, p2, p3, handler...)
+	if IsStop(err) {
+		return changed, nil
+	}
+
+	return changed, err
+}
+
+func HandleSharedP3WithCondition[P1, P2, P3 any](ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType, p1 P1, p2 P2, p3 P3, handler ...HandleSharedP3Func[P1, P2, P3]) (bool, error) {
+	changed, err := HandleSharedP3[P1, P2, P3](ctx, p1, p2, p3, handler...)
+	return WithSharedCondition(conditions, condition, changed, err)
+}
+
+func HandleSharedP3Condition[P1, P2, P3 any](extract HandleSharedP3ConditionExtract[P1, P2, P3], condition sharedApi.ConditionType, handler HandleSharedP3ConditionFunc[P1, P2, P3]) HandleSharedP3Func[P1, P2, P3] {
+	return func(ctx context.Context, p1 P1, p2 P2, p3 P3) (bool, error) {
+		c, changed, err := handler(ctx, p1, p2, p3)
+		return WithSharedConditionChange(extract(ctx, p1, p2, p3), condition, c, changed, err)
 	}
 }

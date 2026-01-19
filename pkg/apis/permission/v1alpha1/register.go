@@ -25,19 +25,19 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	platform2 "github.com/arangodb/kube-arangodb/pkg/apis/permission"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 const (
-	ArangoPlatformVersion = string(utilConstants.VersionV1Beta1)
+	ArangoPermissionVersion = string(utilConstants.VersionV1Alpha1)
 )
 
 var (
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	AddToScheme   = SchemeBuilder.AddToScheme
 
-	SchemeGroupVersion = schema.GroupVersion{Group: platform2.ArangoPermissionGroupName, Version: ArangoPlatformVersion}
+	SchemeGroupVersion = schema.GroupVersion{Group: permission.ArangoPermissionGroupName, Version: ArangoPermissionVersion}
 )
 
 // Resource gets an ArangoCluster GroupResource for a specified resource
@@ -47,7 +47,10 @@ func Resource(resource string) schema.GroupResource {
 
 // addKnownTypes adds the set of types defined in this package to the supplied scheme.
 func addKnownTypes(s *runtime.Scheme) error {
-	s.AddKnownTypes(SchemeGroupVersion)
+	s.AddKnownTypes(SchemeGroupVersion,
+		&ArangoPermissionToken{},
+		&ArangoPermissionTokenList{},
+	)
 	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil
 }

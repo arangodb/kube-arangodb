@@ -18,28 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package token
 
 import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
+	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 )
 
-type ArangoPermissionTokenStatus struct {
-	// Conditions specific to the entire token
-	// +doc/type: api.Conditions
-	Conditions sharedApi.ConditionList `json:"conditions,omitempty"`
+func Kind() string {
+	return permission.ArangoPermissionTokenResourceKind
+}
 
-	// Deployment keeps the Deployment Reference
-	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+func Group() string {
+	return permissionApi.SchemeGroupVersion.Group
+}
 
-	// User keeps the ArangoDB User Reference
-	User *sharedApi.Object `json:"user,omitempty"`
-
-	// Secret keeps the Secret Reference
-	Secret *sharedApi.Object `json:"secret,omitempty"`
-
-	// Refresh defines the refresh time of the token
-	Refresh meta.Time `json:"refresh,omitempty"`
+func Version() string {
+	return permissionApi.SchemeGroupVersion.Version
 }

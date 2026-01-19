@@ -12,6 +12,14 @@ v1alpha1:
             required:
               - name
             type: object
+          roles:
+            description: Roles keeps the roles assigned to the token
+            items:
+              type: string
+            type: array
+          ttl:
+            description: TTL Defines the TTL of the token.
+            type: string
         required:
           - deployment
         type: object

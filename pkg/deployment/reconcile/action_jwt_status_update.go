@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ func (a *actionJWTStatusUpdate) Start(ctx context.Context) (bool, error) {
 	}
 
 	if err = a.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) (update bool) {
-		activeKeyData, active := f.Data[pod.ActiveJWTKey]
+		activeKeyData, active := f.Data[utilConstants.ActiveJWTKey]
 		activeKeyShort := util.SHA256(activeKeyData)
 		activeKey := fmt.Sprintf("sha256:%s", activeKeyShort)
 		if active {
@@ -143,7 +143,7 @@ func (a *actionJWTStatusUpdate) Start(ctx context.Context) (bool, error) {
 		var keys []string
 
 		for key := range f.Data {
-			if key == pod.ActiveJWTKey || key == activeKeyShort || key == utilConstants.SecretKeyToken {
+			if key == utilConstants.ActiveJWTKey || key == activeKeyShort || key == utilConstants.SecretKeyToken {
 				continue
 			}
 

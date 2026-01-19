@@ -18,13 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package constants
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
-)
+const ActiveJWTKey = "-"

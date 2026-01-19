@@ -201,6 +201,8 @@ linters-settings:
         pkg: github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
       - alias: inspectorConstants
         pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants
+      - alias: utilToken
+        pkg: github.com/arangodb/kube-arangodb/pkg/util/token
       - alias: utilConstants
         pkg: github.com/arangodb/kube-arangodb/pkg/util/constants
       - alias: tcache

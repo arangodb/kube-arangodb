@@ -27,6 +27,7 @@ package v1alpha1
 
 import (
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -99,6 +100,16 @@ func (in *ArangoPermissionTokenSpec) DeepCopyInto(out *ArangoPermissionTokenSpec
 		*out = new(v1.Object)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Roles != nil {
+		in, out := &in.Roles, &out.Roles
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.TTL != nil {
+		in, out := &in.TTL, &out.TTL
+		*out = new(metav1.Duration)
+		**out = **in
+	}
 	return
 }
 
@@ -127,11 +138,17 @@ func (in *ArangoPermissionTokenStatus) DeepCopyInto(out *ArangoPermissionTokenSt
 		*out = new(v1.Object)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.User != nil {
+		in, out := &in.User, &out.User
+		*out = new(v1.Object)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Secret != nil {
 		in, out := &in.Secret, &out.Secret
 		*out = new(v1.Object)
 		(*in).DeepCopyInto(*out)
 	}
+	in.Refresh.DeepCopyInto(&out.Refresh)
 	return
 }
 
