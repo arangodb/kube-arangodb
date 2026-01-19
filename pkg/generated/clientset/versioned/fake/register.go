@@ -32,6 +32,7 @@ import (
 	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	permissionv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
@@ -59,6 +60,7 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	mlv1beta1.AddToScheme,
 	networkingv1alpha1.AddToScheme,
 	networkingv1beta1.AddToScheme,
+	permissionv1alpha1.AddToScheme,
 	platformv1alpha1.AddToScheme,
 	platformv1beta1.AddToScheme,
 	replicationv1.AddToScheme,

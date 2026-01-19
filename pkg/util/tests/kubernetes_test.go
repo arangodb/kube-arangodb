@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import (
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -101,4 +102,6 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*networkingApi.ArangoRoute](t)
 	NewMetaObjectRun[*platformApi.ArangoPlatformStorage](t)
 	NewMetaObjectRun[*platformApi.ArangoPlatformChart](t)
+	NewMetaObjectRun[*platformApi.ArangoPlatformService](t)
+	NewMetaObjectRun[*v1alpha1.ArangoPermissionToken](t)
 }

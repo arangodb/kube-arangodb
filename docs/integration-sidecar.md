@@ -152,6 +152,14 @@ HTTP/S Endpoint of the ArangoDeployment Internal Service.
 
 Example: `https://deployment.default.svc:8529`
 
+#### ARANGO_TOKEN (optional)
+
+Optional path to the ArangoToken mounted into the Pod.
+
+File is updated in the runtime, with short, predefined, TTL.
+
+Example: `/var/secrets/arango/token/secret`
+
 #### ARANGO_DEPLOYMENT_CA (optional)
 
 Path to the CA in the PEM format. If not set, TLS is disabled.

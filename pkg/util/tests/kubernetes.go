@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,6 +46,8 @@ import (
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
@@ -320,6 +322,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **v1alpha1.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -552,6 +560,12 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **v1alpha1.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to update object: %s", reflect.TypeOf(v).String()))
 		}
@@ -740,6 +754,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **v1alpha1.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1276,6 +1295,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **v1alpha1.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to get object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1542,6 +1576,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
 			platformApi.SchemeGroupVersion.String(),
 			platform.ArangoPlatformServiceResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
+	case *v1alpha1.ArangoPermissionToken:
+		v.Kind = permission.ArangoPermissionTokenResourceKind
+		v.APIVersion = v1alpha1.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			v1alpha1.SchemeGroupVersion.String(),
+			permission.ArangoPermissionTokenResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
 	default:
