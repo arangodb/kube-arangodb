@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
-	"github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
+	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 )
 
@@ -37,7 +37,7 @@ const (
 )
 
 func init() {
-	register[*v1alpha1.ArangoPermissionToken](ArangoPermissionTokenGKv1Alpha1(), ArangoPermissionTokenGRv1Alpha1())
+	register[*permissionApi.ArangoPermissionToken](ArangoPermissionTokenGKv1Alpha1(), ArangoPermissionTokenGRv1Alpha1())
 }
 
 func ArangoPermissionTokenGK() schema.GroupKind {

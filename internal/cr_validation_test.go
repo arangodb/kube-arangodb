@@ -42,7 +42,7 @@ import (
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
+	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
@@ -349,7 +349,7 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 			fmt.Sprintf("%s/pkg/apis/permission", root): {
 				"v1alpha1": {
 					objects: map[string]interface{}{
-						"spec": v1alpha1.ArangoPermissionToken{}.Spec,
+						"spec": permissionApi.ArangoPermissionToken{}.Spec,
 					},
 				},
 			},

@@ -44,7 +44,7 @@ import (
 	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
+	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
 	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
@@ -442,7 +442,7 @@ func Test_GenerateAPIDocs(t *testing.T) {
 			"v1alpha1": {
 				Types: inputPackageTypes{
 					"ArangoPermissionToken.V1Alpha1": {
-						"Spec": v1alpha1.ArangoPermissionToken{}.Spec,
+						"Spec": permissionApi.ArangoPermissionToken{}.Spec,
 					},
 				},
 				Shared: []string{

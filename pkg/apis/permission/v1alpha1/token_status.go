@@ -20,16 +20,16 @@
 
 package v1alpha1
 
-import v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
 type ArangoPermissionTokenStatus struct {
 	// Conditions specific to the entire token
 	// +doc/type: api.Conditions
-	Conditions v1.ConditionList `json:"conditions,omitempty"`
+	Conditions sharedApi.ConditionList `json:"conditions,omitempty"`
 
 	// Deployment keeps the Deployment Reference
-	Deployment *v1.Object `json:"deployment,omitempty"`
+	Deployment *sharedApi.Object `json:"deployment,omitempty"`
 
 	// Secret keeps the Secret Reference
-	Secret *v1.Object `json:"secret,omitempty"`
+	Secret *sharedApi.Object `json:"secret,omitempty"`
 }

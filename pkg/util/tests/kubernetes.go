@@ -47,7 +47,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
-	"github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
+	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
@@ -322,7 +322,7 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
-		case **v1alpha1.ArangoPermissionToken:
+		case **permissionApi.ArangoPermissionToken:
 			require.NotNil(t, v)
 
 			vl := *v
@@ -560,7 +560,7 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
-		case **v1alpha1.ArangoPermissionToken:
+		case **permissionApi.ArangoPermissionToken:
 			require.NotNil(t, v)
 
 			vl := *v
@@ -754,7 +754,7 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
-		case **v1alpha1.ArangoPermissionToken:
+		case **permissionApi.ArangoPermissionToken:
 			require.NotNil(t, v)
 
 			vl := *v
@@ -1295,7 +1295,7 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
-		case **v1alpha1.ArangoPermissionToken:
+		case **permissionApi.ArangoPermissionToken:
 			require.NotNil(t, v)
 
 			vl := *v
@@ -1578,11 +1578,11 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 			platform.ArangoPlatformServiceResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
-	case *v1alpha1.ArangoPermissionToken:
+	case *permissionApi.ArangoPermissionToken:
 		v.Kind = permission.ArangoPermissionTokenResourceKind
-		v.APIVersion = v1alpha1.SchemeGroupVersion.String()
+		v.APIVersion = permissionApi.SchemeGroupVersion.String()
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
-			v1alpha1.SchemeGroupVersion.String(),
+			permissionApi.SchemeGroupVersion.String(),
 			permission.ArangoPermissionTokenResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))

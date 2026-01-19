@@ -20,8 +20,8 @@
 
 package v1alpha1
 
-import v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
 const (
-	ReadyCondition v1.ConditionType = "Ready"
+	ReadyCondition sharedApi.ConditionType = "Ready"
 )
