@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.4.0](https://github.com/arangodb/kube-arangodb/tree/1.4.0) (2026-01-20)
 - (Feature) Deprecate Dashboard
 - (Bugfix) (Platform) Ensure Helm History limit
 - (Bugfix) (Platform) Increase MetaStore RF
