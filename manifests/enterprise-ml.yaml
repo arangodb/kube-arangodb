@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -18,7 +18,7 @@ metadata:
   name: arango-ml-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -42,7 +42,7 @@ metadata:
   name: arango-ml-operator-rbac-ml
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -56,6 +56,29 @@ rules:
       - "list"
       - "watch"
 ---
+# Source: kube-arangodb/templates/webhook/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: arango-ml-operator-rbac-webhook
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: ml
+    release: ml
+rules:
+  - apiGroups:
+      - "admissionregistration.k8s.io"
+    resources:
+      - "mutatingwebhookconfigurations"
+      - "validatingwebhookconfigurations"
+    verbs:
+      - "get"
+      - "update"
+    resourceNames:
+      - "arango-ml-operator.default.operator.arangodb.com"
+---
 # Source: kube-arangodb/templates/crd/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -63,7 +86,7 @@ metadata:
   name: arango-ml-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -83,7 +106,7 @@ metadata:
   name: arango-ml-operator-rbac-ml
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -91,6 +114,26 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: arango-ml-operator-rbac-ml
+subjects:
+  - kind: ServiceAccount
+    name: arango-ml-operator
+    namespace: default
+---
+# Source: kube-arangodb/templates/webhook/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-ml-operator-rbac-webhook
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: ml
+    release: ml
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-ml-operator-rbac-webhook
 subjects:
   - kind: ServiceAccount
     name: arango-ml-operator
@@ -104,7 +147,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -211,7 +254,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -232,7 +275,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -266,7 +309,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: ml
     release: ml
@@ -284,7 +327,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.3.4
+        helm.sh/chart: kube-arangodb-1.4.0
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: ml
         release: ml
@@ -327,9 +370,11 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb-enterprise:1.3.4
+          image: arangodb/kube-arangodb-enterprise:1.4.0
           args:
             - --threads=8
+            - --api.secondary-name=arango-ml-operator
+            - --api.secondary-name=arango-ml-operator.default.svc
             - --mode.single
             - --operator.ml
             - --chaos.allowed=false

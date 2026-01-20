@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -18,7 +18,7 @@ metadata:
   name: arangolocalstorages.storage.arangodb.com
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -48,7 +48,7 @@ metadata:
   name: arango-storage-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -61,7 +61,7 @@ metadata:
   name: arango-storage-operator-rbac-storage
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -124,6 +124,29 @@ rules:
       - "delete"
       - "watch"
 ---
+# Source: kube-arangodb/templates/webhook/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: arango-storage-operator-rbac-webhook
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: storage
+    release: storage
+rules:
+  - apiGroups:
+      - "admissionregistration.k8s.io"
+    resources:
+      - "mutatingwebhookconfigurations"
+      - "validatingwebhookconfigurations"
+    verbs:
+      - "get"
+      - "update"
+    resourceNames:
+      - "arango-storage-operator.default.operator.arangodb.com"
+---
 # Source: kube-arangodb/templates/crd/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -131,7 +154,7 @@ metadata:
   name: arango-storage-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -151,7 +174,7 @@ metadata:
   name: arango-storage-operator-rbac-storage
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -159,6 +182,26 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: arango-storage-operator-rbac-storage
+subjects:
+  - kind: ServiceAccount
+    name: arango-storage-operator
+    namespace: default
+---
+# Source: kube-arangodb/templates/webhook/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-storage-operator-rbac-webhook
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: storage
+    release: storage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-storage-operator-rbac-webhook
 subjects:
   - kind: ServiceAccount
     name: arango-storage-operator
@@ -172,7 +215,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -220,7 +263,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -241,7 +284,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -275,7 +318,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: storage
     release: storage
@@ -293,7 +336,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.3.4
+        helm.sh/chart: kube-arangodb-1.4.0
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: storage
         release: storage
@@ -336,9 +379,11 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb:1.3.4
+          image: arangodb/kube-arangodb:1.4.0
           args:
             - --threads=8
+            - --api.secondary-name=arango-storage-operator
+            - --api.secondary-name=arango-storage-operator.default.svc
             - --operator.storage
             - --mode.single
             - --chaos.allowed=false

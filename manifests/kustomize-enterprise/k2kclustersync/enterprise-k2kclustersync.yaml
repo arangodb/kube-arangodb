@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -18,7 +18,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -31,7 +31,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-k2kclustersync
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -45,6 +45,29 @@ rules:
       - "list"
       - "watch"
 ---
+# Source: kube-arangodb/templates/webhook/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: arango-k2kclustersync-operator-rbac-webhook
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: k2kclustersync
+    release: k2kclustersync
+rules:
+  - apiGroups:
+      - "admissionregistration.k8s.io"
+    resources:
+      - "mutatingwebhookconfigurations"
+      - "validatingwebhookconfigurations"
+    verbs:
+      - "get"
+      - "update"
+    resourceNames:
+      - "arango-k2kclustersync-operator.default.operator.arangodb.com"
+---
 # Source: kube-arangodb/templates/crd/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -52,7 +75,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -72,7 +95,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-k2kclustersync
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -80,6 +103,26 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: arango-k2kclustersync-operator-rbac-k2kclustersync
+subjects:
+  - kind: ServiceAccount
+    name: arango-k2kclustersync-operator
+    namespace: default
+---
+# Source: kube-arangodb/templates/webhook/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-k2kclustersync-operator-rbac-webhook
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: k2kclustersync
+    release: k2kclustersync
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-k2kclustersync-operator-rbac-webhook
 subjects:
   - kind: ServiceAccount
     name: arango-k2kclustersync-operator
@@ -93,7 +136,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -150,7 +193,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -171,7 +214,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -205,7 +248,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.3.4
+    helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -223,7 +266,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.3.4
+        helm.sh/chart: kube-arangodb-1.4.0
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -266,9 +309,11 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb-enterprise:1.3.4
+          image: arangodb/kube-arangodb-enterprise:1.4.0
           args:
             - --threads=8
+            - --api.secondary-name=arango-k2kclustersync-operator
+            - --api.secondary-name=arango-k2kclustersync-operator.default.svc
             - --mode.single
             - --operator.k2k-cluster-sync
             - --chaos.allowed=false

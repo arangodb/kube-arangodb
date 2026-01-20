@@ -2,26 +2,26 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: arango-deployment-operator
+  name: arango-default-operator
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 ---
 # Source: kube-arangodb/templates/crd/cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: arango-deployment-operator-rbac-crd
+  name: arango-default-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   # database.arangodb.com
   - apiGroups:
@@ -42,6 +42,14 @@ rules:
     verbs: ["create", "get", "list", "watch", "update"]
     resourceNames:
       - "arangoroutes.networking.arangodb.com"
+      # replication.database.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: ["create", "get", "list", "watch", "update"]
+    resourceNames:
+      - "arangodeploymentreplications.replication.database.arangodb.com"
       # scheduler.arangodb.com
   - apiGroups:
       - "apiextensions.k8s.io"
@@ -69,13 +77,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: arango-deployment-operator-rbac-deployment
+  name: arango-default-operator-rbac-deployment
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "apiextensions.k8s.io"
@@ -95,17 +103,46 @@ rules:
       - "get"
       - "list"
 ---
-# Source: kube-arangodb/templates/networking-operator/cluster-role.yaml
+# Source: kube-arangodb/templates/deployment-replications-operator/cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: arango-deployment-operator-rbac-networking
+  name: arango-default-operator-rbac-deployment-replication
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
+rules:
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
+  - apiGroups:
+      - ""
+    resources:
+      - "namespaces"
+      - "nodes"
+    verbs:
+      - "get"
+      - "list"
+---
+# Source: kube-arangodb/templates/networking-operator/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: arango-default-operator-rbac-networking
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "apiextensions.k8s.io"
@@ -120,13 +157,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: arango-deployment-operator-rbac-platform
+  name: arango-default-operator-rbac-platform
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "apiextensions.k8s.io"
@@ -141,13 +178,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: arango-deployment-operator-rbac-scheduler
+  name: arango-default-operator-rbac-scheduler
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "apiextensions.k8s.io"
@@ -162,13 +199,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: arango-deployment-operator-rbac-webhook
+  name: arango-default-operator-rbac-webhook
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "admissionregistration.k8s.io"
@@ -179,140 +216,160 @@ rules:
       - "get"
       - "update"
     resourceNames:
-      - "arango-deployment-operator.default.operator.arangodb.com"
+      - "arango-default-operator.default.operator.arangodb.com"
 ---
 # Source: kube-arangodb/templates/crd/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-crd
+  name: arango-default-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: arango-deployment-operator-rbac-crd
+  name: arango-default-operator-rbac-crd
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/deployment-operator/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-deployment
+  name: arango-default-operator-rbac-deployment
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: arango-deployment-operator-rbac-deployment
+  name: arango-default-operator-rbac-deployment
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
+    namespace: default
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: arango-default-operator-rbac-deployment-replication
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: default
+    release: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: arango-default-operator-rbac-deployment-replication
+subjects:
+  - kind: ServiceAccount
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/networking-operator/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-networking
+  name: arango-default-operator-rbac-networking
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: arango-deployment-operator-rbac-networking
+  name: arango-default-operator-rbac-networking
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/platform-operator/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-platform
+  name: arango-default-operator-rbac-platform
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: arango-deployment-operator-rbac-platform
+  name: arango-default-operator-rbac-platform
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/scheduler-operator/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-scheduler
+  name: arango-default-operator-rbac-scheduler
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: arango-deployment-operator-rbac-scheduler
+  name: arango-default-operator-rbac-scheduler
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/webhook/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-webhook
+  name: arango-default-operator-rbac-webhook
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: arango-deployment-operator-rbac-webhook
+  name: arango-default-operator-rbac-webhook
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/deployment-operator/default-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: arango-deployment-operator-rbac-default
+  name: arango-default-operator-rbac-default
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - ""
@@ -325,14 +382,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: arango-deployment-operator-rbac-deployment
+  name: arango-default-operator-rbac-deployment
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "database.arangodb.com"
@@ -478,18 +535,75 @@ rules:
       - "watch"
       - "patch"
 ---
-# Source: kube-arangodb/templates/networking-operator/role.yaml
+# Source: kube-arangodb/templates/deployment-replications-operator/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: arango-deployment-operator-rbac-networking
+  name: arango-default-operator-rbac-deployment-replication
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
+rules:
+  - apiGroups:
+      - "replication.database.arangodb.com"
+    resources:
+      - "arangodeploymentreplications"
+      - "arangodeploymentreplications/status"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - "database.arangodb.com"
+    resources:
+      - "arangodeployments"
+    verbs:
+      - "get"
+  - apiGroups:
+      - ""
+    resources:
+      - "pods"
+      - "services"
+      - "endpoints"
+      - "persistentvolumeclaims"
+      - "events"
+      - "secrets"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - "apps"
+    resources:
+      - "deployments"
+      - "replicasets"
+    verbs:
+      - "get"
+---
+# Source: kube-arangodb/templates/networking-operator/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: arango-default-operator-rbac-networking
+  namespace: default
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "networking.arangodb.com"
@@ -519,14 +633,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: arango-deployment-operator-rbac-platform
+  name: arango-default-operator-rbac-platform
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "platform.arangodb.com"
@@ -620,14 +734,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: arango-deployment-operator-rbac-scheduler
+  name: arango-default-operator-rbac-scheduler
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 rules:
   - apiGroups:
       - "scheduler.arangodb.com"
@@ -704,18 +818,18 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-default
+  name: arango-default-operator-rbac-default
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: arango-deployment-operator-rbac-default
+  name: arango-default-operator-rbac-default
 subjects:
   - kind: ServiceAccount
     name: default
@@ -725,98 +839,119 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-deployment
+  name: arango-default-operator-rbac-deployment
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: arango-deployment-operator-rbac-deployment
+  name: arango-default-operator-rbac-deployment
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
+    namespace: default
+---
+# Source: kube-arangodb/templates/deployment-replications-operator/role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: arango-default-operator-rbac-deployment-replication
+  namespace: default
+  labels:
+    app.kubernetes.io/name: kube-arangodb
+    helm.sh/chart: kube-arangodb-1.4.0
+    app.kubernetes.io/managed-by: Tiller
+    app.kubernetes.io/instance: default
+    release: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: arango-default-operator-rbac-deployment-replication
+subjects:
+  - kind: ServiceAccount
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/networking-operator/role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-networking
+  name: arango-default-operator-rbac-networking
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: arango-deployment-operator-rbac-networking
+  name: arango-default-operator-rbac-networking
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/platform-operator/role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-platform
+  name: arango-default-operator-rbac-platform
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: arango-deployment-operator-rbac-platform
+  name: arango-default-operator-rbac-platform
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/scheduler-operator/role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: arango-deployment-operator-rbac-scheduler
+  name: arango-default-operator-rbac-scheduler
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: arango-deployment-operator-rbac-scheduler
+  name: arango-default-operator-rbac-scheduler
 subjects:
   - kind: ServiceAccount
-    name: arango-deployment-operator
+    name: arango-default-operator
     namespace: default
 ---
 # Source: kube-arangodb/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: arango-deployment-operator
+  name: arango-default-operator
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 spec:
   ports:
     - name: server
@@ -834,8 +969,8 @@ spec:
   selector:
     app.kubernetes.io/name: kube-arangodb
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
   type: ClusterIP
 ---
 # Source: kube-arangodb/templates/deployment.yaml
@@ -843,14 +978,14 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: arango-deployment-operator
+  name: arango-default-operator
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
     helm.sh/chart: kube-arangodb-1.4.0
     app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: deployment
-    release: deployment
+    app.kubernetes.io/instance: default
+    release: default
 spec:
   replicas: 1
   strategy:
@@ -859,22 +994,22 @@ spec:
     matchLabels:
       app.kubernetes.io/name: kube-arangodb
       app.kubernetes.io/managed-by: Tiller
-      app.kubernetes.io/instance: deployment
-      release: deployment
+      app.kubernetes.io/instance: default
+      release: default
   template:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
         helm.sh/chart: kube-arangodb-1.4.0
         app.kubernetes.io/managed-by: Tiller
-        app.kubernetes.io/instance: deployment
-        release: deployment
+        app.kubernetes.io/instance: default
+        release: default
       annotations:
         platform.arangodb.com/port: "8528"
         platform.arangodb.com/scrape: "true"
         platform.arangodb.com/scheme: "https"
     spec:
-      serviceAccountName: arango-deployment-operator
+      serviceAccountName: arango-default-operator
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -898,7 +1033,7 @@ spec:
                     - key: app.kubernetes.io/instance
                       operator: In
                       values:
-                        - deployment
+                        - default
       hostNetwork: false
       hostPID: false
       hostIPC: false
@@ -908,12 +1043,13 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb-enterprise:1.4.0
+          image: arangodb/kube-arangodb:1.4.0
           args:
             - --threads=8
-            - --api.secondary-name=arango-deployment-operator
-            - --api.secondary-name=arango-deployment-operator.default.svc
+            - --api.secondary-name=arango-default-operator
+            - --api.secondary-name=arango-default-operator.default.svc
             - --operator.deployment
+            - --operator.deployment-replication
             - --mode.single
             - --operator.networking
             - --operator.scheduler
@@ -1052,22 +1188,6 @@ spec:
 
 
 # Source: kube-arangodb/templates/debug/role.yaml
----
-
-
-# Source: kube-arangodb/templates/deployment-replications-operator/cluster-role-binding.yaml
----
-
-
-# Source: kube-arangodb/templates/deployment-replications-operator/cluster-role.yaml
----
-
-
-# Source: kube-arangodb/templates/deployment-replications-operator/role-binding.yaml
----
-
-
-# Source: kube-arangodb/templates/deployment-replications-operator/role.yaml
 ---
 
 
