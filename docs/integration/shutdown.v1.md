@@ -9,7 +9,7 @@ parent: Integration Sidecars
 
 Definitions:
 
-- [Service](https://github.com/arangodb/kube-arangodb/blob/1.3.4/integrations/shutdown/v1/definition/shutdown.proto)
+- [Service](https://github.com/arangodb/kube-arangodb/blob/1.4.0/integrations/shutdown/v1/definition/shutdown.proto)
 
 Operator will send shutdown request once all containers marked with annotation are stopped.
 
