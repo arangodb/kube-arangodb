@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package scheduler
+package permission
 
 import (
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/webhooks/policies"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/permission/webhooks/tokens"
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/webhook"
@@ -32,12 +32,12 @@ import (
 func WebhookAdmissions(client kclient.Client) webhook.Admissions {
 	return webhook.Admissions{
 		webhook.NewAdmissionHandler[*core.Pod](
-			"policies",
+			"tokens",
 			inspectorConstants.PodGroup,
 			inspectorConstants.PodVersionV1,
 			inspectorConstants.PodKind,
 			inspectorConstants.PodResource,
-			policies.Handler(client),
+			tokens.Handler(client),
 		),
 	}
 }

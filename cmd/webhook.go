@@ -27,6 +27,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/arangodb/kube-arangodb/pkg/handlers/permission"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -78,6 +79,7 @@ func cmdWebhookCheckE() error {
 	var admissions webhook.Admissions
 
 	admissions = append(admissions, scheduler.WebhookAdmissions(client)...)
+	admissions = append(admissions, permission.WebhookAdmissions(client)...)
 
 	server, err := webhookServer(ctx, client, admissions...)
 	if err != nil {

@@ -75,5 +75,37 @@ webhooks:
       - "v1"
     sideEffects: None
     timeoutSeconds: 5
+  - name: "pods.token.permission.arangodb.com"
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            - {{ .Release.Namespace }}
+    objectSelector:
+      matchExpressions:
+        - key: profiles.arangodb.com/deployment
+          operator: Exists
+        - key: permissions.arangodb.com/token
+          operator: Exists
+    rules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - "v1"
+        operations:
+          - "CREATE"
+        resources:
+          - "pods"
+        scope: "Namespaced"
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ template "kube-arangodb.operatorName" . }}-webhook
+        path: /webhook/core/v1/pods/token/mutate
+    admissionReviewVersions:
+      - "v1"
+    sideEffects: None
+    timeoutSeconds: 5
 
 {{- end }}
