@@ -19,10 +19,10 @@ Available Commands:
 
 Flags:
       --database.endpoint string                                                            Endpoint of ArangoDB (Env: DATABASE_ENDPOINT) (default "localhost")
+      --database.name string                                                                Database Name (Env: DATABASE_NAME) (default "_system")
       --database.port int                                                                   Port of ArangoDB (Env: DATABASE_PORT) (default 8529)
       --database.proto string                                                               Proto of the ArangoDB endpoint (Env: DATABASE_PROTO) (default "http")
-      --database.rf int                                                                     ArangoDB ReplicationFactor (Env: DATABASE_RF) (default 1)
-      --database.wc int                                                                     ArangoDB WriteConcern (Env: DATABASE_WC) (default 1)
+      --database.source string                                                              Database Source Collection (Env: DATABASE_SOURCE) (default "_statistics")
       --health.address string                                                               Address to expose health service (Env: HEALTH_ADDRESS) (default "0.0.0.0:9091")
       --health.auth.token string                                                            Token for health service (when auth service is token) (Env: HEALTH_AUTH_TOKEN)
       --health.auth.type string                                                             Auth type for health service (Env: HEALTH_AUTH_TYPE) (default "None")
@@ -44,6 +44,10 @@ Flags:
       --integration.authorization.v0                                                        Enable AuthorizationV0 Integration Service (Env: INTEGRATION_AUTHORIZATION_V0)
       --integration.authorization.v0.external                                               Defines if External access to service authorization.v0 is enabled (Env: INTEGRATION_AUTHORIZATION_V0_EXTERNAL)
       --integration.authorization.v0.internal                                               Defines if Internal access to service authorization.v0 is enabled (Env: INTEGRATION_AUTHORIZATION_V0_INTERNAL) (default true)
+      --integration.authorization.v1                                                        Enable AuthorizationV1 Integration Service (Env: INTEGRATION_AUTHORIZATION_V1)
+      --integration.authorization.v1.external                                               Defines if External access to service authorization.v1 is enabled (Env: INTEGRATION_AUTHORIZATION_V1_EXTERNAL)
+      --integration.authorization.v1.internal                                               Defines if Internal access to service authorization.v1 is enabled (Env: INTEGRATION_AUTHORIZATION_V1_INTERNAL) (default true)
+      --integration.authorization.v1.type string                                            Type of the Authorization Integration (Env: INTEGRATION_AUTHORIZATION_V1_TYPE) (default "always")
       --integration.config.v1                                                               Enable ConfigV1 Integration Service (Env: INTEGRATION_CONFIG_V1)
       --integration.config.v1.external                                                      Defines if External access to service config.v1 is enabled (Env: INTEGRATION_CONFIG_V1_EXTERNAL)
       --integration.config.v1.internal                                                      Defines if Internal access to service config.v1 is enabled (Env: INTEGRATION_CONFIG_V1_INTERNAL) (default true)
