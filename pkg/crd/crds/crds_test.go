@@ -165,6 +165,7 @@ func Test_CRDGetters(t *testing.T) {
 		PlatformStorageWithOptions,
 		PlatformChartWithOptions,
 		PlatformServiceWithOptions,
+		PermissionTokenWithOptions,
 	}
 	require.Equal(t, len(AllDefinitions()), len(getters))
 
