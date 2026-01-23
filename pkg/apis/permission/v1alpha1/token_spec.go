@@ -31,8 +31,7 @@ import (
 )
 
 const (
-	ArangoPermissionTokenMinTTL      = 15 * time.Minute
-	ArangoPermissionTokenGracePeriod = 10 * time.Minute
+	ArangoPermissionTokenMinTTL = 15 * time.Minute
 )
 
 type ArangoPermissionTokenSpec struct {
