@@ -50,5 +50,5 @@ func arangoClientProvider(ctx context.Context, c kubernetes.Interface, depl *api
 	return client.NewFactory(client.DirectArangoDBAuthentication(c, depl), client.HTTPClientFactory(
 		http.ShortTransport(),
 		http.WithTransportTLS(http.Insecure),
-	)).Client(ctx, fmt.Sprintf("%s://%s:%d", util.BoolSwitch(depl.GetAcceptedSpec().IsSecure(), "https", "http"), k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.GetAcceptedSpec().ClusterDomain), shared.ArangoPort))
+	)).Client(ctx, fmt.Sprintf("%s://%s:%d", util.BoolSwitch(depl.GetAcceptedSpec().IsSecure(), "https", "http"), k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(depl, depl.GetAcceptedSpec().ClusterDomain), shared.ArangoPort))
 }
