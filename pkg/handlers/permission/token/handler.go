@@ -202,6 +202,8 @@ func (h *handler) HandleDeploymentConnection(ctx context.Context, item operation
 
 	_, err = conn.Version(ctx)
 	if err != nil {
+		logger.Err(err).Warn("Deployment is not reachable")
+
 		if status.Conditions.Update(permissionApi.DeploymentReachableCondition, false, "Deployment not reachable", "Deployment not reachable") {
 			return true, operator.Reconcile("Conditions updated")
 		}
