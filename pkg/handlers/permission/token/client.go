@@ -22,7 +22,9 @@ package token
 
 import (
 	"context"
-
+	"fmt"
+	"github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
@@ -47,5 +49,5 @@ func arangoClientProvider(ctx context.Context, c kubernetes.Interface, depl *api
 	return client.NewFactory(client.DirectArangoDBAuthentication(c, depl), client.HTTPClientFactory(
 		http.ShortTransport(),
 		http.WithTransportTLS(http.Insecure),
-	)).Client(ctx, k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.GetAcceptedSpec().ClusterDomain))
+	)).Client(ctx, fmt.Sprintf("%s://%s:%d", util.BoolSwitch(depl.GetAcceptedSpec().IsSecure(), "https", "http"), k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.GetAcceptedSpec().ClusterDomain), shared.ArangoPort))
 }
