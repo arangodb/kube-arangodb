@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,12 @@ type ArangoPlatformServiceSpec struct {
 	// Values keeps the values of the Service
 	// +doc/type: Object
 	Values sharedApi.Any `json:"values,omitempty,omitzero"`
+
+	// Upgrade keeps the upgrade overrides
+	Upgrade *ArangoPlatformServiceSpecUpgrade `json:"upgrade,omitempty"`
+
+	// Install keeps the install overrides
+	Install *ArangoPlatformServiceSpecInstall `json:"install,omitempty"`
 }
 
 func (c *ArangoPlatformServiceSpec) Validate() error {
@@ -54,5 +60,7 @@ func (c *ArangoPlatformServiceSpec) Validate() error {
 	return shared.WithErrors(
 		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
 		shared.ValidateRequiredInterfacePath("chart", c.Chart),
+		shared.ValidateOptionalInterfacePath("upgrade", c.Upgrade),
+		shared.ValidateOptionalInterfacePath("install", c.Install),
 	)
 }

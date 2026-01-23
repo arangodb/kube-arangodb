@@ -57,6 +57,24 @@ v1beta1:
             required:
               - name
             type: object
+          install:
+            description: Install keeps the install overrides
+            properties:
+              timeout:
+                description: Timeout defines the install timeout
+                type: string
+            type: object
+          upgrade:
+            description: Upgrade keeps the upgrade overrides
+            properties:
+              maxHistory:
+                description: MaxHistory defines the max history
+                format: int32
+                type: integer
+              timeout:
+                description: Timeout defines the upgrade timeout
+                type: string
+            type: object
           values:
             description: Values keeps the values of the Service
             type: object

@@ -365,9 +365,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 			in.Namespace = extension.GetNamespace()
 
 			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
-
-			in.Timeout = 20 * time.Minute
-		})
+		}, withInstallActionOverrides(extension.Spec.Install))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Install Failed", "Release Install failed: %s", err.Error())
 			return false, err
@@ -398,9 +396,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 			in.Namespace = extension.GetNamespace()
 
 			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
-
-			in.Timeout = 20 * time.Minute
-		})
+		}, withUpgradeActionOverrides(extension.Spec.Upgrade))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Upgrade Failed", "Release upgrade failed: %s", err.Error())
 
@@ -435,9 +431,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 			in.Namespace = extension.GetNamespace()
 
 			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
-
-			in.Timeout = 20 * time.Minute
-		})
+		}, withUpgradeActionOverrides(extension.Spec.Upgrade))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Upgrade Failed", "Release upgrade failed: %s", err.Error())
 
