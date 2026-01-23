@@ -18,28 +18,31 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package client
 
 import (
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"context"
+	goHttp "net/http"
 
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type ArangoPermissionTokenStatus struct {
-	// Conditions specific to the entire token
-	// +doc/type: api.Conditions
-	Conditions sharedApi.ConditionList `json:"conditions,omitempty"`
+type HTTPClient interface {
+	GetClient(ctx context.Context) (goHttp.RoundTripper, error)
+}
 
-	// Deployment keeps the Deployment Reference
-	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+type HTTPClientFunc func(ctx context.Context) (goHttp.RoundTripper, error)
 
-	// User keeps the ArangoDB User Reference
-	User *sharedApi.Object `json:"user,omitempty"`
+func (f HTTPClientFunc) GetClient(ctx context.Context) (goHttp.RoundTripper, error) {
+	return f(ctx)
+}
 
-	// Secret keeps the Secret Reference
-	Secret *sharedApi.Object `json:"secret,omitempty"`
+func HTTPClientFactory(mods ...util.Mod[goHttp.Transport]) HTTPClient {
+	return HTTPClientFunc(func(ctx context.Context) (goHttp.RoundTripper, error) {
+		var c goHttp.Transport
 
-	// Refresh defines the refresh time of the token
-	Refresh meta.Time `json:"refresh,omitempty,omitzero"`
+		util.ApplyMods(&c, mods...)
+
+		return &c, nil
+	})
 }

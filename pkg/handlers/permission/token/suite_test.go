@@ -39,16 +39,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
-type arangodbFakeClient struct {
-	client arangodb.Client
-}
-
-func (a arangodbFakeClient) ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
-	return a.client, nil
-}
-
 func newFakeHandler(t *testing.T) *handler {
-	c := arangodbFakeClient{client: tests.TestArangoDBConfig(t).Client(t)}
+	c := tests.TestArangoDBConfig(t).Client(t)
 
 	f := fakeClientSet.NewSimpleClientset()
 	k := fake.NewSimpleClientset()
@@ -58,7 +50,9 @@ func newFakeHandler(t *testing.T) *handler {
 		kubeClient:    k,
 		eventRecorder: event.NewEventRecorder("mock", k).NewInstance(Group(), Version(), Kind()),
 		operator:      operator.NewOperator("mock", "mock", util.Image{Image: "mock"}),
-		provider:      c,
+		provider: clientProviderFunc(func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
+			return c, nil
+		}),
 	}
 
 	return h

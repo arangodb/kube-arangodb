@@ -28,8 +28,24 @@ import (
 	"github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/client"
+	"github.com/arangodb/kube-arangodb/pkg/util/http"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type clientProvider interface {
 	ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error)
+}
+
+type clientProviderFunc func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error)
+
+func (c clientProviderFunc) ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
+	return c(ctx, client, depl)
+}
+
+func arangoClientProvider(ctx context.Context, c kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
+	return client.NewFactory(client.DirectArangoDBAuthentication(c, depl), client.HTTPClientFactory(
+		http.ShortTransport(),
+		http.WithTransportTLS(http.Insecure),
+	)).Client(ctx, k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.GetAcceptedSpec().ClusterDomain))
 }

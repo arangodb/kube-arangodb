@@ -45,6 +45,8 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
 
 		operator: operator,
+
+		provider: clientProviderFunc(arangoClientProvider),
 	}
 
 	if err := operator.RegisterHandler(h); err != nil {
