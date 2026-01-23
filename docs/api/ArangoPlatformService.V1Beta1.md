@@ -30,9 +30,9 @@ Name of the object
 
 ### .spec.install.timeout
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_install.go#L33)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_install.go#L35)</sup>
 
-Timeout defines the upgrade timeout
+Timeout defines the install timeout
 
 Default Value: `20m`
 
@@ -40,7 +40,7 @@ Default Value: `20m`
 
 ### .spec.upgrade.maxHistory
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_upgrade.go#L37)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_upgrade.go#L39)</sup>
 
 MaxHistory defines the max history
 
@@ -50,7 +50,7 @@ Default Value: `10`
 
 ### .spec.upgrade.timeout
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_upgrade.go#L33)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_upgrade.go#L35)</sup>
 
 Timeout defines the upgrade timeout
 

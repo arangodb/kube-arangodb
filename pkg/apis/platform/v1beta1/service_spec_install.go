@@ -30,7 +30,7 @@ import (
 )
 
 type ArangoPlatformServiceSpecInstall struct {
-	// Timeout defines the upgrade timeout
+	// Timeout defines the install timeout
 	// +doc/default: 20m
 	Timeout *meta.Duration `json:"timeout,omitempty"`
 }

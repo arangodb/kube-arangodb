@@ -58,10 +58,10 @@ v1beta1:
               - name
             type: object
           install:
-            description: Install keeps the upgrade overrides
+            description: Install keeps the install overrides
             properties:
               timeout:
-                description: Timeout defines the upgrade timeout
+                description: Timeout defines the install timeout
                 type: string
             type: object
           upgrade:

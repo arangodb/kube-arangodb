@@ -69,7 +69,7 @@ func (c *ArangoPlatformServiceSpecUpgrade) Validate() error {
 		}),
 		shared.ValidateOptionalPath("maxHistory", c.MaxHistory, func(i int) error {
 			if i < 1 {
-				return errors.New("max history needs to be greater than 1")
+				return errors.New("max history needs to be at least 1")
 			}
 
 			return nil

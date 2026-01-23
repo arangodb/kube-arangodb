@@ -48,7 +48,7 @@ type ArangoPlatformServiceSpec struct {
 	// Upgrade keeps the upgrade overrides
 	Upgrade *ArangoPlatformServiceSpecUpgrade `json:"upgrade,omitempty"`
 
-	// Install keeps the upgrade overrides
+	// Install keeps the install overrides
 	Install *ArangoPlatformServiceSpecInstall `json:"install,omitempty"`
 }
 
