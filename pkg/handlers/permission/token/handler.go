@@ -296,7 +296,7 @@ func (h *handler) HandleDeploymentConnection(ctx context.Context, item operation
 
 func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment, conn arangodb.Client) (bool, error) {
 	if status.User == nil {
-		name := fmt.Sprintf("%s-%s", extension.GetName(), goStrings.ToLower(uniuri.NewLen(6)))
+		name := fmt.Sprintf("operator-%s-%s", extension.GetName(), goStrings.ToLower(uniuri.NewLen(6)))
 		logger.Str("name", name).Info("Create ArangoDB User")
 		if _, err := conn.User(ctx, name); err != nil {
 			if !shared.IsNotFound(err) {
