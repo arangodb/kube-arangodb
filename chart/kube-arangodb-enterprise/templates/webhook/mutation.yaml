@@ -102,7 +102,7 @@ webhooks:
       service:
         namespace: {{ .Release.Namespace }}
         name: {{ template "kube-arangodb.operatorName" . }}-webhook
-        path: /webhook/core/v1/pods/token/mutate
+        path: /webhook/core/v1/pods/tokens/mutate
     admissionReviewVersions:
       - "v1"
     sideEffects: None
