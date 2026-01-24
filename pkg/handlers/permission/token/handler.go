@@ -48,6 +48,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
@@ -78,6 +79,30 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		}
 
 		return err
+	}
+
+	if object.GetDeletionTimestamp() != nil {
+		// We are deleting the object
+		finalizer, err := h.finalizer(ctx, object)
+		if err != nil {
+			return err
+		}
+
+		if finalizer != "" {
+			if changed, err := patcher.EnsureFinalizersGone(ctx, h.client.PermissionV1alpha1().ArangoPermissionTokens(item.Namespace), object, finalizer); err != nil {
+				return err
+			} else if changed {
+				return operator.Reconcile("Finalizers updated")
+			}
+		}
+
+		return operator.Reconcile("Finalizers pending removal")
+	}
+
+	if changed, err := patcher.EnsureFinalizersPresent(ctx, h.client.PermissionV1alpha1().ArangoPermissionTokens(item.Namespace), object, permissionApi.FinalizerArangoPermissionTokenUser); err != nil {
+		return err
+	} else if changed {
+		return operator.Reconcile("Finalizers updated")
 	}
 
 	status := object.Status.DeepCopy()
@@ -112,6 +137,57 @@ func (h *handler) CanBeHandled(item operation.Item) bool {
 	return item.Group == Group() &&
 		utilConstants.Version(Version()).IsCompatible(utilConstants.Version(item.Version)) &&
 		item.Kind == Kind()
+}
+
+func (h *handler) finalizer(ctx context.Context, extension *permissionApi.ArangoPermissionToken) (string, error) {
+	for _, finalizer := range extension.GetFinalizers() {
+		switch finalizer {
+		case permissionApi.FinalizerArangoPermissionTokenUser:
+			if err := h.finalizerUserRemoval(ctx, extension); err != nil {
+				return "", err
+			}
+
+			return permissionApi.FinalizerArangoPermissionTokenUser, nil
+		}
+	}
+
+	return "", nil
+}
+
+func (h *handler) finalizerUserRemoval(ctx context.Context, extension *permissionApi.ArangoPermissionToken) error {
+	if extension.Status.Deployment == nil || extension.Status.User == nil {
+		return nil
+	}
+
+	depl, err := h.client.DatabaseV1().ArangoDeployments(extension.GetNamespace()).Get(ctx, extension.Status.Deployment.GetName(), meta.GetOptions{})
+	if err != nil {
+		if kerrors.IsNotFound(err) {
+			return nil
+		}
+
+		return err
+	}
+
+	if !extension.Status.Deployment.Equals(depl) {
+		logger.Warn("Deleting of the user not allowed due to change in UUID")
+		return nil
+	}
+
+	client, err := h.provider.ArangoClient(ctx, h.kubeClient, depl)
+	if err != nil {
+		logger.Warn("Fail to get client for deleting user")
+		return err
+	}
+
+	if err := client.RemoveUser(ctx, extension.Status.User.GetName()); err != nil {
+		if shared.IsNotFound(err) {
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (h *handler) handle(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus) (bool, error) {

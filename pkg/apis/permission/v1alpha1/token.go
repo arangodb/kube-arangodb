@@ -26,6 +26,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 )
 
+const (
+	FinalizerArangoPermissionTokenUser = permission.ArangoPermissionTokenCRDName + "/cleanup"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ArangoPermissionTokenList is a list of ArangoPermission Token.
