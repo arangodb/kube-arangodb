@@ -136,7 +136,7 @@ Flags:
       --arango.basic.password string   Arango Password for Basic Authentication
       --arango.basic.username string   Arango Username for Basic Authentication
       --arango.endpoint strings        Arango Endpoint
-      --arango.insecure                Arango Endpoint Insecure
+      --arango.insecure                Skips TLS certificate verification
       --arango.token string            Arango JWT Token for Authentication
   -h, --help                           help for inventory
       --telemetry                      Enables Telemetry (default true)
@@ -161,7 +161,7 @@ Flags:
       --arango.basic.password string   Arango Password for Basic Authentication
       --arango.basic.username string   Arango Username for Basic Authentication
       --arango.endpoint strings        Arango Endpoint
-      --arango.insecure                Arango Endpoint Insecure
+      --arango.insecure                Skips TLS certificate verification
       --arango.token string            Arango JWT Token for Authentication
   -h, --help                           help for activate
       --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)

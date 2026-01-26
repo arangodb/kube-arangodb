@@ -24,6 +24,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
+
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
@@ -101,6 +103,13 @@ var (
 		Default:     "",
 		Persistent:  false,
 		Check: func(in string) error {
+			if in != "" {
+				_, err := uuid.Parse(in)
+				if err != nil {
+					return err
+				}
+			}
+
 			return nil
 		},
 	}

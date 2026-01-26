@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
+- (Feature) Enable DeploymentID Validation in Platform CLI
 
 ## [1.4.0](https://github.com/arangodb/kube-arangodb/tree/1.4.0) (2026-01-20)
 - (Feature) Deprecate Dashboard
