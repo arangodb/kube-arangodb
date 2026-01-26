@@ -57,7 +57,7 @@ func NewDeployment(prefix string) Deployment {
 
 		insecure: Flag[bool]{
 			Name:        fmt.Sprintf("%s.insecure", prefix),
-			Description: "Arango Endpoint Insecure",
+			Description: "Skips TLS certificate verification",
 		},
 
 		authentication: Flag[string]{
@@ -92,13 +92,6 @@ func NewDeployment(prefix string) Deployment {
 				Name:        fmt.Sprintf("%s.basic.password", prefix),
 				Description: "Arango Password for Basic Authentication",
 				Default:     "",
-				Check: func(in string) error {
-					if in == "" {
-						return errors.Errorf("empty password")
-					}
-
-					return nil
-				},
 			},
 		},
 

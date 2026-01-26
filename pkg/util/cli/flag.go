@@ -104,7 +104,7 @@ func (f Flag[T]) Get(cmd *cobra.Command) (T, error) {
 
 	if f.Check != nil {
 		if err := f.Check(v); err != nil {
-			return util.Default[T](), err
+			return util.Default[T](), errors.Wrapf(err, "Invalid value for flag --%s", f.Name)
 		}
 		return v, nil
 	}
