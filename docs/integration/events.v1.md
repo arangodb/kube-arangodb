@@ -1,11 +1,13 @@
 ---
 layout: page
-title: Integration Sidecar Meta V1
+title: Integration Sidecar Events V1
 grand_parent: ArangoDBPlatform
 parent: Integration Sidecars
 ---
 
 # Events V1
+
+
 
 Definitions:
 

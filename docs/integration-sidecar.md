@@ -60,18 +60,6 @@ metadata:
     integration.profiles.arangodb.com/authn: v1
 ```
 
-#### [Authorization V0](./integration/authorization.v0.md)
-
-Authorization Integration Sidecar
-
-To enable:
-
-```yaml
-metadata:
-  labels:
-    integration.profiles.arangodb.com/authz: v0
-```
-
 #### [Scheduler V2](./integration/scheduler.v2.md)
 
 Scheduler Integration Sidecar
@@ -82,21 +70,6 @@ To enable:
 metadata:
   labels:
     integration.profiles.arangodb.com/sched: v2
-```
-
-#### [Storage V1](./integration/storage.v1.md)
-
-Storage Integration Sidecar (legacy)
-
-To enable:
-
-```yaml
-metadata:
-  labels:
-    integration.profiles.arangodb.com/storage: v1
-    
-    # Optionally, enable DebugPackage integration
-    storage.integration.profiles.arangodb.com/debug: "enabled"
 ```
 
 #### [Storage V2](./integration/storage.v2.md)
