@@ -13,4 +13,4 @@ Definitions:
 
 ## Configuration
 
-In order to configure Platform Storage, refer to the [documentation](../platform.storage.md).
+In order to configure Platform Storage, refer to the [documentation](../platform/storage.md).
