@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,9 +77,16 @@ func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
 
 	client := client.NewClient(c.Connection(), a.log)
 
-	if err := client.SetLicense(ctxChild, string(l.V2), true); err != nil {
-		a.log.Err(err).Error("Unable to set license")
+	if license, err := client.GetLicense(ctxChild); err != nil {
+		a.log.Err(err).Error("Unable to get license")
 		return true, nil
+	} else if license.Hash != l.V2.V2Hash() {
+		if err := client.SetLicense(ctxChild, string(l.V2), true); err != nil {
+			a.log.Err(err).Error("Unable to set license")
+			return true, nil
+		}
+	} else {
+		a.log.Str("hash", license.Hash).Info("License already set")
 	}
 
 	license, err := client.GetLicense(ctxChild)
