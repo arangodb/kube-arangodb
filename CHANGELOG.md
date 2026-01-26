@@ -5,6 +5,7 @@
 - (Feature) Enable DeploymentID Validation in Platform CLI
 - (Documentation) Clean Platform Integration Sidecar documentation
 - (Bugfix) Disable repeated license calls
+- (Maintenance) Fix CVE-2024-25621
 
 ## [1.4.0](https://github.com/arangodb/kube-arangodb/tree/1.4.0) (2026-01-20)
 - (Feature) Deprecate Dashboard
