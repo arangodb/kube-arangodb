@@ -104,7 +104,7 @@ var (
 		Persistent:  false,
 		Check: func(in string) error {
 			if in != "" {
-				_, err := uuid.FromBytes([]byte(in))
+				_, err := uuid.Parse(in)
 				if err != nil {
 					return err
 				}
