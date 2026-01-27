@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
 - (Feature) Enable DeploymentID Validation in Platform CLI
 - (Documentation) Clean Platform Integration Sidecar documentation
