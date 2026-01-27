@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -18,7 +18,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -31,7 +31,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-k2kclustersync
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -52,7 +52,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-webhook
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -75,7 +75,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -95,7 +95,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-k2kclustersync
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -115,7 +115,7 @@ metadata:
   name: arango-k2kclustersync-operator-rbac-webhook
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -136,7 +136,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -193,7 +193,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -214,7 +214,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -248,7 +248,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.0
+    helm.sh/chart: kube-arangodb-1.4.1
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: k2kclustersync
     release: k2kclustersync
@@ -266,7 +266,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.4.0
+        helm.sh/chart: kube-arangodb-1.4.1
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: k2kclustersync
         release: k2kclustersync
@@ -309,7 +309,7 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb-enterprise:1.4.0
+          image: arangodb/kube-arangodb-enterprise:1.4.1
           args:
             - --threads=8
             - --api.secondary-name=arango-k2kclustersync-operator

@@ -9,5 +9,5 @@ parent: Integration Sidecars
 
 Definitions:
 
-- [Service](https://github.com/arangodb/kube-arangodb/blob/1.4.0/integrations/scheduler/v2/definition/definition.proto)
+- [Service](https://github.com/arangodb/kube-arangodb/blob/1.4.1/integrations/scheduler/v2/definition/definition.proto)
 

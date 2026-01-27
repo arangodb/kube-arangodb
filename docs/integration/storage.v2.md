@@ -9,7 +9,7 @@ parent: Integration Sidecars
 
 Definitions:
 
-- [Service](https://github.com/arangodb/kube-arangodb/blob/1.4.0/integrations/storage/v2/definition/storage.proto)
+- [Service](https://github.com/arangodb/kube-arangodb/blob/1.4.1/integrations/storage/v2/definition/storage.proto)
 
 ## Configuration
 

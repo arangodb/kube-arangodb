@@ -10,7 +10,7 @@ title: ArangoPlatformService V1Beta1
 
 ### .spec.chart.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/shared/v1/object.go#L53)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/shared/v1/object.go#L53)</sup>
 
 This field is **required**
 
@@ -20,7 +20,7 @@ Name of the object
 
 ### .spec.deployment.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/shared/v1/object.go#L53)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/shared/v1/object.go#L53)</sup>
 
 This field is **required**
 
@@ -30,7 +30,7 @@ Name of the object
 
 ### .spec.install.timeout
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_install.go#L35)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/platform/v1beta1/service_spec_install.go#L35)</sup>
 
 Timeout defines the install timeout
 
@@ -40,7 +40,7 @@ Default Value: `20m`
 
 ### .spec.upgrade.maxHistory
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_upgrade.go#L39)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/platform/v1beta1/service_spec_upgrade.go#L39)</sup>
 
 MaxHistory defines the max history
 
@@ -50,7 +50,7 @@ Default Value: `10`
 
 ### .spec.upgrade.timeout
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec_upgrade.go#L35)</sup>
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/platform/v1beta1/service_spec_upgrade.go#L35)</sup>
 
 Timeout defines the upgrade timeout
 
@@ -60,7 +60,7 @@ Default Value: `20m`
 
 ### .spec.values
 
-Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.0/pkg/apis/platform/v1beta1/service_spec.go#L46)</sup>
+Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/platform/v1beta1/service_spec.go#L46)</sup>
 
 Values keeps the values of the Service
 
