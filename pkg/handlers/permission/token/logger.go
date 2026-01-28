@@ -18,13 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package constants
+package token
 
-const PermissionsGroup = "permissions.arangodb.com"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-// TokenAttachment can be attached on the Pod or ServiceAccount
-const TokenAttachment = PermissionsGroup + "/token"
-
-const TokenMountPath = "/var/run/secrets/arango/token/"
-
-const TokenEnvName = "ARANGO_TOKEN"
+var logger = logging.Global().RegisterAndGetLogger("permission-token-operator", logging.Info)

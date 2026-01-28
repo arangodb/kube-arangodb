@@ -41,7 +41,6 @@ import (
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -52,8 +51,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
-
-var logger = logging.Global().RegisterAndGetLogger("permission-token-operator", logging.Info)
 
 type handler struct {
 	client     arangoClientSet.Interface

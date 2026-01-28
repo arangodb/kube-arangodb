@@ -68,10 +68,6 @@ func (h handler) CanHandle(ctx context.Context, log logging.Logger, t webhook.Ad
 		return false
 	}
 
-	if _, ok := new.GetLabels()[utilConstants.TokenAttachment]; !ok {
-		return false
-	}
-
 	return true
 }
 
@@ -80,31 +76,53 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		return webhook.MutationResponse{}, errors.Errorf("Object cannot be handled")
 	}
 
-	tokenName, ok := new.GetLabels()[utilConstants.TokenAttachment]
-	if !ok {
-		return webhook.MutationResponse{}, errors.Errorf("Label '%s' not found", utilConstants.TokenAttachment)
-	}
-
 	deploymentName, ok := new.GetLabels()[utilConstants.ProfilesDeployment]
 	if !ok {
-		return webhook.MutationResponse{}, errors.Errorf("Label '%s' not found", utilConstants.ProfilesDeployment)
+		logger.Warn("No deployment label found")
+		return webhook.MutationResponse{
+			ValidationResponse: webhook.ValidationResponse{Allowed: true},
+		}, nil
 	}
 
-	token, err := h.client.Arango().PermissionV1alpha1().ArangoPermissionTokens(request.Namespace).Get(ctx, tokenName, meta.GetOptions{})
-	if err != nil {
-		if kerrors.IsNotFound(err) {
-			return webhook.MutationResponse{}, errors.Errorf("Token '%s' not found", tokenName)
+	if tokenName, ok := new.GetLabels()[utilConstants.TokenAttachment]; ok {
+		return h.generateMutationResponse(ctx, new, deploymentName, new.GetNamespace(), tokenName)
+	}
+
+	if saName := new.Spec.ServiceAccountName; saName != "" {
+		sa, err := h.client.Kubernetes().CoreV1().ServiceAccounts(new.GetNamespace()).Get(ctx, saName, meta.GetOptions{})
+		if err != nil {
+			logger.Err(err).Warn("Failed to get service account")
+			return webhook.MutationResponse{}, errors.Wrapf(err, "Failed to get service account")
 		}
 
-		return webhook.MutationResponse{}, errors.Wrapf(err, "Unable to get token '%s'", tokenName)
+		if tokenName, ok := sa.GetLabels()[utilConstants.TokenAttachment]; ok {
+			return h.generateMutationResponse(ctx, new, deploymentName, new.GetNamespace(), tokenName)
+		}
+	}
+
+	logger.Str("namespace", new.GetNamespace()).Str("name", new.GetName()).Warn("Unable to apply the token")
+
+	return webhook.MutationResponse{
+		ValidationResponse: webhook.ValidationResponse{Allowed: true},
+	}, nil
+}
+
+func (h handler) generateMutationResponse(ctx context.Context, pod *core.Pod, deploymentName, namespace, name string) (webhook.MutationResponse, error) {
+	token, err := h.client.Arango().PermissionV1alpha1().ArangoPermissionTokens(namespace).Get(ctx, name, meta.GetOptions{})
+	if err != nil {
+		if kerrors.IsNotFound(err) {
+			return webhook.MutationResponse{}, errors.Errorf("Token '%s' not found", name)
+		}
+
+		return webhook.MutationResponse{}, errors.Wrapf(err, "Unable to get token '%s'", name)
 	}
 
 	if !token.Status.Conditions.IsTrue(permissionApi.ReadyCondition) {
-		return webhook.MutationResponse{}, errors.Errorf("Token '%s' is not ready", tokenName)
+		return webhook.MutationResponse{}, errors.Errorf("Token '%s' is not ready", name)
 	}
 
 	if token.Status.Deployment.GetName() != deploymentName {
-		return webhook.MutationResponse{}, errors.Errorf("Token '%s' is not deployed to '%s'", tokenName, deploymentName)
+		return webhook.MutationResponse{}, errors.Errorf("Token '%s' is not deployed to '%s'", name, deploymentName)
 	}
 
 	volumeName := token.Status.Secret.GetName()
@@ -134,14 +152,14 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 
 	// Volumes
 	{
-		if len(new.Spec.Volumes) == 0 {
+		if len(pod.Spec.Volumes) == 0 {
 			items = append(items, patch.ItemReplace(patch.NewPath("spec", "volumes"), []core.Volume{volume}))
 		} else {
 			items = append(items, patch.ItemAdd(patch.NewPath("spec", "volumes", "-"), volume))
 		}
 	}
 
-	for id, c := range new.Spec.Containers {
+	for id, c := range pod.Spec.Containers {
 		if len(c.VolumeMounts) == 0 {
 			items = append(items, patch.ItemReplace(patch.NewPath("spec", "containers", fmt.Sprintf("%d", id), "volumeMounts"), []core.VolumeMount{volumeMount}))
 		} else {
@@ -154,7 +172,7 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		}
 	}
 
-	for id, c := range new.Spec.InitContainers {
+	for id, c := range pod.Spec.InitContainers {
 		if len(c.VolumeMounts) == 0 {
 			items = append(items, patch.ItemReplace(patch.NewPath("spec", "initContainers", fmt.Sprintf("%d", id), "volumeMounts"), []core.VolumeMount{volumeMount}))
 		} else {
