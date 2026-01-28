@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,6 +46,8 @@ import (
 	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
+	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
@@ -320,6 +322,12 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
+		case **permissionApi.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
 		}
@@ -338,6 +346,13 @@ func Update[T meta.Object](t *testing.T, k8s kubernetes.Interface, arango arango
 	z := *obj
 	Apply[T](t, z, mods...)
 	UpdateObjects(t, k8s, arango, &z)
+	*obj = z
+}
+
+func UpdateStatus[T meta.Object](t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, obj *T, mods ...MetaObjectMod[T]) {
+	z := *obj
+	Apply[T](t, z, mods...)
+	UpdateStatusObjects(t, k8s, arango, &z)
 	*obj = z
 }
 
@@ -552,6 +567,191 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
+		case **permissionApi.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		default:
+			require.Fail(t, fmt.Sprintf("Unable to update object: %s", reflect.TypeOf(v).String()))
+		}
+	}
+
+	return func(t *testing.T) {
+		RefreshObjects(t, k8s, arango, objects...)
+	}
+}
+
+func UpdateStatusObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) func(t *testing.T) {
+	for _, object := range objects {
+		switch v := object.(type) {
+		case **batch.CronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.BatchV1().CronJobs(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **batch.Job:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.BatchV1().Jobs(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **core.Pod:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Pods(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **core.Service:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := k8s.CoreV1().Services(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **apps.StatefulSet:
+			require.NotNil(t, v)
+			vl := *v
+			_, err := k8s.AppsV1().StatefulSets(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **apps.Deployment:
+			require.NotNil(t, v)
+			vl := *v
+			_, err := k8s.AppsV1().Deployments(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **api.ArangoDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.DatabaseV1().ArangoDeployments(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **api.ArangoClusterSynchronization:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.DatabaseV1().ArangoClusterSynchronizations(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **backupApi.ArangoBackup:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.BackupV1().ArangoBackups(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **backupApi.ArangoBackupPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApi.ArangoMLExtension:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1beta1().ArangoMLExtensions(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApi.ArangoMLStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1beta1().ArangoMLStorages(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApiv1alpha1.ArangoMLExtension:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApiv1alpha1.ArangoMLStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApiv1alpha1.ArangoMLBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **mlApiv1alpha1.ArangoMLCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApiv1alpha1.ArangoProfile:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1alpha1().ArangoProfiles(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoProfile:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoProfiles(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerPod:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerPods(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerDeployment:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerDeployments(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerBatchJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerBatchJobs(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **schedulerApi.ArangoSchedulerCronJob:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.SchedulerV1beta1().ArangoSchedulerCronJobs(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **analyticsApi.GraphAnalyticsEngine:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.AnalyticsV1alpha1().GraphAnalyticsEngines(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **networkingApi.ArangoRoute:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.NetworkingV1beta1().ArangoRoutes(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **platformApi.ArangoPlatformStorage:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PlatformV1beta1().ArangoPlatformStorages(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **platformApi.ArangoPlatformChart:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PlatformV1beta1().ArangoPlatformCharts(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **platformApi.ArangoPlatformService:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **permissionApi.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to update object: %s", reflect.TypeOf(v).String()))
 		}
@@ -740,6 +940,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.PlatformV1beta1().ArangoPlatformServices(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **permissionApi.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
@@ -748,6 +953,16 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 func RefreshObjectsC(t *testing.T, client kclient.Client, objects ...interface{}) {
 	RefreshObjects(t, client.Kubernetes(), client.Arango(), objects...)
+}
+
+func GetObject[T meta.Object](t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, namespace, name string) T {
+	obj := NewMetaObject[T](t, namespace, name)
+
+	RefreshObjects(t, k8s, arango, &obj)
+
+	require.NotNil(t, obj)
+
+	return obj
 }
 
 func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSet.Interface, objects ...interface{}) {
@@ -1276,6 +1491,21 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **permissionApi.ArangoPermissionToken:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to get object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1542,6 +1772,14 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
 			platformApi.SchemeGroupVersion.String(),
 			platform.ArangoPlatformServiceResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
+	case *permissionApi.ArangoPermissionToken:
+		v.Kind = permission.ArangoPermissionTokenResourceKind
+		v.APIVersion = permissionApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			permissionApi.SchemeGroupVersion.String(),
+			permission.ArangoPermissionTokenResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
 	default:

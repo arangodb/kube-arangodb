@@ -35,6 +35,7 @@ import (
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
 	ml "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/ml"
 	networking "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/networking"
+	permission "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/permission"
 	platform "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/platform"
 	replication "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/replication"
 	scheduler "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/scheduler"
@@ -273,6 +274,7 @@ type SharedInformerFactory interface {
 	Database() deployment.Interface
 	Ml() ml.Interface
 	Networking() networking.Interface
+	Permission() permission.Interface
 	Platform() platform.Interface
 	Replication() replication.Interface
 	Scheduler() scheduler.Interface
@@ -301,6 +303,10 @@ func (f *sharedInformerFactory) Ml() ml.Interface {
 
 func (f *sharedInformerFactory) Networking() networking.Interface {
 	return networking.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Permission() permission.Interface {
+	return permission.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Platform() platform.Interface {

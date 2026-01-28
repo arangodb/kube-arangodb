@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,13 +29,13 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 const MaxSize = 128
 
-func newCache(cfg Configuration) func(ctx context.Context) (token.Secret, time.Duration, error) {
-	return func(ctx context.Context) (token.Secret, time.Duration, error) {
+func newCache(cfg Configuration) func(ctx context.Context) (utilToken.Secret, time.Duration, error) {
+	return func(ctx context.Context) (utilToken.Secret, time.Duration, error) {
 		files, err := os.ReadDir(cfg.Path)
 		if err != nil {
 			return nil, 0, err
@@ -82,8 +82,8 @@ func newCache(cfg Configuration) func(ctx context.Context) (token.Secret, time.D
 			data[id] = ts[keys[id]]
 		}
 
-		return token.NewSecretSet(token.NewSecret(ts[keys[0]]), util.FormatList(data, func(a []byte) token.Secret {
-			return token.NewSecret(a)
+		return utilToken.NewSecretSet(utilToken.NewSecret(ts[keys[0]]), util.FormatList(data, func(a []byte) utilToken.Secret {
+			return utilToken.NewSecret(a)
 		})...), cfg.TTL, nil
 	}
 }

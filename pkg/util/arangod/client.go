@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 type (
@@ -177,7 +177,7 @@ func createArangodClientAuthentication(ctx context.Context, cli typedCore.CoreV1
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
-			jwt, err := token.NewClaims().With(token.WithDefaultClaims(), token.WithServerID("kube-arangodb")).Sign(s)
+			jwt, err := utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb")).Sign(s)
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}

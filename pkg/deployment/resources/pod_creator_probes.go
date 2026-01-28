@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
-	"github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 type Probe interface {
@@ -299,10 +299,10 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authz, err := token.NewClaims().With(
-			token.WithDefaultClaims(),
-			token.WithServerID("kube-arangodb"),
-			token.WithAllowedPaths("/_api/version")).Sign(secretData)
+		authz, err := utilToken.NewClaims().With(
+			utilToken.WithDefaultClaims(),
+			utilToken.WithServerID("kube-arangodb"),
+			utilToken.WithAllowedPaths("/_api/version")).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -325,10 +325,10 @@ func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.S
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authz, err := token.NewClaims().With(
-			token.WithDefaultClaims(),
-			token.WithServerID("kube-arangodb"),
-			token.WithAllowedPaths("/_api/version"),
+		authz, err := utilToken.NewClaims().With(
+			utilToken.WithDefaultClaims(),
+			utilToken.WithServerID("kube-arangodb"),
+			utilToken.WithAllowedPaths("/_api/version"),
 		).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -423,10 +423,10 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.Ser
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authz, err := token.NewClaims().With(
-			token.WithDefaultClaims(),
-			token.WithServerID("kube-arangodb"),
-			token.WithAllowedPaths(localPath),
+		authz, err := utilToken.NewClaims().With(
+			utilToken.WithDefaultClaims(),
+			utilToken.WithServerID("kube-arangodb"),
+			utilToken.WithAllowedPaths(localPath),
 		).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -461,10 +461,10 @@ func (r *Resources) probeBuilderLivenessSync(spec api.DeploymentSpec, group api.
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authz, err := token.NewClaims().With(
-			token.WithDefaultClaims(),
-			token.WithServerID("kube-arangodb"),
-			token.WithAllowedPaths("/_api/version"),
+		authz, err := utilToken.NewClaims().With(
+			utilToken.WithDefaultClaims(),
+			utilToken.WithServerID("kube-arangodb"),
+			utilToken.WithAllowedPaths("/_api/version"),
 		).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)
@@ -498,10 +498,10 @@ func (r *Resources) probeBuilderStartupSync(spec api.DeploymentSpec, group api.S
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		authz, err := token.NewClaims().With(
-			token.WithDefaultClaims(),
-			token.WithServerID("kube-arangodb"),
-			token.WithAllowedPaths("/_api/version"),
+		authz, err := utilToken.NewClaims().With(
+			utilToken.WithDefaultClaims(),
+			utilToken.WithServerID("kube-arangodb"),
+			utilToken.WithAllowedPaths("/_api/version"),
 		).Sign(secretData)
 		if err != nil {
 			return nil, errors.WithStack(err)

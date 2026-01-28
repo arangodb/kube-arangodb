@@ -1049,7 +1049,8 @@ CRDS:=apps-job \
       scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \
       analytics-graphanalyticsengine \
       networking-route \
-      platform-storage platform-chart platform-service
+      platform-storage platform-chart platform-service \
+      permission-token
 
 .PHONY: sync
 sync:

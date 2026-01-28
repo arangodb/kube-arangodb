@@ -24,7 +24,10 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
+
+// Legacy
 
 type HandleP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) (bool, error)
 
@@ -66,5 +69,50 @@ func HandleP9Condition[P1, P2, P3, P4, P5, P6, P7, P8, P9 any](extract HandleP9C
 	return func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) (bool, error) {
 		c, changed, err := handler(ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 		return WithConditionChange(extract(ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9), condition, c, changed, err)
+	}
+}
+
+// New
+
+type HandleSharedP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) (bool, error)
+
+type HandleSharedP9ConditionFunc[P1, P2, P3, P4, P5, P6, P7, P8, P9 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) (*Condition, bool, error)
+
+type HandleSharedP9ConditionExtract[P1, P2, P3, P4, P5, P6, P7, P8, P9 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) *sharedApi.ConditionList
+
+func HandleSharedP9[P1, P2, P3, P4, P5, P6, P7, P8, P9 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9, handler ...HandleSharedP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleSharedP9WithStop[P1, P2, P3, P4, P5, P6, P7, P8, P9 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9, handler ...HandleSharedP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9]) (bool, error) {
+	changed, err := HandleSharedP9[P1, P2, P3, P4, P5, P6, P7, P8, P9](ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9, handler...)
+	if IsStop(err) {
+		return changed, nil
+	}
+
+	return changed, err
+}
+
+func HandleSharedP9WithCondition[P1, P2, P3, P4, P5, P6, P7, P8, P9 any](ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9, handler ...HandleSharedP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9]) (bool, error) {
+	changed, err := HandleSharedP9[P1, P2, P3, P4, P5, P6, P7, P8, P9](ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9, handler...)
+	return WithSharedCondition(conditions, condition, changed, err)
+}
+
+func HandleSharedP9Condition[P1, P2, P3, P4, P5, P6, P7, P8, P9 any](extract HandleSharedP9ConditionExtract[P1, P2, P3, P4, P5, P6, P7, P8, P9], condition sharedApi.ConditionType, handler HandleSharedP9ConditionFunc[P1, P2, P3, P4, P5, P6, P7, P8, P9]) HandleSharedP9Func[P1, P2, P3, P4, P5, P6, P7, P8, P9] {
+	return func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, p8 P8, p9 P9) (bool, error) {
+		c, changed, err := handler(ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+		return WithSharedConditionChange(extract(ctx, p1, p2, p3, p4, p5, p6, p7, p8, p9), condition, c, changed, err)
 	}
 }

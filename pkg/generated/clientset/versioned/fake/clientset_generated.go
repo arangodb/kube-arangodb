@@ -42,6 +42,8 @@ import (
 	fakenetworkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1alpha1/fake"
 	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1beta1"
 	fakenetworkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1beta1/fake"
+	permissionv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/permission/v1alpha1"
+	fakepermissionv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/permission/v1alpha1/fake"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1"
 	fakeplatformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1/fake"
 	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1"
@@ -160,6 +162,11 @@ func (c *Clientset) NetworkingV1alpha1() networkingv1alpha1.NetworkingV1alpha1In
 // NetworkingV1beta1 retrieves the NetworkingV1beta1Client
 func (c *Clientset) NetworkingV1beta1() networkingv1beta1.NetworkingV1beta1Interface {
 	return &fakenetworkingv1beta1.FakeNetworkingV1beta1{Fake: &c.Fake}
+}
+
+// PermissionV1alpha1 retrieves the PermissionV1alpha1Client
+func (c *Clientset) PermissionV1alpha1() permissionv1alpha1.PermissionV1alpha1Interface {
+	return &fakepermissionv1alpha1.FakePermissionV1alpha1{Fake: &c.Fake}
 }
 
 // PlatformV1alpha1 retrieves the PlatformV1alpha1Client

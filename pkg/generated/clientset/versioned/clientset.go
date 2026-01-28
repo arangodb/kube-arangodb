@@ -35,6 +35,7 @@ import (
 	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1"
 	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1alpha1"
 	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1beta1"
+	permissionv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/permission/v1alpha1"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1"
 	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1"
 	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
@@ -58,6 +59,7 @@ type Interface interface {
 	MlV1beta1() mlv1beta1.MlV1beta1Interface
 	NetworkingV1alpha1() networkingv1alpha1.NetworkingV1alpha1Interface
 	NetworkingV1beta1() networkingv1beta1.NetworkingV1beta1Interface
+	PermissionV1alpha1() permissionv1alpha1.PermissionV1alpha1Interface
 	PlatformV1alpha1() platformv1alpha1.PlatformV1alpha1Interface
 	PlatformV1beta1() platformv1beta1.PlatformV1beta1Interface
 	ReplicationV1() replicationv1.ReplicationV1Interface
@@ -79,6 +81,7 @@ type Clientset struct {
 	mlV1beta1           *mlv1beta1.MlV1beta1Client
 	networkingV1alpha1  *networkingv1alpha1.NetworkingV1alpha1Client
 	networkingV1beta1   *networkingv1beta1.NetworkingV1beta1Client
+	permissionV1alpha1  *permissionv1alpha1.PermissionV1alpha1Client
 	platformV1alpha1    *platformv1alpha1.PlatformV1alpha1Client
 	platformV1beta1     *platformv1beta1.PlatformV1beta1Client
 	replicationV1       *replicationv1.ReplicationV1Client
@@ -131,6 +134,11 @@ func (c *Clientset) NetworkingV1alpha1() networkingv1alpha1.NetworkingV1alpha1In
 // NetworkingV1beta1 retrieves the NetworkingV1beta1Client
 func (c *Clientset) NetworkingV1beta1() networkingv1beta1.NetworkingV1beta1Interface {
 	return c.networkingV1beta1
+}
+
+// PermissionV1alpha1 retrieves the PermissionV1alpha1Client
+func (c *Clientset) PermissionV1alpha1() permissionv1alpha1.PermissionV1alpha1Interface {
+	return c.permissionV1alpha1
 }
 
 // PlatformV1alpha1 retrieves the PlatformV1alpha1Client
@@ -248,6 +256,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.permissionV1alpha1, err = permissionv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.platformV1alpha1, err = platformv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -306,6 +318,7 @@ func New(c rest.Interface) *Clientset {
 	cs.mlV1beta1 = mlv1beta1.New(c)
 	cs.networkingV1alpha1 = networkingv1alpha1.New(c)
 	cs.networkingV1beta1 = networkingv1beta1.New(c)
+	cs.permissionV1alpha1 = permissionv1alpha1.New(c)
 	cs.platformV1alpha1 = platformv1alpha1.New(c)
 	cs.platformV1beta1 = platformv1beta1.New(c)
 	cs.replicationV1 = replicationv1.New(c)

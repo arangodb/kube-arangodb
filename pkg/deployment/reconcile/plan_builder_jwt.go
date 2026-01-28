@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.A
 		return r.addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTAdd, "Add JWTRotation key").AddParam(checksum, jwtSha))
 	}
 
-	activeKey, ok := folder.Data[pod.ActiveJWTKey]
+	activeKey, ok := folder.Data[utilConstants.ActiveJWTKey]
 	if !ok {
 		return r.addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTSetActive, "Set active key").AddParam(checksum, jwtSha))
 	}
@@ -96,7 +96,7 @@ func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.A
 	}
 
 	for key := range folder.Data {
-		if key == pod.ActiveJWTKey || key == utilConstants.SecretKeyToken {
+		if key == utilConstants.ActiveJWTKey || key == utilConstants.SecretKeyToken {
 			continue
 		}
 
@@ -165,7 +165,7 @@ func (r *Reconciler) createJWTStatusUpdateRequired(apiObject k8sutil.APIObject, 
 		return false
 	}
 
-	activeKeyData, active := f.Data[pod.ActiveJWTKey]
+	activeKeyData, active := f.Data[utilConstants.ActiveJWTKey]
 	activeKeyShort := util.SHA256(activeKeyData)
 	activeKey := fmt.Sprintf("sha256:%s", activeKeyShort)
 	if active {
@@ -181,7 +181,7 @@ func (r *Reconciler) createJWTStatusUpdateRequired(apiObject k8sutil.APIObject, 
 	var keys []string
 
 	for key := range f.Data {
-		if key == pod.ActiveJWTKey || key == activeKeyShort || key == utilConstants.SecretKeyToken {
+		if key == utilConstants.ActiveJWTKey || key == activeKeyShort || key == utilConstants.SecretKeyToken {
 			continue
 		}
 
@@ -276,7 +276,7 @@ func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[stri
 		return false, errors.Wrapf(err, "There is no active JWT Token")
 	}
 
-	if jwtActive, ok := data[pod.ActiveJWTKey]; !ok {
+	if jwtActive, ok := data[utilConstants.ActiveJWTKey]; !ok {
 		return false, errors.Errorf("Missing Active JWT Token in folder")
 	} else if util.SHA256(jwtActive) != e.Result.Active.GetSHA().Checksum() {
 		return true, nil
@@ -291,7 +291,7 @@ func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[stri
 
 func compareJWTKeys(e client.Entries, keys map[string][]byte) bool {
 	for k := range keys {
-		if k == pod.ActiveJWTKey || k == utilConstants.SecretKeyToken {
+		if k == utilConstants.ActiveJWTKey || k == utilConstants.SecretKeyToken {
 			continue
 		}
 

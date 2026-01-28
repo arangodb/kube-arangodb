@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
@@ -67,7 +68,7 @@ func (a *actionJWTClean) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if cleanToken == pod.ActiveJWTKey {
+	if cleanToken == utilConstants.ActiveJWTKey {
 		a.log.Error("Unable to remove active key")
 		return true, nil
 	}
@@ -78,7 +79,7 @@ func (a *actionJWTClean) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if key, ok := f.Data[pod.ActiveJWTKey]; !ok {
+	if key, ok := f.Data[utilConstants.ActiveJWTKey]; !ok {
 		a.log.Info("Active Key is required")
 		return true, nil
 	} else if util.SHA256(key) == cleanToken {

@@ -114,6 +114,7 @@ Flags:
       --generator.arango-ml-extension           Define if generator arango-ml-extension is enabled (default true)
       --generator.arango-ml-storage             Define if generator arango-ml-storage is enabled (default true)
       --generator.arango-networking-route       Define if generator arango-networking-route is enabled (default true)
+      --generator.arango-permission-token       Define if generator arango-permission-token is enabled (default true)
       --generator.arango-platform-chart         Define if generator arango-platform-chart is enabled (default true)
       --generator.arango-platform-service       Define if generator arango-platform-service is enabled (default true)
       --generator.arango-platform-storage       Define if generator arango-platform-storage is enabled (default true)

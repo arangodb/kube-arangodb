@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,14 @@ func NewSecrets(secrets ...Secret) Secret {
 }
 
 type Secrets []Secret
+
+func (s Secrets) SigningHash() string {
+	if len(s) == 0 {
+		return ""
+	}
+
+	return s[0].Hash()
+}
 
 func (s Secrets) Exists() bool {
 	for _, k := range s {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -154,8 +153,8 @@ func getJWTToken() ([]byte, error) {
 	}
 
 	// Try read active one
-	if token, err := readJWTFile(pod.ActiveJWTKey); err == nil {
-		log.Info().Str("token", pod.ActiveJWTKey).Msgf("Using JWT Token")
+	if token, err := readJWTFile(utilConstants.ActiveJWTKey); err == nil {
+		log.Info().Str("token", utilConstants.ActiveJWTKey).Msgf("Using JWT Token")
 		return token, nil
 	}
 

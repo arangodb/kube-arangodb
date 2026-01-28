@@ -50,6 +50,10 @@ func RoundTripper(mods ...util.Mod[goHttp.Transport]) goHttp.RoundTripper {
 	return Transport(df...)
 }
 
+func ShortTransport() func(in *goHttp.Transport) {
+	return configuration.ShortTransport
+}
+
 func RoundTripperWithShortTransport(mods ...util.Mod[goHttp.Transport]) goHttp.RoundTripper {
 	df := append([]util.Mod[goHttp.Transport]{
 		configuration.ShortTransport,

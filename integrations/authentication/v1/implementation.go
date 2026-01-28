@@ -47,7 +47,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
@@ -92,7 +92,7 @@ type implementation struct {
 	cfg Configuration
 
 	userClient cache.Object[arangodb.Requests]
-	cache      cache.Object[token.Secret]
+	cache      cache.Object[utilToken.Secret]
 }
 
 func (i *implementation) Name() string {
@@ -190,12 +190,12 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		duration = v
 	}
 
-	signedToken, err := token.NewClaims().With(
-		token.WithDefaultClaims(),
-		token.WithCurrentIAT(),
-		token.WithDuration(duration),
-		token.WithUsername(user),
-		token.WithRoles(request.GetRoles()...)).Sign(cache)
+	signedToken, err := utilToken.NewClaims().With(
+		utilToken.WithDefaultClaims(),
+		utilToken.WithCurrentIAT(),
+		utilToken.WithDuration(duration),
+		utilToken.WithUsername(user),
+		utilToken.WithRoles(request.GetRoles()...)).Sign(cache)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +340,7 @@ func (i *implementation) Logout(ctx context.Context, req *pbAuthenticationV1.Log
 	return &pbSharedV1.Empty{}, nil
 }
 
-func (i *implementation) extractTokenDetails(cache token.Secret, t string) (string, []string, time.Duration, error) {
+func (i *implementation) extractTokenDetails(cache utilToken.Secret, t string) (string, []string, time.Duration, error) {
 	// Let's check if token is signed properly
 	p, err := cache.Validate(t)
 	if err != nil {
@@ -348,7 +348,7 @@ func (i *implementation) extractTokenDetails(cache token.Secret, t string) (stri
 	}
 
 	user := DefaultAdminUser
-	if v, ok := p.Claims()[token.ClaimPreferredUsername]; ok {
+	if v, ok := p.Claims()[utilToken.ClaimPreferredUsername]; ok {
 		if s, ok := v.(string); ok {
 			user = s
 		}
@@ -358,7 +358,7 @@ func (i *implementation) extractTokenDetails(cache token.Secret, t string) (stri
 
 	claims := p.Claims()
 
-	if v, ok := claims[token.ClaimEXP]; ok {
+	if v, ok := claims[utilToken.ClaimEXP]; ok {
 		switch o := v.(type) {
 		case int64:
 			duration = time.Until(time.Unix(o, 0))
@@ -369,7 +369,7 @@ func (i *implementation) extractTokenDetails(cache token.Secret, t string) (stri
 
 	var roles []string
 
-	if v, ok := claims[token.ClaimRoles]; ok {
+	if v, ok := claims[utilToken.ClaimRoles]; ok {
 		switch o := v.(type) {
 		case []string:
 			roles = o

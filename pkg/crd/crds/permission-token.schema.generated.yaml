@@ -1,0 +1,30 @@
+v1alpha1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          deployment:
+            description: Deployment keeps the Deployment Reference
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          roles:
+            description: Roles keeps the roles assigned to the token
+            items:
+              type: string
+            type: array
+          ttl:
+            description: TTL Defines the TTL of the token.
+            type: string
+        required:
+          - deployment
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

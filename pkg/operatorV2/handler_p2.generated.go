@@ -24,7 +24,10 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
+
+// Legacy
 
 type HandleP2Func[P1, P2 any] func(ctx context.Context, p1 P1, p2 P2) (bool, error)
 
@@ -66,5 +69,50 @@ func HandleP2Condition[P1, P2 any](extract HandleP2ConditionExtract[P1, P2], con
 	return func(ctx context.Context, p1 P1, p2 P2) (bool, error) {
 		c, changed, err := handler(ctx, p1, p2)
 		return WithConditionChange(extract(ctx, p1, p2), condition, c, changed, err)
+	}
+}
+
+// New
+
+type HandleSharedP2Func[P1, P2 any] func(ctx context.Context, p1 P1, p2 P2) (bool, error)
+
+type HandleSharedP2ConditionFunc[P1, P2 any] func(ctx context.Context, p1 P1, p2 P2) (*Condition, bool, error)
+
+type HandleSharedP2ConditionExtract[P1, P2 any] func(ctx context.Context, p1 P1, p2 P2) *sharedApi.ConditionList
+
+func HandleSharedP2[P1, P2 any](ctx context.Context, p1 P1, p2 P2, handler ...HandleSharedP2Func[P1, P2]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleSharedP2WithStop[P1, P2 any](ctx context.Context, p1 P1, p2 P2, handler ...HandleSharedP2Func[P1, P2]) (bool, error) {
+	changed, err := HandleSharedP2[P1, P2](ctx, p1, p2, handler...)
+	if IsStop(err) {
+		return changed, nil
+	}
+
+	return changed, err
+}
+
+func HandleSharedP2WithCondition[P1, P2 any](ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType, p1 P1, p2 P2, handler ...HandleSharedP2Func[P1, P2]) (bool, error) {
+	changed, err := HandleSharedP2[P1, P2](ctx, p1, p2, handler...)
+	return WithSharedCondition(conditions, condition, changed, err)
+}
+
+func HandleSharedP2Condition[P1, P2 any](extract HandleSharedP2ConditionExtract[P1, P2], condition sharedApi.ConditionType, handler HandleSharedP2ConditionFunc[P1, P2]) HandleSharedP2Func[P1, P2] {
+	return func(ctx context.Context, p1 P1, p2 P2) (bool, error) {
+		c, changed, err := handler(ctx, p1, p2)
+		return WithSharedConditionChange(extract(ctx, p1, p2), condition, c, changed, err)
 	}
 }

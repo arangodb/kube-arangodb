@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ func (a *actionJWTSetActive) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	activeKeyData, active := f.Data[pod.ActiveJWTKey]
+	activeKeyData, active := f.Data[utilConstants.ActiveJWTKey]
 	tokenKeyData, token := f.Data[utilConstants.SecretKeyToken]
 
 	if util.SHA256(activeKeyData) == toActiveChecksum && util.SHA256(activeKeyData) == util.SHA256(tokenKeyData) {
@@ -90,7 +90,7 @@ func (a *actionJWTSetActive) Start(ctx context.Context) (bool, error) {
 	}
 
 	p := patch.NewPatch()
-	path := patch.NewPath("data", pod.ActiveJWTKey)
+	path := patch.NewPath("data", utilConstants.ActiveJWTKey)
 	if !active {
 		p.ItemAdd(path, base64.StdEncoding.EncodeToString(toActiveData))
 	} else {

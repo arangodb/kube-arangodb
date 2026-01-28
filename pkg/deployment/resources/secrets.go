@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
-	"github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 var (
@@ -206,7 +206,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 			}
 
 			f.Data[util.SHA256(token)] = token
-			f.Data[pod.ActiveJWTKey] = token
+			f.Data[utilConstants.ActiveJWTKey] = token
 			f.Data[utilConstants.SecretKeyToken] = token
 
 			err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
@@ -220,14 +220,14 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 			return errors.Reconcile()
 		}
 
-		if _, ok := f.Data[pod.ActiveJWTKey]; !ok {
+		if _, ok := f.Data[utilConstants.ActiveJWTKey]; !ok {
 			_, b, ok := getFirstKeyFromMap(f.Data)
 			if !ok {
 				return errors.Errorf("Token Folder secret is invalid")
 			}
 
 			p := patch.NewPatch()
-			p.ItemAdd(patch.NewPath("data", pod.ActiveJWTKey), util.SHA256(b))
+			p.ItemAdd(patch.NewPath("data", utilConstants.ActiveJWTKey), util.SHA256(b))
 
 			pdata, err := json.Marshal(p)
 			if err != nil {
@@ -244,7 +244,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 		}
 
 		if _, ok := f.Data[utilConstants.SecretKeyToken]; !ok {
-			b, ok := f.Data[pod.ActiveJWTKey]
+			b, ok := f.Data[utilConstants.ActiveJWTKey]
 			if !ok {
 				return errors.Errorf("Token Folder secret is invalid")
 			}
@@ -281,7 +281,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 
 	if err := r.createSecretWithMod(ctx, secrets, folderSecretName, func(s *core.Secret) {
 		s.Data[util.SHA256(token)] = token
-		s.Data[pod.ActiveJWTKey] = token
+		s.Data[utilConstants.ActiveJWTKey] = token
 		s.Data[utilConstants.SecretKeyToken] = token
 	}); err != nil {
 		return err
@@ -423,10 +423,10 @@ func AppendKeyfileToKeyfolder(ctx context.Context, cachedStatus inspectorInterfa
 }
 
 var (
-	exporterTokenClaimsMods = []util.ModR[token.Claims]{
-		token.WithDefaultClaims(),
-		token.WithServerID("exporter"),
-		token.WithAllowedPaths(
+	exporterTokenClaimsMods = []util.ModR[utilToken.Claims]{
+		utilToken.WithDefaultClaims(),
+		utilToken.WithServerID("exporter"),
+		utilToken.WithAllowedPaths(
 			"/_admin/statistics",
 			"/_admin/statistics-description",
 			shared.ArangoExporterInternalEndpoint,
@@ -446,7 +446,7 @@ func (r *Resources) ensureExporterTokenSecret(ctx context.Context, cachedStatus 
 		return err
 	} else if update {
 		// Create secret
-		claims := token.NewClaims().With(exporterTokenClaimsMods...)
+		claims := utilToken.NewClaims().With(exporterTokenClaimsMods...)
 		if !exists {
 			owner := r.context.GetAPIObject().AsOwner()
 			err = k8sutil.CreateJWTFromSecret(ctx, cachedStatus.Secret().V1().Read(), secrets, tokenSecretName, secretSecretName, claims, &owner)
@@ -498,7 +498,7 @@ func (r *Resources) ensureExporterTokenSecretCreateRequired(cachedStatus inspect
 			return true, true, nil
 		}
 
-		expectedClaims := token.NewClaims().With(exporterTokenClaimsMods...)
+		expectedClaims := utilToken.NewClaims().With(exporterTokenClaimsMods...)
 
 		return !equality.Semantic.DeepDerivative(tokenClaims.Claims(), expectedClaims), true, nil
 	}
@@ -553,26 +553,26 @@ func (r *Resources) ensureClientAuthCACertificateSecret(ctx context.Context, cac
 }
 
 // getJWTSecret loads the JWT secret from a Secret configured in apiObject.Spec.Authentication.JWTSecretName.
-func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (token.Secret, error) {
+func (r *Resources) getJWTSecret(spec api.DeploymentSpec) (utilToken.Secret, error) {
 	if !spec.IsAuthenticated() {
-		return token.EmptySecret(), nil
+		return utilToken.EmptySecret(), nil
 	}
 	secretName := spec.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get JWT secret")
-		return token.EmptySecret(), errors.WithStack(err)
+		return utilToken.EmptySecret(), errors.WithStack(err)
 	}
 	return s, nil
 }
 
 // getSyncJWTSecret loads the JWT secret used for syncmasters from a Secret configured in apiObject.Spec.Sync.Authentication.JWTSecretName.
-func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (token.Secret, error) {
+func (r *Resources) getSyncJWTSecret(spec api.DeploymentSpec) (utilToken.Secret, error) {
 	secretName := spec.Sync.Authentication.GetJWTSecretName()
 	s, err := k8sutil.GetTokenSecret(context.Background(), r.context.ACS().CurrentClusterCache().Secret().V1().Read(), secretName)
 	if err != nil {
 		r.log.Str("section", "jwt").Err(err).Str("secret-name", secretName).Debug("Failed to get sync JWT secret")
-		return token.EmptySecret(), errors.WithStack(err)
+		return utilToken.EmptySecret(), errors.WithStack(err)
 	}
 	return s, nil
 }
