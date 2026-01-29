@@ -73,6 +73,10 @@ func (a *ArangoBackupPolicy) NewBackup(d *api.ArangoDeployment) *ArangoBackup {
 			Labels:      d.Labels,
 			Annotations: d.Annotations,
 
+			OwnerReferences: []meta.OwnerReference{
+				d.AsOwner(),
+			},
+
 			Finalizers: []string{
 				FinalizerArangoBackup,
 			},
