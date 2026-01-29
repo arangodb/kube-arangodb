@@ -46,6 +46,7 @@ type ArangoPermissionTokenSpec struct {
 	Roles []string `json:"roles,omitempty"`
 
 	// TTL Defines the TTL of the token.
+	// +doc/type: string
 	// +doc/default: 1h
 	TTL *meta.Duration `json:"ttl,omitempty"`
 }

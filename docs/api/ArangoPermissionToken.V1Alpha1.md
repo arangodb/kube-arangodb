@@ -28,7 +28,7 @@ Roles keeps the roles assigned to the token
 
 ### .spec.ttl
 
-Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/permission/v1alpha1/token_spec.go#L50)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/permission/v1alpha1/token_spec.go#L51)</sup>
 
 TTL Defines the TTL of the token.
 
