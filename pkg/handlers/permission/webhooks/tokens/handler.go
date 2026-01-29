@@ -108,6 +108,16 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 }
 
 func (h handler) generateMutationResponse(ctx context.Context, pod *core.Pod, deploymentName, namespace, name string) (webhook.MutationResponse, error) {
+	if v, ok := pod.GetLabels()[utilConstants.TokenAttached]; ok {
+		if v != name {
+			return webhook.MutationResponse{}, errors.Errorf("Unable to reattach Token")
+		}
+
+		return webhook.MutationResponse{
+			ValidationResponse: webhook.ValidationResponse{Allowed: true},
+		}, nil
+	}
+
 	token, err := h.client.Arango().PermissionV1alpha1().ArangoPermissionTokens(namespace).Get(ctx, name, meta.GetOptions{})
 	if err != nil {
 		if kerrors.IsNotFound(err) {
@@ -128,6 +138,14 @@ func (h handler) generateMutationResponse(ctx context.Context, pod *core.Pod, de
 	volumeName := token.Status.Secret.GetName()
 
 	var items []patch.Item
+
+	l := pod.GetLabels()
+	if l == nil {
+		l = make(map[string]string)
+	}
+	l[utilConstants.TokenAttached] = name
+
+	items = append(items, patch.ItemReplace(patch.NewPath("metadata", "labels"), l))
 
 	volume := core.Volume{
 		Name: volumeName,

@@ -25,6 +25,8 @@ const PermissionsGroup = "permissions.arangodb.com"
 // TokenAttachment can be attached on the Pod or ServiceAccount
 const TokenAttachment = PermissionsGroup + "/token"
 
+const TokenAttached = PermissionsGroup + "/attached"
+
 const TokenMountPath = "/var/run/secrets/arango/token/"
 
 const TokenEnvName = "ARANGO_TOKEN"
