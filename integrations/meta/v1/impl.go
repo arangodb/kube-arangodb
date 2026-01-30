@@ -131,8 +131,16 @@ func (i *implementation) Get(ctx context.Context, req *pbMetaV1.ObjectRequest) (
 		return nil, status.Errorf(codes.NotFound, "Key %s not found", key)
 	}
 
-	return object.AsResponse(), nil
+	obj := object.AsResponse()
 
+	nobj, err := req.GetSecret().Decrypt(obj.GetObject())
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Decryption failed: %v", err)
+	}
+
+	obj.Object = nobj
+
+	return obj, nil
 }
 
 func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pbMetaV1.ObjectResponse, error) {
@@ -160,6 +168,13 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 	}
 
 	obj.Object.Object = req.GetObject()
+
+	nobj, err := req.GetSecret().Encrypt(obj.Object.Object)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Encryption failed: %v", err)
+	}
+
+	obj.Object.Object = nobj
 
 	if err := i.cache.Put(ctx, key, &obj); err != nil {
 		if shared.IsPreconditionFailed(err) {
