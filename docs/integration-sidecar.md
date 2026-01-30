@@ -201,7 +201,7 @@ Optional path to the ArangoToken mounted into the Pod.
 
 File is updated in the runtime, with short, predefined, TTL.
 
-Example: `/var/secrets/arango/token/secret`
+Example: `/var/run/secrets/arango/token/token`
 
 #### ARANGO_DEPLOYMENT_CA (optional)
 
