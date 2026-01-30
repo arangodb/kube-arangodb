@@ -38,6 +38,7 @@ import (
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/crypto"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -131,8 +132,22 @@ func (i *implementation) Get(ctx context.Context, req *pbMetaV1.ObjectRequest) (
 		return nil, status.Errorf(codes.NotFound, "Key %s not found", key)
 	}
 
-	return object.AsResponse(), nil
+	obj := object.AsResponse()
 
+	if obj.Object.MessageIs(&EncryptedObject{}) {
+		// Decryption
+		if t := req.GetSecret().GetToken(); t != nil {
+			if o, err := NewDecryptObject(obj.Object, crypto.EncryptionKey(t.GetToken())); err != nil {
+				return nil, status.Errorf(codes.FailedPrecondition, "Object %s decryption failed: %v", key, err)
+			} else {
+				obj.Object = o
+			}
+		} else {
+			return nil, status.Errorf(codes.FailedPrecondition, "Object %s encrypted, but secret is missing", key)
+		}
+	}
+
+	return obj, nil
 }
 
 func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pbMetaV1.ObjectResponse, error) {
@@ -160,6 +175,16 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 	}
 
 	obj.Object.Object = req.GetObject()
+
+	if t := req.GetSecret().GetToken(); t != nil {
+		if encrypt := req.Secret; encrypt != nil {
+			if o, err := NewEncryptObject(obj.Object.Object, crypto.EncryptionKey(t.GetToken())); err != nil {
+				return nil, err
+			} else {
+				obj.Object.Object = o
+			}
+		}
+	}
 
 	if err := i.cache.Put(ctx, key, &obj); err != nil {
 		if shared.IsPreconditionFailed(err) {
