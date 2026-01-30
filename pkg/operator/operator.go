@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/networking/route"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/permission/token"
 	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
 	platformShutdown "github.com/arangodb/kube-arangodb/pkg/handlers/platform/shutdown"
@@ -418,6 +419,10 @@ func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recor
 	}
 
 	if err := platformShutdown.RegisterInformer(operator, recorder, client, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := token.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }

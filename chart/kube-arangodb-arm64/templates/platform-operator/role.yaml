@@ -31,6 +31,19 @@ rules:
       - "delete"
       - "watch"
   - apiGroups:
+      - "permission.arangodb.com"
+    resources:
+      - "arangopermissiontokens"
+      - "arangopermissiontokens/status"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
       - "rbac.authorization.k8s.io"
     resources:
       - "roles"

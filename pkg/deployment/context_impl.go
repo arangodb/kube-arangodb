@@ -285,7 +285,7 @@ func (d *Deployment) getJWTFolderToken() (string, bool) {
 			return "", false
 		}
 
-		if q, ok := s.Data[pod.ActiveJWTKey]; ok {
+		if q, ok := s.Data[utilConstants.ActiveJWTKey]; ok {
 			return string(q), true
 		} else {
 			for _, q := range s.Data {

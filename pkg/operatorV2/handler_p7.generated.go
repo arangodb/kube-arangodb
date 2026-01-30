@@ -24,7 +24,10 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
+
+// Legacy
 
 type HandleP7Func[P1, P2, P3, P4, P5, P6, P7 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7) (bool, error)
 
@@ -66,5 +69,50 @@ func HandleP7Condition[P1, P2, P3, P4, P5, P6, P7 any](extract HandleP7Condition
 	return func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7) (bool, error) {
 		c, changed, err := handler(ctx, p1, p2, p3, p4, p5, p6, p7)
 		return WithConditionChange(extract(ctx, p1, p2, p3, p4, p5, p6, p7), condition, c, changed, err)
+	}
+}
+
+// New
+
+type HandleSharedP7Func[P1, P2, P3, P4, P5, P6, P7 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7) (bool, error)
+
+type HandleSharedP7ConditionFunc[P1, P2, P3, P4, P5, P6, P7 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7) (*Condition, bool, error)
+
+type HandleSharedP7ConditionExtract[P1, P2, P3, P4, P5, P6, P7 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7) *sharedApi.ConditionList
+
+func HandleSharedP7[P1, P2, P3, P4, P5, P6, P7 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, handler ...HandleSharedP7Func[P1, P2, P3, P4, P5, P6, P7]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1, p2, p3, p4, p5, p6, p7)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleSharedP7WithStop[P1, P2, P3, P4, P5, P6, P7 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, handler ...HandleSharedP7Func[P1, P2, P3, P4, P5, P6, P7]) (bool, error) {
+	changed, err := HandleSharedP7[P1, P2, P3, P4, P5, P6, P7](ctx, p1, p2, p3, p4, p5, p6, p7, handler...)
+	if IsStop(err) {
+		return changed, nil
+	}
+
+	return changed, err
+}
+
+func HandleSharedP7WithCondition[P1, P2, P3, P4, P5, P6, P7 any](ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7, handler ...HandleSharedP7Func[P1, P2, P3, P4, P5, P6, P7]) (bool, error) {
+	changed, err := HandleSharedP7[P1, P2, P3, P4, P5, P6, P7](ctx, p1, p2, p3, p4, p5, p6, p7, handler...)
+	return WithSharedCondition(conditions, condition, changed, err)
+}
+
+func HandleSharedP7Condition[P1, P2, P3, P4, P5, P6, P7 any](extract HandleSharedP7ConditionExtract[P1, P2, P3, P4, P5, P6, P7], condition sharedApi.ConditionType, handler HandleSharedP7ConditionFunc[P1, P2, P3, P4, P5, P6, P7]) HandleSharedP7Func[P1, P2, P3, P4, P5, P6, P7] {
+	return func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, p5 P5, p6 P6, p7 P7) (bool, error) {
+		c, changed, err := handler(ctx, p1, p2, p3, p4, p5, p6, p7)
+		return WithSharedConditionChange(extract(ctx, p1, p2, p3, p4, p5, p6, p7), condition, c, changed, err)
 	}
 }

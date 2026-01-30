@@ -16,7 +16,7 @@ Integration Sidecar is supported in a basic resources managed by Kubernetes:
 
 - Pod
 
-To enable integration sidecar for specific deployment label needs to be defined:
+To enable integrations for specific deployment label needs to be defined:
 
 ```yaml
 metadata:
@@ -38,6 +38,42 @@ metadata:
     profiles.arangodb.com/deployment: << deployment name >>
 ```
 
+### Arango Token
+
+Enables the token in the all Containers and InitContainers in the Pod.
+
+Label can be on the ServiceAccount or Pod.
+
+Pod:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    profiles.arangodb.com/deployment: << deployment name >>
+    permissions.arangodb.com/token: << ArangoPermissionToken name >>
+```
+
+ServiceAccount:
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa
+  labels:
+    permissions.arangodb.com/token: << ArangoPermissionToken name >>
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    profiles.arangodb.com/deployment: << deployment name >>
+spec:
+  serviceAccountName: sa
+```
+
 ### Integrations
 
 To enable integration in specific version, labels needs to be added:
@@ -45,6 +81,7 @@ To enable integration in specific version, labels needs to be added:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/<< integration name >>: << integration version >>
 ```
 
@@ -57,6 +94,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/authn: v1
 ```
 
@@ -69,6 +107,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/sched: v2
 ```
 
@@ -81,6 +120,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/storage: v2
 ```
 
@@ -93,6 +133,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/shutdown: v1
 ```
 
@@ -105,6 +146,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/meta: v1
 ```
 
@@ -117,6 +159,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/events: v1
 ```
 
@@ -151,6 +194,14 @@ Example: `deployment`
 HTTP/S Endpoint of the ArangoDeployment Internal Service.
 
 Example: `https://deployment.default.svc:8529`
+
+#### ARANGO_TOKEN (optional)
+
+Optional path to the ArangoToken mounted into the Pod.
+
+File is updated in the runtime, with short, predefined, TTL.
+
+Example: `/var/run/secrets/arango/token/token`
 
 #### ARANGO_DEPLOYMENT_CA (optional)
 

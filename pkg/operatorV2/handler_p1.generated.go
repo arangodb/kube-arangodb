@@ -24,7 +24,10 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
+
+// Legacy
 
 type HandleP1Func[P1 any] func(ctx context.Context, p1 P1) (bool, error)
 
@@ -66,5 +69,50 @@ func HandleP1Condition[P1 any](extract HandleP1ConditionExtract[P1], condition a
 	return func(ctx context.Context, p1 P1) (bool, error) {
 		c, changed, err := handler(ctx, p1)
 		return WithConditionChange(extract(ctx, p1), condition, c, changed, err)
+	}
+}
+
+// New
+
+type HandleSharedP1Func[P1 any] func(ctx context.Context, p1 P1) (bool, error)
+
+type HandleSharedP1ConditionFunc[P1 any] func(ctx context.Context, p1 P1) (*Condition, bool, error)
+
+type HandleSharedP1ConditionExtract[P1 any] func(ctx context.Context, p1 P1) *sharedApi.ConditionList
+
+func HandleSharedP1[P1 any](ctx context.Context, p1 P1, handler ...HandleSharedP1Func[P1]) (bool, error) {
+	isChanged := false
+	for _, h := range handler {
+		changed, err := h(ctx, p1)
+		if changed {
+			isChanged = true
+		}
+
+		if err != nil {
+			return isChanged, err
+		}
+	}
+
+	return isChanged, nil
+}
+
+func HandleSharedP1WithStop[P1 any](ctx context.Context, p1 P1, handler ...HandleSharedP1Func[P1]) (bool, error) {
+	changed, err := HandleSharedP1[P1](ctx, p1, handler...)
+	if IsStop(err) {
+		return changed, nil
+	}
+
+	return changed, err
+}
+
+func HandleSharedP1WithCondition[P1 any](ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType, p1 P1, handler ...HandleSharedP1Func[P1]) (bool, error) {
+	changed, err := HandleSharedP1[P1](ctx, p1, handler...)
+	return WithSharedCondition(conditions, condition, changed, err)
+}
+
+func HandleSharedP1Condition[P1 any](extract HandleSharedP1ConditionExtract[P1], condition sharedApi.ConditionType, handler HandleSharedP1ConditionFunc[P1]) HandleSharedP1Func[P1] {
+	return func(ctx context.Context, p1 P1) (bool, error) {
+		c, changed, err := handler(ctx, p1)
+		return WithSharedConditionChange(extract(ctx, p1), condition, c, changed, err)
 	}
 }

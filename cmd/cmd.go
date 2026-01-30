@@ -52,6 +52,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/scheme"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/permission"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/metrics/collector"
@@ -780,6 +781,7 @@ func buildAdmissionsHooks(client kclient.Client) webhook.Admissions {
 	var admissions webhook.Admissions
 
 	admissions = append(admissions, scheduler.WebhookAdmissions(client)...)
+	admissions = append(admissions, permission.WebhookAdmissions(client)...)
 
 	return admissions
 }
