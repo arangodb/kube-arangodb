@@ -23,7 +23,6 @@ package operator
 import (
 	"context"
 
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
@@ -33,7 +32,7 @@ type HandleP4Func[P1, P2, P3, P4 any] func(ctx context.Context, p1 P1, p2 P2, p3
 
 type HandleP4ConditionFunc[P1, P2, P3, P4 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) (*Condition, bool, error)
 
-type HandleP4ConditionExtract[P1, P2, P3, P4 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) *api.ConditionList
+type HandleP4ConditionExtract[P1, P2, P3, P4 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) *sharedApi.ConditionList
 
 func HandleP4[P1, P2, P3, P4 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, handler ...HandleP4Func[P1, P2, P3, P4]) (bool, error) {
 	isChanged := false
@@ -60,59 +59,14 @@ func HandleP4WithStop[P1, P2, P3, P4 any](ctx context.Context, p1 P1, p2 P2, p3 
 	return changed, err
 }
 
-func HandleP4WithCondition[P1, P2, P3, P4 any](ctx context.Context, conditions *api.ConditionList, condition api.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, handler ...HandleP4Func[P1, P2, P3, P4]) (bool, error) {
+func HandleP4WithCondition[P1, P2, P3, P4 any](ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, handler ...HandleP4Func[P1, P2, P3, P4]) (bool, error) {
 	changed, err := HandleP4[P1, P2, P3, P4](ctx, p1, p2, p3, p4, handler...)
 	return WithCondition(conditions, condition, changed, err)
 }
 
-func HandleP4Condition[P1, P2, P3, P4 any](extract HandleP4ConditionExtract[P1, P2, P3, P4], condition api.ConditionType, handler HandleP4ConditionFunc[P1, P2, P3, P4]) HandleP4Func[P1, P2, P3, P4] {
+func HandleP4Condition[P1, P2, P3, P4 any](extract HandleP4ConditionExtract[P1, P2, P3, P4], condition sharedApi.ConditionType, handler HandleP4ConditionFunc[P1, P2, P3, P4]) HandleP4Func[P1, P2, P3, P4] {
 	return func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) (bool, error) {
 		c, changed, err := handler(ctx, p1, p2, p3, p4)
 		return WithConditionChange(extract(ctx, p1, p2, p3, p4), condition, c, changed, err)
-	}
-}
-
-// New
-
-type HandleSharedP4Func[P1, P2, P3, P4 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) (bool, error)
-
-type HandleSharedP4ConditionFunc[P1, P2, P3, P4 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) (*Condition, bool, error)
-
-type HandleSharedP4ConditionExtract[P1, P2, P3, P4 any] func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) *sharedApi.ConditionList
-
-func HandleSharedP4[P1, P2, P3, P4 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, handler ...HandleSharedP4Func[P1, P2, P3, P4]) (bool, error) {
-	isChanged := false
-	for _, h := range handler {
-		changed, err := h(ctx, p1, p2, p3, p4)
-		if changed {
-			isChanged = true
-		}
-
-		if err != nil {
-			return isChanged, err
-		}
-	}
-
-	return isChanged, nil
-}
-
-func HandleSharedP4WithStop[P1, P2, P3, P4 any](ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4, handler ...HandleSharedP4Func[P1, P2, P3, P4]) (bool, error) {
-	changed, err := HandleSharedP4[P1, P2, P3, P4](ctx, p1, p2, p3, p4, handler...)
-	if IsStop(err) {
-		return changed, nil
-	}
-
-	return changed, err
-}
-
-func HandleSharedP4WithCondition[P1, P2, P3, P4 any](ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType, p1 P1, p2 P2, p3 P3, p4 P4, handler ...HandleSharedP4Func[P1, P2, P3, P4]) (bool, error) {
-	changed, err := HandleSharedP4[P1, P2, P3, P4](ctx, p1, p2, p3, p4, handler...)
-	return WithSharedCondition(conditions, condition, changed, err)
-}
-
-func HandleSharedP4Condition[P1, P2, P3, P4 any](extract HandleSharedP4ConditionExtract[P1, P2, P3, P4], condition sharedApi.ConditionType, handler HandleSharedP4ConditionFunc[P1, P2, P3, P4]) HandleSharedP4Func[P1, P2, P3, P4] {
-	return func(ctx context.Context, p1 P1, p2 P2, p3 P3, p4 P4) (bool, error) {
-		c, changed, err := handler(ctx, p1, p2, p3, p4)
-		return WithSharedConditionChange(extract(ctx, p1, p2, p3, p4), condition, c, changed, err)
 	}
 }

@@ -26,7 +26,6 @@
 package v1beta1
 
 import (
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -129,7 +128,7 @@ func (in *ArangoPlatformChartStatus) DeepCopyInto(out *ArangoPlatformChartStatus
 	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make(deploymentv1.ConditionList, len(*in))
+		*out = make(v1.ConditionList, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -311,7 +310,7 @@ func (in *ArangoPlatformServiceStatus) DeepCopyInto(out *ArangoPlatformServiceSt
 	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make(deploymentv1.ConditionList, len(*in))
+		*out = make(v1.ConditionList, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -673,7 +672,7 @@ func (in *ArangoPlatformStorageStatus) DeepCopyInto(out *ArangoPlatformStorageSt
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make(deploymentv1.ConditionList, len(*in))
+		*out = make(v1.ConditionList, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

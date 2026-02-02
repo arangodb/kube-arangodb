@@ -2,7 +2,6 @@ package operator
 
 import (
 	"context"
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 )
 
@@ -12,7 +11,7 @@ type HandleP{{ .id }}Func{{ .templateVars }} func(ctx context.Context {{- if .in
 
 type HandleP{{ .id }}ConditionFunc{{ .templateVars }} func(ctx context.Context {{- if .inputVars }}, {{ .inputVars }}{{ end }}) (*Condition, bool, error)
 
-type HandleP{{ .id }}ConditionExtract{{ .templateVars }} func(ctx context.Context {{- if .inputVars }}, {{ .inputVars }}{{ end }})  *api.ConditionList
+type HandleP{{ .id }}ConditionExtract{{ .templateVars }} func(ctx context.Context {{- if .inputVars }}, {{ .inputVars }}{{ end }})  *sharedApi.ConditionList
 
 func HandleP{{ .id }}{{ .templateVars }}(ctx context.Context{{- if .inputVars }}, {{ .inputVars }}{{ end }}, handler ...HandleP{{ .id }}Func{{ .templateInputVars }}) (bool, error) {
 	isChanged := false
@@ -39,60 +38,14 @@ func HandleP{{ .id }}WithStop{{ .templateVars }}(ctx context.Context{{- if .inpu
 	return changed, err
 }
 
-func HandleP{{ .id }}WithCondition{{ .templateVars }}(ctx context.Context, conditions *api.ConditionList, condition api.ConditionType{{- if .inputVars }}, {{ .inputVars }}{{ end }}, handler ...HandleP{{ .id }}Func{{ .templateInputVars }}) (bool, error) {
+func HandleP{{ .id }}WithCondition{{ .templateVars }}(ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType{{- if .inputVars }}, {{ .inputVars }}{{ end }}, handler ...HandleP{{ .id }}Func{{ .templateInputVars }}) (bool, error) {
 	changed, err := HandleP{{ .id }}{{ .templateInputVars }}(ctx{{- if .cleanRefs }}, {{ .cleanRefs }}{{ end }}, handler...)
 	return WithCondition(conditions, condition, changed, err)
 }
 
-func HandleP{{ .id }}Condition{{ .templateVars }}(extract HandleP{{ .id }}ConditionExtract{{ .templateInputVars }}, condition api.ConditionType, handler HandleP{{ .id }}ConditionFunc{{ .templateInputVars }}) HandleP{{ .id }}Func{{ .templateInputVars }} {
+func HandleP{{ .id }}Condition{{ .templateVars }}(extract HandleP{{ .id }}ConditionExtract{{ .templateInputVars }}, condition sharedApi.ConditionType, handler HandleP{{ .id }}ConditionFunc{{ .templateInputVars }}) HandleP{{ .id }}Func{{ .templateInputVars }} {
 	return func(ctx context.Context {{- if .inputVars }}, {{ .inputVars }}{{ end }}) (bool, error) {
 		c, changed, err := handler(ctx{{- if .cleanRefs }}, {{ .cleanRefs }}{{ end }})
 		return WithConditionChange(extract(ctx{{- if .cleanRefs }}, {{ .cleanRefs }}{{ end }}), condition, c, changed, err)
-	}
-}
-
-
-// New
-
-type HandleSharedP{{ .id }}Func{{ .templateVars }} func(ctx context.Context {{- if .inputVars }}, {{ .inputVars }}{{ end }}) (bool, error)
-
-type HandleSharedP{{ .id }}ConditionFunc{{ .templateVars }} func(ctx context.Context {{- if .inputVars }}, {{ .inputVars }}{{ end }}) (*Condition, bool, error)
-
-type HandleSharedP{{ .id }}ConditionExtract{{ .templateVars }} func(ctx context.Context {{- if .inputVars }}, {{ .inputVars }}{{ end }}) *sharedApi.ConditionList
-
-func HandleSharedP{{ .id }}{{ .templateVars }}(ctx context.Context{{- if .inputVars }}, {{ .inputVars }}{{ end }}, handler ...HandleSharedP{{ .id }}Func{{ .templateInputVars }}) (bool, error) {
-	isChanged := false
-	for _, h := range handler {
-		changed, err := h(ctx{{- if .cleanRefs }}, {{ .cleanRefs }}{{ end }})
-		if changed {
-			isChanged = true
-		}
-
-		if err != nil {
-			return isChanged, err
-		}
-	}
-
-	return isChanged, nil
-}
-
-func HandleSharedP{{ .id }}WithStop{{ .templateVars }}(ctx context.Context{{- if .inputVars }}, {{ .inputVars }}{{ end }}, handler ...HandleSharedP{{ .id }}Func{{ .templateInputVars }}) (bool, error) {
-	changed, err := HandleSharedP{{ .id }}{{ .templateInputVars }}(ctx {{- if .cleanRefs }}, {{ .cleanRefs }}{{ end }}, handler...)
-	if IsStop(err) {
-		return changed, nil
-	}
-
-	return changed, err
-}
-
-func HandleSharedP{{ .id }}WithCondition{{ .templateVars }}(ctx context.Context, conditions *sharedApi.ConditionList, condition sharedApi.ConditionType{{- if .inputVars }}, {{ .inputVars }}{{ end }}, handler ...HandleSharedP{{ .id }}Func{{ .templateInputVars }}) (bool, error) {
-	changed, err := HandleSharedP{{ .id }}{{ .templateInputVars }}(ctx{{- if .cleanRefs }}, {{ .cleanRefs }}{{ end }}, handler...)
-	return WithSharedCondition(conditions, condition, changed, err)
-}
-
-func HandleSharedP{{ .id }}Condition{{ .templateVars }}(extract HandleSharedP{{ .id }}ConditionExtract{{ .templateInputVars }}, condition sharedApi.ConditionType, handler HandleSharedP{{ .id }}ConditionFunc{{ .templateInputVars }}) HandleSharedP{{ .id }}Func{{ .templateInputVars }} {
-	return func(ctx context.Context {{- if .inputVars }}, {{ .inputVars }}{{ end }}) (bool, error) {
-		c, changed, err := handler(ctx{{- if .cleanRefs }}, {{ .cleanRefs }}{{ end }})
-		return WithSharedConditionChange(extract(ctx{{- if .cleanRefs }}, {{ .cleanRefs }}{{ end }}), condition, c, changed, err)
 	}
 }
