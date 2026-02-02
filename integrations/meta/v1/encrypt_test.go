@@ -29,7 +29,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
+	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -59,19 +59,19 @@ func testEncryptionBatch(t *testing.T, size int) {
 		require.NoError(t, err)
 
 		t.Run("Missing", func(t *testing.T) {
-			resp, err := client.Get(ctx, &definition.ObjectRequest{Key: "/data"})
+			resp, err := client.Get(ctx, &pbMetaV1.ObjectRequest{Key: "/data"})
 			require.EqualValues(t, codes.NotFound, errors.GRPCCode(err))
 			require.Nil(t, resp)
 		})
 
 		t.Run("Set non-encrypted", func(t *testing.T) {
-			_, err := client.Set(ctx, &definition.SetRequest{Key: "/data", Object: any})
+			_, err := client.Set(ctx, &pbMetaV1.SetRequest{Key: "/data", Object: any})
 			require.NoError(t, err)
 		})
 
 		t.Run("Get encrypted", func(t *testing.T) {
-			resp, err := client.Get(ctx, &definition.ObjectRequest{Key: "/data", Secret: &definition.ObjectSecret{
-				Secret: &definition.ObjectSecret_Token{Token: &definition.ObjectSecretToken{Token: "P@ssw0rd"}},
+			resp, err := client.Get(ctx, &pbMetaV1.ObjectRequest{Key: "/data", Secret: &pbMetaV1.ObjectSecret{
+				Secret: &pbMetaV1.ObjectSecret_Token{Token: &pbMetaV1.ObjectSecretToken{Token: "P@ssw0rd"}},
 			}})
 			require.EqualValues(t, codes.FailedPrecondition, errors.GRPCCode(err))
 			require.EqualError(t, err, "rpc error: code = FailedPrecondition desc = Decryption failed: Object is not encrypted, but secret provided")
@@ -79,7 +79,7 @@ func testEncryptionBatch(t *testing.T, size int) {
 		})
 
 		t.Run("Get unencrypted", func(t *testing.T) {
-			resp, err := client.Get(ctx, &definition.ObjectRequest{Key: "/data"})
+			resp, err := client.Get(ctx, &pbMetaV1.ObjectRequest{Key: "/data"})
 			require.NoError(t, err)
 
 			require.NoError(t, resp.Object.UnmarshalTo(&ret))
@@ -88,20 +88,20 @@ func testEncryptionBatch(t *testing.T, size int) {
 		})
 
 		t.Run("Set encrypted", func(t *testing.T) {
-			_, err = client.Set(ctx, &definition.SetRequest{Key: "/data", Object: any, Secret: &definition.ObjectSecret{
-				Secret: &definition.ObjectSecret_Token{Token: &definition.ObjectSecretToken{Token: "P@ssw0rd"}},
+			_, err = client.Set(ctx, &pbMetaV1.SetRequest{Key: "/data", Object: any, Secret: &pbMetaV1.ObjectSecret{
+				Secret: &pbMetaV1.ObjectSecret_Token{Token: &pbMetaV1.ObjectSecretToken{Token: "P@ssw0rd"}},
 			}})
 			require.NoError(t, err)
 		})
 
-		_, err = client.Set(ctx, &definition.SetRequest{Key: "/data", Object: any, Secret: &definition.ObjectSecret{
-			Secret: &definition.ObjectSecret_Token{Token: &definition.ObjectSecretToken{Token: "P@ssw0rd"}},
+		_, err = client.Set(ctx, &pbMetaV1.SetRequest{Key: "/data", Object: any, Secret: &pbMetaV1.ObjectSecret{
+			Secret: &pbMetaV1.ObjectSecret_Token{Token: &pbMetaV1.ObjectSecretToken{Token: "P@ssw0rd"}},
 		}})
 		require.NoError(t, err)
 
 		t.Run("Get encrypted", func(t *testing.T) {
-			resp, err := client.Get(ctx, &definition.ObjectRequest{Key: "/data", Secret: &definition.ObjectSecret{
-				Secret: &definition.ObjectSecret_Token{Token: &definition.ObjectSecretToken{Token: "P@ssw0rd"}},
+			resp, err := client.Get(ctx, &pbMetaV1.ObjectRequest{Key: "/data", Secret: &pbMetaV1.ObjectSecret{
+				Secret: &pbMetaV1.ObjectSecret_Token{Token: &pbMetaV1.ObjectSecretToken{Token: "P@ssw0rd"}},
 			}})
 			require.NoError(t, err)
 			require.NotNil(t, resp)
@@ -112,8 +112,8 @@ func testEncryptionBatch(t *testing.T, size int) {
 		})
 
 		t.Run("Get encrypted - invalid password", func(t *testing.T) {
-			resp, err := client.Get(ctx, &definition.ObjectRequest{Key: "/data", Secret: &definition.ObjectSecret{
-				Secret: &definition.ObjectSecret_Token{Token: &definition.ObjectSecretToken{Token: "P@ssw0rd2"}},
+			resp, err := client.Get(ctx, &pbMetaV1.ObjectRequest{Key: "/data", Secret: &pbMetaV1.ObjectSecret{
+				Secret: &pbMetaV1.ObjectSecret_Token{Token: &pbMetaV1.ObjectSecretToken{Token: "P@ssw0rd2"}},
 			}})
 			require.EqualValues(t, codes.FailedPrecondition, errors.GRPCCode(err))
 			require.EqualError(t, err, "rpc error: code = FailedPrecondition desc = Decryption failed: cipher: message authentication failed")
@@ -121,7 +121,7 @@ func testEncryptionBatch(t *testing.T, size int) {
 		})
 
 		t.Run("Get encrypted - missing password", func(t *testing.T) {
-			resp, err := client.Get(ctx, &definition.ObjectRequest{Key: "/data"})
+			resp, err := client.Get(ctx, &pbMetaV1.ObjectRequest{Key: "/data"})
 			require.EqualValues(t, codes.FailedPrecondition, errors.GRPCCode(err))
 			require.EqualError(t, err, "rpc error: code = FailedPrecondition desc = Decryption failed: Object encrypted, but secret is missing")
 			require.Nil(t, resp)
