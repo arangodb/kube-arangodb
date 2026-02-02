@@ -50,6 +50,9 @@ service MetaV1 {
 message ObjectRequest {
   // Key defines the Object Key (optionally, prefixed with global prefix)
   string key = 1;
+
+  // Secret defines secret for the object encryption
+  optional ObjectSecret secret = 2;
 }
 
 // SetRequest defines request for MetaV1 Object Set Request
@@ -65,6 +68,9 @@ message SetRequest {
 
   // TTL Defines object time-to-live. Optional
   optional google.protobuf.Duration ttl = 4;
+
+  // Secret defines secret for the object encryption
+  optional ObjectSecret secret = 5;
 }
 
 // ObjectResponse defines response for MetaV1 Object Meta
@@ -74,6 +80,9 @@ message ObjectResponseMeta {
 
   // Expires defines the object expiration timestamp (if TTL was set during creation)
   google.protobuf.Timestamp expires = 2;
+
+  // Defines if the object is encrypted
+  bool encrypted = 3;
 }
 
 // ObjectResponse defines response for MetaV1 Object
@@ -89,6 +98,20 @@ message ObjectResponse {
 
   // Meta defines the Object Metadata
   ObjectResponseMeta meta = 4;
+}
+
+// ObjectSecret defines secret used for encryption
+message ObjectSecret {
+  oneof secret {
+    // Token defines secret for the object encryption
+    ObjectSecretToken token = 1;
+  }
+}
+
+// ObjectSecretToken defines secret used for encryption
+message ObjectSecretToken {
+  // Token defines secret for the object encryption
+  string token = 1;
 }
 
 // ListRequest defines request for MetaV1 Object List Request
