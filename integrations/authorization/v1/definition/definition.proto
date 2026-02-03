@@ -30,10 +30,17 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/authorizatio
 
 // AuthorizationV1 Service implementation
 service AuthorizationV1 {
-  // Sends ping to the server
+  // Evaluates single permission
   rpc Evaluate(AuthorizationV1PermissionRequest) returns (AuthorizationV1PermissionResponse) {
     option (google.api.http) = {
       post: "/_integration/authorization/v1/evaluate"
+      body: '*'
+    };
+  }
+  // Evaluates multiple permission
+  rpc EvaluateMany(AuthorizationV1PermissionManyRequest) returns (AuthorizationV1PermissionManyResponse) {
+    option (google.api.http) = {
+      put: "/_integration/authorization/v1/evaluate"
       body: '*'
     };
   }

@@ -36,6 +36,7 @@ v1alpha1:
                   all:
                     properties:
                       env:
+                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -83,6 +84,7 @@ v1alpha1:
                           type: object
                         type: array
                       envFrom:
+                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -104,6 +106,7 @@ v1alpha1:
                           type: object
                         type: array
                       volumeMounts:
+                        description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                         items:
                           properties:
                             mountPath:
@@ -127,14 +130,31 @@ v1alpha1:
                     additionalProperties:
                       properties:
                         args:
+                          description: |-
+                            Arguments to the entrypoint.
+                            The container image's CMD is used if this is not provided.
+                            Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                            cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                            to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                            produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                            of whether the variable exists or not. Cannot be updated.
                           items:
                             type: string
                           type: array
                         command:
+                          description: |-
+                            Entrypoint array. Not executed within a shell.
+                            The container image's ENTRYPOINT is used if this is not provided.
+                            Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                            cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                            to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                            produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                            of whether the variable exists or not. Cannot be updated.
                           items:
                             type: string
                           type: array
                         env:
+                          description: Env keeps the information about environment variables provided to the container
                           items:
                             properties:
                               name:
@@ -182,6 +202,7 @@ v1alpha1:
                             type: object
                           type: array
                         envFrom:
+                          description: EnvFrom keeps the information about environment variable sources provided to the container
                           items:
                             properties:
                               configMapRef:
@@ -203,10 +224,13 @@ v1alpha1:
                             type: object
                           type: array
                         image:
+                          description: Image define image details
                           type: string
                         imagePullPolicy:
+                          description: ImagePullPolicy define Image pull policy
                           type: string
                         lifecycle:
+                          description: Lifecycle keeps actions that the management system should take in response to container lifecycle events.
                           properties:
                             postStart:
                               properties:
@@ -300,6 +324,9 @@ v1alpha1:
                               type: object
                           type: object
                         livenessProbe:
+                          description: |-
+                            LivenessProbe keeps configuration of periodic probe of container liveness.
+                            Container will be restarted if the probe fails.
                           properties:
                             exec:
                               properties:
@@ -365,6 +392,11 @@ v1alpha1:
                               type: integer
                           type: object
                         ports:
+                          description: |-
+                            Ports contains list of ports to expose from the container. Not specifying a port here
+                            DOES NOT prevent that port from being exposed. Any port which is
+                            listening on the default "0.0.0.0" address inside a container will be
+                            accessible from the network.
                           items:
                             properties:
                               containerPort:
@@ -382,6 +414,9 @@ v1alpha1:
                             type: object
                           type: array
                         readinessProbe:
+                          description: |-
+                            ReadinessProbe keeps configuration of periodic probe of container service readiness.
+                            Container will be removed from service endpoints if the probe fails.
                           properties:
                             exec:
                               properties:
@@ -447,6 +482,7 @@ v1alpha1:
                               type: integer
                           type: object
                         resources:
+                          description: Resources holds resource requests & limits for container
                           properties:
                             claims:
                               items:
@@ -469,6 +505,7 @@ v1alpha1:
                               type: object
                           type: object
                         securityContext:
+                          description: SecurityContext holds container-level security attributes and common container settings.
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
@@ -535,6 +572,12 @@ v1alpha1:
                               type: object
                           type: object
                         startupProbe:
+                          description: |-
+                            StartupProbe indicates that the Pod has successfully initialized.
+                            If specified, no other probes are executed until this completes successfully.
+                            If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+                            This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+                            when it might take a long time to load data or warm a cache, than during steady-state operation.
                           properties:
                             exec:
                               properties:
@@ -600,6 +643,7 @@ v1alpha1:
                               type: integer
                           type: object
                         volumeMounts:
+                          description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                           items:
                             properties:
                               mountPath:
@@ -619,6 +663,10 @@ v1alpha1:
                             type: object
                           type: array
                         workingDir:
+                          description: |-
+                            Container's working directory.
+                            If not specified, the container runtime's default will be used, which
+                            might be configured in the container image.
                           type: string
                       type: object
                     type: object
@@ -626,6 +674,7 @@ v1alpha1:
               pod:
                 properties:
                   affinity:
+                    description: Affinity defines scheduling constraints for workload
                     properties:
                       nodeAffinity:
                         properties:
@@ -959,28 +1008,49 @@ v1alpha1:
                   annotations:
                     additionalProperties:
                       type: string
+                    description: |-
+                      Annotations is an unstructured key value map stored with a resource that may be
+                      set by external tools to store and retrieve arbitrary metadata. They are not
+                      queryable and should be preserved when modifying objects.
                     type: object
                   automountServiceAccountToken:
+                    description: AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
                     type: boolean
                   hostIPC:
+                    description: HostIPC defines to use the host's ipc namespace.
                     type: boolean
                   hostNetwork:
+                    description: |-
+                      HostNetwork requests Host network for this pod. Use the host's network namespace.
+                      If this option is set, the ports that will be used must be specified.
                     type: boolean
                   hostPID:
+                    description: HostPID define to use the host's pid namespace.
                     type: boolean
                   imagePullSecrets:
+                    description: ImagePullSecrets define Secrets used to pull Image from registry
                     items:
                       type: string
                     type: array
                   labels:
                     additionalProperties:
                       type: string
+                    description: |-
+                      Map of string keys and values that can be used to organize and categorize
+                      (scope and select) objects. May match selectors of replication controllers
+                      and services.
                     type: object
                   nodeSelector:
                     additionalProperties:
                       type: string
+                    description: NodeSelector is a selector that must be true for the workload to fit on a node.
                     type: object
                   ownerReferences:
+                    description: |-
+                      List of objects depended by this object. If ALL objects in the list have
+                      been deleted, this object will be garbage collected. If this object is managed by a controller,
+                      then an entry in this list will point to this controller, with the controller field set to true.
+                      There cannot be more than one managing controller.
                     items:
                       properties:
                         apiVersion:
@@ -998,6 +1068,7 @@ v1alpha1:
                       type: object
                     type: array
                   podSecurityContext:
+                    description: PodSecurityContext holds pod-level security attributes and common container settings.
                     properties:
                       appArmorProfile:
                         properties:
@@ -1068,12 +1139,22 @@ v1alpha1:
                         type: object
                     type: object
                   schedulerName:
+                    description: |-
+                      SchedulerName specifies, the pod will be dispatched by specified scheduler.
+                      If not specified, the pod will be dispatched by default scheduler.
                     type: string
                   serviceAccountName:
+                    description: ServiceAccountName is the name of the ServiceAccount to use to run this pod.
                     type: string
                   shareProcessNamespace:
+                    description: |-
+                      ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
+                      When this is set containers will be able to view and signal processes from other containers
+                      in the same pod, and the first process in each container will not be assigned PID 1.
+                      HostPID and ShareProcessNamespace cannot both be set.
                     type: boolean
                   tolerations:
+                    description: Tolerations defines tolerations
                     items:
                       properties:
                         effect:
@@ -1090,6 +1171,7 @@ v1alpha1:
                       type: object
                     type: array
                   volumes:
+                    description: Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
                     items:
                       properties:
                         awsElasticBlockStore:
@@ -1832,6 +1914,7 @@ v1beta1:
                     description: All applies generic values to all Containers
                     properties:
                       env:
+                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -1879,6 +1962,7 @@ v1beta1:
                           type: object
                         type: array
                       envFrom:
+                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -1900,6 +1984,7 @@ v1beta1:
                           type: object
                         type: array
                       volumeMounts:
+                        description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                         items:
                           properties:
                             mountPath:
@@ -1923,14 +2008,31 @@ v1beta1:
                     additionalProperties:
                       properties:
                         args:
+                          description: |-
+                            Arguments to the entrypoint.
+                            The container image's CMD is used if this is not provided.
+                            Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                            cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                            to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                            produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                            of whether the variable exists or not. Cannot be updated.
                           items:
                             type: string
                           type: array
                         command:
+                          description: |-
+                            Entrypoint array. Not executed within a shell.
+                            The container image's ENTRYPOINT is used if this is not provided.
+                            Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                            cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                            to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                            produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                            of whether the variable exists or not. Cannot be updated.
                           items:
                             type: string
                           type: array
                         env:
+                          description: Env keeps the information about environment variables provided to the container
                           items:
                             properties:
                               name:
@@ -1978,6 +2080,7 @@ v1beta1:
                             type: object
                           type: array
                         envFrom:
+                          description: EnvFrom keeps the information about environment variable sources provided to the container
                           items:
                             properties:
                               configMapRef:
@@ -1999,10 +2102,13 @@ v1beta1:
                             type: object
                           type: array
                         image:
+                          description: Image define image details
                           type: string
                         imagePullPolicy:
+                          description: ImagePullPolicy define Image pull policy
                           type: string
                         lifecycle:
+                          description: Lifecycle keeps actions that the management system should take in response to container lifecycle events.
                           properties:
                             postStart:
                               properties:
@@ -2096,6 +2202,9 @@ v1beta1:
                               type: object
                           type: object
                         livenessProbe:
+                          description: |-
+                            LivenessProbe keeps configuration of periodic probe of container liveness.
+                            Container will be restarted if the probe fails.
                           properties:
                             exec:
                               properties:
@@ -2161,8 +2270,17 @@ v1beta1:
                               type: integer
                           type: object
                         method:
+                          description: Method defines the merge method
+                          enum:
+                            - override
+                            - append
                           type: string
                         ports:
+                          description: |-
+                            Ports contains list of ports to expose from the container. Not specifying a port here
+                            DOES NOT prevent that port from being exposed. Any port which is
+                            listening on the default "0.0.0.0" address inside a container will be
+                            accessible from the network.
                           items:
                             properties:
                               containerPort:
@@ -2180,6 +2298,9 @@ v1beta1:
                             type: object
                           type: array
                         readinessProbe:
+                          description: |-
+                            ReadinessProbe keeps configuration of periodic probe of container service readiness.
+                            Container will be removed from service endpoints if the probe fails.
                           properties:
                             exec:
                               properties:
@@ -2245,6 +2366,7 @@ v1beta1:
                               type: integer
                           type: object
                         resources:
+                          description: Resources holds resource requests & limits for container
                           properties:
                             claims:
                               items:
@@ -2267,6 +2389,7 @@ v1beta1:
                               type: object
                           type: object
                         securityContext:
+                          description: SecurityContext holds container-level security attributes and common container settings.
                           properties:
                             allowPrivilegeEscalation:
                               type: boolean
@@ -2333,6 +2456,12 @@ v1beta1:
                               type: object
                           type: object
                         startupProbe:
+                          description: |-
+                            StartupProbe indicates that the Pod has successfully initialized.
+                            If specified, no other probes are executed until this completes successfully.
+                            If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+                            This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+                            when it might take a long time to load data or warm a cache, than during steady-state operation.
                           properties:
                             exec:
                               properties:
@@ -2398,6 +2527,7 @@ v1beta1:
                               type: integer
                           type: object
                         volumeMounts:
+                          description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                           items:
                             properties:
                               mountPath:
@@ -2417,6 +2547,10 @@ v1beta1:
                             type: object
                           type: array
                         workingDir:
+                          description: |-
+                            Container's working directory.
+                            If not specified, the container runtime's default will be used, which
+                            might be configured in the container image.
                           type: string
                       type: object
                     description: Containers applies values per container
@@ -2425,14 +2559,31 @@ v1beta1:
                     description: Default applies generic values to default Container (first one on the list)
                     properties:
                       args:
+                        description: |-
+                          Arguments to the entrypoint.
+                          The container image's CMD is used if this is not provided.
+                          Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                          cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                          to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                          produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                          of whether the variable exists or not. Cannot be updated.
                         items:
                           type: string
                         type: array
                       command:
+                        description: |-
+                          Entrypoint array. Not executed within a shell.
+                          The container image's ENTRYPOINT is used if this is not provided.
+                          Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                          cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                          to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                          produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                          of whether the variable exists or not. Cannot be updated.
                         items:
                           type: string
                         type: array
                       env:
+                        description: Env keeps the information about environment variables provided to the container
                         items:
                           properties:
                             name:
@@ -2480,6 +2631,7 @@ v1beta1:
                           type: object
                         type: array
                       envFrom:
+                        description: EnvFrom keeps the information about environment variable sources provided to the container
                         items:
                           properties:
                             configMapRef:
@@ -2501,10 +2653,13 @@ v1beta1:
                           type: object
                         type: array
                       image:
+                        description: Image define image details
                         type: string
                       imagePullPolicy:
+                        description: ImagePullPolicy define Image pull policy
                         type: string
                       lifecycle:
+                        description: Lifecycle keeps actions that the management system should take in response to container lifecycle events.
                         properties:
                           postStart:
                             properties:
@@ -2598,6 +2753,9 @@ v1beta1:
                             type: object
                         type: object
                       livenessProbe:
+                        description: |-
+                          LivenessProbe keeps configuration of periodic probe of container liveness.
+                          Container will be restarted if the probe fails.
                         properties:
                           exec:
                             properties:
@@ -2663,8 +2821,17 @@ v1beta1:
                             type: integer
                         type: object
                       method:
+                        description: Method defines the merge method
+                        enum:
+                          - override
+                          - append
                         type: string
                       ports:
+                        description: |-
+                          Ports contains list of ports to expose from the container. Not specifying a port here
+                          DOES NOT prevent that port from being exposed. Any port which is
+                          listening on the default "0.0.0.0" address inside a container will be
+                          accessible from the network.
                         items:
                           properties:
                             containerPort:
@@ -2682,6 +2849,9 @@ v1beta1:
                           type: object
                         type: array
                       readinessProbe:
+                        description: |-
+                          ReadinessProbe keeps configuration of periodic probe of container service readiness.
+                          Container will be removed from service endpoints if the probe fails.
                         properties:
                           exec:
                             properties:
@@ -2747,6 +2917,7 @@ v1beta1:
                             type: integer
                         type: object
                       resources:
+                        description: Resources holds resource requests & limits for container
                         properties:
                           claims:
                             items:
@@ -2769,6 +2940,7 @@ v1beta1:
                             type: object
                         type: object
                       securityContext:
+                        description: SecurityContext holds container-level security attributes and common container settings.
                         properties:
                           allowPrivilegeEscalation:
                             type: boolean
@@ -2835,6 +3007,12 @@ v1beta1:
                             type: object
                         type: object
                       startupProbe:
+                        description: |-
+                          StartupProbe indicates that the Pod has successfully initialized.
+                          If specified, no other probes are executed until this completes successfully.
+                          If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+                          This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+                          when it might take a long time to load data or warm a cache, than during steady-state operation.
                         properties:
                           exec:
                             properties:
@@ -2900,6 +3078,7 @@ v1beta1:
                             type: integer
                         type: object
                       volumeMounts:
+                        description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                         items:
                           properties:
                             mountPath:
@@ -2919,6 +3098,10 @@ v1beta1:
                           type: object
                         type: array
                       workingDir:
+                        description: |-
+                          Container's working directory.
+                          If not specified, the container runtime's default will be used, which
+                          might be configured in the container image.
                         type: string
                     type: object
                 type: object
@@ -2926,6 +3109,7 @@ v1beta1:
                 description: Pod Template
                 properties:
                   affinity:
+                    description: Affinity defines scheduling constraints for workload
                     properties:
                       nodeAffinity:
                         properties:
@@ -3259,28 +3443,49 @@ v1beta1:
                   annotations:
                     additionalProperties:
                       type: string
+                    description: |-
+                      Annotations is an unstructured key value map stored with a resource that may be
+                      set by external tools to store and retrieve arbitrary metadata. They are not
+                      queryable and should be preserved when modifying objects.
                     type: object
                   automountServiceAccountToken:
+                    description: AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
                     type: boolean
                   hostIPC:
+                    description: HostIPC defines to use the host's ipc namespace.
                     type: boolean
                   hostNetwork:
+                    description: |-
+                      HostNetwork requests Host network for this pod. Use the host's network namespace.
+                      If this option is set, the ports that will be used must be specified.
                     type: boolean
                   hostPID:
+                    description: HostPID define to use the host's pid namespace.
                     type: boolean
                   imagePullSecrets:
+                    description: ImagePullSecrets define Secrets used to pull Image from registry
                     items:
                       type: string
                     type: array
                   labels:
                     additionalProperties:
                       type: string
+                    description: |-
+                      Map of string keys and values that can be used to organize and categorize
+                      (scope and select) objects. May match selectors of replication controllers
+                      and services.
                     type: object
                   nodeSelector:
                     additionalProperties:
                       type: string
+                    description: NodeSelector is a selector that must be true for the workload to fit on a node.
                     type: object
                   ownerReferences:
+                    description: |-
+                      List of objects depended by this object. If ALL objects in the list have
+                      been deleted, this object will be garbage collected. If this object is managed by a controller,
+                      then an entry in this list will point to this controller, with the controller field set to true.
+                      There cannot be more than one managing controller.
                     items:
                       properties:
                         apiVersion:
@@ -3298,6 +3503,7 @@ v1beta1:
                       type: object
                     type: array
                   podSecurityContext:
+                    description: PodSecurityContext holds pod-level security attributes and common container settings.
                     properties:
                       appArmorProfile:
                         properties:
@@ -3368,12 +3574,22 @@ v1beta1:
                         type: object
                     type: object
                   schedulerName:
+                    description: |-
+                      SchedulerName specifies, the pod will be dispatched by specified scheduler.
+                      If not specified, the pod will be dispatched by default scheduler.
                     type: string
                   serviceAccountName:
+                    description: ServiceAccountName is the name of the ServiceAccount to use to run this pod.
                     type: string
                   shareProcessNamespace:
+                    description: |-
+                      ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
+                      When this is set containers will be able to view and signal processes from other containers
+                      in the same pod, and the first process in each container will not be assigned PID 1.
+                      HostPID and ShareProcessNamespace cannot both be set.
                     type: boolean
                   tolerations:
+                    description: Tolerations defines tolerations
                     items:
                       properties:
                         effect:
@@ -3390,6 +3606,7 @@ v1beta1:
                       type: object
                     type: array
                   volumes:
+                    description: Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
                     items:
                       properties:
                         awsElasticBlockStore:

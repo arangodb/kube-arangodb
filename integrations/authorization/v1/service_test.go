@@ -22,6 +22,8 @@ package v1
 
 import (
 	"context"
+	"fmt"
+	goHttp "net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,6 +31,8 @@ import (
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+	"github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
@@ -57,17 +61,45 @@ func Server(t *testing.T, ctx context.Context, plugin pbImplAuthorizationV1Share
 	return local.Start(ctx)
 }
 
-func Client(t *testing.T, ctx context.Context, plugin pbImplAuthorizationV1Shared.Plugin, mods ...util.ModR[Configuration]) pbAuthorizationV1.AuthorizationV1Client {
+func Client(t *testing.T, ctx context.Context, plugin pbImplAuthorizationV1Shared.Plugin, mods ...util.ModR[Configuration]) (pbAuthorizationV1.AuthorizationV1Client, string) {
 	start := Server(t, ctx, plugin, mods...)
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbAuthorizationV1.NewAuthorizationV1Client, start.Address())
 
-	return client
+	return client, start.HTTPAddress()
 }
 
 func Test_Service(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	Client(t, ctx, pbImplAuthorizationV1Shared.NewAlwaysPlugin())
+	p := newPluginTest()
+
+	client, _ := Client(t, ctx, p)
+
+	resp, err := client.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
+		User:     "admin",
+		Action:   "test:Get",
+		Resource: "test",
+	})
+	require.NoError(t, err)
+	require.EqualValues(t, pbAuthorizationV1.AuthorizationV1Effect_Allow, resp.GetEffect())
+}
+
+func Test_ServiceHTTP(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	p := newPluginTest()
+
+	_, endpoint := Client(t, ctx, p)
+
+	data, err := http.Post[ugrpc.Object[*pbAuthorizationV1.AuthorizationV1PermissionRequest], any, error](ctx, goHttp.DefaultClient, ugrpc.NewObject(&pbAuthorizationV1.AuthorizationV1PermissionRequest{
+		User:     "admin",
+		Action:   "test:Get",
+		Resource: "test",
+	}), fmt.Sprintf("http://%s/_integration/authorization/v1/evaluate", endpoint)).WithCode(200).Data()
+	require.NoError(t, err)
+
+	t.Logf("Response: %s", string(data))
 }

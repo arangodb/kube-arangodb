@@ -26,6 +26,7 @@
 package v1alpha1
 
 import (
+	policy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -109,6 +110,11 @@ func (in *ArangoPermissionTokenSpec) DeepCopyInto(out *ArangoPermissionTokenSpec
 		in, out := &in.TTL, &out.TTL
 		*out = new(metav1.Duration)
 		**out = **in
+	}
+	if in.Policy != nil {
+		in, out := &in.Policy, &out.Policy
+		*out = new(policy.Policy)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }

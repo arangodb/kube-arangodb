@@ -81,7 +81,7 @@ func (i *implementation) Register(registrar *grpc.Server) {
 }
 
 func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
-	return nil
+	return pbAuthorizationV1.RegisterAuthorizationV1HandlerServer(ctx, mux, i)
 }
 
 func (i *implementation) Background(ctx context.Context) {
@@ -90,4 +90,46 @@ func (i *implementation) Background(ctx context.Context) {
 
 func (i *implementation) Evaluate(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
 	return i.plugin.Evaluate(ctx, request)
+}
+
+func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionManyRequest) (*pbAuthorizationV1.AuthorizationV1PermissionManyResponse, error) {
+	if len(request.Items) == 0 {
+		return &pbAuthorizationV1.AuthorizationV1PermissionManyResponse{
+			Message: "Missing permission evaluation items",
+			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Deny,
+		}, nil
+	}
+
+	var r = make([]*pbAuthorizationV1.AuthorizationV1PermissionResponse, len(request.Items))
+
+	for id, v := range request.Items {
+		resp, err := i.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
+			User:     request.GetUser(),
+			Roles:    request.GetRoles(),
+			Action:   v.GetAction(),
+			Resource: v.GetResource(),
+			Context:  v.GetContext(),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		r[id] = resp
+	}
+
+	for _, v := range r {
+		if v.GetEffect() == pbAuthorizationV1.AuthorizationV1Effect_Deny {
+			return &pbAuthorizationV1.AuthorizationV1PermissionManyResponse{
+				Message: "One of the requests has been denied",
+				Effect:  pbAuthorizationV1.AuthorizationV1Effect_Deny,
+				Items:   r,
+			}, nil
+		}
+	}
+
+	return &pbAuthorizationV1.AuthorizationV1PermissionManyResponse{
+		Message: "Access Granted",
+		Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+		Items:   r,
+	}, nil
 }

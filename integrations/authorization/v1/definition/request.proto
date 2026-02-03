@@ -53,6 +53,42 @@ message AuthorizationV1PermissionResponse {
   AuthorizationV1Effect effect = 2;
 }
 
+// AuthorizationV1PermissionManyRequest request for the list Permission evaluation request
+message AuthorizationV1PermissionManyRequest {
+  // Defines the User
+  string user = 1;
+
+  // Defines the list of roles
+  repeated string roles = 2;
+  
+  // Defines list of check actions
+  repeated AuthorizationV1PermissionManyRequestItem items = 3;
+}
+
+// AuthorizationV1PermissionRequest request for the single item of evaluation
+message AuthorizationV1PermissionManyRequestItem {
+  // Defines the action
+  string action = 1;
+
+  // Defines the resource
+  string resource = 2;
+
+  // request context
+  optional AuthorizationV1PermissionRequestContext context = 3;
+}
+
+// AuthorizationV1PermissionManyResponse request for the list Permission evaluation request
+message AuthorizationV1PermissionManyResponse {
+  // Message of the Permission evaluation
+  string message = 1;
+
+  // Effect of the permission evaluation
+  AuthorizationV1Effect effect = 2;
+
+  // List of the request items
+  repeated AuthorizationV1PermissionResponse items = 3;
+}
+
 // Request context
 message AuthorizationV1PermissionRequestContext {
   // Keeps the list of the context parameters

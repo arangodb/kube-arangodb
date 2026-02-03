@@ -39,7 +39,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthorizationV1_Evaluate_FullMethodName = "/authorization.AuthorizationV1/Evaluate"
+	AuthorizationV1_Evaluate_FullMethodName     = "/authorization.AuthorizationV1/Evaluate"
+	AuthorizationV1_EvaluateMany_FullMethodName = "/authorization.AuthorizationV1/EvaluateMany"
 )
 
 // AuthorizationV1Client is the client API for AuthorizationV1 service.
@@ -48,8 +49,10 @@ const (
 //
 // AuthorizationV1 Service implementation
 type AuthorizationV1Client interface {
-	// Sends ping to the server
+	// Evaluates single permission
 	Evaluate(ctx context.Context, in *AuthorizationV1PermissionRequest, opts ...grpc.CallOption) (*AuthorizationV1PermissionResponse, error)
+	// Evaluates multiple permission
+	EvaluateMany(ctx context.Context, in *AuthorizationV1PermissionManyRequest, opts ...grpc.CallOption) (*AuthorizationV1PermissionManyResponse, error)
 }
 
 type authorizationV1Client struct {
@@ -70,14 +73,26 @@ func (c *authorizationV1Client) Evaluate(ctx context.Context, in *AuthorizationV
 	return out, nil
 }
 
+func (c *authorizationV1Client) EvaluateMany(ctx context.Context, in *AuthorizationV1PermissionManyRequest, opts ...grpc.CallOption) (*AuthorizationV1PermissionManyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthorizationV1PermissionManyResponse)
+	err := c.cc.Invoke(ctx, AuthorizationV1_EvaluateMany_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthorizationV1Server is the server API for AuthorizationV1 service.
 // All implementations must embed UnimplementedAuthorizationV1Server
 // for forward compatibility.
 //
 // AuthorizationV1 Service implementation
 type AuthorizationV1Server interface {
-	// Sends ping to the server
+	// Evaluates single permission
 	Evaluate(context.Context, *AuthorizationV1PermissionRequest) (*AuthorizationV1PermissionResponse, error)
+	// Evaluates multiple permission
+	EvaluateMany(context.Context, *AuthorizationV1PermissionManyRequest) (*AuthorizationV1PermissionManyResponse, error)
 	mustEmbedUnimplementedAuthorizationV1Server()
 }
 
@@ -90,6 +105,9 @@ type UnimplementedAuthorizationV1Server struct{}
 
 func (UnimplementedAuthorizationV1Server) Evaluate(context.Context, *AuthorizationV1PermissionRequest) (*AuthorizationV1PermissionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Evaluate not implemented")
+}
+func (UnimplementedAuthorizationV1Server) EvaluateMany(context.Context, *AuthorizationV1PermissionManyRequest) (*AuthorizationV1PermissionManyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EvaluateMany not implemented")
 }
 func (UnimplementedAuthorizationV1Server) mustEmbedUnimplementedAuthorizationV1Server() {}
 func (UnimplementedAuthorizationV1Server) testEmbeddedByValue()                         {}
@@ -130,6 +148,24 @@ func _AuthorizationV1_Evaluate_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthorizationV1_EvaluateMany_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorizationV1PermissionManyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorizationV1Server).EvaluateMany(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthorizationV1_EvaluateMany_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorizationV1Server).EvaluateMany(ctx, req.(*AuthorizationV1PermissionManyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthorizationV1_ServiceDesc is the grpc.ServiceDesc for AuthorizationV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -140,6 +176,10 @@ var AuthorizationV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Evaluate",
 			Handler:    _AuthorizationV1_Evaluate_Handler,
+		},
+		{
+			MethodName: "EvaluateMany",
+			Handler:    _AuthorizationV1_EvaluateMany_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

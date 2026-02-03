@@ -119,6 +119,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
       - alias: networkingApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1
+      - alias: permissionApiPolicy
+        pkg: github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy
       - alias: permissionApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1
       - alias: platformApiv1alpha1

@@ -12,6 +12,40 @@ v1alpha1:
             required:
               - name
             type: object
+          policy:
+            description: Policy defined the Authorization Policy
+            properties:
+              statements:
+                description: Statements list of the policy Statements
+                items:
+                  properties:
+                    actions:
+                      description: |-
+                        Actions defines the list of actions.
+                        Action needs to be defined in format `<namespace>:<name>`
+                      items:
+                        type: string
+                      type: array
+                    effect:
+                      description: Effect defines the statement effect.
+                      enum:
+                        - Allow
+                        - Deny
+                      type: string
+                    resources:
+                      description: Resources defines the list of resources
+                      items:
+                        type: string
+                      type: array
+                  required:
+                    - actions
+                    - effect
+                    - resources
+                  type: object
+                type: array
+            required:
+              - statements
+            type: object
           roles:
             description: Roles keeps the roles assigned to the token
             items:

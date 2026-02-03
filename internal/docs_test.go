@@ -253,6 +253,10 @@ func Test_GenerateAPIDocs(t *testing.T) {
 		Shared []string
 	}
 
+	defaultSharedPaths := []string{
+		"shared/v1",
+	}
+
 	type inputPackages map[string]map[string]inputPackage
 
 	// package path -> result doc file name -> name of the top-level field to be described -> field instance for reflection
@@ -268,7 +272,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					},
 				},
 				Shared: []string{
-					"shared/v1",
 					"scheduler/v1beta1",
 					"scheduler/v1beta1/container",
 					"scheduler/v1beta1/container/resources",
@@ -317,7 +320,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					},
 				},
 				Shared: []string{
-					"shared/v1",
 					"scheduler/v1alpha1",
 					"scheduler/v1alpha1/container",
 					"scheduler/v1alpha1/container/resources",
@@ -335,7 +337,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					},
 				},
 				Shared: []string{
-					"shared/v1",
 					"scheduler/v1beta1",
 					"scheduler/v1beta1/container",
 					"scheduler/v1beta1/container/resources",
@@ -353,9 +354,7 @@ func Test_GenerateAPIDocs(t *testing.T) {
 						"Spec": networkingApi.ArangoRoute{}.Spec,
 					},
 				},
-				Shared: []string{
-					"shared/v1",
-				},
+				Shared: []string{},
 			},
 		},
 		"analytics": map[string]inputPackage{
@@ -366,7 +365,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					},
 				},
 				Shared: []string{
-					"shared/v1",
 					"scheduler/v1beta1",
 					"scheduler/v1beta1/container",
 					"scheduler/v1beta1/container/resources",
@@ -394,7 +392,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					},
 				},
 				Shared: []string{
-					"shared/v1",
 					"scheduler/v1beta1/container",
 					"scheduler/v1beta1/container/resources",
 					"scheduler/v1beta1/integration",
@@ -426,9 +423,7 @@ func Test_GenerateAPIDocs(t *testing.T) {
 						"Spec": platformApi.ArangoPlatformService{}.Spec,
 					},
 				},
-				Shared: []string{
-					"shared/v1",
-				},
+				Shared: []string{},
 			},
 			"v1beta1/authentication": {
 				Types: inputPackageTypes{
@@ -446,7 +441,7 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					},
 				},
 				Shared: []string{
-					"shared/v1",
+					"permission/v1alpha1/policy",
 				},
 			},
 		},
@@ -455,6 +450,15 @@ func Test_GenerateAPIDocs(t *testing.T) {
 	for name, versions := range input {
 		for version, docs := range versions {
 			fields := parseSourceFiles(t, root, fset, path.Join(root, "pkg/apis", name, version))
+
+			for _, p := range defaultSharedPaths {
+				sharedFields := parseSourceFiles(t, root, fset, path.Join(root, "pkg/apis", p))
+
+				for n, f := range sharedFields {
+					require.NotContains(t, fields, n)
+					fields[n] = f
+				}
+			}
 
 			for _, p := range docs.Shared {
 				sharedFields := parseSourceFiles(t, root, fset, path.Join(root, "pkg/apis", p))
