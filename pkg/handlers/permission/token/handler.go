@@ -188,7 +188,7 @@ func (h *handler) finalizerUserRemoval(ctx context.Context, extension *permissio
 }
 
 func (h *handler) handle(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus) (bool, error) {
-	return operator.HandleSharedP3WithCondition(ctx, &status.Conditions, permissionApi.ReadyCondition, item, extension, status, h.HandleSpecValidity, h.HandleDeployment)
+	return operator.HandleP3WithCondition(ctx, &status.Conditions, permissionApi.ReadyCondition, item, extension, status, h.HandleSpecValidity, h.HandleDeployment)
 }
 
 func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus) (bool, error) {

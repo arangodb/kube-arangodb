@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2022-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,27 +20,14 @@
 
 package v2alpha1
 
+import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+
 const (
 	// ConditionParamContainerUpdatingName define parameter used during Image Runtime update
 	ConditionParamContainerUpdatingName ConditionParam = "updatingContainerName"
 )
 
 // ConditionParam is a strongly typed condition parameter
-type ConditionParam string
+type ConditionParam = sharedApi.ConditionParam
 
-type ConditionParams map[ConditionParam]string
-
-// Equal compare two ConditionParams objects
-func (c ConditionParams) Equal(b ConditionParams) bool {
-	if len(c) != len(b) {
-		return false
-	}
-
-	for k, v := range c {
-		if v2, ok := b[k]; !ok || v != v2 {
-			return false
-		}
-	}
-
-	return true
-}
+type ConditionParams = sharedApi.ConditionParams

@@ -26,7 +26,6 @@
 package v1alpha1
 
 import (
-	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	container "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container"
 	integration "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration"
 	pod "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
@@ -194,7 +193,7 @@ func (in *GraphAnalyticsEngineStatus) DeepCopyInto(out *GraphAnalyticsEngineStat
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make(deploymentv1.ConditionList, len(*in))
+		*out = make(v1.ConditionList, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

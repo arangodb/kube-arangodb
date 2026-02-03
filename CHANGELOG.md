@@ -4,6 +4,7 @@
 - (Bugfix) (Platform) Permission Token CRD
 - (Feature) Add Backup Owner during creation
 - (Feature) (Platform) MetaStore Secrets
+- (Maintenance) Unify Conditions Handling
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
