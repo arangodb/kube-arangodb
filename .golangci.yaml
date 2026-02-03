@@ -203,6 +203,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants
       - alias: utilToken
         pkg: github.com/arangodb/kube-arangodb/pkg/util/token
+      - alias: utilTokenLoader
+        pkg: github.com/arangodb/kube-arangodb/pkg/util/token/loader
       - alias: utilConstants
         pkg: github.com/arangodb/kube-arangodb/pkg/util/constants
       - alias: tcache
