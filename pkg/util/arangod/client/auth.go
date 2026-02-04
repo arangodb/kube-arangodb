@@ -31,8 +31,8 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
 
 type Authentication interface {
@@ -51,7 +51,7 @@ func DirectArangoDBAuthentication(client kubernetes.Interface, depl *api.ArangoD
 			secrets := client.CoreV1().Secrets(depl.GetNamespace())
 			ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 			defer cancel()
-			s, err := k8sutil.GetTokenFolderSecret(ctxChild, secrets, pod.JWTSecretFolder(depl.GetName()))
+			s, err := utilTokenLoader.LoadSecretSetFromSecretAPI(ctxChild, secrets, pod.JWTSecretFolder(depl.GetName()))
 			if err != nil {
 				return nil, false, errors.WithStack(err)
 			}
