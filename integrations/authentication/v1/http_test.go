@@ -45,11 +45,9 @@ func Test_Authentication_HTTP(t *testing.T) {
 
 	token1 := tests.GenerateJWTToken()
 
-	directory.Save(t, token1)
+	directory.Set(t, token1)
 
 	client := operatorHTTP.NewHTTPClient()
-
-	// TODO: Fix Tests
 
 	t.Run("Without header", func(t *testing.T) {
 		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()))
