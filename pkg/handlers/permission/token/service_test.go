@@ -36,9 +36,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
 
 func extractRoles(t *testing.T, token utilToken.Token) []string {
@@ -205,7 +205,7 @@ func Test_ServiceReconcile(t *testing.T) {
 
 		secret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName())
 
-		validator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		validator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		require.Contains(t, secret.Data, core.ServiceAccountTokenKey)
@@ -246,7 +246,7 @@ func Test_ServiceReconcile(t *testing.T) {
 
 		secret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName())
 
-		validator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		validator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		require.Contains(t, secret.Data, core.ServiceAccountTokenKey)
@@ -262,7 +262,7 @@ func Test_ServiceReconcile(t *testing.T) {
 	t.Run("New deployment - refresh JWT", func(t *testing.T) {
 		oldSecret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName()).Data[core.ServiceAccountTokenKey]
 
-		oldValidator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		oldValidator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		_, err = oldValidator.Validate(string(oldSecret))
@@ -294,7 +294,7 @@ func Test_ServiceReconcile(t *testing.T) {
 
 		secret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName())
 
-		validator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		validator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		require.Contains(t, secret.Data, core.ServiceAccountTokenKey)
@@ -318,7 +318,7 @@ func Test_ServiceReconcile(t *testing.T) {
 	t.Run("New deployment - refresh JWT roles", func(t *testing.T) {
 		oldSecret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName()).Data[core.ServiceAccountTokenKey]
 
-		oldValidator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		oldValidator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		_, err = oldValidator.Validate(string(oldSecret))
@@ -354,7 +354,7 @@ func Test_ServiceReconcile(t *testing.T) {
 
 		secret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName())
 
-		validator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		validator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		require.Contains(t, secret.Data, core.ServiceAccountTokenKey)
@@ -379,7 +379,7 @@ func Test_ServiceReconcile(t *testing.T) {
 	t.Run("New deployment - refresh JWT roles - remove", func(t *testing.T) {
 		oldSecret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName()).Data[core.ServiceAccountTokenKey]
 
-		oldValidator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		oldValidator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		_, err = oldValidator.Validate(string(oldSecret))
@@ -413,7 +413,7 @@ func Test_ServiceReconcile(t *testing.T) {
 
 		secret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName())
 
-		validator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		validator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		require.Contains(t, secret.Data, core.ServiceAccountTokenKey)
@@ -437,7 +437,7 @@ func Test_ServiceReconcile(t *testing.T) {
 	t.Run("New deployment - change of TTL", func(t *testing.T) {
 		oldSecret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName()).Data[core.ServiceAccountTokenKey]
 
-		oldValidator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		oldValidator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		_, err = oldValidator.Validate(string(oldSecret))
@@ -466,7 +466,7 @@ func Test_ServiceReconcile(t *testing.T) {
 
 		secret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName())
 
-		validator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		validator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		require.Contains(t, secret.Data, core.ServiceAccountTokenKey)
@@ -490,7 +490,7 @@ func Test_ServiceReconcile(t *testing.T) {
 	t.Run("New deployment - still valid", func(t *testing.T) {
 		oldSecret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName()).Data[core.ServiceAccountTokenKey]
 
-		oldValidator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		oldValidator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		_, err = oldValidator.Validate(string(oldSecret))
@@ -521,7 +521,7 @@ func Test_ServiceReconcile(t *testing.T) {
 
 		secret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName())
 
-		validator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		validator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		require.Contains(t, secret.Data, core.ServiceAccountTokenKey)
@@ -537,7 +537,7 @@ func Test_ServiceReconcile(t *testing.T) {
 	t.Run("New deployment - expiring", func(t *testing.T) {
 		oldSecret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName()).Data[core.ServiceAccountTokenKey]
 
-		oldValidator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		oldValidator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		_, err = oldValidator.Validate(string(oldSecret))
@@ -568,7 +568,7 @@ func Test_ServiceReconcile(t *testing.T) {
 
 		secret := tests.GetObject[*core.Secret](t, handler.kubeClient, handler.client, tests.FakeNamespace, extension.Status.Secret.GetName())
 
-		validator, err := k8sutil.GetTokenFolderSecret(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
+		validator, err := utilTokenLoader.LoadSecretSetFromSecretAPI(t.Context(), handler.kubeClient.CoreV1().Secrets(deployment.GetNamespace()), pod.JWTSecretFolder(deployment.GetName()))
 		require.NoError(t, err)
 
 		require.Contains(t, secret.Data, core.ServiceAccountTokenKey)

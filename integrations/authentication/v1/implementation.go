@@ -48,6 +48,7 @@ import (
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
 
 func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
@@ -63,7 +64,7 @@ func newInternal(ctx context.Context, cfg Configuration) (*implementation, error
 		cfg: cfg,
 		ctx: ctx,
 
-		cache: cache.NewObject(newCache(cfg)),
+		cache: cache.NewObject(utilTokenLoader.SecretCacheDirectory(cfg.Path, cfg.TTL)),
 
 		userClient: cache.NewObject(func(ctx context.Context) (arangodb.Requests, time.Duration, error) {
 			client := arangodb.NewClient(connection.NewHttpConnection(connection.HttpConfiguration{
