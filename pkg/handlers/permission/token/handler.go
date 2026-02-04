@@ -46,10 +46,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
 
 type handler struct {
@@ -392,7 +392,7 @@ func (h *handler) HandleArangoSecret(ctx context.Context, item operation.Item, e
 		return false, nil
 	}
 
-	secretManager, err := k8sutil.GetTokenFolderSecret(ctx, h.kubeClient.CoreV1().Secrets(depl.GetNamespace()), pod.JWTSecretFolder(depl.GetName()))
+	secretManager, err := utilTokenLoader.LoadSecretSetFromSecretAPI(ctx, h.kubeClient.CoreV1().Secrets(depl.GetNamespace()), pod.JWTSecretFolder(depl.GetName()))
 	if err != nil {
 		return false, err
 	}
