@@ -70,11 +70,14 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 
 	type genSpec struct {
 		objects map[string]interface{}
+		shared  []string
+	}
+
+	defaultSharedPaths := []string{
+		fmt.Sprintf("%s/pkg/apis/shared/v1", root),
 	}
 
 	fset := token.NewFileSet()
-
-	sharedFields := parseSourceFiles(t, root, fset, fmt.Sprintf("%s/pkg/apis/shared/v1", root))
 
 	// CR file prefix -> packages to parse -> versions -> obj
 	input := map[string]map[string]map[string]genSpec{
@@ -190,10 +193,24 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 					objects: map[string]interface{}{
 						"spec": schedulerApiv1alpha1.ArangoProfile{}.Spec,
 					},
+					shared: []string{
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1/container", root),
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1/container/resources", root),
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1/pod", root),
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1alpha1/pod/resources", root),
+					},
 				},
 				"v1beta1": {
 					objects: map[string]interface{}{
 						"spec": schedulerApi.ArangoProfile{}.Spec,
+					},
+					shared: []string{
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1beta1/container", root),
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1beta1/container/resources", root),
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1beta1/integration", root),
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1beta1/pod", root),
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1beta1/pod/resources", root),
+						fmt.Sprintf("%s/pkg/apis/scheduler/v1beta1/policy", root),
 					},
 				},
 			},
@@ -351,6 +368,9 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 					objects: map[string]interface{}{
 						"spec": permissionApi.ArangoPermissionToken{}.Spec,
 					},
+					shared: []string{
+						fmt.Sprintf("%s/pkg/apis/permission/v1alpha1/policy", root),
+					},
 				},
 			},
 		},
@@ -371,9 +391,22 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				for version, generationSpec := range versionMap {
 					fields := parseSourceFiles(t, root, fset, path.Join(apiDir, version))
 
-					for n, f := range sharedFields {
-						require.NotContains(t, fields, n)
-						fields[n] = f
+					for _, p := range defaultSharedPaths {
+						sharedFields := parseSourceFiles(t, root, fset, p)
+
+						for n, f := range sharedFields {
+							require.NotContains(t, fields, n)
+							fields[n] = f
+						}
+					}
+
+					for _, p := range generationSpec.shared {
+						sharedFields := parseSourceFiles(t, root, fset, p)
+
+						for n, f := range sharedFields {
+							require.NotContains(t, fields, n)
+							fields[n] = f
+						}
 					}
 
 					crdVersion := findCRDVersion(t, crd, version)

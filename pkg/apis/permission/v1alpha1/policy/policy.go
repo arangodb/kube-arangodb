@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,27 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package policy
 
 import (
-	"context"
-
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type Handler interface {
-	Name() string
-
-	Health(ctx context.Context) HealthState
-
-	Register(registrar *grpc.Server)
-
-	Gateway(ctx context.Context, mux *runtime.ServeMux) error
+type Policy struct {
+	// Statements list of the policy Statements
+	// +doc/required
+	Statements Statements `json:"statements"`
 }
 
-type HandlerInitService interface {
-	Handler
+func (a *Policy) Validate() error {
+	if a == nil {
+		return nil
+	}
 
-	InitService(svc Service) error
+	return errors.Errors(
+		shared.ValidateRequiredInterfacePath("statements", a.Statements),
+	)
 }

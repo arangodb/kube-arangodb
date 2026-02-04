@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_Authentication_HTTP(t *testing.T) {
@@ -42,13 +43,11 @@ func Test_Authentication_HTTP(t *testing.T) {
 
 	directory, server := Server(t, ctx)
 
-	token1 := generateJWTToken()
+	token1 := tests.GenerateJWTToken()
 
-	reSaveJWTTokens(t, directory, token1)
+	directory.Set(t, token1)
 
 	client := operatorHTTP.NewHTTPClient()
-
-	// TODO: Fix Tests
 
 	t.Run("Without header", func(t *testing.T) {
 		resp := ugrpc.Get[*pbAuthenticationV1.IdentityResponse](ctx, client, fmt.Sprintf("http://%s/_integration/authn/v1/identity", server.HTTPAddress()))

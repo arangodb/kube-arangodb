@@ -27,13 +27,12 @@ import (
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 const MaxTokenSize = 1024 * 8
 
-func SecretCacheDirectory(directory string, ttl time.Duration) cache.ObjectFetcher[utilToken.Secret] {
+func SecretCacheDirectory(directory string, ttl time.Duration) func(ctx context.Context) (utilToken.Secret, time.Duration, error) {
 	return func(ctx context.Context) (utilToken.Secret, time.Duration, error) {
 		s, err := LoadSecretSetFromDirectory(directory)
 		if err != nil {

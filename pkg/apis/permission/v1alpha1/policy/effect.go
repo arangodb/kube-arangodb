@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,27 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package policy
 
-import (
-	"context"
+import "github.com/pkg/errors"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
+type Effect string
+
+func (a Effect) Validate() error {
+	switch a {
+	case EffectAllow, EffectDeny:
+		return nil
+	}
+
+	return errors.Errorf("Invalid effect `%s`: Accepted only Allow or Deny", a)
+}
+
+const (
+	EffectAllow Effect = "Allow"
+	EffectDeny  Effect = "Deny"
 )
-
-type Handler interface {
-	Name() string
-
-	Health(ctx context.Context) HealthState
-
-	Register(registrar *grpc.Server)
-
-	Gateway(ctx context.Context, mux *runtime.ServeMux) error
-}
-
-type HandlerInitService interface {
-	Handler
-
-	InitService(svc Service) error
-}

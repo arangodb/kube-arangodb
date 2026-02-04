@@ -1,0 +1,51 @@
+//
+// DISCLAIMER
+//
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+package policy
+
+import (
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/strings"
+)
+
+type Actions []Action
+
+func (a Actions) Validate() error {
+	return shared.ValidateInterfaceList(a)
+}
+
+type Action string
+
+func (a Action) Validate() error {
+	if z := strings.Split(string(a), ":"); len(z) != 2 {
+		return errors.Errorf("Invalid action '%s': expected format '<namespace>:<name>'", string(a))
+	} else {
+		if z[0] == "" {
+			return errors.Errorf("Invalid action '%s': empty namespace", string(a))
+		}
+
+		if z[1] == "" {
+			return errors.Errorf("Invalid action '%s': empty name", string(a))
+		}
+	}
+
+	return nil
+}

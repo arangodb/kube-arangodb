@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -38,6 +39,8 @@ type ServiceStarter interface {
 
 	Address() string
 	HTTPAddress() string
+
+	Dial() (grpc.ClientConnInterface, error)
 }
 
 type serviceStarter struct {
@@ -61,6 +64,10 @@ func (s *serviceStarter) Wait() error {
 	<-s.done
 
 	return s.error
+}
+
+func (s *serviceStarter) Dial() (grpc.ClientConnInterface, error) {
+	return grpc.NewClient(s.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
 
 func (s *serviceStarter) run(ctx context.Context, health Health, ln, http net.Listener) {
@@ -163,7 +170,11 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 	}
 
 	pr := ln.Addr().(*net.TCPAddr)
-	st.address = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
+	if pr.IP.IsUnspecified() {
+		st.address = fmt.Sprintf("127.0.0.1:%d", pr.Port)
+	} else {
+		st.address = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
+	}
 
 	var hln net.Listener
 
@@ -174,7 +185,11 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		}
 
 		pr := httpln.Addr().(*net.TCPAddr)
-		st.httpAddress = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
+		if pr.IP.IsUnspecified() {
+			st.httpAddress = fmt.Sprintf("127.0.0.1:%d", pr.Port)
+		} else {
+			st.httpAddress = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
+		}
 
 		hln = httpln
 	}

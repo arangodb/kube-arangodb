@@ -23,11 +23,13 @@ package svc
 import (
 	"context"
 	goHttp "net/http"
+	"sync"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
@@ -35,23 +37,53 @@ type Service interface {
 	Start(ctx context.Context) ServiceStarter
 
 	StartWithHealth(ctx context.Context, health Health) ServiceStarter
+
+	GetHandler(name string) (Handler, bool)
+
+	Dial() (grpc.ClientConnInterface, error)
 }
 
 type service struct {
+	lock sync.Mutex
+
 	server *grpc.Server
 	http   *goHttp.Server
 
 	cfg Configuration
 
 	handlers []Handler
+
+	starter ServiceStarter
+}
+
+func (p *service) Dial() (grpc.ClientConnInterface, error) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	if p.starter == nil {
+		return nil, errors.Errorf("server not initialized")
+	}
+
+	return p.starter.Dial()
 }
 
 func (p *service) StartWithHealth(ctx context.Context, health Health) ServiceStarter {
-	return newServiceStarter(ctx, p, health)
+	return p.start(ctx, health)
+}
+
+func (p *service) start(ctx context.Context, health Health) ServiceStarter {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	if p.starter != nil {
+		return serviceError{errors.Errorf("SErvice already started")}
+	}
+
+	p.starter = newServiceStarter(ctx, p, health)
+	return p.starter
 }
 
 func (p *service) Start(ctx context.Context) ServiceStarter {
-	return p.StartWithHealth(ctx, emptyHealth{})
+	return p.start(ctx, emptyHealth{})
 }
 
 func NewService(cfg Configuration, handlers ...Handler) (Service, error) {
@@ -62,6 +94,14 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	var q service
 
 	var opts []grpc.ServerOption
+
+	for _, handler := range handlers {
+		if o, ok := handler.(HandlerInitService); ok {
+			if err := o.InitService(&q); err != nil {
+				return nil, errors.Wrapf(err, "Unable to init handler: %s", handler.Name())
+			}
+		}
+	}
 
 	tls, err := cfg.GetTLSOptions(shutdown.Context())
 	if err != nil {
@@ -107,4 +147,17 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	}
 
 	return &q, nil
+}
+
+func (p *service) GetHandler(name string) (Handler, bool) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	for _, v := range p.handlers {
+		if v.Name() == name {
+			return v, true
+		}
+	}
+
+	return nil, false
 }

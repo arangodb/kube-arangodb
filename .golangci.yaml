@@ -119,6 +119,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
       - alias: networkingApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1
+      - alias: permissionApiPolicy
+        pkg: github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy
       - alias: permissionApi
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1
       - alias: platformApiv1alpha1
@@ -183,6 +185,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources
       - alias: ktls
         pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls
+      - alias: pbEnvoyAuthV3Impl
+        pkg: github.com/envoyproxy/go-control-plane/envoy/service/auth/v3/impl
       - alias: pbEnvoyAuthV3
         pkg: github.com/envoyproxy/go-control-plane/envoy/service/auth/v3
       - alias: pbEnvoyBootstrapV3

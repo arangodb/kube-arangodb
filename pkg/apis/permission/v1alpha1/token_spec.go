@@ -25,6 +25,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -49,6 +50,9 @@ type ArangoPermissionTokenSpec struct {
 	// +doc/type: string
 	// +doc/default: 1h
 	TTL *meta.Duration `json:"ttl,omitempty"`
+
+	// Policy defined the Authorization Policy
+	Policy *permissionApiPolicy.Policy `json:"policy,omitempty"`
 }
 
 func (c *ArangoPermissionTokenSpec) GetTTL() time.Duration {
@@ -65,6 +69,7 @@ func (c *ArangoPermissionTokenSpec) Validate() error {
 	}
 
 	return shared.WithErrors(
+		shared.ValidateOptionalInterfacePath("policy", c.Policy),
 		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
 		shared.ValidateOptionalPath("ttl", c.TTL, func(duration meta.Duration) error {
 			if duration.Duration < ArangoPermissionTokenMinTTL {
