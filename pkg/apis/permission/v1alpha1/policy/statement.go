@@ -51,7 +51,7 @@ type Statement struct {
 func (a Statement) Validate() error {
 	return errors.Errors(
 		shared.ValidateRequiredInterfacePath("effect", a.Effect),
-		shared.ValidateRequiredInterfacePath("actions", a.Actions),
-		shared.ValidateRequiredInterfacePath("resources", a.Resources),
+		shared.ValidateOptionalInterfacePath("actions", a.Actions),
+		shared.ValidateOptionalInterfacePath("resources", a.Resources),
 	)
 }

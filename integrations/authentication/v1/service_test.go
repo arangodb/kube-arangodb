@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import (
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
@@ -41,13 +42,13 @@ func Handler(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]
 	return handler
 }
 
-func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (string, svc.ServiceStarter) {
-	directory := t.TempDir()
+func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (tests.TokenManager, svc.ServiceStarter) {
+	tm := tests.NewTokenManager(t)
 
 	var currentMods []util.ModR[Configuration]
 
 	currentMods = append(currentMods, func(c Configuration) Configuration {
-		c.Path = directory
+		c.Path = tm.Path()
 		return c
 	})
 
@@ -61,10 +62,10 @@ func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration])
 	}, Handler(t, ctx, currentMods...))
 	require.NoError(t, err)
 
-	return directory, local.Start(ctx)
+	return tm, local.Start(ctx)
 }
 
-func Client(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (pbAuthenticationV1.AuthenticationV1Client, string) {
+func Client(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (pbAuthenticationV1.AuthenticationV1Client, tests.TokenManager) {
 	directory, start := Server(t, ctx, mods...)
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbAuthenticationV1.NewAuthenticationV1Client, start.Address())
@@ -78,7 +79,7 @@ func Test_Service(t *testing.T) {
 
 	client, directory := Client(t, ctx)
 
-	reSaveJWTTokens(t, directory, generateJWTToken())
+	directory.Activate(t, tests.GenerateJWTToken())
 
 	token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{})
 	require.NoError(t, err)
@@ -106,7 +107,7 @@ func Test_Service_DifferentDefaultUser(t *testing.T) {
 		return c
 	})
 
-	reSaveJWTTokens(t, directory, generateJWTToken())
+	directory.Set(t, tests.GenerateJWTToken())
 
 	token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{})
 	require.NoError(t, err)
@@ -134,7 +135,7 @@ func Test_Service_AskForDefaultIfAllowed(t *testing.T) {
 		return c
 	})
 
-	reSaveJWTTokens(t, directory, generateJWTToken())
+	directory.Set(t, tests.GenerateJWTToken())
 
 	token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{})
 	require.NoError(t, err)
@@ -162,7 +163,7 @@ func Test_Service_AskForNonDefaultIfAllowed(t *testing.T) {
 		return c
 	})
 
-	reSaveJWTTokens(t, directory, generateJWTToken())
+	directory.Set(t, tests.GenerateJWTToken())
 
 	token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
 		User: util.NewType("other"),
@@ -192,7 +193,7 @@ func Test_Service_AskForDefaultIfBlocked(t *testing.T) {
 		return c
 	})
 
-	reSaveJWTTokens(t, directory, generateJWTToken())
+	directory.Set(t, tests.GenerateJWTToken())
 
 	_, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
 		User: util.NewType("blocked"),
@@ -206,7 +207,7 @@ func Test_Service_WithTTL(t *testing.T) {
 
 	client, directory := Client(t, ctx)
 
-	reSaveJWTTokens(t, directory, generateJWTToken())
+	directory.Set(t, tests.GenerateJWTToken())
 
 	extract := func(t *testing.T, duration time.Duration) (time.Duration, time.Duration) {
 		token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{

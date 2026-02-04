@@ -27,12 +27,11 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
-func SecretCacheSecretAPI(secrets generic.ReadClient[*core.Secret], secretName string, ttl time.Duration) cache.ObjectFetcher[utilToken.Secret] {
+func SecretCacheSecretAPI(secrets generic.ReadClient[*core.Secret], secretName string, ttl time.Duration) func(ctx context.Context) (utilToken.Secret, time.Duration, error) {
 	return func(ctx context.Context) (utilToken.Secret, time.Duration, error) {
 		s, err := LoadSecretSetFromSecretAPI(ctx, secrets, secretName)
 		if err != nil {

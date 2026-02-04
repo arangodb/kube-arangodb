@@ -22,84 +22,58 @@ package v1
 
 import (
 	"context"
-	"fmt"
-	goHttp "net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
-	"github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
+
+func NewAuthenticationHandler(t *testing.T, mods ...util.ModR[pbImplAuthenticationV1.Configuration]) (tests.TokenManager, svc.Handler) {
+	directory := tests.NewTokenManager(t)
+
+	var currentMods []util.ModR[pbImplAuthenticationV1.Configuration]
+
+	currentMods = append(currentMods, func(c pbImplAuthenticationV1.Configuration) pbImplAuthenticationV1.Configuration {
+		c.Path = directory.Path()
+		return c
+	})
+
+	currentMods = append(currentMods, mods...)
+
+	handler, err := pbImplAuthenticationV1.New(t.Context(), pbImplAuthenticationV1.NewConfiguration().With(currentMods...))
+	require.NoError(t, err)
+
+	return directory, handler
+}
 
 func Handler(plugin pbImplAuthorizationV1Shared.Plugin, mods ...util.ModR[Configuration]) svc.Handler {
 	return newInternal(NewConfiguration().With(mods...), plugin)
 }
 
-func Server(t *testing.T, ctx context.Context, plugin pbImplAuthorizationV1Shared.Plugin, mods ...util.ModR[Configuration]) svc.ServiceStarter {
-	var currentMods []util.ModR[Configuration]
-
-	currentMods = append(currentMods, func(c Configuration) Configuration {
-		return c
-	})
-
-	currentMods = append(currentMods, mods...)
+func Server(t *testing.T, ctx context.Context, handlers ...svc.Handler) svc.ServiceStarter {
 
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
 		Gateway: &svc.ConfigurationGateway{
 			Address: "127.0.0.1:0",
 		},
-	}, Handler(plugin, currentMods...))
+	}, handlers...)
 	require.NoError(t, err)
 
 	return local.Start(ctx)
 }
 
-func Client(t *testing.T, ctx context.Context, plugin pbImplAuthorizationV1Shared.Plugin, mods ...util.ModR[Configuration]) (pbAuthorizationV1.AuthorizationV1Client, string) {
-	start := Server(t, ctx, plugin, mods...)
+func Client(t *testing.T, ctx context.Context, handlers ...svc.Handler) (pbAuthorizationV1.AuthorizationV1Client, string) {
+	start := Server(t, ctx, handlers...)
 
 	client := tgrpc.NewGRPCClient(t, ctx, pbAuthorizationV1.NewAuthorizationV1Client, start.Address())
 
 	return client, start.HTTPAddress()
-}
-
-func Test_Service(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
-
-	p := newPluginTest()
-
-	client, _ := Client(t, ctx, p)
-
-	resp, err := client.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-		User:     "admin",
-		Action:   "test:Get",
-		Resource: "test",
-	})
-	require.NoError(t, err)
-	require.EqualValues(t, pbAuthorizationV1.AuthorizationV1Effect_Allow, resp.GetEffect())
-}
-
-func Test_ServiceHTTP(t *testing.T) {
-	ctx, c := context.WithCancel(context.Background())
-	defer c()
-
-	p := newPluginTest()
-
-	_, endpoint := Client(t, ctx, p)
-
-	data, err := http.Post[ugrpc.Object[*pbAuthorizationV1.AuthorizationV1PermissionRequest], any, error](ctx, goHttp.DefaultClient, ugrpc.NewObject(&pbAuthorizationV1.AuthorizationV1PermissionRequest{
-		User:     "admin",
-		Action:   "test:Get",
-		Resource: "test",
-	}), fmt.Sprintf("http://%s/_integration/authorization/v1/evaluate", endpoint)).WithCode(200).Data()
-	require.NoError(t, err)
-
-	t.Logf("Response: %s", string(data))
 }

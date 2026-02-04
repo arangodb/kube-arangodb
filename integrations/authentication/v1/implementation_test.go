@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,18 +30,19 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func Test_Basic(t *testing.T) {
-	directory := t.TempDir()
+	directory := tests.NewTokenManager(t)
 
-	reSaveJWTTokens(t, directory, generateJWTToken(), generateJWTToken(), generateJWTToken(), generateJWTToken(), generateJWTToken(), generateJWTToken())
+	directory.Set(t, tests.GenerateJWTToken(), tests.GenerateJWTToken(), tests.GenerateJWTToken(), tests.GenerateJWTToken(), tests.GenerateJWTToken(), tests.GenerateJWTToken())
 
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
 	s, err := newInternal(ctx, NewConfiguration().With(func(c Configuration) Configuration {
-		c.Path = directory
+		c.Path = directory.Path()
 		c.TTL = 0
 		return c
 	}))
@@ -66,21 +67,21 @@ func Test_Basic(t *testing.T) {
 }
 
 func Test_Flow_WithoutTTL(t *testing.T) {
-	directory := t.TempDir()
+	directory := tests.NewTokenManager(t)
 
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
 	cfg := NewConfiguration()
 
-	cfg.Path = directory
+	cfg.Path = directory.Path()
 	cfg.TTL = time.Duration(0)
 
 	s, err := newInternal(ctx, cfg)
 	require.NoError(t, err)
 
-	secret1 := generateJWTToken()
-	secret2 := generateJWTToken()
+	secret1 := tests.GenerateJWTToken()
+	secret2 := tests.GenerateJWTToken()
 
 	var token1, token2 string
 
@@ -90,7 +91,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 	})
 
 	t.Run("Save secret1", func(t *testing.T) {
-		reSaveJWTTokens(t, directory, secret1)
+		directory.Set(t, secret1)
 	})
 
 	t.Run("Create token1", func(t *testing.T) {
@@ -111,7 +112,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 	})
 
 	t.Run("Save secret2", func(t *testing.T) {
-		reSaveJWTTokens(t, directory, secret2)
+		directory.Set(t, secret2)
 	})
 
 	t.Run("Create token2", func(t *testing.T) {
@@ -132,7 +133,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 	})
 
 	t.Run("Save secret1", func(t *testing.T) {
-		reSaveJWTTokens(t, directory, secret1)
+		directory.Set(t, secret1)
 	})
 
 	t.Run("Validate token2", func(t *testing.T) {
@@ -146,7 +147,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 	})
 
 	t.Run("Save secret2", func(t *testing.T) {
-		reSaveJWTTokens(t, directory, secret2)
+		directory.Set(t, secret2)
 	})
 
 	t.Run("Validate token1", func(t *testing.T) {
@@ -160,7 +161,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 	})
 
 	t.Run("Save secret1 & secret2", func(t *testing.T) {
-		reSaveJWTTokens(t, directory, secret1, secret2)
+		directory.Set(t, secret1, secret2)
 	})
 
 	t.Run("Validate token1", func(t *testing.T) {

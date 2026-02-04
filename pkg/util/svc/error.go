@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ package svc
 import (
 	"context"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -30,6 +32,10 @@ import (
 
 type serviceError struct {
 	error
+}
+
+func (p serviceError) Dial() (grpc.ClientConnInterface, error) {
+	return nil, status.Error(codes.Unavailable, "service unavailable")
 }
 
 func (p serviceError) StartWithHealth(ctx context.Context, health Health) ServiceStarter {

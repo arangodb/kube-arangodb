@@ -65,7 +65,7 @@ message AuthorizationV1PermissionManyRequest {
   repeated AuthorizationV1PermissionManyRequestItem items = 3;
 }
 
-// AuthorizationV1PermissionRequest request for the single item of evaluation
+// AuthorizationV1PermissionManyRequestItem request for the single item of evaluation
 message AuthorizationV1PermissionManyRequestItem {
   // Defines the action
   string action = 1;
@@ -87,6 +87,30 @@ message AuthorizationV1PermissionManyResponse {
 
   // List of the request items
   repeated AuthorizationV1PermissionResponse items = 3;
+}
+
+// AuthorizationV1PermissionRequest request for the Permission evaluation request
+message AuthorizationV1PermissionTokenRequest {
+  // Defines the Token
+  string token = 1;
+
+  // Defines the action
+  string action = 2;
+
+  // Defines the resource
+  string resource = 3;
+
+  // request context
+  optional AuthorizationV1PermissionRequestContext context = 4;
+}
+
+// AuthorizationV1PermissionManyRequest request for the list Permission evaluation request
+message AuthorizationV1PermissionTokenManyRequest {
+  // Defines the Token
+  string token = 1;
+
+  // Defines list of check actions
+  repeated AuthorizationV1PermissionManyRequestItem items = 2;
 }
 
 // Request context

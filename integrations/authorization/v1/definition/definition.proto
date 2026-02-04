@@ -37,10 +37,26 @@ service AuthorizationV1 {
       body: '*'
     };
   }
+
   // Evaluates multiple permission
   rpc EvaluateMany(AuthorizationV1PermissionManyRequest) returns (AuthorizationV1PermissionManyResponse) {
     option (google.api.http) = {
-      put: "/_integration/authorization/v1/evaluate"
+      post: "/_integration/authorization/v1/evaluate-many"
+      body: '*'
+    };
+  }
+  // Evaluates single permission from JWT Token
+  rpc EvaluateToken(AuthorizationV1PermissionTokenRequest) returns (AuthorizationV1PermissionResponse) {
+    option (google.api.http) = {
+      post: "/_integration/authorization/v1/evaluate-token"
+      body: '*'
+    };
+  }
+
+  // Evaluates multiple permission from JWT Token
+  rpc EvaluateTokenMany(AuthorizationV1PermissionTokenManyRequest) returns (AuthorizationV1PermissionManyResponse) {
+    option (google.api.http) = {
+      post: "/_integration/authorization/v1/evaluate-token-many"
       body: '*'
     };
   }

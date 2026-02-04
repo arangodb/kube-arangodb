@@ -36,3 +36,9 @@ type Handler interface {
 
 	Gateway(ctx context.Context, mux *runtime.ServeMux) error
 }
+
+type HandlerInitService interface {
+	Handler
+
+	InitService(svc Service) error
+}

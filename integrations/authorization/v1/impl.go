@@ -25,9 +25,14 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
+	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -55,6 +60,7 @@ func newInternal(cfg Configuration, plugin pbImplAuthorizationV1Shared.Plugin) *
 
 var _ pbAuthorizationV1.AuthorizationV1Server = &implementation{}
 var _ svc.Handler = &implementation{}
+var _ svc.HandlerInitService = &implementation{}
 
 type implementation struct {
 	pbAuthorizationV1.UnimplementedAuthorizationV1Server
@@ -62,6 +68,14 @@ type implementation struct {
 	cfg Configuration
 
 	plugin pbImplAuthorizationV1Shared.Plugin
+
+	auth cache.Object[pbAuthenticationV1.AuthenticationV1Client]
+}
+
+func (i *implementation) InitService(svc svc.Service) error {
+	i.auth = pbImplAuthenticationV1.ServiceClient(svc)
+
+	return nil
 }
 
 func (i *implementation) Name() string {
@@ -132,4 +146,50 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 		Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
 		Items:   r,
 	}, nil
+}
+
+func (i *implementation) EvaluateToken(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionTokenRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
+	auth, err := i.auth.Get(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Authentication V1 Plugin not enabled: %v", err)
+	}
+
+	resp, err := auth.Validate(ctx, &pbAuthenticationV1.ValidateRequest{Token: request.GetToken()})
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Unable to validate the token: %v", err)
+	}
+
+	if !resp.GetIsValid() {
+		return nil, status.Errorf(codes.FailedPrecondition, "JWT Token is invalid")
+	}
+
+	return i.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
+		User:     resp.GetDetails().GetUser(),
+		Roles:    resp.GetDetails().GetRoles(),
+		Action:   request.GetAction(),
+		Resource: request.GetResource(),
+		Context:  request.GetContext(),
+	})
+}
+
+func (i *implementation) EvaluateTokenMany(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionTokenManyRequest) (*pbAuthorizationV1.AuthorizationV1PermissionManyResponse, error) {
+	auth, err := i.auth.Get(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Authentication V1 Plugin not enabled: %v", err)
+	}
+
+	resp, err := auth.Validate(ctx, &pbAuthenticationV1.ValidateRequest{Token: request.GetToken()})
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Unable to validate the token: %v", err)
+	}
+
+	if !resp.GetIsValid() {
+		return nil, status.Errorf(codes.FailedPrecondition, "JWT Token is invalid")
+	}
+
+	return i.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
+		User:  resp.GetDetails().GetUser(),
+		Roles: resp.GetDetails().GetRoles(),
+		Items: request.GetItems(),
+	})
 }

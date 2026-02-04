@@ -18,34 +18,24 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package policy
+package v1
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/strings"
+	"context"
+	"time"
+
+	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-type Actions []Action
-
-func (a Actions) Validate() error {
-	return shared.ValidateInterfaceList(a)
-}
-
-type Action string
-
-func (a Action) Validate() error {
-	if z := strings.Split(string(a), ":"); len(z) != 2 {
-		return errors.Errorf("Invalid action '%s': expected format '<namespace>:<name>'", string(a))
-	} else {
-		if z[0] == "" {
-			return errors.Errorf("Invalid action '%s': empty namespace", string(a))
+func ServiceClient(svc svc.Service) cache.Object[pbAuthenticationV1.AuthenticationV1Client] {
+	return cache.NewObject[pbAuthenticationV1.AuthenticationV1Client](func(ctx context.Context) (pbAuthenticationV1.AuthenticationV1Client, time.Duration, error) {
+		conn, err := svc.Dial()
+		if err != nil {
+			return nil, 0, err
 		}
 
-		if z[1] == "" {
-			return errors.Errorf("Invalid action '%s': empty name", string(a))
-		}
-	}
-
-	return nil
+		return pbAuthenticationV1.NewAuthenticationV1Client(conn), time.Hour * 24 * 365, nil
+	})
 }

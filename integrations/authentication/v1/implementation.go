@@ -374,6 +374,12 @@ func (i *implementation) extractTokenDetails(cache utilToken.Secret, t string) (
 		switch o := v.(type) {
 		case []string:
 			roles = o
+		case []interface{}:
+			for _, v := range o {
+				if z, ok := v.(string); ok {
+					roles = append(roles, z)
+				}
+			}
 		}
 	}
 
