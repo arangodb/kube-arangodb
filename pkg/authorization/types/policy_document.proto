@@ -22,10 +22,13 @@ syntax = "proto3";
 
 package types;
 
-option go_package = "github.com/kube-arangodb/pkg/authorization/types";
+import "pkg/authorization/types/change.proto";
+import "pkg/authorization/types/policy.proto";
 
-// LockDocument Object Definition
-message LockDocument {
+option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/types";
+
+// PolicyDocument Object Definition
+message PolicyDocument {
   // ArangoDB Document Key
   string key = 1  [json_name = "_key"];
   // ArangoDB Document ID
@@ -33,6 +36,15 @@ message LockDocument {
   // ArangoDB Document Revision
   optional string rev = 3 [json_name = "_rev"];
 
-  // Defines Revision ID
-  uint64 revision = 4;
+  // Sequence ID of the Document
+  uint64 sequence = 4;
+
+  // Object Spec
+  Policy spec = 5;
+
+  // Creation details
+  DocumentChange created = 6;
+
+  // Deletion details
+  optional DocumentChange deleted = 7;
 }
