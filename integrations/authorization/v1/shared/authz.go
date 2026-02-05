@@ -27,19 +27,21 @@ import (
 )
 
 type Plugin interface {
-	Background(ctx context.Context)
-
 	Ready(ctx context.Context) error
+
+	Revision() uint64
 
 	Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error)
 }
 
 type PluginFunc func(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error)
 
+func (p PluginFunc) Revision() uint64 {
+	return 0
+}
+
 func (p PluginFunc) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
 	return p(ctx, req)
 }
-
-func (p PluginFunc) Background(ctx context.Context) {}
 
 func (p PluginFunc) Ready(ctx context.Context) error { return nil }

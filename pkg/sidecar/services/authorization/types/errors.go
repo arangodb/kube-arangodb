@@ -18,16 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package types
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+type PermissionDenied struct{}
+
+func (e PermissionDenied) Error() string {
+	return "permission denied"
+}
+
+func IsPermissionDenied(err error) bool {
+	var permissionDenied PermissionDenied
+	ok := errors.As(err, &permissionDenied)
+	return ok
+}

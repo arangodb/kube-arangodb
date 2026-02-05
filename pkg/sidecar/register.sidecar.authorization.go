@@ -18,16 +18,28 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package sidecar
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import (
+	"github.com/spf13/cobra"
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
+
+func init() {
+	global.MustRegister("authorization", registerAuthorization)
+}
+
+func registerAuthorization(cmd *cobra.Command) (svc.Handler, bool, error) {
+	if p, err := flagAuth.Get(cmd); err != nil {
+		return nil, false, err
+	} else if p == "" {
+		return nil, false, nil
+	}
+
+	client := arangoDBDatabaseClient(cmd)
+
+	return sidecarSvcAuthzDefinition.NewAuthorizer(db.NewClient(client).Database("_system")), true, nil
+}

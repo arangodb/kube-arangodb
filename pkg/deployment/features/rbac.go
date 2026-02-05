@@ -18,16 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package features
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+func init() {
+	registerFeature(rbacEnforced)
+}
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
-)
+var rbacEnforced = &feature{
+	name:               "rbac-enforced",
+	description:        "When disabled RBAC runs in permissive mode",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+	hidden:             true,
+}
+
+func RBACEnforced() Feature {
+	return rbacEnforced
+}
