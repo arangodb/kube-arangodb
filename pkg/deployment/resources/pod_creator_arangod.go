@@ -533,7 +533,7 @@ func (m *MemberArangoDPod) GetRestartPolicy() core.RestartPolicy {
 }
 
 func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core.Container, error) {
-	image := m.GetContainerCreator().GetImage()
+	image := m.context.GetOperatorImage()
 
 	args := createInternalExporterArgs(m.Deployment, m.Group, m.GroupSpec, m.Image.ArangoDBVersion)
 

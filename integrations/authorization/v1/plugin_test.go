@@ -49,6 +49,10 @@ type pluginTestImpl struct {
 	responses map[string]*pbAuthorizationV1.AuthorizationV1PermissionResponse
 }
 
+func (p *pluginTestImpl) Revision() uint64 {
+	return 0
+}
+
 func (p *pluginTestImpl) Background(ctx context.Context) {
 
 }

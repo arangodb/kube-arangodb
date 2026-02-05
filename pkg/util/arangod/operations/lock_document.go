@@ -18,16 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package operations
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+const LockDocumentID = "LOCK"
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
-)
+type LockDocument struct {
+	Document `json:",inline"`
+
+	// CurrentSequence keeps current object sequence
+	CurrentSequence uint32 `json:"current_sequence"`
+
+	// Lock keeps the lock id
+	Lock string `json:"lock"`
+}

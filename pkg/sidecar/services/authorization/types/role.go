@@ -18,16 +18,47 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package types
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import (
+	"sort"
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
+
+func (x *Role) Hash() string {
+	if x == nil {
+		return ""
+	}
+
+	return util.SHA256FromStringArray(
+		util.SHA256FromStringArray(x.GetUsers()...),
+		util.SHA256FromStringArray(x.GetPolicies()...),
+	)
+}
+
+func (x *Role) Deleted() bool {
+	return x == nil
+}
+
+func (x *Role) Clean() error {
+	if x == nil {
+		return nil
+	}
+
+	sort.Strings(x.Users)
+	sort.Strings(x.Policies)
+
+	x.Users = util.UniqueList(x.Users)
+	x.Policies = util.UniqueList(x.Policies)
+
+	return nil
+}
+
+func (x *Role) Validate() error {
+	if x == nil {
+		return nil
+	}
+
+	return nil
+}

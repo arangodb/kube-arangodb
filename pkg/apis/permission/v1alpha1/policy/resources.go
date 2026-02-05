@@ -20,7 +20,10 @@
 
 package policy
 
-import shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+import (
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+)
 
 type Resources []Resource
 
@@ -31,5 +34,5 @@ func (a Resources) Validate() error {
 type Resource string
 
 func (a Resource) Validate() error {
-	return nil
+	return sidecarSvcAuthzTypes.ValidateResource(string(a))
 }

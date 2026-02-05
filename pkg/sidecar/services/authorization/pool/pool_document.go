@@ -18,16 +18,35 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package pool
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
+import (
+	"google.golang.org/protobuf/proto"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+type DocumentAction string
+
+var (
+	DocumentCreateAction DocumentAction = "create"
+	DocumentUpdateAction DocumentAction = "update"
+	DocumentDeleteAction DocumentAction = "delete"
+)
+
+type Document[T proto.Message] struct {
+	Key string `json:"_key"`
+
+	Name string `json:"name"`
+
+	Rev *string `json:"_rev,omitempty"`
+
+	Sequence uint32 `json:"sequence"`
+
+	Created meta.Time `json:"created,omitempty"`
+
+	Deleted meta.Time `json:"deleted,omitempty"`
+
+	Action DocumentAction `json:"action,omitempty"`
+
+	Spec T `json:"spec,omitempty"`
+}
