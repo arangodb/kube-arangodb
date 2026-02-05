@@ -18,28 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-syntax = "proto3";
+package types
 
-package types;
-
-import "pkg/authorization/types/effect.proto";
-
-option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/types";
-
-// Policy Object Definition
-message Policy {
-  // List of the statements
-  repeated PolicyStatement statements = 1;
-}
-
-// PolicyStatement Object Definition
-message PolicyStatement {
-  // Effect of the statement
-  Effect effect = 1;
-
-  // List of the resources
-  repeated string resources = 2;
-
-  // List of the actions
-  repeated string actions = 3;
-}
+const LockDocumentID = "LOCK"

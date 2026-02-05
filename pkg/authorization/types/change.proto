@@ -24,7 +24,7 @@ package types;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/kube-arangodb/pkg/authorization/types";
+option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/types";
 
 // DocumentChange defines change of the document
 message DocumentChange {
