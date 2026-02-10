@@ -18,19 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-syntax = "proto3";
+package authorization
 
-package types;
+import (
+	"google.golang.org/protobuf/proto"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
-import "google/protobuf/timestamp.proto";
+type Document[T proto.Message] struct {
+	Key string `json:"_key"`
 
-option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/types";
+	Name string `json:"name"`
 
-// DocumentChange defines change of the document
-message DocumentChange {
-  // Defines change time
-  google.protobuf.Timestamp time = 1;
+	Rev *string `json:"_rev,omitempty"`
 
-  // Defines change details, like user
-  string details = 2;
+	Sequence uint32 `json:"sequence"`
+
+	Created meta.Time `json:"created,omitempty"`
+
+	Deleted meta.Time `json:"deleted,omitempty"`
+
+	Spec T `json:"spec,omitempty"`
 }

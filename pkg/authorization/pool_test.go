@@ -18,14 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-<<<<<<<< HEAD:pkg/logging/standard.go
-//go:build !testing
-
-package logging
-
-func getLogLevel(topic Level) Level {
-	return topic
-========
 package authorization
 
 import (
@@ -45,3 +37,5 @@ func Test_Authz(t *testing.T) {
 	println(ver.String())
 >>>>>>>> 66c8c5e91 (Add DB Wrappers):pkg/authorization/authz_test.go
 }
+=======
+>>>>>>> 62d70b871 (Change Proto and Add Client):pkg/authorization/pool_test.go

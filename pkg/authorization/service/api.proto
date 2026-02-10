@@ -20,31 +20,18 @@
 
 syntax = "proto3";
 
-package types;
-
-import "pkg/authorization/types/change.proto";
 import "pkg/authorization/types/policy.proto";
+import "pkg/authorization/types/role.proto";
+import "integrations/shared/v1/definition/empty.proto";
 
-option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/types";
+import "google/protobuf/duration.proto";
 
-// PolicyDocument Object Definition
-message PolicyDocument {
-  // ArangoDB Document Key
-  string key = 1  [json_name = "_key"];
-  // ArangoDB Document ID
-  string id = 2  [json_name = "_id"];
-  // ArangoDB Document Revision
-  optional string rev = 3 [json_name = "_rev"];
+package service;
 
-  // Sequence ID of the Document
-  uint64 sequence = 4;
+option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/service";
 
-  // Object Spec
-  Policy spec = 5;
 
-  // Creation details
-  DocumentChange created = 6;
+// AuthorizationAPI Service implementation
+service AuthorizationAPI {
 
-  // Deletion details
-  optional DocumentChange deleted = 7;
 }

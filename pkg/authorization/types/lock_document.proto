@@ -34,7 +34,7 @@ message LockDocument {
   optional string rev = 3 [json_name = "_rev"];
 
   // Defines Sequence ID
-  uint64 sequence = 4;
+  uint32 current_sequence = 4;
 
   // Defines unique lock ID
   string lock = 5;

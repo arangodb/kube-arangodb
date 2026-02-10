@@ -35,13 +35,6 @@ import (
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
-type AlreadyLocked struct {
-}
-
-func (a AlreadyLocked) Error() string {
-	return "AlreadyLocked"
-}
-
 type LockFunc[T proto.Message] func(ctx context.Context, c arangodb.Transaction, lock *types.LockDocument) (T, error)
 
 func WithLock[T proto.Message](collection string, process LockFunc[T]) TransactionFunc[T] {

@@ -18,21 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package policy
+syntax = "proto3";
 
-import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/authorization/types"
-)
+package types;
 
-type Resources []Resource
+option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/types";
 
-func (a Resources) Validate() error {
-	return shared.ValidateInterfaceList(a)
-}
+// Role Object Definition
+message Role {
+  // List of the policies
+  repeated string policies = 1;
 
-type Resource string
-
-func (a Resource) Validate() error {
-	return types.ValidateResource(string(a))
+  // List of the users
+  repeated string users = 2;
 }
