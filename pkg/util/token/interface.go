@@ -20,7 +20,11 @@
 
 package token
 
-import jwt "github.com/golang-jwt/jwt/v5"
+import (
+	"time"
+
+	jwt "github.com/golang-jwt/jwt/v5"
+)
 
 type Secret interface {
 	SigningHash() string
@@ -28,6 +32,8 @@ type Secret interface {
 
 	Sign(method jwt.SigningMethod, claims Claims) (string, error)
 	Validate(token string) (Token, error)
+
+	Details(token string) (*string, []string, time.Duration, error)
 
 	Exists() bool
 }

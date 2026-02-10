@@ -28,10 +28,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 type ServiceStarter interface {
@@ -178,7 +180,24 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 
 	var hln net.Listener
 
-	if service.cfg.Gateway != nil {
+	if gateway := service.cfg.Gateway; gateway != nil {
+		conn, err := grpc.NewClient(st.address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			return serviceError{err}
+		}
+
+		mux := runtime.NewServeMux(gateway.MuxExtensions...)
+
+		for _, handler := range service.handlers {
+			if h, ok := handler.(HandlerGateway); ok {
+				if err := h.Gateway(shutdown.Context(), mux, conn); err != nil {
+					return serviceError{err}
+				}
+			}
+		}
+
+		service.http.Handler = service.cfg.Wrap.Wrap(mux)
+
 		httpln, err := net.Listen("tcp", service.cfg.Gateway.Address)
 		if err != nil {
 			return serviceError{err}

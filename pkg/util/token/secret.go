@@ -22,6 +22,7 @@ package token
 
 import (
 	"bytes"
+	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
@@ -68,6 +69,10 @@ func NewSecretWithSize(data []byte, size int) Secret {
 }
 
 type secret []byte
+
+func (s secret) Details(token string) (*string, []string, time.Duration, error) {
+	return extractTokenDetails(s, token)
+}
 
 func (s secret) SigningHash() string {
 	return s.Hash()

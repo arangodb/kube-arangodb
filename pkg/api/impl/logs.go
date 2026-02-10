@@ -30,6 +30,7 @@ import (
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	pb "github.com/arangodb/kube-arangodb/pkg/api/server"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 var loglevelMap = map[pb.LogLevel]logging.Level{
@@ -59,7 +60,7 @@ func (i *implementation) setLogLevelsByTopics(logLevels map[string]logging.Level
 }
 
 func (i *implementation) GetLogLevel(ctx context.Context, _ *pbSharedV1.Empty) (*pb.LogLevelConfig, error) {
-	if i.authenticate(ctx) != nil {
+	if auth := authenticator.GetIdentity(ctx); auth == nil {
 		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
 	}
 
@@ -75,7 +76,7 @@ func (i *implementation) GetLogLevel(ctx context.Context, _ *pbSharedV1.Empty) (
 }
 
 func (i *implementation) SetLogLevel(ctx context.Context, cfg *pb.LogLevelConfig) (*pbSharedV1.Empty, error) {
-	if i.authenticate(ctx) != nil {
+	if auth := authenticator.GetIdentity(ctx); auth == nil {
 		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
 	}
 

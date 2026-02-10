@@ -25,12 +25,12 @@ import (
 	goHttp "net/http"
 	"sync"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 type Service interface {
@@ -119,6 +119,8 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 	opts = append(opts, nopts...)
 
+	opts = append(opts, authenticator.NewInterceptorOptions(cfg.Authenticator)...)
+
 	q.cfg = cfg
 	q.server = grpc.NewServer(opts...)
 	q.handlers = handlers
@@ -128,20 +130,7 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	}
 
 	if gateway := cfg.Gateway; gateway != nil {
-		mux := runtime.NewServeMux(gateway.MuxExtensions...)
-
-		for _, handler := range q.handlers {
-			if err := handler.Gateway(shutdown.Context(), mux); err != nil {
-				return nil, err
-			}
-		}
-
-		var handler goHttp.Handler = mux
-
-		handler = cfg.Wrap.Wrap(handler)
-
 		q.http = &goHttp.Server{
-			Handler:   handler,
 			TLSConfig: tls,
 		}
 	}

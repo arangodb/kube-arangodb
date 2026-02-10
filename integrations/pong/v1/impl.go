@@ -115,7 +115,7 @@ func (i *impl) Register(registrar *grpc.Server) {
 	pbPongV1.RegisterPongV1Server(registrar, i)
 }
 
-func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return pbPongV1.RegisterPongV1HandlerServer(ctx, mux, i)
 }
 

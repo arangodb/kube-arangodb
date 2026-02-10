@@ -21,6 +21,8 @@
 package token
 
 import (
+	"time"
+
 	jwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -31,6 +33,10 @@ func EmptySecret() Secret {
 }
 
 type emptySecret struct{}
+
+func (e emptySecret) Details(token string) (*string, []string, time.Duration, error) {
+	return nil, []string{}, time.Duration(0), jwt.ErrSignatureInvalid
+}
 
 func (e emptySecret) SigningHash() string {
 	return ""

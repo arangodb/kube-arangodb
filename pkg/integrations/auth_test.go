@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ func Test_AuthCases(t *testing.T) {
 				"health",
 				"v1")).
 				Code(t, codes.Unauthenticated).
-				Errorf(t, "authorization token is not provided")
+				Errorf(t, "Unauthorized")
 		})
 		t.Run("external", func(t *testing.T) {
 			tgrpc.AsGRPCError(t, executeSync(t, shutdown.Context(),
@@ -68,7 +68,7 @@ func Test_AuthCases(t *testing.T) {
 				"health",
 				"v1")).
 				Code(t, codes.Unauthenticated).
-				Errorf(t, "authorization token is not provided")
+				Errorf(t, "Unauthorized")
 		})
 	})
 
@@ -89,7 +89,7 @@ func Test_AuthCases(t *testing.T) {
 				"health",
 				"v1")).
 				Code(t, codes.Unauthenticated).
-				Errorf(t, "invalid token")
+				Errorf(t, "Unauthorized")
 		})
 		t.Run("external", func(t *testing.T) {
 			require.NoError(t, executeSync(t, shutdown.Context(),
@@ -126,7 +126,7 @@ func Test_AuthCases(t *testing.T) {
 				"health",
 				"v1")).
 				Code(t, codes.Unauthenticated).
-				Errorf(t, "invalid token")
+				Errorf(t, "Unauthorized")
 		})
 	})
 }

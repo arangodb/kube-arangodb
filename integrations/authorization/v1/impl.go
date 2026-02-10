@@ -94,7 +94,7 @@ func (i *implementation) Register(registrar *grpc.Server) {
 	pbAuthorizationV1.RegisterAuthorizationV1Server(registrar, i)
 }
 
-func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return pbAuthorizationV1.RegisterAuthorizationV1HandlerServer(ctx, mux, i)
 }
 

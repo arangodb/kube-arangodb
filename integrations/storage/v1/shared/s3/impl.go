@@ -79,7 +79,7 @@ func (s *s3impl) Register(registrar *grpc.Server) {
 	pbStorage.RegisterBucketServiceServer(registrar, s)
 }
 
-func (s *s3impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (s *s3impl) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return nil
 }
 
