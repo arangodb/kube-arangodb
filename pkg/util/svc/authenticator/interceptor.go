@@ -67,7 +67,7 @@ func NewInterceptorOptions(auth Authenticator) []grpc.ServerOption {
 			}
 
 			if identity != nil {
-				ctx = context.WithValue(context.Background(), identityContextKey, identity)
+				ctx = context.WithValue(ctx, identityContextKey, identity)
 			}
 
 			return handler(ctx, req)

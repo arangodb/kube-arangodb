@@ -72,15 +72,21 @@ func (s *serviceStarter) Dial() (grpc.ClientConnInterface, error) {
 	return grpc.NewClient(s.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
 
-func (s *serviceStarter) run(ctx context.Context, health Health, ln, http net.Listener) {
+func (s *serviceStarter) run(ctx context.Context, health Health, ln, http net.Listener, conn *grpc.ClientConn) {
 	defer close(s.done)
 
-	s.error = s.runE(ctx, health, ln, http)
+	s.error = s.runE(ctx, health, ln, http, conn)
 }
 
-func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.Listener) error {
+func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.Listener, conn *grpc.ClientConn) error {
 	ctx, c := context.WithCancel(ctx)
 	defer c()
+
+	defer func() {
+		if err := conn.Close(); err != nil {
+			logger.Err(err).Warn("Failed to close connection")
+		}
+	}()
 
 	var serveError error
 
@@ -178,13 +184,14 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		st.address = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
 	}
 
+	conn, err := grpc.NewClient(st.address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return serviceError{err}
+	}
+
 	var hln net.Listener
 
 	if gateway := service.cfg.Gateway; gateway != nil {
-		conn, err := grpc.NewClient(st.address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			return serviceError{err}
-		}
 
 		mux := runtime.NewServeMux(gateway.MuxExtensions...)
 
@@ -213,7 +220,7 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		hln = httpln
 	}
 
-	go st.run(ctx, health, ln, hln)
+	go st.run(ctx, health, ln, hln, conn)
 
 	return st
 }
