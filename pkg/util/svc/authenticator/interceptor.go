@@ -46,6 +46,10 @@ type serverStream struct {
 	ctx context.Context
 }
 
+func (s *serverStream) Context() context.Context {
+	return s.ctx
+}
+
 func NewInterceptorOptions(auth Authenticator) []grpc.ServerOption {
 	if auth == nil {
 		auth = NewAlwaysAuthenticator()
