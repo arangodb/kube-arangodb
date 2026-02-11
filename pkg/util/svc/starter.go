@@ -25,10 +25,10 @@ import (
 	"fmt"
 	"net"
 	goHttp "net/http"
-	"sync"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -83,56 +83,56 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 
 	var serveError error
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg, nctx := errgroup.WithContext(ctx)
+
+	wg.Go(func() error {
 		defer c()
 
 		go func() {
-			<-ctx.Done()
+			<-nctx.Done()
 
 			s.service.server.GracefulStop()
 		}()
 
 		if err := s.service.server.Serve(ln); !errors.AnyOf(err, grpc.ErrServerStopped) {
-			serveError = err
+			return err
 		}
-	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
 
+	wg.Go(func() error {
 		if s.service.cfg.Gateway == nil {
-			return
+			return nil
 		}
 
 		defer c()
 
 		go func() {
-			<-ctx.Done()
+			<-nctx.Done()
 
 			s.service.http.Close()
 		}()
 
 		if s.service.tls {
 			if err := s.service.http.ServeTLS(http, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
-				serveError = err
+				return err
 			}
 		} else {
 			if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
-				serveError = err
+				return err
 			}
 		}
-	}()
+
+		return nil
+	})
 
 	done := make(chan struct{})
 
 	go func() {
 		defer close(done)
 
-		wg.Wait()
+		serveError = wg.Wait()
 	}()
 
 	ticker := time.NewTicker(125 * time.Millisecond)
