@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,11 +28,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
 	"github.com/arangodb/go-driver/v2/connection"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
-	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -144,66 +143,10 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Clien
 	})
 }
 
-func (d *Database) databaseSourceCollection(ctx context.Context, db arangodb.Database) (arangodb.CollectionProperties, error) {
-	col, err := db.GetCollection(ctx, d.Source.Collection, &arangodb.GetCollectionOptions{SkipExistCheck: true})
-	if err != nil {
-		return arangodb.CollectionProperties{}, err
-	}
-
-	prop, err := col.Properties(ctx)
-	if err != nil {
-		return arangodb.CollectionProperties{}, err
-	}
-
-	return prop, nil
+func (d *Database) WithDatabase(endpoint Endpoint) db.Database {
+	return db.NewClient(d.DatabaseClient(endpoint)).Database(d.Database)
 }
 
-func (d *Database) KVCollection(endpoint Endpoint, collection string) cache.Object[arangodb.Collection] {
-	return d.KVCollectionFromClient(d.DatabaseClient(endpoint), collection)
-}
-
-func (d *Database) KVCollectionFromClient(clientO cache.Object[arangodb.Client], collection string) cache.Object[arangodb.Collection] {
-	return cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
-		if d == nil {
-			return nil, 0, errors.Errorf("Database Ref is empty")
-		}
-
-		client, err := clientO.Get(ctx)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		db, err := client.GetDatabase(ctx, d.Database, nil)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		if _, err := db.GetCollection(ctx, collection, nil); err != nil {
-			if !shared.IsNotFound(err) {
-				return nil, 0, err
-			}
-
-			sourceColProps, err := d.databaseSourceCollection(ctx, db)
-			if err != nil {
-				return nil, 0, err
-			}
-
-			if _, err := db.CreateCollectionV2(ctx, collection, &arangodb.CreateCollectionPropertiesV2{
-				IsSystem:          util.NewType(true),
-				WriteConcern:      util.NewType(sourceColProps.WriteConcern),
-				ReplicationFactor: util.NewType(sourceColProps.ReplicationFactor),
-			}); err != nil {
-				if !shared.IsConflict(err) {
-					return nil, 0, err
-				}
-			}
-		}
-
-		col, err := db.GetCollection(ctx, collection, nil)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		return col, time.Hour, nil
-	})
+func (d *Database) SourceCollectionProps() db.CollectionProps {
+	return db.SourceCollectionProps(d.Source.Collection)
 }

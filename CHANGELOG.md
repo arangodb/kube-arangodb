@@ -7,6 +7,7 @@
 - (Maintenance) Unify Conditions Handling
 - (Feature) Unify Token Loader helpers
 - (Feature) (Platform) Extend Authorization Policies
+- (Feature) Unify Database stricture creation
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService

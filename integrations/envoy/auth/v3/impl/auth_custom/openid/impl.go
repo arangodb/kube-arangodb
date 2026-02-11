@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,11 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		}),
 	}
 
-	i.session = session.NewManager[*Session](ctx, "Auth_Custom_OpenID", configuration.KVCollection(configuration.Endpoint, "_gateway_session"))
+	col := configuration.WithDatabase(configuration.Endpoint).
+		CreateCollection("_gateway_session", configuration.SourceCollectionProps()).
+		Get()
+
+	i.session = session.NewManager[*Session](ctx, "Auth_Custom_OpenID", col)
 
 	i.id = cache.NewCache(func(ctx context.Context, in string) (*oidc.IDToken, time.Time, error) {
 		verifier, err := i.verifier.Get(ctx)

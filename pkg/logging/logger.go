@@ -185,7 +185,7 @@ func (f *factory) RegisterLogger(name string, level Level) bool {
 		return false
 	}
 
-	f.defaults[name] = level
+	f.defaults[name] = getLogLevel(level)
 	f.applyForLogger(name)
 
 	return true
