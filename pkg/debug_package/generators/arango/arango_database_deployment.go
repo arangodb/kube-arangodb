@@ -108,6 +108,21 @@ func arangoDeploymentMemberArangoD(logger zerolog.Logger, files chan<- shared.Fi
 		return err
 	}
 
+	files <- shared.NewFile("activities.json", shared.GenerateDataFuncP2(func(depl, member string) ([]byte, error) {
+		handler, err := shared.DiscoverExecFunc()
+		if err != nil {
+			return nil, err
+		}
+
+		out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", member, "_admin", "activities")
+
+		if err != nil {
+			return nil, err
+		}
+
+		return out, nil
+	}, item.GetName(), member.Member.ID))
+
 	files <- shared.NewFile("async-registry.json", shared.GenerateDataFuncP2(func(depl, m string) ([]byte, error) {
 		out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", m, "_admin", "async-registry")
 		if err != nil {
