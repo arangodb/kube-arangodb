@@ -90,7 +90,9 @@ func (d database) CreateCollection(name string, props CollectionProps) Collectio
 				}
 
 				if _, err := db.CreateCollectionV2(ctx, name, opts); err != nil {
-					return nil, 0, err
+					if !shared.IsConflict(err) {
+						return nil, 0, err
+					}
 				}
 			}
 

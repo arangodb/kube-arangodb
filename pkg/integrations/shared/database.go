@@ -148,5 +148,10 @@ func (d *Database) WithDatabase(endpoint Endpoint) db.Database {
 }
 
 func (d *Database) SourceCollectionProps() db.CollectionProps {
+	if d == nil || d.Source.Collection == "" {
+		return func(ctx context.Context, db arangodb.Database) (*arangodb.CreateCollectionPropertiesV2, error) {
+			return nil, errors.Errorf("Source Collection is empty")
+		}
+	}
 	return db.SourceCollectionProps(d.Source.Collection)
 }
