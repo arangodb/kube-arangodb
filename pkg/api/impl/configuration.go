@@ -23,7 +23,6 @@ package impl
 import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 func NewConfiguration() Configuration {
@@ -31,8 +30,6 @@ func NewConfiguration() Configuration {
 }
 
 type Configuration struct {
-	Authenticator authenticator.Authenticator
-
 	LivenessProbe   *probe.LivenessProbe
 	ReadinessProbes map[string]*probe.ReadyProbe
 }

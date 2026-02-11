@@ -50,15 +50,9 @@ func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration])
 		}, time.Hour, nil
 	}))
 
-	var m []util.ModR[Configuration]
-	m = append(m, func(in Configuration) Configuration {
-		in.Authenticator = auth
-		return in
-	})
-	m = append(m, mods...)
-
 	local, err := svc.NewService(svc.Configuration{
-		Address: "127.0.0.1:0",
+		Address:       "127.0.0.1:0",
+		Authenticator: auth,
 		Gateway: &svc.ConfigurationGateway{
 			Address: "127.0.0.1:0",
 			MuxExtensions: []runtime.ServeMuxOption{
@@ -76,7 +70,7 @@ func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration])
 		Wrap: svc.RequestWraps{
 			metrics.Wrapper,
 		},
-	}, handler(m...))
+	}, handler(mods...))
 	require.NoError(t, err)
 
 	return local.Start(ctx)

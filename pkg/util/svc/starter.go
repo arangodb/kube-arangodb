@@ -25,13 +25,14 @@ import (
 	"fmt"
 	"net"
 	goHttp "net/http"
-	"sync"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 type ServiceStarter interface {
@@ -39,8 +40,6 @@ type ServiceStarter interface {
 
 	Address() string
 	HTTPAddress() string
-
-	Dial() (grpc.ClientConnInterface, error)
 }
 
 type serviceStarter struct {
@@ -66,72 +65,74 @@ func (s *serviceStarter) Wait() error {
 	return s.error
 }
 
-func (s *serviceStarter) Dial() (grpc.ClientConnInterface, error) {
-	return grpc.NewClient(s.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-}
-
-func (s *serviceStarter) run(ctx context.Context, health Health, ln, http net.Listener) {
+func (s *serviceStarter) run(ctx context.Context, health Health, ln, http net.Listener, conn *grpc.ClientConn) {
 	defer close(s.done)
 
-	s.error = s.runE(ctx, health, ln, http)
+	s.error = s.runE(ctx, health, ln, http, conn)
 }
 
-func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.Listener) error {
+func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.Listener, conn *grpc.ClientConn) error {
 	ctx, c := context.WithCancel(ctx)
 	defer c()
 
+	defer func() {
+		if err := conn.Close(); err != nil {
+			logger.Err(err).Warn("Failed to close connection")
+		}
+	}()
+
 	var serveError error
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg, nctx := errgroup.WithContext(ctx)
+
+	wg.Go(func() error {
 		defer c()
 
 		go func() {
-			<-ctx.Done()
+			<-nctx.Done()
 
 			s.service.server.GracefulStop()
 		}()
 
 		if err := s.service.server.Serve(ln); !errors.AnyOf(err, grpc.ErrServerStopped) {
-			serveError = err
+			return err
 		}
-	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+		return nil
+	})
 
+	wg.Go(func() error {
 		if s.service.cfg.Gateway == nil {
-			return
+			return nil
 		}
 
 		defer c()
 
 		go func() {
-			<-ctx.Done()
+			<-nctx.Done()
 
 			s.service.http.Close()
 		}()
 
-		if s.service.http.TLSConfig == nil {
-			if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
-				serveError = err
+		if s.service.tls {
+			if err := s.service.http.ServeTLS(http, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+				return err
 			}
 		} else {
-			if err := s.service.http.ServeTLS(http, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
-				serveError = err
+			if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+				return err
 			}
 		}
-	}()
+
+		return nil
+	})
 
 	done := make(chan struct{})
 
 	go func() {
 		defer close(done)
 
-		wg.Wait()
+		serveError = wg.Wait()
 	}()
 
 	ticker := time.NewTicker(125 * time.Millisecond)
@@ -176,9 +177,27 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		st.address = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
 	}
 
+	conn, err := service.dial(st.address)
+	if err != nil {
+		return serviceError{err}
+	}
+
 	var hln net.Listener
 
-	if service.cfg.Gateway != nil {
+	if gateway := service.cfg.Gateway; gateway != nil {
+
+		mux := runtime.NewServeMux(gateway.MuxExtensions...)
+
+		for _, handler := range service.handlers {
+			if h, ok := handler.(HandlerGateway); ok {
+				if err := h.Gateway(shutdown.Context(), mux, conn); err != nil {
+					return serviceError{err}
+				}
+			}
+		}
+
+		service.http.Handler = service.cfg.Wrap.Wrap(mux)
+
 		httpln, err := net.Listen("tcp", service.cfg.Gateway.Address)
 		if err != nil {
 			return serviceError{err}
@@ -194,7 +213,7 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		hln = httpln
 	}
 
-	go st.run(ctx, health, ln, hln)
+	go st.run(ctx, health, ln, hln, conn)
 
 	return st
 }

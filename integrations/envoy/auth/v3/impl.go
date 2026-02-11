@@ -66,7 +66,7 @@ func (i *impl) Register(registrar *grpc.Server) {
 	pbEnvoyAuthV3.RegisterAuthorizationServer(registrar, i)
 }
 
-func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return nil
 }
 

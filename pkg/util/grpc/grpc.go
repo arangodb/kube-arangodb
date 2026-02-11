@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ package grpc
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"io"
 
 	"google.golang.org/grpc"
@@ -38,8 +39,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
-
-const AuthorizationGRPCHeader = "adb-authorization"
 
 func NewGRPCClient[T any](ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, opts ...grpc.DialOption) (T, io.Closer, error) {
 	con, err := NewGRPCConn(addr, opts...)
@@ -134,7 +133,7 @@ func TokenAuthInterceptors(token string) []grpc.DialOption {
 }
 
 func attachTokenAuthToInterceptors(ctx context.Context, token string) context.Context {
-	return metadata.AppendToOutgoingContext(ctx, AuthorizationGRPCHeader, token)
+	return metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("token %s", token))
 }
 
 func GRPCAnyCastAs[T proto.Message](in *anypb.Any, v T) error {

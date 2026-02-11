@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,29 +20,8 @@
 
 package svc
 
-import (
-	"context"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
+var (
+	logger = logging.Global().RegisterAndGetLogger("grpc-service", logging.Info)
 )
-
-type Handler interface {
-	Name() string
-
-	Health(ctx context.Context) HealthState
-
-	Register(registrar *grpc.Server)
-}
-
-type HandlerInitService interface {
-	Handler
-
-	InitService(svc Service) error
-}
-
-type HandlerGateway interface {
-	Handler
-
-	Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error
-}

@@ -21,6 +21,8 @@
 package token
 
 import (
+	"time"
+
 	jwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -32,6 +34,10 @@ func ValidateOnly(in Secret) Secret {
 
 type validateOnly struct {
 	secret Secret
+}
+
+func (v validateOnly) Details(token string) (*string, []string, time.Duration, error) {
+	return extractTokenDetails(v, token)
 }
 
 func (v validateOnly) SigningHash() string {

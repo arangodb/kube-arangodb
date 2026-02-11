@@ -22,15 +22,17 @@ package svc
 
 import (
 	"context"
+	"crypto/tls"
 	goHttp "net/http"
 	"sync"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 type Service interface {
@@ -54,6 +56,8 @@ type service struct {
 	handlers []Handler
 
 	starter ServiceStarter
+
+	tls bool
 }
 
 func (p *service) Dial() (grpc.ClientConnInterface, error) {
@@ -63,7 +67,21 @@ func (p *service) Dial() (grpc.ClientConnInterface, error) {
 		return nil, errors.Errorf("server not initialized")
 	}
 
-	return p.starter.Dial()
+	return p.dial(p.starter.Address())
+}
+
+func (p *service) dial(address string) (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+
+	if p.tls {
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+			InsecureSkipVerify: true,
+		})))
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
+	return grpc.NewClient(address, opts...)
 }
 
 func (p *service) StartWithHealth(ctx context.Context, health Health) ServiceStarter {
@@ -110,6 +128,7 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 	if tls != nil {
 		opts = append(opts, grpc.Creds(credentials.NewTLS(tls)))
+		q.tls = true
 	}
 
 	nopts, err := cfg.RenderOptions()
@@ -118,6 +137,8 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	}
 
 	opts = append(opts, nopts...)
+
+	opts = append(opts, authenticator.NewInterceptorOptions(cfg.Authenticator)...)
 
 	q.cfg = cfg
 	q.server = grpc.NewServer(opts...)
@@ -128,20 +149,7 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	}
 
 	if gateway := cfg.Gateway; gateway != nil {
-		mux := runtime.NewServeMux(gateway.MuxExtensions...)
-
-		for _, handler := range q.handlers {
-			if err := handler.Gateway(shutdown.Context(), mux); err != nil {
-				return nil, err
-			}
-		}
-
-		var handler goHttp.Handler = mux
-
-		handler = cfg.Wrap.Wrap(handler)
-
 		q.http = &goHttp.Server{
-			Handler:   handler,
 			TLSConfig: tls,
 		}
 	}

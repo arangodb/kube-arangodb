@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 var registerer = util.NewRegisterer[string, Factory]()
@@ -95,10 +96,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 			return util.Default[svc.Configuration](), errors.Errorf("Token is empty")
 		}
 
-		cfg.Options = append(cfg.Options,
-			basicTokenAuthUnaryInterceptor(s.auth.token),
-			basicTokenAuthStreamInterceptor(s.auth.token),
-		)
+		cfg.Authenticator = authenticator.Required(authenticator.NewTokenAuthenticator(s.auth.token))
 	}
 
 	if keyfile := s.tls.keyfile; keyfile != "" {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,31 +18,32 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package svc
+package authenticator
 
 import (
 	"context"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-type Handler interface {
-	Name() string
-
-	Health(ctx context.Context) HealthState
-
-	Register(registrar *grpc.Server)
+func Required(auth Authenticator) Authenticator {
+	return requiredAuthenticator{auth: auth}
 }
 
-type HandlerInitService interface {
-	Handler
-
-	InitService(svc Service) error
+type requiredAuthenticator struct {
+	auth Authenticator
 }
 
-type HandlerGateway interface {
-	Handler
+func (r requiredAuthenticator) ValidateGRPC(ctx context.Context) (*Identity, error) {
+	identity, err := r.auth.ValidateGRPC(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error
+	if identity == nil {
+		return nil, status.Error(codes.Unauthenticated, "Unauthorized")
+	}
+
+	return identity, nil
 }

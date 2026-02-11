@@ -29,6 +29,7 @@ import (
 	"google.golang.org/grpc"
 
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 // RequestWrap if returns true execution is stopped
@@ -59,6 +60,8 @@ func (r RequestWraps) Wrap(handler goHttp.Handler) goHttp.Handler {
 
 type Configuration struct {
 	Address string
+
+	Authenticator authenticator.Authenticator
 
 	TLSOptions ktls.TLSConfigFetcher
 

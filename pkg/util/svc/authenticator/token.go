@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,26 +22,21 @@ package authenticator
 
 import (
 	"context"
-	"encoding/base64"
-	goStrings "strings"
 
-	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
-func NewBasicAuthenticator(object cache.Object[map[string]string]) Authenticator {
-	return &basicAuthenticator{object: object}
+func NewTokenAuthenticator(token string) Authenticator {
+	return &tokenAuthenticator{token: token}
 }
 
-type basicAuthenticator struct {
-	object cache.Object[map[string]string]
+type tokenAuthenticator struct {
+	token string
 }
 
-func (b *basicAuthenticator) ValidateGRPC(ctx context.Context) (*Identity, error) {
+func (t tokenAuthenticator) ValidateGRPC(ctx context.Context) (*Identity, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, nil
@@ -59,35 +54,17 @@ func (b *basicAuthenticator) ValidateGRPC(ctx context.Context) (*Identity, error
 			return nil, nil
 		}
 
-		if strings.ToLower(z[0]) != "basic" {
+		if strings.ToLower(z[0]) != "token" {
 			return nil, nil
 		}
 
-		c, err := base64.StdEncoding.DecodeString(z[1])
-		if err == nil {
-			if n := goStrings.SplitN(string(c), ":", 2); len(n) == 2 {
-				if b.validate(ctx, n[0], n[1]) == nil {
-					return &Identity{User: util.NewType(n[0])}, nil
-				}
-			}
+		if z[1] != t.token {
+			return nil, nil
 		}
 
-		return nil, nil
+		return &Identity{}, nil
 
 	default:
 		return nil, nil
 	}
-}
-
-func (b *basicAuthenticator) validate(ctx context.Context, username, password string) error {
-	data, err := b.object.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	if v, ok := data[username]; !ok || v != password {
-		return errors.Errorf("username or password is incorrect")
-	}
-
-	return nil
 }

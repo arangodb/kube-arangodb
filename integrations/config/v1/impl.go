@@ -86,7 +86,7 @@ type impl struct {
 	config Config
 }
 
-func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return nil
 }
 

@@ -23,8 +23,6 @@ package svc
 import (
 	"context"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -32,10 +30,6 @@ import (
 
 type serviceError struct {
 	error
-}
-
-func (p serviceError) Dial() (grpc.ClientConnInterface, error) {
-	return nil, status.Error(codes.Unavailable, "service unavailable")
 }
 
 func (p serviceError) StartWithHealth(ctx context.Context, health Health) ServiceStarter {

@@ -113,7 +113,7 @@ func (i *implementation) init(ctx context.Context) {
 	}
 }
 
-func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return nil
 }
 
