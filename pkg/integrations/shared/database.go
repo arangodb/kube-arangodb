@@ -144,7 +144,11 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Clien
 }
 
 func (d *Database) WithDatabase(endpoint Endpoint) db.Database {
-	return db.NewClient(d.DatabaseClient(endpoint)).Database(d.Database)
+	name := ""
+	if d != nil {
+		name = d.Database
+	}
+	return db.NewClient(d.DatabaseClient(endpoint)).Database(name)
 }
 
 func (d *Database) SourceCollectionProps() db.CollectionProps {
