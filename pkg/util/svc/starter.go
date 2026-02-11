@@ -116,7 +116,7 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 			s.service.http.Close()
 		}()
 
-		if s.service.http.TLSConfig == nil {
+		if s.service.tls {
 			if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
 				serveError = err
 			}

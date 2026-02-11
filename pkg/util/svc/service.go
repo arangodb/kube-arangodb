@@ -56,6 +56,8 @@ type service struct {
 	handlers []Handler
 
 	starter ServiceStarter
+
+	tls bool
 }
 
 func (p *service) Dial() (grpc.ClientConnInterface, error) {
@@ -71,7 +73,7 @@ func (p *service) Dial() (grpc.ClientConnInterface, error) {
 func (p *service) dial(address string) (*grpc.ClientConn, error) {
 	var opts []grpc.DialOption
 
-	if p.http.TLSConfig != nil {
+	if p.tls {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
 			InsecureSkipVerify: true,
 		})))
@@ -126,6 +128,7 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 	if tls != nil {
 		opts = append(opts, grpc.Creds(credentials.NewTLS(tls)))
+		q.tls = true
 	}
 
 	nopts, err := cfg.RenderOptions()
