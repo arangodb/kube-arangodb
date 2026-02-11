@@ -520,7 +520,13 @@ func executeMain(cmd *cobra.Command, args []string) {
 				WithReadinessProbe("scheduler", cfg.EnableScheduler, &schedulerProbe).
 				WithReadinessProbe("cluster-sync", cfg.EnableK2KClusterSync, &k2KClusterSyncProbe)
 
-			c.Authenticator = authenticator.NewBasicAuthenticator(newBasicAuthCacheObject(client, namespace, apiOptions.basicSecretName))
+			cache := newBasicAuthCacheObject(client, namespace, apiOptions.basicSecretName)
+
+			if err := cache.Init(shutdown.Context()); err != nil {
+				logger.Err(err).Fatal("Failed to init basic auth cache")
+			}
+
+			c.Authenticator = authenticator.NewBasicAuthenticator(cache)
 
 			names := []string{
 				name,
