@@ -21,45 +21,30 @@
 package v1
 
 import (
-	"context"
 	"fmt"
 	goStrings "strings"
 	"testing"
-	"time"
 
 	"github.com/dchest/uniuri"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
 func GetCacheObjectForKVStore(t *testing.T) cache.Object[arangodb.Collection] {
-	client := tests.TestArangoDBConfig(t).Client(t)
-	return withTTLIndex(cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
-		db, err := client.CreateDatabase(t.Context(), fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(6))), &arangodb.CreateDatabaseOptions{})
-		if err != nil {
-			return nil, 0, err
-		}
-
-		col, err := db.CreateCollectionV2(t.Context(), "_meta", &arangodb.CreateCollectionPropertiesV2{
+	return db.NewClient(cache.NewObject(tests.TestArangoDBConfig(t).ClientCache())).
+		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(6))), &arangodb.CreateDatabaseOptions{}).
+		CreateCollection("_meta", db.StaticProps(arangodb.CreateCollectionPropertiesV2{
 			IsSystem: util.NewType(true),
-		})
-		if err != nil {
-			return nil, 0, err
-		}
-
-		_, err = col.Properties(t.Context())
-		if err != nil {
-			return nil, 0, err
-		}
-
-		return col, time.Hour, nil
-	}))
+		})).
+		WithTTLIndex("system_meta_store_object_ttl", 0, "ttl").
+		Get()
 }
 
 func GetInternalRemoteCache(t *testing.T) cache.RemoteCache[*Object] {
-	return cache.NewRemoteCache[*Object](withTTLIndex(GetCacheObjectForKVStore(t)))
+	return cache.NewRemoteCache[*Object](GetCacheObjectForKVStore(t))
 }
