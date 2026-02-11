@@ -30,7 +30,6 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -41,8 +40,6 @@ type ServiceStarter interface {
 
 	Address() string
 	HTTPAddress() string
-
-	Dial() (grpc.ClientConnInterface, error)
 }
 
 type serviceStarter struct {
@@ -66,10 +63,6 @@ func (s *serviceStarter) Wait() error {
 	<-s.done
 
 	return s.error
-}
-
-func (s *serviceStarter) Dial() (grpc.ClientConnInterface, error) {
-	return grpc.NewClient(s.Address(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
 
 func (s *serviceStarter) run(ctx context.Context, health Health, ln, http net.Listener, conn *grpc.ClientConn) {
@@ -184,7 +177,7 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		st.address = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
 	}
 
-	conn, err := grpc.NewClient(st.address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := service.dial(st.address)
 	if err != nil {
 		return serviceError{err}
 	}

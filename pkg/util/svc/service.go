@@ -22,11 +22,13 @@ package svc
 
 import (
 	"context"
+	"crypto/tls"
 	goHttp "net/http"
 	"sync"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -63,7 +65,21 @@ func (p *service) Dial() (grpc.ClientConnInterface, error) {
 		return nil, errors.Errorf("server not initialized")
 	}
 
-	return p.starter.Dial()
+	return p.dial(p.starter.Address())
+}
+
+func (p *service) dial(address string) (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+
+	if p.http.TLSConfig != nil {
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+			InsecureSkipVerify: true,
+		})))
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
+	return grpc.NewClient(address, opts...)
 }
 
 func (p *service) StartWithHealth(ctx context.Context, health Health) ServiceStarter {
