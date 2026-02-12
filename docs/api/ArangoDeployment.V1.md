@@ -5100,6 +5100,31 @@ Possible Values:
 
 ***
 
+### .spec.sidecar.enabled
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/deployment/v1/deployment_sidecar_spec.go#L33)</sup>
+
+Enabled if this is set to `true`, the operator runs a sidecar container for
+every Agent, DB-Server, Coordinator and Single server.
+
+Links:
+* [Metrics collection](../metrics.md)
+
+Default Value: `false`
+
+***
+
+### .spec.sidecar.resources
+
+Type: `core.ResourceRequirements` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/deployment/v1/deployment_sidecar_spec.go#L38)</sup>
+
+Resources holds resource requests & limits
+
+Links:
+* [Documentation of core.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.29/#resourcerequirements-v1-core)
+
+***
+
 ### .spec.single.affinity
 
 Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>

@@ -159,7 +159,7 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 
 	var envs = []core.EnvVar{
 		{
-			Name:  "INTEGRATION_API_ADDRESS",
+			Name:  utilConstants.INTEGRATION_API_ADDRESS.String(),
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
 		},
 		{
@@ -167,8 +167,12 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
 		},
 		{
-			Name:  "INTEGRATION_HTTP_ADDRESS",
+			Name:  utilConstants.INTEGRATION_HTTP_ADDRESS.String(),
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetHTTPListenPort()),
+		},
+		{
+			Name:  utilConstants.INTEGRATION_HTTP_ADDRESS_FULL.String(),
+			Value: fmt.Sprintf("http://127.0.0.1:%d", integration.GetHTTPListenPort()),
 		},
 	}
 

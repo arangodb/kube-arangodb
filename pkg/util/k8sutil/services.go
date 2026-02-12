@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,17 +70,20 @@ func CreateExporterClientServiceName(deploymentName string) string {
 	return deploymentName + "-exporter"
 }
 
+// CreateSidecarClientServiceName returns the name of the service used by arangodb-exporter clients for the given
+// deployment name.
+func CreateSidecarClientServiceName(deploymentName string) string {
+	return deploymentName + "-sdc-int"
+}
+
 // CreateAgentLeaderServiceName returns the name of the service used to access a leader agent.
 func CreateAgentLeaderServiceName(deploymentName string) string {
 	return deploymentName + "-agent-leader"
 }
 
-// CreateExporterService
-func CreateExporterService(ctx context.Context, cachedStatus inspector.Inspector,
-	deployment meta.Object, ports []core.ServicePort, selectors map[string]string, owner meta.OwnerReference) (string, bool, error) {
-	deploymentName := deployment.GetName()
-	svcName := CreateExporterClientServiceName(deploymentName)
-
+// CreateService
+func CreateService(ctx context.Context, svcName string, cachedStatus inspector.Inspector,
+	ports []core.ServicePort, selectors map[string]string, owner meta.OwnerReference) (string, bool, error) {
 	if svc, exists := cachedStatus.Service().V1().GetSimple(svcName); exists {
 		if _, changed, err := patcher.Patcher[*core.Service](ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{}, patcher.PatchServiceSelector(selectors), patcher.PatchServicePorts(ports)); err != nil {
 			return "", false, err
@@ -119,6 +122,23 @@ func ExporterServiceDetails(deploymentName string) ([]core.ServicePort, map[stri
 			TargetPort: intstr.FromString(shared.ExporterPortName),
 		},
 	}, LabelsForExporterServiceSelector(deploymentName)
+}
+
+func SidecarServiceDetails(deploymentName string) ([]core.ServicePort, map[string]string) {
+	return []core.ServicePort{
+		{
+			Name:       shared.InternalSidecarContainerPortHTTPName,
+			Protocol:   core.ProtocolTCP,
+			Port:       shared.InternalSidecarContainerPortHTTP,
+			TargetPort: intstr.FromString(shared.InternalSidecarContainerPortHTTPName),
+		},
+		{
+			Name:       shared.InternalSidecarContainerPortGRPCName,
+			Protocol:   core.ProtocolTCP,
+			Port:       shared.InternalSidecarContainerPortGRPC,
+			TargetPort: intstr.FromString(shared.InternalSidecarContainerPortGRPCName),
+		},
+	}, LabelsForSidecarServiceSelector(deploymentName)
 }
 
 // CreateHeadlessService prepares and creates a headless service in k8s, used to provide a stable

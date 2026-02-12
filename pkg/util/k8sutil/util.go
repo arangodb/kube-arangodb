@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ const (
 	LabelKeyRole = "role"
 	// LabelKeyArangoExporter is the key of the label used to indicate that an exporter is present
 	LabelKeyArangoExporter = "arango_exporter"
+	// LabelKeyArangoSidecar is the key of the label used to indicate that an sidecar is present
+	LabelKeyArangoSidecar = "arango_sidecar"
 	// LabelKeyArangoMember is the key of the label used to store the ArangoDeployment member ID in
 	LabelKeyArangoMember = "deployment.arangodb.com/member"
 	// LabelKeyArangoZone is the key of the label used to store the ArangoDeployment zone ID in
@@ -123,6 +125,14 @@ func LabelsForExporterServiceSelector(deploymentName string) map[string]string {
 	return map[string]string{
 		LabelKeyArangoDeployment: deploymentName,
 		LabelKeyArangoExporter:   "yes",
+	}
+}
+
+// LabelsForSidecarServiceSelector returns a map of labels, used to select the all serving containers with sidecars
+func LabelsForSidecarServiceSelector(deploymentName string) map[string]string {
+	return map[string]string{
+		LabelKeyArangoDeployment: deploymentName,
+		LabelKeyArangoSidecar:    "yes",
 	}
 }
 
