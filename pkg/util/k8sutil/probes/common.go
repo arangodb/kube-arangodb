@@ -45,23 +45,23 @@ func (config *Common) SetSpec(spec *api.ServerGroupProbeSpec) {
 		return
 	}
 
-	if config.InitialDelaySeconds != nil {
+	if spec.InitialDelaySeconds != nil {
 		config.InitialDelaySeconds = spec.InitialDelaySeconds
 	}
 
-	if config.TimeoutSeconds != nil {
+	if spec.TimeoutSeconds != nil {
 		config.TimeoutSeconds = spec.TimeoutSeconds
 	}
 
-	if config.PeriodSeconds != nil {
+	if spec.PeriodSeconds != nil {
 		config.PeriodSeconds = spec.PeriodSeconds
 	}
 
-	if config.SuccessThreshold != nil {
+	if spec.SuccessThreshold != nil {
 		config.SuccessThreshold = spec.SuccessThreshold
 	}
 
-	if config.FailureThreshold != nil {
+	if spec.FailureThreshold != nil {
 		config.FailureThreshold = spec.FailureThreshold
 	}
 }
