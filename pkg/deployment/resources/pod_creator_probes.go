@@ -269,7 +269,7 @@ func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, gr
 		Command: args,
 	}
 	if IsServerProgressAvailable(group, image) {
-		cmdProbeConfig.FailureThreshold = math.MaxInt32
+		cmdProbeConfig.FailureThreshold = util.NewType[int32](math.MaxInt32)
 	}
 
 	return cmdProbeConfig, nil
@@ -285,10 +285,12 @@ func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, gro
 	}
 
 	return &probes.CMDProbeConfig{
-		Command:             args,
-		FailureThreshold:    retries,
-		PeriodSeconds:       periodSeconds,
-		InitialDelaySeconds: 1,
+		Command: args,
+		Common: probes.Common{
+			FailureThreshold:    util.NewType[int32](retries),
+			PeriodSeconds:       util.NewType[int32](periodSeconds),
+			InitialDelaySeconds: util.NewType[int32](1),
+		},
 	}, nil
 }
 
@@ -337,12 +339,14 @@ func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.S
 		authorization = fmt.Sprintf("bearer %s", authz)
 	}
 	return &probes.HTTPProbeConfig{
-		LocalPath:           "/_api/version",
-		Secure:              spec.IsSecure(),
-		Authorization:       authorization,
-		FailureThreshold:    retries,
-		PeriodSeconds:       periodSeconds,
-		InitialDelaySeconds: 1,
+		LocalPath:     "/_api/version",
+		Secure:        spec.IsSecure(),
+		Authorization: authorization,
+		Common: probes.Common{
+			FailureThreshold:    util.NewType[int32](retries),
+			PeriodSeconds:       util.NewType[int32](periodSeconds),
+			InitialDelaySeconds: util.NewType[int32](1),
+		},
 	}, nil
 }
 
@@ -404,9 +408,11 @@ func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, g
 	args := r.probeCommand(spec, api.ProbeTypeReadiness)
 
 	return &probes.CMDProbeConfig{
-		Command:             args,
-		InitialDelaySeconds: 2,
-		PeriodSeconds:       2,
+		Command: args,
+		Common: probes.Common{
+			InitialDelaySeconds: util.NewType[int32](2),
+			PeriodSeconds:       util.NewType[int32](2),
+		},
 	}, nil
 }
 
@@ -435,11 +441,13 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.Ser
 		authorization = fmt.Sprintf("bearer %s", authz)
 	}
 	probeCfg := &probes.HTTPProbeConfig{
-		LocalPath:           localPath,
-		Secure:              spec.IsSecure(),
-		Authorization:       authorization,
-		InitialDelaySeconds: 2,
-		PeriodSeconds:       2,
+		LocalPath:     localPath,
+		Secure:        spec.IsSecure(),
+		Authorization: authorization,
+		Common: probes.Common{
+			InitialDelaySeconds: util.NewType[int32](2),
+			PeriodSeconds:       util.NewType[int32](2),
+		},
 	}
 
 	return probeCfg, nil

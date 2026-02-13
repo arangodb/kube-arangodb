@@ -8,6 +8,7 @@
 - (Feature) Unify Token Loader helpers
 - (Feature) (Platform) Extend Authorization Policies
 - (Feature) Unify Database structure creation
+- (Feature) (Platform) Sidecar
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService

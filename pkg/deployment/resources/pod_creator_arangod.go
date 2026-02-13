@@ -398,6 +398,20 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.PodTemplateSpec) error {
 		}
 	}
 
+	if m.Deployment.Sidecar.IsEnabled(m.Deployment.Gateway.IsEnabled()) && m.Deployment.Mode.ServingGroup() == m.Group {
+		var c *core.Container
+
+		pod.Labels[k8sutil.LabelKeyArangoSidecar] = "yes"
+		if container, err := m.createServingSidecarExporter(); err != nil {
+			return err
+		} else {
+			c = container
+		}
+		if c != nil {
+			pod.Spec.Containers = append(pod.Spec.Containers, *c)
+		}
+	}
+
 	// A sidecar provided by the user
 	sidecars := m.GroupSpec.GetSidecars()
 	if len(sidecars) > 0 {
@@ -532,6 +546,29 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 
 	if m.Deployment.Authentication.IsAuthenticated() && m.Deployment.Metrics.GetJWTTokenSecretName() != "" {
 		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ExporterJWTVolumeMount())
+	}
+
+	if pod.IsTLSEnabled(m.Input) {
+		c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
+	}
+
+	return &c, nil
+}
+
+func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, error) {
+	image := m.GetContainerCreator().GetImage()
+
+	args := createInternalSidecarArgs(m.Deployment, m.GroupSpec)
+
+	c, err := ArangodbInternalSidecarContainer(image, args,
+		m.Deployment.Sidecar.Resources,
+		m.Deployment, m.GroupSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	if m.Deployment.Authentication.IsAuthenticated() {
+		c.VolumeMounts = append(c.VolumeMounts, k8sutil.ClusterJWTVolumeMount())
 	}
 
 	if pod.IsTLSEnabled(m.Input) {
