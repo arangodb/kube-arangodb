@@ -18,21 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package policy
+package authorization
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/authorization/types"
+	"google.golang.org/protobuf/proto"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type Resources []Resource
+type Document[T proto.Message] struct {
+	Key string `json:"_key"`
 
-func (a Resources) Validate() error {
-	return shared.ValidateInterfaceList(a)
-}
+	Name string `json:"name"`
 
-type Resource string
+	Rev *string `json:"_rev,omitempty"`
 
-func (a Resource) Validate() error {
-	return types.ValidateResource(string(a))
+	Sequence uint32 `json:"sequence"`
+
+	Created meta.Time `json:"created,omitempty"`
+
+	Deleted meta.Time `json:"deleted,omitempty"`
+
+	Spec T `json:"spec,omitempty"`
 }

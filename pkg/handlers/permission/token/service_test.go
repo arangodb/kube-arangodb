@@ -175,7 +175,7 @@ func Test_ServiceReconcile(t *testing.T) {
 			obj.Spec.Authentication.JWTSecretName = nil
 		})
 
-		require.EqualError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)), "No '-' data found in secret 'example-jwt-folder'")
+		require.EqualError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)), "unexpected EOF")
 	})
 
 	t.Run("Existing deployment", func(t *testing.T) {

@@ -18,21 +18,24 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package policy
+package authorization
 
 import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/authorization/types"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
-type Resources []Resource
+func Test_Authz(t *testing.T) {
+	client := tests.TestArangoDBConfig(t).Client(t)
 
-func (a Resources) Validate() error {
-	return shared.ValidateInterfaceList(a)
+	ver, err := client.Version(t.Context())
+	require.NoError(t, err)
+
+	println(ver.String())
+>>>>>>>> 66c8c5e91 (Add DB Wrappers):pkg/authorization/authz_test.go
 }
-
-type Resource string
-
-func (a Resource) Validate() error {
-	return types.ValidateResource(string(a))
-}
+=======
+>>>>>>> 62d70b871 (Change Proto and Add Client):pkg/authorization/pool_test.go

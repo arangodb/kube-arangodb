@@ -18,21 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package policy
+syntax = "proto3";
 
-import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/authorization/types"
-)
+import "pkg/authorization/types/policy.proto";
+import "pkg/authorization/types/role.proto";
+import "integrations/shared/v1/definition/empty.proto";
 
-type Resources []Resource
+import "google/protobuf/duration.proto";
 
-func (a Resources) Validate() error {
-	return shared.ValidateInterfaceList(a)
-}
+package service;
 
-type Resource string
+option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/service";
 
-func (a Resource) Validate() error {
-	return types.ValidateResource(string(a))
+
+// AuthorizationAPI Service implementation
+service AuthorizationAPI {
+
 }

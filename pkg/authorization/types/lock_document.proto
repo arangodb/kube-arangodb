@@ -18,21 +18,24 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package policy
+syntax = "proto3";
 
-import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/authorization/types"
-)
+package types;
 
-type Resources []Resource
+option go_package = "github.com/arangodb/kube-arangodb/pkg/authorization/types";
 
-func (a Resources) Validate() error {
-	return shared.ValidateInterfaceList(a)
-}
+// LockDocument Object Definition
+message LockDocument {
+  // ArangoDB Document Key
+  string key = 1  [json_name = "_key"];
+  // ArangoDB Document ID
+  string id = 2  [json_name = "_id"];
+  // ArangoDB Document Revision
+  optional string rev = 3 [json_name = "_rev"];
 
-type Resource string
+  // Defines Sequence ID
+  uint32 current_sequence = 4;
 
-func (a Resource) Validate() error {
-	return types.ValidateResource(string(a))
+  // Defines unique lock ID
+  string lock = 5;
 }

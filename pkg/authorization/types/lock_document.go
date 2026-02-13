@@ -18,21 +18,6 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package policy
+package types
 
-import (
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/authorization/types"
-)
-
-type Resources []Resource
-
-func (a Resources) Validate() error {
-	return shared.ValidateInterfaceList(a)
-}
-
-type Resource string
-
-func (a Resource) Validate() error {
-	return types.ValidateResource(string(a))
-}
+const LockDocumentID = "LOCK"
