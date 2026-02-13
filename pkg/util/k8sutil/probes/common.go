@@ -71,7 +71,7 @@ func (config *Common) config(handler core.ProbeHandler) *core.Probe {
 		ProbeHandler:        handler,
 		InitialDelaySeconds: util.OptionalType(config.InitialDelaySeconds, 900), // Wait 15min before first probe
 		TimeoutSeconds:      util.OptionalType(config.TimeoutSeconds, 2),        // Timeout of each probe is 2s
-		PeriodSeconds:       util.OptionalType(config.PeriodSeconds, 60),        // Interval between probes is 10s
+		PeriodSeconds:       util.OptionalType(config.PeriodSeconds, 10),        // Interval between probes is 10s
 		SuccessThreshold:    util.OptionalType(config.SuccessThreshold, 1),      // Single probe is enough to indicate success
 		FailureThreshold:    util.OptionalType(config.FailureThreshold, 10),     // Need 10 failed probes to consider a failed state
 	}

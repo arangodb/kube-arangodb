@@ -197,13 +197,13 @@ Example: `localhost:1234`
 
 #### CENTRAL_INTEGRATION_HTTP_ADDRESS
 
-Integration Service API Address via the Serving Sidecar
+Integration Service HTTP Address via the Serving Sidecar
 
 Example: `localhost:1234`
 
 #### CENTRAL_INTEGRATION_HTTP_ADDRESS_FULL
 
-Integration Service API Address via the Serving Sidecar with protocol
+Integration Service HTTP Address via the Serving Sidecar with protocol
 
 Example: `http://localhost:1234`
 

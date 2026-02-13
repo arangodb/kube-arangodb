@@ -331,13 +331,6 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			log.Err(err).Debug("Failed to create %s sidecar service", name)
 			return errors.WithStack(err)
 		}
-		status := r.context.GetStatus()
-		if status.ExporterServiceName != name {
-			status.ExporterServiceName = name
-			if err := r.context.UpdateStatus(ctx, status); err != nil {
-				return errors.WithStack(err)
-			}
-		}
 	} else {
 		if svc, ok := cachedStatus.Service().V1().GetSimple(k8sutil.CreateSidecarClientServiceName(deploymentName)); ok {
 			ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
@@ -346,7 +339,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 			if err := cachedStatus.ServicesModInterface().V1().Delete(ctxChild, svc.GetName(), meta.DeleteOptions{
 				Preconditions: meta.NewUIDPreconditions(string(svc.GetUID())),
 			}); err != nil {
-				log.Err(err).Debug("Failed to remove %s gateway service", svc.GetName())
+				log.Err(err).Debug("Failed to remove %s sidecar service", svc.GetName())
 				return errors.WithStack(err)
 			}
 		}

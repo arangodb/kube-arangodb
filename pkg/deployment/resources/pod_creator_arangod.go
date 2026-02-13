@@ -402,7 +402,7 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.PodTemplateSpec) error {
 		var c *core.Container
 
 		pod.Labels[k8sutil.LabelKeyArangoSidecar] = "yes"
-		if container, err := m.createServingSidecarInternalExporter(); err != nil {
+		if container, err := m.createServingSidecarExporter(); err != nil {
 			return err
 		} else {
 			c = container
@@ -555,7 +555,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 	return &c, nil
 }
 
-func (m *MemberArangoDPod) createServingSidecarInternalExporter() (*core.Container, error) {
+func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, error) {
 	image := m.GetContainerCreator().GetImage()
 
 	args := createInternalSidecarArgs(m.Deployment, m.GroupSpec)

@@ -36,7 +36,7 @@ const (
 	LabelKeyRole = "role"
 	// LabelKeyArangoExporter is the key of the label used to indicate that an exporter is present
 	LabelKeyArangoExporter = "arango_exporter"
-	// LabelKeyArangoSidecar is the key of the label used to indicate that an sidecar is present
+	// LabelKeyArangoSidecar is the key of the label used to indicate that a sidecar is present
 	LabelKeyArangoSidecar = "arango_sidecar"
 	// LabelKeyArangoMember is the key of the label used to store the ArangoDeployment member ID in
 	LabelKeyArangoMember = "deployment.arangodb.com/member"
