@@ -192,7 +192,7 @@ v1beta1:
                 description: Service defines service upstream reference
                 properties:
                   mode:
-                    description: Mode defiles the resolve mode for the service discovery
+                    description: Mode defines the resolve mode for the service discovery
                     enum:
                       - dns
                       - ip

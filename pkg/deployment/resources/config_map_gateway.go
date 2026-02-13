@@ -279,7 +279,9 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 			return nil, gateway.Config{}, errors.Errorf("Service %s not found", member.GetName())
 		}
 
-		if spec.CommunicationMethod.Type() == api.DeploymentCommunicationMethodTypeIP {
+		if spec.CommunicationMethod.Type() == api.DeploymentCommunicationMethodTypeIP &&
+			svc.Spec.ClusterIP != core.ClusterIPNone &&
+			svc.Spec.ClusterIP != "" {
 			services = append(services, svc.Spec.ClusterIP)
 		} else {
 			if domain := spec.ClusterDomain; domain != nil {

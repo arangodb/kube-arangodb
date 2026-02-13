@@ -50,6 +50,6 @@ func (a *ArangoRouteSpecResolveMode) Validate() error {
 	case ArangoRouteSpecResolveModeDNS, ArangoRouteSpecResolveModeIP:
 		return nil
 	default:
-		return errors.Errorf("Invalid schema: %s", x.String())
+		return errors.Errorf("Invalid resolve mode: %s", x.String())
 	}
 }
