@@ -32,7 +32,7 @@ type Common struct {
 	InitialDelaySeconds *int32
 	// Number of seconds after which the probe times out (defaults to 2).
 	TimeoutSeconds *int32
-	// How often (in seconds) to perform the probe (defaults to 10).
+	// How often (in seconds) to perform the probe (defaults to 60).
 	PeriodSeconds *int32
 	// Minimum consecutive successes for the probe to be considered successful after having failed (defaults to 1).
 	SuccessThreshold *int32
@@ -71,7 +71,7 @@ func (config *Common) config(handler core.ProbeHandler) *core.Probe {
 		ProbeHandler:        handler,
 		InitialDelaySeconds: util.OptionalType(config.InitialDelaySeconds, 900), // Wait 15min before first probe
 		TimeoutSeconds:      util.OptionalType(config.TimeoutSeconds, 2),        // Timeout of each probe is 2s
-		PeriodSeconds:       util.OptionalType(config.PeriodSeconds, 10),        // Interval between probes is 10s
+		PeriodSeconds:       util.OptionalType(config.PeriodSeconds, 60),        // Interval between probes is 60s
 		SuccessThreshold:    util.OptionalType(config.SuccessThreshold, 1),      // Single probe is enough to indicate success
 		FailureThreshold:    util.OptionalType(config.FailureThreshold, 10),     // Need 10 failed probes to consider a failed state
 	}
