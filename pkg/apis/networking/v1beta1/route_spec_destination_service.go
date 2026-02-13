@@ -37,7 +37,7 @@ type ArangoRouteSpecDestinationService struct {
 	// +doc/required
 	Port *intstr.IntOrString `json:"port,omitempty"`
 
-	// Mode defiles the resolve mode for the service discovery
+	// Mode defines the resolve mode for the service discovery
 	// +doc/default: dns
 	// +doc/enum: dns|DNS Names of Service used
 	// +doc/enum: ip|IP used wherever possible (except Headless Services)

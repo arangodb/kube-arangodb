@@ -143,7 +143,7 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 
 	switch mode {
 	case networkingApi.ArangoRouteSpecResolveModeIP:
-		if ip := s.Spec.ClusterIP; ip != core.ClusterIPNone {
+		if ip := s.Spec.ClusterIP; ip != core.ClusterIPNone && ip != "" {
 			target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
 				networkingApi.ArangoRouteStatusTargetDestination{
 					Host: ip,
