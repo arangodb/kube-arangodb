@@ -113,6 +113,18 @@ Possible Values:
 
 ***
 
+### .spec.destination.service.mode
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/networking/v1beta1/route_spec_destination_service.go#L44)</sup>
+
+Mode defines the resolve mode for the service discovery
+
+Possible Values: 
+* `"dns"` (default) - DNS Names of Service used
+* `"ip"` - IP used wherever possible (except Headless Services)
+
+***
+
 ### .spec.destination.service.name
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/shared/v1/object.go#L53)</sup>
