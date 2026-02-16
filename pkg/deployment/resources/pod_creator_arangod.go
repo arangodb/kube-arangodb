@@ -560,8 +560,15 @@ func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, erro
 
 	args := createInternalSidecarArgs(m.Deployment, m.GroupSpec)
 
+	baseResources := kresources.CleanContainerResource(
+		kresources.UpscaleResourceRequirements(
+			*k8sutil.CreateBasicContainerResources(),
+			m.Deployment.Sidecar.Resources,
+		),
+	)
+
 	c, err := ArangodbInternalSidecarContainer(image, args,
-		m.Deployment.Sidecar.Resources,
+		baseResources,
 		m.Deployment, m.GroupSpec)
 	if err != nil {
 		return nil, err

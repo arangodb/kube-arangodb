@@ -92,11 +92,12 @@ func ArangodbInternalSidecarContainer(image string, args []string,
 
 	probe := probes.GRPCProbeConfig{Port: shared.InternalSidecarContainerPortHealth, Common: probes.Common{
 		InitialDelaySeconds: util.NewType[int32](0),
+		PeriodSeconds:       util.NewType[int32](5),
+		TimeoutSeconds:      util.NewType[int32](2),
 	}}
 
 	c.LivenessProbe = probe.Create()
 	c.ReadinessProbe = probe.Create()
-	c.StartupProbe = probe.Create()
 
 	return c, nil
 }
