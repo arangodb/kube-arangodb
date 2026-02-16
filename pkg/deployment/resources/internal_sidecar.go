@@ -38,7 +38,7 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 	options := k8sutil.CreateOptionPairs(64)
 
 	if spec.Authentication.IsAuthenticated() {
-		options.Add("--sidecar.auth", shared.ExporterJWTVolumeMountDir)
+		options.Add("--sidecar.auth", shared.ClusterJWTSecretVolumeMountDir)
 	}
 
 	if port := groupSpec.InternalPort; port == nil {
@@ -61,7 +61,7 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 // ArangodbInternalSidecarContainer creates sidecar container based on internal sidecar
 func ArangodbInternalSidecarContainer(image string, args []string,
 	res core.ResourceRequirements, spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) (core.Container, error) {
-	exePath := k8sutil.LifecycleBinary()
+	exePath := k8sutil.BinaryPath()
 
 	c := core.Container{
 		Name:    shared.IntegrationContainerName,
@@ -87,7 +87,6 @@ func ArangodbInternalSidecarContainer(image string, args []string,
 		Resources:       kresources.ExtractPodAcceptedResourceRequirement(res),
 		SecurityContext: k8sutil.CreateSecurityContext(groupSpec.SecurityContext),
 		ImagePullPolicy: core.PullIfNotPresent,
-		VolumeMounts:    []core.VolumeMount{k8sutil.LifecycleVolumeMount()},
 	}
 
 	probe := probes.GRPCProbeConfig{Port: shared.InternalSidecarContainerPortHealth, Common: probes.Common{
