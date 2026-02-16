@@ -161,14 +161,15 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 					Port: destPort,
 				},
 			}
-		} else {
-			target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
-				networkingApi.ArangoRouteStatusTargetDestination{
-					Host: fmt.Sprintf("%s.%s.svc", s.GetName(), s.GetNamespace()),
-					Port: destPort,
-				},
-			}
+			break
 		}
+		target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
+			networkingApi.ArangoRouteStatusTargetDestination{
+				Host: fmt.Sprintf("%s.%s.svc", s.GetName(), s.GetNamespace()),
+				Port: destPort,
+			},
+		}
+
 	}
 
 	if status.Target.Hash() == target.Hash() {

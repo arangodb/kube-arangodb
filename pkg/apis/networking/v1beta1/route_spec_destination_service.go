@@ -57,9 +57,13 @@ func (a *ArangoRouteSpecDestinationService) Validate() error {
 		a = &ArangoRouteSpecDestinationService{}
 	}
 
-	if err := shared.WithErrors(a.Object.Validate(), shared.ValidateRequiredPath("port", a.Port, func(i intstr.IntOrString) error {
-		return nil
-	})); err != nil {
+	if err := shared.WithErrors(
+		a.Object.Validate(),
+		shared.ValidateRequiredPath("port", a.Port, func(i intstr.IntOrString) error {
+			return nil
+		}),
+		shared.ValidateOptionalInterfacePath("mode", a.Mode),
+	); err != nil {
 		return err
 	}
 

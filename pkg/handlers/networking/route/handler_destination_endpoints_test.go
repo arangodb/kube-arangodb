@@ -101,7 +101,6 @@ func Test_Handler_Destination_Endpoints_Valid(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -171,7 +170,6 @@ func Test_Handler_Destination_Endpoints_Valid_HTTP1(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -243,7 +241,6 @@ func Test_Handler_Destination_Endpoints_Valid_HTTP2(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -311,7 +308,6 @@ func Test_Handler_Destination_Endpoints_PortForward(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -395,7 +391,6 @@ func Test_Handler_Destination_Endpoints_MultiTargets(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -467,7 +462,6 @@ func Test_Handler_Destination_Endpoints_MultiDestinations(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }

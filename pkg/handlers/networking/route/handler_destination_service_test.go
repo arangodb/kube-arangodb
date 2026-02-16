@@ -124,7 +124,6 @@ func Test_Handler_Destination_Service_Valid(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -178,7 +177,6 @@ func Test_Handler_Destination_Service_Valid_HTTP1(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -231,7 +229,6 @@ func Test_Handler_Destination_Service_Valid_HTTP2(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -287,7 +284,6 @@ func Test_Handler_Destination_Service_Valid_WithDefault_DNS_Custom(t *testing.T)
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -345,7 +341,6 @@ func Test_Handler_Destination_Service_Valid_WithDefaultPath_DNS_Custom(t *testin
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -399,7 +394,6 @@ func Test_Handler_Destination_Service_Valid_WithDefault_DNS(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -456,7 +450,6 @@ func Test_Handler_Destination_Service_Valid_WithDefaultPath_DNS(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -510,7 +503,6 @@ func Test_Handler_Destination_Service_Valid_WithDefault_IP(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -567,7 +559,6 @@ func Test_Handler_Destination_Service_Valid_WithDefaultPath_IP(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -620,7 +611,6 @@ func Test_Handler_Destination_Service_Valid_WithIP(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -676,7 +666,6 @@ func Test_Handler_Destination_Service_Valid_WithIPPath(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -729,7 +718,6 @@ func Test_Handler_Destination_Service_Valid_WithDNS(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -785,7 +773,6 @@ func Test_Handler_Destination_Service_Valid_WithDNSPath(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -838,7 +825,6 @@ func Test_Handler_Destination_Service_ValidName(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -982,7 +968,6 @@ func Test_Handler_Destination_Service_Insecure_Default(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 
 	require.False(t, extension.Status.Target.TLS.IsInsecure())
@@ -1035,7 +1020,6 @@ func Test_Handler_Destination_Service_Insecure_Nil(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 
@@ -1091,7 +1075,6 @@ func Test_Handler_Destination_Service_Insecure_HTTPS_Override(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 
 	require.True(t, extension.Status.Target.TLS.IsInsecure())
@@ -1145,7 +1128,6 @@ func Test_Handler_Destination_Service_Insecure_HTTP_Override(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 
