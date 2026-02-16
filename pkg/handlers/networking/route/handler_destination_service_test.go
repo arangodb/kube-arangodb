@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -124,7 +124,6 @@ func Test_Handler_Destination_Service_Valid(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -177,7 +176,6 @@ func Test_Handler_Destination_Service_Valid_HTTP1(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -232,6 +230,334 @@ func Test_Handler_Destination_Service_Valid_HTTP2(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
+	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Service_Valid_WithDefault_DNS_Custom(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Service: &networkingApi.ArangoRouteSpecDestinationService{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+				},
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *api.ArangoDeployment) {
+		obj.Spec.CommunicationMethod = util.NewType(api.DeploymentCommunicationMethodDNS)
+		obj.Spec.ClusterDomain = util.NewType("random.domain")
+	})
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+		obj.Spec.ClusterIP = "127.0.0.2"
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Equal(t, networkingApi.ArangoRouteStatusTargetServiceType, extension.Status.Target.Type)
+
+	require.Len(t, extension.Status.Target.RenderURLs(), 1)
+	require.EqualValues(t, "http://deployment.fake.svc.random.domain:10244/", extension.Status.Target.RenderURLs()[0])
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
+	require.EqualValues(t, c.Reason, "Destination Found")
+	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Service_Valid_WithDefaultPath_DNS_Custom(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Service: &networkingApi.ArangoRouteSpecDestinationService{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+				},
+				Path: util.NewType("/test/path/"),
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *api.ArangoDeployment) {
+		obj.Spec.CommunicationMethod = util.NewType(api.DeploymentCommunicationMethodDNS)
+		obj.Spec.ClusterDomain = util.NewType("random.domain")
+	})
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+		obj.Spec.ClusterIP = "127.0.0.2"
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Equal(t, networkingApi.ArangoRouteStatusTargetServiceType, extension.Status.Target.Type)
+
+	require.Len(t, extension.Status.Target.RenderURLs(), 1)
+	require.EqualValues(t, "http://deployment.fake.svc.random.domain:10244/test/path/", extension.Status.Target.RenderURLs()[0])
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
+	require.EqualValues(t, c.Reason, "Destination Found")
+	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Service_Valid_WithDefault_DNS(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Service: &networkingApi.ArangoRouteSpecDestinationService{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+				},
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *api.ArangoDeployment) {
+		obj.Spec.CommunicationMethod = util.NewType(api.DeploymentCommunicationMethodDNS)
+	})
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+		obj.Spec.ClusterIP = "127.0.0.2"
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Equal(t, networkingApi.ArangoRouteStatusTargetServiceType, extension.Status.Target.Type)
+
+	require.Len(t, extension.Status.Target.RenderURLs(), 1)
+	require.EqualValues(t, "http://deployment.fake.svc:10244/", extension.Status.Target.RenderURLs()[0])
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
+	require.EqualValues(t, c.Reason, "Destination Found")
+	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Service_Valid_WithDefaultPath_DNS(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Service: &networkingApi.ArangoRouteSpecDestinationService{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+				},
+				Path: util.NewType("/test/path/"),
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *api.ArangoDeployment) {
+		obj.Spec.CommunicationMethod = util.NewType(api.DeploymentCommunicationMethodDNS)
+	})
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+		obj.Spec.ClusterIP = "127.0.0.2"
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Equal(t, networkingApi.ArangoRouteStatusTargetServiceType, extension.Status.Target.Type)
+
+	require.Len(t, extension.Status.Target.RenderURLs(), 1)
+	require.EqualValues(t, "http://deployment.fake.svc:10244/test/path/", extension.Status.Target.RenderURLs()[0])
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
+	require.EqualValues(t, c.Reason, "Destination Found")
+	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Service_Valid_WithDefault_IP(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Service: &networkingApi.ArangoRouteSpecDestinationService{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+				},
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *api.ArangoDeployment) {
+		obj.Spec.CommunicationMethod = util.NewType(api.DeploymentCommunicationMethodIP)
+	})
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+		obj.Spec.ClusterIP = "127.0.0.2"
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Equal(t, networkingApi.ArangoRouteStatusTargetServiceType, extension.Status.Target.Type)
+
+	require.Len(t, extension.Status.Target.RenderURLs(), 1)
+	require.EqualValues(t, "http://127.0.0.2:10244/", extension.Status.Target.RenderURLs()[0])
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
+	require.EqualValues(t, c.Reason, "Destination Found")
+	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Service_Valid_WithDefaultPath_IP(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Service: &networkingApi.ArangoRouteSpecDestinationService{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+				},
+				Path: util.NewType("/test/path/"),
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *api.ArangoDeployment) {
+		obj.Spec.CommunicationMethod = util.NewType(api.DeploymentCommunicationMethodIP)
+	})
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+		obj.Spec.ClusterIP = "127.0.0.2"
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Equal(t, networkingApi.ArangoRouteStatusTargetServiceType, extension.Status.Target.Type)
+
+	require.Len(t, extension.Status.Target.RenderURLs(), 1)
+	require.EqualValues(t, "http://127.0.0.2:10244/test/path/", extension.Status.Target.RenderURLs()[0])
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -252,6 +578,7 @@ func Test_Handler_Destination_Service_Valid_WithIP(t *testing.T) {
 						Name: "deployment",
 					},
 					Port: util.NewType(intstr.FromInt32(10244)),
+					Mode: util.NewType(networkingApi.ArangoRouteSpecResolveModeIP),
 				},
 			}
 		})
@@ -285,11 +612,10 @@ func Test_Handler_Destination_Service_Valid_WithIP(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
-func Test_Handler_Destination_Service_Valid_WithPath(t *testing.T) {
+func Test_Handler_Destination_Service_Valid_WithIPPath(t *testing.T) {
 	// Setup
 	handler := newFakeHandler()
 
@@ -305,6 +631,7 @@ func Test_Handler_Destination_Service_Valid_WithPath(t *testing.T) {
 						Name: "deployment",
 					},
 					Port: util.NewType(intstr.FromInt32(10244)),
+					Mode: util.NewType(networkingApi.ArangoRouteSpecResolveModeIP),
 				},
 				Path: util.NewType("/test/path/"),
 			}
@@ -339,6 +666,112 @@ func Test_Handler_Destination_Service_Valid_WithPath(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
+	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Service_Valid_WithDNS(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Service: &networkingApi.ArangoRouteSpecDestinationService{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+					Mode: util.NewType(networkingApi.ArangoRouteSpecResolveModeDNS),
+				},
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment")
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+		obj.Spec.ClusterIP = "127.0.0.2"
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Equal(t, networkingApi.ArangoRouteStatusTargetServiceType, extension.Status.Target.Type)
+
+	require.Len(t, extension.Status.Target.RenderURLs(), 1)
+	require.EqualValues(t, "http://deployment.fake.svc:10244/", extension.Status.Target.RenderURLs()[0])
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
+	require.EqualValues(t, c.Reason, "Destination Found")
+	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Service_Valid_WithDNSPath(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Service: &networkingApi.ArangoRouteSpecDestinationService{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+					Mode: util.NewType(networkingApi.ArangoRouteSpecResolveModeDNS),
+				},
+				Path: util.NewType("/test/path/"),
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment")
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+		obj.Spec.ClusterIP = "127.0.0.2"
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Equal(t, networkingApi.ArangoRouteStatusTargetServiceType, extension.Status.Target.Type)
+
+	require.Len(t, extension.Status.Target.RenderURLs(), 1)
+	require.EqualValues(t, "http://deployment.fake.svc:10244/test/path/", extension.Status.Target.RenderURLs()[0])
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -392,7 +825,6 @@ func Test_Handler_Destination_Service_ValidName(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -536,7 +968,6 @@ func Test_Handler_Destination_Service_Insecure_Default(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 
 	require.False(t, extension.Status.Target.TLS.IsInsecure())
@@ -589,7 +1020,6 @@ func Test_Handler_Destination_Service_Insecure_Nil(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 
@@ -645,7 +1075,6 @@ func Test_Handler_Destination_Service_Insecure_HTTPS_Override(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 
 	require.True(t, extension.Status.Target.TLS.IsInsecure())
@@ -699,7 +1128,6 @@ func Test_Handler_Destination_Service_Insecure_HTTP_Override(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 

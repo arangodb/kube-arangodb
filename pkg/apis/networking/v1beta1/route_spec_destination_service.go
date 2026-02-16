@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,12 @@ type ArangoRouteSpecDestinationService struct {
 	// +doc/type: intstr.IntOrString
 	// +doc/required
 	Port *intstr.IntOrString `json:"port,omitempty"`
+
+	// Mode defines the resolve mode for the service discovery
+	// +doc/default: dns
+	// +doc/enum: dns|DNS Names of Service used
+	// +doc/enum: ip|IP used wherever possible (except Headless Services)
+	Mode *ArangoRouteSpecResolveMode `json:"mode,omitempty"`
 }
 
 func (a *ArangoRouteSpecDestinationService) GetPort() *intstr.IntOrString {
@@ -51,9 +57,13 @@ func (a *ArangoRouteSpecDestinationService) Validate() error {
 		a = &ArangoRouteSpecDestinationService{}
 	}
 
-	if err := shared.WithErrors(a.Object.Validate(), shared.ValidateRequiredPath("port", a.Port, func(i intstr.IntOrString) error {
-		return nil
-	})); err != nil {
+	if err := shared.WithErrors(
+		a.Object.Validate(),
+		shared.ValidateRequiredPath("port", a.Port, func(i intstr.IntOrString) error {
+			return nil
+		}),
+		shared.ValidateOptionalInterfacePath("mode", a.Mode),
+	); err != nil {
 		return err
 	}
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -309,6 +309,9 @@ func (c *ConfigDestination) RenderCluster(name string) (*pbEnvoyClusterV3.Cluste
 		Name:           name,
 		ConnectTimeout: durationpb.New(time.Second),
 		LbPolicy:       pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
+		ClusterDiscoveryType: &pbEnvoyClusterV3.Cluster_Type{
+			Type: pbEnvoyClusterV3.Cluster_STRICT_DNS,
+		},
 		LoadAssignment: &pbEnvoyEndpointV3.ClusterLoadAssignment{
 			ClusterName: name,
 			Endpoints: []*pbEnvoyEndpointV3.LocalityLbEndpoints{
