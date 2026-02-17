@@ -167,7 +167,7 @@ func (a actionRuntimeContainerImageUpdate) getContainerDetails() (string, string
 		return "", "", "", false
 	}
 
-	revision, ok := a.action.GetParam(rotation.ContainerRevision)
+	revision, ok := a.action.Locals.Get(rotation.ContainerRevision)
 	if !ok {
 		revision = ""
 	}
@@ -247,7 +247,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 				return false, errors.Errorf("Unable to find container status")
 			}
 
-			a.actionImpl.action.AddParam(rotation.ContainerRevision, fmt.Sprintf("%d", cstatus.RestartCount))
+			a.actionImpl.action.Locals.Add(rotation.ContainerRevision, fmt.Sprintf("%d", cstatus.RestartCount), true)
 
 			if _, err := a.actionCtx.ACS().CurrentClusterCache().PodsModInterface().V1().Update(ctx, pod, meta.UpdateOptions{}); err != nil {
 				return true, err
