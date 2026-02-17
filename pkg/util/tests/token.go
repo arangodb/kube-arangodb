@@ -21,10 +21,13 @@
 package tests
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"path"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -58,12 +61,21 @@ type TokenManager interface {
 	Set(t *testing.T, active Token, tokens ...Token) TokenManager
 
 	Sign(t *testing.T, claims utilToken.Claims) string
+
+	TokenSignature(t *testing.T, mods ...util.ModR[utilToken.Claims]) func(ctx context.Context) (string, time.Duration, error)
 }
 
 type tokenManager struct {
 	lock sync.Mutex
 
 	path string
+}
+
+func (m *tokenManager) TokenSignature(t *testing.T, mods ...util.ModR[utilToken.Claims]) func(ctx context.Context) (string, time.Duration, error) {
+	return func(ctx context.Context) (string, time.Duration, error) {
+		t.Logf("Generating token")
+		return fmt.Sprintf("bearer %s", m.Sign(t, utilToken.NewClaims().With(mods...))), 125 * time.Millisecond, nil
+	}
 }
 
 func (m *tokenManager) Sign(t *testing.T, claims utilToken.Claims) string {

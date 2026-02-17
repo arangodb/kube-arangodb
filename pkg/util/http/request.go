@@ -27,9 +27,8 @@ import (
 	"io"
 	goHttp "net/http"
 
-	"github.com/pkg/errors"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Response[T any] interface {

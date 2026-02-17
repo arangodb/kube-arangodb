@@ -20,7 +20,9 @@
 
 package authenticator
 
-import "context"
+import (
+	"context"
+)
 
 type Identity struct {
 	User  *string

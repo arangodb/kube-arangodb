@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,18 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package errors
+package authentication
 
-var notImplementedError = Errorf("NotImplemented")
+import (
+	"context"
+	"fmt"
+)
 
-func NotImplementedError() error {
-	return WithStack(notImplementedError)
+func Static(token string) Authentication {
+	return static(token)
 }
 
-func IsNotImplementedError(err error) bool {
-	if err == nil {
-		return false
-	}
+type static string
 
-	return Is(err, notImplementedError)
+func (s static) ExtendAuthentication(ctx context.Context) (string, bool, error) {
+	return fmt.Sprintf("bearer %s", string(s)), true, nil
 }

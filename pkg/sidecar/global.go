@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,18 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package errors
+package sidecar
 
-var notImplementedError = Errorf("NotImplemented")
+import (
+	"github.com/spf13/cobra"
 
-func NotImplementedError() error {
-	return WithStack(notImplementedError)
-}
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+)
 
-func IsNotImplementedError(err error) bool {
-	if err == nil {
-		return false
-	}
+type registerHandler func(cmd *cobra.Command) (svc.Handler, bool, error)
 
-	return Is(err, notImplementedError)
-}
+var global = util.NewRegisterer[string, registerHandler]()

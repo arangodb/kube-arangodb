@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,18 +18,16 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package errors
+package authentication
 
-var notImplementedError = Errorf("NotImplemented")
+import "context"
 
-func NotImplementedError() error {
-	return WithStack(notImplementedError)
+type emptyAuthenticator struct{}
+
+func (e emptyAuthenticator) ExtendAuthentication(ctx context.Context) (string, bool, error) {
+	return "", false, nil
 }
 
-func IsNotImplementedError(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	return Is(err, notImplementedError)
+func NewEmptyAuthentication() Authentication {
+	return emptyAuthenticator{}
 }
