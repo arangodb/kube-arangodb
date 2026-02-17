@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -54,6 +54,6 @@ func NewTokenFileAuthentication(path string) Authentication {
 			return "", 0, err
 		}
 
-		return fmt.Sprintf("bearer %s", strings.TrimSpace(string(data))), 15 * time.Second, nil
+		return fmt.Sprintf("bearer %s", goStrings.TrimSpace(string(data))), 15 * time.Second, nil
 	}))
 }
