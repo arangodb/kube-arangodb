@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,20 @@ package svc
 
 import (
 	"context"
+	"fmt"
+	goHttp "net/http"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	pbHealth "google.golang.org/grpc/health/grpc_health_v1"
+
+	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
 func Test_Service(t *testing.T) {
@@ -71,4 +79,72 @@ func Test_Service(t *testing.T) {
 	c()
 
 	require.NoError(t, st.Wait())
+}
+
+func Test_Service_Connections(t *testing.T) {
+	handler := newPongHandler()
+
+	t.Run("UNIX", func(t *testing.T) {
+		dir := t.TempDir()
+
+		h, err := NewService(Configuration{
+			Address: "127.0.0.1:0",
+			Unix:    filepath.Join(dir, "data.sock"),
+			Gateway: &ConfigurationGateway{
+				Address: "127.0.0.1:0",
+			},
+		}, handler)
+		require.NoError(t, err)
+
+		ctx, c := context.WithCancel(context.Background())
+		defer c()
+
+		st := h.Start(ctx)
+
+		conn, err := h.Dial()
+		require.NoError(t, err)
+
+		cl := pbPongV1.NewPongV1Client(conn)
+
+		_, err = cl.Ping(context.Background(), &pbSharedV1.Empty{})
+		require.NoError(t, err)
+
+		_, err = ugrpc.Get[*pbPongV1.PongV1PingResponse](context.Background(), operatorHTTP.NewHTTPClient(), fmt.Sprintf("http://%s/_integration/pong/v1/ping", st.HTTPAddress())).WithCode(goHttp.StatusOK).Get()
+		require.NoError(t, err)
+
+		c()
+
+		require.NoError(t, st.Wait())
+	})
+
+	t.Run("TCP", func(t *testing.T) {
+		h, err := NewService(Configuration{
+			Address: "127.0.0.1:0",
+			Gateway: &ConfigurationGateway{
+				Address: "127.0.0.1:0",
+			},
+		}, handler)
+		require.NoError(t, err)
+
+		ctx, c := context.WithCancel(context.Background())
+		defer c()
+
+		st := h.Start(ctx)
+
+		conn, err := h.Dial()
+		require.NoError(t, err)
+
+		cl := pbPongV1.NewPongV1Client(conn)
+
+		_, err = cl.Ping(context.Background(), &pbSharedV1.Empty{})
+		require.NoError(t, err)
+
+		_, err = ugrpc.Get[*pbPongV1.PongV1PingResponse](context.Background(), operatorHTTP.NewHTTPClient(), fmt.Sprintf("http://%s/_integration/pong/v1/ping", st.HTTPAddress())).WithCode(goHttp.StatusOK).Get()
+		require.NoError(t, err)
+
+		c()
+
+		require.NoError(t, st.Wait())
+	})
+
 }

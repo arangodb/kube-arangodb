@@ -23,8 +23,11 @@ package svc
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net"
 	goHttp "net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -40,12 +43,13 @@ type ServiceStarter interface {
 
 	Address() string
 	HTTPAddress() string
+	Unix() string
 }
 
 type serviceStarter struct {
 	service *service
 
-	address, httpAddress string
+	address, httpAddress, unix string
 
 	error error
 	done  chan struct{}
@@ -53,6 +57,10 @@ type serviceStarter struct {
 
 func (s *serviceStarter) Address() string {
 	return s.address
+}
+
+func (s *serviceStarter) Unix() string {
+	return s.unix
 }
 
 func (s *serviceStarter) HTTPAddress() string {
@@ -65,13 +73,13 @@ func (s *serviceStarter) Wait() error {
 	return s.error
 }
 
-func (s *serviceStarter) run(ctx context.Context, health Health, ln, http net.Listener, conn *grpc.ClientConn) {
+func (s *serviceStarter) run(ctx context.Context, health Health, grpcListener, unixGRPCListener, httpListener net.Listener, conn *grpc.ClientConn) {
 	defer close(s.done)
 
-	s.error = s.runE(ctx, health, ln, http, conn)
+	s.error = s.runE(ctx, health, grpcListener, unixGRPCListener, httpListener, conn)
 }
 
-func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.Listener, conn *grpc.ClientConn) error {
+func (s *serviceStarter) runE(ctx context.Context, health Health, grpcListener, unixGRPCListener, httpListener net.Listener, conn *grpc.ClientConn) error {
 	ctx, c := context.WithCancel(ctx)
 	defer c()
 
@@ -86,15 +94,31 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 	wg, nctx := errgroup.WithContext(ctx)
 
 	wg.Go(func() error {
-		defer c()
+		go func() {
+			<-nctx.Done()
+
+			s.service.grpc.network.GracefulStop()
+		}()
+
+		if err := s.service.grpc.network.Serve(grpcListener); !errors.AnyOf(err, grpc.ErrServerStopped) {
+			return err
+		}
+
+		return nil
+	})
+
+	wg.Go(func() error {
+		if s.service.cfg.Unix == "" {
+			return nil
+		}
 
 		go func() {
 			<-nctx.Done()
 
-			s.service.server.GracefulStop()
+			s.service.grpc.unix.GracefulStop()
 		}()
 
-		if err := s.service.server.Serve(ln); !errors.AnyOf(err, grpc.ErrServerStopped) {
+		if err := s.service.grpc.unix.Serve(unixGRPCListener); !errors.AnyOf(err, grpc.ErrServerStopped) {
 			return err
 		}
 
@@ -106,8 +130,6 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 			return nil
 		}
 
-		defer c()
-
 		go func() {
 			<-nctx.Done()
 
@@ -115,11 +137,11 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, ln, http net.L
 		}()
 
 		if s.service.tls {
-			if err := s.service.http.ServeTLS(http, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+			if err := s.service.http.ServeTLS(httpListener, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
 				return err
 			}
 		} else {
-			if err := s.service.http.Serve(http); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+			if err := s.service.http.Serve(httpListener); !errors.AnyOf(err, goHttp.ErrServerClosed) {
 				return err
 			}
 		}
@@ -165,6 +187,8 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		done:    make(chan struct{}),
 	}
 
+	logger.Str("address", service.cfg.Address).Info("Starting GRPC Listener")
+
 	ln, err := net.Listen("tcp", service.cfg.Address)
 	if err != nil {
 		return serviceError{err}
@@ -177,14 +201,40 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		st.address = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
 	}
 
-	conn, err := service.dial(st.address)
+	logger.Str("address", st.address).Info("Started GRPC Listener")
+
+	var gsln, hln net.Listener
+
+	if unix := service.cfg.Unix; unix != "" {
+		if err := os.MkdirAll(filepath.Dir(unix), 0755); err != nil {
+			return serviceError{err}
+		}
+
+		if err := os.Remove(unix); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return serviceError{err}
+		}
+
+		logger.Str("address", unix).Info("Starting GRPC UNIX Listener")
+		ln, err := net.Listen("unix", service.cfg.Unix)
+		if err != nil {
+			return serviceError{err}
+		}
+
+		st.unix = unix
+
+		gsln = ln
+		logger.Str("address", unix).Info("Started GRPC UNIX Listener")
+	} else {
+		logger.Info("Starting GRPC UNIX Listener skipped")
+	}
+
+	conn, err := service.dial(st.address, st.unix)
 	if err != nil {
 		return serviceError{err}
 	}
 
-	var hln net.Listener
-
 	if gateway := service.cfg.Gateway; gateway != nil {
+		logger.Str("address", service.cfg.Gateway.Address).Info("Starting HTTP Listener")
 
 		mux := runtime.NewServeMux(gateway.MuxExtensions...)
 
@@ -211,9 +261,13 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		}
 
 		hln = httpln
+
+		logger.Str("address", st.httpAddress).Info("Started HTTP Listener")
+	} else {
+		logger.Info("Starting HTTP Listener skipped")
 	}
 
-	go st.run(ctx, health, ln, hln, conn)
+	go st.run(ctx, health, ln, gsln, hln, conn)
 
 	return st
 }

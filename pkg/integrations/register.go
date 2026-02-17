@@ -64,7 +64,7 @@ type configuration struct {
 type serviceConfiguration struct {
 	enabled bool
 
-	address string
+	address, unix string
 
 	gateway struct {
 		enabled bool
@@ -87,6 +87,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 	var cfg svc.Configuration
 
 	cfg.Address = s.address
+	cfg.Unix = s.unix
 
 	switch goStrings.ToLower(s.auth.t) {
 	case "none":
@@ -143,6 +144,7 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 
 		f.BoolVar(&c.services.internal.enabled, "services.enabled", true, "Defines if internal access is enabled"),
 		f.StringVar(&c.services.internal.address, "services.address", "127.0.0.1:9092", "Address to expose internal services"),
+		f.StringVar(&c.services.internal.unix, "services.unix", "", "Path of the UNIX file handler"),
 		f.StringVar(&c.services.internal.auth.t, "services.auth.type", "None", "Auth type for internal service"),
 		f.StringVar(&c.services.internal.auth.token, "services.auth.token", "", "Token for internal service (when auth service is token)"),
 		f.StringVar(&c.services.internal.tls.keyfile, "services.tls.keyfile", "", "Path to the keyfile"),

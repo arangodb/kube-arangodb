@@ -147,7 +147,10 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 
 	options := k8sutil.CreateOptionPairs(64)
 
+	unixPath := fmt.Sprintf("%s/%s", utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountFile)
+
 	options.Addf("--services.address", "127.0.0.1:%d", integration.GetListenPort())
+	options.Addf("--services.unix", "%s", unixPath)
 	options.Addf("--health.address", "0.0.0.0:%d", integration.GetControllerListenPort())
 	options.Addf("--services.gateway.address", "127.0.0.1:%d", integration.GetHTTPListenPort())
 	options.Add("--database.endpoint", k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", name, spec.GetMode().ServingGroup().AsRole()), spec.ClusterDomain))
@@ -161,6 +164,10 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 		{
 			Name:  utilConstants.INTEGRATION_API_ADDRESS.String(),
 			Value: fmt.Sprintf("127.0.0.1:%d", integration.GetListenPort()),
+		},
+		{
+			Name:  utilConstants.INTEGRATION_API_UNIX.String(),
+			Value: unixPath,
 		},
 		{
 			Name:  utilConstants.INTEGRATION_SERVICE_ADDRESS.String(),
@@ -217,6 +224,15 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 				FailureThreshold:    2,  // Need 2 failed probes to consider a failed state
 			},
 		},
+
+		VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
+			VolumeMounts: []core.VolumeMount{
+				{
+					Name:      utilConstants.SidecarUnixSocketMountName,
+					MountPath: utilConstants.SidecarUnixSocketMountPath,
+				},
+			},
+		},
 	}
 
 	pt := schedulerApi.ProfileTemplate{
@@ -226,6 +242,15 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 				Environments: &schedulerContainerResourcesApi.Environments{
 					Env: envs,
 				},
+				VolumeMounts: &schedulerContainerResourcesApi.VolumeMounts{
+					VolumeMounts: []core.VolumeMount{
+						{
+							Name:      utilConstants.SidecarUnixSocketMountName,
+							MountPath: utilConstants.SidecarUnixSocketMountPath,
+							ReadOnly:  true,
+						},
+					},
+				},
 			},
 			Containers: map[string]schedulerContainerApi.Container{
 				ContainerName: util.TypeOrDefault(k8sutil.CreateDefaultContainerTemplate(image).With(&c).With(integration.GetContainer())),
@@ -234,6 +259,16 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 		Pod: &schedulerPodApi.Pod{
 			Metadata: &schedulerPodResourcesApi.Metadata{
 				Annotations: map[string]string{},
+			},
+			Volumes: &schedulerPodResourcesApi.Volumes{
+				Volumes: []core.Volume{
+					{
+						Name: utilConstants.SidecarUnixSocketMountName,
+						VolumeSource: core.VolumeSource{
+							EmptyDir: &core.EmptyDirVolumeSource{},
+						},
+					},
+				},
 			},
 		},
 	}

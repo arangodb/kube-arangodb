@@ -23,6 +23,8 @@ package svc
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
+	"net"
 	goHttp "net/http"
 	"sync"
 
@@ -48,8 +50,8 @@ type Service interface {
 type service struct {
 	lock sync.Mutex
 
-	server *grpc.Server
-	http   *goHttp.Server
+	grpc serviceGRPC
+	http *goHttp.Server
 
 	cfg Configuration
 
@@ -60,6 +62,11 @@ type service struct {
 	tls bool
 }
 
+type serviceGRPC struct {
+	network *grpc.Server
+	unix    *grpc.Server
+}
+
 func (p *service) Dial() (grpc.ClientConnInterface, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -67,10 +74,10 @@ func (p *service) Dial() (grpc.ClientConnInterface, error) {
 		return nil, errors.Errorf("server not initialized")
 	}
 
-	return p.dial(p.starter.Address())
+	return p.dial(p.starter.Address(), p.starter.Unix())
 }
 
-func (p *service) dial(address string) (*grpc.ClientConn, error) {
+func (p *service) dial(address string, unix string) (*grpc.ClientConn, error) {
 	var opts []grpc.DialOption
 
 	if p.tls {
@@ -79,6 +86,16 @@ func (p *service) dial(address string) (*grpc.ClientConn, error) {
 		})))
 	} else {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
+	if unix != "" {
+		logger.Str("addr", fmt.Sprintf("unix://%s", unix)).Info("Connecting via UNIX Socket")
+		opts = append(opts, grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
+			// ignore addr; dial the unix socket directly
+			return (&net.Dialer{}).DialContext(ctx, "unix", unix)
+		}))
+	} else {
+		logger.Str("addr", fmt.Sprintf("http://%s", address)).Info("Connecting via Socket")
 	}
 
 	return grpc.NewClient(address, opts...)
@@ -141,11 +158,18 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	opts = append(opts, authenticator.NewInterceptorOptions(cfg.Authenticator)...)
 
 	q.cfg = cfg
-	q.server = grpc.NewServer(opts...)
+	q.grpc.network = grpc.NewServer(opts...)
+	if unix := cfg.Unix; unix != "" {
+		q.grpc.unix = grpc.NewServer(opts...)
+	}
+
 	q.handlers = handlers
 
 	for _, handler := range q.handlers {
-		handler.Register(q.server)
+		handler.Register(q.grpc.network)
+		if q.grpc.unix != nil {
+			handler.Register(q.grpc.unix)
+		}
 	}
 
 	if gateway := cfg.Gateway; gateway != nil {

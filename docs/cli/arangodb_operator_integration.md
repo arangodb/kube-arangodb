@@ -135,6 +135,7 @@ Flags:
       --services.gateway.address string                                                     Address to expose internal gateway services (Env: SERVICES_GATEWAY_ADDRESS) (default "127.0.0.1:9192")
       --services.gateway.enabled                                                            Defines if internal gateway is enabled (Env: SERVICES_GATEWAY_ENABLED) (default true)
       --services.tls.keyfile string                                                         Path to the keyfile (Env: SERVICES_TLS_KEYFILE)
+      --services.unix string                                                                Path of the UNIX file handler (Env: SERVICES_UNIX)
 
 Use "arangodb_operator_integration [command] --help" for more information about a command.
 ```
