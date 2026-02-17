@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -339,11 +339,12 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		a.log.Info("Checking the running")
 		// Image is changed after restart
 		if cspec.Image == cstatus.Image {
-			// Image not yet updated, retry soon
+			// Image updated, done
 			return true, false, nil
 		}
 
 		if fmt.Sprintf("%d", cstatus.RestartCount) != revision {
+			// Revision changed
 			return true, false, nil
 		}
 
