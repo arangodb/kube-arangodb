@@ -22,6 +22,8 @@ package authentication
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -36,7 +38,7 @@ func NewInterceptorClientOptions(auth Authentication) []grpc.DialOption {
 		grpc.WithUnaryInterceptor(func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 			token, change, err := auth.ExtendAuthentication(ctx)
 			if err != nil {
-				return err
+				return status.Error(codes.Unauthenticated, err.Error())
 			}
 
 			if change {
@@ -48,7 +50,7 @@ func NewInterceptorClientOptions(auth Authentication) []grpc.DialOption {
 		grpc.WithStreamInterceptor(func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 			token, change, err := auth.ExtendAuthentication(ctx)
 			if err != nil {
-				return nil, err
+				return nil, status.Error(codes.Unauthenticated, err.Error())
 			}
 
 			if change {

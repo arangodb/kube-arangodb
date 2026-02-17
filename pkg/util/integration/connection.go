@@ -44,8 +44,8 @@ import (
 )
 
 func NewIntegrationConnection() (grpc.ClientConnInterface, error) {
-	addr, err := utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Lookup()
-	if !err {
+	addr, ok := utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Lookup()
+	if !ok {
 		return nil, errors.Errorf("Integration Service Address not found")
 	}
 

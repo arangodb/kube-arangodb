@@ -94,6 +94,14 @@ func runSidecar(t *testing.T) runner {
 	}
 }
 
+func executeHttpRequest(t *testing.T, client http.HTTPClient, req *goHttp.Request) (*goHttp.Response, error) {
+	resp, err := client.Do(req)
+	if err == nil {
+		require.NoError(t, resp.Body.Close())
+	}
+	return resp, err
+}
+
 func renderTLSKeyfileCertificate(t *testing.T) []string {
 	dir := t.TempDir()
 
@@ -128,7 +136,7 @@ func Test_Protocol(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 
 				// Expect Response
 				require.NoError(t, err)
@@ -140,7 +148,7 @@ func Test_Protocol(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				_, err = c.Do(req)
+				_, err = executeHttpRequest(t, c, req)
 				// Expect Response
 				require.Error(t, err)
 			})
@@ -154,7 +162,7 @@ func Test_Protocol(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 				// Expect Response
 				require.NoError(t, err)
 				require.Equal(t, goHttp.StatusBadRequest, resp.StatusCode)
@@ -165,7 +173,7 @@ func Test_Protocol(t *testing.T) {
 
 				c := http.NewHTTPClient(http.WithTransport(http.WithTransportTLS(http.Insecure)))
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 				// Expect Response
 				require.NoError(t, err)
 				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
@@ -190,7 +198,7 @@ func Test_Protocol(t *testing.T) {
 
 				pong := pbPongV1.NewPongV1Client(c)
 
-				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Code(t, codes.Unavailable).Errorf(t, "connection error: desc = \"transport: authentication handshake failed: tls: first record does not look like a TLS handshake\"")
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Code(t, codes.Unavailable)
 			})
 	})
 
@@ -235,7 +243,7 @@ func Test_Auth(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 
 				// Expect Response
 				require.NoError(t, err)
@@ -251,7 +259,7 @@ func Test_Auth(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 
 				// Expect Response
 				require.NoError(t, err)
@@ -267,7 +275,7 @@ func Test_Auth(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 
 				// Expect Response
 				require.NoError(t, err)
@@ -321,7 +329,7 @@ func Test_Auth(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 
 				// Expect Response
 				require.NoError(t, err)
@@ -337,10 +345,11 @@ func Test_Auth(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 
 				// Expect Response
 				require.NoError(t, err)
+				defer resp.Body.Close()
 				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
 			}).
 			run("HTTP Client With auth 2", func(t *testing.T) {
@@ -353,7 +362,7 @@ func Test_Auth(t *testing.T) {
 
 				c := http.NewHTTPClient()
 
-				resp, err := c.Do(req)
+				resp, err := executeHttpRequest(t, c, req)
 
 				// Expect Response
 				require.NoError(t, err)

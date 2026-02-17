@@ -42,12 +42,12 @@ func (c cachedAuthentication) ExtendAuthentication(ctx context.Context) (string,
 	return v, true, nil
 }
 
-func NewCachedAuthenticator(token cache.Object[string]) Authentication {
+func NewCachedAuthentication(token cache.Object[string]) Authentication {
 	return cachedAuthentication{token: token}
 }
 
 func NewTokenFileAuthentication(path string) Authentication {
-	return NewCachedAuthenticator(cache.NewObject(func(ctx context.Context) (string, time.Duration, error) {
+	return NewCachedAuthentication(cache.NewObject(func(ctx context.Context) (string, time.Duration, error) {
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return "", 0, err
