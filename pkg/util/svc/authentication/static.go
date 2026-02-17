@@ -18,27 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package authenticator
+package authentication
 
 import (
 	"context"
+	"fmt"
 )
 
-type Identity struct {
-	User  *string
-	Roles []string
+func Static(token string) Authentication {
+	return static(token)
 }
 
-func GetIdentity(ctx context.Context) *Identity {
-	v := ctx.Value(identityContextKey)
-	if v == nil {
-		return nil
-	}
+type static string
 
-	z, ok := v.(*Identity)
-	if !ok {
-		return nil
-	}
-
-	return z
+func (s static) ExtendAuthentication(ctx context.Context) (string, bool, error) {
+	return fmt.Sprintf("bearer %s", string(s)), true, nil
 }

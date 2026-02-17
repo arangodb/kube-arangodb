@@ -24,6 +24,8 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type identityContext string
@@ -59,7 +61,7 @@ func NewInterceptorOptions(auth Authenticator) []grpc.ServerOption {
 		grpc.StreamInterceptor(func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 			identity, err := auth.ValidateGRPC(ss.Context())
 			if err != nil {
-				return err
+				return status.Error(codes.Unauthenticated, err.Error())
 			}
 
 			return handler(srv, serverStreamWithAuth(ss, identity))
@@ -67,7 +69,7 @@ func NewInterceptorOptions(auth Authenticator) []grpc.ServerOption {
 		grpc.UnaryInterceptor(func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 			identity, err := auth.ValidateGRPC(ctx)
 			if err != nil {
-				return nil, err
+				return nil, status.Error(codes.Unauthenticated, err.Error())
 			}
 
 			if identity != nil {

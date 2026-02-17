@@ -108,6 +108,14 @@ func run(cmd *cobra.Command, args []string) error {
 func runWithContext(ctx context.Context, cmd *cobra.Command) error {
 	var handlers []svc.Handler
 
+	for _, handler := range global.Items() {
+		if handler, ok, err := handler.V(cmd); err != nil {
+			return err
+		} else if ok {
+			handlers = append(handlers, handler)
+		}
+	}
+
 	return runWithHealth(ctx, cmd, handlers...)
 }
 

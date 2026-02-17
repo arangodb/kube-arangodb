@@ -18,27 +18,14 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package authenticator
+package authentication
 
-import (
-	"context"
-)
+import utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 
-type Identity struct {
-	User  *string
-	Roles []string
-}
-
-func GetIdentity(ctx context.Context) *Identity {
-	v := ctx.Value(identityContextKey)
-	if v == nil {
-		return nil
+func NewArangoTokenAuthentication() Authentication {
+	if v, ok := utilConstants.INTEGRATION_ARANGO_TOKEN.Lookup(); !ok {
+		return NewEmptyAuthentication()
+	} else {
+		return NewTokenFileAuthentication(v)
 	}
-
-	z, ok := v.(*Identity)
-	if !ok {
-		return nil
-	}
-
-	return z
 }

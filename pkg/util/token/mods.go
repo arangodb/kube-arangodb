@@ -60,6 +60,12 @@ func WithDuration(dur time.Duration) util.ModR[Claims] {
 	return WithExp(time.Now().Add(dur))
 }
 
+func WithRelativeDuration(dur time.Duration) util.ModR[Claims] {
+	return func(in Claims) Claims {
+		return in.With(WithKey(ClaimEXP, time.Now().Add(dur).Unix()))
+	}
+}
+
 func WithExp(time time.Time) util.ModR[Claims] {
 	return WithKey(ClaimEXP, time.Unix())
 }

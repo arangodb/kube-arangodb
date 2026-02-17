@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,9 +48,47 @@ func NewGRPCClient[T any](t *testing.T, ctx context.Context, in func(cc grpc.Cli
 	return client
 }
 
+func NewExecutor[IN, OUT proto.Message](t *testing.T, caller func(ctx context.Context, in IN, opts ...grpc.CallOption) (OUT, error), in IN, opts ...grpc.CallOption) Executor[OUT] {
+	resp, err := caller(t.Context(), in, opts...)
+	return executor[OUT]{
+		ErrorStatusValidator: AsGRPCError(t, err),
+		resp:                 resp,
+	}
+}
+
+type Executor[T proto.Message] interface {
+	ErrorStatusValidator
+
+	Get(t *testing.T) T
+}
+
+type executor[T proto.Message] struct {
+	ErrorStatusValidator
+
+	resp T
+}
+
+func (e executor[T]) Get(t *testing.T) T {
+	e.Code(t, codes.OK)
+	return e.resp
+}
+
 type ErrorStatusValidator interface {
 	Code(t *testing.T, code codes.Code) ErrorStatusValidator
 	Errorf(t *testing.T, msg string, args ...interface{}) ErrorStatusValidator
+}
+
+type noErrorValidator struct {
+}
+
+func (n noErrorValidator) Code(t *testing.T, code codes.Code) ErrorStatusValidator {
+	require.Equal(t, codes.OK, code, "code should be OK when no error provided")
+	return n
+}
+
+func (n noErrorValidator) Errorf(t *testing.T, msg string, args ...interface{}) ErrorStatusValidator {
+	require.Fail(t, "no error provided")
+	return n
 }
 
 type errorStatusValidator struct {
@@ -63,11 +101,15 @@ func (e errorStatusValidator) Errorf(t *testing.T, msg string, args ...interface
 }
 
 func (e errorStatusValidator) Code(t *testing.T, code codes.Code) ErrorStatusValidator {
-	require.Equal(t, code, e.st.Code())
+	require.Equal(t, code, e.st.Code(), e.st.Code().String())
 	return e
 }
 
 func AsGRPCError(t *testing.T, err error) ErrorStatusValidator {
+	if err == nil {
+		return noErrorValidator{}
+	}
+
 	v, ok := svc.AsGRPCErrorStatus(err)
 	require.True(t, ok)
 	st := v.GRPCStatus()

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,6 +147,15 @@ func FilterList[A any](in []A, filter func(A) bool) []A {
 	}
 
 	return r
+}
+
+func ContainsList[A comparable](in []A, v A) bool {
+	for _, el := range in {
+		if el == v {
+			return true
+		}
+	}
+	return false
 }
 
 func UniqueList[A comparable](in []A) []A {

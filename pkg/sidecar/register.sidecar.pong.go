@@ -18,27 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package authenticator
+package sidecar
 
 import (
-	"context"
+	"github.com/spf13/cobra"
+
+	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-type Identity struct {
-	User  *string
-	Roles []string
-}
-
-func GetIdentity(ctx context.Context) *Identity {
-	v := ctx.Value(identityContextKey)
-	if v == nil {
-		return nil
-	}
-
-	z, ok := v.(*Identity)
-	if !ok {
-		return nil
-	}
-
-	return z
+func init() {
+	global.Register("pong", func(cmd *cobra.Command) (svc.Handler, bool, error) {
+		svc, err := pbImplPongV1.New()
+		if err != nil {
+			return nil, false, err
+		}
+		return svc, true, nil
+	})
 }

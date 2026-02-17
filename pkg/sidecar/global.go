@@ -18,27 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package authenticator
+package sidecar
 
 import (
-	"context"
+	"github.com/spf13/cobra"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-type Identity struct {
-	User  *string
-	Roles []string
-}
+type registerHandler func(cmd *cobra.Command) (svc.Handler, bool, error)
 
-func GetIdentity(ctx context.Context) *Identity {
-	v := ctx.Value(identityContextKey)
-	if v == nil {
-		return nil
-	}
-
-	z, ok := v.(*Identity)
-	if !ok {
-		return nil
-	}
-
-	return z
-}
+var global = util.NewRegisterer[string, registerHandler]()
