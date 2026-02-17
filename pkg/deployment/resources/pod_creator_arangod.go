@@ -398,7 +398,7 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.PodTemplateSpec) error {
 		}
 	}
 
-	if m.Deployment.Sidecar.IsEnabled(m.Deployment.Gateway.IsEnabled()) && m.Deployment.Mode.ServingGroup() == m.Group {
+	if m.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) && m.Deployment.Mode.ServingGroup() == m.Group {
 		var c *core.Container
 
 		pod.Labels[k8sutil.LabelKeyArangoSidecar] = "yes"
@@ -556,7 +556,7 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 }
 
 func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, error) {
-	image := m.GetContainerCreator().GetImage()
+	image := m.context.GetOperatorImage()
 
 	args := createInternalSidecarArgs(m.Deployment, m.GroupSpec)
 

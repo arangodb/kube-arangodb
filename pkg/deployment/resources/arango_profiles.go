@@ -87,6 +87,7 @@ func matchArangoProfilesLabels(labels map[string]string, additional ...util.KV[s
 func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	start := time.Now()
 	spec := r.context.GetSpec()
+	status := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 
@@ -192,7 +193,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				r.templateKubernetesEnvs(),
 				r.templateResourceEnvs(),
 				r.templateImagePullSecrets(),
-				r.templateCentralServiceEnvs(deploymentName, spec, cachedStatus),
+				r.templateCentralServiceEnvs(deploymentName, spec, status, cachedStatus),
 			)
 			if err != nil {
 				return "", nil, err
@@ -431,8 +432,8 @@ func (r *Resources) templateResourceEnvs() *schedulerApi.ProfileTemplate {
 	}
 }
 
-func (r *Resources) templateCentralServiceEnvs(name string, spec api.DeploymentSpec, cachedStatus inspectorInterface.Inspector) *schedulerApi.ProfileTemplate {
-	if !spec.Sidecar.IsEnabled(spec.IsGatewayEnabled()) {
+func (r *Resources) templateCentralServiceEnvs(name string, spec api.DeploymentSpec, status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector) *schedulerApi.ProfileTemplate {
+	if !status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
 		return nil
 	}
 
@@ -463,6 +464,10 @@ func (r *Resources) templateCentralServiceEnvs(name string, spec api.DeploymentS
 						{
 							Name:  utilConstants.CENTRAL_INTEGRATION_HTTP_ADDRESS_FULL.String(),
 							Value: fmt.Sprintf("%s://%s:%d", util.BoolSwitch(spec.IsSecure(), "https", "http"), v, shared.InternalSidecarContainerPortHTTP),
+						},
+						{
+							Name:  utilConstants.CENTRAL_INTEGRATION_SECURED.String(),
+							Value: util.BoolSwitch(spec.IsSecure(), "true", "false"),
 						},
 					},
 				},

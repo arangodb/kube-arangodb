@@ -131,6 +131,9 @@ const (
 
 	// ConditionTypeGatewayConfig contains current config checksum of the Gateway
 	ConditionTypeGatewayConfig ConditionType = "GatewayConfig"
+
+	// ConditionTypeGatewaySidecarEnabled indicates that the sidecar gateway is enabled.
+	ConditionTypeGatewaySidecarEnabled ConditionType = "GatewaySidecarEnabled"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

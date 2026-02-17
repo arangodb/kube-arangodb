@@ -320,7 +320,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		}
 	}
 
-	if spec.Sidecar.IsEnabled(spec.IsGatewayEnabled()) {
+	if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 		defer cancel()
 
