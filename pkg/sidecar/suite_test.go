@@ -64,8 +64,7 @@ func (r runnerImpl) evaluateArgs(in func(t *testing.T) []string) runner {
 }
 
 func (r runnerImpl) addArgs(args ...string) runner {
-	var q runnerImpl
-	q.t = r.t
+	q := r
 	q.args = append(q.args, args...)
 	return q
 }
@@ -96,7 +95,7 @@ func runSidecar(t *testing.T) runner {
 
 func executeHttpRequest(t *testing.T, client http.HTTPClient, req *goHttp.Request) (*goHttp.Response, error) {
 	resp, err := client.Do(req)
-	if err == nil {
+	if resp != nil {
 		require.NoError(t, resp.Body.Close())
 	}
 	return resp, err
