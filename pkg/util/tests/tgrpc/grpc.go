@@ -32,8 +32,8 @@ import (
 	proto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func NewGRPCClient[T any](t *testing.T, ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, opts ...grpc.DialOption) T {
@@ -110,7 +110,7 @@ func AsGRPCError(t *testing.T, err error) ErrorStatusValidator {
 		return noErrorValidator{}
 	}
 
-	v, ok := svc.AsGRPCErrorStatus(err)
+	v, ok := errors.AsGRPCErrorStatus(err)
 	require.True(t, ok)
 	st := v.GRPCStatus()
 	require.NotNil(t, st)

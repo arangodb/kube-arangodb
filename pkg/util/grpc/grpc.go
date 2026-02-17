@@ -37,7 +37,7 @@ import (
 	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func NewGRPCClient[T any](ctx context.Context, in func(cc grpc.ClientConnInterface) T, addr string, opts ...grpc.DialOption) (T, io.Closer, error) {
@@ -73,7 +73,7 @@ func NewOptionalTLSGRPCConn(ctx context.Context, addr string, tls *tls.Config, o
 		}
 
 		if _, err := pbPongV1.NewPongV1Client(conn).Ping(ctx, &pbSharedV1.Empty{}); err != nil {
-			if v, ok := svc.AsGRPCErrorStatus(err); !ok {
+			if v, ok := errors.AsGRPCErrorStatus(err); !ok {
 				return nil, err
 			} else {
 				if status := v.GRPCStatus(); status == nil {

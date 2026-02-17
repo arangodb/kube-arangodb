@@ -22,11 +22,13 @@ package authentication
 
 import (
 	"context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func NewInterceptorClientOptions(auth Authentication) []grpc.DialOption {
@@ -38,7 +40,7 @@ func NewInterceptorClientOptions(auth Authentication) []grpc.DialOption {
 		grpc.WithUnaryInterceptor(func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 			token, change, err := auth.ExtendAuthentication(ctx)
 			if err != nil {
-				return status.Error(codes.Unauthenticated, err.Error())
+				return status.Error(codes.Unauthenticated, errors.ExtractGRPCCause(err).Error())
 			}
 
 			if change {
@@ -50,7 +52,7 @@ func NewInterceptorClientOptions(auth Authentication) []grpc.DialOption {
 		grpc.WithStreamInterceptor(func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 			token, change, err := auth.ExtendAuthentication(ctx)
 			if err != nil {
-				return nil, status.Error(codes.Unauthenticated, err.Error())
+				return nil, status.Error(codes.Unauthenticated, errors.ExtractGRPCCause(err).Error())
 			}
 
 			if change {

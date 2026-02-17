@@ -24,7 +24,7 @@ import (
 	"context"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
-	errors "github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 )
 

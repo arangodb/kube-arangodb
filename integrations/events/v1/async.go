@@ -24,9 +24,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 

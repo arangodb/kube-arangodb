@@ -25,11 +25,11 @@ import (
 	"encoding/base64"
 	goStrings "strings"
 
-	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 

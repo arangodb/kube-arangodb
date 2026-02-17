@@ -20,12 +20,10 @@
 
 package errors
 
-import "github.com/pkg/errors"
-
 var notImplementedError = Errorf("NotImplemented")
 
 func NotImplementedError() error {
-	return errors.WithStack(notImplementedError)
+	return WithStack(notImplementedError)
 }
 
 func IsNotImplementedError(err error) bool {

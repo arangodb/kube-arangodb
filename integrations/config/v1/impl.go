@@ -148,7 +148,7 @@ func (i *impl) ModuleDetails(ctx context.Context, request *pbConfigV1.ConfigV1Mo
 
 		return nil
 	}); err != nil {
-		if gErr, ok := svc.AsGRPCErrorStatus(err); ok {
+		if gErr, ok := errors.AsGRPCErrorStatus(err); ok {
 			return nil, gErr
 		}
 		return nil, status.Errorf(codes.Internal, "Unable to list directory for module `%s`", request.GetModule())

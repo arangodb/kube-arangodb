@@ -23,13 +23,13 @@ package v1
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
