@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	pod2 "github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -80,6 +81,10 @@ type testContext struct {
 
 	Inspector inspectorInterface.Inspector
 	state     member.StateInspector
+}
+
+func (c *testContext) IsFeatureImageSupported(feature features.Feature) bool {
+	return true
 }
 
 func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {

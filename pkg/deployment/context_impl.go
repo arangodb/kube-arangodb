@@ -38,7 +38,6 @@ import (
 	driver "github.com/arangodb/go-driver"
 	"github.com/arangodb/go-driver/agency"
 	"github.com/arangodb/go-driver/http"
-	"github.com/arangodb/go-driver/jwt"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -61,6 +60,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
+	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
 
 var _ resources.Context = &Deployment{}
@@ -248,67 +250,39 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, errors.Errorf("Cache is not yet started")
 	}
 
-	var secret string
-	var found bool
-
 	// Check if we can find token in folder
-	if i := d.currentObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-		secret, found = d.getJWTFolderToken()
-	}
-
-	// Fallback to token
-	if !found {
-		secret, found = d.getJWTToken()
-	}
-
-	if !found {
-		return nil, errors.Errorf("JWT Secret is invalid")
-	}
-
-	jwt, err := jwt.CreateArangodJwtAuthorizationHeader(secret, "kube-arangodb")
+	token, err := d.getJWTSecret()
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
-	return driver.RawAuthentication(jwt), nil
+	header, err := token.Sign(utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb")))
+	if err != nil {
+		return nil, err
+	}
+
+	return driver.RawAuthentication(fmt.Sprintf("bearer %s", header)), nil
 }
 
-func (d *Deployment) getJWTFolderToken() (string, bool) {
+func (d *Deployment) getJWTSecret() (utilToken.Secret, error) {
 	if i := d.currentObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-		s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), pod.JWTSecretFolder(d.GetName()), meta.GetOptions{})
-		if err != nil {
-			d.log.Err(err).Error("Unable to get secret")
-			return "", false
-		}
+		ctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(shutdown.Context())
+		defer c()
 
-		if len(s.Data) == 0 {
-			return "", false
-		}
-
-		if q, ok := s.Data[utilConstants.ActiveJWTKey]; ok {
-			return string(q), true
-		} else {
-			for _, q := range s.Data {
-				return string(q), true
-			}
-		}
+		return utilTokenLoader.LoadSecretSetFromSecretAPI(ctx, d.GetCachedStatus().Secret().V1().Read(), pod.JWTSecretFolder(d.GetName()))
 	}
 
-	return "", false
-}
-
-func (d *Deployment) getJWTToken() (string, bool) {
 	s, err := d.GetCachedStatus().Secret().V1().Read().Get(context.Background(), d.GetSpec().Authentication.GetJWTSecretName(), meta.GetOptions{})
 	if err != nil {
-		return "", false
+		return nil, err
 	}
 
 	jwt, ok := s.Data[utilConstants.SecretKeyToken]
 	if !ok {
-		return "", false
+		return nil, errors.Errorf("JWT Secret is invalid")
 	}
 
-	return string(jwt), true
+	return utilToken.NewSecret(jwt), nil
 }
 
 // GetSyncServerClient returns a cached client for a specific arangosync server.

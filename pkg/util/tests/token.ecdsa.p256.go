@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,10 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package token
+package tests
 
-import jwt "github.com/golang-jwt/jwt/v5"
+import (
+	"testing"
 
-func DefaultSigningMethod() jwt.SigningMethod {
-	return jwt.SigningMethodHS256
+	"github.com/stretchr/testify/require"
+
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
+)
+
+func GenerateECDSAP256Token(t *testing.T) Token {
+	token, err := utilToken.GenerateECDSASecret()
+	require.NoError(t, err)
+
+	return token
 }

@@ -225,7 +225,7 @@ func Test_Protocol(t *testing.T) {
 	})
 }
 
-func Test_Auth(t *testing.T) {
+func Test_Auth_JWT(t *testing.T) {
 	tm := tests.NewTokenManager(t)
 	tmTemp := tests.NewTokenManager(t)
 
@@ -249,7 +249,7 @@ func Test_Auth(t *testing.T) {
 				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
 			}).
 			run("HTTP Client With auth 1", func(t *testing.T) {
-				auth := tm.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(time.Minute)))
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(time.Minute))
 
 				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
 				require.NoError(t, err)
@@ -265,7 +265,7 @@ func Test_Auth(t *testing.T) {
 				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
 			}).
 			run("HTTP Client With auth 2", func(t *testing.T) {
-				auth := tmTemp.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(time.Minute)))
+				auth := tmTemp.Sign(t, utilToken.WithRelativeDuration(time.Minute))
 
 				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
 				require.NoError(t, err)
@@ -290,7 +290,7 @@ func Test_Auth(t *testing.T) {
 				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Get(t)
 			}).
 			run("GRPC Auth 1", func(t *testing.T) {
-				auth := tm.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(time.Minute)))
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(time.Minute))
 
 				var opts []grpc.DialOption
 				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -304,7 +304,7 @@ func Test_Auth(t *testing.T) {
 				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Get(t)
 			}).
 			run("GRPC Auth 2", func(t *testing.T) {
-				auth := tmTemp.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(time.Minute)))
+				auth := tmTemp.Sign(t, utilToken.WithRelativeDuration(time.Minute))
 
 				var opts []grpc.DialOption
 				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -335,7 +335,7 @@ func Test_Auth(t *testing.T) {
 				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
 			}).
 			run("HTTP Client With auth 1", func(t *testing.T) {
-				auth := tm.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(time.Minute)))
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(time.Minute))
 
 				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
 				require.NoError(t, err)
@@ -352,7 +352,7 @@ func Test_Auth(t *testing.T) {
 				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
 			}).
 			run("HTTP Client With auth 2", func(t *testing.T) {
-				auth := tmTemp.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(time.Minute)))
+				auth := tmTemp.Sign(t, utilToken.WithRelativeDuration(time.Minute))
 
 				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
 				require.NoError(t, err)
@@ -377,7 +377,7 @@ func Test_Auth(t *testing.T) {
 				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Code(t, codes.Unauthenticated)
 			}).
 			run("GRPC Auth 1", func(t *testing.T) {
-				auth := tm.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(time.Minute)))
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(time.Minute))
 
 				var opts []grpc.DialOption
 				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -391,7 +391,7 @@ func Test_Auth(t *testing.T) {
 				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Get(t)
 			}).
 			run("GRPC Auth 2", func(t *testing.T) {
-				auth := tmTemp.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(time.Minute)))
+				auth := tmTemp.Sign(t, utilToken.WithRelativeDuration(time.Minute))
 
 				var opts []grpc.DialOption
 				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -405,7 +405,207 @@ func Test_Auth(t *testing.T) {
 				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Code(t, codes.Unauthenticated)
 			}).
 			run("GRPC Auth with timeout", func(t *testing.T) {
-				auth := tm.Sign(t, utilToken.NewClaims().With(utilToken.WithRelativeDuration(2*time.Second)))
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(2*time.Second))
+
+				var opts []grpc.DialOption
+				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				opts = append(opts, authentication.NewInterceptorClientOptions(authentication.Static(auth))...)
+				c, err := grpc.NewClient("127.0.0.1:8109", opts...)
+				require.NoError(t, err)
+				defer c.Close()
+
+				pong := pbPongV1.NewPongV1Client(c)
+
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Get(t)
+
+				time.Sleep(3 * time.Second)
+
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Code(t, codes.Unauthenticated)
+			})
+	})
+}
+
+func Test_Auth_ECDSA(t *testing.T) {
+	tm := tests.NewTokenManager(t)
+	tmTemp := tests.NewTokenManager(t)
+
+	token1, token2 := tests.GenerateECDSAP256Token(t), tests.GenerateECDSAP256Token(t)
+
+	tm.Set(t, token1)
+	tmTemp.Set(t, token2)
+
+	t.Run("NoAuth", func(t *testing.T) {
+		runSidecar(t).
+			run("HTTP Client", func(t *testing.T) {
+				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
+				require.NoError(t, err)
+
+				c := http.NewHTTPClient()
+
+				resp, err := executeHttpRequest(t, c, req)
+
+				// Expect Response
+				require.NoError(t, err)
+				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
+			}).
+			run("HTTP Client With auth 1", func(t *testing.T) {
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(time.Minute))
+
+				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
+				require.NoError(t, err)
+
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", auth))
+
+				c := http.NewHTTPClient()
+
+				resp, err := executeHttpRequest(t, c, req)
+
+				// Expect Response
+				require.NoError(t, err)
+				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
+			}).
+			run("HTTP Client With auth 2", func(t *testing.T) {
+				auth := tmTemp.Sign(t, utilToken.WithRelativeDuration(time.Minute))
+
+				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
+				require.NoError(t, err)
+
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", auth))
+
+				c := http.NewHTTPClient()
+
+				resp, err := executeHttpRequest(t, c, req)
+
+				// Expect Response
+				require.NoError(t, err)
+				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
+			}).
+			run("GRPC Plain", func(t *testing.T) {
+				c, err := grpc.NewClient("127.0.0.1:8109", grpc.WithTransportCredentials(insecure.NewCredentials()))
+				require.NoError(t, err)
+				defer c.Close()
+
+				pong := pbPongV1.NewPongV1Client(c)
+
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Get(t)
+			}).
+			run("GRPC Auth 1", func(t *testing.T) {
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(time.Minute))
+
+				var opts []grpc.DialOption
+				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				opts = append(opts, authentication.NewInterceptorClientOptions(authentication.Static(auth))...)
+				c, err := grpc.NewClient("127.0.0.1:8109", opts...)
+				require.NoError(t, err)
+				defer c.Close()
+
+				pong := pbPongV1.NewPongV1Client(c)
+
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Get(t)
+			}).
+			run("GRPC Auth 2", func(t *testing.T) {
+				auth := tmTemp.Sign(t, utilToken.WithRelativeDuration(time.Minute))
+
+				var opts []grpc.DialOption
+				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				opts = append(opts, authentication.NewInterceptorClientOptions(authentication.Static(auth))...)
+				c, err := grpc.NewClient("127.0.0.1:8109", opts...)
+				require.NoError(t, err)
+				defer c.Close()
+
+				pong := pbPongV1.NewPongV1Client(c)
+
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Get(t)
+			})
+	})
+
+	t.Run("Auth", func(t *testing.T) {
+		runSidecar(t).
+			addArgs("--sidecar.auth", tm.Path()).
+			run("HTTP Client", func(t *testing.T) {
+				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
+				require.NoError(t, err)
+
+				c := http.NewHTTPClient()
+
+				resp, err := executeHttpRequest(t, c, req)
+
+				// Expect Response
+				require.NoError(t, err)
+				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
+			}).
+			run("HTTP Client With auth 1", func(t *testing.T) {
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(time.Minute))
+
+				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
+				require.NoError(t, err)
+
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", auth))
+
+				c := http.NewHTTPClient()
+
+				resp, err := executeHttpRequest(t, c, req)
+
+				// Expect Response
+				require.NoError(t, err)
+				defer resp.Body.Close()
+				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
+			}).
+			run("HTTP Client With auth 2", func(t *testing.T) {
+				auth := tmTemp.Sign(t, utilToken.WithRelativeDuration(time.Minute))
+
+				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
+				require.NoError(t, err)
+
+				req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", auth))
+
+				c := http.NewHTTPClient()
+
+				resp, err := executeHttpRequest(t, c, req)
+
+				// Expect Response
+				require.NoError(t, err)
+				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
+			}).
+			run("GRPC Plain", func(t *testing.T) {
+				c, err := grpc.NewClient("127.0.0.1:8109", grpc.WithTransportCredentials(insecure.NewCredentials()))
+				require.NoError(t, err)
+				defer c.Close()
+
+				pong := pbPongV1.NewPongV1Client(c)
+
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Code(t, codes.Unauthenticated)
+			}).
+			run("GRPC Auth 1", func(t *testing.T) {
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(time.Minute))
+
+				var opts []grpc.DialOption
+				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				opts = append(opts, authentication.NewInterceptorClientOptions(authentication.Static(auth))...)
+				c, err := grpc.NewClient("127.0.0.1:8109", opts...)
+				require.NoError(t, err)
+				defer c.Close()
+
+				pong := pbPongV1.NewPongV1Client(c)
+
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Get(t)
+			}).
+			run("GRPC Auth 2", func(t *testing.T) {
+				auth := tmTemp.Sign(t, utilToken.WithRelativeDuration(time.Minute))
+
+				var opts []grpc.DialOption
+				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+				opts = append(opts, authentication.NewInterceptorClientOptions(authentication.Static(auth))...)
+				c, err := grpc.NewClient("127.0.0.1:8109", opts...)
+				require.NoError(t, err)
+				defer c.Close()
+
+				pong := pbPongV1.NewPongV1Client(c)
+
+				tgrpc.NewExecutor(t, pong.Ping, &pbSharedV1.Empty{}).Code(t, codes.Unauthenticated)
+			}).
+			run("GRPC Auth with timeout", func(t *testing.T) {
+				auth := tm.Sign(t, utilToken.WithRelativeDuration(2*time.Second))
 
 				var opts []grpc.DialOption
 				opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))

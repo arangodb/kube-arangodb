@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ func (a *actionJWTAdd) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	jwtSha := util.SHA256(jwt)
+	jwtSha := util.TrimSpaceSHA256(jwt)
 
 	if appendToken != jwtSha {
 		a.log.Error("JWT Secret changed")

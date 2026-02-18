@@ -149,6 +149,18 @@ func FilterList[A any](in []A, filter func(A) bool) []A {
 	return r
 }
 
+func FilterListType[OUT any](in []any) []OUT {
+	r := make([]OUT, 0, len(in))
+
+	for _, v := range in {
+		if k, ok := v.(OUT); ok {
+			r = append(r, k)
+		}
+	}
+
+	return r
+}
+
 func ContainsList[A comparable](in []A, v A) bool {
 	for _, el := range in {
 		if el == v {

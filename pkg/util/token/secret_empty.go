@@ -24,8 +24,6 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func EmptySecret() Secret {
@@ -33,6 +31,10 @@ func EmptySecret() Secret {
 }
 
 type emptySecret struct{}
+
+func (e emptySecret) KeyFunc(token *jwt.Token) (any, error) {
+	return nil, noTokenFound{}
+}
 
 func (e emptySecret) Details(token string) (*string, []string, time.Duration, error) {
 	return nil, []string{}, time.Duration(0), jwt.ErrSignatureInvalid
@@ -46,8 +48,12 @@ func (e emptySecret) Hash() string {
 	return ""
 }
 
-func (e emptySecret) Sign(method jwt.SigningMethod, claims Claims) (string, error) {
-	return "", errors.Errorf("no token found")
+func (e emptySecret) Sign(claims Claims) (string, error) {
+	return "", noTokenFound{}
+}
+
+func (e emptySecret) Method() jwt.SigningMethod {
+	return jwt.SigningMethodNone
 }
 
 func (e emptySecret) Validate(token string) (Token, error) {

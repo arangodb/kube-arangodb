@@ -65,7 +65,7 @@ func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.A
 		return r.addJWTPropagatedPlanAction(status)
 	}
 
-	jwtSha := util.SHA256(jwt)
+	jwtSha := util.TrimSpaceSHA256(jwt)
 
 	if _, ok := folder.Data[jwtSha]; !ok {
 		return r.addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTAdd, "Add JWTRotation key").AddParam(checksum, jwtSha))
@@ -77,7 +77,7 @@ func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.A
 	}
 
 	tokenKey, ok := folder.Data[utilConstants.SecretKeyToken]
-	if !ok || util.SHA256(activeKey) != util.SHA256(tokenKey) {
+	if !ok || util.TrimSpaceSHA256(activeKey) != util.TrimSpaceSHA256(tokenKey) {
 		return r.addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTSetActive, "Set active key and add token field").AddParam(checksum, jwtSha))
 	}
 
@@ -91,7 +91,7 @@ func (r *Reconciler) createJWTKeyUpdate(ctx context.Context, apiObject k8sutil.A
 		return nil
 	}
 
-	if util.SHA256(activeKey) != jwtSha {
+	if util.TrimSpaceSHA256(activeKey) != jwtSha {
 		return r.addJWTPropagatedPlanAction(status, actions.NewClusterAction(api.ActionTypeJWTSetActive, "Set active key").AddParam(checksum, jwtSha))
 	}
 
@@ -149,7 +149,7 @@ func (r *Reconciler) createJWTStatusUpdateRequired(apiObject k8sutil.APIObject, 
 			return false
 		}
 
-		keySha := fmt.Sprintf("sha256:%s", util.SHA256(key))
+		keySha := fmt.Sprintf("sha256:%s", util.TrimSpaceSHA256(key))
 
 		if status.Hashes.JWT.Active != keySha {
 			r.planLogger.Error("JWT Token is invalid")
@@ -166,7 +166,7 @@ func (r *Reconciler) createJWTStatusUpdateRequired(apiObject k8sutil.APIObject, 
 	}
 
 	activeKeyData, active := f.Data[utilConstants.ActiveJWTKey]
-	activeKeyShort := util.SHA256(activeKeyData)
+	activeKeyShort := util.TrimSpaceSHA256(activeKeyData)
 	activeKey := fmt.Sprintf("sha256:%s", activeKeyShort)
 	if active {
 		if status.Hashes.JWT.Active != activeKey {
@@ -278,7 +278,7 @@ func isMemberJWTTokenInvalid(ctx context.Context, c client.Client, data map[stri
 
 	if jwtActive, ok := data[utilConstants.ActiveJWTKey]; !ok {
 		return false, errors.Errorf("Missing Active JWT Token in folder")
-	} else if util.SHA256(jwtActive) != e.Result.Active.GetSHA().Checksum() {
+	} else if util.TrimSpaceSHA256(jwtActive) != e.Result.Active.GetSHA().Checksum() {
 		return true, nil
 	}
 

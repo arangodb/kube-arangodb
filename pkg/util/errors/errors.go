@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -118,6 +118,15 @@ func AnyOf(err error, targets ...error) bool {
 func Is(err, target error) bool { return errors.Is(err, target) }
 
 func As(err error, target interface{}) bool { return errors.As(err, target) }
+
+func AsType[T error](err error) (T, bool) {
+	var target T
+	if errors.As(err, &target) {
+		return target, true
+	}
+
+	return target, false
+}
 
 type timeout interface {
 	Timeout() bool

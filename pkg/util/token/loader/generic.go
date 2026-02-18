@@ -21,16 +21,14 @@
 package loader
 
 import (
-	"io"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
-func LoadSecretsFromData(data map[string][]byte) (utilToken.Secret, utilToken.Secrets, error) {
+func LoadSecretsFromData(data map[string][]byte) (utilToken.Secret, utilToken.Secrets) {
 	if len(data) == 0 {
-		return nil, nil, io.ErrUnexpectedEOF
+		return utilToken.EmptySecret(), nil
 	}
 
 	var active = utilToken.EmptySecret()
@@ -45,5 +43,5 @@ func LoadSecretsFromData(data map[string][]byte) (utilToken.Secret, utilToken.Se
 		return utilToken.NewSecret(a.V)
 	}))
 
-	return active, passive, nil
+	return active, passive
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,5 +27,21 @@ import (
 )
 
 func IsSignatureInvalidError(err error) bool {
-	return errors.Is(err, jwt.ErrSignatureInvalid)
+	if err == nil {
+		return false
+	}
+
+	return errors.Is(err, jwt.ErrSignatureInvalid) || errors.Is(err, jwt.ErrTokenSignatureInvalid)
+}
+
+func IsNoTokenFoundError(err error) bool {
+	var noTokenFound noTokenFound
+	return errors.As(err, &noTokenFound)
+}
+
+type noTokenFound struct {
+}
+
+func (n noTokenFound) Error() string {
+	return "no token found"
 }

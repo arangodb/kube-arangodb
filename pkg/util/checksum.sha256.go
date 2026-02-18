@@ -21,6 +21,7 @@
 package util
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -73,6 +74,10 @@ func SHA256FromStringMap(data map[string]string) string {
 
 func SHA256FromString(data string) string {
 	return SHA256([]byte(data))
+}
+
+func TrimSpaceSHA256(data []byte) string {
+	return SHA256(bytes.TrimSpace(data))
 }
 
 func SHA256(data []byte) string {
