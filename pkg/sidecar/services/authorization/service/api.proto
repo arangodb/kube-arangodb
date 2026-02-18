@@ -1,0 +1,106 @@
+//
+// DISCLAIMER
+//
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+import "pkg/sidecar/services/authorization/types/policy.proto";
+import "pkg/sidecar/services/authorization/types/role.proto";
+
+package service;
+
+option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/service";
+
+
+// AuthorizationAPI Service implementation
+service AuthorizationAPI {
+  rpc APIGetPolicy(AuthorizationAPINamedRequest) returns (AuthorizationAPIPolicyResponse){
+    option (google.api.http) = {
+      get: "/_management/permissions/policy/{name}"
+    };
+  }
+  rpc APIDeletePolicy(AuthorizationAPINamedRequest) returns (AuthorizationAPIPolicyResponse){
+    option (google.api.http) = {
+      delete: "/_management/permissions/policy/{name}"
+    };
+  }
+  rpc APICreatePolicy(AuthorizationAPIPolicyRequest) returns (AuthorizationAPIPolicyResponse){
+    option (google.api.http) = {
+      post: "/_management/permissions/policy/{name}"
+      body: "*"
+    };
+  }
+  rpc APIUpdatePolicy(AuthorizationAPIPolicyRequest) returns (AuthorizationAPIPolicyResponse){
+    option (google.api.http) = {
+      put: "/_management/permissions/policy/{name}"
+      body: "*"
+    };
+  }  
+  
+  rpc APIGetRole(AuthorizationAPINamedRequest) returns (AuthorizationAPIRoleResponse){
+    option (google.api.http) = {
+      get: "/_management/permissions/role/{name}"
+    };
+  }
+  rpc APIDeleteRole(AuthorizationAPINamedRequest) returns (AuthorizationAPIRoleResponse){
+    option (google.api.http) = {
+      delete: "/_management/permissions/role/{name}"
+    };
+  }
+  rpc APICreateRole(AuthorizationAPIRoleRequest) returns (AuthorizationAPIRoleResponse){
+    option (google.api.http) = {
+      post: "/_management/permissions/role/{name}"
+      body: "*"
+    };
+  }
+  rpc APIUpdateRole(AuthorizationAPIRoleRequest) returns (AuthorizationAPIRoleResponse){
+    option (google.api.http) = {
+      put: "/_management/permissions/role/{name}"
+      body: "*"
+    };
+  }
+}
+
+message AuthorizationAPINamedRequest {
+  string name = 1;
+}
+
+message AuthorizationAPIPolicyRequest {
+  string name = 1;
+  types.Policy item = 2;
+}
+
+message AuthorizationAPIPolicyResponse {
+    string name = 1;
+    uint32 index = 2;
+    types.Policy item = 3;
+}
+
+message AuthorizationAPIRoleRequest {
+  string name = 1;
+  types.Role item = 2;
+}
+
+message AuthorizationAPIRoleResponse {
+  string name = 1;
+  uint32 index = 2;
+  types.Role item = 3;
+}

@@ -36,12 +36,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
-	plugin, err := cfg.Plugin()
+	plugin, err := cfg.Plugin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -96,10 +96,6 @@ func (i *implementation) Register(registrar *grpc.Server) {
 
 func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return pbAuthorizationV1.RegisterAuthorizationV1Handler(ctx, mux, conn)
-}
-
-func (i *implementation) Background(ctx context.Context) {
-	i.plugin.Background(ctx)
 }
 
 func (i *implementation) Evaluate(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {

@@ -18,16 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package definition
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+func (x *AuthorizationV1PermissionRequestContext) GetContext() map[string][]string {
+	if x == nil {
+		return nil
+	}
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
-)
+	r := make(map[string][]string, len(x.GetParameters()))
+
+	for k, v := range x.GetParameters() {
+		r[k] = v.GetValues()
+	}
+
+	return r
+}

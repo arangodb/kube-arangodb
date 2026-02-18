@@ -18,16 +18,28 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+syntax = "proto3";
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+package types;
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
-)
+import "pkg/sidecar/services/authorization/types/effect.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types";
+
+// Policy Object Definition
+message Policy {
+  // List of the statements
+  repeated PolicyStatement statements = 1;
+}
+
+// PolicyStatement Object Definition
+message PolicyStatement {
+  // Effect of the statement
+  Effect effect = 1;
+
+  // List of the resources
+  repeated string resources = 2;
+
+  // List of the actions
+  repeated string actions = 3;
+}

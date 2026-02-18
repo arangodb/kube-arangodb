@@ -18,16 +18,15 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package operations
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+type Document struct {
+	// Key represents Arango Document Key
+	Key string
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
-)
+	// Id represents Arango Document ID
+	Id string `json:"_id"`
+
+	// Revision represents optional Arango Document Revision
+	Revision *string `json:"_rev"`
+}

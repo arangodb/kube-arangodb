@@ -43,9 +43,6 @@ type ArangoPermissionTokenSpec struct {
 	// +doc/skip: checksum
 	Deployment *sharedApi.Object `json:"deployment"`
 
-	// Roles keeps the roles assigned to the token
-	Roles []string `json:"roles,omitempty"`
-
 	// TTL Defines the TTL of the token.
 	// +doc/type: string
 	// +doc/default: 1h
