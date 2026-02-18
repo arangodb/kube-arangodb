@@ -65,7 +65,7 @@ type Config struct {
 func (c Config) Validate() error {
 	return errors.Errors(
 		shared.PrefixResourceErrors("defaultDestination", c.DefaultDestination.Validate()),
-		shared.PrefixResourceErrors("integrationSidecar", c.IntegrationSidecar.Validate()),
+		shared.ValidateOptionalInterfacePath("integrationSidecar", c.IntegrationSidecar),
 		shared.PrefixResourceErrors("destinations", c.Destinations.Validate()),
 		shared.PrefixResourceErrors("sni", c.SNI.Validate()),
 	)
