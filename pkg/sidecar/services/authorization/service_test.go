@@ -85,7 +85,7 @@ func Test_Service(t *testing.T) {
 
 	tm := tests.NewTokenManager(t)
 
-	q, api := Client(t, ctx, tm, authentication.NewCachedAuthenticator(cache.NewObject(tm.TokenSignature(t, utilToken.WithRelativeDuration(time.Second)))))
+	q, api := Client(t, ctx, tm, authentication.NewCachedAuthentication(cache.NewObject(tm.TokenSignature(t, utilToken.WithRelativeDuration(time.Second)))))
 
 	token := tests.GenerateJWTToken()
 
