@@ -23,6 +23,7 @@ package svc
 import (
 	"context"
 	"fmt"
+	"net"
 	goHttp "net/http"
 	"path/filepath"
 	"testing"
@@ -83,6 +84,46 @@ func Test_Service(t *testing.T) {
 
 func Test_Service_Connections(t *testing.T) {
 	handler := newPongHandler()
+
+	t.Run("HTTP UNIX", func(t *testing.T) {
+		dir := t.TempDir()
+
+		h, err := NewService(Configuration{
+			Address: "127.0.0.1:0",
+			Unix:    filepath.Join(dir, "data.sock"),
+			Gateway: &ConfigurationGateway{
+				Address: "127.0.0.1:0",
+				Unix:    filepath.Join(dir, "data2.sock"),
+			},
+		}, handler)
+		require.NoError(t, err)
+
+		ctx, c := context.WithCancel(context.Background())
+		defer c()
+
+		st := h.Start(ctx)
+
+		conn, err := h.Dial()
+		require.NoError(t, err)
+
+		cl := pbPongV1.NewPongV1Client(conn)
+
+		_, err = cl.Ping(context.Background(), &pbSharedV1.Empty{})
+		require.NoError(t, err)
+
+		_, err = ugrpc.Get[*pbPongV1.PongV1PingResponse](context.Background(), operatorHTTP.NewHTTPClient(
+			operatorHTTP.WithTransport(func(in *goHttp.Transport) {
+				in.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+					return net.Dial("unix", st.HTTPUnix())
+				}
+			}),
+		), "http://unix/_integration/pong/v1/ping").WithCode(goHttp.StatusOK).Get()
+		require.NoError(t, err)
+
+		c()
+
+		require.NoError(t, st.Wait())
+	})
 
 	t.Run("UNIX", func(t *testing.T) {
 		dir := t.TempDir()

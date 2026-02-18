@@ -46,6 +46,7 @@ const (
 	INTEGRATION_API_ADDRESS       util.EnvironmentVariable = "INTEGRATION_API_ADDRESS"
 	INTEGRATION_API_UNIX          util.EnvironmentVariable = "INTEGRATION_API_UNIX"
 	INTEGRATION_HTTP_ADDRESS      util.EnvironmentVariable = "INTEGRATION_HTTP_ADDRESS"
+	INTEGRATION_HTTP_UNIX         util.EnvironmentVariable = "INTEGRATION_HTTP_UNIX"
 	INTEGRATION_HTTP_ADDRESS_FULL util.EnvironmentVariable = "INTEGRATION_HTTP_ADDRESS_FULL"
 
 	INTEGRATION_ARANGO_TOKEN util.EnvironmentVariable = TokenEnvName

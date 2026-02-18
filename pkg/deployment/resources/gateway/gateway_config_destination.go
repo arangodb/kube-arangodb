@@ -306,12 +306,10 @@ func (c *ConfigDestination) RenderCluster(name string) (*pbEnvoyClusterV3.Cluste
 	}
 
 	cluster := &pbEnvoyClusterV3.Cluster{
-		Name:           name,
-		ConnectTimeout: durationpb.New(time.Second),
-		LbPolicy:       pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
-		ClusterDiscoveryType: &pbEnvoyClusterV3.Cluster_Type{
-			Type: pbEnvoyClusterV3.Cluster_STRICT_DNS,
-		},
+		Name:                 name,
+		ConnectTimeout:       durationpb.New(time.Second),
+		LbPolicy:             pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
+		ClusterDiscoveryType: evaluateClusterDiscoveryType(c.Targets...),
 		LoadAssignment: &pbEnvoyEndpointV3.ClusterLoadAssignment{
 			ClusterName: name,
 			Endpoints: []*pbEnvoyEndpointV3.LocalityLbEndpoints{

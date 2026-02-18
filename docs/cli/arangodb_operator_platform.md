@@ -19,7 +19,7 @@ Available Commands:
 
 Flags:
   -h, --help                help for arangodb_operator_platform
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 
 Use "arangodb_operator_platform [command] --help" for more information about a command.
@@ -46,7 +46,7 @@ Flags:
   -h, --help   help for package
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 
 Use "arangodb_operator_platform package [command] --help" for more information about a command.
@@ -67,7 +67,7 @@ Flags:
       --platform.name string   Kubernetes Platform Name (name of the ArangoDeployment)
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_dump_cmd)
@@ -92,7 +92,7 @@ Flags:
       --registry.docker.insecure strings   List of insecure registries
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_install_cmd)
@@ -115,7 +115,7 @@ Flags:
   -h, --help   help for license
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 
 Use "arangodb_operator_platform license [command] --help" for more information about a command.
@@ -142,7 +142,7 @@ Flags:
       --telemetry                      Enables Telemetry (default true)
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_license_inventory_cmd)
@@ -171,7 +171,7 @@ Flags:
       --telemetry                      Enables Telemetry (default true)
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_license_activate_cmd)
@@ -194,7 +194,7 @@ Flags:
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
 
 Global Flags:
-      --kubeconfig string   Kubernetes Config File
+      --kubeconfig string   Kubernetes Config File (default "/home/ubuntu/.kube/devstack")
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_license_generate_cmd)

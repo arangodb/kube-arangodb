@@ -76,6 +76,7 @@ type Configuration struct {
 
 type ConfigurationGateway struct {
 	Address string
+	Unix    string
 
 	MuxExtensions []runtime.ServeMuxOption
 }

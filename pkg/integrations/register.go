@@ -69,7 +69,7 @@ type serviceConfiguration struct {
 	gateway struct {
 		enabled bool
 
-		address string
+		address, unix string
 	}
 
 	tls struct {
@@ -107,6 +107,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 	if s.gateway.enabled {
 		cfg.Gateway = &svc.ConfigurationGateway{
 			Address: s.gateway.address,
+			Unix:    s.gateway.unix,
 			MuxExtensions: []runtime.ServeMuxOption{
 				runtime.WithOutgoingHeaderMatcher(outgoingHeaderMatcher),
 				runtime.WithForwardResponseOption(forwardResponseOption),
@@ -150,6 +151,7 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 		f.StringVar(&c.services.internal.tls.keyfile, "services.tls.keyfile", "", "Path to the keyfile"),
 		f.BoolVar(&c.services.internal.gateway.enabled, "services.gateway.enabled", true, "Defines if internal gateway is enabled"),
 		f.StringVar(&c.services.internal.gateway.address, "services.gateway.address", "127.0.0.1:9192", "Address to expose internal gateway services"),
+		f.StringVar(&c.services.internal.gateway.unix, "services.gateway.unix", "", "Path of the UNIX file handler for http connections"),
 
 		f.BoolVar(&c.services.external.enabled, "services.external.enabled", false, "Defines if external access is enabled"),
 		f.StringVar(&c.services.external.address, "services.external.address", "0.0.0.0:9093", "Address to expose external services"),

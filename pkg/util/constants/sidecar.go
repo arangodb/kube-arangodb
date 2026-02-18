@@ -21,7 +21,8 @@
 package constants
 
 const (
-	SidecarUnixSocketMountPath = "/var/run/sidecar/socket"
-	SidecarUnixSocketMountName = "sidecar-unix"
-	SidecarUnixSocketMountFile = "socket.sock"
+	SidecarUnixSocketMountPath     = "/var/run/sidecar/socket"
+	SidecarUnixSocketMountName     = "sidecar-unix"
+	SidecarUnixSocketMountFile     = "api.sock"
+	SidecarUnixSocketMountHTTPFile = "http.sock"
 )

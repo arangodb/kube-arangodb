@@ -51,7 +51,7 @@ type service struct {
 	lock sync.Mutex
 
 	grpc serviceGRPC
-	http *goHttp.Server
+	http *serviceHTTP
 
 	cfg Configuration
 
@@ -65,6 +65,11 @@ type service struct {
 type serviceGRPC struct {
 	network *grpc.Server
 	unix    *grpc.Server
+}
+
+type serviceHTTP struct {
+	network *goHttp.Server
+	unix    *goHttp.Server
 }
 
 func (p *service) Dial() (grpc.ClientConnInterface, error) {
@@ -173,9 +178,16 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	}
 
 	if gateway := cfg.Gateway; gateway != nil {
-		q.http = &goHttp.Server{
+		var http serviceHTTP
+		http.network = &goHttp.Server{
 			TLSConfig: tls,
 		}
+
+		if gateway.Unix != "" {
+			http.unix = &goHttp.Server{}
+		}
+
+		q.http = &http
 	}
 
 	return &q, nil
