@@ -28,6 +28,14 @@ type serviceError struct {
 	error
 }
 
+func (p serviceError) HTTPUnix() string {
+	return ""
+}
+
+func (p serviceError) Unix() string {
+	return ""
+}
+
 func (p serviceError) StartWithHealth(ctx context.Context, health Health) ServiceStarter {
 	return p
 }

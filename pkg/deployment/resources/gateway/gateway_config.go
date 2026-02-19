@@ -55,7 +55,7 @@ type Config struct {
 
 	DefaultTLS *ConfigTLS `json:"defaultTLS,omitempty"`
 
-	IntegrationSidecar *ConfigDestinationTarget `json:"integrationSidecar,omitempty"`
+	IntegrationSidecar ConfigDestinationTarget `json:"integrationSidecar,omitempty"`
 
 	SNI ConfigSNIList `json:"sni,omitempty"`
 
@@ -65,7 +65,7 @@ type Config struct {
 func (c Config) Validate() error {
 	return errors.Errors(
 		shared.PrefixResourceErrors("defaultDestination", c.DefaultDestination.Validate()),
-		shared.PrefixResourceErrors("integrationSidecar", c.IntegrationSidecar.Validate()),
+		shared.ValidateOptionalInterfacePath("integrationSidecar", c.IntegrationSidecar),
 		shared.PrefixResourceErrors("destinations", c.Destinations.Validate()),
 		shared.PrefixResourceErrors("sni", c.SNI.Validate()),
 	)
@@ -200,12 +200,10 @@ func (c Config) RenderClusters() ([]*pbEnvoyClusterV3.Cluster, error) {
 			return nil, err
 		}
 		cluster := &pbEnvoyClusterV3.Cluster{
-			Name:           utilConstants.EnvoyIntegrationSidecarCluster,
-			ConnectTimeout: durationpb.New(time.Second),
-			LbPolicy:       pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
-			ClusterDiscoveryType: &pbEnvoyClusterV3.Cluster_Type{
-				Type: pbEnvoyClusterV3.Cluster_STRICT_DNS,
-			},
+			Name:                 utilConstants.EnvoyIntegrationSidecarCluster,
+			ConnectTimeout:       durationpb.New(time.Second),
+			LbPolicy:             pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
+			ClusterDiscoveryType: evaluateClusterDiscoveryType(i),
 			LoadAssignment: &pbEnvoyEndpointV3.ClusterLoadAssignment{
 				ClusterName: utilConstants.EnvoyIntegrationSidecarCluster,
 				Endpoints: []*pbEnvoyEndpointV3.LocalityLbEndpoints{

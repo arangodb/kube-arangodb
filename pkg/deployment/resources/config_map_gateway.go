@@ -67,9 +67,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		Targets: gateway.ConfigDestinationTargets{
-			{
-				Host: "127.0.0.1",
-				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			gateway.ConfigDestinationTargetUnix{
+				Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountHTTPFile),
 			},
 		},
 	}
@@ -85,9 +84,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		Targets: gateway.ConfigDestinationTargets{
-			{
-				Host: "127.0.0.1",
-				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			gateway.ConfigDestinationTargetUnix{
+				Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountHTTPFile),
 			},
 		},
 	}
@@ -103,9 +101,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		Targets: gateway.ConfigDestinationTargets{
-			{
-				Host: "127.0.0.1",
-				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			gateway.ConfigDestinationTargetUnix{
+				Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountHTTPFile),
 			},
 		},
 	}
@@ -304,14 +301,13 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 		MergeSlashes: util.NewType(true),
 	}
 
-	cfg.IntegrationSidecar = &gateway.ConfigDestinationTarget{
-		Host: "127.0.0.1",
-		Port: int32(r.context.GetSpec().Integration.GetSidecar().GetListenPort()),
+	cfg.IntegrationSidecar = gateway.ConfigDestinationTargetUnix{
+		Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountFile),
 	}
 
 	cfg.DefaultDestination = gateway.ConfigDestination{
 		Targets: util.FormatList(services, func(a string) gateway.ConfigDestinationTarget {
-			return gateway.ConfigDestinationTarget{
+			return gateway.ConfigDestinationTargetEndpoint{
 				Host: a,
 				Port: shared.ArangoPort,
 			}
@@ -404,7 +400,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				case networkingApi.ArangoRouteStatusTargetEndpointsType, networkingApi.ArangoRouteStatusTargetServiceType:
 					if destinations := target.Destinations; len(destinations) > 0 {
 						for _, destination := range destinations {
-							var t gateway.ConfigDestinationTarget
+							var t gateway.ConfigDestinationTargetEndpoint
 
 							t.Host = destination.Host
 							t.Port = destination.Port

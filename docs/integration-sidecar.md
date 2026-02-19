@@ -171,6 +171,12 @@ Integration Service API Address
 
 Example: `localhost:1234`
 
+#### INTEGRATION_API_UNIX
+
+Integration Service API Unix Handler File Address
+
+Example: `/var/run/sidecar/socket/api.sock`
+
 #### INTEGRATION_SERVICE_ADDRESS
 
 Integration Service API Address
@@ -182,6 +188,12 @@ Example: `localhost:1234`
 Integration Service HTTP Address
 
 Example: `localhost:1234`
+
+#### INTEGRATION_HTTP_UNIX
+
+Integration Service HTTP Unix Handler File Address
+
+Example: `/var/run/sidecar/socket/http.sock`
 
 #### INTEGRATION_HTTP_ADDRESS_FULL
 

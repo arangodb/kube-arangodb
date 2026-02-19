@@ -13,6 +13,7 @@
 - (Feature) (Platform) Extend Gateway Options
 - (Feature) (Platform) Sidecar Feature
 - (Feature) (Platform) Sidecar Auth
+- (Feature) (Platform) Integration Unix Connection
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
