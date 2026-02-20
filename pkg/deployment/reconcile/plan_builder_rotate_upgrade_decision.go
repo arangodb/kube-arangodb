@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,18 +46,18 @@ type updateUpgradeDecisionItem struct {
 
 type updateUpgradeDecisionMap map[updateUpgradeDecisionItem]updateUpgradeDecision
 
-func (u updateUpgradeDecisionMap) GetFromToVersion() (from driver.Version, to driver.Version) {
+func (u updateUpgradeDecisionMap) GetFromTo() (from driver.Version, to driver.Version) {
 	for _, el := range u {
 		if !el.upgrade || !el.upgradeDecision.UpgradeNeeded {
 			continue
 		}
 
-		if from == "" || from.CompareTo(el.upgradeDecision.FromVersion) > 0 {
-			from = el.upgradeDecision.FromVersion
+		if from == "" || from.CompareTo(el.upgradeDecision.From.ArangoDBVersion) > 0 {
+			from = el.upgradeDecision.From.ArangoDBVersion
 		}
 
-		if to == "" || to.CompareTo(el.upgradeDecision.ToVersion) < 0 {
-			to = el.upgradeDecision.ToVersion
+		if to == "" || to.CompareTo(el.upgradeDecision.To.ArangoDBVersion) < 0 {
+			to = el.upgradeDecision.To.ArangoDBVersion
 		}
 	}
 

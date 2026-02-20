@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ func init() {
 	registerFeature(upgradeVersionCheckV2)
 	registerFeature(upgradeAlternativeOrder)
 	registerFeature(upgradeIndexOrderIssue)
+	registerFeature(upgradeCheckSkip)
 }
 
 var upgradeVersionCheck Feature = &feature{
@@ -63,6 +64,14 @@ var upgradeIndexOrderIssue Feature = &feature{
 	hidden:             true,
 }
 
+var upgradeCheckSkip Feature = &feature{
+	name:               "upgrade-check-skip",
+	description:        "Upgrade the deployment even if internal checks do not allow",
+	enterpriseRequired: false,
+	enabledByDefault:   false,
+	hidden:             true,
+}
+
 func UpgradeVersionCheck() Feature {
 	return upgradeVersionCheck
 }
@@ -74,6 +83,8 @@ func UpgradeVersionCheckV2() Feature {
 func UpgradeAlternativeOrder() Feature { return upgradeAlternativeOrder }
 
 func UpgradeIndexOrderIssue() Feature { return upgradeIndexOrderIssue }
+
+func UpgradeCheckSkip() Feature { return upgradeCheckSkip }
 
 func IsUpgradeIndexOrderIssueEnabled(group api.ServerGroup, from, to driver.Version) bool {
 	if !UpgradeIndexOrderIssue().Enabled() {
