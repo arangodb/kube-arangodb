@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import (
 	"fmt"
 
 	"github.com/arangodb/go-driver"
-	upgraderules "github.com/arangodb/go-upgrade-rules"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -37,15 +36,14 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/compare"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 // upgradeDecision is the result of an upgrade check.
 type upgradeDecision struct {
-	FromVersion       driver.Version
-	FromLicense       upgraderules.License
-	ToVersion         driver.Version
-	ToLicense         upgraderules.License
+	From              api.ImageInfo
+	To                api.ImageInfo
 	UpgradeNeeded     bool // If set, the image version has changed
 	UpgradeAllowed    bool // If set, it is an allowed version change
 	AutoUpgradeNeeded bool // If set, the database must be started with `--database.auto-upgrade` once
@@ -238,7 +236,7 @@ func (r *Reconciler) createUpgradePlanInternalCondition(apiObject k8sutil.APIObj
 }
 
 func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec api.DeploymentSpec, status api.DeploymentStatus, context PlanBuilderContext, decision updateUpgradeDecisionMap, agencyCache state.State) (api.Plan, bool) {
-	from, to := decision.GetFromToVersion()
+	from, to := decision.GetFromTo()
 	upgradeOrder := getUpgradeOrder(spec, from, to).Groups()
 
 	for _, group := range upgradeOrder {
@@ -256,8 +254,11 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 			}
 
 			if !d.upgradeDecision.UpgradeAllowed {
-				context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion, d.upgradeDecision.FromLicense, d.upgradeDecision.ToLicense))
-				return nil, false
+				if !features.UpgradeCheckSkip().Enabled() {
+					context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.From, d.upgradeDecision.To))
+					return nil, false
+				}
+				r.log.Warn("Upgrade not allowed, but check skipped")
 			}
 		}
 	}
@@ -283,8 +284,11 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 			}
 
 			if !d.upgradeDecision.UpgradeAllowed {
-				context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion, d.upgradeDecision.FromLicense, d.upgradeDecision.ToLicense))
-				return nil, false
+				if !features.UpgradeCheckSkip().Enabled() {
+					context.CreateEvent(k8sutil.NewUpgradeNotAllowedEvent(apiObject, d.upgradeDecision.From, d.upgradeDecision.To))
+					return nil, false
+				}
+				r.log.Warn("Upgrade not allowed, but check skipped")
 			}
 
 			if m.Member.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
@@ -297,7 +301,7 @@ func (r *Reconciler) createUpgradePlanInternal(apiObject k8sutil.APIObject, spec
 				return nil, false
 			}
 
-			dum := util.BoolSwitch(features.IsUpgradeIndexOrderIssueEnabled(group, d.upgradeDecision.FromVersion, d.upgradeDecision.ToVersion), api.ServerGroupUpgradeModeReplace, api.ServerGroupUpgradeModeInplace)
+			dum := util.BoolSwitch(features.IsUpgradeIndexOrderIssueEnabled(group, d.upgradeDecision.From.ArangoDBVersion, d.upgradeDecision.To.ArangoDBVersion), api.ServerGroupUpgradeModeReplace, api.ServerGroupUpgradeModeInplace)
 
 			um := spec.GetServerGroupSpec(group).UpgradeMode.Default(dum)
 
@@ -362,24 +366,11 @@ func (r *Reconciler) podNeedsUpgrading(mode api.DeploymentMode, status api.Membe
 		return upgradeDecision{UpgradeNeeded: false}
 	}
 
-	// Image changed, check if change is allowed
-	specVersion := currentImage.ArangoDBVersion
-	memberVersion := memberImage.ArangoDBVersion
-	asLicense := func(info api.ImageInfo) upgraderules.License {
-		if info.Enterprise {
-			return upgraderules.LicenseEnterprise
-		}
-		return upgraderules.LicenseCommunity
-	}
-	specLicense := asLicense(currentImage)
-	memberLicense := asLicense(memberImage)
-	if err := upgraderules.CheckUpgradeRulesWithLicense(memberVersion, specVersion, memberLicense, specLicense); err != nil {
+	if err := checkUpgradeRules(currentImage, memberImage); err != nil {
 		// E.g. 3.x -> 4.x, we cannot allow automatically
 		return upgradeDecision{
-			FromVersion:    memberVersion,
-			FromLicense:    memberLicense,
-			ToVersion:      specVersion,
-			ToLicense:      specLicense,
+			From:           memberImage,
+			To:             currentImage,
 			UpgradeNeeded:  true,
 			UpgradeAllowed: false,
 		}
@@ -390,26 +381,22 @@ func (r *Reconciler) podNeedsUpgrading(mode api.DeploymentMode, status api.Membe
 		// Upgrade to 3.12 in Active Failover mode is not supported!
 		// No change
 		return upgradeDecision{
-			FromVersion:    memberVersion,
-			FromLicense:    memberLicense,
-			ToVersion:      specVersion,
-			ToLicense:      specLicense,
+			From:           memberImage,
+			To:             currentImage,
 			UpgradeNeeded:  true,
 			UpgradeAllowed: false,
 		}
 	}
 
-	if specVersion.Major() != memberVersion.Major() || specVersion.Minor() != memberVersion.Minor() {
+	if currentImage.ArangoDBVersion.Major() != memberImage.ArangoDBVersion.Major() || currentImage.ArangoDBVersion.Minor() != memberImage.ArangoDBVersion.Minor() {
 		// Is allowed, with `--database.auto-upgrade`
-		r.planLogger.Str("spec-version", string(specVersion)).Str("pod-version", string(memberVersion)).
-			Int("spec-version.major", specVersion.Major()).Int("spec-version.minor", specVersion.Minor()).
-			Int("pod-version.major", memberVersion.Major()).Int("pod-version.minor", memberVersion.Minor()).
+		r.planLogger.Str("spec-version", string(currentImage.ArangoDBVersion)).Str("pod-version", string(memberImage.ArangoDBVersion)).
+			Int("spec-version.major", currentImage.ArangoDBVersion.Major()).Int("spec-version.minor", currentImage.ArangoDBVersion.Minor()).
+			Int("pod-version.major", memberImage.ArangoDBVersion.Major()).Int("pod-version.minor", memberImage.ArangoDBVersion.Minor()).
 			Info("Deciding to do a upgrade with --auto-upgrade")
 		return upgradeDecision{
-			FromVersion:       memberVersion,
-			FromLicense:       memberLicense,
-			ToVersion:         specVersion,
-			ToLicense:         specLicense,
+			From:              memberImage,
+			To:                currentImage,
 			UpgradeNeeded:     true,
 			UpgradeAllowed:    true,
 			AutoUpgradeNeeded: true,
@@ -417,10 +404,8 @@ func (r *Reconciler) podNeedsUpgrading(mode api.DeploymentMode, status api.Membe
 	}
 	// Patch version change, rotate only
 	return upgradeDecision{
-		FromVersion:       memberVersion,
-		FromLicense:       memberLicense,
-		ToVersion:         specVersion,
-		ToLicense:         specLicense,
+		From:              memberImage,
+		To:                currentImage,
 		UpgradeNeeded:     true,
 		UpgradeAllowed:    true,
 		AutoUpgradeNeeded: true,
@@ -671,4 +656,49 @@ func getUpgradeOrder(spec api.DeploymentSpec, from, to driver.Version) api.Deplo
 
 func getRotateOrder(spec api.DeploymentSpec) api.DeploymentSpecOrder {
 	return spec.Rotate.GetOrder(nil)
+}
+
+func checkUpgradeRules(from, to api.ImageInfo) error {
+	if from.IsEnterprise() && !to.IsEnterprise() {
+		return errors.Errorf("Switch from EE to CE is not allowed")
+	}
+
+	if to.ArangoDBVersion.Major() >= 4 {
+		// For 3.12 handling lets switch logic
+		if from.ArangoDBVersion.Major() == 3 {
+			if from.ArangoDBVersion.CompareTo("3.12") > 0 {
+				return nil
+			}
+
+			return errors.Errorf("Upgrade to 4.x is alowed only from 3.12")
+		}
+
+		if to.ArangoDBVersion.Major() == from.ArangoDBVersion.Major() {
+			// Same minor, just patch upgrade (old style)
+			return nil
+		}
+
+		if to.ArangoDBVersion.Major() == from.ArangoDBVersion.Major()+1 {
+			// Allows single jump (ala minor in old style)
+			return nil
+		}
+
+		return errors.Errorf("Upgrade to x+1.y is alowed only from x.y")
+	} else {
+		if to.ArangoDBVersion.Major() != 3 || from.ArangoDBVersion.Major() != 3 {
+			return errors.Errorf("Upgrade to 3.x is alowed only from 3.x")
+		}
+
+		if to.ArangoDBVersion.Minor() == from.ArangoDBVersion.Minor() {
+			// Same minor, just patch upgrade
+			return nil
+		}
+
+		if to.ArangoDBVersion.Minor() == from.ArangoDBVersion.Minor()+1 {
+			// Allows single jump
+			return nil
+		}
+
+		return errors.Errorf("Upgrade to 3.x+1.y is alowed only from 3.x.y")
+	}
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,13 @@ import (
 	driver "github.com/arangodb/go-driver"
 )
 
+type License string
+
+const (
+	LicenseCommunity  License = "Community"
+	LicenseEnterprise License = "Enterprise"
+)
+
 // ImageInfo contains an ID of an image and the ArangoDB version inside the image.
 type ImageInfo struct {
 	Image           string         `json:"image"`                      // Human provided name of the image
@@ -39,13 +46,7 @@ func (i *ImageInfo) String() string {
 		return "undefined"
 	}
 
-	e := "Community"
-
-	if i.Enterprise {
-		e = "Enterprise"
-	}
-
-	return fmt.Sprintf("ArangoDB %s %s (%s)", e, string(i.ArangoDBVersion), i.Image)
+	return fmt.Sprintf("ArangoDB %s %s (%s)", i.License(), string(i.ArangoDBVersion), i.Image)
 }
 
 // IsEnterprise returns true if image is enterprise
@@ -55,6 +56,15 @@ func (i *ImageInfo) IsEnterprise() bool {
 	}
 
 	return i.Enterprise
+}
+
+// License returns returns license string
+func (i *ImageInfo) License() License {
+	if i == nil && !i.Enterprise {
+		return LicenseCommunity
+	}
+
+	return LicenseEnterprise
 }
 
 // ImageInfoList is a list of image infos
