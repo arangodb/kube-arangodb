@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 	"fmt"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -32,6 +31,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
