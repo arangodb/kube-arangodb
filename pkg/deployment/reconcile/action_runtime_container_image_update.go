@@ -31,6 +31,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
@@ -247,7 +248,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 				return false, errors.Errorf("Unable to find container status")
 			}
 
-			a.actionImpl.action.Locals.Add(rotation.ContainerRevision, fmt.Sprintf("%d", cstatus.RestartCount), true)
+			a.actionImpl.actionCtx.Add(rotation.ContainerRevision, fmt.Sprintf("%d", cstatus.RestartCount), true)
 
 			if _, err := a.actionCtx.ACS().CurrentClusterCache().PodsModInterface().V1().Update(ctx, pod, meta.UpdateOptions{}); err != nil {
 				return true, err
@@ -310,15 +311,13 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		return true, false, nil
 	}
 
-	if s := cstatus.State.Terminated; s != nil {
-		// We are in terminated state
-		// Image is changed after start
-		if cspec.Image != cstatus.Image {
-			// Image not yet updated, retry soon
-			return false, false, nil
-		}
+	if revision == "" {
+		a.log.Info("Unable to find revision")
+		return true, false, nil
+	}
 
-		// Pod won't get up and running
+	// Container has been restarted
+	if s := cstatus.State.Terminated; s != nil {
 		return true, false, errors.Errorf("Container %s failed during image replacement: (%d) %s: %s", name, s.ExitCode, s.Reason, s.Message)
 	} else if s := cstatus.State.Waiting; s != nil {
 		if pod.Spec.RestartPolicy == core.RestartPolicyAlways {
@@ -336,21 +335,19 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		// Pod is still pulling image or pending for pod start
 		return false, false, nil
 	} else if s := cstatus.State.Running; s != nil {
-		a.log.Info("Checking the running")
-		// Image is changed after restart
-		if cspec.Image == cstatus.Image {
-			// Image updated, done
-			return true, false, nil
+		if cRev := fmt.Sprintf("%d", cstatus.RestartCount); cRev == revision {
+			a.log.Str("current", cRev).Str("expected", revision).Info("Container did not restart")
+			return false, false, nil
 		}
 
-		if fmt.Sprintf("%d", cstatus.RestartCount) != revision {
-			// Revision changed
-			return true, false, nil
+		if !k8sutil.IsPodReady(pod) {
+			return false, false, nil
 		}
 
-		return false, false, nil
-	} else {
-		// Unknown state
-		return false, false, nil
+		// Pod running and restart completed
+		return true, false, nil
 	}
+
+	// Still pending
+	return false, false, nil
 }

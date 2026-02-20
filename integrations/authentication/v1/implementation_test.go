@@ -87,7 +87,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 
 	t.Run("Ensure we cant work without secrets", func(t *testing.T) {
 		_, err := s.CreateToken(context.Background(), &pbAuthenticationV1.CreateTokenRequest{})
-		require.EqualError(t, err, "unexpected EOF")
+		require.EqualError(t, err, "no token found")
 	})
 
 	t.Run("Save secret1", func(t *testing.T) {

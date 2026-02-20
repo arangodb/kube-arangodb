@@ -82,7 +82,7 @@ func (a *actionJWTClean) Start(ctx context.Context) (bool, error) {
 	if key, ok := f.Data[utilConstants.ActiveJWTKey]; !ok {
 		a.log.Info("Active Key is required")
 		return true, nil
-	} else if util.SHA256(key) == cleanToken {
+	} else if util.TrimSpaceSHA256(key) == cleanToken {
 		a.log.Info("Unable to remove active key")
 		return true, nil
 	}

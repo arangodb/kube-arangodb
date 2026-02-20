@@ -36,6 +36,10 @@ type validateOnly struct {
 	secret Secret
 }
 
+func (v validateOnly) KeyFunc(token *jwt.Token) (any, error) {
+	return "", errors.Errorf("Secret only allows validation")
+}
+
 func (v validateOnly) Details(token string) (*string, []string, time.Duration, error) {
 	return extractTokenDetails(v, token)
 }
@@ -48,8 +52,12 @@ func (v validateOnly) Hash() string {
 	return v.secret.Hash()
 }
 
-func (v validateOnly) Sign(method jwt.SigningMethod, claims Claims) (string, error) {
+func (v validateOnly) Sign(claims Claims) (string, error) {
 	return "", errors.Errorf("Secret only allows validation")
+}
+
+func (v validateOnly) Method() jwt.SigningMethod {
+	return jwt.SigningMethodNone
 }
 
 func (v validateOnly) Validate(token string) (Token, error) {
