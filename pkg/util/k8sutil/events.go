@@ -245,7 +245,7 @@ func NewUpgradeNotAllowedEvent(apiObject APIObject, from, to api.ImageInfo) *Eve
 		event.Reason = "Downgrade not allowed"
 		verb = "Downgrading"
 	}
-	if from.ArangoDBVersion == to.ArangoDBVersion {
+	if from.License() == to.License() {
 		event.Message = fmt.Sprintf("%s ArangoDB %s from version %s to version %s is not allowed",
 			verb, from.License(), from.ArangoDBVersion, to.ArangoDBVersion)
 	} else {

@@ -667,11 +667,11 @@ func checkUpgradeRules(from, to api.ImageInfo) error {
 	if to.ArangoDBVersion.Major() >= 4 {
 		// For 3.12 handling lets switch logic
 		if from.ArangoDBVersion.Major() == 3 {
-			if from.ArangoDBVersion.CompareTo("3.12") > 0 {
+			if from.ArangoDBVersion.CompareTo("3.12") >= 0 {
 				return nil
 			}
 
-			return errors.Errorf("Upgrade to 4.x is alowed only from 3.12")
+			return errors.Errorf("Upgrade to 4.x is allowed only from 3.12")
 		}
 
 		if to.ArangoDBVersion.Major() == from.ArangoDBVersion.Major() {
@@ -684,10 +684,10 @@ func checkUpgradeRules(from, to api.ImageInfo) error {
 			return nil
 		}
 
-		return errors.Errorf("Upgrade to x+1.y is alowed only from x.y")
+		return errors.Errorf("Upgrade to x+1.y is allowed only from x.y")
 	} else {
 		if to.ArangoDBVersion.Major() != 3 || from.ArangoDBVersion.Major() != 3 {
-			return errors.Errorf("Upgrade to 3.x is alowed only from 3.x")
+			return errors.Errorf("Upgrade to 3.x is allowed only from 3.x")
 		}
 
 		if to.ArangoDBVersion.Minor() == from.ArangoDBVersion.Minor() {
@@ -700,6 +700,6 @@ func checkUpgradeRules(from, to api.ImageInfo) error {
 			return nil
 		}
 
-		return errors.Errorf("Upgrade to 3.x+1.y is alowed only from 3.x.y")
+		return errors.Errorf("Upgrade to 3.x+1.y is allowed only from 3.x.y")
 	}
 }

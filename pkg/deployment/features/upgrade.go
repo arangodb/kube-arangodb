@@ -66,7 +66,7 @@ var upgradeIndexOrderIssue Feature = &feature{
 
 var upgradeCheckSkip Feature = &feature{
 	name:               "upgrade-check-skip",
-	description:        "Upgrade the deployment even if internal checks does not allow",
+	description:        "Upgrade the deployment even if internal checks do not allow",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 	hidden:             true,
