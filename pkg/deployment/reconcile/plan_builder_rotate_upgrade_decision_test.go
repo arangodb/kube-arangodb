@@ -222,7 +222,7 @@ func Test_CheckUpgradeRules(t *testing.T) {
 		{
 			Allowed: true,
 			From: api.ImageInfo{
-				ArangoDBVersion: "3.12.0",
+				ArangoDBVersion: "3.12.8",
 				Enterprise:      true,
 			},
 			To: api.ImageInfo{

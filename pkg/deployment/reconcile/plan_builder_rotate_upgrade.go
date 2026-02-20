@@ -366,8 +366,9 @@ func (r *Reconciler) podNeedsUpgrading(mode api.DeploymentMode, status api.Membe
 		return upgradeDecision{UpgradeNeeded: false}
 	}
 
-	if err := checkUpgradeRules(currentImage, memberImage); err != nil {
+	if err := checkUpgradeRules(memberImage, currentImage); err != nil {
 		// E.g. 3.x -> 4.x, we cannot allow automatically
+		r.log.Err(err).Warn("Upgrade Check Failed")
 		return upgradeDecision{
 			From:           memberImage,
 			To:             currentImage,

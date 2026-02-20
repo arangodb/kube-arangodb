@@ -60,7 +60,7 @@ func (i *ImageInfo) IsEnterprise() bool {
 
 // License returns returns license string
 func (i *ImageInfo) License() License {
-	if i == nil && !i.Enterprise {
+	if i == nil || !i.Enterprise {
 		return LicenseCommunity
 	}
 
