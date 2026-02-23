@@ -28,6 +28,7 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cert"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -64,6 +65,15 @@ func NewECDSAValidateSecret(key *ecdsa.PublicKey) (Secret, error) {
 type ecdsaValidateSecret struct {
 	key  *ecdsa.PublicKey
 	hash string
+}
+
+func (e ecdsaValidateSecret) PublicKey() []string {
+	res, err := cert.KeyToPublicPem(e.key)
+	if err != nil {
+		return nil
+	}
+
+	return []string{res}
 }
 
 func (e ecdsaValidateSecret) SigningHash() string {

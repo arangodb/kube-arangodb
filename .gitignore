@@ -21,4 +21,4 @@ tools/codegen/boilerplate.go.txt
 .checksum.code
 .checksum.mod
 
-cache/
+./cache/

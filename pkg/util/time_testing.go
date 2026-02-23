@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,32 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package token
+//go:build testing
 
-import (
-	"time"
+package util
 
-	jwt "github.com/golang-jwt/jwt/v5"
-)
+import "time"
 
-type Secret interface {
-	SigningHash() string
-	Hash() string
-
-	PublicKey() []string
-
-	Sign(claims Claims) (string, error)
-	Validate(token string) (Token, error)
-
-	KeyFunc(token *jwt.Token) (any, error)
-
-	Method() jwt.SigningMethod
-
-	Details(token string) (*string, []string, time.Duration, error)
-
-	Exists() bool
-}
-
-type Token interface {
-	Claims() Claims
+func GetDuration(in time.Duration) time.Duration {
+	return 0
 }

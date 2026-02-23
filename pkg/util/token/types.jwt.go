@@ -77,6 +77,10 @@ func NewJWTSecretWithSize(data []byte, size int) Secret {
 
 type secret []byte
 
+func (s secret) PublicKey() []string {
+	return nil
+}
+
 func (s secret) KeyFunc(token *jwt.Token) (any, error) {
 	return []byte(s), nil
 }

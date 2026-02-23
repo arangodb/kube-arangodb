@@ -41,6 +41,16 @@ type secretSet struct {
 	secondary Secret
 }
 
+func (s secretSet) PublicKey() []string {
+	var r []string
+
+	r = append(r, s.main.PublicKey()...)
+
+	r = append(r, s.secondary.PublicKey()...)
+
+	return r
+}
+
 func (s secretSet) KeyFunc(token *jwt.Token) (any, error) {
 	return s.main.KeyFunc(token)
 }

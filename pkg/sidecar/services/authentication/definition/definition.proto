@@ -1,0 +1,61 @@
+//
+// DISCLAIMER
+//
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package authentication;
+
+import "google/api/annotations.proto";
+
+import "integrations/shared/v1/definition/empty.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication/definition";
+
+// SidecarAuthenticationService defines the Authentication Client Service
+service SidecarAuthenticationService {
+  // Returns the keys
+  rpc GetKeys (shared.Empty) returns (SidecarAuthenticationKeysResponse) {
+    option (google.api.http) = {
+      get: "/_management/authentication/keys"
+    };
+  }
+  // Returns the keys if checksum is different, otherwise AlreadyExists
+  rpc GetOptionalKeys (SidecarAuthenticationKeysRequest) returns (SidecarAuthenticationKeysResponse) {
+    option (google.api.http) = {
+      post: "/_management/authentication/keys"
+      body: "*"
+    };
+  }
+}
+
+// SidecarAuthenticationKeys defines the keys request with filter
+message SidecarAuthenticationKeysRequest {
+  // If checksum is the same returns AlreadyExists
+  optional string checksum = 1;
+}
+
+// SidecarAuthenticationKeysResponse defines the keys response
+message SidecarAuthenticationKeysResponse {
+  // List of the public keys
+  repeated string keys = 1;
+
+  // Get key checksum
+  string checksum = 2;
+}
