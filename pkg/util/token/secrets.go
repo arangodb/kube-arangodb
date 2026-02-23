@@ -35,6 +35,16 @@ func NewSecrets(secrets ...Secret) Secret {
 
 type Secrets []Secret
 
+func (s Secrets) PublicKey() []string {
+	var r []string
+
+	for _, secret := range s {
+		r = append(r, secret.PublicKey()...)
+	}
+
+	return r
+}
+
 func (s Secrets) KeyFunc(token *jwt.Token) (any, error) {
 	return "", errors.Errorf("secrets signing method not supported")
 }

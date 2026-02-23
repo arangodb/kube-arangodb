@@ -36,6 +36,10 @@ type validateOnly struct {
 	secret Secret
 }
 
+func (v validateOnly) PublicKey() []string {
+	return v.secret.PublicKey()
+}
+
 func (v validateOnly) KeyFunc(token *jwt.Token) (any, error) {
 	return "", errors.Errorf("Secret only allows validation")
 }
