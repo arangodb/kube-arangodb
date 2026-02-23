@@ -22,8 +22,8 @@ package operations
 
 import (
 	"context"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
-	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
