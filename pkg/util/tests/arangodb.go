@@ -23,8 +23,10 @@
 package tests
 
 import (
+	"context"
 	goStrings "strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -60,6 +62,27 @@ func (a ArangoDBTestConfig) Client(t *testing.T) arangodb.Client {
 	require.NoError(t, err)
 
 	return client
+}
+
+func (a ArangoDBTestConfig) ClientCache() func(ctx context.Context) (arangodb.Client, time.Duration, error) {
+	return func(ctx context.Context) (arangodb.Client, time.Duration, error) {
+		client := arangodb.NewClient(connection.NewHttpConnection(connection.HttpConfiguration{
+			Authentication: a.Auth.Auth(),
+			Endpoint: connection.NewRoundRobinEndpoints([]string{
+				a.Endpoint,
+			}),
+			ContentType:    connection.ApplicationJSON,
+			ArangoDBConfig: connection.ArangoDBConfiguration{},
+			Transport:      operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
+		}))
+
+		_, err := client.Version(ctx)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		return client, time.Hour, nil
+	}
 }
 
 type ArangoDBTestConfigAuth struct {

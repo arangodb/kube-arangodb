@@ -69,7 +69,7 @@ func (i *implementation) Register(registrar *grpc.Server) {
 	pbSchedulerV2.RegisterSchedulerV2Server(registrar, i)
 }
 
-func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return nil
 }
 

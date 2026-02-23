@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 var registerer = util.NewRegisterer[string, Factory]()
@@ -63,12 +64,12 @@ type configuration struct {
 type serviceConfiguration struct {
 	enabled bool
 
-	address string
+	address, unix string
 
 	gateway struct {
 		enabled bool
 
-		address string
+		address, unix string
 	}
 
 	tls struct {
@@ -86,6 +87,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 	var cfg svc.Configuration
 
 	cfg.Address = s.address
+	cfg.Unix = s.unix
 
 	switch goStrings.ToLower(s.auth.t) {
 	case "none":
@@ -95,10 +97,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 			return util.Default[svc.Configuration](), errors.Errorf("Token is empty")
 		}
 
-		cfg.Options = append(cfg.Options,
-			basicTokenAuthUnaryInterceptor(s.auth.token),
-			basicTokenAuthStreamInterceptor(s.auth.token),
-		)
+		cfg.Authenticator = authenticator.Required(authenticator.NewTokenAuthenticator(s.auth.token))
 	}
 
 	if keyfile := s.tls.keyfile; keyfile != "" {
@@ -108,6 +107,7 @@ func (s *serviceConfiguration) Config() (svc.Configuration, error) {
 	if s.gateway.enabled {
 		cfg.Gateway = &svc.ConfigurationGateway{
 			Address: s.gateway.address,
+			Unix:    s.gateway.unix,
 			MuxExtensions: []runtime.ServeMuxOption{
 				runtime.WithOutgoingHeaderMatcher(outgoingHeaderMatcher),
 				runtime.WithForwardResponseOption(forwardResponseOption),
@@ -145,11 +145,13 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 
 		f.BoolVar(&c.services.internal.enabled, "services.enabled", true, "Defines if internal access is enabled"),
 		f.StringVar(&c.services.internal.address, "services.address", "127.0.0.1:9092", "Address to expose internal services"),
+		f.StringVar(&c.services.internal.unix, "services.unix", "", "Path of the UNIX file handler"),
 		f.StringVar(&c.services.internal.auth.t, "services.auth.type", "None", "Auth type for internal service"),
 		f.StringVar(&c.services.internal.auth.token, "services.auth.token", "", "Token for internal service (when auth service is token)"),
 		f.StringVar(&c.services.internal.tls.keyfile, "services.tls.keyfile", "", "Path to the keyfile"),
 		f.BoolVar(&c.services.internal.gateway.enabled, "services.gateway.enabled", true, "Defines if internal gateway is enabled"),
 		f.StringVar(&c.services.internal.gateway.address, "services.gateway.address", "127.0.0.1:9192", "Address to expose internal gateway services"),
+		f.StringVar(&c.services.internal.gateway.unix, "services.gateway.unix", "", "Path of the UNIX file handler for http connections"),
 
 		f.BoolVar(&c.services.external.enabled, "services.external.enabled", false, "Defines if external access is enabled"),
 		f.StringVar(&c.services.external.address, "services.external.address", "0.0.0.0:9093", "Address to expose external services"),

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,30 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package sidecar
 
 import (
-	"context"
-	"time"
+	"github.com/spf13/cobra"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func withTTLIndex(in cache.Object[arangodb.Collection]) cache.Object[arangodb.Collection] {
-	return cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
-		col, err := in.Get(ctx)
+func init() {
+	global.Register("pong", func(cmd *cobra.Command) (svc.Handler, bool, error) {
+		svc, err := pbImplPongV1.New()
 		if err != nil {
-			return nil, 0, err
+			return nil, false, err
 		}
-
-		if _, _, err := col.EnsureTTLIndex(ctx, []string{"created"}, int(DefaultTTL/time.Second), &arangodb.CreateTTLIndexOptions{
-			Name: "system_events_created_ttl_index",
-		}); err != nil {
-			return nil, 0, err
-		}
-
-		return col, time.Hour, nil
+		return svc, true, nil
 	})
 }

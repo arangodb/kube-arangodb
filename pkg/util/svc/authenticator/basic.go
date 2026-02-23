@@ -25,12 +25,11 @@ import (
 	"encoding/base64"
 	goStrings "strings"
 
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
@@ -42,49 +41,42 @@ type basicAuthenticator struct {
 	object cache.Object[map[string]string]
 }
 
-func (b *basicAuthenticator) Init(ctx context.Context) error {
-	_, err := b.object.Get(ctx)
-	return err
-}
-
-func (b *basicAuthenticator) ValidateGRPC(ctx context.Context) error {
+func (b *basicAuthenticator) ValidateGRPC(ctx context.Context) (*Identity, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return status.Errorf(codes.Unauthenticated, "metadata is not provided")
+		return nil, nil
 	}
 
 	v := md.Get("authorization")
 	switch len(v) {
 	case 0:
-		return status.Errorf(codes.Unauthenticated, "authorization token is not provided")
+		return nil, nil
 
 	case 1:
 		h := v[0]
 		z := strings.SplitN(h, " ", 2)
 		if len(z) != 2 {
-			return status.Errorf(codes.Unauthenticated, "authorization token is not provided")
+			return nil, nil
 		}
 
 		if strings.ToLower(z[0]) != "basic" {
-			return status.Errorf(codes.Unauthenticated, "authorization token is not provided")
+			return nil, nil
 		}
 
 		c, err := base64.StdEncoding.DecodeString(z[1])
 		if err == nil {
 			if n := goStrings.SplitN(string(c), ":", 2); len(n) == 2 {
 				if b.validate(ctx, n[0], n[1]) == nil {
-					break
+					return &Identity{User: util.NewType(n[0])}, nil
 				}
 			}
 		}
 
-		return status.Errorf(codes.Unauthenticated, "authorization token is invalid")
+		return nil, nil
 
 	default:
-		return status.Errorf(codes.Unauthenticated, "authorization token is invalid")
+		return nil, nil
 	}
-
-	return nil
 }
 
 func (b *basicAuthenticator) validate(ctx context.Context, username, password string) error {

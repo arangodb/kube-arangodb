@@ -20,7 +20,7 @@
 
 package policy
 
-import "github.com/pkg/errors"
+import "github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 type Effect string
 

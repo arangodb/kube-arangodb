@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 )
 
 func NewClaims() Claims {
-	return Claims{}
+	return Claims{}.With(WithDefaultClaims())
 }
 
 type Claims jwt.MapClaims
@@ -43,5 +43,5 @@ func (t Claims) With(mods ...util.ModR[Claims]) Claims {
 }
 
 func (t Claims) Sign(secret Secret) (string, error) {
-	return secret.Sign(DefaultSigningMethod(), t)
+	return secret.Sign(t)
 }

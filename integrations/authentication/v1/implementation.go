@@ -47,6 +47,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
@@ -108,7 +109,7 @@ func (i *implementation) Register(registrar *grpc.Server) {
 	pbAuthenticationV1.RegisterAuthenticationV1Server(registrar, i)
 }
 
-func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return pbAuthenticationV1.RegisterAuthenticationV1HandlerServer(ctx, mux, i)
 }
 
@@ -218,6 +219,10 @@ func (i *implementation) Identity(ctx context.Context, _ *pbSharedV1.Empty) (*pb
 	if !i.cfg.Enabled {
 		// Auth is disabled, return static response
 		return &pbAuthenticationV1.IdentityResponse{User: "root"}, nil
+	}
+
+	if auth := authenticator.GetIdentity(ctx); auth != nil {
+		return &pbAuthenticationV1.IdentityResponse{User: util.OptionalType(auth.User, DefaultAdminUser)}, nil
 	}
 
 	md, ok := metadata.FromIncomingContext(ctx)

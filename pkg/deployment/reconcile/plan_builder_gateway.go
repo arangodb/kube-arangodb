@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	client "github.com/arangodb/kube-arangodb/pkg/deployment/client"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -123,4 +124,21 @@ func (r *Reconciler) getGatewayInventoryConfig(ctx context.Context, planCtx Plan
 	defer c()
 
 	return internalClient.Inventory(lCtx)
+}
+
+func (r *Reconciler) createGatewaySidecarEnablementPlan(ctx context.Context, _ k8sutil.APIObject, spec api.DeploymentSpec,
+	status api.DeploymentStatus, planCtx PlanBuilderContext) api.Plan {
+	expected := features.GatewayIntegration().ImageSupported(status.CurrentImage) && spec.Sidecar.IsEnabled(spec.IsGatewayEnabled())
+
+	if expected {
+		if !status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+			return api.Plan{sharedReconcile.UpdateConditionActionV2("Gateways Sidecar Enabled", api.ConditionTypeGatewaySidecarEnabled, true, "Gateway Enabled", "Gateway Enabled", "")}
+		}
+	} else {
+		if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+			return api.Plan{sharedReconcile.RemoveConditionActionV2("Gateways Sidecar Disabled", api.ConditionTypeGatewaySidecarEnabled)}
+		}
+	}
+
+	return nil
 }

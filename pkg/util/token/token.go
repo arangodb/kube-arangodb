@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,12 +26,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func Validate(t string, secret []byte) (Token, error) {
-	token, err := jwt.Parse(t, func(token *jwt.Token) (i interface{}, err error) {
-		return secret, nil
-	},
+func Validate(t string, secret Secret) (Token, error) {
+	token, err := jwt.Parse(t, secret.KeyFunc,
 		jwt.WithIssuedAt(),
-		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+		jwt.WithValidMethods([]string{secret.Method().Alg()}),
 	)
 	if err != nil {
 		return nil, err

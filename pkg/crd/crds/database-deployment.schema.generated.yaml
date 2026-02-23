@@ -10392,6 +10392,38 @@ v1:
                   - standard
                 type: string
             type: object
+          sidecar:
+            description: Sidecar holds sidecar configuration settings
+            properties:
+              enabled:
+                description: |-
+                  Enabled if this is set to `true`, the operator runs a sidecar container for
+                  every Agent, DB-Server, Coordinator and Single server.
+                type: boolean
+              resources:
+                description: Resources holds resource requests & limits
+                properties:
+                  claims:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        request:
+                          type: string
+                      type: object
+                    type: array
+                  limits:
+                    additionalProperties:
+                      type: string
+                      x-kubernetes-int-or-string: true
+                    type: object
+                  requests:
+                    additionalProperties:
+                      type: string
+                      x-kubernetes-int-or-string: true
+                    type: object
+                type: object
+            type: object
           single:
             description: Single contains specification for servers running in deployment mode `Single` or `ActiveFailover`.
             properties:
@@ -27724,6 +27756,38 @@ v2alpha1:
                   - coordinatorFirst
                   - standard
                 type: string
+            type: object
+          sidecar:
+            description: Sidecar holds sidecar configuration settings
+            properties:
+              enabled:
+                description: |-
+                  Enabled if this is set to `true`, the operator runs a sidecar container for
+                  every Agent, DB-Server, Coordinator and Single server.
+                type: boolean
+              resources:
+                description: Resources holds resource requests & limits
+                properties:
+                  claims:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        request:
+                          type: string
+                      type: object
+                    type: array
+                  limits:
+                    additionalProperties:
+                      type: string
+                      x-kubernetes-int-or-string: true
+                    type: object
+                  requests:
+                    additionalProperties:
+                      type: string
+                      x-kubernetes-int-or-string: true
+                    type: object
+                type: object
             type: object
           single:
             description: Single contains specification for servers running in deployment mode `Single` or `ActiveFailover`.

@@ -61,13 +61,6 @@ func (i *implementation) Register(registrar *grpc.Server) {
 	server.RegisterOperatorServer(registrar, i)
 }
 
-func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
-	return server.RegisterOperatorHandlerServer(ctx, mux, i)
-}
-func (i *implementation) authenticate(ctx context.Context) error {
-	if i.cfg.Authenticator == nil {
-		return nil
-	}
-
-	return i.cfg.Authenticator.ValidateGRPC(ctx)
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return server.RegisterOperatorHandler(ctx, mux, conn)
 }

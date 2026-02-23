@@ -21,6 +21,8 @@
 package token
 
 import (
+	"time"
+
 	jwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -39,6 +41,14 @@ type secretSet struct {
 	secondary Secret
 }
 
+func (s secretSet) KeyFunc(token *jwt.Token) (any, error) {
+	return s.main.KeyFunc(token)
+}
+
+func (s secretSet) Details(token string) (*string, []string, time.Duration, error) {
+	return extractTokenDetails(s, token)
+}
+
 func (s secretSet) SigningHash() string {
 	return s.main.SigningHash()
 }
@@ -51,8 +61,12 @@ func (s secretSet) Hash() string {
 	return util.SHA256FromStringArray(s.main.Hash(), s.secondary.Hash())
 }
 
-func (s secretSet) Sign(method jwt.SigningMethod, claims Claims) (string, error) {
-	return s.main.Sign(method, claims)
+func (s secretSet) Sign(claims Claims) (string, error) {
+	return s.main.Sign(claims)
+}
+
+func (s secretSet) Method() jwt.SigningMethod {
+	return s.main.Method()
 }
 
 func (s secretSet) Validate(token string) (Token, error) {

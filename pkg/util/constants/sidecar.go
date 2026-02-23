@@ -18,31 +18,11 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1
+package constants
 
-import (
-	"context"
-	"time"
-
-	"github.com/arangodb/go-driver/v2/arangodb"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+const (
+	SidecarUnixSocketMountPath     = "/var/run/sidecar/socket"
+	SidecarUnixSocketMountName     = "sidecar-unix"
+	SidecarUnixSocketMountFile     = "api.sock"
+	SidecarUnixSocketMountHTTPFile = "http.sock"
 )
-
-func withTTLIndex(in cache.Object[arangodb.Collection]) cache.Object[arangodb.Collection] {
-	return cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
-		col, err := in.Get(ctx)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		if _, _, err := col.EnsureTTLIndex(ctx, []string{"ttl"}, 0, &arangodb.CreateTTLIndexOptions{
-			Name: "system_meta_store_object_ttl",
-		}); err != nil {
-			println(err.Error())
-			return nil, 0, err
-		}
-
-		return col, time.Hour, nil
-	})
-}

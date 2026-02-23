@@ -86,7 +86,7 @@ type impl struct {
 	config Config
 }
 
-func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *impl) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return nil
 }
 
@@ -148,7 +148,7 @@ func (i *impl) ModuleDetails(ctx context.Context, request *pbConfigV1.ConfigV1Mo
 
 		return nil
 	}); err != nil {
-		if gErr, ok := svc.AsGRPCErrorStatus(err); ok {
+		if gErr, ok := errors.AsGRPCErrorStatus(err); ok {
 			return nil, gErr
 		}
 		return nil, status.Errorf(codes.Internal, "Unable to list directory for module `%s`", request.GetModule())

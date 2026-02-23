@@ -34,7 +34,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/jwt"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -44,6 +43,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 const (
@@ -145,24 +145,24 @@ func readJWTFile(file string) ([]byte, error) {
 	return data, nil
 }
 
-func getJWTToken() ([]byte, error) {
+func getJWTToken() (utilToken.Secret, error) {
 	// Try read default one
 	if token, err := readJWTFile(utilConstants.SecretKeyToken); err == nil {
 		log.Info().Str("token", utilConstants.SecretKeyToken).Msgf("Using JWT Token")
-		return token, nil
+		return utilToken.NewSecret(token), nil
 	}
 
 	// Try read active one
 	if token, err := readJWTFile(utilConstants.ActiveJWTKey); err == nil {
 		log.Info().Str("token", utilConstants.ActiveJWTKey).Msgf("Using JWT Token")
-		return token, nil
+		return utilToken.NewSecret(token), nil
 	}
 
 	if files, err := os.ReadDir(probeInput.JWTPath); err == nil {
 		for _, file := range files {
 			if token, err := readJWTFile(file.Name()); err == nil {
 				log.Info().Str("token", file.Name()).Msgf("Using JWT Token")
-				return token, nil
+				return utilToken.NewSecret(token), nil
 			}
 		}
 	}
@@ -180,12 +180,12 @@ func addAuthHeader(req *goHttp.Request) error {
 		return err
 	}
 
-	header, err := jwt.CreateArangodJwtAuthorizationHeader(string(token), "probe")
+	header, err := token.Sign(utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("probe")))
 	if err != nil {
 		return err
 	}
 
-	req.Header.Add("Authorization", header)
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", header))
 	return nil
 }
 

@@ -41,9 +41,10 @@ func New(cfg Configuration) (svc.Handler, error) {
 		return nil, err
 	}
 
-	col := cfg.KVCollection(cfg.Endpoint, "_events")
-
-	col = withTTLIndex(col)
+	col := cfg.WithDatabase(cfg.Endpoint).
+		CreateCollection("_events", cfg.SourceCollectionProps()).
+		WithTTLIndex("system_events_created_ttl_index", DefaultTTL, "created").
+		Get()
 
 	return newInternal(cfg, NewArangoRemoteStore[*pbEventsV1.Event](col)), nil
 }
@@ -85,7 +86,7 @@ func (i *implementation) Register(registrar *grpc.Server) {
 	pbEventsV1.RegisterEventsV1Server(registrar, i)
 }
 
-func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux) error {
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return nil
 }
 

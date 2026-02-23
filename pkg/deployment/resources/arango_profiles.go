@@ -87,6 +87,7 @@ func matchArangoProfilesLabels(labels map[string]string, additional ...util.KV[s
 func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspectorInterface.Inspector) error {
 	start := time.Now()
 	spec := r.context.GetSpec()
+	status := r.context.GetStatus()
 	apiObject := r.context.GetAPIObject()
 	deploymentName := apiObject.GetName()
 
@@ -192,6 +193,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 				r.templateKubernetesEnvs(),
 				r.templateResourceEnvs(),
 				r.templateImagePullSecrets(),
+				r.templateCentralServiceEnvs(deploymentName, spec, status, cachedStatus),
 			)
 			if err != nil {
 				return "", nil, err
@@ -288,22 +290,22 @@ func (r *Resources) arangoDeploymentProfileTemplate(cachedStatus inspectorInterf
 
 	envs = append(envs,
 		core.EnvVar{
-			Name:  "ARANGO_DEPLOYMENT_NAME",
+			Name:  utilConstants.ARANGO_DEPLOYMENT_NAME.String(),
 			Value: deploymentName,
 		},
 		core.EnvVar{
-			Name:  "ARANGO_DEPLOYMENT_ENDPOINT",
+			Name:  utilConstants.ARANGO_DEPLOYMENT_ENDPOINT.String(),
 			Value: r.arangoDeploymentInternalAddress(cachedStatus),
 		},
 		core.EnvVar{
-			Name:  "ARANGODB_ENDPOINT",
+			Name:  utilConstants.ARANGODB_ENDPOINT.String(),
 			Value: r.arangoDeploymentInternalAddress(cachedStatus),
 		},
 	)
 
 	if !r.context.GetSpec().IsAuthenticated() {
 		envs = append(envs, core.EnvVar{
-			Name:  "AUTHENTICATION_ENABLED",
+			Name:  utilConstants.AUTHENTICATION_ENABLED.String(),
 			Value: r.arangoDeploymentInternalAddress(cachedStatus),
 		})
 	}
@@ -326,7 +328,7 @@ func (r *Resources) templateKubernetesEnvs() *schedulerApi.ProfileTemplate {
 				Environments: &schedulerContainerResourcesApi.Environments{
 					Env: []core.EnvVar{
 						{
-							Name: "KUBERNETES_NAMESPACE",
+							Name: utilConstants.KUBERNETES_NAMESPACE.String(),
 							ValueFrom: &core.EnvVarSource{
 								FieldRef: &core.ObjectFieldSelector{
 									FieldPath: "metadata.namespace",
@@ -334,7 +336,7 @@ func (r *Resources) templateKubernetesEnvs() *schedulerApi.ProfileTemplate {
 							},
 						},
 						{
-							Name: "KUBERNETES_POD_NAME",
+							Name: utilConstants.KUBERNETES_POD_NAME.String(),
 							ValueFrom: &core.EnvVarSource{
 								FieldRef: &core.ObjectFieldSelector{
 									FieldPath: "metadata.name",
@@ -342,7 +344,7 @@ func (r *Resources) templateKubernetesEnvs() *schedulerApi.ProfileTemplate {
 							},
 						},
 						{
-							Name: "KUBERNETES_POD_IP",
+							Name: utilConstants.KUBERNETES_POD_IP.String(),
 							ValueFrom: &core.EnvVarSource{
 								FieldRef: &core.ObjectFieldSelector{
 									FieldPath: "status.podIP",
@@ -350,7 +352,7 @@ func (r *Resources) templateKubernetesEnvs() *schedulerApi.ProfileTemplate {
 							},
 						},
 						{
-							Name: "KUBERNETES_SERVICE_ACCOUNT",
+							Name: utilConstants.KUBERNETES_SERVICE_ACCOUNT.String(),
 							ValueFrom: &core.EnvVarSource{
 								FieldRef: &core.ObjectFieldSelector{
 									FieldPath: "spec.serviceAccountName",
@@ -388,7 +390,7 @@ func (r *Resources) templateResourceEnvs() *schedulerApi.ProfileTemplate {
 					Env: []core.EnvVar{
 
 						{
-							Name: "CONTAINER_CPU_REQUESTS",
+							Name: utilConstants.CONTAINER_CPU_REQUESTS.String(),
 							ValueFrom: &core.EnvVarSource{
 								ResourceFieldRef: &core.ResourceFieldSelector{
 									Resource: "requests.cpu",
@@ -397,7 +399,7 @@ func (r *Resources) templateResourceEnvs() *schedulerApi.ProfileTemplate {
 							},
 						},
 						{
-							Name: "CONTAINER_MEMORY_REQUESTS",
+							Name: utilConstants.CONTAINER_MEMORY_REQUESTS.String(),
 							ValueFrom: &core.EnvVarSource{
 								ResourceFieldRef: &core.ResourceFieldSelector{
 									Resource: "requests.memory",
@@ -406,7 +408,7 @@ func (r *Resources) templateResourceEnvs() *schedulerApi.ProfileTemplate {
 							},
 						},
 						{
-							Name: "CONTAINER_CPU_LIMITS",
+							Name: utilConstants.CONTAINER_CPU_LIMITS.String(),
 							ValueFrom: &core.EnvVarSource{
 								ResourceFieldRef: &core.ResourceFieldSelector{
 									Resource: "limits.cpu",
@@ -415,13 +417,57 @@ func (r *Resources) templateResourceEnvs() *schedulerApi.ProfileTemplate {
 							},
 						},
 						{
-							Name: "CONTAINER_MEMORY_LIMITS",
+							Name: utilConstants.CONTAINER_MEMORY_LIMITS.String(),
 							ValueFrom: &core.EnvVarSource{
 								ResourceFieldRef: &core.ResourceFieldSelector{
 									Resource: "limits.memory",
 									Divisor:  divisor1Mi,
 								},
 							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *Resources) templateCentralServiceEnvs(name string, spec api.DeploymentSpec, status api.DeploymentStatus, cachedStatus inspectorInterface.Inspector) *schedulerApi.ProfileTemplate {
+	if !status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		return nil
+	}
+
+	svc, ok := cachedStatus.Service().V1().GetSimple(k8sutil.CreateSidecarClientServiceName(name))
+	if !ok {
+		return nil
+	}
+
+	v := svc.GetName()
+
+	if spec.CommunicationMethod.Type() == api.DeploymentCommunicationMethodTypeIP {
+		v = svc.Spec.ClusterIP
+	}
+
+	return &schedulerApi.ProfileTemplate{
+		Container: &schedulerApi.ProfileContainerTemplate{
+			All: &schedulerContainerApi.Generic{
+				Environments: &schedulerContainerResourcesApi.Environments{
+					Env: []core.EnvVar{
+						{
+							Name:  utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.String(),
+							Value: fmt.Sprintf("%s:%d", v, shared.InternalSidecarContainerPortGRPC),
+						},
+						{
+							Name:  utilConstants.CENTRAL_INTEGRATION_HTTP_ADDRESS.String(),
+							Value: fmt.Sprintf("%s:%d", v, shared.InternalSidecarContainerPortHTTP),
+						},
+						{
+							Name:  utilConstants.CENTRAL_INTEGRATION_HTTP_ADDRESS_FULL.String(),
+							Value: fmt.Sprintf("%s://%s:%d", util.BoolSwitch(spec.IsSecure(), "https", "http"), v, shared.InternalSidecarContainerPortHTTP),
+						},
+						{
+							Name:  utilConstants.CENTRAL_INTEGRATION_SECURED.String(),
+							Value: util.BoolSwitch(spec.IsSecure(), "true", "false"),
 						},
 					},
 				},
@@ -456,7 +502,7 @@ func (r *Resources) arangoDeploymentCATemplate() *schedulerApi.ProfileTemplate {
 				Environments: &schedulerContainerResourcesApi.Environments{
 					Env: []core.EnvVar{
 						{
-							Name:  "ARANGO_DEPLOYMENT_CA",
+							Name:  utilConstants.ARANGO_DEPLOYMENT_CA.String(),
 							Value: fmt.Sprintf("/etc/deployment-int/ca/%s", CACertName),
 						},
 					},

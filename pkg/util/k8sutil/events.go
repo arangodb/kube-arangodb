@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	driver "github.com/arangodb/go-driver"
-	upgraderules "github.com/arangodb/go-upgrade-rules"
-
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
@@ -236,31 +234,23 @@ func NewCannotShrinkVolumeEvent(apiObject APIObject, pvcname string) *Event {
 }
 
 // NewUpgradeNotAllowedEvent creates an event indicating that an upgrade (or downgrade) is not allowed.
-func NewUpgradeNotAllowedEvent(apiObject APIObject,
-	fromVersion, toVersion driver.Version,
-	fromLicense, toLicense upgraderules.License) *Event {
+func NewUpgradeNotAllowedEvent(apiObject APIObject, from, to api.ImageInfo) *Event {
 	event := newDeploymentEvent(apiObject)
 	event.Type = core.EventTypeNormal
-	formatLicense := func(l upgraderules.License) string {
-		if l == upgraderules.LicenseCommunity {
-			return "Community Edition"
-		}
-		return "Enterprise Edition"
-	}
 	var verb string
-	if fromVersion.CompareTo(toVersion) < 0 {
+	if from.ArangoDBVersion.CompareTo(to.ArangoDBVersion) < 0 {
 		event.Reason = "Upgrade not allowed"
 		verb = "Upgrading"
 	} else {
 		event.Reason = "Downgrade not allowed"
 		verb = "Downgrading"
 	}
-	if fromLicense == toLicense {
+	if from.License() == to.License() {
 		event.Message = fmt.Sprintf("%s ArangoDB %s from version %s to version %s is not allowed",
-			verb, formatLicense(fromLicense), fromVersion, toVersion)
+			verb, from.License(), from.ArangoDBVersion, to.ArangoDBVersion)
 	} else {
 		event.Message = fmt.Sprintf("%s ArangoDB from %s version %s to %s version %s is not allowed",
-			verb, formatLicense(fromLicense), fromVersion, formatLicense(toLicense), toVersion)
+			verb, from.License(), from.ArangoDBVersion, to.License(), to.ArangoDBVersion)
 	}
 	return event
 }

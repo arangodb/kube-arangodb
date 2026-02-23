@@ -84,7 +84,7 @@ func (a *actionJWTSetActive) Start(ctx context.Context) (bool, error) {
 	activeKeyData, active := f.Data[utilConstants.ActiveJWTKey]
 	tokenKeyData, token := f.Data[utilConstants.SecretKeyToken]
 
-	if util.SHA256(activeKeyData) == toActiveChecksum && util.SHA256(activeKeyData) == util.SHA256(tokenKeyData) {
+	if util.TrimSpaceSHA256(activeKeyData) == toActiveChecksum && util.TrimSpaceSHA256(activeKeyData) == util.TrimSpaceSHA256(tokenKeyData) {
 		a.log.Info("Desired JWT is already active")
 		return true, nil
 	}

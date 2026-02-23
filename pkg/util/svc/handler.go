@@ -33,12 +33,16 @@ type Handler interface {
 	Health(ctx context.Context) HealthState
 
 	Register(registrar *grpc.Server)
-
-	Gateway(ctx context.Context, mux *runtime.ServeMux) error
 }
 
 type HandlerInitService interface {
 	Handler
 
 	InitService(svc Service) error
+}
+
+type HandlerGateway interface {
+	Handler
+
+	Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error
 }

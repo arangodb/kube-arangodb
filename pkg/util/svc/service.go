@@ -22,15 +22,19 @@ package svc
 
 import (
 	"context"
+	"crypto/tls"
+	"fmt"
+	"net"
 	goHttp "net/http"
 	"sync"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 type Service interface {
@@ -46,14 +50,26 @@ type Service interface {
 type service struct {
 	lock sync.Mutex
 
-	server *grpc.Server
-	http   *goHttp.Server
+	grpc serviceGRPC
+	http *serviceHTTP
 
 	cfg Configuration
 
 	handlers []Handler
 
 	starter ServiceStarter
+
+	tls bool
+}
+
+type serviceGRPC struct {
+	network *grpc.Server
+	unix    *grpc.Server
+}
+
+type serviceHTTP struct {
+	network *goHttp.Server
+	unix    *goHttp.Server
 }
 
 func (p *service) Dial() (grpc.ClientConnInterface, error) {
@@ -63,7 +79,31 @@ func (p *service) Dial() (grpc.ClientConnInterface, error) {
 		return nil, errors.Errorf("server not initialized")
 	}
 
-	return p.starter.Dial()
+	return p.dial(p.starter.Address(), p.starter.Unix())
+}
+
+func (p *service) dial(address string, unix string) (*grpc.ClientConn, error) {
+	var opts []grpc.DialOption
+
+	if p.tls {
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+			InsecureSkipVerify: true,
+		})))
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
+	if unix != "" {
+		logger.Str("addr", fmt.Sprintf("unix://%s", unix)).Info("Connecting via UNIX Socket")
+		opts = append(opts, grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
+			// ignore addr; dial the unix socket directly
+			return (&net.Dialer{}).DialContext(ctx, "unix", unix)
+		}))
+	} else {
+		logger.Str("addr", fmt.Sprintf("http://%s", address)).Info("Connecting via Socket")
+	}
+
+	return grpc.NewClient(address, opts...)
 }
 
 func (p *service) StartWithHealth(ctx context.Context, health Health) ServiceStarter {
@@ -110,6 +150,7 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 	if tls != nil {
 		opts = append(opts, grpc.Creds(credentials.NewTLS(tls)))
+		q.tls = true
 	}
 
 	nopts, err := cfg.RenderOptions()
@@ -119,31 +160,34 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 	opts = append(opts, nopts...)
 
+	opts = append(opts, authenticator.NewInterceptorOptions(cfg.Authenticator)...)
+
 	q.cfg = cfg
-	q.server = grpc.NewServer(opts...)
+	q.grpc.network = grpc.NewServer(opts...)
+	if unix := cfg.Unix; unix != "" {
+		q.grpc.unix = grpc.NewServer(opts...)
+	}
+
 	q.handlers = handlers
 
 	for _, handler := range q.handlers {
-		handler.Register(q.server)
+		handler.Register(q.grpc.network)
+		if q.grpc.unix != nil {
+			handler.Register(q.grpc.unix)
+		}
 	}
 
 	if gateway := cfg.Gateway; gateway != nil {
-		mux := runtime.NewServeMux(gateway.MuxExtensions...)
-
-		for _, handler := range q.handlers {
-			if err := handler.Gateway(shutdown.Context(), mux); err != nil {
-				return nil, err
-			}
-		}
-
-		var handler goHttp.Handler = mux
-
-		handler = cfg.Wrap.Wrap(handler)
-
-		q.http = &goHttp.Server{
-			Handler:   handler,
+		var http serviceHTTP
+		http.network = &goHttp.Server{
 			TLSConfig: tls,
 		}
+
+		if gateway.Unix != "" {
+			http.unix = &goHttp.Server{}
+		}
+
+		q.http = &http
 	}
 
 	return &q, nil

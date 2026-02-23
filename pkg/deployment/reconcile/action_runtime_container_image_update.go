@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -30,6 +31,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
@@ -57,7 +59,7 @@ func (a actionRuntimeContainerImageUpdate) Pre(ctx context.Context) error {
 		return nil
 	}
 
-	cname, _, ok := a.getContainerDetails()
+	cname, _, _, ok := a.getContainerDetails()
 	if !ok {
 		a.log.Info("Unable to find container details")
 		return nil
@@ -104,7 +106,7 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 		}
 	}
 
-	cname, image, ok := a.getContainerDetails()
+	cname, image, _, ok := a.getContainerDetails()
 	if !ok {
 		a.log.Info("Unable to find container details")
 		return nil
@@ -155,18 +157,23 @@ func (a actionRuntimeContainerImageUpdate) Post(ctx context.Context) error {
 	})
 }
 
-func (a actionRuntimeContainerImageUpdate) getContainerDetails() (string, string, bool) {
+func (a actionRuntimeContainerImageUpdate) getContainerDetails() (string, string, string, bool) {
 	container, ok := a.action.GetParam(rotation.ContainerName)
 	if !ok {
-		return "", "", false
+		return "", "", "", false
 	}
 
 	image, ok := a.action.GetParam(rotation.ContainerImage)
 	if !ok {
-		return "", "", false
+		return "", "", "", false
 	}
 
-	return container, image, true
+	revision, ok := a.action.Locals.Get(rotation.ContainerRevision)
+	if !ok {
+		revision = ""
+	}
+
+	return container, image, revision, true
 }
 
 // Start starts the action for changing conditions on the provided member.
@@ -182,7 +189,7 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 		return true, errors.Errorf("Client is not ready")
 	}
 
-	name, image, ok := a.getContainerDetails()
+	name, image, _, ok := a.getContainerDetails()
 	if !ok {
 		a.log.Info("Unable to find container details")
 		return true, nil
@@ -235,6 +242,14 @@ func (a actionRuntimeContainerImageUpdate) Start(ctx context.Context) (bool, err
 			// Update pod image
 			pod.Spec.Containers[id].Image = image
 
+			cstatus, ok := kresources.GetContainerStatusByName(pod, name)
+			if !ok {
+				a.log.Info("Unable to find container status")
+				return false, errors.Errorf("Unable to find container status")
+			}
+
+			a.actionImpl.actionCtx.Add(rotation.ContainerRevision, fmt.Sprintf("%d", cstatus.RestartCount), true)
+
 			if _, err := a.actionCtx.ACS().CurrentClusterCache().PodsModInterface().V1().Update(ctx, pod, meta.UpdateOptions{}); err != nil {
 				return true, err
 			}
@@ -273,7 +288,7 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		return true, false, nil
 	}
 
-	name, image, ok := a.getContainerDetails()
+	name, image, revision, ok := a.getContainerDetails()
 	if !ok {
 		a.log.Info("Unable to find container details")
 		return true, false, nil
@@ -296,15 +311,13 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		return true, false, nil
 	}
 
-	if s := cstatus.State.Terminated; s != nil {
-		// We are in terminated state
-		// Image is changed after start
-		if cspec.Image != cstatus.Image {
-			// Image not yet updated, retry soon
-			return false, false, nil
-		}
+	if revision == "" {
+		a.log.Info("Unable to find revision")
+		return true, false, nil
+	}
 
-		// Pod won't get up and running
+	// Container has been restarted
+	if s := cstatus.State.Terminated; s != nil {
 		return true, false, errors.Errorf("Container %s failed during image replacement: (%d) %s: %s", name, s.ExitCode, s.Reason, s.Message)
 	} else if s := cstatus.State.Waiting; s != nil {
 		if pod.Spec.RestartPolicy == core.RestartPolicyAlways {
@@ -322,15 +335,19 @@ func (a actionRuntimeContainerImageUpdate) CheckProgress(ctx context.Context) (b
 		// Pod is still pulling image or pending for pod start
 		return false, false, nil
 	} else if s := cstatus.State.Running; s != nil {
-		// Image is changed after restart
-		if cspec.Image != cstatus.Image {
-			// Image not yet updated, retry soon
+		if cRev := fmt.Sprintf("%d", cstatus.RestartCount); cRev == revision {
+			a.log.Str("current", cRev).Str("expected", revision).Info("Container did not restart")
 			return false, false, nil
 		}
 
+		if !k8sutil.IsPodReady(pod) {
+			return false, false, nil
+		}
+
+		// Pod running and restart completed
 		return true, false, nil
-	} else {
-		// Unknown state
-		return false, false, nil
 	}
+
+	// Still pending
+	return false, false, nil
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,29 +44,35 @@ const (
 	NodeArchAffinityLabelBeta = "beta.kubernetes.io/arch"
 
 	// Pod constants
-	ServerContainerName             = "server"
-	ExporterContainerName           = "exporter"
-	IntegrationContainerName        = "integration"
-	OperatorContainerName           = "operator"
-	ArangodVolumeName               = "arangod-data"
-	TlsKeyfileVolumeName            = "tls-keyfile"
-	ClientAuthCAVolumeName          = "client-auth-ca"
-	ClusterJWTSecretVolumeName      = "cluster-jwt"
-	MasterJWTSecretVolumeName       = "master-jwt"
-	LifecycleVolumeName             = "lifecycle"
-	FoxxAppEphemeralVolumeName      = "ephemeral-apps"
-	TMPEphemeralVolumeName          = "ephemeral-tmp"
-	ArangoDTimezoneVolumeName       = "arangod-timezone"
-	RocksdbEncryptionVolumeName     = "rocksdb-encryption"
-	ExporterJWTVolumeName           = "exporter-jwt"
-	ArangodVolumeMountDir           = "/data"
-	RocksDBEncryptionVolumeMountDir = "/secrets/rocksdb/encryption"
-	TLSKeyfileVolumeMountDir        = "/secrets/tls"
-	TLSSNIKeyfileVolumeMountDir     = "/secrets/sni"
-	ClientAuthCAVolumeMountDir      = "/secrets/client-auth/ca"
-	ClusterJWTSecretVolumeMountDir  = "/secrets/cluster/jwt"
-	ExporterJWTVolumeMountDir       = "/secrets/exporter/jwt"
-	MasterJWTSecretVolumeMountDir   = "/secrets/master/jwt"
+	ServerContainerName                    = "server"
+	ExporterContainerName                  = "exporter"
+	IntegrationContainerName               = "integration"
+	InternalSidecarContainerPortGRPCName   = "isidecar-grpc"
+	InternalSidecarContainerPortGRPC       = 8109
+	InternalSidecarContainerPortHTTPName   = "isidecar-http"
+	InternalSidecarContainerPortHTTP       = 8108
+	InternalSidecarContainerPortHealthName = "isidecar-health"
+	InternalSidecarContainerPortHealth     = 8107
+	OperatorContainerName                  = "operator"
+	ArangodVolumeName                      = "arangod-data"
+	TlsKeyfileVolumeName                   = "tls-keyfile"
+	ClientAuthCAVolumeName                 = "client-auth-ca"
+	ClusterJWTSecretVolumeName             = "cluster-jwt"
+	MasterJWTSecretVolumeName              = "master-jwt"
+	LifecycleVolumeName                    = "lifecycle"
+	FoxxAppEphemeralVolumeName             = "ephemeral-apps"
+	TMPEphemeralVolumeName                 = "ephemeral-tmp"
+	ArangoDTimezoneVolumeName              = "arangod-timezone"
+	RocksdbEncryptionVolumeName            = "rocksdb-encryption"
+	ExporterJWTVolumeName                  = "exporter-jwt"
+	ArangodVolumeMountDir                  = "/data"
+	RocksDBEncryptionVolumeMountDir        = "/secrets/rocksdb/encryption"
+	TLSKeyfileVolumeMountDir               = "/secrets/tls"
+	TLSSNIKeyfileVolumeMountDir            = "/secrets/sni"
+	ClientAuthCAVolumeMountDir             = "/secrets/client-auth/ca"
+	ClusterJWTSecretVolumeMountDir         = "/secrets/cluster/jwt"
+	ExporterJWTVolumeMountDir              = "/secrets/exporter/jwt"
+	MasterJWTSecretVolumeMountDir          = "/secrets/master/jwt"
 
 	// Security constants
 	DefaultRunAsUser  = 1000

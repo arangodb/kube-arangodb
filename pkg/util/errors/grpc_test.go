@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,11 +29,11 @@ import (
 )
 
 func Test_GRPC(t *testing.T) {
-	v, ok := ExtractCause[grpcError](status.Error(codes.InvalidArgument, "path missing"))
+	v, ok := ExtractCause[GRPCErrorStatus](status.Error(codes.InvalidArgument, "path missing"))
 	require.True(t, ok)
 	require.EqualValues(t, codes.InvalidArgument, v.GRPCStatus().Code())
 
-	v, ok = ExtractCause[grpcError](WithStack(status.Error(codes.InvalidArgument, "path missing")))
+	v, ok = ExtractCause[GRPCErrorStatus](WithStack(status.Error(codes.InvalidArgument, "path missing")))
 	require.True(t, ok)
 	require.EqualValues(t, codes.InvalidArgument, v.GRPCStatus().Code())
 
