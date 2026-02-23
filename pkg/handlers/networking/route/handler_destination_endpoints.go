@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -164,6 +164,15 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 	target.Destinations = util.Sort(target.Destinations, func(i, j networkingApi.ArangoRouteStatusTargetDestination) bool {
 		return i.Hash() < j.Hash()
 	})
+
+	if len(target.Destinations) == 0 {
+		return &operator.Condition{
+			Status:  false,
+			Reason:  "No target destinations found",
+			Message: "No target destinations found",
+			Hash:    target.Hash(),
+		}, false, nil
+	}
 
 	if status.Target.Hash() == target.Hash() {
 		return &operator.Condition{
