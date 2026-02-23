@@ -1,4 +1,4 @@
 pkg/generated/** linguist-generated
 **/zz_generated.deepcopy.go linguist-generated
-pkg/api/** linguist-generated
 **/*.generated.go linguist-generated
+**/*.pb.go linguist-generated
