@@ -16,6 +16,7 @@
 - (Feature) (Platform) Integration Unix Connection
 - (Feature) (Platform) Asymmetric Key Support
 - (Feature) Upgrade 4.0 process
+- (Bugfix) (Platform) Fix empty Endpoints Slice
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
