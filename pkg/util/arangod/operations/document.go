@@ -22,7 +22,7 @@ package operations
 
 type Document struct {
 	// Key represents Arango Document Key
-	Key string
+	Key string `json:"_key"`
 
 	// Id represents Arango Document ID
 	Id string `json:"_id"`
