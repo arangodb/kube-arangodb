@@ -32,6 +32,10 @@ func EmptySecret() Secret {
 
 type emptySecret struct{}
 
+func (e emptySecret) PublicKey() []string {
+	return nil
+}
+
 func (e emptySecret) KeyFunc(token *jwt.Token) (any, error) {
 	return nil, noTokenFound{}
 }
