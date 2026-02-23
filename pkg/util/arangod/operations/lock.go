@@ -22,7 +22,6 @@ package operations
 
 import (
 	"context"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 
 	"k8s.io/apimachinery/pkg/util/uuid"
 
@@ -30,6 +29,7 @@ import (
 	"github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type LockFunc[T any] func(ctx context.Context, c arangodb.Transaction, lock *LockDocument) (T, error)
