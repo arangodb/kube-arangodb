@@ -22,6 +22,7 @@ package client
 
 import (
 	"context"
+	"time"
 
 	"k8s.io/client-go/kubernetes"
 
@@ -29,8 +30,8 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
@@ -45,23 +46,50 @@ func (f AuthenticationFunc) Authentication(ctx context.Context) (connection.Auth
 	return f(ctx)
 }
 
-func DirectArangoDBAuthentication(client kubernetes.Interface, depl *api.ArangoDeployment) Authentication {
+func DisabledAuth() Authentication {
 	return AuthenticationFunc(func(ctx context.Context) (connection.Authentication, bool, error) {
-		if v := depl.GetAcceptedSpec().Authentication.GetJWTSecretName(); v != api.JWTSecretNameDisabled {
-			secrets := client.CoreV1().Secrets(depl.GetNamespace())
-			ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
-			defer cancel()
-			s, err := utilTokenLoader.LoadSecretSetFromSecretAPI(ctxChild, secrets, pod.JWTSecretFolder(depl.GetName()))
-			if err != nil {
-				return nil, false, errors.WithStack(err)
-			}
-			jwt, err := utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb")).Sign(s)
-			if err != nil {
-				return nil, false, errors.WithStack(err)
-			}
-			return connection.NewHeaderAuth("Authorization", "bearer %s", jwt), true, nil
+		return nil, false, nil
+	})
+}
+
+func FolderArangoDBAuthentication(path string) Authentication {
+	if path == "" {
+		return DisabledAuth()
+	}
+
+	folder := cache.NewObject[utilToken.Secret](utilTokenLoader.SecretCacheDirectory(path, 15*time.Second))
+
+	return AuthenticationFunc(func(ctx context.Context) (connection.Authentication, bool, error) {
+		secret, err := folder.Get(ctx)
+		if err != nil {
+			return nil, false, err
 		}
 
-		return nil, false, nil
+		jwt, err := utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb"), utilToken.WithRelativeDuration(time.Minute)).Sign(secret)
+		if err != nil {
+			return nil, false, errors.WithStack(err)
+		}
+		return connection.NewHeaderAuth("Authorization", "bearer %s", jwt), true, nil
+	})
+}
+
+func DirectArangoDBAuthentication(client kubernetes.Interface, depl *api.ArangoDeployment) Authentication {
+	if !depl.GetAcceptedSpec().Authentication.IsAuthenticated() {
+		return DisabledAuth()
+	}
+
+	secret := cache.NewObject[utilToken.Secret](utilTokenLoader.SecretCacheSecretAPI(client.CoreV1().Secrets(depl.GetNamespace()), pod.JWTSecretFolder(depl.GetName()), 15*time.Second))
+
+	return AuthenticationFunc(func(ctx context.Context) (connection.Authentication, bool, error) {
+		secret, err := secret.Get(ctx)
+		if err != nil {
+			return nil, false, err
+		}
+
+		jwt, err := utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb")).Sign(secret)
+		if err != nil {
+			return nil, false, errors.WithStack(err)
+		}
+		return connection.NewHeaderAuth("Authorization", "bearer %s", jwt), true, nil
 	})
 }
