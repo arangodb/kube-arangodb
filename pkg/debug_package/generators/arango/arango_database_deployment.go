@@ -22,6 +22,7 @@ package arango
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/rs/zerolog"
@@ -102,20 +103,56 @@ func arangoDeploymentMemberArangoD(logger zerolog.Logger, files chan<- shared.Fi
 	files, c := shared.WithPrefix(files, "%s/", member.Member.ID)
 	defer c()
 
-	files <- shared.NewFile("async-registry.json", shared.GenerateDataFuncP2(func(depl, member string) ([]byte, error) {
-		handler, err := shared.DiscoverExecFunc()
+	handler, err := shared.DiscoverExecFunc()
+	if err != nil {
+		return err
+	}
+
+	files <- shared.NewFile("activities.json", shared.GenerateDataFuncP2(func(depl, m string) ([]byte, error) {
+		h, err := shared.DiscoverExecFunc()
 		if err != nil {
 			return nil, err
 		}
-
-		out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", member, "_admin", "async-registry")
-
+		out, _, err := h(logger, "admin", "member", "request", "get", "-d", depl, "-m", m, "_admin", "activities")
 		if err != nil {
 			return nil, err
 		}
-
 		return out, nil
 	}, item.GetName(), member.Member.ID))
+
+	files <- shared.NewFile("async-registry.json", shared.GenerateDataFuncP2(func(depl, m string) ([]byte, error) {
+		out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", m, "_admin", "async-registry")
+		if err != nil {
+			return nil, err
+		}
+		return out, nil
+	}, item.GetName(), member.Member.ID))
+
+	listOut, _, listErr := handler(logger, "admin", "member", "request", "get", "-d", item.GetName(), "-m", member.Member.ID, "_admin", "server", "crashes")
+	if listErr != nil {
+		logger.Debug().Err(listErr).Msg("Failed to get crash list, skipping crash dump files")
+	} else {
+		files <- shared.NewFile("crashes.json", func() ([]byte, error) { return listOut, nil })
+		var wrap struct {
+			Result []string `json:"result"`
+		}
+		if json.Unmarshal(listOut, &wrap) == nil && len(wrap.Result) > 0 {
+			for _, id := range wrap.Result {
+				crashID := id
+				files <- shared.NewFile("crashes/"+crashID+".json", shared.GenerateDataFuncP2(func(depl, m string) ([]byte, error) {
+					h, err := shared.DiscoverExecFunc()
+					if err != nil {
+						return nil, err
+					}
+					out, _, err := h(logger, "admin", "member", "request", "get", "-d", depl, "-m", m, "_admin", "server", "crashes", crashID)
+					if err != nil {
+						return nil, err
+					}
+					return out, nil
+				}, item.GetName(), member.Member.ID))
+			}
+		}
+	}
 
 	files <- shared.NewFile("stack", shared.GenerateDataFuncP2(func(depl, pod string) ([]byte, error) {
 		handler, err := shared.RemoteExecFunc("/usr/bin/eu-stack", pod, "server")
