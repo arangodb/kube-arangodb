@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -267,6 +267,9 @@ type DeploymentSpec struct {
 
 	// Integration defined main Integration configuration.
 	Integration *DeploymentSpecIntegration `json:"integration,omitempty"`
+
+	// Sidecar holds sidecar configuration settings
+	Sidecar SidecarSpec `json:"sidecar,omitempty,omitzero"`
 }
 
 // GetAllowMemberRecreation returns member recreation policy based on group and settings
@@ -565,6 +568,9 @@ func (s *DeploymentSpec) Validate() error {
 	}
 	if err := s.Metrics.Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.metrics"))
+	}
+	if err := s.Sidecar.Validate(); err != nil {
+		return errors.WithStack(errors.Wrap(err, "spec.sidecar"))
 	}
 	if err := s.Chaos.Validate(); err != nil {
 		return errors.WithStack(errors.Wrap(err, "spec.chaos"))

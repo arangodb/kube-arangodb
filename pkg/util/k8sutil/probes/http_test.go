@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func TestCreate(t *testing.T) {
@@ -34,7 +35,11 @@ func TestCreate(t *testing.T) {
 	secret := "the secret"
 
 	// http
-	config := HTTPProbeConfig{path, false, secret, "", 0, 0, 0, 0, 0}
+	config := HTTPProbeConfig{
+		LocalPath:     path,
+		Secure:        false,
+		Authorization: secret,
+	}
 	probe := config.Create()
 
 	assert.Equal(t, probe.InitialDelaySeconds, int32(15*60))
@@ -50,13 +55,22 @@ func TestCreate(t *testing.T) {
 	assert.Equal(t, probe.ProbeHandler.HTTPGet.Scheme, core.URISchemeHTTP)
 
 	// https
-	config = HTTPProbeConfig{path, true, secret, "", 0, 0, 0, 0, 0}
+	config = HTTPProbeConfig{
+		LocalPath:     path,
+		Secure:        true,
+		Authorization: secret,
+	}
 	probe = config.Create()
 
 	assert.Equal(t, probe.ProbeHandler.HTTPGet.Scheme, core.URISchemeHTTPS)
 
 	// http, custom timing
-	config = HTTPProbeConfig{path, false, secret, "", 1, 2, 3, 4, 5}
+	config = HTTPProbeConfig{
+		LocalPath:     path,
+		Secure:        true,
+		Authorization: secret,
+		Common:        Common{util.NewType[int32](1), util.NewType[int32](2), util.NewType[int32](3), util.NewType[int32](4), util.NewType[int32](5)},
+	}
 	probe = config.Create()
 
 	assert.Equal(t, probe.InitialDelaySeconds, int32(1))

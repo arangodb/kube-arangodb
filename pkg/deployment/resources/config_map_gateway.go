@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"sort"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	core "k8s.io/api/core/v1"
@@ -33,6 +34,7 @@ import (
 
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	pbInventoryV1 "github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -65,9 +67,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		Targets: gateway.ConfigDestinationTargets{
-			{
-				Host: "127.0.0.1",
-				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			gateway.ConfigDestinationTargetUnix{
+				Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountHTTPFile),
 			},
 		},
 	}
@@ -83,9 +84,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		Targets: gateway.ConfigDestinationTargets{
-			{
-				Host: "127.0.0.1",
-				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			gateway.ConfigDestinationTargetUnix{
+				Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountHTTPFile),
 			},
 		},
 	}
@@ -101,9 +101,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		Targets: gateway.ConfigDestinationTargets{
-			{
-				Host: "127.0.0.1",
-				Port: int32(r.context.GetSpec().Integration.GetSidecar().GetHTTPListenPort()),
+			gateway.ConfigDestinationTargetUnix{
+				Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountHTTPFile),
 			},
 		},
 	}
@@ -262,11 +261,38 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 	log := r.log.Str("section", "gateway-config-render")
 
 	spec := r.context.GetSpec()
-	svcServingName := fmt.Sprintf("%s-%s", deploymentName, spec.Mode.Get().ServingGroup().AsRole())
 
-	svc, svcExist := cachedStatus.Service().V1().GetSimple(svcServingName)
-	if !svcExist {
-		return nil, gateway.Config{}, errors.Errorf("Service %s not found", svcServingName)
+	var services []string
+	for _, e := range r.context.GetStatus().Members.AsListInGroup(spec.Mode.Get().ServingGroup()) {
+		memberName := e.Member.ArangoMemberName(r.context.GetAPIObject().GetName(), e.Group)
+
+		member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
+		if !ok {
+			return nil, gateway.Config{}, errors.Errorf("Member %s not found", memberName)
+		}
+
+		svc, ok := cachedStatus.Service().V1().GetSimple(member.GetName())
+		if !ok {
+			return nil, gateway.Config{}, errors.Errorf("Service %s not found", member.GetName())
+		}
+
+		if spec.CommunicationMethod.Type() == api.DeploymentCommunicationMethodTypeIP &&
+			svc.Spec.ClusterIP != core.ClusterIPNone &&
+			svc.Spec.ClusterIP != "" {
+			services = append(services, svc.Spec.ClusterIP)
+		} else {
+			if domain := spec.ClusterDomain; domain != nil {
+				services = append(services, fmt.Sprintf("%s.%s.svc.%s", svc.GetName(), svc.GetNamespace(), *domain))
+			} else {
+				services = append(services, fmt.Sprintf("%s.%s.svc", svc.GetName(), svc.GetNamespace()))
+			}
+		}
+	}
+
+	sort.Strings(services)
+
+	if len(services) == 0 {
+		return nil, gateway.Config{}, errors.Errorf("No services defined in configuration")
 	}
 
 	var cfg gateway.Config
@@ -275,18 +301,17 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 		MergeSlashes: util.NewType(true),
 	}
 
-	cfg.IntegrationSidecar = &gateway.ConfigDestinationTarget{
-		Host: "127.0.0.1",
-		Port: int32(r.context.GetSpec().Integration.GetSidecar().GetListenPort()),
+	cfg.IntegrationSidecar = gateway.ConfigDestinationTargetUnix{
+		Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountFile),
 	}
 
 	cfg.DefaultDestination = gateway.ConfigDestination{
-		Targets: []gateway.ConfigDestinationTarget{
-			{
-				Host: svc.Spec.ClusterIP,
+		Targets: util.FormatList(services, func(a string) gateway.ConfigDestinationTarget {
+			return gateway.ConfigDestinationTargetEndpoint{
+				Host: a,
 				Port: shared.ArangoPort,
-			},
-		},
+			}
+		}),
 		AuthExtension: &gateway.ConfigAuthZExtension{},
 		Timeout: &meta.Duration{
 			Duration: utilConstants.MaxEnvoyUpstreamTimeout,
@@ -375,7 +400,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				case networkingApi.ArangoRouteStatusTargetEndpointsType, networkingApi.ArangoRouteStatusTargetServiceType:
 					if destinations := target.Destinations; len(destinations) > 0 {
 						for _, destination := range destinations {
-							var t gateway.ConfigDestinationTarget
+							var t gateway.ConfigDestinationTargetEndpoint
 
 							t.Host = destination.Host
 							t.Port = destination.Port

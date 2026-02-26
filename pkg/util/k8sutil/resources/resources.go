@@ -123,6 +123,17 @@ func UpscaleContainerResourceRequirements(container *core.Container, resources c
 	container.Resources.Limits = UpscaleOptionalContainerResourceList(container.Resources.Limits, container.Resources.Requests)
 }
 
+func UpscaleResourceRequirements(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
+	var r core.ResourceRequirements
+
+	r.Limits = UpscaleContainerResourceList(to.Limits, from.Limits)
+	r.Requests = UpscaleContainerResourceList(to.Requests, from.Requests)
+
+	r.Limits = UpscaleOptionalContainerResourceList(r.Limits, r.Requests)
+
+	return r
+}
+
 func UpscaleOptionalResourceRequirements(to core.ResourceRequirements, from core.ResourceRequirements) core.ResourceRequirements {
 	var r core.ResourceRequirements
 

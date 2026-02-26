@@ -33,6 +33,10 @@ linters-settings:
   importas:
     no-unaliased: true
     alias:
+      - alias: sidecarSvcAuthnDefinition
+        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication/definition
+      - alias: sidecarSvcAuthn
+        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication
       - alias: pbImplAuthorizationV1
         pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1
       - alias: pbImplAuthorizationV1Shared

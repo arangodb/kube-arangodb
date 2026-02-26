@@ -35,8 +35,9 @@ import (
 )
 
 const (
-	ContainerName  = "name"
-	ContainerImage = "image"
+	ContainerName     = "name"
+	ContainerImage    = "image"
+	ContainerRevision = "revision"
 )
 
 func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *core.PodTemplateSpec) compare.Func {
@@ -49,7 +50,7 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 					return compare.SkippedRotation, nil, nil
 				}
 
-				if specContainer.Name == api.ServerGroupReservedContainerNameServer {
+				if specContainer.Name == api.ServerGroupReservedContainerNameServer && g != api.ServerGroupGateways {
 					// Lets check if server contains new args
 
 					specCommand := cleanServerContainerArgs(specContainer.Command)
@@ -98,7 +99,10 @@ func containersCompare(ds api.DeploymentSpec, g api.ServerGroup, spec, status *c
 				} else {
 					if specContainer.Image != statusContainer.Image {
 						// Image changed
-						plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerImageUpdate).AddParam(ContainerName, specContainer.Name).AddParam(ContainerImage, specContainer.Image))
+						plan = append(plan, builder.NewAction(api.ActionTypeRuntimeContainerImageUpdate).
+							AddParam(ContainerName, specContainer.Name).
+							AddParam(ContainerImage, specContainer.Image),
+						)
 
 						statusContainer.Image = specContainer.Image
 						mode = mode.And(compare.InPlaceRotation)

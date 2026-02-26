@@ -85,5 +85,6 @@ func LoadSecretsFromDirectory(directory string) (utilToken.Secret, utilToken.Sec
 		ts[file.Name()] = buff
 	}
 
-	return LoadSecretsFromData(ts)
+	active, secondary := LoadSecretsFromData(ts)
+	return active, secondary, nil
 }

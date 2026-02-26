@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,6 +139,22 @@ type Deployment struct {
 	memberState memberState.StateInspector
 
 	metrics Metrics
+}
+
+func (d *Deployment) IsFeatureImageSupported(feature features.Feature) bool {
+	status := d.GetStatus()
+
+	if !feature.ImageSupported(status.CurrentImage) {
+		return false
+	}
+
+	for _, m := range status.Members.AsList() {
+		if m.Member.Image != nil && !feature.ImageSupported(m.Member.Image) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (d *Deployment) IsSyncEnabled() bool {

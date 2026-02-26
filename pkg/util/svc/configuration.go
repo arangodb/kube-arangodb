@@ -61,6 +61,8 @@ func (r RequestWraps) Wrap(handler goHttp.Handler) goHttp.Handler {
 type Configuration struct {
 	Address string
 
+	Unix string
+
 	Authenticator authenticator.Authenticator
 
 	TLSOptions ktls.TLSConfigFetcher
@@ -74,6 +76,7 @@ type Configuration struct {
 
 type ConfigurationGateway struct {
 	Address string
+	Unix    string
 
 	MuxExtensions []runtime.ServeMuxOption
 }

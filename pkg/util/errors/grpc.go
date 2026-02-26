@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,13 +25,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type grpcError interface {
-	error
-	GRPCStatus() *status.Status
-}
-
 func GRPCStatus(err error) (*status.Status, bool) {
-	v, ok := ExtractCause[grpcError](err)
+	v, ok := ExtractCause[GRPCErrorStatus](err)
 
 	if !ok {
 		return status.New(codes.Unknown, err.Error()), false
@@ -62,4 +57,30 @@ func IsGRPCCode(err error, codes ...codes.Code) bool {
 	}
 
 	return false
+}
+
+type GRPCErrorStatus interface {
+	error
+
+	GRPCStatus() *status.Status
+}
+
+func AsGRPCErrorStatus(err error) (GRPCErrorStatus, bool) {
+	var v GRPCErrorStatus
+	if As(err, &v) {
+		return v, true
+	}
+	return nil, false
+}
+
+func ExtractGRPCCause(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if v, ok := AsGRPCErrorStatus(err); ok {
+		return Errorf("%s", v.GRPCStatus().Message())
+	}
+
+	return err
 }

@@ -1,5 +1,5 @@
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,17 +19,88 @@
 package resources
 
 import (
+	"path/filepath"
+
 	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
+func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, version driver.Version) []string {
+	tokenpath := filepath.Join(shared.ExporterJWTVolumeMountDir, utilConstants.SecretKeyToken)
+	options := k8sutil.CreateOptionPairs(64)
+
+	if spec.Authentication.IsAuthenticated() {
+		options.Add("--arangodb.jwt-file", tokenpath)
+	}
+
+	path := getArangoExporterInternalEndpoint(version)
+
+	if port := groupSpec.InternalPort; port == nil {
+		scheme := "http"
+		if spec.IsSecure() {
+			scheme = "https"
+		}
+		options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, groupSpec.GetPort(), path)
+		if spec.Metrics.GetExtensions().GetUsageMetrics() && group == api.ServerGroupDBServers {
+			options.Addf("--arangodb.endpoint", "%s://localhost:%d%s", scheme, groupSpec.GetPort(), shared.ArangoExporterUsageEndpoint)
+		}
+	} else {
+		options.Addf("--arangodb.endpoint", "http://localhost:%d%s", *port, path)
+		if spec.Metrics.GetExtensions().GetUsageMetrics() && group == api.ServerGroupDBServers {
+			options.Addf("--arangodb.endpoint", "http://localhost:%d%s", groupSpec.GetPort(), shared.ArangoExporterUsageEndpoint)
+		}
+	}
+
+	keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
+	if spec.IsSecure() && spec.Metrics.IsTLS() {
+		options.Add("--ssl.keyfile", keyPath)
+	}
+
+	var port uint16 = shared.ArangoExporterPort
+
+	if p := spec.Metrics.Port; p != nil {
+		port = *p
+	}
+
+	if p := groupSpec.ExporterPort; p != nil {
+		port = *p
+	}
+
+	if port != shared.ArangoExporterPort {
+		options.Addf("--server.address", ":%d", port)
+	}
+
+	return options.Sort().AsArgs()
+}
+
+func getArangoExporterInternalEndpoint(version driver.Version) string {
+	path := shared.ArangoExporterInternalEndpoint
+	if version.CompareTo("3.8.0") >= 0 {
+		path = shared.ArangoExporterInternalEndpointV2
+	}
+	return path
+}
+
+func createExporterLivenessProbe(isSecure bool) probes.Probe {
+	probeCfg := &probes.HTTPProbeConfig{
+		LocalPath: "/",
+		PortName:  shared.ExporterPortName,
+		Secure:    isSecure,
+	}
+
+	return probeCfg
+}
+
 // ArangodbInternalExporterContainer creates metrics container based on internal exporter
-func ArangodbInternalExporterContainer(image string, args []string, livenessProbe *probes.HTTPProbeConfig,
+func ArangodbInternalExporterContainer(image string, args []string, livenessProbe probes.Probe,
 	res core.ResourceRequirements, spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) (core.Container, error) {
 
 	exePath := k8sutil.LifecycleBinary()

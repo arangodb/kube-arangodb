@@ -51,7 +51,7 @@ func EmptyTLSConfig(ctx context.Context) (*tls.Config, error) {
 	return nil, nil
 }
 
-func NewStatisTLSConfig(cfg *tls.Config) TLSConfigFetcher {
+func NewStaticTLSConfig(cfg *tls.Config) TLSConfigFetcher {
 	return func(ctx context.Context) (*tls.Config, error) {
 		return cfg, nil
 	}

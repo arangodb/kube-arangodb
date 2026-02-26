@@ -56,7 +56,7 @@ func Test_Service_Token(t *testing.T) {
 	})
 
 	t.Run("Without Roles", func(t *testing.T) {
-		token := directory.Sign(t, utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithUsername("admin")))
+		token := directory.Sign(t, utilToken.WithDefaultClaims(), utilToken.WithUsername("admin"))
 
 		resp, err := client.EvaluateToken(ctx, &pbAuthorizationV1.AuthorizationV1PermissionTokenRequest{
 			Token:    token,
@@ -68,7 +68,7 @@ func Test_Service_Token(t *testing.T) {
 	})
 
 	t.Run("With Roles", func(t *testing.T) {
-		token := directory.Sign(t, utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithUsername("admin"), utilToken.WithRoles("x")))
+		token := directory.Sign(t, utilToken.WithDefaultClaims(), utilToken.WithUsername("admin"), utilToken.WithRoles("x"))
 
 		resp, err := client.EvaluateToken(ctx, &pbAuthorizationV1.AuthorizationV1PermissionTokenRequest{
 			Token:    token,

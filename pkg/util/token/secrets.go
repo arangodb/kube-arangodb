@@ -35,6 +35,20 @@ func NewSecrets(secrets ...Secret) Secret {
 
 type Secrets []Secret
 
+func (s Secrets) PublicKey() []string {
+	var r []string
+
+	for _, secret := range s {
+		r = append(r, secret.PublicKey()...)
+	}
+
+	return r
+}
+
+func (s Secrets) KeyFunc(token *jwt.Token) (any, error) {
+	return "", errors.Errorf("secrets signing method not supported")
+}
+
 func (s Secrets) Details(token string) (*string, []string, time.Duration, error) {
 	return extractTokenDetails(s, token)
 }
@@ -63,8 +77,12 @@ func (s Secrets) Hash() string {
 	})...)
 }
 
-func (s Secrets) Sign(method jwt.SigningMethod, claims Claims) (string, error) {
+func (s Secrets) Sign(claims Claims) (string, error) {
 	return "", errors.Errorf("secrets signing method not supported")
+}
+
+func (s Secrets) Method() jwt.SigningMethod {
+	return jwt.SigningMethodNone
 }
 
 func (s Secrets) Validate(token string) (Token, error) {

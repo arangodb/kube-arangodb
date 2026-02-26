@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,14 @@
 package v2alpha1
 
 import core "k8s.io/api/core/v1"
+
+// DeploymentCommunicationMethodType define type IP/DNS of communication
+type DeploymentCommunicationMethodType int
+
+const (
+	DeploymentCommunicationMethodTypeDNS DeploymentCommunicationMethodType = iota
+	DeploymentCommunicationMethodTypeIP
+)
 
 // DeploymentCommunicationMethod define communication method used for inter-cluster communication
 type DeploymentCommunicationMethod string
@@ -51,6 +59,15 @@ func (d *DeploymentCommunicationMethod) Get() DeploymentCommunicationMethod {
 		return v
 	default:
 		return DefaultDeploymentCommunicationMethod
+	}
+}
+
+func (d *DeploymentCommunicationMethod) Type() DeploymentCommunicationMethodType {
+	switch d.Get() {
+	case DeploymentCommunicationMethodIP:
+		return DeploymentCommunicationMethodTypeIP
+	default:
+		return DeploymentCommunicationMethodTypeDNS
 	}
 }
 

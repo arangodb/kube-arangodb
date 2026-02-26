@@ -30,8 +30,14 @@ type Secret interface {
 	SigningHash() string
 	Hash() string
 
-	Sign(method jwt.SigningMethod, claims Claims) (string, error)
+	PublicKey() []string
+
+	Sign(claims Claims) (string, error)
 	Validate(token string) (Token, error)
+
+	KeyFunc(token *jwt.Token) (any, error)
+
+	Method() jwt.SigningMethod
 
 	Details(token string) (*string, []string, time.Duration, error)
 

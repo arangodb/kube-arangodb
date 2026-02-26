@@ -23,7 +23,6 @@ package resources
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -78,6 +77,11 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 	imageFound := status.CurrentImage != nil
 	defer metrics.SetDuration(inspectSecretsDurationGauges.WithLabelValues(deploymentName), start)
 	counterMetric := inspectedSecretsCounters.WithLabelValues(deploymentName)
+
+	if status.CurrentImage == nil {
+		r.log.Info("Delay secret creation")
+		return nil
+	}
 
 	log := r.log.Str("section", "secret")
 
@@ -205,7 +209,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 				return errors.Errorf("Token secret is invalid")
 			}
 
-			f.Data[util.SHA256(token)] = token
+			f.Data[util.TrimSpaceSHA256(token)] = token
 			f.Data[utilConstants.ActiveJWTKey] = token
 			f.Data[utilConstants.SecretKeyToken] = token
 
@@ -280,7 +284,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 	}
 
 	if err := r.createSecretWithMod(ctx, secrets, folderSecretName, func(s *core.Secret) {
-		s.Data[util.SHA256(token)] = token
+		s.Data[util.TrimSpaceSHA256(token)] = token
 		s.Data[utilConstants.ActiveJWTKey] = token
 		s.Data[utilConstants.SecretKeyToken] = token
 	}); err != nil {
@@ -339,14 +343,23 @@ func (r *Resources) createSecretWithKey(ctx context.Context, secrets generic.Mod
 }
 
 func (r *Resources) createTokenSecret(ctx context.Context, secrets generic.ModClient[*core.Secret], secretName string) error {
-	tokenData := make([]byte, 32)
-	util.Rand().Read(tokenData)
-	token := hex.EncodeToString(tokenData)
+	if r.context.IsFeatureImageSupported(features.JWTAsymmetricKey()) {
+		key, err := utilToken.GenerateECDSASecret()
+		if err != nil {
+			return err
+		}
 
+		return r.createTokenSecretObject(ctx, secrets, secretName, key)
+	}
+
+	return r.createTokenSecretObject(ctx, secrets, secretName, utilToken.GenerateJWTSecret())
+}
+
+func (r *Resources) createTokenSecretObject(ctx context.Context, secrets generic.ModClient[*core.Secret], secretName string, value []byte) error {
 	// Create secret
 	owner := r.context.GetAPIObject().AsOwner()
 	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return k8sutil.CreateTokenSecret(ctxChild, secrets, secretName, token, &owner)
+		return k8sutil.CreateTokenSecret(ctxChild, secrets, secretName, string(value), &owner)
 	})
 	if kerrors.IsAlreadyExists(err) {
 		// Secret added while we tried it also

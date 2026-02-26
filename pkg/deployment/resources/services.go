@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -294,7 +294,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 		ports, selectors := k8sutil.ExporterServiceDetails(deploymentName)
 
-		name, _, err := k8sutil.CreateExporterService(ctxChild, cachedStatus, apiObject, ports, selectors, apiObject.AsOwner())
+		name, _, err := k8sutil.CreateService(ctxChild, k8sutil.CreateExporterClientServiceName(deploymentName), cachedStatus, ports, selectors, apiObject.AsOwner())
 		if err != nil {
 			log.Err(err).Debug("Failed to create %s exporter service", name)
 			return errors.WithStack(err)
@@ -303,6 +303,43 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 		if status.ExporterServiceName != name {
 			status.ExporterServiceName = name
 			if err := r.context.UpdateStatus(ctx, status); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+	} else {
+		if svc, ok := cachedStatus.Service().V1().GetSimple(k8sutil.CreateExporterClientServiceName(deploymentName)); ok {
+			ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+			defer cancel()
+
+			if err := cachedStatus.ServicesModInterface().V1().Delete(ctxChild, svc.GetName(), meta.DeleteOptions{
+				Preconditions: meta.NewUIDPreconditions(string(svc.GetUID())),
+			}); err != nil {
+				log.Err(err).Debug("Failed to remove %s exporter service", svc.GetName())
+				return errors.WithStack(err)
+			}
+		}
+	}
+
+	if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+		defer cancel()
+
+		ports, selectors := k8sutil.SidecarServiceDetails(deploymentName)
+
+		name, _, err := k8sutil.CreateService(ctxChild, k8sutil.CreateSidecarClientServiceName(deploymentName), cachedStatus, ports, selectors, apiObject.AsOwner())
+		if err != nil {
+			log.Err(err).Debug("Failed to create %s sidecar service", name)
+			return errors.WithStack(err)
+		}
+	} else {
+		if svc, ok := cachedStatus.Service().V1().GetSimple(k8sutil.CreateSidecarClientServiceName(deploymentName)); ok {
+			ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+			defer cancel()
+
+			if err := cachedStatus.ServicesModInterface().V1().Delete(ctxChild, svc.GetName(), meta.DeleteOptions{
+				Preconditions: meta.NewUIDPreconditions(string(svc.GetUID())),
+			}); err != nil {
+				log.Err(err).Debug("Failed to remove %s sidecar service", svc.GetName())
 				return errors.WithStack(err)
 			}
 		}

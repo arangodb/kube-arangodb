@@ -22,14 +22,18 @@ package svc
 
 import (
 	"context"
-
-	"google.golang.org/grpc/status"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type serviceError struct {
 	error
+}
+
+func (p serviceError) HTTPUnix() string {
+	return ""
+}
+
+func (p serviceError) Unix() string {
+	return ""
 }
 
 func (p serviceError) StartWithHealth(ctx context.Context, health Health) ServiceStarter {
@@ -54,18 +58,4 @@ func (p serviceError) Update(key string, state HealthState) {
 
 func (p serviceError) Start(ctx context.Context) ServiceStarter {
 	return p
-}
-
-type GRPCErrorStatus interface {
-	error
-
-	GRPCStatus() *status.Status
-}
-
-func AsGRPCErrorStatus(err error) (GRPCErrorStatus, bool) {
-	var v GRPCErrorStatus
-	if errors.As(err, &v) {
-		return v, true
-	}
-	return nil, false
 }

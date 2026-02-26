@@ -20,84 +20,10 @@
 
 package token
 
-import (
-	"bytes"
-	"time"
-
-	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/pkg/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-)
-
-const DefaultTokenSecretSize = 64
-
-var secretTrimCharacters = map[byte]any{
-	' ':  true,
-	'\t': true,
-	'\n': true,
-	'\r': true,
-}
-
-func isTrimCharacter(char byte) bool {
-	_, exists := secretTrimCharacters[char]
-	return exists
-}
-
-func trimSecret(in []byte) []byte {
-	return bytes.TrimFunc(in, func(r rune) bool {
-		return isTrimCharacter(byte(r))
-	})
-}
-
 func NewSecret(data []byte) Secret {
-	return NewSecretWithSize(data, DefaultTokenSecretSize)
-}
-
-func NewSecretWithSize(data []byte, size int) Secret {
-	data = trimSecret(data)
-
-	if len(data) == 0 {
-		return emptySecret{}
+	if v, err := NewECDSAFromData(data); err == nil && v.Exists() {
+		return v
 	}
 
-	r := make([]byte, size)
-
-	copy(r, data)
-
-	return secret(r)
-}
-
-type secret []byte
-
-func (s secret) Details(token string) (*string, []string, time.Duration, error) {
-	return extractTokenDetails(s, token)
-}
-
-func (s secret) SigningHash() string {
-	return s.Hash()
-}
-
-func (s secret) Exists() bool {
-	return true
-}
-
-func (s secret) Sign(method jwt.SigningMethod, claims Claims) (string, error) {
-	token := jwt.NewWithClaims(method, jwt.MapClaims(claims))
-
-	// Sign and get the complete encoded token as a string using the secret
-	signedToken, err := token.SignedString([]byte(s))
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return signedToken, nil
-}
-
-func (s secret) Validate(token string) (Token, error) {
-	return Validate(token, s)
-}
-
-func (s secret) Hash() string {
-	return util.SHA256(s)
+	return NewJWTSecret(data)
 }

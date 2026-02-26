@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package features
 
 func init() {
 	registerFeature(jwtRotation)
+	registerFeature(jwtAsymmetricKey)
 }
 
 var jwtRotation = &feature{
@@ -32,6 +33,19 @@ var jwtRotation = &feature{
 	hidden:             true,
 }
 
+var jwtAsymmetricKey = &feature{
+	name:               "jwt-asymmetric-key",
+	description:        "Uses Asymmetric Key as a default in ArangoDB",
+	enterpriseRequired: false,
+	enabledByDefault:   true,
+	hidden:             true,
+	version:            newFeatureVersion("3.12.8", NoVersionLimit),
+}
+
 func JWTRotation() Feature {
 	return jwtRotation
+}
+
+func JWTAsymmetricKey() Feature {
+	return jwtAsymmetricKey
 }

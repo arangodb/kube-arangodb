@@ -21,25 +21,30 @@
 package tests
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"path"
 	"sync"
 	"testing"
+	"time"
 
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
 
 type Token []byte
 
-func GenerateJWTToken() Token {
-	var tokenData = make([]byte, 32)
-	util.Rand().Read(tokenData)
-	return tokenData
+func (tk Token) Sign(t *testing.T, mods ...util.ModR[utilToken.Claims]) string {
+	token, err := utilToken.NewSecret(tk).Sign(utilToken.NewClaims().With(mods...))
+	require.NoError(t, err)
+	return token
 }
 
 func NewTokenManager(t *testing.T) TokenManager {
@@ -57,7 +62,12 @@ type TokenManager interface {
 
 	Set(t *testing.T, active Token, tokens ...Token) TokenManager
 
-	Sign(t *testing.T, claims utilToken.Claims) string
+	Sign(t *testing.T, claims ...util.ModR[utilToken.Claims]) string
+	Error(claims ...util.ModR[utilToken.Claims]) error
+
+	Validate(t *testing.T, token string) bool
+
+	TokenSignature(t *testing.T, mods ...util.ModR[utilToken.Claims]) func(ctx context.Context) (string, time.Duration, error)
 }
 
 type tokenManager struct {
@@ -66,17 +76,52 @@ type tokenManager struct {
 	path string
 }
 
-func (m *tokenManager) Sign(t *testing.T, claims utilToken.Claims) string {
+func (m *tokenManager) Validate(t *testing.T, token string) bool {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
 	secrets, err := utilTokenLoader.LoadSecretSetFromDirectory(m.Path())
 	require.NoError(t, err)
 
-	z, err := claims.Sign(secrets)
-	require.NoError(t, err)
+	_, err = secrets.Validate(token)
+	if err != nil {
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
+			return false
+		}
+		require.NoError(t, err)
+	}
 
-	return z
+	return true
+}
+
+func (m *tokenManager) TokenSignature(t *testing.T, mods ...util.ModR[utilToken.Claims]) func(ctx context.Context) (string, time.Duration, error) {
+	return func(ctx context.Context) (string, time.Duration, error) {
+		t.Logf("Generating token")
+		return fmt.Sprintf("bearer %s", m.Sign(t, mods...)), 125 * time.Millisecond, nil
+	}
+}
+
+func (m *tokenManager) sign(claims ...util.ModR[utilToken.Claims]) (string, error) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	secrets, err := utilTokenLoader.LoadSecretSetFromDirectory(m.Path())
+	if err != nil {
+		return "", err
+	}
+
+	return utilToken.NewClaims().With(claims...).Sign(secrets)
+}
+
+func (m *tokenManager) Sign(t *testing.T, claims ...util.ModR[utilToken.Claims]) string {
+	token, err := m.sign(claims...)
+	require.NoError(t, err)
+	return token
+}
+
+func (m *tokenManager) Error(claims ...util.ModR[utilToken.Claims]) error {
+	_, err := m.sign(claims...)
+	return err
 }
 
 func (m *tokenManager) Set(t *testing.T, active Token, tokens ...Token) TokenManager {

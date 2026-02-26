@@ -276,6 +276,11 @@ func (in *ArangoRouteSpecDestinationService) DeepCopyInto(out *ArangoRouteSpecDe
 		*out = new(intstr.IntOrString)
 		**out = **in
 	}
+	if in.Mode != nil {
+		in, out := &in.Mode, &out.Mode
+		*out = new(ArangoRouteSpecResolveMode)
+		**out = **in
+	}
 	return
 }
 

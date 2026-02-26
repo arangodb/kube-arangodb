@@ -57,9 +57,10 @@ func LoadSecretsFromSecretAPI(ctx context.Context, secrets generic.ReadClient[*c
 		return nil, nil, err
 	}
 
-	return LoadSecretsFromSecret(s)
+	active, secondary := LoadSecretsFromSecret(s)
+	return active, secondary, nil
 }
 
-func LoadSecretsFromSecret(secret *core.Secret) (utilToken.Secret, utilToken.Secrets, error) {
+func LoadSecretsFromSecret(secret *core.Secret) (utilToken.Secret, utilToken.Secrets) {
 	return LoadSecretsFromData(secret.Data)
 }

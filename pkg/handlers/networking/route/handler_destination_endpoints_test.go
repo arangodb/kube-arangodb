@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,8 +101,57 @@ func Test_Handler_Destination_Endpoints_Valid(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
+}
+
+func Test_Handler_Destination_Endpoints_Empty(t *testing.T) {
+	// Setup
+	handler := newFakeHandler()
+
+	// Arrange
+	extension := tests.NewMetaObject[*networkingApi.ArangoRoute](t, tests.FakeNamespace, "test",
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Deployment = util.NewType("deployment")
+		},
+		func(t *testing.T, obj *networkingApi.ArangoRoute) {
+			obj.Spec.Destination = &networkingApi.ArangoRouteSpecDestination{
+				Endpoints: &networkingApi.ArangoRouteSpecDestinationEndpoints{
+					Object: &sharedApi.Object{
+						Name: "deployment",
+					},
+					Port: util.NewType(intstr.FromInt32(10244)),
+				},
+			}
+		})
+	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "deployment")
+	svc := tests.NewMetaObject[*core.Service](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Service) {
+		obj.Spec.Ports = []core.ServicePort{
+			{
+				Port: 10244,
+			},
+		}
+	})
+	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
+		obj.Subsets = []core.EndpointSubset{}
+	})
+
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc, &endpoints)
+
+	// Test
+	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+	// Refresh
+	refresh(t)
+
+	// Assert
+	require.True(t, extension.Status.Conditions.IsTrue(networkingApi.SpecValidCondition))
+	require.False(t, extension.Status.Conditions.IsTrue(networkingApi.DestinationValidCondition))
+	require.False(t, extension.Status.Conditions.IsTrue(networkingApi.ReadyCondition))
+	require.Nil(t, extension.Status.Target)
+
+	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
+	require.True(t, ok)
+	require.EqualValues(t, c.Reason, "No target destinations found")
 }
 
 func Test_Handler_Destination_Endpoints_Valid_HTTP1(t *testing.T) {
@@ -171,7 +220,6 @@ func Test_Handler_Destination_Endpoints_Valid_HTTP1(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -243,7 +291,6 @@ func Test_Handler_Destination_Endpoints_Valid_HTTP2(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -311,7 +358,6 @@ func Test_Handler_Destination_Endpoints_PortForward(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
@@ -395,7 +441,6 @@ func Test_Handler_Destination_Endpoints_MultiTargets(t *testing.T) {
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
 	require.EqualValues(t, c.Reason, "Destination Found")
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }
 
@@ -467,7 +512,6 @@ func Test_Handler_Destination_Endpoints_MultiDestinations(t *testing.T) {
 
 	c, ok := extension.Status.Conditions.Get(networkingApi.DestinationValidCondition)
 	require.True(t, ok)
-	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Reason, "Destination Found")
 	require.EqualValues(t, c.Hash, extension.Status.Target.Hash())
 }

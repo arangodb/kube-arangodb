@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyIfEmpty(r.updateMemberRotationConditionsPlan).
 		ApplyIfEmpty(r.createMemberAllowUpgradeConditionPlan).
 		ApplyIfEmpty(r.createMemberGatewayConfigConditionPlan).
+		ApplyIfEmpty(r.createGatewaySidecarEnablementPlan).
 		ApplyIfEmpty(r.createGatewayConfigConditionPlan).
 		ApplyIfEmpty(r.createMemberRecreationConditionsPlan).
 		ApplyIfEmpty(r.createMemberPodSchedulingFailurePlan).

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ type Config struct {
 
 	DefaultTLS *ConfigTLS `json:"defaultTLS,omitempty"`
 
-	IntegrationSidecar *ConfigDestinationTarget `json:"integrationSidecar,omitempty"`
+	IntegrationSidecar ConfigDestinationTarget `json:"integrationSidecar,omitempty"`
 
 	SNI ConfigSNIList `json:"sni,omitempty"`
 
@@ -65,7 +65,7 @@ type Config struct {
 func (c Config) Validate() error {
 	return errors.Errors(
 		shared.PrefixResourceErrors("defaultDestination", c.DefaultDestination.Validate()),
-		shared.PrefixResourceErrors("integrationSidecar", c.IntegrationSidecar.Validate()),
+		shared.ValidateOptionalInterfacePath("integrationSidecar", c.IntegrationSidecar),
 		shared.PrefixResourceErrors("destinations", c.Destinations.Validate()),
 		shared.PrefixResourceErrors("sni", c.SNI.Validate()),
 	)
@@ -200,9 +200,10 @@ func (c Config) RenderClusters() ([]*pbEnvoyClusterV3.Cluster, error) {
 			return nil, err
 		}
 		cluster := &pbEnvoyClusterV3.Cluster{
-			Name:           utilConstants.EnvoyIntegrationSidecarCluster,
-			ConnectTimeout: durationpb.New(time.Second),
-			LbPolicy:       pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
+			Name:                 utilConstants.EnvoyIntegrationSidecarCluster,
+			ConnectTimeout:       durationpb.New(time.Second),
+			LbPolicy:             pbEnvoyClusterV3.Cluster_ROUND_ROBIN,
+			ClusterDiscoveryType: evaluateClusterDiscoveryType(i),
 			LoadAssignment: &pbEnvoyEndpointV3.ClusterLoadAssignment{
 				ClusterName: utilConstants.EnvoyIntegrationSidecarCluster,
 				Endpoints: []*pbEnvoyEndpointV3.LocalityLbEndpoints{

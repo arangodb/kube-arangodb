@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,14 +139,21 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 		}
 	}
 
-	if ip := s.Spec.ClusterIP; ip != "" {
-		target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
-			networkingApi.ArangoRouteStatusTargetDestination{
-				Host: ip,
-				Port: destPort,
-			},
+	mode := util.OptionalType(svc.Mode, util.BoolSwitch(deploymentSpec.CommunicationMethod.Type() == api.DeploymentCommunicationMethodTypeIP, networkingApi.ArangoRouteSpecResolveModeIP, networkingApi.ArangoRouteSpecResolveModeDNS))
+
+	switch mode {
+	case networkingApi.ArangoRouteSpecResolveModeIP:
+		if ip := s.Spec.ClusterIP; ip != core.ClusterIPNone && ip != "" {
+			target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
+				networkingApi.ArangoRouteStatusTargetDestination{
+					Host: ip,
+					Port: destPort,
+				},
+			}
+			break
 		}
-	} else {
+		fallthrough
+	default:
 		if domain := deployment.Spec.ClusterDomain; domain != nil {
 			target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
 				networkingApi.ArangoRouteStatusTargetDestination{
@@ -154,14 +161,15 @@ func (h *handler) HandleArangoDestinationService(ctx context.Context, item opera
 					Port: destPort,
 				},
 			}
-		} else {
-			target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
-				networkingApi.ArangoRouteStatusTargetDestination{
-					Host: fmt.Sprintf("%s.%s.svc", s.GetName(), s.GetNamespace()),
-					Port: destPort,
-				},
-			}
+			break
 		}
+		target.Destinations = networkingApi.ArangoRouteStatusTargetDestinations{
+			networkingApi.ArangoRouteStatusTargetDestination{
+				Host: fmt.Sprintf("%s.%s.svc", s.GetName(), s.GetNamespace()),
+				Port: destPort,
+			},
+		}
+
 	}
 
 	if status.Target.Hash() == target.Hash() {

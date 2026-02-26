@@ -290,15 +290,6 @@ func GetTokenSecret(ctx context.Context, secrets generic.ReadClient[*core.Secret
 	return GetTokenFromSecret(s)
 }
 
-// GetTokenFolderSecret loads the token folder secret from a Secret with given name.
-func GetTokenFolderSecret(ctx context.Context, secrets generic.ReadClient[*core.Secret], secretName string) (utilToken.Secret, error) {
-	s, err := secrets.Get(ctx, secretName, meta.GetOptions{})
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return GetTokenFromFolderSecret(s)
-}
-
 // GetTokenFromSecret loads the token secret from a Secret with given name.
 func GetTokenFromSecret(s *core.Secret) (utilToken.Secret, error) {
 	// Take the first data from the token key
@@ -307,25 +298,6 @@ func GetTokenFromSecret(s *core.Secret) (utilToken.Secret, error) {
 		return nil, errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", utilConstants.SecretKeyToken, s.GetName()))
 	}
 	return utilToken.NewSecret(data), nil
-}
-
-// GetTokenFromFolderSecret loads the token secret from a Secret with given name.
-func GetTokenFromFolderSecret(s *core.Secret) (utilToken.Secret, error) {
-	// Take the first data from the token key
-	data, found := s.Data[utilConstants.ActiveJWTKey]
-	if !found {
-		return nil, errors.WithStack(errors.Errorf("No '%s' data found in secret '%s'", utilConstants.ActiveJWTKey, s.GetName()))
-	}
-
-	tokens := make([]utilToken.Secret, 0, len(s.Data)-1)
-	for k, secret := range s.Data {
-		if k != utilConstants.ActiveJWTKey {
-			tokens = append(tokens, utilToken.NewSecret(secret))
-		}
-	}
-
-	return utilToken.NewSecretSet(utilToken.NewSecret(data), tokens...), nil
-
 }
 
 // CreateTokenSecret creates a secret with given name in given namespace
