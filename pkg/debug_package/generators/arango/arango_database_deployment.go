@@ -108,18 +108,6 @@ func arangoDeploymentMemberArangoD(logger zerolog.Logger, files chan<- shared.Fi
 		return err
 	}
 
-	files <- shared.NewFile("activities.json", shared.GenerateDataFuncP2(func(depl, m string) ([]byte, error) {
-		h, err := shared.DiscoverExecFunc()
-		if err != nil {
-			return nil, err
-		}
-		out, _, err := h(logger, "admin", "member", "request", "get", "-d", depl, "-m", m, "_admin", "activities")
-		if err != nil {
-			return nil, err
-		}
-		return out, nil
-	}, item.GetName(), member.Member.ID))
-
 	files <- shared.NewFile("async-registry.json", shared.GenerateDataFuncP2(func(depl, m string) ([]byte, error) {
 		out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", m, "_admin", "async-registry")
 		if err != nil {
@@ -128,7 +116,7 @@ func arangoDeploymentMemberArangoD(logger zerolog.Logger, files chan<- shared.Fi
 		return out, nil
 	}, item.GetName(), member.Member.ID))
 
-	listOut, _, listErr := handler(logger, "admin", "member", "request", "get", "-d", item.GetName(), "-m", member.Member.ID, "_admin", "server", "crashes")
+	listOut, _, listErr := handler(logger, "admin", "member", "request", "get", "-d", item.GetName(), "-m", member.Member.ID, "_admin", "crashes")
 	if listErr != nil {
 		logger.Debug().Err(listErr).Msg("Failed to get crash list, skipping crash dump files")
 	} else {
@@ -144,7 +132,7 @@ func arangoDeploymentMemberArangoD(logger zerolog.Logger, files chan<- shared.Fi
 					if err != nil {
 						return nil, err
 					}
-					out, _, err := h(logger, "admin", "member", "request", "get", "-d", depl, "-m", m, "_admin", "server", "crashes", crashID)
+					out, _, err := h(logger, "admin", "member", "request", "get", "-d", depl, "-m", m, "_admin", "crashes", crashID)
 					if err != nil {
 						return nil, err
 					}
