@@ -108,7 +108,7 @@ func arangoDeploymentMemberArangoD(logger zerolog.Logger, files chan<- shared.Fi
 			return nil, err
 		}
 
-		out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", member, "_admin", "activities")
+		out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", member, "_arango", "experimental", "_admin", "activities")
 
 		if err != nil {
 			return nil, err
