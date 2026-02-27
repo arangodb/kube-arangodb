@@ -65,13 +65,25 @@ func NewFilteredArangoLocalStorageInformer(client versioned.Interface, resyncPer
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.StorageV1alpha().ArangoLocalStorages().List(context.TODO(), options)
+				return client.StorageV1alpha().ArangoLocalStorages().List(context.Background(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.StorageV1alpha().ArangoLocalStorages().Watch(context.TODO(), options)
+				return client.StorageV1alpha().ArangoLocalStorages().Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.StorageV1alpha().ArangoLocalStorages().List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.StorageV1alpha().ArangoLocalStorages().Watch(ctx, options)
 			},
 		},
 		&apisstoragev1alpha.ArangoLocalStorage{},

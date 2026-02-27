@@ -66,13 +66,25 @@ func NewFilteredArangoDeploymentReplicationInformer(client versioned.Interface, 
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ReplicationV2alpha1().ArangoDeploymentReplications(namespace).List(context.TODO(), options)
+				return client.ReplicationV2alpha1().ArangoDeploymentReplications(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ReplicationV2alpha1().ArangoDeploymentReplications(namespace).Watch(context.TODO(), options)
+				return client.ReplicationV2alpha1().ArangoDeploymentReplications(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.ReplicationV2alpha1().ArangoDeploymentReplications(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.ReplicationV2alpha1().ArangoDeploymentReplications(namespace).Watch(ctx, options)
 			},
 		},
 		&apisreplicationv2alpha1.ArangoDeploymentReplication{},

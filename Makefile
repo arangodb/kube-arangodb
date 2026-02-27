@@ -11,8 +11,8 @@ ifeq ($(shell uname),Darwin)
 	REALPATH ?= grealpath
 endif
 
-KUBERNETES_VERSION_MINOR:=32
-KUBERNETES_VERSION_PATCH:=11
+KUBERNETES_VERSION_MINOR:=33
+KUBERNETES_VERSION_PATCH:=8
 
 ENVOY_IMAGE=envoyproxy/envoy:v1.36.4
 
@@ -435,11 +435,11 @@ protolint-fix:
 .PHONY: vulncheck vulncheck-optional
 vulncheck:
 	@echo ">> Checking for known vulnerabilities (required)"
-	@$(GOPATH)/bin/govulncheck --tags $(GOBUILDTAGS) ./...
+	$(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
 
 vulncheck-optional:
 	@echo ">> Checking for known vulnerabilities (optional)"
-	@-$(GOPATH)/bin/govulncheck --tags $(GOBUILDTAGS) ./...
+	-$(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
 
 .PHONY: build
 build: docker manifests

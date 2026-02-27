@@ -66,13 +66,25 @@ func NewFilteredArangoSchedulerBatchJobInformer(client versioned.Interface, name
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SchedulerV1beta1().ArangoSchedulerBatchJobs(namespace).List(context.TODO(), options)
+				return client.SchedulerV1beta1().ArangoSchedulerBatchJobs(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SchedulerV1beta1().ArangoSchedulerBatchJobs(namespace).Watch(context.TODO(), options)
+				return client.SchedulerV1beta1().ArangoSchedulerBatchJobs(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.SchedulerV1beta1().ArangoSchedulerBatchJobs(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.SchedulerV1beta1().ArangoSchedulerBatchJobs(namespace).Watch(ctx, options)
 			},
 		},
 		&apisschedulerv1beta1.ArangoSchedulerBatchJob{},

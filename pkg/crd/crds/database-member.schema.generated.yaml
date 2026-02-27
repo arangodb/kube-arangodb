@@ -853,6 +853,8 @@ v1:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -1408,6 +1410,8 @@ v1:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -1969,6 +1973,8 @@ v1:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -4102,6 +4108,8 @@ v2alpha1:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -4657,6 +4665,8 @@ v2alpha1:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -5218,6 +5228,8 @@ v2alpha1:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
