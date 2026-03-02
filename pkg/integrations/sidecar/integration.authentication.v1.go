@@ -23,10 +23,8 @@ package sidecar
 import (
 	core "k8s.io/api/core/v1"
 
-	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -59,10 +57,6 @@ func (i IntegrationAuthenticationV1) Envs() ([]core.EnvVar, error) {
 		{
 			Name:  "INTEGRATION_AUTHENTICATION_V1_PATH",
 			Value: shared.ClusterJWTSecretVolumeMountDir,
-		},
-		{
-			Name:  "INTEGRATION_AUTHORIZATION_V1_TYPE",
-			Value: util.BoolSwitch(features.RBACEnforced().Enabled(), pbImplAuthorizationV1.ConfigurationTypeCentral, pbImplAuthorizationV1.ConfigurationTypeCentralPermissive).String(),
 		},
 	}
 
