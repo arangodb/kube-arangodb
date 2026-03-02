@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,6 +101,21 @@ func arangoDatabaseDeploymentMembers(ctx context.Context, logger zerolog.Logger,
 func arangoDeploymentMemberArangoD(logger zerolog.Logger, files chan<- shared.File, item *api.ArangoDeployment, member api.DeploymentStatusMemberElement) error {
 	files, c := shared.WithPrefix(files, "%s/", member.Member.ID)
 	defer c()
+
+	files <- shared.NewFile("activities.json", shared.GenerateDataFuncP2(func(depl, member string) ([]byte, error) {
+		handler, err := shared.DiscoverExecFunc()
+		if err != nil {
+			return nil, err
+		}
+
+		out, _, err := handler(logger, "admin", "member", "request", "get", "-d", depl, "-m", member, "_arango", "experimental", "_admin", "activities")
+
+		if err != nil {
+			return nil, err
+		}
+
+		return out, nil
+	}, item.GetName(), member.Member.ID))
 
 	files <- shared.NewFile("async-registry.json", shared.GenerateDataFuncP2(func(depl, member string) ([]byte, error) {
 		handler, err := shared.DiscoverExecFunc()
