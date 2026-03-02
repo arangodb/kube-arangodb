@@ -297,6 +297,8 @@ func (h *handler) HandleDeploymentSidecarConnection(ctx context.Context, item op
 		return false, operator.Stop("Deployment sidecar not reachable")
 	}
 
+	defer conn.Close()
+
 	if status.Conditions.Update(permissionApi.SidecarReachableCondition, true, "Deployment sidecar reachable", "Deployment sidecar reachable") {
 		return true, operator.Reconcile("Conditions updated")
 	}
@@ -341,7 +343,7 @@ func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, e
 			status.User = &sharedApi.Object{
 				Name: name,
 			}
-			return false, operator.Reconcile("ArangoDB User name used")
+			return true, operator.Reconcile("ArangoDB User name used")
 		}
 
 		user, err := conn.CreateUser(ctx, name, &arangodb.UserOptions{
