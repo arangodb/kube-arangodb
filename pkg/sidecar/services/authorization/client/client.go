@@ -74,16 +74,10 @@ type client struct {
 }
 
 func (c *client) Revision() uint64 {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-
 	return c.revision
 }
 
 func (c *client) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-
 	policies := c.get().extractUserPolicies(req.GetUser(), req.GetRoles()...)
 
 	context := req.GetContext().GetContext()

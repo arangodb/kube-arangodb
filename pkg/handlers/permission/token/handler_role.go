@@ -206,6 +206,8 @@ func (h *handler) finalizerRoleRemoval(ctx context.Context, extension *permissio
 		return err
 	}
 
+	defer conn.Close()
+
 	client := sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn)
 
 	if _, err := client.APIDeleteRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{

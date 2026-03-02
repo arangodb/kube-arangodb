@@ -70,7 +70,10 @@ func (p permissive) Evaluate(ctx context.Context, req *pbAuthorizationV1.Authori
 		}, nil
 	case pbAuthorizationV1.AuthorizationV1Effect_Deny:
 		log.Info("Access Denied")
-		fallthrough
+		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
+			Message: "Access granted due to the Permissive mode",
+			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+		}, nil
 	default:
 		log.Info("Unknown Effect")
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{

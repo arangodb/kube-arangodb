@@ -201,6 +201,8 @@ func (h *handler) finalizerPolicyRemoval(ctx context.Context, extension *permiss
 		return err
 	}
 
+	defer conn.Close()
+
 	client := sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn)
 
 	if _, err := client.APIDeletePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
