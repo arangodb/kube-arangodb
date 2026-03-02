@@ -44,8 +44,10 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/integration"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
@@ -96,7 +98,11 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		return operator.Reconcile("Finalizers pending removal")
 	}
 
-	if changed, err := patcher.EnsureFinalizersPresent(ctx, h.client.PermissionV1alpha1().ArangoPermissionTokens(item.Namespace), object, permissionApi.FinalizerArangoPermissionTokenUser); err != nil {
+	if changed, err := patcher.EnsureFinalizersPresent(ctx, h.client.PermissionV1alpha1().ArangoPermissionTokens(item.Namespace), object,
+		permissionApi.FinalizerArangoPermissionTokenUser,
+		permissionApi.FinalizerArangoPermissionTokenRole,
+		permissionApi.FinalizerArangoPermissionTokenPolicy,
+	); err != nil {
 		return err
 	} else if changed {
 		return operator.Reconcile("Finalizers updated")
@@ -145,6 +151,18 @@ func (h *handler) finalizer(ctx context.Context, extension *permissionApi.Arango
 			}
 
 			return permissionApi.FinalizerArangoPermissionTokenUser, nil
+		case permissionApi.FinalizerArangoPermissionTokenRole:
+			if err := h.finalizerRoleRemoval(ctx, extension); err != nil {
+				return "", err
+			}
+
+			return permissionApi.FinalizerArangoPermissionTokenRole, nil
+		case permissionApi.FinalizerArangoPermissionTokenPolicy:
+			if err := h.finalizerPolicyRemoval(ctx, extension); err != nil {
+				return "", err
+			}
+
+			return permissionApi.FinalizerArangoPermissionTokenPolicy, nil
 		}
 	}
 
@@ -264,7 +282,29 @@ func (h *handler) HandleDeployment(ctx context.Context, item operation.Item, ext
 		return true, nil
 	}
 
-	return operator.HandleP4(ctx, item, extension, status, depl, h.HandleDeploymentConnection)
+	return operator.HandleP4(ctx, item, extension, status, depl, h.HandleDeploymentConnection, h.HandleDeploymentSidecarConnection)
+}
+
+func (h *handler) HandleDeploymentSidecarConnection(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment) (bool, error) {
+	conn, err := integration.NewIntegrationConnectionFromDeployment(h.kubeClient, depl, utilToken.WithRelativeDuration(time.Minute))
+	if err != nil {
+		logger.Err(err).Warn("Deployment is not reachable")
+
+		if status.Conditions.Update(permissionApi.SidecarReachableCondition, false, "Deployment sidecar not reachable", "Deployment sidecar not reachable") {
+			return true, operator.Reconcile("Conditions updated")
+		}
+
+		return false, operator.Stop("Deployment sidecar not reachable")
+	}
+
+	defer conn.Close()
+
+	if status.Conditions.Update(permissionApi.SidecarReachableCondition, true, "Deployment sidecar reachable", "Deployment sidecar reachable") {
+		return true, operator.Reconcile("Conditions updated")
+	}
+
+	return operator.HandleP5(ctx, item, extension, status, depl, sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn), h.HandleArangoDBPolicy, h.HandleArangoDBRole)
+
 }
 
 func (h *handler) HandleDeploymentConnection(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment) (bool, error) {
@@ -300,7 +340,10 @@ func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, e
 				return false, err
 			}
 		} else {
-			return false, operator.Reconcile("ArangoDB User name used")
+			status.User = &sharedApi.Object{
+				Name: name,
+			}
+			return true, operator.Reconcile("ArangoDB User name used")
 		}
 
 		user, err := conn.CreateUser(ctx, name, &arangodb.UserOptions{
@@ -431,5 +474,5 @@ func (h *handler) HandleArangoSecret(ctx context.Context, item operation.Item, e
 
 	h.eventRecorder.Normal(extension, "Token Generated", "Token Generated with Hash %s and Expiration %s", hash, status.Refresh.Time.String())
 
-	return true, nil
+	return true, operator.Reconcile("Secret Changed")
 }

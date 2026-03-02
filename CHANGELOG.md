@@ -12,6 +12,7 @@
 - (Feature) (Platform) Sidecar Initial Resources
 - (Feature) (Platform) Extend Gateway Options
 - (Feature) (Platform) Sidecar Feature
+- (Feature) (Platform) Authorization Central Service
 - (Feature) (Platform) Sidecar Auth
 - (Feature) (Platform) Integration Unix Connection
 - (Feature) (Platform) Asymmetric Key Support
@@ -20,6 +21,7 @@
 - (Feature) (Platform) Authn PublicKey Support
 - (Feature) Introduce ArangoD Data Helper
 - (Maintenance) Bump Kubernetes to 1.33
+- (Feature) (Platform) Authorization Central Service
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService

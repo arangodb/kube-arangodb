@@ -64,7 +64,12 @@ func Test_ServiceReconcile(t *testing.T) {
 		func(t *testing.T, obj *permissionApi.ArangoPermissionToken) {})
 
 	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, tests.FakeNamespace, "example",
-		func(t *testing.T, obj *api.ArangoDeployment) {})
+		func(t *testing.T, obj *api.ArangoDeployment) {
+			obj.Status.Conditions = append(obj.Status.Conditions, sharedApi.Condition{
+				Type:   api.ConditionTypeGatewaySidecarEnabled,
+				Status: core.ConditionTrue,
+			})
+		})
 
 	jwt := tests.NewMetaObject[*core.Secret](t, tests.FakeNamespace, pod.JWTSecretFolder("example"), func(t *testing.T, obj *core.Secret) {
 		obj.Data = map[string][]byte{}
@@ -175,7 +180,7 @@ func Test_ServiceReconcile(t *testing.T) {
 			obj.Spec.Authentication.JWTSecretName = nil
 		})
 
-		require.EqualError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)), "No '-' data found in secret 'example-jwt-folder'")
+		require.EqualError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)), "no token found")
 	})
 
 	t.Run("Existing deployment", func(t *testing.T) {
@@ -329,7 +334,6 @@ func Test_ServiceReconcile(t *testing.T) {
 			obj.Spec.Deployment = &sharedApi.Object{
 				Name: "example",
 			}
-
 			obj.Spec.Roles = []string{
 				"role",
 			}

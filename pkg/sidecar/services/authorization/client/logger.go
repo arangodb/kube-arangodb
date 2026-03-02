@@ -18,16 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package client
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+import "github.com/arangodb/kube-arangodb/pkg/logging"
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
-)
+var logger = logging.Global().RegisterAndGetLogger("authz-pool-client", logging.Info)

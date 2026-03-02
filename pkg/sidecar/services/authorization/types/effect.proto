@@ -18,16 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+syntax = "proto3";
 
-import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+package types;
 
-const (
-	ReadyCondition               sharedApi.ConditionType = "Ready"
-	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
-	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
-	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
-	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
-	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
-	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
-)
+option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types";
+
+// Statement Effect
+enum Effect {
+  // Deny definition
+  Deny = 0;
+
+  // Allow definition
+  Allow = 1;
+}

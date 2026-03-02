@@ -51,12 +51,12 @@ func (a *authorizationV1) Description() string {
 
 func (a *authorizationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
-		fs.StringVar((*string)(&a.config.Type), "type", string(pbImplAuthorizationV1.ConfigurationTypeAlways), "Type of the Authorization Integration"),
+		fs.StringVar((*string)(&a.config.Type), "type", string(pbImplAuthorizationV1.ConfigurationTypeCentral), "Type of the Authorization Integration"),
 	)
 }
 
 func (a *authorizationV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	return pbImplAuthorizationV1.New(a.config)
+	return pbImplAuthorizationV1.New(ctx, a.config)
 }
 
 func (a *authorizationV1) Init(ctx context.Context, cmd *cobra.Command) error {
