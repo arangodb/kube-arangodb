@@ -66,13 +66,25 @@ func NewFilteredArangoTaskInformer(client versioned.Interface, namespace string,
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV1().ArangoTasks(namespace).List(context.TODO(), options)
+				return client.DatabaseV1().ArangoTasks(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV1().ArangoTasks(namespace).Watch(context.TODO(), options)
+				return client.DatabaseV1().ArangoTasks(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.DatabaseV1().ArangoTasks(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.DatabaseV1().ArangoTasks(namespace).Watch(ctx, options)
 			},
 		},
 		&apisdeploymentv1.ArangoTask{},

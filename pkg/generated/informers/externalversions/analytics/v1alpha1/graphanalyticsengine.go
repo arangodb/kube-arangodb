@@ -66,13 +66,25 @@ func NewFilteredGraphAnalyticsEngineInformer(client versioned.Interface, namespa
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AnalyticsV1alpha1().GraphAnalyticsEngines(namespace).List(context.TODO(), options)
+				return client.AnalyticsV1alpha1().GraphAnalyticsEngines(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AnalyticsV1alpha1().GraphAnalyticsEngines(namespace).Watch(context.TODO(), options)
+				return client.AnalyticsV1alpha1().GraphAnalyticsEngines(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.AnalyticsV1alpha1().GraphAnalyticsEngines(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.AnalyticsV1alpha1().GraphAnalyticsEngines(namespace).Watch(ctx, options)
 			},
 		},
 		&apisanalyticsv1alpha1.GraphAnalyticsEngine{},

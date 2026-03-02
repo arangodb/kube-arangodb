@@ -66,13 +66,25 @@ func NewFilteredArangoMLCronJobInformer(client versioned.Interface, namespace st
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MlV1alpha1().ArangoMLCronJobs(namespace).List(context.TODO(), options)
+				return client.MlV1alpha1().ArangoMLCronJobs(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MlV1alpha1().ArangoMLCronJobs(namespace).Watch(context.TODO(), options)
+				return client.MlV1alpha1().ArangoMLCronJobs(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MlV1alpha1().ArangoMLCronJobs(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.MlV1alpha1().ArangoMLCronJobs(namespace).Watch(ctx, options)
 			},
 		},
 		&apismlv1alpha1.ArangoMLCronJob{},

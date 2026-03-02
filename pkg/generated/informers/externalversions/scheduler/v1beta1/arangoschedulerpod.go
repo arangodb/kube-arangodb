@@ -66,13 +66,25 @@ func NewFilteredArangoSchedulerPodInformer(client versioned.Interface, namespace
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SchedulerV1beta1().ArangoSchedulerPods(namespace).List(context.TODO(), options)
+				return client.SchedulerV1beta1().ArangoSchedulerPods(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SchedulerV1beta1().ArangoSchedulerPods(namespace).Watch(context.TODO(), options)
+				return client.SchedulerV1beta1().ArangoSchedulerPods(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options v1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.SchedulerV1beta1().ArangoSchedulerPods(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options v1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.SchedulerV1beta1().ArangoSchedulerPods(namespace).Watch(ctx, options)
 			},
 		},
 		&apisschedulerv1beta1.ArangoSchedulerPod{},

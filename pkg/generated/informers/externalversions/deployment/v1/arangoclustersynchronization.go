@@ -66,13 +66,25 @@ func NewFilteredArangoClusterSynchronizationInformer(client versioned.Interface,
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV1().ArangoClusterSynchronizations(namespace).List(context.TODO(), options)
+				return client.DatabaseV1().ArangoClusterSynchronizations(namespace).List(context.Background(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.DatabaseV1().ArangoClusterSynchronizations(namespace).Watch(context.TODO(), options)
+				return client.DatabaseV1().ArangoClusterSynchronizations(namespace).Watch(context.Background(), options)
+			},
+			ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.DatabaseV1().ArangoClusterSynchronizations(namespace).List(ctx, options)
+			},
+			WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+				if tweakListOptions != nil {
+					tweakListOptions(&options)
+				}
+				return client.DatabaseV1().ArangoClusterSynchronizations(namespace).Watch(ctx, options)
 			},
 		},
 		&apisdeploymentv1.ArangoClusterSynchronization{},

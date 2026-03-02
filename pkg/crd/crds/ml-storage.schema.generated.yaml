@@ -251,6 +251,8 @@ v1alpha1:
                                 x-kubernetes-int-or-string: true
                             type: object
                         type: object
+                      stopSignal:
+                        type: string
                     type: object
                   listenPort:
                     description: ListenPort defines on which port the sidecar container will be listening for connections
