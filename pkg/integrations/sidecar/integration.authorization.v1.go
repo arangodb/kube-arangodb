@@ -21,10 +21,11 @@
 package sidecar
 
 import (
+	core "k8s.io/api/core/v1"
+
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	core "k8s.io/api/core/v1"
 )
 
 type IntegrationAuthorizationV1 struct {

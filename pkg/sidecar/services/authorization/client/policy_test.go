@@ -202,4 +202,50 @@ func Test_PolicyEvaluation_Actions(t *testing.T) {
 		nil,
 		sidecarSvcAuthzTypes.Effect_Allow,
 	)
+
+	statementEvaluator(t, "Ensure prefix suffix", &sidecarSvcAuthzTypes.PolicyStatement{
+		Effect:    sidecarSvcAuthzTypes.Effect_Allow,
+		Resources: []string{"content:file:/data"},
+		Actions:   []string{"test:Get*"},
+	}, &sidecarSvcAuthzTypes.PolicyStatement{
+		Effect:    sidecarSvcAuthzTypes.Effect_Allow,
+		Resources: []string{"content:file:/data2"},
+		Actions:   []string{"test:*All"},
+	}).Evaluate(
+		"Exact granted",
+		"test:GetAll",
+		"content:file:/data",
+		nil,
+		sidecarSvcAuthzTypes.Effect_Allow,
+	).Evaluate(
+		"Exact granted",
+		"test:2GetAll",
+		"content:file:/data",
+		nil,
+		sidecarSvcAuthzTypes.Effect_Deny,
+	).Evaluate(
+		"Exact granted",
+		"test:Get",
+		"content:file:/data",
+		nil,
+		sidecarSvcAuthzTypes.Effect_Allow,
+	).Evaluate(
+		"Exact granted",
+		"test:GetAll",
+		"content:file:/data2",
+		nil,
+		sidecarSvcAuthzTypes.Effect_Allow,
+	).Evaluate(
+		"Exact granted",
+		"test:GetAll2",
+		"content:file:/data2",
+		nil,
+		sidecarSvcAuthzTypes.Effect_Deny,
+	).Evaluate(
+		"Exact granted",
+		"test:All",
+		"content:file:/data2",
+		nil,
+		sidecarSvcAuthzTypes.Effect_Allow,
+	)
 }

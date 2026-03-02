@@ -37,9 +37,9 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication/definition
       - alias: sidecarSvcAuthn
         pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication
-      - alias: sidecarSvcAuthz
-        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition
       - alias: sidecarSvcAuthzDefinition
+        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition
+      - alias: sidecarSvcAuthz
         pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization
       - alias: sidecarSvcAuthzTypes
         pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types

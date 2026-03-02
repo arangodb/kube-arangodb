@@ -23,7 +23,7 @@ package sidecar
 import (
 	"github.com/spf13/cobra"
 
-	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization"
+	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -41,5 +41,5 @@ func registerAuthorization(cmd *cobra.Command) (svc.Handler, bool, error) {
 
 	client := arangoDBDatabaseClient(cmd)
 
-	return sidecarSvcAuthzDefinition.NewAuthorizer(db.NewClient(client).Database("_system")), true, nil
+	return sidecarSvcAuthz.NewAuthorizer(db.NewClient(client).Database("_system")), true, nil
 }

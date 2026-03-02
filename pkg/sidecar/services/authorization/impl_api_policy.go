@@ -26,12 +26,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
-func (a *implementation) APIGetPolicy(ctx context.Context, request *sidecarSvcAuthz.AuthorizationAPINamedRequest) (*sidecarSvcAuthz.AuthorizationAPIPolicyResponse, error) {
+func (a *implementation) APIGetPolicy(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse, error) {
 	if identity := authenticator.GetIdentity(ctx); identity == nil {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	} else {
@@ -46,14 +46,14 @@ func (a *implementation) APIGetPolicy(ctx context.Context, request *sidecarSvcAu
 		return nil, status.Error(codes.NotFound, "Policy not found")
 	}
 
-	return &sidecarSvcAuthz.AuthorizationAPIPolicyResponse{
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse{
 		Name:  request.GetName(),
 		Index: index,
 		Item:  policy,
 	}, nil
 }
 
-func (a *implementation) APIDeletePolicy(ctx context.Context, request *sidecarSvcAuthz.AuthorizationAPINamedRequest) (*sidecarSvcAuthz.AuthorizationAPIPolicyResponse, error) {
+func (a *implementation) APIDeletePolicy(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse, error) {
 	if identity := authenticator.GetIdentity(ctx); identity == nil {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	} else {
@@ -73,13 +73,13 @@ func (a *implementation) APIDeletePolicy(ctx context.Context, request *sidecarSv
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &sidecarSvcAuthz.AuthorizationAPIPolicyResponse{
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse{
 		Name:  request.GetName(),
 		Index: offset,
 	}, nil
 }
 
-func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSvcAuthz.AuthorizationAPIPolicyRequest) (*sidecarSvcAuthz.AuthorizationAPIPolicyResponse, error) {
+func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse, error) {
 	if identity := authenticator.GetIdentity(ctx); identity == nil {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	} else {
@@ -103,14 +103,14 @@ func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSv
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &sidecarSvcAuthz.AuthorizationAPIPolicyResponse{
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse{
 		Name:  request.GetName(),
 		Index: offset,
 		Item:  res,
 	}, nil
 }
 
-func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSvcAuthz.AuthorizationAPIPolicyRequest) (*sidecarSvcAuthz.AuthorizationAPIPolicyResponse, error) {
+func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse, error) {
 	if identity := authenticator.GetIdentity(ctx); identity == nil {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	} else {
@@ -138,7 +138,7 @@ func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSv
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &sidecarSvcAuthz.AuthorizationAPIPolicyResponse{
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse{
 		Name:  request.GetName(),
 		Index: offset,
 		Item:  res,

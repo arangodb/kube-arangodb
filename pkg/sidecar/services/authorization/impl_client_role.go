@@ -28,14 +28,14 @@ import (
 	"google.golang.org/grpc/status"
 
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
-func (a *implementation) PoolRoleChanges(request *sidecarSvcAuthz.AuthorizationPoolRequest, g grpc.ServerStreamingServer[sidecarSvcAuthz.AuthorizationPoolRoleResponse]) error {
+func (a *implementation) PoolRoleChanges(request *sidecarSvcAuthzDefinition.AuthorizationPoolRequest, g grpc.ServerStreamingServer[sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponse]) error {
 	if authenticator.GetIdentity(g.Context()) == nil {
 		return status.Error(codes.Unauthenticated, "Unauthenticated")
 	}
@@ -63,7 +63,7 @@ func (a *implementation) PoolRoleChanges(request *sidecarSvcAuthz.AuthorizationP
 			if len(items) == 0 {
 				if time.Since(last) > request.GetTimeout().AsDuration() {
 					// Send empty response
-					if err := g.Send(&sidecarSvcAuthz.AuthorizationPoolRoleResponse{
+					if err := g.Send(&sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponse{
 						Items: nil,
 					}); err != nil {
 						return status.Error(codes.Internal, err.Error())
@@ -75,9 +75,9 @@ func (a *implementation) PoolRoleChanges(request *sidecarSvcAuthz.AuthorizationP
 			}
 
 			for _, item := range util.BatchList(128, items) {
-				if err := g.Send(&sidecarSvcAuthz.AuthorizationPoolRoleResponse{
-					Items: util.FormatList(item, func(a pool.OffsetItem[*sidecarSvcAuthzTypes.Role]) *sidecarSvcAuthz.AuthorizationPoolRoleResponseItem {
-						return &sidecarSvcAuthz.AuthorizationPoolRoleResponseItem{
+				if err := g.Send(&sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponse{
+					Items: util.FormatList(item, func(a pool.OffsetItem[*sidecarSvcAuthzTypes.Role]) *sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponseItem {
+						return &sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponseItem{
 							Name:  a.Name,
 							Index: a.Sequence,
 							Item:  a.Item,
@@ -97,7 +97,7 @@ func (a *implementation) PoolRoleChanges(request *sidecarSvcAuthz.AuthorizationP
 	}
 }
 
-func (a *implementation) GetRole(empty *pbSharedV1.Empty, g grpc.ServerStreamingServer[sidecarSvcAuthz.AuthorizationPoolRoleResponse]) error {
+func (a *implementation) GetRole(empty *pbSharedV1.Empty, g grpc.ServerStreamingServer[sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponse]) error {
 	if authenticator.GetIdentity(g.Context()) == nil {
 		return status.Error(codes.Unauthenticated, "Unauthenticated")
 	}
@@ -105,9 +105,9 @@ func (a *implementation) GetRole(empty *pbSharedV1.Empty, g grpc.ServerStreaming
 	items := a.roles.Get()
 
 	for _, item := range util.BatchList(128, items) {
-		if err := g.Send(&sidecarSvcAuthz.AuthorizationPoolRoleResponse{
-			Items: util.FormatList(item, func(a pool.OffsetItem[*sidecarSvcAuthzTypes.Role]) *sidecarSvcAuthz.AuthorizationPoolRoleResponseItem {
-				return &sidecarSvcAuthz.AuthorizationPoolRoleResponseItem{
+		if err := g.Send(&sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponse{
+			Items: util.FormatList(item, func(a pool.OffsetItem[*sidecarSvcAuthzTypes.Role]) *sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponseItem {
+				return &sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponseItem{
 					Name:  a.Name,
 					Index: a.Sequence,
 					Item:  a.Item,

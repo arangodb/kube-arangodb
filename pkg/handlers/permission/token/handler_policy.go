@@ -36,7 +36,7 @@ import (
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -44,7 +44,7 @@ import (
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
-func (h *handler) HandleArangoDBPolicy(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, st *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment, conn sidecarSvcAuthz.AuthorizationAPIClient) (bool, error) {
+func (h *handler) HandleArangoDBPolicy(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, st *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment, conn sidecarSvcAuthzDefinition.AuthorizationAPIClient) (bool, error) {
 	if extension.Spec.Policy != nil && !depl.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
 		return false, errors.Errorf("Sidecar is not enabled")
 	}
@@ -52,7 +52,7 @@ func (h *handler) HandleArangoDBPolicy(ctx context.Context, item operation.Item,
 	if extension.Spec.Policy == nil || !depl.GetAcceptedSpec().IsAuthenticated() {
 		// Policy should be gone
 		if st.Policy != nil {
-			_, err := conn.APIDeletePolicy(ctx, &sidecarSvcAuthz.AuthorizationAPINamedRequest{
+			_, err := conn.APIDeletePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
 				Name: st.Policy.GetName(),
 			})
 			if err != nil {
@@ -84,7 +84,7 @@ func (h *handler) HandleArangoDBPolicy(ctx context.Context, item operation.Item,
 
 	if st.Policy == nil {
 		// Create the policy
-		if _, err := conn.APICreatePolicy(ctx, &sidecarSvcAuthz.AuthorizationAPIPolicyRequest{
+		if _, err := conn.APICreatePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 			Name: name,
 			Item: policies,
 		}); err != nil {
@@ -103,7 +103,7 @@ func (h *handler) HandleArangoDBPolicy(ctx context.Context, item operation.Item,
 		return true, operator.Reconcile("Policy created")
 	}
 
-	existing, err := conn.APIGetPolicy(ctx, &sidecarSvcAuthz.AuthorizationAPINamedRequest{
+	existing, err := conn.APIGetPolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
 		Name: st.Policy.GetName(),
 	})
 	if err != nil {
@@ -122,7 +122,7 @@ func (h *handler) HandleArangoDBPolicy(ctx context.Context, item operation.Item,
 		}
 
 		// Create the policy
-		if _, err := conn.APIUpdatePolicy(ctx, &sidecarSvcAuthz.AuthorizationAPIPolicyRequest{
+		if _, err := conn.APIUpdatePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 			Name: name,
 			Item: policies,
 		}); err != nil {
@@ -162,6 +162,8 @@ func (h *handler) renderPolicy(in *permissionApiPolicy.Policy) (*sidecarSvcAuthz
 		s.Actions = util.FormatList(st.Actions, func(a permissionApiPolicy.Action) string {
 			return string(a)
 		})
+
+		r.Statements = append(r.Statements, &s)
 	}
 
 	if err := r.Validate(); err != nil {
@@ -199,9 +201,9 @@ func (h *handler) finalizerPolicyRemoval(ctx context.Context, extension *permiss
 		return err
 	}
 
-	client := sidecarSvcAuthz.NewAuthorizationAPIClient(conn)
+	client := sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn)
 
-	if _, err := client.APIDeletePolicy(ctx, &sidecarSvcAuthz.AuthorizationAPINamedRequest{
+	if _, err := client.APIDeletePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
 		Name: extension.Status.Policy.GetName(),
 	}); err != nil {
 		if status.Code(err) == codes.NotFound {

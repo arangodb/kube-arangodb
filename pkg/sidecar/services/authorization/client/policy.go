@@ -158,9 +158,9 @@ func newMatch(v string) (match, error) {
 	if suffix, prefix := goStrings.HasSuffix(v, "*"), goStrings.HasPrefix(v, "*"); suffix && prefix {
 		return nil, errors.Errorf("invalid policy statement: %s", v)
 	} else if suffix {
-		return suffixMatch(v), nil
+		return suffixMatch(goStrings.TrimSuffix(v, "*")), nil
 	} else if prefix {
-		return prefixMatch(v), nil
+		return prefixMatch(goStrings.TrimPrefix(v, "*")), nil
 	}
 
 	return exactMatch(v), nil

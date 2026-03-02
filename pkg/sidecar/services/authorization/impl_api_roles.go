@@ -26,12 +26,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
-func (a *implementation) APIGetRole(ctx context.Context, request *sidecarSvcAuthz.AuthorizationAPINamedRequest) (*sidecarSvcAuthz.AuthorizationAPIRoleResponse, error) {
+func (a *implementation) APIGetRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
 	if identity := authenticator.GetIdentity(ctx); identity == nil {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	} else {
@@ -46,14 +46,14 @@ func (a *implementation) APIGetRole(ctx context.Context, request *sidecarSvcAuth
 		return nil, status.Error(codes.NotFound, "Role not found")
 	}
 
-	return &sidecarSvcAuthz.AuthorizationAPIRoleResponse{
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse{
 		Name:  request.GetName(),
 		Index: index,
 		Item:  role,
 	}, nil
 }
 
-func (a *implementation) APIDeleteRole(ctx context.Context, request *sidecarSvcAuthz.AuthorizationAPINamedRequest) (*sidecarSvcAuthz.AuthorizationAPIRoleResponse, error) {
+func (a *implementation) APIDeleteRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
 	if identity := authenticator.GetIdentity(ctx); identity == nil {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	} else {
@@ -73,13 +73,13 @@ func (a *implementation) APIDeleteRole(ctx context.Context, request *sidecarSvcA
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &sidecarSvcAuthz.AuthorizationAPIRoleResponse{
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse{
 		Name:  request.GetName(),
 		Index: offset,
 	}, nil
 }
 
-func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcAuthz.AuthorizationAPIRoleRequest) (*sidecarSvcAuthz.AuthorizationAPIRoleResponse, error) {
+func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIRoleRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
 	if identity := authenticator.GetIdentity(ctx); identity == nil {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	} else {
@@ -103,14 +103,14 @@ func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcA
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &sidecarSvcAuthz.AuthorizationAPIRoleResponse{
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse{
 		Name:  request.GetName(),
 		Index: offset,
 		Item:  res,
 	}, nil
 }
 
-func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcAuthz.AuthorizationAPIRoleRequest) (*sidecarSvcAuthz.AuthorizationAPIRoleResponse, error) {
+func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIRoleRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
 	if identity := authenticator.GetIdentity(ctx); identity == nil {
 		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
 	} else {
@@ -138,7 +138,7 @@ func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcA
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &sidecarSvcAuthz.AuthorizationAPIRoleResponse{
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse{
 		Name:  request.GetName(),
 		Index: offset,
 		Item:  res,

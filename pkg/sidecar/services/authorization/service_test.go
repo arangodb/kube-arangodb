@@ -35,7 +35,7 @@ import (
 	"github.com/arangodb/go-driver/v2/arangodb"
 
 	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
@@ -69,14 +69,14 @@ func Server(t *testing.T, ctx context.Context, tm tests.TokenManager) svc.Servic
 	return local.Start(ctx)
 }
 
-func Client(t *testing.T, ctx context.Context, tm tests.TokenManager, auth authentication.Authentication) (sidecarSvcAuthz.AuthorizationPoolServiceClient, sidecarSvcAuthz.AuthorizationAPIClient) {
+func Client(t *testing.T, ctx context.Context, tm tests.TokenManager, auth authentication.Authentication) (sidecarSvcAuthzDefinition.AuthorizationPoolServiceClient, sidecarSvcAuthzDefinition.AuthorizationAPIClient) {
 	start := Server(t, ctx, tm)
 
 	var opts []grpc.DialOption
 
 	opts = append(opts, authentication.NewInterceptorClientOptions(auth)...)
 
-	return tgrpc.NewGRPCClient(t, ctx, sidecarSvcAuthz.NewAuthorizationPoolServiceClient, start.Address(), opts...), tgrpc.NewGRPCClient(t, ctx, sidecarSvcAuthz.NewAuthorizationAPIClient, start.Address(), opts...)
+	return tgrpc.NewGRPCClient(t, ctx, sidecarSvcAuthzDefinition.NewAuthorizationPoolServiceClient, start.Address(), opts...), tgrpc.NewGRPCClient(t, ctx, sidecarSvcAuthzDefinition.NewAuthorizationAPIClient, start.Address(), opts...)
 }
 
 func Test_Service(t *testing.T) {
@@ -98,36 +98,36 @@ func Test_Service(t *testing.T) {
 
 	require.True(t, z.Wait(zctx))
 
-	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthz.AuthorizationAPIPolicyRequest{
+	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 		Name: "example",
 		Item: nil,
 	}).Code(t, codes.InvalidArgument)
 
 	time.Sleep(5 * time.Second)
 
-	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthz.AuthorizationAPIPolicyRequest{
+	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 		Name: "example",
 		Item: &sidecarSvcAuthzTypes.Policy{},
 	}).Code(t, codes.OK)
 
 	time.Sleep(5 * time.Second)
 
-	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthz.AuthorizationAPIPolicyRequest{
+	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 		Name: "example2",
 		Item: &sidecarSvcAuthzTypes.Policy{},
 	}).Code(t, codes.OK)
 
-	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthz.AuthorizationAPIPolicyRequest{
+	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 		Name: "example3",
 		Item: &sidecarSvcAuthzTypes.Policy{},
 	}).Code(t, codes.OK)
 
-	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthz.AuthorizationAPIPolicyRequest{
+	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 		Name: "example4",
 		Item: &sidecarSvcAuthzTypes.Policy{},
 	}).Code(t, codes.OK)
 
-	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthz.AuthorizationAPIPolicyRequest{
+	tgrpc.NewExecutor(t, api.APICreatePolicy, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 		Name: "example5",
 		Item: &sidecarSvcAuthzTypes.Policy{},
 	}).Code(t, codes.OK)

@@ -33,13 +33,13 @@ import (
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func NewClient(ctx context.Context, c sidecarSvcAuthz.AuthorizationPoolServiceClient) Client {
+func NewClient(ctx context.Context, c sidecarSvcAuthzDefinition.AuthorizationPoolServiceClient) Client {
 	client := &client{
 		client: c,
 		closed: make(chan struct{}),
@@ -61,7 +61,7 @@ type client struct {
 
 	setLock sync.Mutex
 
-	client sidecarSvcAuthz.AuthorizationPoolServiceClient
+	client sidecarSvcAuthzDefinition.AuthorizationPoolServiceClient
 
 	closed chan struct{}
 
@@ -262,7 +262,7 @@ func (c *client) runPoliciesE(ctx context.Context) error {
 	logger.Trace("Policies init complete")
 
 	for {
-		changes, err := c.client.PoolPolicyChanges(ctx, &sidecarSvcAuthz.AuthorizationPoolRequest{
+		changes, err := c.client.PoolPolicyChanges(ctx, &sidecarSvcAuthzDefinition.AuthorizationPoolRequest{
 			Start:   index,
 			Timeout: durationpb.New(15 * time.Second),
 		})
@@ -323,7 +323,7 @@ func (c *client) runRolesE(ctx context.Context) error {
 	logger.Trace("Roles init complete")
 
 	for {
-		changes, err := c.client.PoolRoleChanges(ctx, &sidecarSvcAuthz.AuthorizationPoolRequest{
+		changes, err := c.client.PoolRoleChanges(ctx, &sidecarSvcAuthzDefinition.AuthorizationPoolRequest{
 			Start:   index,
 			Timeout: durationpb.New(15 * time.Second),
 		})

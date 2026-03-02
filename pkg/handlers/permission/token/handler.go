@@ -44,7 +44,7 @@ import (
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/integration"
@@ -144,7 +144,6 @@ func (h *handler) CanBeHandled(item operation.Item) bool {
 
 func (h *handler) finalizer(ctx context.Context, extension *permissionApi.ArangoPermissionToken) (string, error) {
 	for _, finalizer := range extension.GetFinalizers() {
-		println(finalizer)
 		switch finalizer {
 		case permissionApi.FinalizerArangoPermissionTokenUser:
 			if err := h.finalizerUserRemoval(ctx, extension); err != nil {
@@ -302,7 +301,7 @@ func (h *handler) HandleDeploymentSidecarConnection(ctx context.Context, item op
 		return true, operator.Reconcile("Conditions updated")
 	}
 
-	return operator.HandleP5(ctx, item, extension, status, depl, sidecarSvcAuthz.NewAuthorizationAPIClient(conn), h.HandleArangoDBPolicy, h.HandleArangoDBRole)
+	return operator.HandleP5(ctx, item, extension, status, depl, sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn), h.HandleArangoDBPolicy, h.HandleArangoDBRole)
 
 }
 

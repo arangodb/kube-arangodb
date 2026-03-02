@@ -27,7 +27,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
@@ -48,12 +48,12 @@ func NewAuthorizer(client db.Database) svc.Handler {
 	}
 }
 
-var _ sidecarSvcAuthz.AuthorizationPoolServiceServer = &implementation{}
-var _ sidecarSvcAuthz.AuthorizationAPIServer = &implementation{}
+var _ sidecarSvcAuthzDefinition.AuthorizationPoolServiceServer = &implementation{}
+var _ sidecarSvcAuthzDefinition.AuthorizationAPIServer = &implementation{}
 
 type implementation struct {
-	sidecarSvcAuthz.UnimplementedAuthorizationPoolServiceServer
-	sidecarSvcAuthz.UnimplementedAuthorizationAPIServer
+	sidecarSvcAuthzDefinition.UnimplementedAuthorizationPoolServiceServer
+	sidecarSvcAuthzDefinition.UnimplementedAuthorizationAPIServer
 
 	policies pool.Pooler[*sidecarSvcAuthzTypes.Policy]
 	roles    pool.Pooler[*sidecarSvcAuthzTypes.Role]
@@ -68,12 +68,12 @@ func (a *implementation) Health(ctx context.Context) svc.HealthState {
 }
 
 func (a *implementation) Register(registrar *grpc.Server) {
-	sidecarSvcAuthz.RegisterAuthorizationPoolServiceServer(registrar, a)
-	sidecarSvcAuthz.RegisterAuthorizationAPIServer(registrar, a)
+	sidecarSvcAuthzDefinition.RegisterAuthorizationPoolServiceServer(registrar, a)
+	sidecarSvcAuthzDefinition.RegisterAuthorizationAPIServer(registrar, a)
 }
 
 func (a *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return sidecarSvcAuthz.RegisterAuthorizationAPIHandler(ctx, mux, conn)
+	return sidecarSvcAuthzDefinition.RegisterAuthorizationAPIHandler(ctx, mux, conn)
 }
 
 func (a *implementation) Refresh(ctx context.Context) error {
