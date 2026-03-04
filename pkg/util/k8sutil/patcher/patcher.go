@@ -43,7 +43,7 @@ func NewPatchList[T meta.Object](items ...Patch[T]) PatchList[T] {
 type PatchList[T meta.Object] []Patch[T]
 
 func (p PatchList[T]) Append(items ...Patch[T]) PatchList[T] {
-	z := make([]Patch[T], 0, len(p)+len(items))
+	z := make([]Patch[T], len(p)+len(items))
 	copy(z, p)
 	copy(z[len(p):], items)
 	return z
