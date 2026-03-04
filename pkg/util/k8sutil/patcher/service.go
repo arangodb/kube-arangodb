@@ -116,6 +116,10 @@ func PatchServiceClusterIP(clusterIP string) Patch[*core.Service] {
 			}
 		}
 
+		if clusterIP == "" && in.Spec.ClusterIP != core.ClusterIPNone {
+			return nil
+		}
+
 		panic(ImmutableError{})
 	}
 }

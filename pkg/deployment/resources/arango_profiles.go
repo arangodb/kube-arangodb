@@ -177,7 +177,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		}
 	}
 
-	if changed, err := r.ensureArangoProfilesFactory(ctx, cachedStatus,
+	if changed, ready, err := r.ensureArangoProfilesFactory(ctx, cachedStatus,
 		func() (string, *schedulerApi.ArangoProfile, error) {
 			counterMetric.Inc()
 			name := fmt.Sprintf("%s-int", deploymentName)
@@ -257,6 +257,22 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		return err
 	} else if changed {
 		reconcileRequired.Required()
+	} else {
+		if ready != status.Conditions.IsTrue(api.ConditionTypeProfilesReady) {
+			if err = r.context.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+				if ready {
+					return s.Conditions.Update(api.ConditionTypeProfilesReady, true, "Profiles ready", "Profiles  Ready")
+				} else {
+					return s.Conditions.Update(api.ConditionTypeProfilesReady, false, "Profiles not ready", "Profiles not Ready")
+				}
+			}); err != nil {
+				return err
+			}
+
+			r.log.Info("Updated profiles ready")
+
+			reconcileRequired.Required()
+		}
 	}
 
 	return reconcileRequired.Reconcile(ctx)
@@ -522,58 +538,67 @@ func (r *Resources) arangoDeploymentCATemplate() *schedulerApi.ProfileTemplate {
 	}
 }
 
-func (r *Resources) ensureArangoProfilesFactory(ctx context.Context, cachedStatus inspectorInterface.Inspector, expected ...func() (string, *schedulerApi.ArangoProfile, error)) (bool, error) {
+func (r *Resources) ensureArangoProfilesFactory(ctx context.Context, cachedStatus inspectorInterface.Inspector, expected ...func() (string, *schedulerApi.ArangoProfile, error)) (bool, bool, error) {
 	var changed bool
+	var ready = true
 
 	for _, e := range expected {
 		name, profile, err := e()
 		if err != nil {
-			return false, err
+			return false, false, err
 		}
-		if c, err := r.ensureArangoProfile(ctx, cachedStatus, name, profile); err != nil {
-			return false, err
-		} else if c {
-			changed = true
+		if c, rdy, err := r.ensureArangoProfile(ctx, cachedStatus, name, profile); err != nil {
+			return false, false, err
+		} else {
+			if c {
+				changed = true
+			}
+
+			if !rdy {
+				ready = false
+			}
 		}
 	}
 
-	return changed, nil
+	return changed, ready, nil
 }
 
-func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspectorInterface.Inspector, name string, expected *schedulerApi.ArangoProfile) (bool, error) {
+func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspectorInterface.Inspector, name string, expected *schedulerApi.ArangoProfile) (bool, bool, error) {
 	arangoProfiles := cachedStatus.ArangoProfileModInterface().V1Beta1()
 
 	if expected != nil && expected.GetName() != name {
-		return false, errors.Errorf("Name mismatch")
+		return false, false, errors.Errorf("Name mismatch")
 	}
 
 	if c, err := cachedStatus.ArangoProfile().V1Beta1(); err == nil {
 		if s, ok := c.GetSimple(name); !ok {
 			if expected != nil {
 				if _, err := arangoProfiles.Create(ctx, expected, meta.CreateOptions{}); err != nil {
-					return false, err
+					return false, false, err
 				}
 
-				return true, nil
+				return true, false, nil
 			}
+
+			return false, false, nil
 		} else {
 			if expected == nil {
 				if err := arangoProfiles.Delete(ctx, s.GetName(), meta.DeleteOptions{}); err != nil {
 					if !kerrors.IsNotFound(err) {
-						return false, err
+						return false, false, err
 					}
 				}
 
-				return true, nil
+				return true, false, nil
 			}
 			expectedChecksum, err := expected.Spec.Template.Checksum()
 			if err != nil {
-				return false, err
+				return false, false, err
 			}
 
 			currChecksum, err := s.Spec.Template.Checksum()
 			if err != nil {
-				return false, err
+				return false, false, err
 			}
 
 			if expected.Spec.Selectors == nil && s.Spec.Selectors != nil {
@@ -584,9 +609,9 @@ func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspec
 							patch.ItemRemove(patch.NewPath("spec", "selectors")),
 						}
 					}); err != nil {
-					return false, err
+					return false, false, err
 				} else if changed {
-					return true, nil
+					return true, false, nil
 				}
 			} else if !equality.Semantic.DeepEqual(expected.Spec.Selectors, s.Spec.Selectors) {
 				if _, changed, err := patcher.Patcher[*schedulerApi.ArangoProfile](ctx, arangoProfiles, s, meta.PatchOptions{},
@@ -595,9 +620,9 @@ func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspec
 							patch.ItemReplace(patch.NewPath("spec", "selectors"), expected.Spec.Selectors),
 						}
 					}); err != nil {
-					return false, err
+					return false, false, err
 				} else if changed {
-					return true, nil
+					return true, false, nil
 				}
 			}
 
@@ -608,13 +633,16 @@ func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspec
 							patch.ItemReplace(patch.NewPath("spec", "template"), util.TypeOrDefault(expected.Spec.Template)),
 						}
 					}); err != nil {
-					return false, err
+					return false, false, err
 				} else if changed {
-					return true, nil
+					return true, false, nil
 				}
 			}
+
+			return false, s.Status.Conditions.IsTrue(schedulerApi.ReadyCondition), nil
 		}
 	}
 
-	return false, nil
+	// Permission denied, nothing to do
+	return false, true, nil
 }

@@ -536,7 +536,7 @@ ifdef PUSHIMAGES
 	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
 		--build-arg "IMAGE=$(BASEUBIIMAGE)" \
-		--platform l$(DOCKER_PLATFORMS) --push -t $(OPERATORUBIIMAGE) .
+		--platform $(DOCKER_PLATFORMS) --push -t $(OPERATORUBIIMAGE) .
 else
 	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
