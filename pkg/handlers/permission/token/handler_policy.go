@@ -112,6 +112,8 @@ func (h *handler) HandleArangoDBPolicy(ctx context.Context, item operation.Item,
 			return false, err
 		}
 
+		logger.Str("name", st.Policy.GetName()).Info("Policy gone")
+
 		st.Policy = nil
 		return true, operator.Reconcile("Policy gone")
 	}

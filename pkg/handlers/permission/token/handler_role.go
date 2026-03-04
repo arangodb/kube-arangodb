@@ -128,6 +128,8 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 			return false, err
 		}
 
+		logger.Str("name", st.Role.GetName()).Info("Role gone")
+
 		st.Role = nil
 		return true, operator.Reconcile("Role gone")
 	}

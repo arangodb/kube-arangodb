@@ -294,7 +294,7 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 		ports, selectors := k8sutil.ExporterServiceDetails(deploymentName)
 
-		name, _, err := k8sutil.CreateService(ctxChild, k8sutil.CreateExporterClientServiceName(deploymentName), cachedStatus, ports, selectors, apiObject.AsOwner())
+		name, _, err := k8sutil.CreateService(ctxChild, k8sutil.CreateExporterClientServiceName(deploymentName), cachedStatus, ports, selectors, apiObject.AsOwner(), patcher.PatchServiceClusterIP(core.ClusterIPNone))
 		if err != nil {
 			log.Err(err).Debug("Failed to create %s exporter service", name)
 			return errors.WithStack(err)
@@ -326,8 +326,23 @@ func (r *Resources) EnsureServices(ctx context.Context, cachedStatus inspectorIn
 
 		ports, selectors := k8sutil.SidecarServiceDetails(deploymentName)
 
-		name, _, err := k8sutil.CreateService(ctxChild, k8sutil.CreateSidecarClientServiceName(deploymentName), cachedStatus, ports, selectors, apiObject.AsOwner())
+		name, _, err := k8sutil.CreateService(ctxChild, k8sutil.CreateSidecarClientServiceName(deploymentName), cachedStatus, ports, selectors, apiObject.AsOwner(), patcher.PatchServiceClusterIP(""))
 		if err != nil {
+			if errors.IsType[patcher.ImmutableError](err) {
+				if svc, ok := cachedStatus.Service().V1().GetSimple(k8sutil.CreateSidecarClientServiceName(deploymentName)); ok {
+					ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+					defer cancel()
+
+					if err := cachedStatus.ServicesModInterface().V1().Delete(ctxChild, svc.GetName(), meta.DeleteOptions{
+						Preconditions: meta.NewUIDPreconditions(string(svc.GetUID())),
+					}); err != nil {
+						log.Err(err).Debug("Failed to remove %s sidecar service", svc.GetName())
+						return errors.WithStack(err)
+					}
+				}
+
+				return reconcileRequired.Reconcile(ctx)
+			}
 			log.Err(err).Debug("Failed to create %s sidecar service", name)
 			return errors.WithStack(err)
 		}

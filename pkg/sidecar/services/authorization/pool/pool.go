@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,14 +36,22 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/operations"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
-func NewPooler[T PoolerObject](connection cache.Object[arangodb.Collection]) Pooler[T] {
-	return &pooler[T]{
+const DefaultPoolerTimeout = 10 * time.Second
+
+func NewPooler[T PoolerObject](connection cache.Object[arangodb.Collection], interval time.Duration) Pooler[T] {
+	var z = &pooler[T]{
 		connection: connection,
 		state:      make(map[string]Document[T]),
 		index:      1,
+		interval:   interval,
 	}
+
+	go z.start(shutdown.Context())
+
+	return z
 }
 
 type PoolerObject interface {
@@ -65,6 +74,8 @@ type Pooler[T PoolerObject] interface {
 
 	Index() uint32
 
+	Ready() bool
+
 	Pool(start uint32) ([]OffsetItem[T], error)
 	Get() []OffsetItem[T]
 }
@@ -78,7 +89,44 @@ type pooler[T PoolerObject] struct {
 
 	connection cache.Object[arangodb.Collection]
 
+	last     time.Time
+	interval time.Duration
+
 	offset Offset[T]
+}
+
+func (p *pooler[T]) start(ctx context.Context) {
+	tickerT := time.NewTicker(p.interval)
+	defer tickerT.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+
+		}
+
+		if err := p.Refresh(ctx); err != nil {
+			logger.Err(err).Warn("Failed to refresh")
+			time.Sleep(125 * time.Millisecond)
+			continue
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-tickerT.C:
+			continue
+		}
+	}
+}
+
+func (p *pooler[T]) Ready() bool {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+
+	return time.Since(p.last) < p.interval*2
 }
 
 func (p *pooler[T]) Item(name string) (T, uint32, bool) {
@@ -141,16 +189,16 @@ func (p *pooler[T]) run(ctx context.Context, name string, action DocumentAction,
 		return util.Default[T](), 0, err
 	}
 
+	if err := p.refresh(ctx, col); err != nil {
+		return util.Default[T](), 0, err
+	}
+
 	res, err := operations.WithTransaction[Document[T]](ctx, col.Database(), arangodb.TransactionCollections{
 		Read:  []string{col.Name()},
 		Write: []string{col.Name()},
 	}, &arangodb.BeginTransactionOptions{}, operations.WithLock(col.Name(), func(ctx context.Context, c arangodb.Transaction, lock *operations.LockDocument) (Document[T], error) {
 		col, err := c.GetCollection(ctx, col.Name(), &arangodb.GetCollectionOptions{SkipExistCheck: true})
 		if err != nil {
-			return util.Default[Document[T]](), err
-		}
-
-		if err := p.refresh(ctx, col); err != nil {
 			return util.Default[Document[T]](), err
 		}
 

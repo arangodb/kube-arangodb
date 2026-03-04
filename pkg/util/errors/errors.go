@@ -117,6 +117,11 @@ func AnyOf(err error, targets ...error) bool {
 
 func Is(err, target error) bool { return errors.Is(err, target) }
 
+func IsType[T error](err error) bool {
+	_, ok := AsType[T](err)
+	return ok
+}
+
 func As(err error, target interface{}) bool { return errors.As(err, target) }
 
 func AsType[T error](err error) (T, bool) {

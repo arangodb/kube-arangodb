@@ -93,7 +93,7 @@ func (a *actionJWTClean) Start(ctx context.Context) (bool, error) {
 	}
 
 	p := patch.NewPatch()
-	p.ItemRemove(patch.NewPath("data", cleanToken))
+	p = p.ItemRemove(patch.NewPath("data", cleanToken))
 
 	patch, err := p.Marshal()
 	if err != nil {

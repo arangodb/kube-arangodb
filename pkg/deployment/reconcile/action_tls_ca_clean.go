@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ func (a *actionCleanTLSCACertificate) Start(ctx context.Context) (bool, error) {
 	}
 
 	p := patch.NewPatch()
-	p.ItemRemove(patch.NewPath("data", certChecksum))
+	p = p.ItemRemove(patch.NewPath("data", certChecksum))
 
 	patch, err := p.Marshal()
 	if err != nil {

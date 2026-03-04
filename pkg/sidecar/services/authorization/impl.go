@@ -40,11 +40,11 @@ func NewAuthorizer(client db.Database) svc.Handler {
 			CreateCollection("_policies", db.SourceCollectionProps("_users")).
 			WithUniqueIndex("policies_unique_sequence_index", "sequence").
 			WithTTLIndex("policies_deleted_index", 30*24*time.Hour, "deleted").
-			Get()),
+			Get(), pool.DefaultPoolerTimeout),
 		roles: pool.NewPooler[*sidecarSvcAuthzTypes.Role](client.
 			CreateCollection("_roles", db.SourceCollectionProps("_users")).
 			WithTTLIndex("roles_deleted_index", 30*24*time.Hour, "deleted").
-			Get()),
+			Get(), pool.DefaultPoolerTimeout),
 	}
 }
 
@@ -64,6 +64,9 @@ func (a *implementation) Name() string {
 }
 
 func (a *implementation) Health(ctx context.Context) svc.HealthState {
+	if !a.roles.Ready() || !a.policies.Ready() {
+		return svc.Unhealthy
+	}
 	return svc.Healthy
 }
 

@@ -382,7 +382,7 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 
 		return minInspectionInterval, nil
 	} else {
-		isUpToDate, reason := d.isUpToDateStatus(currentSpec.GetMode(), status)
+		isUpToDate, reason := d.isUpToDateStatus(currentSpec, status)
 
 		if !isUpToDate && status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 			if err = d.updateConditionWithHash(ctx, api.ConditionTypeUpToDate, false, reason, "There are pending operations in plan or members are in restart process", *v); err != nil {
@@ -449,7 +449,7 @@ func (d *Deployment) sendCIUpdate() {
 	}
 }
 
-func (d *Deployment) isUpToDateStatus(mode api.DeploymentMode, status api.DeploymentStatus) (upToDate bool, reason string) {
+func (d *Deployment) isUpToDateStatus(spec api.DeploymentSpec, status api.DeploymentStatus) (upToDate bool, reason string) {
 	if !status.IsPlanEmpty() && !status.Conditions.IsTrue(api.ConditionTypeUpToDate) {
 		return false, "Plan is not empty"
 	}
@@ -490,6 +490,12 @@ func (d *Deployment) isUpToDateStatus(mode api.DeploymentMode, status api.Deploy
 		return
 	}
 
+	if expected := features.GatewayIntegration().ImageSupported(status.CurrentImage) && spec.Sidecar.IsEnabled(spec.IsGatewayEnabled()); expected != status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		upToDate = false
+		reason = "Gateway Enablement condition is invalid"
+		return
+	}
+
 	for _, m := range status.Members.AsList() {
 		member := m.Member
 		if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {
@@ -502,7 +508,7 @@ func (d *Deployment) isUpToDateStatus(mode api.DeploymentMode, status api.Deploy
 			reason = "PVC is resizing"
 			return
 		}
-		if mode != api.DeploymentModeActiveFailover {
+		if spec.GetMode() != api.DeploymentModeActiveFailover {
 			if !member.Conditions.IsTrue(api.ConditionTypeReady) {
 				upToDate = false
 				reason = "Not all members are ready"

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
 )
 
 func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owner meta.OwnerReference, obj *sharedApi.ServiceAccount, name, namespace string, role, clusterRole []rbac.PolicyRule) (bool, error) {
@@ -203,7 +204,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 
 			if !equality.Semantic.DeepEqual(r.Rules, role) {
 				// There is change in the roles
-				if _, err := util.WithKubernetesPatch[*rbac.Role](ctx, obj.Namespaced.Role.GetName(), client.RbacV1().Roles(namespace), patch.ItemReplace(patch.NewPath("rules"), role)); err != nil {
+				if _, err := patcher.WithKubernetesPatch[*rbac.Role](ctx, obj.Namespaced.Role.GetName(), client.RbacV1().Roles(namespace), patch.ItemReplace(patch.NewPath("rules"), role)); err != nil {
 					if !kerrors.IsNotFound(err) {
 						return false, err
 					}
@@ -348,7 +349,7 @@ func EnsureServiceAccount(ctx context.Context, client kubernetes.Interface, owne
 
 			if !equality.Semantic.DeepEqual(r.Rules, clusterRole) {
 				// There is change in the roles
-				if _, err := util.WithKubernetesPatch[*rbac.ClusterRole](ctx, obj.Cluster.Role.GetName(), client.RbacV1().ClusterRoles(), patch.ItemReplace(patch.NewPath("rules"), clusterRole)); err != nil {
+				if _, err := patcher.WithKubernetesPatch[*rbac.ClusterRole](ctx, obj.Cluster.Role.GetName(), client.RbacV1().ClusterRoles(), patch.ItemReplace(patch.NewPath("rules"), clusterRole)); err != nil {
 					if !kerrors.IsNotFound(err) {
 						return false, err
 					}
