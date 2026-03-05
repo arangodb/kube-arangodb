@@ -26,6 +26,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 type ProfileTemplates []*ProfileTemplate
@@ -57,22 +58,28 @@ func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
 
 	// Apply  ArangoSchedulerPod Spec
 	if err := t.GetPod().Apply(pod); err != nil {
-		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
+		return errors.Wrapf(err, "Error while rendering ArangoSchedulerPod")
+	}
+
+	for v := range t.Container.Containers {
+		if kresources.GetContainerIDByName(pod.Spec.Containers, v) == -1 {
+			pod.Spec.Containers = append(pod.Spec.Containers, core.Container{Name: v})
+		}
 	}
 
 	// Apply Generic Containers Spec
 	if err := t.GetContainer().ApplyGeneric(pod); err != nil {
-		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
+		return errors.Wrapf(err, "Error while rendering ArangoSchedulerPod")
 	}
 
 	// Apply Containers Spec
 	if err := t.GetContainer().ApplyContainers(pod); err != nil {
-		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
+		return errors.Wrapf(err, "Error while rendering ArangoSchedulerPod")
 	}
 
 	// Apply Default Containers Spec
 	if err := t.GetContainer().ApplyDefault(pod); err != nil {
-		return errors.Wrapf(err, "Error while rendering  ArangoSchedulerPod")
+		return errors.Wrapf(err, "Error while rendering ArangoSchedulerPod")
 	}
 
 	return nil
