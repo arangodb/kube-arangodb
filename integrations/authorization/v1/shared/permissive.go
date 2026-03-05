@@ -48,18 +48,23 @@ func (p permissive) Revision() uint64 {
 }
 
 func (p permissive) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
-	resp, err := p.parent.Evaluate(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
 	log := p.log.
+		Str("method", "Permissive.Evaluate").
 		Str("user", req.GetUser()).
 		Str("action", req.GetAction()).
 		Str("resource", req.GetResource()).
 		Strs("roles", req.GetRoles()...).
-		JSON("context", req.GetContext()).
-		Str("message", resp.GetMessage())
+		JSON("context", req.GetContext())
+
+	resp, err := p.parent.Evaluate(ctx, req)
+	if err != nil {
+		log.Err(err).Warn("Failed to evaluate permission")
+		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
+			Message: "Access granted",
+			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+		}, nil
+	}
+	log = log.Str("message", resp.GetMessage())
 
 	switch resp.GetEffect() {
 	case pbAuthorizationV1.AuthorizationV1Effect_Allow:

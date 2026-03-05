@@ -580,7 +580,7 @@ func (r *Resources) ensureArangoProfile(ctx context.Context, cachedStatus inspec
 				return true, false, nil
 			}
 
-			return false, false, nil
+			return false, true, nil
 		} else {
 			if expected == nil {
 				if err := arangoProfiles.Delete(ctx, s.GetName(), meta.DeleteOptions{}); err != nil {
