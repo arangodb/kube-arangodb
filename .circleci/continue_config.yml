@@ -17,17 +17,11 @@ executors:
   golang-executor:
     docker:
       - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.24.13
-        aws_auth:
-          oidc_role_arn: arn:aws:iam::889010145541:role/circleci-project-dev-kube-arangodb
-  machine-executor:
-    machine:
-      image: ubuntu-2204:current
-      docker_layer_caching: true
+        resource_class: arangodb/amd-xlarge-amd64
 
 jobs:
   check-code:
     executor: golang-executor
-    resource_class: xlarge
     environment:
       GOCACHE: "/tmp/go/cache"
       GOPATH: "/tmp/go/path"
@@ -104,7 +98,7 @@ jobs:
             - /tmp/go/cache
 
   manifests_verify:
-    executor: machine-executor
+    executor: golang-executor
     steps:
       - checkout
       - run:
