@@ -25,7 +25,6 @@ jobs:
     environment:
       GOCACHE: "/tmp/go/cache"
       GOPATH: "/tmp/go/path"
-      KUBECONFIG: "/tmp/go/config"
       GO111MODULES: off
       KEEP_GOPATH: 1
     steps:

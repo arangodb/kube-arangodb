@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,20 +18,37 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
+//go:build !testing
+
 package kconfig
 
 import (
+	"fmt"
+	"os"
+
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-const Kubeconfig util.EnvironmentVariable = "KUBECONFIG"
-
-// NewFileConfig loads config from path
-func NewFileConfig(path string) func() (*rest.Config, error) {
-	return func() (config *rest.Config, err error) {
-		return clientcmd.BuildConfigFromFlags("", path)
+// NewConfig loads config from KUBECONFIG or as incluster
+func NewConfig() (*rest.Config, error) {
+	// If KUBECONFIG is defined use this variable
+	if kubeconfig, ok := Kubeconfig.Lookup(); ok {
+		return clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
+
+	// Try to load incluster config
+	if cfg, err := rest.InClusterConfig(); err == nil {
+		return cfg, nil
+	} else if err != rest.ErrNotInCluster {
+		return nil, err
+	}
+
+	// At the end try to use default path
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	return clientcmd.BuildConfigFromFlags("", fmt.Sprintf("%s/.kube/config", home))
 }
