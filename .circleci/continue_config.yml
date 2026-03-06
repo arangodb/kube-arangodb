@@ -17,7 +17,7 @@ executors:
   golang-executor:
     docker:
       - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.24.13
-        resource_class: arangodb/amd-xlarge-amd64
+    resource_class: arangodb/amd-2xlarge-amd64
 
 jobs:
   check-code:
