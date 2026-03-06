@@ -29,6 +29,7 @@ jobs:
       KEEP_GOPATH: 1
     steps:
       - run: apt-get update && apt-get install -y unzip
+      - checkout
       - run:
           name: Run Vendor
           command: make vendor tools-min init
