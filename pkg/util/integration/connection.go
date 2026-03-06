@@ -59,7 +59,7 @@ func NewIntegrationConnection() (grpc.ClientConnInterface, error) {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
-	opts = append(opts, authentication.NewInterceptorClientOptions(authentication.NewArangoTokenAuthentication())...)
+	opts = append(opts, authentication.NewInterceptorClientOptions(authentication.NewEnvAuthentication())...)
 
 	return grpc.NewClient(addr, opts...)
 }

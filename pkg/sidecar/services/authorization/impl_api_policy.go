@@ -32,13 +32,12 @@ import (
 )
 
 func (a *implementation) APIGetPolicy(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse, error) {
-	if identity := authenticator.GetIdentity(ctx); identity == nil {
-		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
-	} else {
-		// Restrict only for superuser for now
-		if identity.User != nil {
-			return nil, status.Error(codes.Unauthenticated, "Only super-user allowed")
-		}
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:GetPolicy", request.GetName()); err != nil {
+		return nil, err
 	}
 
 	policy, index, ok := a.policies.Item(request.GetName())
@@ -54,13 +53,12 @@ func (a *implementation) APIGetPolicy(ctx context.Context, request *sidecarSvcAu
 }
 
 func (a *implementation) APIDeletePolicy(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse, error) {
-	if identity := authenticator.GetIdentity(ctx); identity == nil {
-		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
-	} else {
-		// Restrict only for superuser for now
-		if identity.User != nil {
-			return nil, status.Error(codes.Unauthenticated, "Only super-user allowed")
-		}
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:DeletePolicy", request.GetName()); err != nil {
+		return nil, err
 	}
 
 	offset, err := a.policies.Delete(ctx, request.GetName())
@@ -80,13 +78,12 @@ func (a *implementation) APIDeletePolicy(ctx context.Context, request *sidecarSv
 }
 
 func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse, error) {
-	if identity := authenticator.GetIdentity(ctx); identity == nil {
-		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
-	} else {
-		// Restrict only for superuser for now
-		if identity.User != nil {
-			return nil, status.Error(codes.Unauthenticated, "Only super-user allowed")
-		}
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:CreatePolicy", request.GetName()); err != nil {
+		return nil, err
 	}
 
 	if item := request.GetItem(); item == nil {
@@ -111,13 +108,12 @@ func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSv
 }
 
 func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse, error) {
-	if identity := authenticator.GetIdentity(ctx); identity == nil {
-		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
-	} else {
-		// Restrict only for superuser for now
-		if identity.User != nil {
-			return nil, status.Error(codes.Unauthenticated, "Only super-user allowed")
-		}
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:UpdatePolicy", request.GetName()); err != nil {
+		return nil, err
 	}
 
 	if item := request.GetItem(); item == nil {

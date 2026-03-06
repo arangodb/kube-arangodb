@@ -23,25 +23,31 @@ package sidecar
 import (
 	"github.com/spf13/cobra"
 
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
+	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc/authentication"
 )
 
 func init() {
-	global.MustRegister("authorization", registerAuthorization)
-}
+	global.MustRegister("authorization-client", func(cmd *cobra.Command) (svc.Handler, bool, error) {
+		if p, err := flagAuth.Get(cmd); err != nil {
+			return nil, false, err
+		} else if p == "" {
+			return nil, false, nil
+		}
 
-func registerAuthorization(cmd *cobra.Command) (svc.Handler, bool, error) {
-	p, err := flagAuth.Get(cmd)
-	if err != nil {
-		return nil, false, err
-	} else if p == "" {
-		return nil, false, nil
-	}
+		p, err := flagAuthMode.Get(cmd)
+		if err != nil {
+			return nil, false, err
+		}
 
-	c := arangoDBDatabaseClient(cmd)
+		authz, err := pbImplAuthorizationV1.New(cmd.Context(), pbImplAuthorizationV1.NewConfiguration().With(func(in pbImplAuthorizationV1.Configuration) pbImplAuthorizationV1.Configuration {
+			in.Type = pbImplAuthorizationV1.ConfigurationType(p)
+			return in
+		}))
+		if err != nil {
+			return nil, false, err
+		}
 
-	return sidecarSvcAuthz.NewAuthorizer(db.NewClient(c).Database("_system"), authentication.NewFolderAuthentication(p)), true, nil
+		return authz, true, nil
+	})
 }

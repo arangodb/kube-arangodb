@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
+	"github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -46,9 +47,17 @@ type collection struct {
 func (c collection) WithUniqueIndex(name string, path ...string) Collection {
 	return collection{
 		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
-			col, err := c.cache.Get(ctx)
+			col, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
+			}
+
+			if _, err := col.Index(ctx, name); err != nil {
+				if !shared.IsNotFound(err) {
+					return nil, 0, err
+				}
+			} else {
+				return col, ttl, nil
 			}
 
 			if _, _, err := col.EnsurePersistentIndex(ctx, path, &arangodb.CreatePersistentIndexOptions{
@@ -58,7 +67,7 @@ func (c collection) WithUniqueIndex(name string, path ...string) Collection {
 				return nil, 0, err
 			}
 
-			return col, DefaultTTL, nil
+			return col, ttl, nil
 		}),
 	}
 }
@@ -66,9 +75,17 @@ func (c collection) WithUniqueIndex(name string, path ...string) Collection {
 func (c collection) WithTTLIndex(name string, ttl time.Duration, path ...string) Collection {
 	return collection{
 		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
-			col, err := c.cache.Get(ctx)
+			col, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
+			}
+
+			if _, err := col.Index(ctx, name); err != nil {
+				if !shared.IsNotFound(err) {
+					return nil, 0, err
+				}
+			} else {
+				return col, ttl, nil
 			}
 
 			if _, _, err := col.EnsureTTLIndex(ctx, path, int(ttl/time.Second), &arangodb.CreateTTLIndexOptions{
@@ -77,7 +94,7 @@ func (c collection) WithTTLIndex(name string, ttl time.Duration, path ...string)
 				return nil, 0, err
 			}
 
-			return col, DefaultTTL, nil
+			return col, ttl, nil
 		}),
 	}
 }
@@ -85,12 +102,12 @@ func (c collection) WithTTLIndex(name string, ttl time.Duration, path ...string)
 func (c collection) Database() Database {
 	return database{
 		cache: cache.NewObject(func(ctx context.Context) (arangodb.Database, time.Duration, error) {
-			col, err := c.cache.Get(ctx)
+			col, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
 			}
 
-			return col.Database(), DefaultTTL, nil
+			return col.Database(), ttl, nil
 		}),
 	}
 }

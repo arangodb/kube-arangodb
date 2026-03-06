@@ -36,8 +36,8 @@ import (
 )
 
 func (a *implementation) PoolPolicyChanges(request *sidecarSvcAuthzDefinition.AuthorizationPoolRequest, g grpc.ServerStreamingServer[sidecarSvcAuthzDefinition.AuthorizationPoolPolicyResponse]) error {
-	if authenticator.GetIdentity(g.Context()) == nil {
-		return status.Error(codes.Unauthenticated, "Unauthenticated")
+	if err := a.Health(g.Context()).Require(); err != nil {
+		return err
 	}
 
 	index := request.GetStart()

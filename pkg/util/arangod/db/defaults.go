@@ -22,4 +22,4 @@ package db
 
 import "time"
 
-const DefaultTTL = time.Hour
+const DefaultTTL = time.Minute

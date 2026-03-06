@@ -205,6 +205,7 @@ func (c *client) run(ctx context.Context) {
 	for {
 		if err := c.runE(ctx); err != nil {
 			logger.Err(err).Warn("Authorization pool client error")
+			time.Sleep(time.Second)
 		}
 
 		select {
@@ -285,9 +286,9 @@ func (c *client) runPoliciesE(ctx context.Context) error {
 				policies[item.GetName()] = item.GetItem()
 				index = item.GetIndex()
 			}
-		}
 
-		c.setPolicies(policies)
+			c.setPolicies(policies)
+		}
 	}
 }
 
@@ -346,8 +347,8 @@ func (c *client) runRolesE(ctx context.Context) error {
 				roles[item.GetName()] = item.GetItem()
 				index = item.GetIndex()
 			}
-		}
 
-		c.setRoles(roles)
+			c.setRoles(roles)
+		}
 	}
 }

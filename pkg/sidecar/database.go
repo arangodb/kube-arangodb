@@ -29,6 +29,7 @@ import (
 	"github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/client"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
 )
@@ -39,7 +40,7 @@ func arangoDBDatabaseAuth(cmd *cobra.Command) cache.Object[client.Authentication
 		if err != nil {
 			return nil, 0, err
 		}
-		return client.FolderArangoDBAuthentication(path), 30 * time.Second, nil
+		return client.FolderArangoDBAuthentication(path), db.DefaultTTL, nil
 	})
 }
 
@@ -65,6 +66,6 @@ func arangoDBDatabaseClient(cmd *cobra.Command) cache.Object[arangodb.Client] {
 		if err != nil {
 			return nil, 0, err
 		}
-		return client, time.Hour, nil
+		return client, db.DefaultTTL, nil
 	})
 }

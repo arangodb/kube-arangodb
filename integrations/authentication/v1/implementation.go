@@ -123,7 +123,6 @@ func (i *implementation) Validate(ctx context.Context, request *pbAuthentication
 			IsValid: true,
 			Details: &pbAuthenticationV1.ValidateResponseDetails{
 				Lifetime: durationpb.New(DefaultTokenMaxTTL),
-				User:     DefaultAdminUser,
 			},
 		}, nil
 	}
@@ -161,7 +160,6 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 
 		return &pbAuthenticationV1.CreateTokenResponse{
 			Lifetime: durationpb.New(DefaultTokenMaxTTL),
-			User:     DefaultAdminUser,
 			Token:    "",
 		}, nil
 	}
@@ -202,14 +200,14 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		return nil, err
 	}
 
-	user, roles, _, err := i.extractTokenDetails(cache, signedToken)
+	newUser, roles, _, err := i.extractTokenDetails(cache, signedToken)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pbAuthenticationV1.CreateTokenResponse{
 		Lifetime: durationpb.New(duration),
-		User:     user,
+		User:     newUser,
 		Token:    signedToken,
 		Roles:    roles,
 	}, nil
@@ -346,17 +344,17 @@ func (i *implementation) Logout(ctx context.Context, req *pbAuthenticationV1.Log
 	return &pbSharedV1.Empty{}, nil
 }
 
-func (i *implementation) extractTokenDetails(cache utilToken.Secret, t string) (string, []string, time.Duration, error) {
+func (i *implementation) extractTokenDetails(cache utilToken.Secret, t string) (*string, []string, time.Duration, error) {
 	// Let's check if token is signed properly
 	p, err := cache.Validate(t)
 	if err != nil {
-		return "", nil, 0, err
+		return nil, nil, 0, err
 	}
 
-	user := DefaultAdminUser
+	var user *string
 	if v, ok := p.Claims()[utilToken.ClaimPreferredUsername]; ok {
 		if s, ok := v.(string); ok {
-			user = s
+			user = &s
 		}
 	}
 

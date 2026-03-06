@@ -22,11 +22,16 @@ package svc
 
 import (
 	"context"
+	"sync"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	imHealth "google.golang.org/grpc/health"
 	pbHealth "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/status"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type HealthState int
@@ -36,6 +41,27 @@ const (
 	Degraded
 	Healthy
 )
+
+func (h HealthState) String() string {
+	switch h {
+	case Unhealthy:
+		return "unhealthy"
+	case Degraded:
+		return "degraded"
+	case Healthy:
+		return "healthy"
+	default:
+		return "unhealthy"
+	}
+}
+
+func (h HealthState) Require() error {
+	if h == Healthy {
+		return nil
+	}
+
+	return status.Error(codes.Unavailable, "service is not healthy")
+}
 
 type HealthType int
 
@@ -69,9 +95,15 @@ type health struct {
 
 	t HealthType
 	*imHealth.Server
+
+	health map[string]HealthState
+	lock   sync.Mutex
 }
 
 func (h *health) Update(key string, state HealthState) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	healthState := pbHealth.HealthCheckResponse_UNKNOWN
 
 	switch h.t {
@@ -92,7 +124,24 @@ func (h *health) Update(key string, state HealthState) {
 	}
 
 	h.SetServingStatus(key, healthState)
-	h.SetServingStatus("", pbHealth.HealthCheckResponse_SERVING)
+	if v, ok := h.health[key]; ok && v == state {
+		return
+	}
+
+	h.health[key] = state
+
+	l := logger
+	for k, v := range h.health {
+		l = l.Str(k, v.String())
+	}
+
+	if v := util.MapValues(h.health); util.ContainsList(v, Unhealthy) || util.ContainsList(v, Degraded) {
+		h.SetServingStatus("", pbHealth.HealthCheckResponse_NOT_SERVING)
+		l.Warn("Health check unhealthy")
+	} else {
+		h.SetServingStatus("", pbHealth.HealthCheckResponse_SERVING)
+		l.Info("Health check healthy")
+	}
 }
 
 func (h *health) Name() string {
@@ -115,6 +164,7 @@ func NewHealthService(cfg Configuration, t HealthType, handlers ...Handler) (Hea
 	health := &health{
 		Server: imHealth.NewServer(),
 		t:      t,
+		health: make(map[string]HealthState),
 	}
 
 	var h []Handler

@@ -65,7 +65,7 @@ func FolderArangoDBAuthentication(path string) Authentication {
 			return nil, false, err
 		}
 
-		jwt, err := utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb"), utilToken.WithRelativeDuration(time.Minute)).Sign(secret)
+		jwt, err := utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb"), utilToken.WithRelativeDuration(time.Hour)).Sign(secret)
 		if err != nil {
 			return nil, false, errors.WithStack(err)
 		}

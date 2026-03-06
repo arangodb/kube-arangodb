@@ -22,11 +22,46 @@ package authenticator
 
 import (
 	"context"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 )
 
 type Identity struct {
 	User  *string
 	Roles []string
+}
+
+func (i *Identity) EvaluatePermission(ctx context.Context, client cache.Object[pbAuthorizationV1.AuthorizationV1Client], action, resource string) error {
+	if i == nil {
+		return status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
+
+	c, err := client.Get(ctx)
+	if err != nil {
+		println(err.Error(), "ZZ")
+		return status.Error(codes.Internal, err.Error())
+	}
+
+	resp, err := c.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
+		User:     i.User,
+		Roles:    i.Roles,
+		Action:   action,
+		Resource: resource,
+	})
+	if err != nil {
+		println(err.Error(), "ZZ2")
+		return status.Error(codes.Internal, err.Error())
+	}
+
+	if resp.GetEffect() == pbAuthorizationV1.AuthorizationV1Effect_Allow {
+		return nil
+	}
+
+	return status.Error(codes.PermissionDenied, resp.GetMessage())
 }
 
 func GetIdentity(ctx context.Context) *Identity {

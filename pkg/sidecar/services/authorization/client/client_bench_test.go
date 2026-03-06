@@ -31,6 +31,7 @@ import (
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func generateTestingPolicies(size, statements int) map[string]*sidecarSvcAuthzTypes.Policy {
@@ -91,7 +92,7 @@ func BenchmarkClientEvaluationPerformance(b *testing.B) {
 
 	for b.Loop() {
 		res, err := p.Evaluate(b.Context(), &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-			User: "test",
+			User: util.NewType("test"),
 			Roles: []string{
 				fmt.Sprintf("role-%09d", rand.Intn(100)),
 			},

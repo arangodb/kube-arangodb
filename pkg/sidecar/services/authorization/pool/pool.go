@@ -307,6 +307,7 @@ func (p *pooler[T]) refresh(ctx context.Context, col arangodb.Collection) error 
 	}
 
 	p.offset.Trim(1024)
+	p.last = time.Now()
 
 	return nil
 }

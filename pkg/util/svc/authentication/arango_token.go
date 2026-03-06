@@ -22,10 +22,14 @@ package authentication
 
 import utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 
-func NewArangoTokenAuthentication() Authentication {
-	if v, ok := utilConstants.INTEGRATION_ARANGO_TOKEN.Lookup(); !ok {
-		return NewEmptyAuthentication()
-	} else {
+func NewEnvAuthentication() Authentication {
+	if v, ok := utilConstants.INTEGRATION_ARANGO_TOKEN.Lookup(); ok {
 		return NewTokenFileAuthentication(v)
 	}
+
+	if v, ok := utilConstants.INTEGRATION_ARANGO_JWT_FOLDER.Lookup(); ok {
+		return NewFolderAuthentication(v)
+	}
+
+	return NewEmptyAuthentication()
 }

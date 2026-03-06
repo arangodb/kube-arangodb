@@ -18,30 +18,26 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package sidecar
+package v1
 
 import (
-	"github.com/spf13/cobra"
+	"context"
+	"time"
 
-	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization"
-	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
+	"google.golang.org/grpc"
+
+	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc/authentication"
 )
 
-func init() {
-	global.MustRegister("authorization", registerAuthorization)
-}
+func ServiceClient(svc svc.Service, opts ...grpc.DialOption) cache.Object[pbAuthorizationV1.AuthorizationV1Client] {
+	return cache.NewObject[pbAuthorizationV1.AuthorizationV1Client](func(ctx context.Context) (pbAuthorizationV1.AuthorizationV1Client, time.Duration, error) {
+		conn, err := svc.Dial(opts...)
+		if err != nil {
+			return nil, 0, err
+		}
 
-func registerAuthorization(cmd *cobra.Command) (svc.Handler, bool, error) {
-	p, err := flagAuth.Get(cmd)
-	if err != nil {
-		return nil, false, err
-	} else if p == "" {
-		return nil, false, nil
-	}
-
-	c := arangoDBDatabaseClient(cmd)
-
-	return sidecarSvcAuthz.NewAuthorizer(db.NewClient(c).Database("_system"), authentication.NewFolderAuthentication(p)), true, nil
+		return pbAuthorizationV1.NewAuthorizationV1Client(conn), time.Hour * 24 * 365, nil
+	})
 }

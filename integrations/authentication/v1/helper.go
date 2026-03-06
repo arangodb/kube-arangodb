@@ -24,14 +24,16 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/grpc"
+
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func ServiceClient(svc svc.Service) cache.Object[pbAuthenticationV1.AuthenticationV1Client] {
+func ServiceClient(svc svc.Service, opts ...grpc.DialOption) cache.Object[pbAuthenticationV1.AuthenticationV1Client] {
 	return cache.NewObject[pbAuthenticationV1.AuthenticationV1Client](func(ctx context.Context) (pbAuthenticationV1.AuthenticationV1Client, time.Duration, error) {
-		conn, err := svc.Dial()
+		conn, err := svc.Dial(opts...)
 		if err != nil {
 			return nil, 0, err
 		}

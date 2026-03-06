@@ -43,6 +43,7 @@ func Register() (*cobra.Command, error) {
 		flagGatewayAddress,
 		flagKeyfile,
 		flagAuth,
+		flagAuthMode,
 		flagHealthAddress,
 		flagArangodb,
 	); err != nil {

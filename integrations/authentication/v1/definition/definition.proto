@@ -102,7 +102,7 @@ message ValidateResponseDetails {
   google.protobuf.Duration lifetime = 1;
 
   // user returns the User used in the Token. If a user is not specified, `root` is returned
-  string user = 2;
+  optional string user = 2;
 
   // roles specify list of the roles assigned to the token
   repeated string roles = 3;
@@ -126,7 +126,7 @@ message CreateTokenResponse {
   google.protobuf.Duration lifetime = 1;
 
   // user returns the User used in the Token
-  string user = 2;
+  optional string user = 2;
 
   // token returns the Token as a string
   string token = 3;

@@ -52,22 +52,27 @@ func (o *objectHash[T]) Init(ctx context.Context) error {
 }
 
 func (o *objectHash[T]) Get(ctx context.Context) (T, error) {
+	v, _, err := o.GetWithTTL(ctx)
+	return v, err
+}
+
+func (o *objectHash[T]) GetWithTTL(ctx context.Context) (T, time.Duration, error) {
 	o.lock.Lock()
 	defer o.lock.Unlock()
 
 	if time.Now().After(o.eol) || o.eol.IsZero() {
 		obj, hash, ttl, err := o.caller(ctx, o.hash)
 		if err != nil {
-			return util.Default[T](), err
+			return util.Default[T](), 0, err
 		}
 
 		if ttl <= 0 {
-			return obj, nil
+			return obj, 0, nil
 		}
 
 		if v := o.hash; v != nil && hash == *v {
 			o.eol = time.Now().Add(ttl)
-			return o.obj, nil
+			return o.obj, ttl, nil
 		}
 
 		o.obj = obj
@@ -75,5 +80,5 @@ func (o *objectHash[T]) Get(ctx context.Context) (T, error) {
 		o.hash = &hash
 	}
 
-	return o.obj, nil
+	return o.obj, time.Until(o.eol), nil
 }
