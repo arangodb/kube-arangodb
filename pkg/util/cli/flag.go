@@ -245,6 +245,10 @@ func (f Flag[T]) Env() string {
 }
 
 func (f Flag[T]) GetFromEnv() (T, error) {
+	if !f.EnvEnabled {
+		return f.Default, nil
+	}
+
 	v, ok := os.LookupEnv(f.Env())
 	if !ok {
 		return f.Default, nil

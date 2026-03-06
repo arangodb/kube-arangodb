@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,30 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package constants
+//go:build testing
 
-func NamespaceWithDefault(def string) string {
-	if v, ok := Namespace(); ok {
-		return v
+package kconfig
+
+import (
+	"fmt"
+	"os"
+
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+)
+
+// NewConfig loads config from KUBECONFIG or as incluster
+func NewConfig() (*rest.Config, error) {
+	// If KUBECONFIG is defined use this variable
+	if kubeconfig, ok := Kubeconfig.Lookup(); ok {
+		return clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
 
-	return def
+	// At the end try to use default path
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+
+	return clientcmd.BuildConfigFromFlags("", fmt.Sprintf("%s/.kube/config", home))
 }
