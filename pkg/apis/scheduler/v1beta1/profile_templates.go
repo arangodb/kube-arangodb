@@ -61,9 +61,11 @@ func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
 		return errors.Wrapf(err, "Error while rendering ArangoSchedulerPod")
 	}
 
-	for v := range t.Container.Containers {
-		if kresources.GetContainerIDByName(pod.Spec.Containers, v) == -1 {
-			pod.Spec.Containers = append(pod.Spec.Containers, core.Container{Name: v})
+	if c := t.GetContainer(); c != nil {
+		for v := range c.Containers {
+			if kresources.GetContainerIDByName(pod.Spec.Containers, v) == -1 {
+				pod.Spec.Containers = append(pod.Spec.Containers, core.Container{Name: v})
+			}
 		}
 	}
 

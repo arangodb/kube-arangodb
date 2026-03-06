@@ -47,7 +47,7 @@ func MergeVolumeMounts(in []core.VolumeMount, envs ...core.VolumeMount) []core.V
 
 	for id := range envs {
 		if nid := util.ListIndex(out, func(mount core.VolumeMount) bool {
-			return mount.Name == envs[id].Name
+			return mount.Name == envs[id].Name && mount.MountPath == envs[id].MountPath
 		}); nid == -1 {
 			out = append(out, envs[id])
 		} else {
