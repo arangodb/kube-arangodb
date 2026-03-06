@@ -29,25 +29,9 @@ jobs:
       KEEP_GOPATH: 1
     steps:
       - run: apt-get update && apt-get install -y unzip
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - checkout
-      - run:
-          name: Calculate cache
-          command: bash ./scripts/cache.sh .
-      - restore_cache:
-          keys:
-            - build-mod-{{ checksum ".checksum.mod" }}
-      - restore_cache:
-          keys:
-            - build-code-{{ checksum ".checksum.mod" }}
       - run:
           name: Run Vendor
           command: make vendor tools-min init
-      - save_cache:
-          key: build-mod-{{ checksum ".checksum.mod" }}
-          paths:
-            - /tmp/go/path
       - run:
           name: License check
           command: |
@@ -92,10 +76,6 @@ jobs:
               exit 0
             fi
             make ci-check
-      - save_cache:
-          key: build-code-{{ checksum ".checksum.mod" }}
-          paths:
-            - /tmp/go/cache
 
   manifests_verify:
     executor: golang-executor
