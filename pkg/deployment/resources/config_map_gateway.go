@@ -56,6 +56,32 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to generate gateway config"))
 	}
 
+	services := r.renderServingServices(cachedStatus)
+
+	if len(services) == 0 {
+		return errors.Errorf("No services defined in configuration")
+	}
+
+	if r.context.GetStatus().Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		cfg.Destinations[utilConstants.ManagementDestination] = gateway.ConfigDestination{
+			Type:  util.NewType(util.BoolSwitch(r.context.GetSpec().TLS.IsSecure(), gateway.ConfigDestinationTypeHTTPS, gateway.ConfigDestinationTypeHTTP)),
+			Match: util.NewType(gateway.ConfigMatchPrefix),
+			Path:  util.NewType(utilConstants.ManagementDestination),
+			AuthExtension: &gateway.ConfigAuthZExtension{
+				AuthZExtension: map[string]string{
+					pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordFalse,
+					pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
+				},
+			},
+			Targets: util.FormatList(services, func(a string) gateway.ConfigDestinationTarget {
+				return gateway.ConfigDestinationTargetEndpoint{
+					Host: a,
+					Port: shared.InternalSidecarContainerPortHTTP,
+				}
+			}),
+		}
+	}
+
 	cfg.Destinations[utilConstants.EnvoyIdentityDestination] = gateway.ConfigDestination{
 		Type:  util.NewType(gateway.ConfigDestinationTypeHTTP),
 		Match: util.NewType(gateway.ConfigMatchPath),
@@ -250,16 +276,7 @@ func (r *Resources) ensureGatewayConfigMap(ctx context.Context, cachedStatus ins
 	return nil
 }
 
-func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspector) (*pbInventoryV1.Inventory, gateway.Config, error) {
-	var inventory pbInventoryV1.Inventory
-
-	inventory.Networking = &pbInventoryV1.InventoryNetworking{}
-	inventory.Platform = &pbInventoryV1.InventoryPlatform{}
-
-	deploymentName := r.context.GetAPIObject().GetName()
-
-	log := r.log.Str("section", "gateway-config-render")
-
+func (r *Resources) renderServingServices(cachedStatus inspectorInterface.Inspector) []string {
 	spec := r.context.GetSpec()
 
 	var services []string
@@ -268,12 +285,12 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 
 		member, ok := cachedStatus.ArangoMember().V1().GetSimple(memberName)
 		if !ok {
-			return nil, gateway.Config{}, errors.Errorf("Member %s not found", memberName)
+			continue
 		}
 
 		svc, ok := cachedStatus.Service().V1().GetSimple(member.GetName())
 		if !ok {
-			return nil, gateway.Config{}, errors.Errorf("Service %s not found", member.GetName())
+			continue
 		}
 
 		if spec.CommunicationMethod.Type() == api.DeploymentCommunicationMethodTypeIP &&
@@ -290,6 +307,23 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 	}
 
 	sort.Strings(services)
+
+	return services
+}
+
+func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspector) (*pbInventoryV1.Inventory, gateway.Config, error) {
+	var inventory pbInventoryV1.Inventory
+
+	inventory.Networking = &pbInventoryV1.InventoryNetworking{}
+	inventory.Platform = &pbInventoryV1.InventoryPlatform{}
+
+	deploymentName := r.context.GetAPIObject().GetName()
+
+	log := r.log.Str("section", "gateway-config-render")
+
+	spec := r.context.GetSpec()
+
+	services := r.renderServingServices(cachedStatus)
 
 	if len(services) == 0 {
 		return nil, gateway.Config{}, errors.Errorf("No services defined in configuration")

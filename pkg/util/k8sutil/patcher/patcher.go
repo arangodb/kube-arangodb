@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,11 +29,25 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 type Patch[T meta.Object] func(in T) []patch.Item
+
+func NewPatchList[T meta.Object](items ...Patch[T]) PatchList[T] {
+	return items
+}
+
+type PatchList[T meta.Object] []Patch[T]
+
+func (p PatchList[T]) Append(items ...Patch[T]) PatchList[T] {
+	z := make([]Patch[T], len(p)+len(items))
+	copy(z, p)
+	copy(z[len(p):], items)
+	return z
+}
 
 type Client[T meta.Object] interface {
 	generic.PatchInterface[T]
@@ -48,12 +62,9 @@ func Patcher[T meta.Object](ctx context.Context, client Client[T], in T, opts me
 		return util.Default[T](), false, nil
 	}
 
-	var items []patch.Item
-
-	for id := range functions {
-		if f := functions[id]; f != nil {
-			items = append(items, f(in)...)
-		}
+	items, err := Generate(in, functions...)
+	if err != nil {
+		return util.Default[T](), false, err
 	}
 
 	if len(items) == 0 {
@@ -73,6 +84,27 @@ func Patcher[T meta.Object](ctx context.Context, client Client[T], in T, opts me
 	} else {
 		return obj, true, nil
 	}
+}
+
+func Generate[T meta.Object](in T, functions ...Patch[T]) (items patch.Patch, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if v, ok := r.(error); ok {
+				err = v
+				return
+			}
+
+			err = errors.Errorf("Recovered from panic: %v", r)
+		}
+	}()
+
+	for id := range functions {
+		if f := functions[id]; f != nil {
+			items = append(items, f(in)...)
+		}
+	}
+
+	return
 }
 
 func Optional[T meta.Object](p Patch[T], enabled bool) Patch[T] {

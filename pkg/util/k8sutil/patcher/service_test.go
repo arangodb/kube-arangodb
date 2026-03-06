@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,8 +28,23 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
+
+func Test_Ports(t *testing.T) {
+	svc := &core.Service{}
+
+	diff, err := Generate(svc, NewPatchList(PatchServicePorts([]core.ServicePort{
+		{},
+	})).Append(PatchServiceClusterIP(core.ClusterIPNone))...)
+	require.NoError(t, err)
+
+	svc, err = patch.Object(svc, diff)
+	require.NoError(t, err)
+
+	require.Len(t, svc.Spec.Ports, 1)
+}
 
 func Test_Service(t *testing.T) {
 	c := tests.NewEmptyInspector(t)

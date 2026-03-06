@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ func (a *actionEncryptionKeyAdd) Start(ctx context.Context) (bool, error) {
 	}
 
 	p := patch.NewPatch()
-	p.ItemAdd(patch.NewPath("data", sha), base64.StdEncoding.EncodeToString(d))
+	p = p.ItemAdd(patch.NewPath("data", sha), base64.StdEncoding.EncodeToString(d))
 
 	patch, err := p.Marshal()
 	if err != nil {

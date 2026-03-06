@@ -24,7 +24,10 @@ import sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 
 const (
 	ReadyCondition               sharedApi.ConditionType = "Ready"
+	ReadyPolicyCondition         sharedApi.ConditionType = "ReadyPolicy"
+	ReadyRoleCondition           sharedApi.ConditionType = "ReadyRole"
 	DeploymentFoundCondition     sharedApi.ConditionType = "DeploymentFound"
 	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
+	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
 	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
 )

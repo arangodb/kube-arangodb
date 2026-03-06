@@ -100,7 +100,7 @@ func (a *actionJWTAdd) Start(ctx context.Context) (bool, error) {
 	}
 
 	p := patch.NewPatch()
-	p.ItemAdd(patch.NewPath("data", jwtSha), base64.StdEncoding.EncodeToString(jwt))
+	p = p.ItemAdd(patch.NewPath("data", jwtSha), base64.StdEncoding.EncodeToString(jwt))
 
 	patch, err := p.Marshal()
 	if err != nil {

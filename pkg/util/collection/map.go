@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -191,9 +191,9 @@ func getFieldPatch(mode api.LabelsMode, section string, expected map[string]stri
 		}
 		for e, v := range expected {
 			if a, ok := actual[e]; !ok {
-				p.ItemAdd(patch.NewPath("metadata", section, e), v)
+				p = p.ItemAdd(patch.NewPath("metadata", section, e), v)
 			} else if v != a {
-				p.ItemReplace(patch.NewPath("metadata", section, e), v)
+				p = p.ItemReplace(patch.NewPath("metadata", section, e), v)
 			}
 		}
 	case api.LabelsReplaceMode:
@@ -202,9 +202,9 @@ func getFieldPatch(mode api.LabelsMode, section string, expected map[string]stri
 		}
 		for e, v := range expected {
 			if a, ok := actual[e]; !ok {
-				p.ItemAdd(patch.NewPath("metadata", section, e), v)
+				p = p.ItemAdd(patch.NewPath("metadata", section, e), v)
 			} else if v != a {
-				p.ItemReplace(patch.NewPath("metadata", section, e), v)
+				p = p.ItemReplace(patch.NewPath("metadata", section, e), v)
 			}
 		}
 
@@ -216,7 +216,7 @@ func getFieldPatch(mode api.LabelsMode, section string, expected map[string]stri
 			}
 
 			if _, ok := expected[a]; !ok {
-				p.ItemRemove(patch.NewPath("metadata", section, a))
+				p = p.ItemRemove(patch.NewPath("metadata", section, a))
 			}
 		}
 	}
@@ -228,7 +228,7 @@ func getFieldPatch(mode api.LabelsMode, section string, expected map[string]stri
 	// Add map init
 	if actual == nil {
 		newP := patch.NewPatch()
-		newP.ItemAdd(patch.NewPath("metadata", section), []string{})
+		newP = newP.ItemAdd(patch.NewPath("metadata", section), []string{})
 		p = append(newP, p...)
 	}
 

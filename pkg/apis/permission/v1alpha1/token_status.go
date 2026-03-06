@@ -37,6 +37,12 @@ type ArangoPermissionTokenStatus struct {
 	// User keeps the ArangoDB User Reference
 	User *sharedApi.Object `json:"user,omitempty"`
 
+	// Role keeps the Role Reference
+	Role *sharedApi.Object `json:"role,omitempty"`
+
+	// Policy keeps the Policy Reference
+	Policy *sharedApi.Object `json:"policy,omitempty"`
+
 	// Secret keeps the Secret Reference
 	Secret *sharedApi.Object `json:"secret,omitempty"`
 

@@ -64,7 +64,7 @@ func NewIntegrationConnection() (grpc.ClientConnInterface, error) {
 	return grpc.NewClient(addr, opts...)
 }
 
-func NewIntegrationConnectionFromDeployment(client kubernetes.Interface, depl *api.ArangoDeployment, mods ...util.ModR[utilToken.Claims]) (grpc.ClientConnInterface, error) {
+func NewIntegrationConnectionFromDeployment(client kubernetes.Interface, depl *api.ArangoDeployment, mods ...util.ModR[utilToken.Claims]) (*grpc.ClientConn, error) {
 	spec := depl.GetAcceptedSpec()
 
 	if !depl.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {

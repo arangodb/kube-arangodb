@@ -81,6 +81,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/envoyproxy/go-control-plane/envoy v1.36.0
+	github.com/evanphx/json-patch v5.9.11+incompatible
 	github.com/go-logr/logr v1.4.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.1
@@ -136,7 +137,6 @@ require (
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
-	github.com/evanphx/json-patch v5.9.11+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

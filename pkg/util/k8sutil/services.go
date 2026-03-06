@@ -32,6 +32,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -83,9 +84,9 @@ func CreateAgentLeaderServiceName(deploymentName string) string {
 
 // CreateService
 func CreateService(ctx context.Context, svcName string, cachedStatus inspector.Inspector,
-	ports []core.ServicePort, selectors map[string]string, owner meta.OwnerReference) (string, bool, error) {
+	ports []core.ServicePort, selectors map[string]string, owner meta.OwnerReference, patches ...patcher.Patch[*core.Service]) (string, bool, error) {
 	if svc, exists := cachedStatus.Service().V1().GetSimple(svcName); exists {
-		if _, changed, err := patcher.Patcher[*core.Service](ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{}, patcher.PatchServiceSelector(selectors), patcher.PatchServicePorts(ports)); err != nil {
+		if _, changed, err := patcher.Patcher[*core.Service](ctx, cachedStatus.ServicesModInterface().V1(), svc, meta.PatchOptions{}, patcher.NewPatchList(patcher.PatchServiceSelector(selectors), patcher.PatchServicePorts(ports)).Append(patches...)...); err != nil {
 			return "", false, err
 		} else {
 			return svcName, changed, nil
@@ -97,13 +98,18 @@ func CreateService(ctx context.Context, svcName string, cachedStatus inspector.I
 			Name:   svcName,
 			Labels: selectors,
 		},
-		Spec: core.ServiceSpec{
-			ClusterIP: core.ClusterIPNone,
-			Ports:     ports,
-			Selector:  selectors,
-		},
 	}
 	AddOwnerRefToObject(svc.GetObjectMeta(), &owner)
+
+	apply, err := patcher.Generate(svc, patcher.NewPatchList(patcher.PatchServiceSelector(selectors), patcher.PatchServicePorts(ports)).Append(patches...)...)
+	if err != nil {
+		return "", false, err
+	}
+
+	svc, err = patch.Object(svc, apply)
+	if err != nil {
+		return "", false, err
+	}
 
 	if _, err := cachedStatus.ServicesModInterface().V1().Create(ctx, svc, meta.CreateOptions{}); kerrors.IsAlreadyExists(err) {
 		return svcName, false, nil

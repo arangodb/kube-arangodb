@@ -231,7 +231,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 			}
 
 			p := patch.NewPatch()
-			p.ItemAdd(patch.NewPath("data", utilConstants.ActiveJWTKey), util.SHA256(b))
+			p = p.ItemAdd(patch.NewPath("data", utilConstants.ActiveJWTKey), util.SHA256(b))
 
 			pdata, err := json.Marshal(p)
 			if err != nil {
@@ -254,7 +254,7 @@ func (r *Resources) ensureTokenSecretFolder(ctx context.Context, cachedStatus in
 			}
 
 			p := patch.NewPatch()
-			p.ItemAdd(patch.NewPath("data", utilConstants.SecretKeyToken), util.SHA256(b))
+			p = p.ItemAdd(patch.NewPath("data", utilConstants.SecretKeyToken), util.SHA256(b))
 
 			pdata, err := json.Marshal(p)
 			if err != nil {

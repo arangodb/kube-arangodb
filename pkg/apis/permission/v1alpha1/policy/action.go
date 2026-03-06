@@ -22,8 +22,7 @@ package policy
 
 import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/strings"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
 
 type Actions []Action
@@ -35,17 +34,5 @@ func (a Actions) Validate() error {
 type Action string
 
 func (a Action) Validate() error {
-	if z := strings.Split(string(a), ":"); len(z) != 2 {
-		return errors.Errorf("Invalid action '%s': expected format '<namespace>:<name>'", string(a))
-	} else {
-		if z[0] == "" {
-			return errors.Errorf("Invalid action '%s': empty namespace", string(a))
-		}
-
-		if z[1] == "" {
-			return errors.Errorf("Invalid action '%s': empty name", string(a))
-		}
-	}
-
-	return nil
+	return sidecarSvcAuthzTypes.ValidateAction(string(a))
 }

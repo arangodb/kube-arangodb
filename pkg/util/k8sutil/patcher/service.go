@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,6 +100,27 @@ func PatchServiceSelector(selector map[string]string) Patch[*core.Service] {
 		return []patch.Item{
 			patch.ItemReplace(patch.NewPath("spec", "selector"), selector),
 		}
+	}
+}
+
+func PatchServiceClusterIP(clusterIP string) Patch[*core.Service] {
+	return func(in *core.Service) []patch.Item {
+		if in.Spec.ClusterIP == clusterIP {
+			return nil
+		}
+
+		if in.Spec.ClusterIP == "" {
+			// Patch possible
+			return []patch.Item{
+				patch.ItemReplace(patch.NewPath("spec", "clusterIP"), clusterIP),
+			}
+		}
+
+		if clusterIP == "" && in.Spec.ClusterIP != core.ClusterIPNone {
+			return nil
+		}
+
+		panic(ImmutableError{})
 	}
 }
 

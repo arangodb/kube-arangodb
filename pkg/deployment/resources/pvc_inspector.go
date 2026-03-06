@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,9 +98,9 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 		if ownerUpdate(pvc.GetObjectMeta(), &owner) {
 			q := patch.NewPatch()
 			if f := pvc.ObjectMeta.OwnerReferences; len(f) == 0 {
-				q.Add(patch.ItemRemove(patch.NewPath("metadata", "ownerReferences")))
+				q = q.Add(patch.ItemRemove(patch.NewPath("metadata", "ownerReferences")))
 			} else {
-				q.Add(patch.ItemReplace(patch.NewPath("metadata", "ownerReferences"), pvc.ObjectMeta.OwnerReferences))
+				q = q.Add(patch.ItemReplace(patch.NewPath("metadata", "ownerReferences"), pvc.ObjectMeta.OwnerReferences))
 			}
 
 			d, err := q.Marshal()
@@ -133,9 +133,9 @@ func (r *Resources) InspectPVCs(ctx context.Context, cachedStatus inspectorInter
 			if r.ensurePVCFinalizers(pvc) {
 				q := patch.NewPatch()
 				if f := pvc.Finalizers; len(f) == 0 {
-					q.Add(patch.ItemRemove(patch.NewPath("metadata", "finalizers")))
+					q = q.Add(patch.ItemRemove(patch.NewPath("metadata", "finalizers")))
 				} else {
-					q.Add(patch.ItemReplace(patch.NewPath("metadata", "finalizers"), f))
+					q = q.Add(patch.ItemReplace(patch.NewPath("metadata", "finalizers"), f))
 				}
 
 				d, err := q.Marshal()

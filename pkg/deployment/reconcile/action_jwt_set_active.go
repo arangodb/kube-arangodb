@@ -92,16 +92,16 @@ func (a *actionJWTSetActive) Start(ctx context.Context) (bool, error) {
 	p := patch.NewPatch()
 	path := patch.NewPath("data", utilConstants.ActiveJWTKey)
 	if !active {
-		p.ItemAdd(path, base64.StdEncoding.EncodeToString(toActiveData))
+		p = p.ItemAdd(path, base64.StdEncoding.EncodeToString(toActiveData))
 	} else {
-		p.ItemReplace(path, base64.StdEncoding.EncodeToString(toActiveData))
+		p = p.ItemReplace(path, base64.StdEncoding.EncodeToString(toActiveData))
 	}
 
 	path = patch.NewPath("data", utilConstants.SecretKeyToken)
 	if !token {
-		p.ItemAdd(path, base64.StdEncoding.EncodeToString(toActiveData))
+		p = p.ItemAdd(path, base64.StdEncoding.EncodeToString(toActiveData))
 	} else {
-		p.ItemReplace(path, base64.StdEncoding.EncodeToString(toActiveData))
+		p = p.ItemReplace(path, base64.StdEncoding.EncodeToString(toActiveData))
 	}
 
 	patch, err := p.Marshal()

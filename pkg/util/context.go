@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,6 @@ import (
 	"context"
 	"time"
 
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
@@ -95,28 +91,6 @@ func WithContextTimeoutP4A3[P1, P2, P3, P4, A1, A2, A3 interface{}](ctx context.
 	defer c()
 
 	return f(nCtx, a1, a2, a3)
-}
-
-type PatchInterface[P1 meta.Object] interface {
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions, subresources ...string) (P1, error)
-}
-
-func WithKubernetesPatch[P1 meta.Object](ctx context.Context, obj string, client PatchInterface[P1], p ...patch.Item) (P1, error) {
-	if len(p) == 0 {
-		return Default[P1](), nil
-	}
-
-	parser := patch.Patch(p)
-
-	data, err := parser.Marshal()
-	if err != nil {
-		return Default[P1](), err
-	}
-
-	nCtx, c := context.WithTimeout(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get())
-	defer c()
-
-	return client.Patch(nCtx, obj, types.JSONPatchType, data, meta.PatchOptions{})
 }
 
 type ContextKey string

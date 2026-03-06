@@ -134,6 +134,9 @@ const (
 
 	// ConditionTypeGatewaySidecarEnabled indicates that the sidecar gateway is enabled.
 	ConditionTypeGatewaySidecarEnabled ConditionType = "GatewaySidecarEnabled"
+
+	// ConditionTypeProfilesReady indicates that the profiles are ready.
+	ConditionTypeProfilesReady ConditionType = "ProfilesReady"
 )
 
 // Condition represents one current condition of a deployment or deployment member.

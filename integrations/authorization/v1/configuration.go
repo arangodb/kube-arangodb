@@ -21,25 +21,36 @@
 package v1
 
 import (
+	"context"
+
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/integration"
 )
 
 type ConfigurationType string
 
 func (c ConfigurationType) Validate() error {
 	switch c {
-	case ConfigurationTypeAlways:
+	case ConfigurationTypeAlways, ConfigurationTypeCentral, ConfigurationTypeCentralPermissive:
 		return nil
 	default:
 		return errors.Errorf("Configuration type '%s' is not supported", string(c))
 	}
 }
 
+func (c ConfigurationType) String() string {
+	return string(c)
+}
+
 const (
-	ConfigurationTypeAlways ConfigurationType = "always"
+	ConfigurationTypeAlways            ConfigurationType = "always"
+	ConfigurationTypeCentral           ConfigurationType = "central"
+	ConfigurationTypeCentralPermissive ConfigurationType = "central-permissive"
 )
 
 func NewConfiguration() Configuration {
@@ -50,10 +61,23 @@ type Configuration struct {
 	Type ConfigurationType `json:"type,omitempty"`
 }
 
-func (c Configuration) Plugin() (pbImplAuthorizationV1Shared.Plugin, error) {
+func (c Configuration) Plugin(ctx context.Context) (pbImplAuthorizationV1Shared.Plugin, error) {
 	switch c.Type {
 	case ConfigurationTypeAlways:
 		return pbImplAuthorizationV1Shared.NewAlwaysPlugin(), nil
+	case ConfigurationTypeCentral:
+		conn, err := integration.NewIntegrationConnection()
+		if err != nil {
+			return nil, err
+		}
+		return sidecarSvcAuthzClient.NewClient(ctx, sidecarSvcAuthzDefinition.NewAuthorizationPoolServiceClient(conn)), nil
+
+	case ConfigurationTypeCentralPermissive:
+		conn, err := integration.NewIntegrationConnection()
+		if err != nil {
+			return nil, err
+		}
+		return pbImplAuthorizationV1Shared.Permissive(sidecarSvcAuthzClient.NewClient(ctx, sidecarSvcAuthzDefinition.NewAuthorizationPoolServiceClient(conn)), logger), nil
 	default:
 		return nil, errors.Errorf("Configuration type '%s' is not supported", string(c.Type))
 	}

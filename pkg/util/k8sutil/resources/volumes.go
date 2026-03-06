@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,11 @@
 
 package resources
 
-import core "k8s.io/api/core/v1"
+import (
+	core "k8s.io/api/core/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
 
 func MergeVolumes(in []core.Volume, envs ...core.Volume) []core.Volume {
 	out := append([]core.Volume{}, in...)
@@ -41,7 +45,15 @@ func MergeVolumes(in []core.Volume, envs ...core.Volume) []core.Volume {
 func MergeVolumeMounts(in []core.VolumeMount, envs ...core.VolumeMount) []core.VolumeMount {
 	out := append([]core.VolumeMount{}, in...)
 
-	out = append(out, envs...)
+	for id := range envs {
+		if nid := util.ListIndex(out, func(mount core.VolumeMount) bool {
+			return mount.Name == envs[id].Name && mount.MountPath == envs[id].MountPath
+		}); nid == -1 {
+			out = append(out, envs[id])
+		} else {
+			out[nid] = envs[id]
+		}
+	}
 
 	return out
 }

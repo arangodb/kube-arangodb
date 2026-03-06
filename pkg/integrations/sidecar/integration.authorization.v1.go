@@ -22,6 +22,10 @@ package sidecar
 
 import (
 	core "k8s.io/api/core/v1"
+
+	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type IntegrationAuthorizationV1 struct {
@@ -41,6 +45,10 @@ func (i IntegrationAuthorizationV1) Envs() ([]core.EnvVar, error) {
 		{
 			Name:  "INTEGRATION_AUTHORIZATION_V1",
 			Value: "true",
+		},
+		{
+			Name:  "INTEGRATION_AUTHORIZATION_V1_TYPE",
+			Value: util.BoolSwitch(features.RBACEnforced().Enabled(), pbImplAuthorizationV1.ConfigurationTypeCentral, pbImplAuthorizationV1.ConfigurationTypeCentralPermissive).String(),
 		},
 	}
 

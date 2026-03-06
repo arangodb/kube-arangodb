@@ -149,6 +149,16 @@ func (in *ArangoPermissionTokenStatus) DeepCopyInto(out *ArangoPermissionTokenSt
 		*out = new(v1.Object)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Role != nil {
+		in, out := &in.Role, &out.Role
+		*out = new(v1.Object)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Policy != nil {
+		in, out := &in.Policy, &out.Policy
+		*out = new(v1.Object)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Secret != nil {
 		in, out := &in.Secret, &out.Secret
 		*out = new(v1.Object)

@@ -47,7 +47,7 @@ Flags:
       --integration.authorization.v1                                                        Enable AuthorizationV1 Integration Service (Env: INTEGRATION_AUTHORIZATION_V1)
       --integration.authorization.v1.external                                               Defines if External access to service authorization.v1 is enabled (Env: INTEGRATION_AUTHORIZATION_V1_EXTERNAL)
       --integration.authorization.v1.internal                                               Defines if Internal access to service authorization.v1 is enabled (Env: INTEGRATION_AUTHORIZATION_V1_INTERNAL) (default true)
-      --integration.authorization.v1.type string                                            Type of the Authorization Integration (Env: INTEGRATION_AUTHORIZATION_V1_TYPE) (default "always")
+      --integration.authorization.v1.type string                                            Type of the Authorization Integration (Env: INTEGRATION_AUTHORIZATION_V1_TYPE) (default "central")
       --integration.config.v1                                                               Enable ConfigV1 Integration Service (Env: INTEGRATION_CONFIG_V1)
       --integration.config.v1.external                                                      Defines if External access to service config.v1 is enabled (Env: INTEGRATION_CONFIG_V1_EXTERNAL)
       --integration.config.v1.internal                                                      Defines if Internal access to service config.v1 is enabled (Env: INTEGRATION_CONFIG_V1_INTERNAL) (default true)

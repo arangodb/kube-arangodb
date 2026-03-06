@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ func (a *actionTimezoneSecretSet) Start(ctx context.Context) (bool, error) {
 		data[pod.TimezoneTZKey] = base64.StdEncoding.EncodeToString([]byte(tz.Name))
 
 		p := patch.NewPatch()
-		p.ItemReplace(patch.NewPath("data"), data)
+		p = p.ItemReplace(patch.NewPath("data"), data)
 
 		patch, err := p.Marshal()
 		if err != nil {
