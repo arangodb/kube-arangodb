@@ -12,7 +12,6 @@
 - (Feature) (Platform) Sidecar Initial Resources
 - (Feature) (Platform) Extend Gateway Options
 - (Feature) (Platform) Sidecar Feature
-- (Feature) (Platform) Authorization Central Service
 - (Feature) (Platform) Sidecar Auth
 - (Feature) (Platform) Integration Unix Connection
 - (Feature) (Platform) Asymmetric Key Support
