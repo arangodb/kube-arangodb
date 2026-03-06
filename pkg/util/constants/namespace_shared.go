@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,33 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
+//go:build !testing
+
 package constants
 
-func NamespaceWithDefault(def string) string {
-	if v, ok := Namespace(); ok {
-		return v
+import (
+	"os"
+	goStrings "strings"
+)
+
+func Namespace() (string, bool) {
+	return namespaceWithSAAndEnv(PathMountServiceAccountNamespace, EnvOperatorPodNamespace)
+}
+
+func namespaceWithSAAndEnv(sa, env string) (string, bool) {
+	// Extract from env
+	if e, ok := os.LookupEnv(env); ok && e != "" {
+		if v := goStrings.TrimSpace(e); v != "" {
+			return v, true
+		}
 	}
 
-	return def
+	// Extract from file
+	if data, err := os.ReadFile(sa); err == nil && len(data) > 0 {
+		if v := goStrings.TrimSpace(string(data)); v != "" {
+			return v, true
+		}
+	}
+
+	return "", false
 }

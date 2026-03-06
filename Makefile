@@ -1030,7 +1030,7 @@ _check: sync-crds
 generate: generate-internal generate-proto fmt yamlfmt license
 
 generate-internal:
-	ROOT=$(ROOT) go test --count=1 "$(REPOPATH)/internal/..."
+	ROOT=$(ROOT) go test --count=1 --tags "testing,$(GOBUILDTAGS)" "$(REPOPATH)/internal/..."
 
 generate-proto:
 	PATH="$(GOBUILDDIR)/bin:$(PATH)" $(GOBUILDDIR)/bin/protoc -I.:$(GOBUILDDIR)/include/ -I.:$(GOBUILDDIR)/include/googleapis/ \
