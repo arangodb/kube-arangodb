@@ -28,6 +28,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
+func Static[T any](caller T) Object[T] {
+	return NewObject[T](func(ctx context.Context) (T, time.Duration, error) {
+		return caller, time.Hour * 24 * 364, nil
+	})
+}
+
 func NewObject[T any](caller ObjectFetcher[T]) Object[T] {
 	return &object[T]{
 		caller: caller,

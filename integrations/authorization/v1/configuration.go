@@ -66,18 +66,10 @@ func (c Configuration) Plugin(ctx context.Context) (pbImplAuthorizationV1Shared.
 	case ConfigurationTypeAlways:
 		return pbImplAuthorizationV1Shared.NewAlwaysPlugin(), nil
 	case ConfigurationTypeCentral:
-		conn, err := integration.NewIntegrationConnection()
-		if err != nil {
-			return nil, err
-		}
-		return pbImplAuthorizationV1Shared.SuperUser(sidecarSvcAuthzClient.NewClient(ctx, sidecarSvcAuthzDefinition.NewAuthorizationPoolServiceClient(conn))), nil
+		return pbImplAuthorizationV1Shared.SuperUser(sidecarSvcAuthzClient.NewClient(ctx, integration.NewIntegrationClientCache(sidecarSvcAuthzDefinition.NewAuthorizationPoolServiceClient))), nil
 
 	case ConfigurationTypeCentralPermissive:
-		conn, err := integration.NewIntegrationConnection()
-		if err != nil {
-			return nil, err
-		}
-		return pbImplAuthorizationV1Shared.SuperUser(pbImplAuthorizationV1Shared.Permissive(sidecarSvcAuthzClient.NewClient(ctx, sidecarSvcAuthzDefinition.NewAuthorizationPoolServiceClient(conn)), logger)), nil
+		return pbImplAuthorizationV1Shared.SuperUser(pbImplAuthorizationV1Shared.Permissive(sidecarSvcAuthzClient.NewClient(ctx, integration.NewIntegrationClientCache(sidecarSvcAuthzDefinition.NewAuthorizationPoolServiceClient)), logger)), nil
 	default:
 		return nil, errors.Errorf("Configuration type '%s' is not supported", string(c.Type))
 	}

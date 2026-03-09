@@ -91,7 +91,7 @@ func Test_Service(t *testing.T) {
 
 	tm.Set(t, token)
 
-	z := sidecarSvcAuthzClient.NewClient(t.Context(), q)
+	z := sidecarSvcAuthzClient.NewClient(t.Context(), cache.Static(q))
 
 	zctx, c := context.WithTimeout(t.Context(), time.Second)
 	defer c()

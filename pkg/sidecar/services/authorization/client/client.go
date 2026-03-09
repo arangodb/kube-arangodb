@@ -36,10 +36,11 @@ import (
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func NewClient(ctx context.Context, c sidecarSvcAuthzDefinition.AuthorizationPoolServiceClient) Client {
+func NewClient(ctx context.Context, c cache.Object[sidecarSvcAuthzDefinition.AuthorizationPoolServiceClient]) Client {
 	client := &client{
 		client: c,
 		closed: make(chan struct{}),
@@ -61,13 +62,13 @@ type client struct {
 
 	setLock sync.Mutex
 
-	client sidecarSvcAuthzDefinition.AuthorizationPoolServiceClient
+	client cache.Object[sidecarSvcAuthzDefinition.AuthorizationPoolServiceClient]
 
 	closed chan struct{}
 
 	revision uint64
 
-	cache *cache
+	cache *internalCache
 
 	policies clientSet[*sidecarSvcAuthzTypes.Policy]
 	roles    clientSet[*sidecarSvcAuthzTypes.Role]
@@ -109,7 +110,7 @@ func (c *client) Evaluate(ctx context.Context, req *pbAuthorizationV1.Authorizat
 	}, nil
 }
 
-func (c *client) get() *cache {
+func (c *client) get() *internalCache {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -138,7 +139,7 @@ func (c *client) Ready(ctx context.Context) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	return errors.Errors(c.policies.ready(), c.roles.ready(), util.BoolSwitch(c.cache == nil, errors.Errorf("nil cache"), nil))
+	return errors.Errors(c.policies.ready(), c.roles.ready(), util.BoolSwitch(c.cache == nil, errors.Errorf("nil internalCache"), nil))
 }
 
 func (c *client) setRoles(items map[string]*sidecarSvcAuthzTypes.Role) {
@@ -234,10 +235,15 @@ func (c *client) runE(ctx context.Context) error {
 func (c *client) runPoliciesE(ctx context.Context) error {
 	policies := map[string]*sidecarSvcAuthzTypes.Policy{}
 
+	client, err := c.client.Get(ctx)
+	if err != nil {
+		return err
+	}
+
 	var index uint32
 
 	{
-		response, err := c.client.GetPolicy(ctx, &pbSharedV1.Empty{})
+		response, err := client.GetPolicy(ctx, &pbSharedV1.Empty{})
 		if err != nil {
 			return err
 		}
@@ -263,7 +269,7 @@ func (c *client) runPoliciesE(ctx context.Context) error {
 	logger.Trace("Policies init complete")
 
 	for {
-		changes, err := c.client.PoolPolicyChanges(ctx, &sidecarSvcAuthzDefinition.AuthorizationPoolRequest{
+		changes, err := client.PoolPolicyChanges(ctx, &sidecarSvcAuthzDefinition.AuthorizationPoolRequest{
 			Start:   index,
 			Timeout: durationpb.New(15 * time.Second),
 		})
@@ -297,8 +303,13 @@ func (c *client) runRolesE(ctx context.Context) error {
 
 	var index uint32
 
+	client, err := c.client.Get(ctx)
+	if err != nil {
+		return err
+	}
+
 	{
-		response, err := c.client.GetRole(ctx, &pbSharedV1.Empty{})
+		response, err := client.GetRole(ctx, &pbSharedV1.Empty{})
 		if err != nil {
 			return err
 		}
@@ -324,7 +335,7 @@ func (c *client) runRolesE(ctx context.Context) error {
 	logger.Trace("Roles init complete")
 
 	for {
-		changes, err := c.client.PoolRoleChanges(ctx, &sidecarSvcAuthzDefinition.AuthorizationPoolRequest{
+		changes, err := client.PoolRoleChanges(ctx, &sidecarSvcAuthzDefinition.AuthorizationPoolRequest{
 			Start:   index,
 			Timeout: durationpb.New(15 * time.Second),
 		})
