@@ -72,7 +72,7 @@ func (c collection) WithUniqueIndex(name string, path ...string) Collection {
 	}
 }
 
-func (c collection) WithTTLIndex(name string, ttl time.Duration, path ...string) Collection {
+func (c collection) WithTTLIndex(name string, gttl time.Duration, path ...string) Collection {
 	return collection{
 		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
 			col, ttl, err := c.cache.GetWithTTL(ctx)
@@ -88,7 +88,7 @@ func (c collection) WithTTLIndex(name string, ttl time.Duration, path ...string)
 				return col, ttl, nil
 			}
 
-			if _, _, err := col.EnsureTTLIndex(ctx, path, int(ttl/time.Second), &arangodb.CreateTTLIndexOptions{
+			if _, _, err := col.EnsureTTLIndex(ctx, path, int(gttl/time.Second), &arangodb.CreateTTLIndexOptions{
 				Name: name,
 			}); err != nil {
 				return nil, 0, err
