@@ -84,9 +84,9 @@ func Test_Service(t *testing.T) {
 	token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{})
 	require.NoError(t, err)
 
-	t.Logf("Token generated for user %s: %s", token.User, token.Token)
+	t.Logf("Token generated for user %s: %s", token.GetUser(), token.Token)
 
-	require.EqualValues(t, "root", token.User)
+	require.EqualValues(t, "root", token.GetUser())
 
 	valid, err := client.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
 		Token: token.Token,
@@ -112,9 +112,9 @@ func Test_Service_DifferentDefaultUser(t *testing.T) {
 	token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{})
 	require.NoError(t, err)
 
-	t.Logf("Token generated for user %s: %s", token.User, token.Token)
+	t.Logf("Token generated for user %s: %s", token.GetUser(), token.Token)
 
-	require.EqualValues(t, "different", token.User)
+	require.EqualValues(t, "different", token.GetUser())
 
 	valid, err := client.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
 		Token: token.Token,
@@ -140,9 +140,9 @@ func Test_Service_AskForDefaultIfAllowed(t *testing.T) {
 	token, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{})
 	require.NoError(t, err)
 
-	t.Logf("Token generated for user %s: %s", token.User, token.Token)
+	t.Logf("Token generated for user %s: %s", token.GetUser(), token.Token)
 
-	require.EqualValues(t, "root", token.User)
+	require.EqualValues(t, "root", token.GetUser())
 
 	valid, err := client.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
 		Token: token.Token,
@@ -170,9 +170,9 @@ func Test_Service_AskForNonDefaultIfAllowed(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	t.Logf("Token generated for user %s: %s", token.User, token.Token)
+	t.Logf("Token generated for user %s: %s", token.GetUser(), token.Token)
 
-	require.EqualValues(t, "other", token.User)
+	require.EqualValues(t, "other", token.GetUser())
 
 	valid, err := client.Validate(ctx, &pbAuthenticationV1.ValidateRequest{
 		Token: token.Token,
