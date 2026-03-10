@@ -439,6 +439,12 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoPermissionToken.V1Alpha1": {
 						"Spec": permissionApi.ArangoPermissionToken{}.Spec,
 					},
+					"ArangoPermissionRole.V1Alpha1": {
+						"Spec": permissionApi.ArangoPermissionRole{}.Spec,
+					},
+					"ArangoPermissionPolicy.V1Alpha1": {
+						"Spec": permissionApi.ArangoPermissionPolicy{}.Spec,
+					},
 				},
 				Shared: []string{
 					"permission/v1alpha1/policy",

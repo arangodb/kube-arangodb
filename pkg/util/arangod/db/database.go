@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -80,7 +80,7 @@ func (d database) CreateCollection(name string, props CollectionProps) Collectio
 
 			_, err = db.GetCollection(ctx, name, &arangodb.GetCollectionOptions{})
 			if err != nil {
-				if !shared.IsNotFound(err) {
+				if !adbDriverV2Shared.IsNotFound(err) {
 					return nil, 0, err
 				}
 
@@ -90,7 +90,7 @@ func (d database) CreateCollection(name string, props CollectionProps) Collectio
 				}
 
 				if _, err := db.CreateCollectionV2(ctx, name, opts); err != nil {
-					if !shared.IsConflict(err) {
+					if !adbDriverV2Shared.IsConflict(err) {
 						return nil, 0, err
 					}
 				}

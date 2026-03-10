@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -125,15 +125,15 @@ func (o *operator) processObject(item operation.Item) error {
 func (o *operator) processItem(item operation.Item) error {
 	for _, handler := range o.handlers {
 		if handler.CanBeHandled(item) {
-			return o.processItemWithCTX(item, handler)
+			return Handle(handler, item)
 		}
 	}
 
 	return nil
 }
 
-func (o *operator) processItemWithCTX(item operation.Item, handler Handler) error {
-	ctx, c := WithHandlerTimeout(context.Background(), handler)
+func Handle(handler Handler, item operation.Item) error {
+	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
 	return handler.Handle(ctx, item)

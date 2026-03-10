@@ -105,6 +105,10 @@ func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcA
 		return nil, err
 	}
 
+	if item := request.GetName(); item == "" {
+		return nil, status.Error(codes.InvalidArgument, "Name cannot be empty")
+	}
+
 	if item := request.GetItem(); item == nil {
 		return nil, status.Error(codes.InvalidArgument, "Item cannot be empty")
 	}
@@ -133,6 +137,10 @@ func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcA
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:UpdateRole", request.GetName()); err != nil {
 		return nil, err
+	}
+
+	if item := request.GetName(); item == "" {
+		return nil, status.Error(codes.InvalidArgument, "Name cannot be empty")
 	}
 
 	if item := request.GetItem(); item == nil {

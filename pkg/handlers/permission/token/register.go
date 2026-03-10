@@ -24,6 +24,7 @@ import (
 	"k8s.io/client-go/informers"
 
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/permission/shared"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
@@ -46,7 +47,7 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 
 		operator: operator,
 
-		provider: clientProviderFunc(arangoClientProvider),
+		provider: shared.ClientProviderFunc(shared.ArangoClientProvider),
 	}
 
 	if err := operator.RegisterHandler(h); err != nil {

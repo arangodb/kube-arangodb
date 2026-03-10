@@ -105,6 +105,10 @@ func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSv
 		return nil, err
 	}
 
+	if item := request.GetName(); item == "" {
+		return nil, status.Error(codes.InvalidArgument, "Name cannot be empty")
+	}
+
 	if item := request.GetItem(); item == nil {
 		return nil, status.Error(codes.InvalidArgument, "Item cannot be empty")
 	}
@@ -133,6 +137,10 @@ func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSv
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:UpdatePolicy", request.GetName()); err != nil {
 		return nil, err
+	}
+
+	if item := request.GetName(); item == "" {
+		return nil, status.Error(codes.InvalidArgument, "Name cannot be empty")
 	}
 
 	if item := request.GetItem(); item == nil {

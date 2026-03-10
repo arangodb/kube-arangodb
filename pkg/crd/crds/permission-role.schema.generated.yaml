@@ -1,0 +1,56 @@
+v1alpha1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          deployment:
+            description: Deployment keeps the Deployment Reference
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          policy:
+            description: Policy defined the Authorization Policy
+            properties:
+              statements:
+                description: Statements list of the policy Statements
+                items:
+                  properties:
+                    actions:
+                      description: |-
+                        Actions defines the list of actions.
+                        Action needs to be defined in format `<namespace>:<name>`
+                      items:
+                        type: string
+                      type: array
+                    effect:
+                      description: Effect defines the statement effect.
+                      enum:
+                        - Allow
+                        - Deny
+                      type: string
+                    resources:
+                      description: Resources defines the list of resources
+                      items:
+                        type: string
+                      type: array
+                  required:
+                    - actions
+                    - effect
+                    - resources
+                  type: object
+                type: array
+            required:
+              - statements
+            type: object
+        required:
+          - deployment
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

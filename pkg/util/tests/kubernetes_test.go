@@ -104,4 +104,6 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*platformApi.ArangoPlatformChart](t)
 	NewMetaObjectRun[*platformApi.ArangoPlatformService](t)
 	NewMetaObjectRun[*permissionApi.ArangoPermissionToken](t)
+	NewMetaObjectRun[*permissionApi.ArangoPermissionRole](t)
+	NewMetaObjectRun[*permissionApi.ArangoPermissionPolicy](t)
 }

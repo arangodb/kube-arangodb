@@ -131,6 +131,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1beta1().ArangoRoutes().Informer()}, nil
 
 		// Group=permission.arangodb.com, Version=v1alpha1
+	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissionpolicies"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionPolicies().Informer()}, nil
+	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissionroles"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionRoles().Informer()}, nil
 	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissiontokens"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionTokens().Informer()}, nil
 

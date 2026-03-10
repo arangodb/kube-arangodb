@@ -22,4 +22,8 @@
 
 package v1alpha1
 
+type ArangoPermissionPolicyExpansion interface{}
+
+type ArangoPermissionRoleExpansion interface{}
+
 type ArangoPermissionTokenExpansion interface{}

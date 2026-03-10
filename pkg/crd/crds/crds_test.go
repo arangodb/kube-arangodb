@@ -105,6 +105,8 @@ func Test_CRD(t *testing.T) {
 		{platform.ArangoPlatformChartCRDName, PlatformChartDefinitionWithOptions},
 		{platform.ArangoPlatformServiceCRDName, PlatformServiceDefinitionWithOptions},
 		{permission.ArangoPermissionTokenCRDName, PermissionTokenDefinitionWithOptions},
+		{permission.ArangoPermissionPolicyCRDName, PermissionPolicyDefinitionWithOptions},
+		{permission.ArangoPermissionRoleCRDName, PermissionRoleDefinitionWithOptions},
 	}
 
 	for _, tc := range testCases {
@@ -129,8 +131,8 @@ func Test_AllDefinitionsDefined(t *testing.T) {
 		require.NotEmpty(t, a)
 		require.NotEmpty(t, b)
 
-		require.NotContains(t, registered, a)
-		require.NotContains(t, registered, b)
+		require.NotContains(t, registered, a, def.CRD.GetName())
+		require.NotContains(t, registered, b, def.CRD.GetName())
 
 		registered[a] = true
 		registered[b] = true
@@ -166,6 +168,8 @@ func Test_CRDGetters(t *testing.T) {
 		PlatformChartWithOptions,
 		PlatformServiceWithOptions,
 		PermissionTokenWithOptions,
+		PermissionPolicyWithOptions,
+		PermissionRoleWithOptions,
 	}
 	require.Equal(t, len(AllDefinitions()), len(getters))
 

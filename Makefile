@@ -1051,7 +1051,7 @@ CRDS:=apps-job \
       analytics-graphanalyticsengine \
       networking-route \
       platform-storage platform-chart platform-service \
-      permission-token
+      permission-token permission-role permission-policy
 
 .PHONY: sync
 sync:

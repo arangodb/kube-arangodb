@@ -22,6 +22,22 @@
 
 package v1alpha1
 
+// ArangoPermissionPolicyListerExpansion allows custom methods to be added to
+// ArangoPermissionPolicyLister.
+type ArangoPermissionPolicyListerExpansion interface{}
+
+// ArangoPermissionPolicyNamespaceListerExpansion allows custom methods to be added to
+// ArangoPermissionPolicyNamespaceLister.
+type ArangoPermissionPolicyNamespaceListerExpansion interface{}
+
+// ArangoPermissionRoleListerExpansion allows custom methods to be added to
+// ArangoPermissionRoleLister.
+type ArangoPermissionRoleListerExpansion interface{}
+
+// ArangoPermissionRoleNamespaceListerExpansion allows custom methods to be added to
+// ArangoPermissionRoleNamespaceLister.
+type ArangoPermissionRoleNamespaceListerExpansion interface{}
+
 // ArangoPermissionTokenListerExpansion allows custom methods to be added to
 // ArangoPermissionTokenLister.
 type ArangoPermissionTokenListerExpansion interface{}

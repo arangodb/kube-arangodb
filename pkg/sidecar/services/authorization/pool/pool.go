@@ -30,7 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/operations"
@@ -157,6 +157,7 @@ func (p *pooler[T]) Get() []OffsetItem[T] {
 		return OffsetItem[T]{
 			Item:     a.Spec,
 			Sequence: a.Sequence,
+			Name:     a.Name,
 		}
 	})
 }
@@ -330,7 +331,7 @@ func PoolChanges[T proto.Message](ctx context.Context, db arangodb.DatabaseQuery
 		var d Document[T]
 
 		if _, err := result.ReadDocument(ctx, &d); err != nil {
-			if shared.IsEOF(err) {
+			if adbDriverV2Shared.IsEOF(err) {
 				break
 			}
 
