@@ -44,6 +44,9 @@ func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string
 	parsedRoles := make(map[string][]string)
 
 	for name, role := range roles {
+		if role == nil {
+			continue
+		}
 		for _, policy := range role.Policies {
 			parsedRoles[name] = append(parsedRoles[name], policy)
 

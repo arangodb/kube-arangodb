@@ -29,12 +29,10 @@ import (
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
-	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
-func (a *implementation) APIListPolicy(ctx context.Context, empty *pbSharedV1.Empty) (*sidecarSvcAuthzDefinition.AuthorizationAPIListResponse, error) {
+func (a *implementation) APIListPolicy(ctx context.Context, request *pbSharedV1.OffsetRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIListResponse, error) {
 	if err := a.Health(ctx).Require(); err != nil {
 		return nil, err
 	}
@@ -43,10 +41,11 @@ func (a *implementation) APIListPolicy(ctx context.Context, empty *pbSharedV1.Em
 		return nil, err
 	}
 
+	page, items := pbSharedV1.Paginate(request, a.policies.Items())
+
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIListResponse{
-		Names: util.FormatList(a.policies.Get(), func(a pool.OffsetItem[*sidecarSvcAuthzTypes.Policy]) string {
-			return a.Name
-		}),
+		Names: items,
+		Page:  page,
 	}, nil
 }
 

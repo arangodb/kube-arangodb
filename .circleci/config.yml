@@ -18,6 +18,3 @@ workflows:
           base-revision: master
           config-path: .circleci/continue_config.yml
           tag: "3.9"
-          mapping: |
-            manifests/.* manifests-verify true
-            chart/.* manifests-verify true

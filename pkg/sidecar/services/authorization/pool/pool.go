@@ -57,6 +57,8 @@ func NewPooler[T PoolerObject](connection cache.Object[arangodb.Collection], int
 type PoolerObject interface {
 	proto.Message
 
+	Deleted() bool
+
 	Hash() string
 
 	Clean() error
@@ -77,7 +79,9 @@ type Pooler[T PoolerObject] interface {
 	Ready() bool
 
 	Pool(start uint32) ([]OffsetItem[T], error)
-	Get() []OffsetItem[T]
+	Offsets() []OffsetItem[T]
+
+	Items() []string
 }
 
 type pooler[T PoolerObject] struct {
@@ -141,7 +145,23 @@ func (p *pooler[T]) Item(name string) (T, uint32, bool) {
 	return v.Spec, v.Sequence, true
 }
 
-func (p *pooler[T]) Get() []OffsetItem[T] {
+func (p *pooler[T]) Items() []string {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+
+	r := make([]string, 0, len(p.state))
+
+	for k, v := range p.state {
+		if !v.Spec.Deleted() {
+			continue
+		}
+		r = append(r, k)
+	}
+
+	return r
+}
+
+func (p *pooler[T]) Offsets() []OffsetItem[T] {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
 
@@ -299,7 +319,7 @@ func (p *pooler[T]) refresh(ctx context.Context, col arangodb.Collection) error 
 
 		p.offset.Add(doc.Sequence, doc.Name, doc.Spec)
 
-		if doc.Action == DocumentDeleteAction {
+		if doc.Action == DocumentDeleteAction || doc.Spec.Deleted() {
 			// Deleted
 			delete(p.state, doc.Name)
 		} else {

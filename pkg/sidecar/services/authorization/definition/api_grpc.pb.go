@@ -59,7 +59,7 @@ const (
 // AuthorizationAPI Service implementation
 type AuthorizationAPIClient interface {
 	// Return the Policies
-	APIListPolicy(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error)
+	APIListPolicy(ctx context.Context, in *definition.OffsetRequest, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error)
 	// Return the Policy
 	APIGetPolicy(ctx context.Context, in *AuthorizationAPINamedRequest, opts ...grpc.CallOption) (*AuthorizationAPIPolicyResponse, error)
 	// Delete the Policy
@@ -69,7 +69,7 @@ type AuthorizationAPIClient interface {
 	// Update the Policy
 	APIUpdatePolicy(ctx context.Context, in *AuthorizationAPIPolicyRequest, opts ...grpc.CallOption) (*AuthorizationAPIPolicyResponse, error)
 	// Return the Roles
-	APIListRole(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error)
+	APIListRole(ctx context.Context, in *definition.OffsetRequest, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error)
 	// Returns the Role
 	APIGetRole(ctx context.Context, in *AuthorizationAPINamedRequest, opts ...grpc.CallOption) (*AuthorizationAPIRoleResponse, error)
 	// Delete the Role
@@ -88,7 +88,7 @@ func NewAuthorizationAPIClient(cc grpc.ClientConnInterface) AuthorizationAPIClie
 	return &authorizationAPIClient{cc}
 }
 
-func (c *authorizationAPIClient) APIListPolicy(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error) {
+func (c *authorizationAPIClient) APIListPolicy(ctx context.Context, in *definition.OffsetRequest, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AuthorizationAPIListResponse)
 	err := c.cc.Invoke(ctx, AuthorizationAPI_APIListPolicy_FullMethodName, in, out, cOpts...)
@@ -138,7 +138,7 @@ func (c *authorizationAPIClient) APIUpdatePolicy(ctx context.Context, in *Author
 	return out, nil
 }
 
-func (c *authorizationAPIClient) APIListRole(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error) {
+func (c *authorizationAPIClient) APIListRole(ctx context.Context, in *definition.OffsetRequest, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AuthorizationAPIListResponse)
 	err := c.cc.Invoke(ctx, AuthorizationAPI_APIListRole_FullMethodName, in, out, cOpts...)
@@ -195,7 +195,7 @@ func (c *authorizationAPIClient) APIUpdateRole(ctx context.Context, in *Authoriz
 // AuthorizationAPI Service implementation
 type AuthorizationAPIServer interface {
 	// Return the Policies
-	APIListPolicy(context.Context, *definition.Empty) (*AuthorizationAPIListResponse, error)
+	APIListPolicy(context.Context, *definition.OffsetRequest) (*AuthorizationAPIListResponse, error)
 	// Return the Policy
 	APIGetPolicy(context.Context, *AuthorizationAPINamedRequest) (*AuthorizationAPIPolicyResponse, error)
 	// Delete the Policy
@@ -205,7 +205,7 @@ type AuthorizationAPIServer interface {
 	// Update the Policy
 	APIUpdatePolicy(context.Context, *AuthorizationAPIPolicyRequest) (*AuthorizationAPIPolicyResponse, error)
 	// Return the Roles
-	APIListRole(context.Context, *definition.Empty) (*AuthorizationAPIListResponse, error)
+	APIListRole(context.Context, *definition.OffsetRequest) (*AuthorizationAPIListResponse, error)
 	// Returns the Role
 	APIGetRole(context.Context, *AuthorizationAPINamedRequest) (*AuthorizationAPIRoleResponse, error)
 	// Delete the Role
@@ -224,7 +224,7 @@ type AuthorizationAPIServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuthorizationAPIServer struct{}
 
-func (UnimplementedAuthorizationAPIServer) APIListPolicy(context.Context, *definition.Empty) (*AuthorizationAPIListResponse, error) {
+func (UnimplementedAuthorizationAPIServer) APIListPolicy(context.Context, *definition.OffsetRequest) (*AuthorizationAPIListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method APIListPolicy not implemented")
 }
 func (UnimplementedAuthorizationAPIServer) APIGetPolicy(context.Context, *AuthorizationAPINamedRequest) (*AuthorizationAPIPolicyResponse, error) {
@@ -239,7 +239,7 @@ func (UnimplementedAuthorizationAPIServer) APICreatePolicy(context.Context, *Aut
 func (UnimplementedAuthorizationAPIServer) APIUpdatePolicy(context.Context, *AuthorizationAPIPolicyRequest) (*AuthorizationAPIPolicyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method APIUpdatePolicy not implemented")
 }
-func (UnimplementedAuthorizationAPIServer) APIListRole(context.Context, *definition.Empty) (*AuthorizationAPIListResponse, error) {
+func (UnimplementedAuthorizationAPIServer) APIListRole(context.Context, *definition.OffsetRequest) (*AuthorizationAPIListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method APIListRole not implemented")
 }
 func (UnimplementedAuthorizationAPIServer) APIGetRole(context.Context, *AuthorizationAPINamedRequest) (*AuthorizationAPIRoleResponse, error) {
@@ -276,7 +276,7 @@ func RegisterAuthorizationAPIServer(s grpc.ServiceRegistrar, srv AuthorizationAP
 }
 
 func _AuthorizationAPI_APIListPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(definition.Empty)
+	in := new(definition.OffsetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func _AuthorizationAPI_APIListPolicy_Handler(srv interface{}, ctx context.Contex
 		FullMethod: AuthorizationAPI_APIListPolicy_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthorizationAPIServer).APIListPolicy(ctx, req.(*definition.Empty))
+		return srv.(AuthorizationAPIServer).APIListPolicy(ctx, req.(*definition.OffsetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -366,7 +366,7 @@ func _AuthorizationAPI_APIUpdatePolicy_Handler(srv interface{}, ctx context.Cont
 }
 
 func _AuthorizationAPI_APIListRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(definition.Empty)
+	in := new(definition.OffsetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -378,7 +378,7 @@ func _AuthorizationAPI_APIListRole_Handler(srv interface{}, ctx context.Context,
 		FullMethod: AuthorizationAPI_APIListRole_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthorizationAPIServer).APIListRole(ctx, req.(*definition.Empty))
+		return srv.(AuthorizationAPIServer).APIListRole(ctx, req.(*definition.OffsetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

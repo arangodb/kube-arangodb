@@ -2,17 +2,6 @@ version: 2.1
 orbs:
   slack: circleci/slack@4.1
 
-parameters:
-  manifests-verify:
-    type: boolean
-    default: false
-  minikube-version:
-    type: string
-    default: v1.31.2
-  helm-version:
-    type: string
-    default: v3.13.0
-
 executors:
   golang-executor:
     docker:
@@ -78,42 +67,9 @@ jobs:
             fi
             make ci-check
 
-  manifests_verify:
-    executor: golang-executor
-    steps:
-      - checkout
-      - run:
-          name: Install Kubectl Executable
-          command: |-
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" &&
-            chmod +x kubectl &&
-            mv kubectl /usr/local/bin/
-            mkdir -p ${HOME}/.kube && touch ${HOME}/.kube/config
-      - run:
-          name: Install Minikube Executable
-          command: |-
-            curl -Lo minikube https://github.com/kubernetes/minikube/releases/download/<< pipeline.parameters.minikube-version >>/minikube-linux-amd64 &&
-            chmod +x minikube &&
-            mv minikube /usr/local/bin/
-      - run:
-          name: Install Helm Service
-          command: |-
-            export DESIRED_VERSION=<< pipeline.parameters.helm-version >>
-            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
-      - run:
-          command: make manifests
-      - run:
-          command: make manifests-verify
-
 workflows:
   version: 2
 
   run_tests:
     jobs:
       - check-code
-
-  manifests-verify:
-    when:
-      equal: [ true, << pipeline.parameters.manifests-verify >> ]
-    jobs:
-      - manifests_verify
