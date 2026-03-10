@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 
+	definition_9 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -34,6 +35,27 @@ var (
 	_ = utilities.NewDoubleArray
 	_ = metadata.Join
 )
+
+func request_AuthorizationAPI_APIListPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq definition_9.Empty
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.APIListPolicy(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AuthorizationAPI_APIListPolicy_0(ctx context.Context, marshaler runtime.Marshaler, server AuthorizationAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq definition_9.Empty
+		metadata runtime.ServerMetadata
+	)
+	msg, err := server.APIListPolicy(ctx, &protoReq)
+	return msg, metadata, err
+}
 
 func request_AuthorizationAPI_APIGetPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
@@ -200,6 +222,27 @@ func local_request_AuthorizationAPI_APIUpdatePolicy_0(ctx context.Context, marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 	msg, err := server.APIUpdatePolicy(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_AuthorizationAPI_APIListRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq definition_9.Empty
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.APIListRole(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AuthorizationAPI_APIListRole_0(ctx context.Context, marshaler runtime.Marshaler, server AuthorizationAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq definition_9.Empty
+		metadata runtime.ServerMetadata
+	)
+	msg, err := server.APIListRole(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -377,6 +420,26 @@ func local_request_AuthorizationAPI_APIUpdateRole_0(ctx context.Context, marshal
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterAuthorizationAPIHandlerFromEndpoint instead.
 // GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
 func RegisterAuthorizationAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, server AuthorizationAPIServer) error {
+	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIListPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/service.AuthorizationAPI/APIListPolicy", runtime.WithHTTPPathPattern("/_management/permissions/policy"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AuthorizationAPI_APIListPolicy_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIListPolicy_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIGetPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -456,6 +519,26 @@ func RegisterAuthorizationAPIHandlerServer(ctx context.Context, mux *runtime.Ser
 			return
 		}
 		forward_AuthorizationAPI_APIUpdatePolicy_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIListRole_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/service.AuthorizationAPI/APIListRole", runtime.WithHTTPPathPattern("/_management/permissions/role"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AuthorizationAPI_APIListRole_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIListRole_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIGetRole_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -577,6 +660,23 @@ func RegisterAuthorizationAPIHandler(ctx context.Context, mux *runtime.ServeMux,
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "AuthorizationAPIClient" to call the correct interceptors. This client ignores the HTTP middlewares.
 func RegisterAuthorizationAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client AuthorizationAPIClient) error {
+	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIListPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/service.AuthorizationAPI/APIListPolicy", runtime.WithHTTPPathPattern("/_management/permissions/policy"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AuthorizationAPI_APIListPolicy_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIListPolicy_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIGetPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -644,6 +744,23 @@ func RegisterAuthorizationAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 			return
 		}
 		forward_AuthorizationAPI_APIUpdatePolicy_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIListRole_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/service.AuthorizationAPI/APIListRole", runtime.WithHTTPPathPattern("/_management/permissions/role"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AuthorizationAPI_APIListRole_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIListRole_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIGetRole_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -717,10 +834,12 @@ func RegisterAuthorizationAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 }
 
 var (
+	pattern_AuthorizationAPI_APIListPolicy_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "policy"}, ""))
 	pattern_AuthorizationAPI_APIGetPolicy_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
 	pattern_AuthorizationAPI_APIDeletePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
 	pattern_AuthorizationAPI_APICreatePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
 	pattern_AuthorizationAPI_APIUpdatePolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
+	pattern_AuthorizationAPI_APIListRole_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "role"}, ""))
 	pattern_AuthorizationAPI_APIGetRole_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
 	pattern_AuthorizationAPI_APIDeleteRole_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
 	pattern_AuthorizationAPI_APICreateRole_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
@@ -728,10 +847,12 @@ var (
 )
 
 var (
+	forward_AuthorizationAPI_APIListPolicy_0   = runtime.ForwardResponseMessage
 	forward_AuthorizationAPI_APIGetPolicy_0    = runtime.ForwardResponseMessage
 	forward_AuthorizationAPI_APIDeletePolicy_0 = runtime.ForwardResponseMessage
 	forward_AuthorizationAPI_APICreatePolicy_0 = runtime.ForwardResponseMessage
 	forward_AuthorizationAPI_APIUpdatePolicy_0 = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIListRole_0     = runtime.ForwardResponseMessage
 	forward_AuthorizationAPI_APIGetRole_0      = runtime.ForwardResponseMessage
 	forward_AuthorizationAPI_APIDeleteRole_0   = runtime.ForwardResponseMessage
 	forward_AuthorizationAPI_APICreateRole_0   = runtime.ForwardResponseMessage

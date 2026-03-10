@@ -40,6 +40,10 @@ func (a *implementation) PoolPolicyChanges(request *sidecarSvcAuthzDefinition.Au
 		return err
 	}
 
+	if err := authenticator.GetIdentity(g.Context()).EvaluatePermission(g.Context(), a.auth, "rbac:PoolPolicy", ""); err != nil {
+		return err
+	}
+
 	index := request.GetStart()
 
 	tickerT := time.NewTicker(250 * time.Millisecond)

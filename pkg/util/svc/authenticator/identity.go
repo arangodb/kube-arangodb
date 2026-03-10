@@ -42,7 +42,6 @@ func (i *Identity) EvaluatePermission(ctx context.Context, client cache.Object[p
 
 	c, err := client.Get(ctx)
 	if err != nil {
-		println(err.Error(), "ZZ")
 		return status.Error(codes.Internal, err.Error())
 	}
 

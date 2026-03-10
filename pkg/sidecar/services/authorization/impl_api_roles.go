@@ -26,10 +26,29 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
+
+func (a *implementation) APIListRole(ctx context.Context, empty *pbSharedV1.Empty) (*sidecarSvcAuthzDefinition.AuthorizationAPIListResponse, error) {
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:ListRole", ""); err != nil {
+		return nil, err
+	}
+
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIListResponse{
+		Names: util.FormatList(a.roles.Get(), func(a pool.OffsetItem[*sidecarSvcAuthzTypes.Role]) string {
+			return a.Name
+		}),
+	}, nil
+}
 
 func (a *implementation) APIGetRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
 	if err := a.Health(ctx).Require(); err != nil {
