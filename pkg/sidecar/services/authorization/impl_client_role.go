@@ -36,8 +36,12 @@ import (
 )
 
 func (a *implementation) PoolRoleChanges(request *sidecarSvcAuthzDefinition.AuthorizationPoolRequest, g grpc.ServerStreamingServer[sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponse]) error {
-	if authenticator.GetIdentity(g.Context()) == nil {
-		return status.Error(codes.Unauthenticated, "Unauthenticated")
+	if err := a.Health(g.Context()).Require(); err != nil {
+		return err
+	}
+
+	if err := authenticator.GetIdentity(g.Context()).EvaluatePermission(g.Context(), a.auth, "rbac:PoolRole", ""); err != nil {
+		return err
 	}
 
 	index := request.GetStart()

@@ -24,6 +24,8 @@ package service;
 
 import "google/api/annotations.proto";
 
+import "integrations/shared/v1/definition/empty.proto";
+
 import "pkg/sidecar/services/authorization/types/policy.proto";
 import "pkg/sidecar/services/authorization/types/role.proto";
 
@@ -31,6 +33,13 @@ option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/auth
 
 // AuthorizationAPI Service implementation
 service AuthorizationAPI {
+  // Return the Policies
+  rpc APIListPolicy(shared.Empty) returns (AuthorizationAPIListResponse){
+    option (google.api.http) = {
+      get: "/_management/permissions/policy"
+    };
+  }
+
   // Return the Policy
   rpc APIGetPolicy(AuthorizationAPINamedRequest) returns (AuthorizationAPIPolicyResponse){
     option (google.api.http) = {
@@ -58,6 +67,13 @@ service AuthorizationAPI {
     option (google.api.http) = {
       put: "/_management/permissions/policy/{name}"
       body: "*"
+    };
+  }
+
+  // Return the Roles
+  rpc APIListRole(shared.Empty) returns (AuthorizationAPIListResponse){
+    option (google.api.http) = {
+      get: "/_management/permissions/role"
     };
   }
 
@@ -96,6 +112,12 @@ service AuthorizationAPI {
 message AuthorizationAPINamedRequest {
   // Name of the object
   string name = 1;
+}
+
+// AuthorizationAPI List Response
+message AuthorizationAPIListResponse {
+  // List of the names
+  repeated string names = 1;
 }
 
 // AuthorizationAPI Policy Request

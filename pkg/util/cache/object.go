@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
+func Static[T any](caller T) Object[T] {
+	return NewObject[T](func(ctx context.Context) (T, time.Duration, error) {
+		return caller, time.Hour * 24 * 364, nil
+	})
+}
+
 func NewObject[T any](caller ObjectFetcher[T]) Object[T] {
 	return &object[T]{
 		caller: caller,
@@ -39,6 +45,7 @@ type ObjectFetcher[T any] func(ctx context.Context) (T, time.Duration, error)
 type Object[T any] interface {
 	Init(context.Context) error
 	Get(ctx context.Context) (T, error)
+	GetWithTTL(ctx context.Context) (T, time.Duration, error)
 }
 
 type object[T any] struct {
@@ -54,24 +61,28 @@ func (o *object[T]) Init(ctx context.Context) error {
 	_, err := o.Get(ctx)
 	return err
 }
-
 func (o *object[T]) Get(ctx context.Context) (T, error) {
+	v, _, err := o.GetWithTTL(ctx)
+	return v, err
+}
+
+func (o *object[T]) GetWithTTL(ctx context.Context) (T, time.Duration, error) {
 	o.lock.Lock()
 	defer o.lock.Unlock()
 
 	if time.Now().After(o.eol) || o.eol.IsZero() {
 		obj, ttl, err := o.caller(ctx)
 		if err != nil {
-			return util.Default[T](), err
+			return util.Default[T](), 0, err
 		}
 
 		if ttl <= 0 {
-			return obj, nil
+			return obj, 0, nil
 		}
 
 		o.obj = obj
 		o.eol = time.Now().Add(ttl)
 	}
 
-	return o.obj, nil
+	return o.obj, time.Until(o.eol), nil
 }

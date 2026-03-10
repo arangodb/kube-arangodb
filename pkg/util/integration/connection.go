@@ -21,6 +21,7 @@
 package integration
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"time"
@@ -43,6 +44,30 @@ import (
 	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
 
+func NewIntegrationClientCache[T any](in func(cc grpc.ClientConnInterface) T) cache.Object[T] {
+	conn := NewIntegrationConnectionCache()
+
+	return cache.NewObject(func(ctx context.Context) (T, time.Duration, error) {
+		c, ttl, err := conn.GetWithTTL(ctx)
+		if err != nil {
+			return util.Default[T](), 0, err
+		}
+
+		return in(c), ttl, nil
+	})
+}
+
+func NewIntegrationConnectionCache() cache.Object[grpc.ClientConnInterface] {
+	return cache.NewObject[grpc.ClientConnInterface](func(ctx context.Context) (grpc.ClientConnInterface, time.Duration, error) {
+		conn, err := NewIntegrationConnection()
+		if err != nil {
+			return nil, 0, err
+		}
+
+		return conn, time.Hour, nil
+	})
+}
+
 func NewIntegrationConnection() (grpc.ClientConnInterface, error) {
 	addr, ok := utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Lookup()
 	if !ok {
@@ -59,7 +84,7 @@ func NewIntegrationConnection() (grpc.ClientConnInterface, error) {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
-	opts = append(opts, authentication.NewInterceptorClientOptions(authentication.NewArangoTokenAuthentication())...)
+	opts = append(opts, authentication.NewInterceptorClientOptions(authentication.NewEnvAuthentication())...)
 
 	return grpc.NewClient(addr, opts...)
 }

@@ -32,11 +32,12 @@ import (
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, cfg Configuration) (svc.HandlerInitService, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -84,7 +85,6 @@ func (i *implementation) Name() string {
 
 func (i *implementation) Health(ctx context.Context) svc.HealthState {
 	if err := i.plugin.Ready(ctx); err != nil {
-		logger.Err(err).Warn("Service is not ready")
 		return svc.Degraded
 	}
 	return svc.Healthy
@@ -99,10 +99,18 @@ func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, con
 }
 
 func (i *implementation) Evaluate(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
+	if err := i.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
 	return i.plugin.Evaluate(ctx, request)
 }
 
 func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionManyRequest) (*pbAuthorizationV1.AuthorizationV1PermissionManyResponse, error) {
+	if err := i.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
 	if len(request.Items) == 0 {
 		return &pbAuthorizationV1.AuthorizationV1PermissionManyResponse{
 			Message: "Missing permission evaluation items",
@@ -114,7 +122,7 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 
 	for id, v := range request.Items {
 		resp, err := i.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-			User:     request.GetUser(),
+			User:     request.User,
 			Roles:    request.GetRoles(),
 			Action:   v.GetAction(),
 			Resource: v.GetResource(),
@@ -145,6 +153,10 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 }
 
 func (i *implementation) EvaluateToken(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionTokenRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
+	if err := i.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
 	auth, err := i.auth.Get(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "Authentication V1 Plugin not enabled: %v", err)
@@ -160,7 +172,7 @@ func (i *implementation) EvaluateToken(ctx context.Context, request *pbAuthoriza
 	}
 
 	return i.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-		User:     resp.GetDetails().GetUser(),
+		User:     util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User),
 		Roles:    resp.GetDetails().GetRoles(),
 		Action:   request.GetAction(),
 		Resource: request.GetResource(),
@@ -169,6 +181,10 @@ func (i *implementation) EvaluateToken(ctx context.Context, request *pbAuthoriza
 }
 
 func (i *implementation) EvaluateTokenMany(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionTokenManyRequest) (*pbAuthorizationV1.AuthorizationV1PermissionManyResponse, error) {
+	if err := i.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
 	auth, err := i.auth.Get(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "Authentication V1 Plugin not enabled: %v", err)
@@ -184,7 +200,7 @@ func (i *implementation) EvaluateTokenMany(ctx context.Context, request *pbAutho
 	}
 
 	return i.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
-		User:  resp.GetDetails().GetUser(),
+		User:  util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User),
 		Roles: resp.GetDetails().GetRoles(),
 		Items: request.GetItems(),
 	})

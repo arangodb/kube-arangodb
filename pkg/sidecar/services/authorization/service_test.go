@@ -48,12 +48,12 @@ import (
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
-func Handler(t *testing.T) svc.Handler {
+func Handler(t *testing.T, tm tests.TokenManager) svc.Handler {
 	return NewAuthorizer(db.NewClient(cache.NewObject(tests.TestArangoDBConfig(t).ClientCache())).
 		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(8))), &arangodb.CreateDatabaseOptions{}).
 		CreateCollection("_users", db.StaticProps(arangodb.CreateCollectionPropertiesV2{
 			IsSystem: util.NewType(true),
-		})).Database())
+		})).Database(), authentication.NewFolderAuthentication(tm.Path()))
 }
 
 func Server(t *testing.T, ctx context.Context, tm tests.TokenManager) svc.ServiceStarter {
@@ -63,7 +63,7 @@ func Server(t *testing.T, ctx context.Context, tm tests.TokenManager) svc.Servic
 		Gateway: &svc.ConfigurationGateway{
 			Address: "127.0.0.1:0",
 		},
-	}, Handler(t))
+	}, Handler(t, tm))
 	require.NoError(t, err)
 
 	return local.Start(ctx)
@@ -91,7 +91,7 @@ func Test_Service(t *testing.T) {
 
 	tm.Set(t, token)
 
-	z := sidecarSvcAuthzClient.NewClient(t.Context(), q)
+	z := sidecarSvcAuthzClient.NewClient(t.Context(), cache.Static(q))
 
 	zctx, c := context.WithTimeout(t.Context(), time.Second)
 	defer c()

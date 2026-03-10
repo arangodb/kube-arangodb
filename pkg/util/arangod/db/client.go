@@ -47,7 +47,7 @@ type client struct {
 func (c client) CreateDatabase(name string, options *arangodb.CreateDatabaseOptions) Database {
 	return database{
 		cache: cache.NewObject(func(ctx context.Context) (arangodb.Database, time.Duration, error) {
-			client, err := c.cache.Get(ctx)
+			client, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
 			}
@@ -56,7 +56,7 @@ func (c client) CreateDatabase(name string, options *arangodb.CreateDatabaseOpti
 				return nil, 0, err
 			}
 
-			return db, DefaultTTL, nil
+			return db, ttl, nil
 		}),
 	}
 }
@@ -64,7 +64,7 @@ func (c client) CreateDatabase(name string, options *arangodb.CreateDatabaseOpti
 func (c client) Database(name string) Database {
 	return database{
 		cache: cache.NewObject(func(ctx context.Context) (arangodb.Database, time.Duration, error) {
-			client, err := c.cache.Get(ctx)
+			client, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
 			}
@@ -73,7 +73,7 @@ func (c client) Database(name string) Database {
 				return nil, 0, err
 			}
 
-			return db, DefaultTTL, nil
+			return db, ttl, nil
 		}),
 	}
 }

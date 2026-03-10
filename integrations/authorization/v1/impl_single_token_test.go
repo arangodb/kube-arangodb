@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
@@ -46,7 +47,7 @@ func Test_Service_Token(t *testing.T) {
 	client, _ := Client(t, ctx, Handler(p), authn)
 
 	p.Set(t, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-		User:     "admin",
+		User:     util.NewType("admin"),
 		Roles:    []string{"x"},
 		Action:   "test:Get",
 		Resource: "test",

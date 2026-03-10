@@ -26,19 +26,37 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
+func (a *implementation) APIListRole(ctx context.Context, empty *pbSharedV1.Empty) (*sidecarSvcAuthzDefinition.AuthorizationAPIListResponse, error) {
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:ListRole", ""); err != nil {
+		return nil, err
+	}
+
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIListResponse{
+		Names: util.FormatList(a.roles.Get(), func(a pool.OffsetItem[*sidecarSvcAuthzTypes.Role]) string {
+			return a.Name
+		}),
+	}, nil
+}
+
 func (a *implementation) APIGetRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
-	if identity := authenticator.GetIdentity(ctx); identity == nil {
-		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
-	} else {
-		// Restrict only for superuser for now
-		if identity.User != nil {
-			return nil, status.Error(codes.Unauthenticated, "Only super-user allowed")
-		}
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:GetRole", request.GetName()); err != nil {
+		return nil, err
 	}
 
 	role, index, ok := a.roles.Item(request.GetName())
@@ -54,13 +72,12 @@ func (a *implementation) APIGetRole(ctx context.Context, request *sidecarSvcAuth
 }
 
 func (a *implementation) APIDeleteRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
-	if identity := authenticator.GetIdentity(ctx); identity == nil {
-		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
-	} else {
-		// Restrict only for superuser for now
-		if identity.User != nil {
-			return nil, status.Error(codes.Unauthenticated, "Only super-user allowed")
-		}
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:DeleteRole", request.GetName()); err != nil {
+		return nil, err
 	}
 
 	offset, err := a.roles.Delete(ctx, request.GetName())
@@ -80,13 +97,12 @@ func (a *implementation) APIDeleteRole(ctx context.Context, request *sidecarSvcA
 }
 
 func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIRoleRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
-	if identity := authenticator.GetIdentity(ctx); identity == nil {
-		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
-	} else {
-		// Restrict only for superuser for now
-		if identity.User != nil {
-			return nil, status.Error(codes.Unauthenticated, "Only super-user allowed")
-		}
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:CreateRole", request.GetName()); err != nil {
+		return nil, err
 	}
 
 	if item := request.GetItem(); item == nil {
@@ -111,13 +127,12 @@ func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcA
 }
 
 func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIRoleRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse, error) {
-	if identity := authenticator.GetIdentity(ctx); identity == nil {
-		return nil, status.Error(codes.Unauthenticated, "Unauthenticated")
-	} else {
-		// Restrict only for superuser for now
-		if identity.User != nil {
-			return nil, status.Error(codes.Unauthenticated, "Only super-user allowed")
-		}
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.auth, "rbac:UpdateRole", request.GetName()); err != nil {
+		return nil, err
 	}
 
 	if item := request.GetItem(); item == nil {

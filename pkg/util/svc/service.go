@@ -44,7 +44,7 @@ type Service interface {
 
 	GetHandler(name string) (Handler, bool)
 
-	Dial() (grpc.ClientConnInterface, error)
+	Dial(opts ...grpc.DialOption) (grpc.ClientConnInterface, error)
 }
 
 type service struct {
@@ -72,19 +72,17 @@ type serviceHTTP struct {
 	unix    *goHttp.Server
 }
 
-func (p *service) Dial() (grpc.ClientConnInterface, error) {
+func (p *service) Dial(opts ...grpc.DialOption) (grpc.ClientConnInterface, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	if p.starter == nil {
 		return nil, errors.Errorf("server not initialized")
 	}
 
-	return p.dial(p.starter.Address(), p.starter.Unix())
+	return p.dial(p.starter.Address(), p.starter.Unix(), opts...)
 }
 
-func (p *service) dial(address string, unix string) (*grpc.ClientConn, error) {
-	var opts []grpc.DialOption
-
+func (p *service) dial(address string, unix string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	if p.tls {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
 			InsecureSkipVerify: true,

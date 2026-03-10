@@ -23,6 +23,7 @@ package sidecar
 import (
 	"fmt"
 
+	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 )
@@ -52,6 +53,11 @@ var (
 		Name:        "sidecar.auth",
 		Description: "Path to the JWT Folder",
 		Default:     "",
+	}
+	flagAuthMode = cli.Flag[string]{
+		Name:        "sidecar.auth.mode",
+		Description: "Auth Mode",
+		Default:     string(pbImplAuthorizationV1.ConfigurationTypeCentral),
 	}
 	flagArangodb = cli.Flag[string]{
 		Name:        "arangodb.endpoint",

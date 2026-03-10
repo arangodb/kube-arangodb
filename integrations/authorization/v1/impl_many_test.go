@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func Test_Service_Many(t *testing.T) {
@@ -36,7 +37,7 @@ func Test_Service_Many(t *testing.T) {
 	p := newPluginTest()
 
 	p.Set(t, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-		User:     "admin",
+		User:     util.NewType("admin"),
 		Action:   "test:Get",
 		Resource: "deny",
 	}, &pbAuthorizationV1.AuthorizationV1PermissionResponse{
@@ -48,7 +49,7 @@ func Test_Service_Many(t *testing.T) {
 
 	t.Run("Empty", func(t *testing.T) {
 		resp, err := client.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
-			User: "admin",
+			User: util.NewType("admin"),
 		})
 		require.NoError(t, err)
 		require.EqualValues(t, pbAuthorizationV1.AuthorizationV1Effect_Deny, resp.GetEffect())
@@ -57,7 +58,7 @@ func Test_Service_Many(t *testing.T) {
 
 	t.Run("Single Allow", func(t *testing.T) {
 		resp, err := client.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
-			User: "admin",
+			User: util.NewType("admin"),
 			Items: []*pbAuthorizationV1.AuthorizationV1PermissionManyRequestItem{
 				{
 					Action:   "test:Get",
@@ -73,7 +74,7 @@ func Test_Service_Many(t *testing.T) {
 
 	t.Run("Multi Allow", func(t *testing.T) {
 		resp, err := client.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
-			User: "admin",
+			User: util.NewType("admin"),
 			Items: []*pbAuthorizationV1.AuthorizationV1PermissionManyRequestItem{
 				{
 					Action:   "test:Get",
@@ -94,7 +95,7 @@ func Test_Service_Many(t *testing.T) {
 
 	t.Run("Multi Allow with deny", func(t *testing.T) {
 		resp, err := client.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
-			User: "admin",
+			User: util.NewType("admin"),
 			Items: []*pbAuthorizationV1.AuthorizationV1PermissionManyRequestItem{
 				{
 					Action:   "test:Get",

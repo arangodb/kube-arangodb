@@ -18,18 +18,35 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package authentication
+package authenticator
 
-import utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
+import (
+	"context"
 
-func NewEnvAuthentication() Authentication {
-	if v, ok := utilConstants.INTEGRATION_ARANGO_TOKEN.Lookup(); ok {
-		return NewTokenFileAuthentication(v)
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
+
+const AnonymousUser = "system:anonymous"
+
+func Anonymous(auth Authenticator) Authenticator {
+	return anonymousAuthenticator{auth: auth}
+}
+
+type anonymousAuthenticator struct {
+	auth Authenticator
+}
+
+func (r anonymousAuthenticator) ValidateGRPC(ctx context.Context) (*Identity, error) {
+	identity, err := r.auth.ValidateGRPC(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if v, ok := utilConstants.INTEGRATION_ARANGO_JWT_FOLDER.Lookup(); ok {
-		return NewFolderAuthentication(v)
+	if identity == nil {
+		return &Identity{
+			User: util.NewType(AnonymousUser),
+		}, nil
 	}
 
-	return NewEmptyAuthentication()
+	return identity, nil
 }

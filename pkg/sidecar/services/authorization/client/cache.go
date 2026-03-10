@@ -27,7 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string]*sidecarSvcAuthzTypes.Role) cache {
+func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string]*sidecarSvcAuthzTypes.Role) internalCache {
 	parsedPolicies := make(map[string]*policy, len(policies))
 
 	for name, policy := range policies {
@@ -65,20 +65,20 @@ func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string
 		parsedUsers[k] = v
 	}
 
-	return cache{
+	return internalCache{
 		users:    parsedUsers,
 		roles:    parsedRoles,
 		policies: parsedPolicies,
 	}
 }
 
-type cache struct {
+type internalCache struct {
 	users    map[string][]string
 	roles    map[string][]string
 	policies map[string]*policy
 }
 
-func (c *cache) extractUserPolicies(user string, userRoles ...string) []*policy {
+func (c *internalCache) extractUserPolicies(user string, userRoles ...string) []*policy {
 	if c == nil {
 		return nil
 	}

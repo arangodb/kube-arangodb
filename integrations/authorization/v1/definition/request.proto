@@ -29,7 +29,7 @@ option go_package = "github.com/arangodb/kube-arangodb/integrations/authorizatio
 // AuthorizationV1PermissionRequest request for the Permission evaluation request
 message AuthorizationV1PermissionRequest {
   // Defines the User
-  string user = 1;
+  optional string user = 1;
 
   // Defines the list of roles
   repeated string roles = 2;
@@ -56,7 +56,7 @@ message AuthorizationV1PermissionResponse {
 // AuthorizationV1PermissionManyRequest request for the list Permission evaluation request
 message AuthorizationV1PermissionManyRequest {
   // Defines the User
-  string user = 1;
+  optional string user = 1;
 
   // Defines the list of roles
   repeated string roles = 2;

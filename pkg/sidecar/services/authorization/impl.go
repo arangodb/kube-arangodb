@@ -27,14 +27,18 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
+	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
+	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authentication"
 )
 
-func NewAuthorizer(client db.Database) svc.Handler {
+func NewAuthorizer(client db.Database, auth authentication.Authentication) svc.HandlerInitService {
 	return &implementation{
 		policies: pool.NewPooler[*sidecarSvcAuthzTypes.Policy](client.
 			CreateCollection("_policies", db.SourceCollectionProps("_users")).
@@ -45,6 +49,7 @@ func NewAuthorizer(client db.Database) svc.Handler {
 			CreateCollection("_roles", db.SourceCollectionProps("_users")).
 			WithTTLIndex("roles_deleted_index", 30*24*time.Hour, "deleted").
 			Get(), pool.DefaultPoolerTimeout),
+		clientAuth: auth,
 	}
 }
 
@@ -57,10 +62,19 @@ type implementation struct {
 
 	policies pool.Pooler[*sidecarSvcAuthzTypes.Policy]
 	roles    pool.Pooler[*sidecarSvcAuthzTypes.Role]
+
+	auth cache.Object[pbAuthorizationV1.AuthorizationV1Client]
+
+	clientAuth authentication.Authentication
+}
+
+func (a *implementation) InitService(svc svc.Service) error {
+	a.auth = pbImplAuthorizationV1.ServiceClient(svc, authentication.NewInterceptorClientOptions(a.clientAuth)...)
+	return nil
 }
 
 func (a *implementation) Name() string {
-	return "implementation"
+	return "authorization"
 }
 
 func (a *implementation) Health(ctx context.Context) svc.HealthState {

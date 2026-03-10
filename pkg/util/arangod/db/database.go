@@ -73,7 +73,7 @@ type database struct {
 func (d database) CreateCollection(name string, props CollectionProps) Collection {
 	return collection{
 		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
-			db, err := d.cache.Get(ctx)
+			db, ttl, err := d.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
 			}
@@ -101,7 +101,7 @@ func (d database) CreateCollection(name string, props CollectionProps) Collectio
 				return nil, 0, err
 			}
 
-			return col, DefaultTTL, nil
+			return col, ttl, nil
 		}),
 	}
 }
@@ -109,7 +109,7 @@ func (d database) CreateCollection(name string, props CollectionProps) Collectio
 func (d database) Collection(name string) Collection {
 	return collection{
 		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
-			db, err := d.cache.Get(ctx)
+			db, ttl, err := d.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
 			}
@@ -119,7 +119,7 @@ func (d database) Collection(name string) Collection {
 				return nil, 0, err
 			}
 
-			return col, DefaultTTL, nil
+			return col, ttl, nil
 		}),
 	}
 }

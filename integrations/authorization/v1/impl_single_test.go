@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
 )
@@ -42,7 +43,7 @@ func Test_Service(t *testing.T) {
 	client, _ := Client(t, ctx, Handler(p))
 
 	resp, err := client.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-		User:     "admin",
+		User:     util.NewType("admin"),
 		Action:   "test:Get",
 		Resource: "test",
 	})
@@ -59,7 +60,7 @@ func Test_ServiceHTTP(t *testing.T) {
 	_, endpoint := Client(t, ctx, Handler(p))
 
 	data, err := http.Post[ugrpc.Object[*pbAuthorizationV1.AuthorizationV1PermissionRequest], any, error](ctx, goHttp.DefaultClient, ugrpc.NewObject(&pbAuthorizationV1.AuthorizationV1PermissionRequest{
-		User:     "admin",
+		User:     util.NewType("admin"),
 		Action:   "test:Get",
 		Resource: "test",
 	}), fmt.Sprintf("http://%s/_integration/authorization/v1/evaluate", endpoint)).WithCode(200).Data()

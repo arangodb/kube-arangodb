@@ -25,6 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
@@ -43,6 +44,7 @@ func Register() (*cobra.Command, error) {
 		flagGatewayAddress,
 		flagKeyfile,
 		flagAuth,
+		flagAuthMode,
 		flagHealthAddress,
 		flagArangodb,
 	); err != nil {
@@ -93,10 +95,18 @@ func configuration(cmd *cobra.Command) (svc.Configuration, error) {
 	if auth, err := flagAuth.Get(cmd); err != nil {
 		return svc.Configuration{}, err
 	} else if auth != "" {
-		cfg.Authenticator = authenticator.Required(authenticator.NewJWTAuthentication(auth))
+		cfg.Authenticator = authenticator.NewJWTAuthentication(auth)
 	} else {
-		cfg.Authenticator = authenticator.Required(authenticator.NewAlwaysAuthenticator())
+		cfg.Authenticator = authenticator.NewAlwaysAuthenticator()
 	}
+
+	if am, err := flagAuthMode.Get(cmd); err != nil {
+		return svc.Configuration{}, err
+	} else if am == string(pbImplAuthorizationV1.ConfigurationTypeCentralPermissive) {
+		cfg.Authenticator = authenticator.Anonymous(cfg.Authenticator)
+	}
+
+	cfg.Authenticator = authenticator.Required(cfg.Authenticator)
 
 	return cfg, nil
 }

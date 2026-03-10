@@ -63,7 +63,7 @@ func Test_Basic(t *testing.T) {
 
 	require.True(t, validateResponse.IsValid)
 	require.NotNil(t, validateResponse.Details)
-	require.EqualValues(t, DefaultUser, validateResponse.Details.User)
+	require.EqualValues(t, DefaultUser, validateResponse.Details.GetUser())
 }
 
 func Test_Flow_WithoutTTL(t *testing.T) {
@@ -108,7 +108,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, response)
 		require.True(t, response.IsValid)
-		require.EqualValues(t, cfg.Create.DefaultUser, response.Details.User)
+		require.EqualValues(t, cfg.Create.DefaultUser, response.Details.GetUser())
 	})
 
 	t.Run("Save secret2", func(t *testing.T) {
@@ -129,7 +129,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, response)
 		require.True(t, response.IsValid)
-		require.EqualValues(t, cfg.Create.DefaultUser, response.Details.User)
+		require.EqualValues(t, cfg.Create.DefaultUser, response.Details.GetUser())
 	})
 
 	t.Run("Save secret1", func(t *testing.T) {
@@ -171,7 +171,7 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, response)
 		require.True(t, response.IsValid)
-		require.EqualValues(t, cfg.Create.DefaultUser, response.Details.User)
+		require.EqualValues(t, cfg.Create.DefaultUser, response.Details.GetUser())
 	})
 
 	t.Run("Validate token2", func(t *testing.T) {
@@ -181,6 +181,6 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, response)
 		require.True(t, response.IsValid)
-		require.EqualValues(t, cfg.Create.DefaultUser, response.Details.User)
+		require.EqualValues(t, cfg.Create.DefaultUser, response.Details.GetUser())
 	})
 }

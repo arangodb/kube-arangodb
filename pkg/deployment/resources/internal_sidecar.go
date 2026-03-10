@@ -21,12 +21,15 @@
 package resources
 
 import (
+	"fmt"
 	"path/filepath"
 
 	core "k8s.io/api/core/v1"
 
+	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -39,6 +42,7 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 
 	if spec.Authentication.IsAuthenticated() {
 		options.Add("--sidecar.auth", shared.ClusterJWTSecretVolumeMountDir)
+		options.Add("--sidecar.auth.mode", util.BoolSwitch(features.RBACEnforced().Enabled(), pbImplAuthorizationV1.ConfigurationTypeCentral, pbImplAuthorizationV1.ConfigurationTypeCentralPermissive).String())
 	}
 
 	if port := groupSpec.InternalPort; port == nil {
@@ -87,6 +91,24 @@ func ArangodbInternalSidecarContainer(image string, args []string,
 		Resources:       kresources.ExtractPodAcceptedResourceRequirement(res),
 		SecurityContext: k8sutil.CreateSecurityContext(groupSpec.SecurityContext),
 		ImagePullPolicy: core.PullIfNotPresent,
+		Env: []core.EnvVar{
+			{
+				Name:  utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.String(),
+				Value: fmt.Sprintf("127.0.0.1:%d", shared.InternalSidecarContainerPortGRPC),
+			},
+			{
+				Name:  utilConstants.CENTRAL_INTEGRATION_SECURED.String(),
+				Value: util.BoolSwitch(spec.IsSecure(), "true", "false"),
+			},
+		},
+	}
+
+	if spec.IsAuthenticated() {
+		c.Env = append(c.Env, core.EnvVar{
+			Name:  utilConstants.INTEGRATION_ARANGO_JWT_FOLDER.String(),
+			Value: shared.ClusterJWTSecretVolumeMountDir,
+		},
+		)
 	}
 
 	probe := probes.GRPCProbeConfig{Port: shared.InternalSidecarContainerPortHealth, Common: probes.Common{
