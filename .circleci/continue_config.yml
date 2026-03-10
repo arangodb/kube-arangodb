@@ -2,6 +2,17 @@ version: 2.1
 orbs:
   slack: circleci/slack@4.1
 
+parameters:
+  manifests-verify:
+    type: boolean
+    default: false
+  minikube-version:
+    type: string
+    default: v1.31.2
+  helm-version:
+    type: string
+    default: v3.13.0
+
 executors:
   golang-executor:
     docker:
