@@ -50,6 +50,14 @@ func Test_Offset(t *testing.T) {
 		require.EqualValues(t, items[0:DefaultPageSize], nitems)
 	})
 
+	t.Run("Full", func(t *testing.T) {
+		res, nitems := Paginate(&OffsetRequest{ItemsPerPage: util.NewType[int32](102400)}, items)
+		require.Len(t, nitems, 1024)
+		require.EqualValues(t, len(items), res.GetItems())
+		require.EqualValues(t, 1, res.GetPage())
+		require.EqualValues(t, items, nitems)
+	})
+
 	t.Run("Page 2", func(t *testing.T) {
 		res, nitems := Paginate(&OffsetRequest{Page: util.NewType[int32](2)}, items)
 		require.Len(t, nitems, DefaultPageSize)

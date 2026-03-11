@@ -41,7 +41,7 @@ func (a *implementation) APIListRole(ctx context.Context, request *pbSharedV1.Of
 		return nil, err
 	}
 
-	page, items := pbSharedV1.Paginate(request, a.policies.Items())
+	page, items := pbSharedV1.Paginate(request, a.roles.Items())
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIListResponse{
 		Names: items,
