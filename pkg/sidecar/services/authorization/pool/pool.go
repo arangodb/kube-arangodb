@@ -23,6 +23,7 @@ package pool
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -152,11 +153,13 @@ func (p *pooler[T]) Items() []string {
 	r := make([]string, 0, len(p.state))
 
 	for k, v := range p.state {
-		if !v.Spec.Deleted() {
+		if v.Spec.Deleted() {
 			continue
 		}
 		r = append(r, k)
 	}
+
+	sort.Strings(r)
 
 	return r
 }
