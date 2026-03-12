@@ -30,6 +30,7 @@ import (
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
+	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -100,6 +101,6 @@ func BenchmarkClientEvaluationPerformance(b *testing.B) {
 			Resource: "storage:/data/super/get",
 		})
 		require.NoError(b, err)
-		require.EqualValues(b, pbAuthorizationV1.AuthorizationV1Effect_Allow, res.Effect)
+		require.EqualValues(b, types.Effect_Allow, res.Effect)
 	}
 }

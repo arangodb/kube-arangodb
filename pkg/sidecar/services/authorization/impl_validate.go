@@ -18,20 +18,29 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package shared
+package authorization
 
 import (
 	"context"
 
-	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
-func NewNeverPlugin() Plugin {
-	return PluginFunc(func(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
-		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
-			Message: "Denied by never plugin",
+func (a *implementation) ValidateSelfPermission(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIValidateSelfRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIValidateResponse, error) {
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, request.GetAction(), request.GetResource()); err != nil {
+		return &sidecarSvcAuthzDefinition.AuthorizationAPIValidateResponse{
+			Message: err.Error(),
 			Effect:  types.Effect_Deny,
 		}, nil
-	})
+	}
+
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIValidateResponse{
+		Effect: types.Effect_Allow,
+	}, nil
 }

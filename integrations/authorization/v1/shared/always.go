@@ -24,13 +24,14 @@ import (
 	"context"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
 
 func NewAlwaysPlugin() Plugin {
 	return PluginFunc(func(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Allowed by always plugin",
-			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+			Effect:  types.Effect_Allow,
 		}, nil
 	})
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
@@ -53,7 +54,7 @@ func Test_Service_Token(t *testing.T) {
 		Resource: "test",
 	}, &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 		Message: "Marked",
-		Effect:  pbAuthorizationV1.AuthorizationV1Effect_Deny,
+		Effect:  types.Effect_Deny,
 	})
 
 	t.Run("Without Roles", func(t *testing.T) {
@@ -65,7 +66,7 @@ func Test_Service_Token(t *testing.T) {
 			Resource: "test",
 		})
 		require.NoError(t, err)
-		require.EqualValues(t, pbAuthorizationV1.AuthorizationV1Effect_Allow, resp.GetEffect())
+		require.EqualValues(t, types.Effect_Allow, resp.GetEffect())
 	})
 
 	t.Run("With Roles", func(t *testing.T) {
@@ -77,6 +78,6 @@ func Test_Service_Token(t *testing.T) {
 			Resource: "test",
 		})
 		require.NoError(t, err)
-		require.EqualValues(t, pbAuthorizationV1.AuthorizationV1Effect_Deny, resp.GetEffect())
+		require.EqualValues(t, types.Effect_Deny, resp.GetEffect())
 	})
 }

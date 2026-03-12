@@ -24,6 +24,7 @@ import (
 	"context"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
 
 func SuperUser(p Plugin) Plugin {
@@ -48,7 +49,7 @@ func (s superUser) Evaluate(ctx context.Context, req *pbAuthorizationV1.Authoriz
 	if req != nil && req.User == nil {
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Superuser Allowed",
-			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+			Effect:  types.Effect_Allow,
 		}, nil
 	}
 

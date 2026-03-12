@@ -22,7 +22,8 @@ syntax = "proto3";
 
 package authorization;
 
-import "integrations/authorization/v1/definition/effect.proto";
+import "pkg/sidecar/services/authorization/types/context.proto";
+import "pkg/sidecar/services/authorization/types/effect.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition";
 
@@ -41,7 +42,7 @@ message AuthorizationV1PermissionRequest {
   string resource = 4;
 
   // request context
-  optional AuthorizationV1PermissionRequestContext context = 5;
+  optional types.Context context = 5;
 }
 
 // AuthorizationV1PermissionResponse request for the Permission evaluation response
@@ -50,7 +51,7 @@ message AuthorizationV1PermissionResponse {
   string message = 1;
 
   // Effect of the permission evaluation
-  AuthorizationV1Effect effect = 2;
+  types.Effect effect = 2;
 }
 
 // AuthorizationV1PermissionManyRequest request for the list Permission evaluation request
@@ -74,7 +75,7 @@ message AuthorizationV1PermissionManyRequestItem {
   string resource = 2;
 
   // request context
-  optional AuthorizationV1PermissionRequestContext context = 3;
+  optional types.Context context = 3;
 }
 
 // AuthorizationV1PermissionManyResponse request for the list Permission evaluation request
@@ -83,7 +84,7 @@ message AuthorizationV1PermissionManyResponse {
   string message = 1;
 
   // Effect of the permission evaluation
-  AuthorizationV1Effect effect = 2;
+  types.Effect effect = 2;
 
   // List of the request items
   repeated AuthorizationV1PermissionResponse items = 3;
@@ -101,7 +102,7 @@ message AuthorizationV1PermissionTokenRequest {
   string resource = 3;
 
   // request context
-  optional AuthorizationV1PermissionRequestContext context = 4;
+  optional types.Context context = 4;
 }
 
 // AuthorizationV1PermissionManyRequest request for the list Permission evaluation request
@@ -111,16 +112,4 @@ message AuthorizationV1PermissionTokenManyRequest {
 
   // Defines list of check actions
   repeated AuthorizationV1PermissionManyRequestItem items = 2;
-}
-
-// Request context
-message AuthorizationV1PermissionRequestContext {
-  // Keeps the list of the context parameters
-  map<string, AuthorizationV1PermissionRequestContextParameter> parameters = 1;
-}
-
-// Request context parameter
-message AuthorizationV1PermissionRequestContextParameter {
-  // keeps the context values
-  repeated string values = 1;
 }

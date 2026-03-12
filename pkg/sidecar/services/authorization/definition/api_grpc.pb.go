@@ -40,16 +40,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthorizationAPI_APIListPolicy_FullMethodName   = "/service.AuthorizationAPI/APIListPolicy"
-	AuthorizationAPI_APIGetPolicy_FullMethodName    = "/service.AuthorizationAPI/APIGetPolicy"
-	AuthorizationAPI_APIDeletePolicy_FullMethodName = "/service.AuthorizationAPI/APIDeletePolicy"
-	AuthorizationAPI_APICreatePolicy_FullMethodName = "/service.AuthorizationAPI/APICreatePolicy"
-	AuthorizationAPI_APIUpdatePolicy_FullMethodName = "/service.AuthorizationAPI/APIUpdatePolicy"
-	AuthorizationAPI_APIListRole_FullMethodName     = "/service.AuthorizationAPI/APIListRole"
-	AuthorizationAPI_APIGetRole_FullMethodName      = "/service.AuthorizationAPI/APIGetRole"
-	AuthorizationAPI_APIDeleteRole_FullMethodName   = "/service.AuthorizationAPI/APIDeleteRole"
-	AuthorizationAPI_APICreateRole_FullMethodName   = "/service.AuthorizationAPI/APICreateRole"
-	AuthorizationAPI_APIUpdateRole_FullMethodName   = "/service.AuthorizationAPI/APIUpdateRole"
+	AuthorizationAPI_ValidateSelfPermission_FullMethodName = "/service.AuthorizationAPI/ValidateSelfPermission"
+	AuthorizationAPI_APIListPolicy_FullMethodName          = "/service.AuthorizationAPI/APIListPolicy"
+	AuthorizationAPI_APIGetPolicy_FullMethodName           = "/service.AuthorizationAPI/APIGetPolicy"
+	AuthorizationAPI_APIDeletePolicy_FullMethodName        = "/service.AuthorizationAPI/APIDeletePolicy"
+	AuthorizationAPI_APICreatePolicy_FullMethodName        = "/service.AuthorizationAPI/APICreatePolicy"
+	AuthorizationAPI_APIUpdatePolicy_FullMethodName        = "/service.AuthorizationAPI/APIUpdatePolicy"
+	AuthorizationAPI_APIListRole_FullMethodName            = "/service.AuthorizationAPI/APIListRole"
+	AuthorizationAPI_APIGetRole_FullMethodName             = "/service.AuthorizationAPI/APIGetRole"
+	AuthorizationAPI_APIDeleteRole_FullMethodName          = "/service.AuthorizationAPI/APIDeleteRole"
+	AuthorizationAPI_APICreateRole_FullMethodName          = "/service.AuthorizationAPI/APICreateRole"
+	AuthorizationAPI_APIUpdateRole_FullMethodName          = "/service.AuthorizationAPI/APIUpdateRole"
 )
 
 // AuthorizationAPIClient is the client API for AuthorizationAPI service.
@@ -58,6 +59,8 @@ const (
 //
 // AuthorizationAPI Service implementation
 type AuthorizationAPIClient interface {
+	// Create the Policy
+	ValidateSelfPermission(ctx context.Context, in *AuthorizationAPIValidateSelfRequest, opts ...grpc.CallOption) (*AuthorizationAPIValidateResponse, error)
 	// Return the Policies
 	APIListPolicy(ctx context.Context, in *definition.OffsetRequest, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error)
 	// Return the Policy
@@ -86,6 +89,16 @@ type authorizationAPIClient struct {
 
 func NewAuthorizationAPIClient(cc grpc.ClientConnInterface) AuthorizationAPIClient {
 	return &authorizationAPIClient{cc}
+}
+
+func (c *authorizationAPIClient) ValidateSelfPermission(ctx context.Context, in *AuthorizationAPIValidateSelfRequest, opts ...grpc.CallOption) (*AuthorizationAPIValidateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthorizationAPIValidateResponse)
+	err := c.cc.Invoke(ctx, AuthorizationAPI_ValidateSelfPermission_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *authorizationAPIClient) APIListPolicy(ctx context.Context, in *definition.OffsetRequest, opts ...grpc.CallOption) (*AuthorizationAPIListResponse, error) {
@@ -194,6 +207,8 @@ func (c *authorizationAPIClient) APIUpdateRole(ctx context.Context, in *Authoriz
 //
 // AuthorizationAPI Service implementation
 type AuthorizationAPIServer interface {
+	// Create the Policy
+	ValidateSelfPermission(context.Context, *AuthorizationAPIValidateSelfRequest) (*AuthorizationAPIValidateResponse, error)
 	// Return the Policies
 	APIListPolicy(context.Context, *definition.OffsetRequest) (*AuthorizationAPIListResponse, error)
 	// Return the Policy
@@ -224,6 +239,9 @@ type AuthorizationAPIServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuthorizationAPIServer struct{}
 
+func (UnimplementedAuthorizationAPIServer) ValidateSelfPermission(context.Context, *AuthorizationAPIValidateSelfRequest) (*AuthorizationAPIValidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateSelfPermission not implemented")
+}
 func (UnimplementedAuthorizationAPIServer) APIListPolicy(context.Context, *definition.OffsetRequest) (*AuthorizationAPIListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method APIListPolicy not implemented")
 }
@@ -273,6 +291,24 @@ func RegisterAuthorizationAPIServer(s grpc.ServiceRegistrar, srv AuthorizationAP
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AuthorizationAPI_ServiceDesc, srv)
+}
+
+func _AuthorizationAPI_ValidateSelfPermission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorizationAPIValidateSelfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorizationAPIServer).ValidateSelfPermission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthorizationAPI_ValidateSelfPermission_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorizationAPIServer).ValidateSelfPermission(ctx, req.(*AuthorizationAPIValidateSelfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AuthorizationAPI_APIListPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -462,6 +498,10 @@ var AuthorizationAPI_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "service.AuthorizationAPI",
 	HandlerType: (*AuthorizationAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ValidateSelfPermission",
+			Handler:    _AuthorizationAPI_ValidateSelfPermission_Handler,
+		},
 		{
 			MethodName: "APIListPolicy",
 			Handler:    _AuthorizationAPI_APIListPolicy_Handler,

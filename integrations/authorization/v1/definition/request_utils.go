@@ -34,21 +34,3 @@ func (a *AuthorizationV1PermissionRequest) Hash() string {
 		a.GetContext().Hash(),
 	)
 }
-
-func (a *AuthorizationV1PermissionRequestContext) Hash() string {
-	if a == nil {
-		return ""
-	}
-
-	return util.SHA256FromStringArray(
-		util.SHA256FromHashStringMap(a.GetParameters()),
-	)
-}
-
-func (a *AuthorizationV1PermissionRequestContextParameter) Hash() string {
-	if v := a.GetValues(); len(v) > 0 {
-		return util.SHA256FromStringArray(v...)
-	}
-
-	return ""
-}

@@ -28,6 +28,7 @@ import (
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
 
 type Identity struct {
@@ -50,7 +51,7 @@ func (i *Identity) EvaluatePermission(ctx context.Context, c pbImplAuthorization
 		return status.Error(codes.Internal, err.Error())
 	}
 
-	if resp.GetEffect() == pbAuthorizationV1.AuthorizationV1Effect_Allow {
+	if resp.GetEffect() == sidecarSvcAuthzTypes.Effect_Allow {
 		return nil
 	}
 
