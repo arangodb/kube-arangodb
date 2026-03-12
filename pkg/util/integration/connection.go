@@ -57,9 +57,9 @@ func NewIntegrationClientCache[T any](in func(cc grpc.ClientConnInterface) T) ca
 	})
 }
 
-func NewIntegrationConnectionCache() cache.Object[grpc.ClientConnInterface] {
-	return cache.NewObject[grpc.ClientConnInterface](func(ctx context.Context) (grpc.ClientConnInterface, time.Duration, error) {
-		conn, err := NewIntegrationConnection()
+func NewIntegrationConnectionCache(opts ...grpc.DialOption) cache.Object[*grpc.ClientConn] {
+	return cache.NewObject[*grpc.ClientConn](func(ctx context.Context) (*grpc.ClientConn, time.Duration, error) {
+		conn, err := NewIntegrationConnection(opts...)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -68,13 +68,11 @@ func NewIntegrationConnectionCache() cache.Object[grpc.ClientConnInterface] {
 	})
 }
 
-func NewIntegrationConnection() (grpc.ClientConnInterface, error) {
+func NewIntegrationConnection(opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	addr, ok := utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Lookup()
 	if !ok {
 		return nil, errors.Errorf("Integration Service Address not found")
 	}
-
-	var opts []grpc.DialOption
 
 	if v, ok := utilConstants.CENTRAL_INTEGRATION_SECURED.Lookup(); ok && v == "true" {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{

@@ -18,17 +18,12 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package sidecar
+package authorization
 
 import (
-	"context"
-
-	"github.com/spf13/cobra"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
 
-type registerHandler func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error)
-
-var global = util.NewRegisterer[string, registerHandler]()
+var (
+	logger = logging.Global().RegisterAndGetLogger("sidecar-authz", logging.Info)
+)

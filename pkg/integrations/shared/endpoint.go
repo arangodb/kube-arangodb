@@ -27,9 +27,14 @@ import (
 	"github.com/spf13/cobra"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
+)
+
+const (
+	AuthClientContext util.ContextObject[cache.Object[pbAuthenticationV1.AuthenticationV1Client]] = "integration-auth-client"
 )
 
 type Endpoint struct {

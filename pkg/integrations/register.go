@@ -32,9 +32,13 @@ import (
 
 	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
 	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	integrationsClients "github.com/arangodb/kube-arangodb/pkg/integrations/clients"
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/integration"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
@@ -203,6 +207,8 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 		return errors.Wrapf(err, "Unable to parse external config")
 	}
 
+	internalConfig.Options = append(internalConfig.Options, svc.ProxyServer(integration.NewIntegrationConnectionCache(svc.ProxyClientOpts()...))...)
+
 	var internalHandlers, externalHandlers, healthHandlers, allHandlers []svc.Handler
 
 	var services []pbImplPongV1.Service
@@ -216,6 +222,24 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 	externalHandlers = append(externalHandlers, pong)
 	healthHandlers = append(healthHandlers, pong)
 	allHandlers = append(allHandlers, pong)
+
+	var db integrationsShared.Database
+	var endpoint integrationsShared.Endpoint
+
+	if err := integrationsShared.FillAll(cmd, &db, &endpoint); err != nil {
+		return err
+	}
+	if err := errors.Errors(
+		shared.PrefixResourceError("endpoint", endpoint.Validate()),
+		shared.PrefixResourceError("database", db.Validate()),
+	); err != nil {
+		return err
+	}
+
+	ctx = utilConstantsContext.ArangoDBClientCache.Set(ctx, db.DatabaseClient(endpoint))
+	ctx = integrationsShared.DatabaseSourceContext.Set(ctx, db.SourceCollectionProps())
+	ctx = integrationsShared.DatabaseNameContext.Set(ctx, db.Database)
+	ctx = integrationsShared.AuthClientContext.Set(ctx, endpoint.AuthClient())
 
 	for _, handler := range c.registered {
 		if ok, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s", handler.Name())); err != nil {

@@ -35,9 +35,11 @@ import (
 )
 
 func Client(t *testing.T, ctx context.Context) pbEnvoyAuthV3.AuthorizationClient {
+	handler, err := New(ctx, pbImplEnvoyAuthV3Shared.Configuration{})
+	require.NoError(t, err)
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, New(ctx, pbImplEnvoyAuthV3Shared.Configuration{}))
+	}, handler)
 	require.NoError(t, err)
 
 	start := local.Start(ctx)

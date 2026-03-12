@@ -23,6 +23,7 @@
 - (Feature) (Platform) Authorization Central Service
 - (Feature) (Platform) Permission RBAC
 - (Feature) (Platform) Permission Role & Policy CRD
+- (Feature) (Platform) (Proxy) Meta V1
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService

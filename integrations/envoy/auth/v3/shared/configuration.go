@@ -20,15 +20,8 @@
 
 package shared
 
-import (
-	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
-)
-
 type Configuration struct {
 	Enabled bool
-
-	integrationsShared.Endpoint
-	integrationsShared.Database
 
 	Extensions ConfigurationExtensions
 

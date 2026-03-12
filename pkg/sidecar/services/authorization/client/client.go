@@ -81,33 +81,7 @@ func (c *client) Revision() uint64 {
 func (c *client) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
 	policies := c.get().extractUserPolicies(req.GetUser(), req.GetRoles()...)
 
-	context := req.GetContext().GetContext()
-
-	var allowed bool
-
-	for _, policy := range policies {
-		if a, err := policy.Evaluate(req.GetAction(), req.GetResource(), context); err != nil {
-			if sidecarSvcAuthzTypes.IsPermissionDenied(err) {
-				return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
-					Message: "Explicit deny",
-					Effect:  pbAuthorizationV1.AuthorizationV1Effect_Deny,
-				}, nil
-			}
-		} else if a {
-			allowed = true
-		}
-	}
-
-	if allowed {
-		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
-			Message: "Access Granted",
-			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
-		}, nil
-	}
-	return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
-		Message: "Permission denied",
-		Effect:  pbAuthorizationV1.AuthorizationV1Effect_Deny,
-	}, nil
+	return EvaluatePolicies(req, policies...)
 }
 
 func (c *client) get() *internalCache {

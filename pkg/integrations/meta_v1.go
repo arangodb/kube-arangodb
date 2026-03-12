@@ -27,7 +27,6 @@ import (
 
 	pbImplMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1"
 	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
-	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -58,9 +57,5 @@ func (a *metaV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 }
 
 func (a *metaV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	if err := integrationsShared.FillAll(cmd, &a.config.Endpoint, &a.config.Database); err != nil {
-		return nil, err
-	}
-
-	return pbImplMetaV1.New(a.config)
+	return pbImplMetaV1.New(ctx, a.config)
 }

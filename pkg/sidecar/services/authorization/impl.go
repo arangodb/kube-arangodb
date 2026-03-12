@@ -28,17 +28,21 @@ import (
 	"google.golang.org/grpc"
 
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
-	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
-	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc/authentication"
 )
 
-func NewAuthorizer(client db.Database, auth authentication.Authentication) svc.HandlerInitService {
+type Authorizer interface {
+	Plugin() pbImplAuthorizationV1Shared.Plugin
+
+	svc.Handler
+}
+
+func NewAuthorizer(client db.Database, authType pbImplAuthorizationV1.ConfigurationType) Authorizer {
 	return &implementation{
 		policies: pool.NewPooler[*sidecarSvcAuthzTypes.Policy](client.
 			CreateCollection("_policies", db.SourceCollectionProps("_users")).
@@ -49,7 +53,7 @@ func NewAuthorizer(client db.Database, auth authentication.Authentication) svc.H
 			CreateCollection("_roles", db.SourceCollectionProps("_users")).
 			WithTTLIndex("roles_deleted_index", 30*24*time.Hour, "deleted").
 			Get(), pool.DefaultPoolerTimeout),
-		clientAuth: auth,
+		authType: authType,
 	}
 }
 
@@ -63,18 +67,24 @@ type implementation struct {
 	policies pool.Pooler[*sidecarSvcAuthzTypes.Policy]
 	roles    pool.Pooler[*sidecarSvcAuthzTypes.Role]
 
-	auth cache.Object[pbAuthorizationV1.AuthorizationV1Client]
-
-	clientAuth authentication.Authentication
-}
-
-func (a *implementation) InitService(svc svc.Service) error {
-	a.auth = pbImplAuthorizationV1.ServiceClient(svc, authentication.NewInterceptorClientOptions(a.clientAuth)...)
-	return nil
+	authType pbImplAuthorizationV1.ConfigurationType
 }
 
 func (a *implementation) Name() string {
 	return "authorization"
+}
+
+func (a *implementation) Plugin() pbImplAuthorizationV1Shared.Plugin {
+	switch a.authType {
+	case pbImplAuthorizationV1.ConfigurationTypeCentral:
+		return a
+	case pbImplAuthorizationV1.ConfigurationTypeCentralPermissive:
+		return pbImplAuthorizationV1Shared.Permissive(a, logger)
+	case pbImplAuthorizationV1.ConfigurationTypeAlways:
+		return pbImplAuthorizationV1Shared.Permissive(pbImplAuthorizationV1Shared.NewAlwaysPlugin(), logger)
+	default:
+		return pbImplAuthorizationV1Shared.NewNeverPlugin()
+	}
 }
 
 func (a *implementation) Health(ctx context.Context) svc.HealthState {

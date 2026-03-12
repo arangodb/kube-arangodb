@@ -29,34 +29,34 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func newPolicy(in *sidecarSvcAuthzTypes.Policy) (policy, error) {
-	var p policy
+func NewPolicy(in *sidecarSvcAuthzTypes.Policy) (Policy, error) {
+	var p Policy
 
-	if statements, err := util.FormatListErr(in.GetStatements(), func(a *sidecarSvcAuthzTypes.PolicyStatement) (statement, error) {
-		return newStatement(a)
+	if statements, err := util.FormatListErr(in.GetStatements(), func(a *sidecarSvcAuthzTypes.PolicyStatement) (Statement, error) {
+		return NewStatement(a)
 	}); err != nil {
-		return policy{}, err
+		return Policy{}, err
 	} else {
-		p.statements = statements
+		p.Statements = statements
 	}
 
 	return p, nil
 }
 
-type policy struct {
-	statements []statement
+type Policy struct {
+	Statements []Statement
 }
 
-func (p *policy) Evaluate(action, resource string, context map[string][]string) (bool, error) {
+func (p *Policy) Evaluate(action, resource string, context map[string][]string) (bool, error) {
 	if p == nil {
 		return false, nil
 	}
 
 	var allowed bool
 
-	for _, stmt := range p.statements {
+	for _, stmt := range p.Statements {
 		if stmt.Evaluate(action, resource, context) {
-			if stmt.effect == sidecarSvcAuthzTypes.Effect_Deny {
+			if stmt.Effect == sidecarSvcAuthzTypes.Effect_Deny {
 				return false, sidecarSvcAuthzTypes.PermissionDenied{}
 			}
 			allowed = true
@@ -66,58 +66,58 @@ func (p *policy) Evaluate(action, resource string, context map[string][]string) 
 	return allowed, nil
 }
 
-func newStatement(in *sidecarSvcAuthzTypes.PolicyStatement) (statement, error) {
-	var s statement
-	s.effect = in.GetEffect()
+func NewStatement(in *sidecarSvcAuthzTypes.PolicyStatement) (Statement, error) {
+	var s Statement
+	s.Effect = in.GetEffect()
 
-	if actions, err := util.FormatListErr(in.GetActions(), func(a string) (match, error) {
-		return newAction(a)
+	if actions, err := util.FormatListErr(in.GetActions(), func(a string) (Match, error) {
+		return NewAction(a)
 	}); err != nil {
-		return statement{}, err
+		return Statement{}, err
 	} else {
 		s.actions = actions
 	}
 
-	if resources, err := util.FormatListErr(in.GetResources(), func(a string) (match, error) {
-		return newMatch(a)
+	if resources, err := util.FormatListErr(in.GetResources(), func(a string) (Match, error) {
+		return NewMatch(a)
 	}); err != nil {
-		return statement{}, err
+		return Statement{}, err
 	} else {
-		s.resources = resources
+		s.Resources = resources
 	}
 
 	return s, nil
 }
 
-type statement struct {
-	effect    sidecarSvcAuthzTypes.Effect
-	resources matches
-	actions   matches
+type Statement struct {
+	Effect    sidecarSvcAuthzTypes.Effect
+	Resources Matches
+	actions   Matches
 }
 
-func (p *statement) Evaluate(action, resource string, context map[string][]string) bool {
+func (p *Statement) Evaluate(action, resource string, context map[string][]string) bool {
 	if p == nil {
 		return false
 	}
 
 	// Skip context
 
-	return p.actions.match(action) && p.resources.match(resource)
+	return p.actions.Match(action) && p.Resources.Match(resource)
 }
 
-type matches []match
+type Matches []Match
 
-func (m matches) match(resource string) bool {
+func (m Matches) Match(resource string) bool {
 	for _, match := range m {
-		if match.match(resource) {
+		if match.Match(resource) {
 			return true
 		}
 	}
 	return false
 }
 
-func newAction(in string) (match, error) {
-	p, err := newMultiMatch(in)
+func NewAction(in string) (Match, error) {
+	p, err := NewMultiMatch(in)
 	if err != nil {
 		return nil, err
 	}
@@ -133,11 +133,11 @@ func newAction(in string) (match, error) {
 	return nil, fmt.Errorf("invalid action: %s", in)
 }
 
-func newMultiMatch(v string) (match, error) {
+func NewMultiMatch(v string) (Match, error) {
 	r := goStrings.Split(v, ":")
 
-	q, err := util.FormatListErr(r, func(a string) (match, error) {
-		return newMatch(a)
+	q, err := util.FormatListErr(r, func(a string) (Match, error) {
+		return NewMatch(a)
 	})
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func newMultiMatch(v string) (match, error) {
 	return manyMatch(q), nil
 }
 
-func newMatch(v string) (match, error) {
+func NewMatch(v string) (Match, error) {
 	if v == "*" {
 		return allMatch{}, nil
 	}
@@ -166,13 +166,13 @@ func newMatch(v string) (match, error) {
 	return exactMatch(v), nil
 }
 
-type match interface {
-	match(resource string) bool
+type Match interface {
+	Match(resource string) bool
 }
 
-type manyMatch []match
+type manyMatch []Match
 
-func (m manyMatch) match(resource string) bool {
+func (m manyMatch) Match(resource string) bool {
 	res := goStrings.Split(resource, ":")
 
 	if len(m) == 0 {
@@ -194,7 +194,7 @@ func (m manyMatch) match(resource string) bool {
 			return true
 		}
 
-		if !m[id].match(res[id]) {
+		if !m[id].Match(res[id]) {
 			return false
 		}
 	}
@@ -204,29 +204,29 @@ func (m manyMatch) match(resource string) bool {
 
 type exactMatch string
 
-func (e exactMatch) match(resource string) bool {
+func (e exactMatch) Match(resource string) bool {
 	return string(e) == resource
 }
 
-func isAllMatch(in match) bool {
+func isAllMatch(in Match) bool {
 	_, ok := in.(allMatch)
 	return ok
 }
 
 type allMatch struct{}
 
-func (a allMatch) match(resource string) bool {
+func (a allMatch) Match(resource string) bool {
 	return true
 }
 
 type suffixMatch string
 
-func (p suffixMatch) match(resource string) bool {
+func (p suffixMatch) Match(resource string) bool {
 	return goStrings.HasSuffix(resource, string(p))
 }
 
 type prefixMatch string
 
-func (s prefixMatch) match(resource string) bool {
+func (s prefixMatch) Match(resource string) bool {
 	return goStrings.HasPrefix(resource, string(s))
 }

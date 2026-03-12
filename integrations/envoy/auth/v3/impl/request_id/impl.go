@@ -31,8 +31,8 @@ import (
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
-func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
-	return impl{}, true
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool, error) {
+	return impl{}, true, nil
 }
 
 type impl struct {

@@ -30,12 +30,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool, error) {
 	if !configuration.Enabled {
-		return nil, false
+		return nil, false, nil
 	}
 
-	return impl{}, true
+	return impl{}, true, nil
 }
 
 type impl struct {

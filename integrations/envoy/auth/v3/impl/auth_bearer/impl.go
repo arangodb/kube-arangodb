@@ -28,25 +28,31 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
-func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool, error) {
 	if !configuration.Enabled {
-		return nil, false
+		return nil, false, nil
 	}
 
 	if !configuration.Extensions.JWT {
-		return nil, false
+		return nil, false, nil
 	}
 
 	var z impl
 
 	z.configuration = configuration
-	z.authClient = configuration.AuthClient()
+
+	if a, ok := integrationsShared.AuthClientContext.Get(ctx); ok {
+		z.authClient = a
+	} else {
+		return nil, false, errors.Errorf("auth client not found")
+	}
 
 	z.cache = cache.NewCache[pbImplEnvoyAuthV3Shared.Token, pbImplEnvoyAuthV3Shared.ResponseAuth](func(ctx context.Context, in pbImplEnvoyAuthV3Shared.Token) (pbImplEnvoyAuthV3Shared.ResponseAuth, time.Time, error) {
 		client, err := z.authClient.Get(ctx)
@@ -75,7 +81,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		}, time.Now().Add(pbImplEnvoyAuthV3Shared.DefaultTTL), nil
 	})
 
-	return z, true
+	return z, true, nil
 }
 
 type impl struct {

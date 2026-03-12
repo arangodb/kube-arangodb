@@ -21,6 +21,7 @@
 package sidecar
 
 import (
+	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -33,7 +34,7 @@ import (
 )
 
 func init() {
-	global.Register("authentication", func(cmd *cobra.Command) (svc.Handler, bool, error) {
+	global.Register("authentication", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
 		path, err := flagAuth.Get(cmd)
 		if err != nil {
 			return nil, false, err

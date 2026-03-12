@@ -38,12 +38,15 @@ import (
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/session"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool, error) {
 	c := cache.NewConfigFile[platformAuthenticationApi.OpenID](configuration.Auth.Path, time.Minute)
 
 	i := &impl{
@@ -59,8 +62,23 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		}),
 	}
 
-	col := configuration.WithDatabase(configuration.Endpoint).
-		CreateCollection("_gateway_session", configuration.SourceCollectionProps()).
+	client, ok := utilConstantsContext.ArangoDBClientCache.Get(ctx)
+	if !ok {
+		return nil, false, errors.Errorf("client not found")
+	}
+
+	dbn, ok := integrationsShared.DatabaseNameContext.Get(ctx)
+	if !ok {
+		return nil, false, errors.Errorf("dbname not found")
+	}
+
+	source, ok := integrationsShared.DatabaseSourceContext.Get(ctx)
+	if !ok {
+		return nil, false, errors.Errorf("dbname not found")
+	}
+
+	col := db.NewClient(client).Database(dbn).
+		CreateCollection("_gateway_session", source).
 		Get()
 
 	i.session = session.NewManager[*Session](ctx, "Auth_Custom_OpenID", col)
@@ -76,7 +94,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		return v, time.Now().Add(5 * time.Minute), err
 	})
 
-	return i, true
+	return i, true, nil
 }
 
 type impl struct {

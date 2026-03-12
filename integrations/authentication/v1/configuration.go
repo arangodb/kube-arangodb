@@ -24,7 +24,6 @@ import (
 	"slices"
 	"time"
 
-	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -60,7 +59,6 @@ func NewConfiguration() Configuration {
 }
 
 type Configuration struct {
-	integrationsShared.Database
 	Enabled bool
 
 	TTL time.Duration

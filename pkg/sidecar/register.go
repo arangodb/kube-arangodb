@@ -26,8 +26,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
@@ -118,8 +121,23 @@ func run(cmd *cobra.Command, args []string) error {
 func runWithContext(ctx context.Context, cmd *cobra.Command) error {
 	var handlers []svc.Handler
 
+	ctx = utilConstantsContext.ArangoDBClientCache.Set(ctx, arangoDBDatabaseClient(cmd))
+
+	handler, authz, enabled, err := newAuthorizationClient(ctx, cmd)
+	if err != nil {
+		return err
+	}
+
+	ctx = utilConstantsContext.AuthZClientPlugin.Set(ctx, authz)
+	ctx = integrationsShared.DatabaseNameContext.Set(ctx, "_system")
+	ctx = integrationsShared.DatabaseSourceContext.Set(ctx, db.SourceCollectionProps("_users"))
+
+	if enabled {
+		handlers = append(handlers, handler)
+	}
+
 	for _, handler := range global.Items() {
-		if handler, ok, err := handler.V(cmd); err != nil {
+		if handler, ok, err := handler.V(ctx, cmd); err != nil {
 			return err
 		} else if ok {
 			handlers = append(handlers, handler)
