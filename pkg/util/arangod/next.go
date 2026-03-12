@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"io"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -51,7 +51,7 @@ func (q queryV1NextIterator[T]) Next(ctx context.Context) ([]T, error) {
 		var o T
 
 		if _, err := q.in.ReadDocument(ctx, &o); err != nil {
-			if _, ok := errors.ExtractCause[shared.NoMoreDocumentsError](err); ok {
+			if _, ok := errors.ExtractCause[adbDriverV2Shared.NoMoreDocumentsError](err); ok {
 				break
 			}
 

@@ -47,7 +47,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/networking/route"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/permission/token"
+	permissionPolicy "github.com/arangodb/kube-arangodb/pkg/handlers/permission/policy"
+	permissionRole "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role"
+	permissionToken "github.com/arangodb/kube-arangodb/pkg/handlers/permission/token"
 	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
 	platformShutdown "github.com/arangodb/kube-arangodb/pkg/handlers/platform/shutdown"
@@ -422,7 +424,15 @@ func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recor
 		panic(err)
 	}
 
-	if err := token.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+	if err := permissionToken.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := permissionPolicy.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := permissionRole.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }

@@ -98,3 +98,11 @@ func WithArangoPlatformServiceUpdateStatusInterfaceRetry(ctx context.Context, cl
 func WithArangoPermissionTokenUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionTokenStatus, *permissionApi.ArangoPermissionToken], obj *permissionApi.ArangoPermissionToken, status permissionApi.ArangoPermissionTokenStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionToken, error) {
 	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionTokenStatus, *permissionApi.ArangoPermissionToken](ctx, client, obj, status, opts)
 }
+
+func WithArangoPermissionRoleUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionRoleStatus, *permissionApi.ArangoPermissionRole], obj *permissionApi.ArangoPermissionRole, status permissionApi.ArangoPermissionRoleStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionRole, error) {
+	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionRoleStatus, *permissionApi.ArangoPermissionRole](ctx, client, obj, status, opts)
+}
+
+func WithArangoPermissionPolicyUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionPolicyStatus, *permissionApi.ArangoPermissionPolicy], obj *permissionApi.ArangoPermissionPolicy, status permissionApi.ArangoPermissionPolicyStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionPolicy, error) {
+	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionPolicyStatus, *permissionApi.ArangoPermissionPolicy](ctx, client, obj, status, opts)
+}

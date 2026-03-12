@@ -35,6 +35,10 @@ rules:
     resources:
       - "arangopermissiontokens"
       - "arangopermissiontokens/status"
+      - "arangopermissionroles"
+      - "arangopermissionroles/status"
+      - "arangopermissionpolicies"
+      - "arangopermissionpolicies/status"
     verbs:
       - "get"
       - "list"

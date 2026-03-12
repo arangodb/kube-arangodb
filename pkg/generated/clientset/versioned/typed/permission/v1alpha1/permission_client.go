@@ -32,12 +32,22 @@ import (
 
 type PermissionV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	ArangoPermissionPoliciesGetter
+	ArangoPermissionRolesGetter
 	ArangoPermissionTokensGetter
 }
 
 // PermissionV1alpha1Client is used to interact with features provided by the permission.arangodb.com group.
 type PermissionV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *PermissionV1alpha1Client) ArangoPermissionPolicies(namespace string) ArangoPermissionPolicyInterface {
+	return newArangoPermissionPolicies(c, namespace)
+}
+
+func (c *PermissionV1alpha1Client) ArangoPermissionRoles(namespace string) ArangoPermissionRoleInterface {
+	return newArangoPermissionRoles(c, namespace)
 }
 
 func (c *PermissionV1alpha1Client) ArangoPermissionTokens(namespace string) ArangoPermissionTokenInterface {

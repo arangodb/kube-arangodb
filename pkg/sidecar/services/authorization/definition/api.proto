@@ -24,7 +24,7 @@ package service;
 
 import "google/api/annotations.proto";
 
-import "integrations/shared/v1/definition/empty.proto";
+import "integrations/shared/v1/definition/offset.proto";
 
 import "pkg/sidecar/services/authorization/types/policy.proto";
 import "pkg/sidecar/services/authorization/types/role.proto";
@@ -34,7 +34,7 @@ option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/auth
 // AuthorizationAPI Service implementation
 service AuthorizationAPI {
   // Return the Policies
-  rpc APIListPolicy(shared.Empty) returns (AuthorizationAPIListResponse){
+  rpc APIListPolicy(shared.OffsetRequest) returns (AuthorizationAPIListResponse){
     option (google.api.http) = {
       get: "/_management/permissions/policy"
     };
@@ -71,7 +71,7 @@ service AuthorizationAPI {
   }
 
   // Return the Roles
-  rpc APIListRole(shared.Empty) returns (AuthorizationAPIListResponse){
+  rpc APIListRole(shared.OffsetRequest) returns (AuthorizationAPIListResponse){
     option (google.api.http) = {
       get: "/_management/permissions/role"
     };
@@ -118,6 +118,9 @@ message AuthorizationAPINamedRequest {
 message AuthorizationAPIListResponse {
   // List of the names
   repeated string names = 1;
+
+  // Page details
+  optional shared.OffsetResponse page = 2;
 }
 
 // AuthorizationAPI Policy Request

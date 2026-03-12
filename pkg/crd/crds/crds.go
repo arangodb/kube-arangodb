@@ -105,6 +105,8 @@ func AllDefinitions() []Definition {
 
 		// Permission
 		PermissionTokenDefinitionWithOptions(),
+		PermissionPolicyDefinitionWithOptions(),
+		PermissionRoleDefinitionWithOptions(),
 	}
 }
 

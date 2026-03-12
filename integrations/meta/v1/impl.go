@@ -32,7 +32,7 @@ import (
 	"google.golang.org/grpc/status"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
@@ -178,7 +178,7 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 	obj.Object.Object = nobj
 
 	if err := i.cache.Put(ctx, key, &obj); err != nil {
-		if shared.IsPreconditionFailed(err) {
+		if adbDriverV2Shared.IsPreconditionFailed(err) {
 			logger.Err(err).Str("key", key).Warn("Precondition failed")
 			return nil, status.Errorf(codes.FailedPrecondition, "Key %s cannot be updated with revision %s", key, req.GetRevision())
 		}

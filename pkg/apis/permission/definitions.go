@@ -25,5 +25,13 @@ const (
 	ArangoPermissionTokenResourceKind   = "ArangoPermissionToken"
 	ArangoPermissionTokenResourcePlural = "arangopermissiontokens"
 
+	ArangoPermissionRoleCRDName        = ArangoPermissionRoleResourcePlural + "." + ArangoPermissionGroupName
+	ArangoPermissionRoleResourceKind   = "ArangoPermissionRole"
+	ArangoPermissionRoleResourcePlural = "arangopermissionroles"
+
+	ArangoPermissionPolicyCRDName        = ArangoPermissionPolicyResourcePlural + "." + ArangoPermissionGroupName
+	ArangoPermissionPolicyResourceKind   = "ArangoPermissionPolicy"
+	ArangoPermissionPolicyResourcePlural = "arangopermissionpolicies"
+
 	ArangoPermissionGroupName = "permission.arangodb.com"
 )

@@ -27,6 +27,8 @@ import (
 func init() {
 	defs := []func(...func(options *crds.CRDOptions)) crds.Definition{
 		crds.PermissionTokenDefinitionWithOptions,
+		crds.PermissionRoleDefinitionWithOptions,
+		crds.PermissionPolicyDefinitionWithOptions,
 	}
 	for _, getDef := range defs {
 		defFn := getDef // bring into scope

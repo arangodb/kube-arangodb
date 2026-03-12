@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -53,7 +53,7 @@ func (c collection) WithUniqueIndex(name string, path ...string) Collection {
 			}
 
 			if _, err := col.Index(ctx, name); err != nil {
-				if !shared.IsNotFound(err) {
+				if !adbDriverV2Shared.IsNotFound(err) {
 					return nil, 0, err
 				}
 			} else {
@@ -81,7 +81,7 @@ func (c collection) WithTTLIndex(name string, gttl time.Duration, path ...string
 			}
 
 			if _, err := col.Index(ctx, name); err != nil {
-				if !shared.IsNotFound(err) {
+				if !adbDriverV2Shared.IsNotFound(err) {
 					return nil, 0, err
 				}
 			} else {

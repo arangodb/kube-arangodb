@@ -1,0 +1,29 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arangopermissionpolicies.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionPolicy
+    listKind: ArangoPermissionPolicyList
+    plural: arangopermissionpolicies
+    singular: arangopermissionpolicy
+    shortNames:
+      - arangopolicy
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if Policy is valid
+          name: Ready
+          type: string
+      subresources:
+        status: {}

@@ -31,12 +31,39 @@ import (
 
 func Permission(f shared.FactoryGen) {
 	f.AddSection("permission").
-		Register("token", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionToken](arangoPermissionV1alpha1ArangoPermissionTokenList, shared.WithDefinitions[*permissionApi.ArangoPermissionToken]))
+		Register("token", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionToken](arangoPermissionV1alpha1ArangoPermissionTokenList, shared.WithDefinitions[*permissionApi.ArangoPermissionToken])).
+		Register("role", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionRole](arangoPermissionV1alpha1ArangoPermissionRoleList, shared.WithDefinitions[*permissionApi.ArangoPermissionRole])).
+		Register("policy", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionPolicy](arangoPermissionV1alpha1ArangoPermissionPolicyList, shared.WithDefinitions[*permissionApi.ArangoPermissionPolicy]))
+
 }
 
 func arangoPermissionV1alpha1ArangoPermissionTokenList(ctx context.Context, client kclient.Client, namespace string) ([]*permissionApi.ArangoPermissionToken, error) {
 	return list.ListObjects[*permissionApi.ArangoPermissionTokenList, *permissionApi.ArangoPermissionToken](ctx, client.Arango().PermissionV1alpha1().ArangoPermissionTokens(namespace), func(result *permissionApi.ArangoPermissionTokenList) []*permissionApi.ArangoPermissionToken {
 		q := make([]*permissionApi.ArangoPermissionToken, len(result.Items))
+
+		for id, e := range result.Items {
+			q[id] = e.DeepCopy()
+		}
+
+		return q
+	})
+}
+
+func arangoPermissionV1alpha1ArangoPermissionRoleList(ctx context.Context, client kclient.Client, namespace string) ([]*permissionApi.ArangoPermissionRole, error) {
+	return list.ListObjects[*permissionApi.ArangoPermissionRoleList, *permissionApi.ArangoPermissionRole](ctx, client.Arango().PermissionV1alpha1().ArangoPermissionRoles(namespace), func(result *permissionApi.ArangoPermissionRoleList) []*permissionApi.ArangoPermissionRole {
+		q := make([]*permissionApi.ArangoPermissionRole, len(result.Items))
+
+		for id, e := range result.Items {
+			q[id] = e.DeepCopy()
+		}
+
+		return q
+	})
+}
+
+func arangoPermissionV1alpha1ArangoPermissionPolicyList(ctx context.Context, client kclient.Client, namespace string) ([]*permissionApi.ArangoPermissionPolicy, error) {
+	return list.ListObjects[*permissionApi.ArangoPermissionPolicyList, *permissionApi.ArangoPermissionPolicy](ctx, client.Arango().PermissionV1alpha1().ArangoPermissionPolicies(namespace), func(result *permissionApi.ArangoPermissionPolicyList) []*permissionApi.ArangoPermissionPolicy {
+		q := make([]*permissionApi.ArangoPermissionPolicy, len(result.Items))
 
 		for id, e := range result.Items {
 			q[id] = e.DeepCopy()

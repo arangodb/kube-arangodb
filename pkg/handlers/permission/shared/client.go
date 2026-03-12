@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package token
+package shared
 
 import (
 	"context"
@@ -36,17 +36,17 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-type clientProvider interface {
+type ClientProvider interface {
 	ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error)
 }
 
-type clientProviderFunc func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error)
+type ClientProviderFunc func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error)
 
-func (c clientProviderFunc) ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
+func (c ClientProviderFunc) ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
 	return c(ctx, client, depl)
 }
 
-func arangoClientProvider(ctx context.Context, c kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
+func ArangoClientProvider(ctx context.Context, c kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
 	return client.NewFactory(client.DirectArangoDBAuthentication(c, depl), client.HTTPClientFactory(
 		http.ShortTransport(),
 		http.WithTransportTLS(http.Insecure),

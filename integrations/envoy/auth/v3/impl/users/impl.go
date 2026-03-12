@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -57,7 +57,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		if user, err := client.User(ctx, in); err == nil {
 			return user, time.Now().Add(24 * time.Hour), nil
 		} else {
-			if !shared.IsNotFound(err) {
+			if !adbDriverV2Shared.IsNotFound(err) {
 				return nil, util.Default[time.Time](), err
 			}
 		}
@@ -66,7 +66,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 			Password: string(uuid.NewUUID()),
 			Active:   util.NewType(true),
 		}); err != nil {
-			if !shared.IsConflict(err) {
+			if !adbDriverV2Shared.IsConflict(err) {
 				return nil, util.Default[time.Time](), err
 			}
 		} else {

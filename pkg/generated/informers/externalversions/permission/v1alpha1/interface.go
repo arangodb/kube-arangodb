@@ -28,6 +28,10 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// ArangoPermissionPolicies returns a ArangoPermissionPolicyInformer.
+	ArangoPermissionPolicies() ArangoPermissionPolicyInformer
+	// ArangoPermissionRoles returns a ArangoPermissionRoleInformer.
+	ArangoPermissionRoles() ArangoPermissionRoleInformer
 	// ArangoPermissionTokens returns a ArangoPermissionTokenInformer.
 	ArangoPermissionTokens() ArangoPermissionTokenInformer
 }
@@ -41,6 +45,16 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// ArangoPermissionPolicies returns a ArangoPermissionPolicyInformer.
+func (v *version) ArangoPermissionPolicies() ArangoPermissionPolicyInformer {
+	return &arangoPermissionPolicyInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoPermissionRoles returns a ArangoPermissionRoleInformer.
+func (v *version) ArangoPermissionRoles() ArangoPermissionRoleInformer {
+	return &arangoPermissionRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ArangoPermissionTokens returns a ArangoPermissionTokenInformer.

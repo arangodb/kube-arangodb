@@ -50,6 +50,10 @@ func addKnownTypes(s *runtime.Scheme) error {
 	s.AddKnownTypes(SchemeGroupVersion,
 		&ArangoPermissionToken{},
 		&ArangoPermissionTokenList{},
+		&ArangoPermissionPolicy{},
+		&ArangoPermissionPolicyList{},
+		&ArangoPermissionRole{},
+		&ArangoPermissionRoleList{},
 	)
 	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

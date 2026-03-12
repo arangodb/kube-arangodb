@@ -32,6 +32,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
@@ -97,6 +98,9 @@ func (a *implementation) PoolRoleChanges(request *sidecarSvcAuthzDefinition.Auth
 
 		case <-g.Context().Done():
 			return g.Context().Err()
+
+		case <-shutdown.Context().Done():
+			return g.Context().Err()
 		}
 	}
 }
@@ -106,7 +110,7 @@ func (a *implementation) GetRole(empty *pbSharedV1.Empty, g grpc.ServerStreaming
 		return status.Error(codes.Unauthenticated, "Unauthenticated")
 	}
 
-	items := a.roles.Get()
+	items := a.roles.Offsets()
 
 	for _, item := range util.BatchList(128, items) {
 		if err := g.Send(&sidecarSvcAuthzDefinition.AuthorizationPoolRoleResponse{

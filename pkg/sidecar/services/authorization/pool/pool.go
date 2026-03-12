@@ -23,6 +23,7 @@ package pool
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -30,7 +31,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/operations"
@@ -57,6 +58,8 @@ func NewPooler[T PoolerObject](connection cache.Object[arangodb.Collection], int
 type PoolerObject interface {
 	proto.Message
 
+	Deleted() bool
+
 	Hash() string
 
 	Clean() error
@@ -77,7 +80,9 @@ type Pooler[T PoolerObject] interface {
 	Ready() bool
 
 	Pool(start uint32) ([]OffsetItem[T], error)
-	Get() []OffsetItem[T]
+	Offsets() []OffsetItem[T]
+
+	Items() []string
 }
 
 type pooler[T PoolerObject] struct {
@@ -141,7 +146,25 @@ func (p *pooler[T]) Item(name string) (T, uint32, bool) {
 	return v.Spec, v.Sequence, true
 }
 
-func (p *pooler[T]) Get() []OffsetItem[T] {
+func (p *pooler[T]) Items() []string {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+
+	r := make([]string, 0, len(p.state))
+
+	for k, v := range p.state {
+		if v.Spec.Deleted() {
+			continue
+		}
+		r = append(r, k)
+	}
+
+	sort.Strings(r)
+
+	return r
+}
+
+func (p *pooler[T]) Offsets() []OffsetItem[T] {
 	p.lock.RLock()
 	defer p.lock.RUnlock()
 
@@ -157,6 +180,7 @@ func (p *pooler[T]) Get() []OffsetItem[T] {
 		return OffsetItem[T]{
 			Item:     a.Spec,
 			Sequence: a.Sequence,
+			Name:     a.Name,
 		}
 	})
 }
@@ -298,7 +322,7 @@ func (p *pooler[T]) refresh(ctx context.Context, col arangodb.Collection) error 
 
 		p.offset.Add(doc.Sequence, doc.Name, doc.Spec)
 
-		if doc.Action == DocumentDeleteAction {
+		if doc.Action == DocumentDeleteAction || doc.Spec.Deleted() {
 			// Deleted
 			delete(p.state, doc.Name)
 		} else {
@@ -330,7 +354,7 @@ func PoolChanges[T proto.Message](ctx context.Context, db arangodb.DatabaseQuery
 		var d Document[T]
 
 		if _, err := result.ReadDocument(ctx, &d); err != nil {
-			if shared.IsEOF(err) {
+			if adbDriverV2Shared.IsEOF(err) {
 				break
 			}
 

@@ -32,6 +32,14 @@ type FakePermissionV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakePermissionV1alpha1) ArangoPermissionPolicies(namespace string) v1alpha1.ArangoPermissionPolicyInterface {
+	return newFakeArangoPermissionPolicies(c, namespace)
+}
+
+func (c *FakePermissionV1alpha1) ArangoPermissionRoles(namespace string) v1alpha1.ArangoPermissionRoleInterface {
+	return newFakeArangoPermissionRoles(c, namespace)
+}
+
 func (c *FakePermissionV1alpha1) ArangoPermissionTokens(namespace string) v1alpha1.ArangoPermissionTokenInterface {
 	return newFakeArangoPermissionTokens(c, namespace)
 }

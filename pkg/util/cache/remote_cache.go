@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -120,7 +120,7 @@ func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {
 		// Ignore the revision if it is not set
 		IgnoreRevs: util.NewType(GetRemoteCacheObjectRev(obj) == ""),
 	}); err != nil {
-		if !shared.IsNotFound(err) {
+		if !adbDriverV2Shared.IsNotFound(err) {
 			return err
 		}
 
@@ -152,7 +152,7 @@ func (r *remoteCache[T]) Get(ctx context.Context, key string) (T, bool, error) {
 
 	obj, err := r.cache.Get(ctx, key)
 	if err != nil {
-		if shared.IsNotFound(err) {
+		if adbDriverV2Shared.IsNotFound(err) {
 			return util.Default[T](), false, nil
 		}
 
@@ -179,7 +179,7 @@ func (r *remoteCache[T]) Remove(ctx context.Context, key string) (bool, error) {
 	}
 
 	if _, err := client.DeleteDocumentWithOptions(ctx, url.QueryEscape(key), &arangodb.CollectionDocumentDeleteOptions{}); err != nil {
-		if !shared.IsNotFound(err) {
+		if !adbDriverV2Shared.IsNotFound(err) {
 			return false, err
 		}
 

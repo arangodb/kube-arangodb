@@ -90,7 +90,7 @@ func Handle(handler operator.Handler, item operation.Item) error {
 
 func HandleWithMax(handler operator.Handler, item operation.Item, max int) error {
 	for i := 0; i < max; i++ {
-		if err := handler.Handle(context.Background(), item); err != nil {
+		if err := operator.Handle(handler, item); err != nil {
 			if operator.IsReconcile(err) {
 				continue
 			}
@@ -327,6 +327,18 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			_, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **permissionApi.ArangoPermissionRole:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionRoles(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			require.NoError(t, err)
+		case **permissionApi.ArangoPermissionPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionPolicies(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to create object: %s", reflect.TypeOf(v).String()))
@@ -572,6 +584,18 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			_, err := arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **permissionApi.ArangoPermissionRole:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionRoles(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			require.NoError(t, err)
+		case **permissionApi.ArangoPermissionPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+			_, err := arango.PermissionV1alpha1().ArangoPermissionPolicies(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to update object: %s", reflect.TypeOf(v).String()))
@@ -945,6 +969,16 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.PermissionV1alpha1().ArangoPermissionTokens(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **permissionApi.ArangoPermissionRole:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.PermissionV1alpha1().ArangoPermissionRoles(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+		case **permissionApi.ArangoPermissionPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+			require.NoError(t, arango.PermissionV1alpha1().ArangoPermissionPolicies(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to delete object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1506,6 +1540,36 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
+		case **permissionApi.ArangoPermissionRole:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.PermissionV1alpha1().ArangoPermissionRoles(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
+		case **permissionApi.ArangoPermissionPolicy:
+			require.NotNil(t, v)
+
+			vl := *v
+
+			vn, err := arango.PermissionV1alpha1().ArangoPermissionPolicies(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					*v = nil
+				} else {
+					require.NoError(t, err)
+				}
+			} else {
+				*v = vn
+			}
 		default:
 			require.Fail(t, fmt.Sprintf("Unable to get object: %s", reflect.TypeOf(v).String()))
 		}
@@ -1780,6 +1844,22 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
 			permissionApi.SchemeGroupVersion.String(),
 			permission.ArangoPermissionTokenResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
+	case *permissionApi.ArangoPermissionPolicy:
+		v.Kind = permission.ArangoPermissionPolicyResourceKind
+		v.APIVersion = permissionApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			permissionApi.SchemeGroupVersion.String(),
+			permission.ArangoPermissionPolicyResourcePlural,
+			object.GetNamespace(),
+			object.GetName()))
+	case *permissionApi.ArangoPermissionRole:
+		v.Kind = permission.ArangoPermissionRoleResourceKind
+		v.APIVersion = permissionApi.SchemeGroupVersion.String()
+		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
+			permissionApi.SchemeGroupVersion.String(),
+			permission.ArangoPermissionRoleResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
 	default:

@@ -34,13 +34,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	"github.com/arangodb/kube-arangodb/pkg/handlers/permission/shared"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -62,7 +63,7 @@ type handler struct {
 
 	operator operator.Operator
 
-	provider clientProvider
+	provider shared.ClientProvider
 }
 
 func (h *handler) Name() string {
@@ -99,9 +100,9 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	}
 
 	if changed, err := patcher.EnsureFinalizersPresent(ctx, h.client.PermissionV1alpha1().ArangoPermissionTokens(item.Namespace), object,
-		permissionApi.FinalizerArangoPermissionTokenUser,
-		permissionApi.FinalizerArangoPermissionTokenRole,
-		permissionApi.FinalizerArangoPermissionTokenPolicy,
+		permissionApi.FinalizerArangoPermissionUser,
+		permissionApi.FinalizerArangoPermissionRole,
+		permissionApi.FinalizerArangoPermissionPolicy,
 	); err != nil {
 		return err
 	} else if changed {
@@ -145,24 +146,24 @@ func (h *handler) CanBeHandled(item operation.Item) bool {
 func (h *handler) finalizer(ctx context.Context, extension *permissionApi.ArangoPermissionToken) (string, error) {
 	for _, finalizer := range extension.GetFinalizers() {
 		switch finalizer {
-		case permissionApi.FinalizerArangoPermissionTokenUser:
+		case permissionApi.FinalizerArangoPermissionUser:
 			if err := h.finalizerUserRemoval(ctx, extension); err != nil {
 				return "", err
 			}
 
-			return permissionApi.FinalizerArangoPermissionTokenUser, nil
-		case permissionApi.FinalizerArangoPermissionTokenRole:
+			return permissionApi.FinalizerArangoPermissionUser, nil
+		case permissionApi.FinalizerArangoPermissionRole:
 			if err := h.finalizerRoleRemoval(ctx, extension); err != nil {
 				return "", err
 			}
 
-			return permissionApi.FinalizerArangoPermissionTokenRole, nil
-		case permissionApi.FinalizerArangoPermissionTokenPolicy:
+			return permissionApi.FinalizerArangoPermissionRole, nil
+		case permissionApi.FinalizerArangoPermissionPolicy:
 			if err := h.finalizerPolicyRemoval(ctx, extension); err != nil {
 				return "", err
 			}
 
-			return permissionApi.FinalizerArangoPermissionTokenPolicy, nil
+			return permissionApi.FinalizerArangoPermissionPolicy, nil
 		}
 	}
 
@@ -195,7 +196,7 @@ func (h *handler) finalizerUserRemoval(ctx context.Context, extension *permissio
 	}
 
 	if err := client.RemoveUser(ctx, extension.Status.User.GetName()); err != nil {
-		if shared.IsNotFound(err) {
+		if adbDriverV2Shared.IsNotFound(err) {
 			return nil
 		}
 
@@ -336,7 +337,7 @@ func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, e
 		name := fmt.Sprintf("operator-%s-%s", extension.GetName(), goStrings.ToLower(uniuri.NewLen(6)))
 		logger.Str("name", name).Info("Create ArangoDB User")
 		if _, err := conn.User(ctx, name); err != nil {
-			if !shared.IsNotFound(err) {
+			if !adbDriverV2Shared.IsNotFound(err) {
 				return false, err
 			}
 		} else {
@@ -362,7 +363,7 @@ func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, e
 	}
 
 	if _, err := conn.User(ctx, status.User.GetName()); err != nil {
-		if !shared.IsNotFound(err) {
+		if !adbDriverV2Shared.IsNotFound(err) {
 			return false, err
 		}
 

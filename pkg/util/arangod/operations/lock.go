@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -44,7 +44,7 @@ func WithLock[T any](collection string, process LockFunc[T]) TransactionFunc[T] 
 		var lock LockDocument
 
 		if _, err := col.ReadDocument(ctx, LockDocumentID, &lock); err != nil {
-			if !shared.IsNotFound(err) {
+			if !adbDriverV2Shared.IsNotFound(err) {
 				// Unable to fetch document
 				return util.Default[T](), errors.Wrapf(err, "Failed to get lock for collection %s", collection)
 			}
