@@ -150,11 +150,12 @@ func (i *implementation) Get(ctx context.Context, req *pbMetaV1.ObjectRequest) (
 	i.lock.RLock()
 	defer i.lock.RUnlock()
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "rbac:ListRole", ""); err != nil {
+	key := i.cfg.Key(req.GetKey())
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:GetKey", key); err != nil {
 		return nil, err
 	}
 
-	key := i.cfg.Key(req.GetKey())
 	object, exists, err := i.cache.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -181,6 +182,10 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 	defer i.lock.Unlock()
 
 	key := i.cfg.Key(req.GetKey())
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:UpdateKey", key); err != nil {
+		return nil, err
+	}
 
 	var objMeta ObjectMeta
 
@@ -236,6 +241,10 @@ func (i *implementation) Delete(ctx context.Context, req *pbMetaV1.ObjectRequest
 
 	key := i.cfg.Key(req.GetKey())
 
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:DeleteKey", key); err != nil {
+		return nil, err
+	}
+
 	removed, err := i.cache.Remove(ctx, key)
 	if err != nil {
 		return nil, err
@@ -250,6 +259,10 @@ func (i *implementation) Delete(ctx context.Context, req *pbMetaV1.ObjectRequest
 
 func (i *implementation) List(req *pbMetaV1.ListRequest, server pbMetaV1.MetaV1_ListServer) error {
 	log := logger.Str("func", "List")
+
+	if err := authenticator.GetIdentity(server.Context()).EvaluatePermission(server.Context(), i.auth, "meta:ListKey", req.GetPrefix()); err != nil {
+		return err
+	}
 
 	size := int(util.OptionalType(req.Batch, 128))
 
