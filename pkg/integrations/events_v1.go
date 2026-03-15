@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import (
 
 	pbImplEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1"
 	pbEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1/definition"
-	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -61,9 +60,5 @@ func (a *eventsV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 }
 
 func (a *eventsV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	if err := integrationsShared.FillAll(cmd, &a.config.Endpoint, &a.config.Database); err != nil {
-		return nil, err
-	}
-
-	return pbImplEventsV1.New(a.config)
+	return pbImplEventsV1.New(ctx, a.config)
 }

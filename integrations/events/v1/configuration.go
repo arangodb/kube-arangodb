@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import (
 	"time"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
@@ -34,17 +33,12 @@ func NewConfiguration() Configuration {
 }
 
 type Configuration struct {
-	integrationsShared.Endpoint
-	integrationsShared.Database
-
 	Async ConfigurationAsync
 }
 
 func (c Configuration) Validate() error {
 	return errors.Errors(
 		shared.PrefixResourceError("async", c.Async.Validate()),
-		shared.PrefixResourceError("endpoint", c.Endpoint.Validate()),
-		shared.PrefixResourceError("database", c.Database.Validate()),
 	)
 }
 

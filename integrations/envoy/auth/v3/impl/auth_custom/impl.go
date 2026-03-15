@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,13 +27,13 @@ import (
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 )
 
-func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool, error) {
 	if !configuration.Enabled {
-		return nil, false
+		return nil, false, nil
 	}
 
 	if !configuration.Auth.Enabled {
-		return nil, false
+		return nil, false, nil
 	}
 
 	switch configuration.Auth.Type {
@@ -41,5 +41,5 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		return openid.New(ctx, configuration)
 	}
 
-	return nil, false
+	return nil, false, nil
 }

@@ -29,18 +29,23 @@ import (
 	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	impl2 "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl"
+	pbImplEnvoyAuthV3Impl "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors/panics"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, config pbImplEnvoyAuthV3Shared.Configuration) svc.Handler {
+func New(ctx context.Context, config pbImplEnvoyAuthV3Shared.Configuration) (svc.Handler, error) {
+	auth, err := pbImplEnvoyAuthV3Impl.Factory().Render(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &impl{
 		config:  config,
-		handler: impl2.Factory().Render(ctx, config),
-	}
+		handler: auth,
+	}, nil
 }
 
 var _ pbEnvoyAuthV3.AuthorizationServer = &impl{}

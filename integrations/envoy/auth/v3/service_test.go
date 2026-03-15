@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,9 +35,11 @@ import (
 )
 
 func Client(t *testing.T, ctx context.Context) pbEnvoyAuthV3.AuthorizationClient {
+	handler, err := New(ctx, pbImplEnvoyAuthV3Shared.Configuration{})
+	require.NoError(t, err)
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, New(ctx, pbImplEnvoyAuthV3Shared.Configuration{}))
+	}, handler)
 	require.NoError(t, err)
 
 	start := local.Start(ctx)

@@ -21,33 +21,22 @@
 package sidecar
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
-	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
+	pbImplMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
 func init() {
-	global.MustRegister("authorization-client", func(cmd *cobra.Command) (svc.Handler, bool, error) {
-		if p, err := flagAuth.Get(cmd); err != nil {
-			return nil, false, err
-		} else if p == "" {
-			return nil, false, nil
-		}
-
-		p, err := flagAuthMode.Get(cmd)
+	global.Register("meta-v1", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
+		svc, err := pbImplMetaV1.New(ctx, pbImplMetaV1.Configuration{
+			TTL: 0,
+		})
 		if err != nil {
 			return nil, false, err
 		}
-
-		authz, err := pbImplAuthorizationV1.New(cmd.Context(), pbImplAuthorizationV1.NewConfiguration().With(func(in pbImplAuthorizationV1.Configuration) pbImplAuthorizationV1.Configuration {
-			in.Type = pbImplAuthorizationV1.ConfigurationType(p)
-			return in
-		}))
-		if err != nil {
-			return nil, false, err
-		}
-
-		return authz, true, nil
+		return svc, true, nil
 	})
 }

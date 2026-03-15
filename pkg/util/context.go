@@ -93,6 +93,31 @@ func WithContextTimeoutP4A3[P1, P2, P3, P4, A1, A2, A3 interface{}](ctx context.
 	return f(nCtx, a1, a2, a3)
 }
 
+type ContextObject[V any] ContextKey
+
+func (o ContextObject[V]) Set(ctx context.Context, val V) context.Context {
+	return context.WithValue(ctx, ContextKey(o), val)
+}
+
+func (o ContextObject[V]) Get(ctx context.Context) (V, bool) {
+	v := ctx.Value(ContextKey(o))
+	z, ok := v.(V)
+	if !ok {
+		return Default[V](), false
+	}
+
+	return z, true
+}
+
+func (o ContextObject[V]) GetWithDefault(ctx context.Context, def V) V {
+	z, ok := o.Get(ctx)
+	if !ok {
+		return def
+	}
+
+	return z
+}
+
 type ContextKey string
 
 func RunContextAsync(ctx context.Context, in func(ctx context.Context)) context.CancelFunc {

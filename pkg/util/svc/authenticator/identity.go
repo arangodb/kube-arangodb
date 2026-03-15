@@ -27,7 +27,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
-	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 )
 
 type Identity struct {
@@ -35,14 +35,9 @@ type Identity struct {
 	Roles []string
 }
 
-func (i *Identity) EvaluatePermission(ctx context.Context, client cache.Object[pbAuthorizationV1.AuthorizationV1Client], action, resource string) error {
+func (i *Identity) EvaluatePermission(ctx context.Context, c pbImplAuthorizationV1Shared.Evaluator, action, resource string) error {
 	if i == nil {
 		return status.Error(codes.Unauthenticated, "Unauthenticated")
-	}
-
-	c, err := client.Get(ctx)
-	if err != nil {
-		return status.Error(codes.Internal, err.Error())
 	}
 
 	resp, err := c.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{

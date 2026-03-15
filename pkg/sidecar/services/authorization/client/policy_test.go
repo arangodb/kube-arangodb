@@ -37,7 +37,7 @@ type evaluator interface {
 type evaluatorImpl struct {
 	t      *testing.T
 	name   string
-	policy *policy
+	policy *Policy
 }
 
 func (e evaluatorImpl) Evaluate(name string, action, resource string, context map[string][]string, effect sidecarSvcAuthzTypes.Effect) evaluator {
@@ -59,7 +59,7 @@ func (e evaluatorImpl) Evaluate(name string, action, resource string, context ma
 }
 
 func statementEvaluator(t *testing.T, name string, statements ...*sidecarSvcAuthzTypes.PolicyStatement) evaluator {
-	pol, err := newPolicy(&sidecarSvcAuthzTypes.Policy{Statements: statements})
+	pol, err := NewPolicy(&sidecarSvcAuthzTypes.Policy{Statements: statements})
 	require.NoError(t, err)
 
 	return evaluatorImpl{
