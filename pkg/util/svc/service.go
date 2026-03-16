@@ -44,7 +44,7 @@ type Service interface {
 
 	GetHandler(name string) (Handler, bool)
 
-	Dial(opts ...grpc.DialOption) (grpc.ClientConnInterface, error)
+	Dial(opts ...grpc.DialOption) (*grpc.ClientConn, error)
 }
 
 type service struct {
@@ -72,7 +72,7 @@ type serviceHTTP struct {
 	unix    *goHttp.Server
 }
 
-func (p *service) Dial(opts ...grpc.DialOption) (grpc.ClientConnInterface, error) {
+func (p *service) Dial(opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	if p.starter == nil {

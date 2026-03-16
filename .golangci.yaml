@@ -79,6 +79,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3
       - alias: pbImplEnvoyAuthV3Shared
         pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared
+      - alias: pbImplEnvoyAuthV3Impl
+        pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl
       - alias: pbInventoryV1
         pkg: github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition
       - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1
@@ -223,6 +225,8 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/util/token
       - alias: utilTokenLoader
         pkg: github.com/arangodb/kube-arangodb/pkg/util/token/loader
+      - alias: utilConstantsContext
+        pkg: github.com/arangodb/kube-arangodb/pkg/util/constants/context
       - alias: utilConstants
         pkg: github.com/arangodb/kube-arangodb/pkg/util/constants
       - alias: tcache

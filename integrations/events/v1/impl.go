@@ -32,17 +32,35 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pbEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1/definition"
+	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
-	col := cfg.WithDatabase(cfg.Endpoint).
-		CreateCollection("_events", cfg.SourceCollectionProps()).
+	client, ok := utilConstantsContext.ArangoDBClientCache.Get(ctx)
+	if !ok {
+		return nil, errors.Errorf("Unable to get arangodb client")
+	}
+
+	dbname, ok := integrationsShared.DatabaseNameContext.Get(ctx)
+	if !ok {
+		return nil, errors.Errorf("Unable to get DBName")
+	}
+
+	source, ok := integrationsShared.DatabaseSourceContext.Get(ctx)
+	if !ok {
+		return nil, errors.Errorf("Unable to get Source DB")
+	}
+
+	col := db.NewClient(client).Database(dbname).
+		CreateCollection("_events", source).
 		WithTTLIndex("system_events_created_ttl_index", DefaultTTL, "created").
 		Get()
 

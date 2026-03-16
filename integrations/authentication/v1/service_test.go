@@ -30,6 +30,8 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
@@ -44,6 +46,8 @@ func Handler(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]
 
 func Server(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) (tests.TokenManager, svc.ServiceStarter) {
 	tm := tests.NewTokenManager(t)
+
+	ctx = utilConstantsContext.ArangoDBClientCache.Set(ctx, cache.NewObject(tests.TestArangoClientCacheFunc(t)))
 
 	var currentMods []util.ModR[Configuration]
 

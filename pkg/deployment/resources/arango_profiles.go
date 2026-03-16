@@ -177,6 +177,12 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		}
 	}
 
+	never := func() func() (integrationsSidecar.Integration, bool) {
+		return func() (integrationsSidecar.Integration, bool) {
+			return nil, false
+		}
+	}
+
 	if changed, ready, err := r.ensureArangoProfilesFactory(ctx, cachedStatus,
 		func() (string, *schedulerApi.ArangoProfile, error) {
 			counterMetric.Inc()
@@ -239,7 +245,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 			return nil, false
 		}),
-		gen(utilConstants.ProfilesIntegrationMeta, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationMetaV1{})),
+		gen(utilConstants.ProfilesIntegrationMeta, utilConstants.ProfilesIntegrationV1, never()),
 		gen(utilConstants.ProfilesIntegrationEvents, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationEventsV1{})),
 		gen(utilConstants.ProfilesIntegrationStorage, utilConstants.ProfilesIntegrationV2, func() (integrationsSidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Beta1(); err == nil {

@@ -22,7 +22,6 @@ package v1
 
 import (
 	"context"
-	"fmt"
 	goHttp "net/http"
 	"slices"
 	goStrings "strings"
@@ -36,7 +35,6 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/connection"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_cookie"
@@ -44,8 +42,8 @@ import (
 	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
@@ -61,24 +59,18 @@ func newInternal(ctx context.Context, cfg Configuration) (*implementation, error
 		return nil, err
 	}
 
+	client, ok := utilConstantsContext.ArangoDBClientCache.Get(ctx)
+	if !ok {
+		return nil, errors.Errorf("Unable to get arangodb client")
+	}
+
 	obj := &implementation{
 		cfg: cfg,
 		ctx: ctx,
 
 		cache: cache.NewObject(utilTokenLoader.SecretCacheDirectory(cfg.Path, cfg.TTL)),
 
-		userClient: cache.NewObject(func(ctx context.Context) (arangodb.Requests, time.Duration, error) {
-			client := arangodb.NewClient(connection.NewHttpConnection(connection.HttpConfiguration{
-				Endpoint: connection.NewRoundRobinEndpoints([]string{
-					fmt.Sprintf("%s://%s:%d", cfg.Database.Proto, cfg.Database.Endpoint, cfg.Database.Port),
-				}),
-				ContentType:    connection.ApplicationJSON,
-				ArangoDBConfig: connection.ArangoDBConfiguration{},
-				Transport:      operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
-			}))
-
-			return client, 24 * time.Hour, nil
-		}),
+		userClient: client,
 	}
 
 	return obj, nil
@@ -93,7 +85,7 @@ type implementation struct {
 	ctx context.Context
 	cfg Configuration
 
-	userClient cache.Object[arangodb.Requests]
+	userClient cache.Object[arangodb.Client]
 	cache      cache.Object[utilToken.Secret]
 }
 

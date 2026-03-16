@@ -18,17 +18,18 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package sidecar
+package context
 
 import (
-	"context"
+	"github.com/arangodb/go-driver/v2/arangodb"
 
-	"github.com/spf13/cobra"
-
+	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 )
 
-type registerHandler func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error)
+const (
+	ArangoDBClientCache util.ContextObject[cache.Object[arangodb.Client]] = "arangodb-client-cache-object"
 
-var global = util.NewRegisterer[string, registerHandler]()
+	AuthZClientPlugin util.ContextObject[pbImplAuthorizationV1Shared.Evaluator] = "authz-client-plugin"
+)

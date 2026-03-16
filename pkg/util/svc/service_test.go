@@ -35,6 +35,7 @@ import (
 
 	pbPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
@@ -182,6 +183,69 @@ func Test_Service_Connections(t *testing.T) {
 
 		_, err = ugrpc.Get[*pbPongV1.PongV1PingResponse](context.Background(), operatorHTTP.NewHTTPClient(), fmt.Sprintf("http://%s/_integration/pong/v1/ping", st.HTTPAddress())).WithCode(goHttp.StatusOK).Get()
 		require.NoError(t, err)
+
+		c()
+
+		require.NoError(t, st.Wait())
+	})
+
+	t.Run("Proxy", func(t *testing.T) {
+		h, err := NewService(Configuration{
+			Address: "127.0.0.1:0",
+			Gateway: &ConfigurationGateway{
+				Address: "127.0.0.1:0",
+			},
+		}, handler)
+		require.NoError(t, err)
+
+		ctx, c := context.WithCancel(context.Background())
+		defer c()
+
+		st := h.Start(ctx)
+
+		conn, err := h.Dial(ProxyClientOpts()...)
+		require.NoError(t, err)
+
+		// Second server
+
+		h2, err := NewService(Configuration{
+			Address: "127.0.0.1:0",
+			Gateway: &ConfigurationGateway{
+				Address: "127.0.0.1:0",
+			},
+			Options: ProxyServer(cache.Static(conn)),
+		}, ProxyGateway(pbPongV1.Name, pbPongV1.RegisterPongV1Handler))
+		require.NoError(t, err)
+
+		ctx2, c2 := context.WithCancel(context.Background())
+		defer c2()
+
+		st2 := h2.Start(ctx2)
+
+		conn2, err := h2.Dial()
+		require.NoError(t, err)
+
+		// Check
+
+		cl := pbPongV1.NewPongV1Client(conn)
+
+		_, err = cl.Ping(context.Background(), &pbSharedV1.Empty{})
+		require.NoError(t, err)
+
+		_, err = ugrpc.Get[*pbPongV1.PongV1PingResponse](context.Background(), operatorHTTP.NewHTTPClient(), fmt.Sprintf("http://%s/_integration/pong/v1/ping", st.HTTPAddress())).WithCode(goHttp.StatusOK).Get()
+		require.NoError(t, err)
+
+		cl = pbPongV1.NewPongV1Client(conn2)
+
+		_, err = cl.Ping(context.Background(), &pbSharedV1.Empty{})
+		require.NoError(t, err)
+
+		_, err = ugrpc.Get[*pbPongV1.PongV1PingResponse](context.Background(), operatorHTTP.NewHTTPClient(), fmt.Sprintf("http://%s/_integration/pong/v1/ping", st2.HTTPAddress())).WithCode(goHttp.StatusOK).Get()
+		require.NoError(t, err)
+
+		c2()
+
+		require.NoError(t, st2.Wait())
 
 		c()
 

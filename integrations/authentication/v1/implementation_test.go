@@ -30,6 +30,8 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
@@ -40,6 +42,8 @@ func Test_Basic(t *testing.T) {
 
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
+
+	ctx = utilConstantsContext.ArangoDBClientCache.Set(ctx, cache.NewObject(tests.TestArangoClientCacheFunc(t)))
 
 	s, err := newInternal(ctx, NewConfiguration().With(func(c Configuration) Configuration {
 		c.Path = directory.Path()
@@ -71,6 +75,8 @@ func Test_Flow_WithoutTTL(t *testing.T) {
 
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
+
+	ctx = utilConstantsContext.ArangoDBClientCache.Set(ctx, cache.NewObject(tests.TestArangoClientCacheFunc(t)))
 
 	cfg := NewConfiguration()
 

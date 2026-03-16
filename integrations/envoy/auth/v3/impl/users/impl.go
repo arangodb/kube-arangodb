@@ -33,20 +33,26 @@ import (
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool) {
+func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuration) (pbImplEnvoyAuthV3Shared.AuthHandler, bool, error) {
 	if !configuration.Enabled {
-		return nil, false
+		return nil, false, nil
 	}
 
 	if !configuration.Extensions.UsersCreate {
-		return nil, false
+		return nil, false, nil
 	}
 
 	i := &impl{}
 
-	i.userClient = configuration.DatabaseClient(configuration.Endpoint)
+	if c, ok := utilConstantsContext.ArangoDBClientCache.Get(ctx); ok {
+		i.userClient = c
+	} else {
+		return nil, false, errors.Errorf("client not found")
+	}
 
 	i.users = cache.NewCache[string, arangodb.User](func(ctx context.Context, in string) (arangodb.User, time.Time, error) {
 		client, err := i.userClient.Get(ctx)
@@ -77,7 +83,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		return v, time.Now().Add(24 * time.Hour), err
 	})
 
-	return i, true
+	return i, true, nil
 }
 
 type impl struct {

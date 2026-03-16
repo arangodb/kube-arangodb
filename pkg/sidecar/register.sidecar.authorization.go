@@ -21,27 +21,42 @@
 package sidecar
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
+	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
+	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	sidecarSvcAuthz "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc/authentication"
 )
 
-func init() {
-	global.MustRegister("authorization", registerAuthorization)
-}
-
-func registerAuthorization(cmd *cobra.Command) (svc.Handler, bool, error) {
+func newAuthorizationClient(ctx context.Context, cmd *cobra.Command) (svc.Handler, pbImplAuthorizationV1Shared.Evaluator, bool, error) {
 	p, err := flagAuth.Get(cmd)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	} else if p == "" {
-		return nil, false, nil
+		return nil, pbImplAuthorizationV1Shared.NewAlwaysPlugin(), false, nil
 	}
 
-	c := arangoDBDatabaseClient(cmd)
+	c, ok := utilConstantsContext.ArangoDBClientCache.Get(ctx)
+	if !ok {
+		return nil, pbImplAuthorizationV1Shared.NewAlwaysPlugin(), false, errors.Errorf("Client not defined")
+	}
 
-	return sidecarSvcAuthz.NewAuthorizer(db.NewClient(c).Database("_system"), authentication.NewFolderAuthentication(p)), true, nil
+	pm, err := flagAuthMode.Get(cmd)
+	if err != nil {
+		return nil, nil, false, err
+	}
+
+	pz := pbImplAuthorizationV1.ConfigurationType(pm)
+	if err := pz.Validate(); err != nil {
+		return nil, nil, false, err
+	}
+
+	auth := sidecarSvcAuthz.NewAuthorizer(db.NewClient(c).Database("_system"), pz)
+	return auth, auth.Plugin(), true, nil
 }

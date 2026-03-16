@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,23 +31,25 @@ func NewFactory(gen ...FactoryGen) Factory {
 }
 
 type Factory interface {
-	Render(ctx context.Context, configuration Configuration) AuthHandler
+	Render(ctx context.Context, configuration Configuration) (AuthHandler, error)
 }
 
-type FactoryGen func(ctx context.Context, configuration Configuration) (AuthHandler, bool)
+type FactoryGen func(ctx context.Context, configuration Configuration) (AuthHandler, bool, error)
 
 type factories []FactoryGen
 
-func (f factories) Render(ctx context.Context, configuration Configuration) AuthHandler {
+func (f factories) Render(ctx context.Context, configuration Configuration) (AuthHandler, error) {
 	hand := make(handlers, 0, len(f))
 
 	for id := range f {
-		if v, ok := f[id](ctx, configuration); ok {
+		if v, ok, err := f[id](ctx, configuration); err != nil {
+			return nil, err
+		} else if ok {
 			hand = append(hand, v)
 		}
 	}
 
-	return hand
+	return hand, nil
 }
 
 type handlers []AuthHandler

@@ -21,6 +21,8 @@
 package sidecar
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
@@ -28,7 +30,7 @@ import (
 )
 
 func init() {
-	global.Register("pong", func(cmd *cobra.Command) (svc.Handler, bool, error) {
+	global.Register("pong", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
 		svc, err := pbImplPongV1.New()
 		if err != nil {
 			return nil, false, err

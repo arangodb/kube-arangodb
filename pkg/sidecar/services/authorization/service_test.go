@@ -34,6 +34,7 @@ import (
 
 	"github.com/arangodb/go-driver/v2/arangodb"
 
+	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
@@ -48,12 +49,12 @@ import (
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
-func Handler(t *testing.T, tm tests.TokenManager) svc.Handler {
+func Handler(t *testing.T) svc.Handler {
 	return NewAuthorizer(db.NewClient(cache.NewObject(tests.TestArangoDBConfig(t).ClientCache())).
 		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(8))), &arangodb.CreateDatabaseOptions{}).
 		CreateCollection("_users", db.StaticProps(arangodb.CreateCollectionPropertiesV2{
 			IsSystem: util.NewType(true),
-		})).Database(), authentication.NewFolderAuthentication(tm.Path()))
+		})).Database(), pbImplAuthorizationV1.ConfigurationTypeCentralPermissive)
 }
 
 func Server(t *testing.T, ctx context.Context, tm tests.TokenManager) svc.ServiceStarter {
@@ -63,7 +64,7 @@ func Server(t *testing.T, ctx context.Context, tm tests.TokenManager) svc.Servic
 		Gateway: &svc.ConfigurationGateway{
 			Address: "127.0.0.1:0",
 		},
-	}, Handler(t, tm))
+	}, Handler(t))
 	require.NoError(t, err)
 
 	return local.Start(ctx)

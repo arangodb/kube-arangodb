@@ -83,6 +83,8 @@ type Pooler[T PoolerObject] interface {
 	Offsets() []OffsetItem[T]
 
 	Items() []string
+
+	Copy() map[string]T
 }
 
 type pooler[T PoolerObject] struct {
@@ -98,6 +100,19 @@ type pooler[T PoolerObject] struct {
 	interval time.Duration
 
 	offset Offset[T]
+}
+
+func (p *pooler[T]) Copy() map[string]T {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+
+	r := make(map[string]T, len(p.state))
+
+	for k, v := range p.state {
+		r[k] = v.Spec
+	}
+
+	return r
 }
 
 func (p *pooler[T]) start(ctx context.Context) {

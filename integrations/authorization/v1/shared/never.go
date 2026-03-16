@@ -18,17 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package sidecar
+package shared
 
 import (
 	"context"
 
-	"github.com/spf13/cobra"
-
-	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 )
 
-type registerHandler func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error)
-
-var global = util.NewRegisterer[string, registerHandler]()
+func NewNeverPlugin() Plugin {
+	return PluginFunc(func(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
+		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
+			Message: "Denied by never plugin",
+			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Deny,
+		}, nil
+	})
+}

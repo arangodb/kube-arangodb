@@ -31,6 +31,7 @@ import (
 	"github.com/arangodb/go-driver/v2/connection"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -45,6 +46,11 @@ type Database struct {
 
 	Source DatabaseSource
 }
+
+const (
+	DatabaseSourceContext util.ContextObject[db.CollectionProps] = "integration-client-database-source"
+	DatabaseNameContext   util.ContextObject[string]             = "integration-client-database-name"
+)
 
 type DatabaseSource struct {
 	Collection string
@@ -141,14 +147,6 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Clien
 
 		return client, time.Hour, nil
 	})
-}
-
-func (d *Database) WithDatabase(endpoint Endpoint) db.Database {
-	name := ""
-	if d != nil {
-		name = d.Database
-	}
-	return db.NewClient(d.DatabaseClient(endpoint)).Database(name)
 }
 
 func (d *Database) SourceCollectionProps() db.CollectionProps {

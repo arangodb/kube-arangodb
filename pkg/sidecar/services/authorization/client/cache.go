@@ -28,10 +28,10 @@ import (
 )
 
 func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string]*sidecarSvcAuthzTypes.Role) internalCache {
-	parsedPolicies := make(map[string]*policy, len(policies))
+	parsedPolicies := make(map[string]*Policy, len(policies))
 
 	for name, policy := range policies {
-		p, err := newPolicy(policy)
+		p, err := NewPolicy(policy)
 		if err != nil {
 			logger.Err(err).Str("name", name).Warn("Failed to create policy")
 			continue
@@ -78,15 +78,15 @@ func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string
 type internalCache struct {
 	users    map[string][]string
 	roles    map[string][]string
-	policies map[string]*policy
+	policies map[string]*Policy
 }
 
-func (c *internalCache) extractUserPolicies(user string, userRoles ...string) []*policy {
+func (c *internalCache) extractUserPolicies(user string, userRoles ...string) []*Policy {
 	if c == nil {
 		return nil
 	}
 
-	var policyNames = make(map[string]*policy, len(c.policies))
+	var policyNames = make(map[string]*Policy, len(c.policies))
 
 	for _, name := range c.users[user] {
 		if p, ok := c.policies[name]; ok {

@@ -30,6 +30,8 @@ import (
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
@@ -47,7 +49,9 @@ func NewAuthenticationHandler(t *testing.T, mods ...util.ModR[pbImplAuthenticati
 
 	currentMods = append(currentMods, mods...)
 
-	handler, err := pbImplAuthenticationV1.New(t.Context(), pbImplAuthenticationV1.NewConfiguration().With(currentMods...))
+	ctx := utilConstantsContext.ArangoDBClientCache.Set(t.Context(), cache.NewObject(tests.TestArangoClientCacheFunc(t)))
+
+	handler, err := pbImplAuthenticationV1.New(ctx, pbImplAuthenticationV1.NewConfiguration().With(currentMods...))
 	require.NoError(t, err)
 
 	return directory, handler
