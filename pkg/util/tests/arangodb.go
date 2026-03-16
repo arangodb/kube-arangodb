@@ -34,6 +34,7 @@ import (
 	"github.com/arangodb/go-driver/v2/connection"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
@@ -108,6 +109,22 @@ type ArangoDBTestConfigAuthBasic struct {
 
 type ArangoDBTestConfigAuthJWT struct {
 	Token string
+}
+
+func TestArangoClientCacheFunc(t *testing.T) func(ctx context.Context) (arangodb.Client, time.Duration, error) {
+	if !TEST_ARANGODB_ENDPOINT.Exists() {
+		return func(ctx context.Context) (arangodb.Client, time.Duration, error) {
+			return nil, 0, errors.Errorf("TEST_ARANGODB_ENDPOINT is not set")
+		}
+	}
+
+	var r ArangoDBTestConfig
+
+	r.Endpoint = TEST_ARANGODB_ENDPOINT.Get()
+
+	r.Auth = TestConfigAuth(t)
+
+	return r.ClientCache()
 }
 
 func TestArangoDBConfig(t *testing.T) ArangoDBTestConfig {

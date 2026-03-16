@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,8 +42,8 @@ func NewHelperInterface[K comparable](f HelperInterface[K]) Helper[K] {
 }
 
 func NewHelper[K comparable](f HelperFunc[K]) Helper[K] {
-	return cache.NewCache(cache.CacheExtract[K, Token](func(ctx context.Context, in K) (Token, time.Time, error) {
+	return cache.NewCache(func(ctx context.Context, in K) (Token, time.Time, error) {
 		v, err := f(ctx, in)
 		return v, time.Now().Add(DefaultTTL), err
-	}))
+	})
 }
