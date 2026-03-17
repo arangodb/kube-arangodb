@@ -24,14 +24,14 @@ import (
 	"context"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
-	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
 
 func NewNeverPlugin() Plugin {
 	return PluginFunc(func(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Denied by never plugin",
-			Effect:  types.Effect_Deny,
+			Effect:  sidecarSvcAuthzTypes.Effect_Deny,
 		}, nil
 	})
 }

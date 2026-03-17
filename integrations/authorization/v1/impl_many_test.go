@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
-	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -43,7 +43,7 @@ func Test_Service_Many(t *testing.T) {
 		Resource: "deny",
 	}, &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 		Message: "Marked",
-		Effect:  types.Effect_Deny,
+		Effect:  sidecarSvcAuthzTypes.Effect_Deny,
 	})
 
 	client, _ := Client(t, ctx, Handler(p))
@@ -53,7 +53,7 @@ func Test_Service_Many(t *testing.T) {
 			User: util.NewType("admin"),
 		})
 		require.NoError(t, err)
-		require.EqualValues(t, types.Effect_Deny, resp.GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Deny, resp.GetEffect())
 		require.Len(t, resp.GetItems(), 0)
 	})
 
@@ -68,9 +68,9 @@ func Test_Service_Many(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		require.EqualValues(t, types.Effect_Allow, resp.GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetEffect())
 		require.Len(t, resp.GetItems(), 1)
-		require.EqualValues(t, types.Effect_Allow, resp.GetItems()[0].GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetItems()[0].GetEffect())
 	})
 
 	t.Run("Multi Allow", func(t *testing.T) {
@@ -88,10 +88,10 @@ func Test_Service_Many(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		require.EqualValues(t, types.Effect_Allow, resp.GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetEffect())
 		require.Len(t, resp.GetItems(), 2)
-		require.EqualValues(t, types.Effect_Allow, resp.GetItems()[0].GetEffect())
-		require.EqualValues(t, types.Effect_Allow, resp.GetItems()[1].GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetItems()[0].GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetItems()[1].GetEffect())
 	})
 
 	t.Run("Multi Allow with deny", func(t *testing.T) {
@@ -113,10 +113,10 @@ func Test_Service_Many(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		require.EqualValues(t, types.Effect_Deny, resp.GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Deny, resp.GetEffect())
 		require.Len(t, resp.GetItems(), 3)
-		require.EqualValues(t, types.Effect_Allow, resp.GetItems()[0].GetEffect())
-		require.EqualValues(t, types.Effect_Allow, resp.GetItems()[1].GetEffect())
-		require.EqualValues(t, types.Effect_Deny, resp.GetItems()[2].GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetItems()[0].GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetItems()[1].GetEffect())
+		require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Deny, resp.GetItems()[2].GetEffect())
 	})
 }

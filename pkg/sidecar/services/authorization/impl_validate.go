@@ -24,7 +24,7 @@ import (
 	"context"
 
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
-	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
@@ -36,11 +36,11 @@ func (a *implementation) ValidateSelfPermission(ctx context.Context, request *si
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, request.GetAction(), request.GetResource()); err != nil {
 		return &sidecarSvcAuthzDefinition.AuthorizationAPIValidateResponse{
 			Message: err.Error(),
-			Effect:  types.Effect_Deny,
+			Effect:  sidecarSvcAuthzTypes.Effect_Deny,
 		}, nil
 	}
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIValidateResponse{
-		Effect: types.Effect_Allow,
+		Effect: sidecarSvcAuthzTypes.Effect_Allow,
 	}, nil
 }

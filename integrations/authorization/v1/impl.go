@@ -32,7 +32,7 @@ import (
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
-	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
@@ -115,7 +115,7 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 	if len(request.Items) == 0 {
 		return &pbAuthorizationV1.AuthorizationV1PermissionManyResponse{
 			Message: "Missing permission evaluation items",
-			Effect:  types.Effect_Deny,
+			Effect:  sidecarSvcAuthzTypes.Effect_Deny,
 		}, nil
 	}
 
@@ -137,10 +137,10 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 	}
 
 	for _, v := range r {
-		if v.GetEffect() == types.Effect_Deny {
+		if v.GetEffect() == sidecarSvcAuthzTypes.Effect_Deny {
 			return &pbAuthorizationV1.AuthorizationV1PermissionManyResponse{
 				Message: "One of the requests has been denied",
-				Effect:  types.Effect_Deny,
+				Effect:  sidecarSvcAuthzTypes.Effect_Deny,
 				Items:   r,
 			}, nil
 		}
@@ -148,7 +148,7 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 
 	return &pbAuthorizationV1.AuthorizationV1PermissionManyResponse{
 		Message: "Access Granted",
-		Effect:  types.Effect_Allow,
+		Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 		Items:   r,
 	}, nil
 }
