@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -48,7 +49,7 @@ func Test_Service(t *testing.T) {
 		Resource: "test",
 	})
 	require.NoError(t, err)
-	require.EqualValues(t, pbAuthorizationV1.AuthorizationV1Effect_Allow, resp.GetEffect())
+	require.EqualValues(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetEffect())
 }
 
 func Test_ServiceHTTP(t *testing.T) {

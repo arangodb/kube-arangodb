@@ -100,6 +100,6 @@ func BenchmarkClientEvaluationPerformance(b *testing.B) {
 			Resource: "storage:/data/super/get",
 		})
 		require.NoError(b, err)
-		require.EqualValues(b, pbAuthorizationV1.AuthorizationV1Effect_Allow, res.Effect)
+		require.EqualValues(b, sidecarSvcAuthzTypes.Effect_Allow, res.Effect)
 	}
 }

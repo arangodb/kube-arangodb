@@ -29,6 +29,7 @@ import (
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
 
 func newPluginTest() pluginTest {
@@ -71,7 +72,7 @@ func (p *pluginTestImpl) Evaluate(ctx context.Context, req *pbAuthorizationV1.Au
 
 	return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 		Message: "Default Response",
-		Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+		Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 	}, nil
 }
 

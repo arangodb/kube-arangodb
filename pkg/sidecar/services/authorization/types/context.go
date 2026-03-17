@@ -18,17 +18,38 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-syntax = "proto3";
+package types
 
-package authorization;
+import "github.com/arangodb/kube-arangodb/pkg/util"
 
-option go_package = "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition";
+func (a *Context) Hash() string {
+	if a == nil {
+		return ""
+	}
 
-// AuthorizationV1Effect defines the Statement Effect
-enum AuthorizationV1Effect {
-  // Deny definition
-  Deny = 0;
+	return util.SHA256FromStringArray(
+		util.SHA256FromHashStringMap(a.GetParameters()),
+	)
+}
 
-  // Allow definition
-  Allow = 1;
+func (a *ContextParameter) Hash() string {
+	if v := a.GetValues(); len(v) > 0 {
+		return util.SHA256FromStringArray(v...)
+	}
+
+	return ""
+}
+
+func (x *Context) GetContext() map[string][]string {
+	if x == nil {
+		return nil
+	}
+
+	r := make(map[string][]string, len(x.GetParameters()))
+
+	for k, v := range x.GetParameters() {
+		r[k] = v.GetValues()
+	}
+
+	return r
 }

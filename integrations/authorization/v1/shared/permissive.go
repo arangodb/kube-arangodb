@@ -25,6 +25,7 @@ import (
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
 
 func Permissive(parent Plugin, log logging.Logger) Plugin {
@@ -61,29 +62,29 @@ func (p permissive) Evaluate(ctx context.Context, req *pbAuthorizationV1.Authori
 		log.Err(err).Warn("Failed to evaluate permission")
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Access granted",
-			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+			Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 		}, nil
 	}
 	log = log.Str("message", resp.GetMessage())
 
 	switch resp.GetEffect() {
-	case pbAuthorizationV1.AuthorizationV1Effect_Allow:
+	case sidecarSvcAuthzTypes.Effect_Allow:
 		log.Info("Access Granted")
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Access granted",
-			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+			Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 		}, nil
-	case pbAuthorizationV1.AuthorizationV1Effect_Deny:
+	case sidecarSvcAuthzTypes.Effect_Deny:
 		log.Info("Access Denied")
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Access granted due to the Permissive mode",
-			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+			Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 		}, nil
 	default:
 		log.Info("Unknown Effect")
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Access granted due to the Permissive mode",
-			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+			Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 		}, nil
 	}
 
