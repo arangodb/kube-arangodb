@@ -35,7 +35,7 @@ func EvaluatePolicies(req *pbAuthorizationV1.AuthorizationV1PermissionRequest, p
 			if sidecarSvcAuthzTypes.IsPermissionDenied(err) {
 				return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 					Message: "Explicit deny",
-					Effect:  pbAuthorizationV1.AuthorizationV1Effect_Deny,
+					Effect:  sidecarSvcAuthzTypes.Effect_Deny,
 				}, nil
 			}
 		} else if a {
@@ -46,11 +46,11 @@ func EvaluatePolicies(req *pbAuthorizationV1.AuthorizationV1PermissionRequest, p
 	if allowed {
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Access Granted",
-			Effect:  pbAuthorizationV1.AuthorizationV1Effect_Allow,
+			Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 		}, nil
 	}
 	return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 		Message: "Permission denied",
-		Effect:  pbAuthorizationV1.AuthorizationV1Effect_Deny,
+		Effect:  sidecarSvcAuthzTypes.Effect_Deny,
 	}, nil
 }

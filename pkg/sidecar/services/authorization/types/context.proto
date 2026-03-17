@@ -18,8 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package definition
+syntax = "proto3";
 
-func (a AuthorizationV1Effect) Hash() string {
-	return a.String()
+package types;
+
+option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types";
+
+// Context
+message Context {
+  // Keeps the list of the context parameters
+  map<string, ContextParameter> parameters = 1;
+}
+
+// Context parameter
+message ContextParameter {
+  // keeps the context values
+  repeated string values = 1;
 }

@@ -26,6 +26,8 @@ import "google/api/annotations.proto";
 
 import "integrations/shared/v1/definition/offset.proto";
 
+import "pkg/sidecar/services/authorization/types/context.proto";
+import "pkg/sidecar/services/authorization/types/effect.proto";
 import "pkg/sidecar/services/authorization/types/policy.proto";
 import "pkg/sidecar/services/authorization/types/role.proto";
 
@@ -33,6 +35,14 @@ option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/auth
 
 // AuthorizationAPI Service implementation
 service AuthorizationAPI {
+  // Create the Policy
+  rpc ValidateSelfPermission(AuthorizationAPIValidateSelfRequest) returns (AuthorizationAPIValidateResponse){
+    option (google.api.http) = {
+      post: "/_management/permissions/validate"
+      body: "*"
+    };
+  }
+
   // Return the Policies
   rpc APIListPolicy(shared.OffsetRequest) returns (AuthorizationAPIListResponse){
     option (google.api.http) = {
@@ -163,4 +173,25 @@ message AuthorizationAPIRoleResponse {
 
   // Role spec
   types.Role item = 3;
+}
+
+// AuthorizationAPI Validate Self Request
+message AuthorizationAPIValidateSelfRequest {
+  // Defines the action
+  string action = 1;
+
+  // Defines the resource
+  string resource = 2;
+
+  // request context
+  optional types.Context context = 3;
+}
+
+// AuthorizationAPI Validate Response
+message AuthorizationAPIValidateResponse {
+  // Message of the Permission evaluation
+  string message = 1;
+
+  // Effect of the permission evaluation
+  types.Effect effect = 2;
 }
