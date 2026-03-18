@@ -222,7 +222,7 @@ ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
 endif
 
-BASEUBIIMAGE ?= registry.access.redhat.com/ubi8/ubi-minimal:8.4
+BASEUBIIMAGE ?= registry.access.redhat.com/ubi9/ubi-minimal:9.4
 
 OPERATORIMAGENAME ?= $(REPONAME)
 

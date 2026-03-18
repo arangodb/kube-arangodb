@@ -25,6 +25,7 @@
 - (Feature) (Platform) Permission Role & Policy CRD
 - (Feature) (Platform) (Proxy) Meta V1
 - (Feature) (Platform) Permission evaluation endpoint
+- (Maintenance) UBI 9 Image
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
