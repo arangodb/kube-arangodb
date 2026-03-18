@@ -38,6 +38,7 @@ import (
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
@@ -183,6 +184,13 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		}
 	}
 
+	central := func(integration integrationsSidecar.Integration) func() (integrationsSidecar.Integration, bool) {
+		if features.CentralServices().Enabled() {
+			return never()
+		}
+		return always(integration)
+	}
+
 	if changed, ready, err := r.ensureArangoProfilesFactory(ctx, cachedStatus,
 		func() (string, *schedulerApi.ArangoProfile, error) {
 			counterMetric.Inc()
@@ -245,7 +253,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 			return nil, false
 		}),
-		gen(utilConstants.ProfilesIntegrationMeta, utilConstants.ProfilesIntegrationV1, never()),
+		gen(utilConstants.ProfilesIntegrationMeta, utilConstants.ProfilesIntegrationV1, central(integrationsSidecar.IntegrationMetaV1{})),
 		gen(utilConstants.ProfilesIntegrationEvents, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationEventsV1{})),
 		gen(utilConstants.ProfilesIntegrationStorage, utilConstants.ProfilesIntegrationV2, func() (integrationsSidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Beta1(); err == nil {

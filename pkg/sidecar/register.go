@@ -50,6 +50,7 @@ func Register() (*cobra.Command, error) {
 		flagAuthMode,
 		flagHealthAddress,
 		flagArangodb,
+		flagCentralServicesEnabled,
 	); err != nil {
 		return nil, err
 	}

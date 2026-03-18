@@ -33,7 +33,7 @@ func (a *implementation) ValidateSelfPermission(ctx context.Context, request *si
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, request.GetAction(), request.GetResource()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), request.GetAction(), request.GetResource()); err != nil {
 		return &sidecarSvcAuthzDefinition.AuthorizationAPIValidateResponse{
 			Message: err.Error(),
 			Effect:  sidecarSvcAuthzTypes.Effect_Deny,

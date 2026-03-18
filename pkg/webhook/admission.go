@@ -67,16 +67,16 @@ func (a Admissions) Handle(w goHttp.ResponseWriter, r *goHttp.Request) bool {
 	for _, handler := range a {
 		log := logger.Str("name", handler.Name())
 
-		log.Info("Handling request")
+		log.Debug("Handling request")
 
 		if endpoint := fmt.Sprintf("/webhook/%s/%s/validate", gvsAsPath(handler.Resource()), handler.Name()); endpoint == r.URL.Path {
-			log.Str("endpoint", endpoint).Info("Handling Validate handler")
+			log.Str("endpoint", endpoint).Debug("Handling Validate handler")
 			handler.Validate(w, r)
 			return true
 		}
 
 		if endpoint := fmt.Sprintf("/webhook/%s/%s/mutate", gvsAsPath(handler.Resource()), handler.Name()); endpoint == r.URL.Path {
-			log.Str("endpoint", endpoint).Info("Handling Mutate handler")
+			log.Str("endpoint", endpoint).Debug("Handling Mutate handler")
 			handler.Mutate(w, r)
 			return true
 		}
@@ -159,7 +159,7 @@ func (a admissionImpl[T]) Mutate(writer goHttp.ResponseWriter, request *goHttp.R
 func (a admissionImpl[T]) request(t AdmissionRequestType, writer goHttp.ResponseWriter, request *goHttp.Request) {
 	log := logger.Wrap(logging.HTTPRequestWrap(request))
 
-	log.Info("Request Received")
+	log.Debug("Request Received")
 
 	timeout := time.Second
 
@@ -178,7 +178,7 @@ func (a admissionImpl[T]) request(t AdmissionRequestType, writer goHttp.Response
 
 	code, data := a.requestWriterJSON(ctx, log, t, request)
 	writer.WriteHeader(code)
-	log.Int("code", code).Str("data", string(data)).Info("Request Response send")
+	log.Int("code", code).Str("data", string(data)).Debug("Request Response send")
 	if len(data) > 0 {
 		if _, err := util.WriteAll(writer, data); err != nil {
 			log.Err(err).Warn("Unable to send response")

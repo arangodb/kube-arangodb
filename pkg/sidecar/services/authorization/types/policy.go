@@ -123,6 +123,10 @@ func (x Effect) Validate() error {
 }
 
 func ValidateAction(action string) error {
+	if action == "*" {
+		return nil
+	}
+
 	if z := strings.Split(action, ":"); len(z) != 2 {
 		return errors.Errorf("Invalid action '%s': expected format '<namespace>:<name>'", action)
 	} else {
