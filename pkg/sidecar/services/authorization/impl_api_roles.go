@@ -37,7 +37,7 @@ func (a *implementation) APIListRole(ctx context.Context, request *pbSharedV1.Of
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:ListRole", ""); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:ListRole", ""); err != nil {
 		return nil, err
 	}
 
@@ -54,7 +54,7 @@ func (a *implementation) APIGetRole(ctx context.Context, request *sidecarSvcAuth
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:GetRole", request.GetName()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:GetRole", request.GetName()); err != nil {
 		return nil, err
 	}
 
@@ -75,7 +75,7 @@ func (a *implementation) APIDeleteRole(ctx context.Context, request *sidecarSvcA
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:DeleteRole", request.GetName()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:DeleteRole", request.GetName()); err != nil {
 		return nil, err
 	}
 
@@ -100,7 +100,7 @@ func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcA
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:CreateRole", request.GetName()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:CreateRole", request.GetName()); err != nil {
 		return nil, err
 	}
 
@@ -134,7 +134,7 @@ func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcA
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:UpdateRole", request.GetName()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:UpdateRole", request.GetName()); err != nil {
 		return nil, err
 	}
 

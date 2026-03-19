@@ -49,6 +49,7 @@ func EvaluatePolicies(req *pbAuthorizationV1.AuthorizationV1PermissionRequest, p
 			Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 		}, nil
 	}
+
 	return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 		Message: "Permission denied",
 		Effect:  sidecarSvcAuthzTypes.Effect_Deny,

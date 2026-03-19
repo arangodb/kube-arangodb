@@ -37,7 +37,7 @@ func (a *implementation) APIListPolicy(ctx context.Context, request *pbSharedV1.
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:ListPolicy", ""); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:ListPolicy", ""); err != nil {
 		return nil, err
 	}
 
@@ -54,7 +54,7 @@ func (a *implementation) APIGetPolicy(ctx context.Context, request *sidecarSvcAu
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:GetPolicy", request.GetName()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:GetPolicy", request.GetName()); err != nil {
 		return nil, err
 	}
 
@@ -75,7 +75,7 @@ func (a *implementation) APIDeletePolicy(ctx context.Context, request *sidecarSv
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:DeletePolicy", request.GetName()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:DeletePolicy", request.GetName()); err != nil {
 		return nil, err
 	}
 
@@ -100,7 +100,7 @@ func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSv
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:CreatePolicy", request.GetName()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:CreatePolicy", request.GetName()); err != nil {
 		return nil, err
 	}
 
@@ -134,7 +134,7 @@ func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSv
 		return nil, err
 	}
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a, "rbac:UpdatePolicy", request.GetName()); err != nil {
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:UpdatePolicy", request.GetName()); err != nil {
 		return nil, err
 	}
 

@@ -44,7 +44,7 @@ func newAuthorizationClient(ctx context.Context, cmd *cobra.Command) (svc.Handle
 
 	c, ok := utilConstantsContext.ArangoDBClientCache.Get(ctx)
 	if !ok {
-		return nil, pbImplAuthorizationV1Shared.NewAlwaysPlugin(), false, errors.Errorf("Client not defined")
+		return nil, pbImplAuthorizationV1Shared.NewNeverPlugin(), false, errors.Errorf("Client not defined")
 	}
 
 	pm, err := flagAuthMode.Get(cmd)

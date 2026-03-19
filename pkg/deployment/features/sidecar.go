@@ -22,6 +22,7 @@ package features
 
 func init() {
 	registerFeature(gatewaySidecar)
+	registerFeature(centralServices)
 }
 
 var gatewaySidecar = &feature{
@@ -32,6 +33,18 @@ var gatewaySidecar = &feature{
 	dependencies:       []Feature{jwtRotation, gateway},
 }
 
+var centralServices = &feature{
+	name:               "central-services",
+	description:        "Enables Central Services",
+	enterpriseRequired: true,
+	enabledByDefault:   true,
+	dependencies:       []Feature{gatewaySidecar},
+}
+
 func GatewayIntegration() Feature {
 	return gatewaySidecar
+}
+
+func CentralServices() Feature {
+	return centralServices
 }

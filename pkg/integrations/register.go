@@ -30,6 +30,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/cobra"
 
+	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
 	pbShutdownV1 "github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -240,6 +241,7 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 	ctx = integrationsShared.DatabaseSourceContext.Set(ctx, db.SourceCollectionProps())
 	ctx = integrationsShared.DatabaseNameContext.Set(ctx, db.Database)
 	ctx = integrationsShared.AuthClientContext.Set(ctx, endpoint.AuthClient())
+	ctx = utilConstantsContext.AuthZClientPlugin.Set(ctx, pbImplAuthorizationV1Shared.NewAlwaysPlugin())
 
 	for _, handler := range c.registered {
 		if ok, err := cmd.Flags().GetBool(fmt.Sprintf("integration.%s", handler.Name())); err != nil {

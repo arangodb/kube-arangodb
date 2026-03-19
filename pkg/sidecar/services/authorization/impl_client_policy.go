@@ -41,7 +41,7 @@ func (a *implementation) PoolPolicyChanges(request *sidecarSvcAuthzDefinition.Au
 		return err
 	}
 
-	if err := authenticator.GetIdentity(g.Context()).EvaluatePermission(g.Context(), a, "rbac:PoolPolicy", ""); err != nil {
+	if err := authenticator.GetIdentity(g.Context()).EvaluatePermission(g.Context(), a.Plugin(), "rbac:PoolPolicy", ""); err != nil {
 		return err
 	}
 

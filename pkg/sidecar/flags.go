@@ -64,4 +64,9 @@ var (
 		Description: "ArangoDB Endpoint",
 		Default:     "",
 	}
+	flagCentralServicesEnabled = cli.Flag[bool]{
+		Name:        "central",
+		Description: "Defines if central services are enabled",
+		Default:     false,
+	}
 )

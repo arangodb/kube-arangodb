@@ -45,6 +45,8 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 		options.Add("--sidecar.auth.mode", util.BoolSwitch(features.RBACEnforced().Enabled(), pbImplAuthorizationV1.ConfigurationTypeCentral, pbImplAuthorizationV1.ConfigurationTypeCentralPermissive).String())
 	}
 
+	options.Add("--central", util.BoolSwitch(features.CentralServices().Enabled(), "true", "false"))
+
 	if port := groupSpec.InternalPort; port == nil {
 		scheme := "http"
 		if spec.IsSecure() {

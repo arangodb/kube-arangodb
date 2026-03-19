@@ -31,6 +31,12 @@ import (
 
 func init() {
 	global.Register("meta-v1", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
+		if v, err := flagCentralServicesEnabled.Get(cmd); err != nil {
+			return nil, false, err
+		} else if !v {
+			return nil, false, nil
+		}
+
 		svc, err := pbImplMetaV1.New(ctx, pbImplMetaV1.Configuration{
 			TTL: 0,
 		})
