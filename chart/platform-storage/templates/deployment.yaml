@@ -1,0 +1,59 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ template "platform-storage.releaseName" . }}"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "platform-storage.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ template "platform-storage.name" . }}
+      app.kubernetes.io/managed-by: {{ .Release.Service }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "platform-storage.name" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        release: {{ .Release.Name }}
+    spec:
+{{- if .Values.minio.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.minio.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.minio.tolerations }}
+      tolerations:
+{{ toYaml .Values.minio.tolerations | indent 8 }}
+{{- end }}
+      containers:
+        - name: minio
+          image: "{{ .Values.minio.image }}"
+          args:
+            - server
+            - /data
+          envFrom:
+            - secretRef:
+                name: "{{ template "platform-storage.releaseName" . }}-root-credentials"
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - name: data
+              mountPath: /data
+{{- if .Values.minio.resources }}
+          resources:
+{{ toYaml .Values.minio.resources | indent 12 }}
+{{- end }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: "{{ template "platform-storage.releaseName" . }}"
