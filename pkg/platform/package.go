@@ -39,6 +39,7 @@ func pkg() (*cobra.Command, error) {
 	if err := withRegisterCommand(&cmd,
 		packageDump,
 		packageInstall,
+		packageChart,
 		packageExport,
 		packageImport,
 		packageMerge,

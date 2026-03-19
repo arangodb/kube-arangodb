@@ -28,6 +28,7 @@ import (
 
 	integrations "github.com/arangodb/kube-arangodb/pkg/integrations"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/license"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
@@ -39,6 +40,7 @@ var (
 )
 
 func init() {
+	license.RegisterCommand(&cmd)
 	if err := integrations.Register(&cmd); err != nil {
 		panic(err.Error())
 	}

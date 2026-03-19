@@ -27,6 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/platform"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/license"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
@@ -46,6 +47,8 @@ func mainE() error {
 	if err != nil {
 		return err
 	}
+
+	license.RegisterCommand(c)
 
 	if err := logging.Init(c); err != nil {
 		return err
