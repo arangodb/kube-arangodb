@@ -1,0 +1,22 @@
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "platform-storage.releaseName" . }}"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "platform-storage.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ template "platform-storage.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+  ports:
+    - port: 9000
+      targetPort: 9000

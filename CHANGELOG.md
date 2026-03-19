@@ -28,6 +28,7 @@
 - (Maintenance) UBI 9 Image
 - (Feature) (Platform) Central Service Feature
 - (Bugfix) (Platform) Fix RBAC Resource Evaluation
+- (Platform) Storage Chart
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService

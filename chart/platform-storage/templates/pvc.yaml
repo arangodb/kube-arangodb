@@ -1,0 +1,22 @@
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ template "platform-storage.releaseName" . }}"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "platform-storage.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.storage.class }}
+  storageClassName: "{{ .Values.storage.class }}"
+  {{- end }}
+  resources:
+    requests:
+      storage: "{{ .Values.storage.size }}"

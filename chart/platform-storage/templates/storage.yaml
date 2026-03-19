@@ -1,0 +1,22 @@
+{{- if .Values.deployment.name }}
+---
+
+apiVersion: platform.arangodb.com/v1beta1
+kind: ArangoPlatformStorage
+metadata:
+  name: "{{ .Values.deployment.name }}"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ template "platform-storage.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+spec:
+  backend:
+    s3:
+      bucketName: "{{ template "platform-storage.releaseName" . }}"
+      credentialsSecret:
+        name: "{{ template "platform-storage.releaseName" . }}-credentials"
+      endpoint: "http://{{ template "platform-storage.releaseName" . }}.{{ .Release.Namespace }}.svc:9000"
+{{- end }}
