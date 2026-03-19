@@ -223,5 +223,3 @@ Global Flags:
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_license_generate_cmd)
-
-# ArangoDB Operator Platform License Chart Command
