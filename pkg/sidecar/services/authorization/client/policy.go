@@ -79,7 +79,7 @@ func NewStatement(in *sidecarSvcAuthzTypes.PolicyStatement) (Statement, error) {
 	}
 
 	if resources, err := util.FormatListErr(in.GetResources(), func(a string) (Match, error) {
-		return NewMatch(a)
+		return NewMultiMatch(a)
 	}); err != nil {
 		return Statement{}, err
 	} else {

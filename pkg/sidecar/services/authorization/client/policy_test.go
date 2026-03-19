@@ -248,4 +248,18 @@ func Test_PolicyEvaluation_Actions(t *testing.T) {
 		nil,
 		sidecarSvcAuthzTypes.Effect_Allow,
 	)
+
+	statementEvaluator(t, "Ensure exact grant",
+		&sidecarSvcAuthzTypes.PolicyStatement{
+			Effect:    sidecarSvcAuthzTypes.Effect_Allow,
+			Resources: []string{"content:data:*:*"},
+			Actions:   []string{"*"},
+		}, &sidecarSvcAuthzTypes.PolicyStatement{
+			Effect:    sidecarSvcAuthzTypes.Effect_Deny,
+			Resources: []string{"content:data:data:*"},
+			Actions:   []string{"*"},
+		}).
+		Evaluate("Any catch", "test:Test", "content:data:x:y", nil, sidecarSvcAuthzTypes.Effect_Allow).
+		Evaluate("Catch deny", "test:Test", "content:data:data:y", nil, sidecarSvcAuthzTypes.Effect_Deny).
+		Evaluate("Catch postfix", "test:Test", "content:data:x:y:z", nil, sidecarSvcAuthzTypes.Effect_Allow)
 }
