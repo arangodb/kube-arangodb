@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
+	goStrings "strings"
 
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/config"
@@ -131,7 +131,7 @@ Arango Platform Release has been installed!
 
 Components:
 %s
-`, strings.Join(lines, "\n"))))
+`, goStrings.Join(lines, "\n"))))
 
 	if err := builder.Done(); err != nil {
 		return err
