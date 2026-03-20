@@ -157,6 +157,12 @@ func GenerateCLIArangoDBOperatorPlatformReadme(root string) error {
 		readmeSections["arangodb_operator_platform_package_install_cmd"] = section
 	}
 
+	if section, err := GenerateHelpQuoted(cmd, "package", "chart"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_package_chart_cmd"] = section
+	}
+
 	if section, err := GenerateHelpQuoted(cmd, "license"); err != nil {
 		return err
 	} else {

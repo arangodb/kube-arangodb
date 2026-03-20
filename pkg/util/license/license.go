@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,40 +18,42 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package license
 
 import (
-	goflag "flag"
+	_ "embed"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/license"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
-var (
-	cmdOps = cobra.Command{
-		Use:  "arangodb_operator_ops",
-		RunE: cli.Usage,
-	}
-)
+//go:embed license.full.txt
+var full []byte
 
-func init() {
-	license.RegisterCommand(&cmdOps)
+//go:embed license.short.txt
+var short []byte
+
+func RegisterCommand(cmd *cobra.Command) {
+	cmd.AddCommand(&cobra.Command{
+		Use:   "license",
+		Short: "License",
+		Long:  "License",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if _, err := cmd.OutOrStdout().Write(full); err != nil {
+				return err
+			}
+			return nil
+		},
+	})
 }
 
-func CommandOps() *cobra.Command {
-	return &cmdOps
+func Full() []byte {
+	z := make([]byte, len(full))
+	copy(z, full)
+	return z
 }
 
-func ExecuteOps() int {
-	flag.CommandLine.AddGoFlagSet(goflag.CommandLine)
-
-	if err := cmdOps.ExecuteContext(shutdown.Context()); err != nil {
-		return 1
-	}
-
-	return 0
+func Short() []byte {
+	z := make([]byte, len(short))
+	copy(z, short)
+	return z
 }

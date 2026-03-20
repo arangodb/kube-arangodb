@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import (
 
 	integrations "github.com/arangodb/kube-arangodb/pkg/integrations"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	"github.com/arangodb/kube-arangodb/pkg/util/license"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
@@ -39,6 +40,7 @@ var (
 )
 
 func init() {
+	license.RegisterCommand(&cmd)
 	if err := integrations.Register(&cmd); err != nil {
 		panic(err.Error())
 	}

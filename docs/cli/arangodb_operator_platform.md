@@ -36,6 +36,7 @@ Usage:
   arangodb_operator_platform package [command]
 
 Available Commands:
+  chart       Generates the Helm Chart version of the Platform Installation
   dump        Dumps the current setup of the platform
   export      Export the package in the ZIP Format
   import      Imports the package from the ZIP format
@@ -96,6 +97,30 @@ Global Flags:
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_install_cmd)
+
+# ArangoDB Operator Platform Package Chart Command
+
+[START_INJECT]: # (arangodb_operator_platform_package_chart_cmd)
+```
+Generates the Helm Chart version of the Platform Installation
+
+Usage:
+  arangodb_operator_platform package chart [flags] output ... packages
+
+Flags:
+  -h, --help                               help for chart
+      --license.client.discover            Discovers the LicenseSecret from ArangoDeployment (default true)
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
+      --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --registry.docker.credentials        Use Docker Credentials
+      --registry.docker.insecure strings   List of insecure registries
+
+Global Flags:
+      --kubeconfig string   Kubernetes Config File
+  -n, --namespace string    Kubernetes Namespace (default "default")
+```
+[END_INJECT]: # (arangodb_operator_platform_package_chart_cmd)
 
 # ArangoDB Operator Platform License Command
 

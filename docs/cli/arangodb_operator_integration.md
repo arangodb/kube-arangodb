@@ -16,6 +16,7 @@ Available Commands:
   client      
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
+  license     License
 
 Flags:
       --database.endpoint string                                                            Endpoint of ArangoDB (Env: DATABASE_ENDPOINT) (default "localhost")
