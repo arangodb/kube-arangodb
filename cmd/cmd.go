@@ -775,7 +775,7 @@ func updateAdmissionHookCA(ctx context.Context, client kclient.Client, caBundle 
 		return err
 	}
 
-	if err := admission.UpdateMutatingAdmissionHookCA(ctx, client, caBundle, webhookOptions.webhooks.validating...); err != nil {
+	if err := admission.UpdateMutatingAdmissionHookCA(ctx, client, caBundle, webhookOptions.webhooks.mutating...); err != nil {
 		return err
 	}
 
