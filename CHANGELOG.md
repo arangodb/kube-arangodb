@@ -29,8 +29,9 @@
 - (Feature) (Platform) Central Service Feature
 - (Bugfix) (Platform) Fix RBAC Resource Evaluation
 - (Platform) Storage Chart
-- (Feature) (Platform) Package Chart Generatqion
+- (Feature) (Platform) Package Chart Generation
 - (Feature) (DebugPackage) CrashHandler Data
+- (Feature) (DebugPackage) Activities
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
