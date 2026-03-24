@@ -40,6 +40,7 @@ func pkg() (*cobra.Command, error) {
 		packageDump,
 		packageInstall,
 		packageChart,
+		packageCopy,
 		packageExport,
 		packageImport,
 		packageMerge,

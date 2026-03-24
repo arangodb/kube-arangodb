@@ -37,6 +37,7 @@ Usage:
 
 Available Commands:
   chart       Generates the Helm Chart version of the Platform Installation
+  copy        Copy the package from LM Registry into internal registry
   dump        Dumps the current setup of the platform
   export      Export the package in the ZIP Format
   import      Imports the package from the ZIP format
@@ -53,6 +54,53 @@ Global Flags:
 Use "arangodb_operator_platform package [command] --help" for more information about a command.
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_cmd)
+
+# ArangoDB Operator Platform Package Chart Command
+
+[START_INJECT]: # (arangodb_operator_platform_package_chart_cmd)
+```
+Generates the Helm Chart version of the Platform Installation
+
+Usage:
+  arangodb_operator_platform package chart [flags] output ... packages
+
+Flags:
+  -h, --help                               help for chart
+      --license.client.discover            Discovers the LicenseSecret from ArangoDeployment (default true)
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
+      --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --registry.docker.credentials        Use Docker Credentials
+      --registry.docker.insecure strings   List of insecure registries
+
+Global Flags:
+      --kubeconfig string   Kubernetes Config File
+  -n, --namespace string    Kubernetes Namespace (default "default")
+```
+[END_INJECT]: # (arangodb_operator_platform_package_chart_cmd)
+
+# ArangoDB Operator Platform Package Copy Command
+
+[START_INJECT]: # (arangodb_operator_platform_package_copy_cmd)
+```
+Copy the package from LM Registry into internal registry
+
+Usage:
+  arangodb_operator_platform package copy [flags] package registry output
+
+Flags:
+  -h, --help                               help for copy
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
+      --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --registry.docker.credentials        Use Docker Credentials
+      --registry.docker.insecure strings   List of insecure registries
+
+Global Flags:
+      --kubeconfig string   Kubernetes Config File
+  -n, --namespace string    Kubernetes Namespace (default "default")
+```
+[END_INJECT]: # (arangodb_operator_platform_package_copy_cmd)
 
 # ArangoDB Operator Platform Package Dump Command
 
@@ -72,6 +120,49 @@ Global Flags:
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_dump_cmd)
+
+# ArangoDB Operator Platform Package Export Command
+
+[START_INJECT]: # (arangodb_operator_platform_package_export_cmd)
+```
+Export the package in the ZIP Format
+
+Usage:
+  arangodb_operator_platform package export [flags] package output
+
+Flags:
+  -h, --help                               help for export
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
+      --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --registry.docker.credentials        Use Docker Credentials
+      --registry.docker.insecure strings   List of insecure registries
+
+Global Flags:
+      --kubeconfig string   Kubernetes Config File
+  -n, --namespace string    Kubernetes Namespace (default "default")
+```
+[END_INJECT]: # (arangodb_operator_platform_package_export_cmd)
+
+# ArangoDB Operator Platform Package Import Command
+
+[START_INJECT]: # (arangodb_operator_platform_package_import_cmd)
+```
+Imports the package from the ZIP format
+
+Usage:
+  arangodb_operator_platform package import [flags] registry package output
+
+Flags:
+  -h, --help                               help for import
+      --registry.docker.credentials        Use Docker Credentials
+      --registry.docker.insecure strings   List of insecure registries
+
+Global Flags:
+      --kubeconfig string   Kubernetes Config File
+  -n, --namespace string    Kubernetes Namespace (default "default")
+```
+[END_INJECT]: # (arangodb_operator_platform_package_import_cmd)
 
 # ArangoDB Operator Platform Package Install Command
 
@@ -98,29 +189,23 @@ Global Flags:
 ```
 [END_INJECT]: # (arangodb_operator_platform_package_install_cmd)
 
-# ArangoDB Operator Platform Package Chart Command
+# ArangoDB Operator Platform Package Merge Command
 
-[START_INJECT]: # (arangodb_operator_platform_package_chart_cmd)
+[START_INJECT]: # (arangodb_operator_platform_package_merge_cmd)
 ```
-Generates the Helm Chart version of the Platform Installation
+Merges definitions into single file
 
 Usage:
-  arangodb_operator_platform package chart [flags] output ... packages
+  arangodb_operator_platform package merge ... packages [flags]
 
 Flags:
-  -h, --help                               help for chart
-      --license.client.discover            Discovers the LicenseSecret from ArangoDeployment (default true)
-      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
-      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
-      --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
-      --registry.docker.credentials        Use Docker Credentials
-      --registry.docker.insecure strings   List of insecure registries
+  -h, --help   help for merge
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
   -n, --namespace string    Kubernetes Namespace (default "default")
 ```
-[END_INJECT]: # (arangodb_operator_platform_package_chart_cmd)
+[END_INJECT]: # (arangodb_operator_platform_package_merge_cmd)
 
 # ArangoDB Operator Platform License Command
 
