@@ -1,0 +1,5 @@
+---
+
+{{ "{{" }}- if not .Values.deployment {{ "}}" }}
+{{ "{{" }}- fail "Deployment needs to be defined" {{ "}}" }}
+{{ "{{" }}- end {{ "}}" }}

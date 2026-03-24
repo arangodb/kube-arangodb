@@ -22,16 +22,13 @@ package platform
 
 import (
 	"context"
-	"fmt"
+	_ "embed"
 	"os"
-	goStrings "strings"
 
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/config"
 	"github.com/spf13/cobra"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/platform/pack"
@@ -41,6 +38,43 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	licenseData "github.com/arangodb/kube-arangodb/pkg/util/license"
 )
+
+var (
+	//go:embed templates/chart.yaml
+	packageChartTemplateChart util.Template[packageChartRenderInput]
+
+	//go:embed templates/check.yaml
+	packageChartTemplateCheck util.Template[packageChartRenderInput]
+
+	//go:embed templates/values.yaml
+	packageChartTemplateValues util.Template[packageChartRenderInput]
+
+	//go:embed templates/notes.txt
+	packageChartTemplateNotes util.Template[packageChartRenderInput]
+
+	//go:embed templates/resource.chart.yaml
+	packageChartTemplateResourceChart util.Template[packageChartRenderInput]
+
+	//go:embed templates/resource.service.yaml
+	packageChartTemplateResourceService util.Template[packageChartRenderInput]
+)
+
+type packageChartRenderInput struct {
+	Name string
+
+	Charts   map[string]packageChartRenderInputChart
+	Services map[string]packageChartRenderInputService
+}
+type packageChartRenderInputChart struct {
+	Name    string
+	Version string
+	Spec    platformApi.ArangoPlatformChartSpec
+}
+
+type packageChartRenderInputService struct {
+	Name string
+	Spec platformApi.ArangoPlatformServiceSpec
+}
 
 func packageChart() (*cobra.Command, error) {
 	var cmd cobra.Command
@@ -85,53 +119,77 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	input := packageChartRenderInput{
+		Name: "arango-platform-release",
+	}
+
 	out, err := os.OpenFile(args[0], os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 
-	var lines []string
-
-	builder := helm.NewChartBuilder(out, helm.ChartDefinition{
-		ApiVersion:  "v1",
-		Name:        "arango-platform-release",
-		Version:     "1.0.0",
-		Description: "Arango Platform Release",
-	})
-
-	builder.File("LICENSE", licenseData.Full())
-
-	builder.YAMLFile("values.yaml", map[string]any{
-		"deployment": "",
-	})
-
-	builder.File("templates/check.yaml", []byte(`
-{{- if not .Values.deployment }}
-{{- fail "Deployment needs to be defined" }}
-{{- end }}
-`))
+	input.Charts = map[string]packageChartRenderInputChart{}
+	input.Services = map[string]packageChartRenderInputService{}
 
 	for k, v := range r.Packages {
 		o, err := packageChartChart(cmd.Context(), reg, endpoint, k, v)
 		if err != nil {
 			return err
 		}
-		builder.YAMLFile(fmt.Sprintf("templates/chart/%s.yaml", o.GetName()), o)
-		lines = append(lines, fmt.Sprintf("ArangoPlatformChart %s in Version %s", o.GetName(), v.Version))
+
+		if o != nil {
+			input.Charts[k] = *o
+		}
 	}
 
 	for k, v := range r.Releases {
-		rel := packageChartRelease(k, v)
-		builder.YAMLFile(fmt.Sprintf("templates/release/%s.yaml", rel.GetName()), rel)
-		lines = append(lines, fmt.Sprintf("ArangoPlatformService %s", rel.GetName()))
+		o := packageChartRelease(k, v)
+
+		if o != nil {
+			input.Services[k] = *o
+		}
 	}
 
-	builder.File("templates/NOTES.txt", []byte(fmt.Sprintf(`
-Arango Platform Release has been installed!
+	builder := util.NewGZipBuilder(out)
 
-Components:
-%s
-`, goStrings.Join(lines, "\n"))))
+	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateChart, input), "%s/Chart.yaml", input.Name)
+
+	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateValues, input), "%s/values.yaml", input.Name)
+
+	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateCheck, input), "%s/templates/check.yaml", input.Name)
+
+	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateNotes, input), "%s/templates/NOTES.txt", input.Name)
+
+	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateResourceChart, input), "%s/templates/ArangoPlatformChart.yaml", input.Name)
+
+	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateResourceService, input), "%s/templates/ArangoPlatformService.yaml", input.Name)
+
+	builder = builder.File(util.GZipBuilderProcessBytes(licenseData.Full()), "%s/LICENSE", input.Name)
+
+	//	builder.YAMLFile("values.yaml", map[string]any{
+	//		"deployment": "",
+	//	})
+	//
+	//	builder.File("templates/check.yaml", []byte(`
+	//{{- if not .Values.deployment }}
+	//{{- fail "Deployment needs to be defined" }}
+	//{{- end }}
+	//`))
+	//
+
+	//
+	//	for k, v := range r.Releases {
+	//		rel := packageChartRelease(k, v)
+	//		builder.YAMLFile(fmt.Sprintf("templates/release/%s.yaml", rel.GetName()), rel)
+	//		lines = append(lines, fmt.Sprintf("ArangoPlatformService %s", rel.GetName()))
+	//	}
+	//
+	//	builder.File("templates/NOTES.txt", []byte(fmt.Sprintf(`
+	//Arango Platform Release has been installed!
+	//
+	//Components:
+	//%s
+	//`, goStrings.Join(lines, "\n"))))
 
 	if err := builder.Done(); err != nil {
 		return err
@@ -144,16 +202,9 @@ Components:
 	return nil
 }
 
-func packageChartRelease(name string, packageSpec helm.PackageRelease) meta.Object {
-	return &platformApi.ArangoPlatformService{
-		TypeMeta: meta.TypeMeta{
-			Kind:       platform.ArangoPlatformServiceResourceKind,
-			APIVersion: fmt.Sprintf("%s/%s", platform.ArangoPlatformGroupName, platformApi.ArangoPlatformVersion),
-		},
-		ObjectMeta: meta.ObjectMeta{
-			Name:      name,
-			Namespace: "{{ .Release.Namespace }}",
-		},
+func packageChartRelease(name string, packageSpec helm.PackageRelease) *packageChartRenderInputService {
+	return &packageChartRenderInputService{
+		Name: name,
 		Spec: platformApi.ArangoPlatformServiceSpec{
 			Deployment: &sharedApi.Object{
 				Name: "{{ .Values.deployment }}",
@@ -166,21 +217,15 @@ func packageChartRelease(name string, packageSpec helm.PackageRelease) meta.Obje
 	}
 }
 
-func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint string, name string, packageSpec helm.PackageSpec) (meta.Object, error) {
+func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint string, name string, packageSpec helm.PackageSpec) (*packageChartRenderInputChart, error) {
 	chart, err := pack.ResolvePackageSpec(ctx, endpoint, name, packageSpec, reg, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &platformApi.ArangoPlatformChart{
-		TypeMeta: meta.TypeMeta{
-			Kind:       platform.ArangoPlatformChartResourceKind,
-			APIVersion: fmt.Sprintf("%s/%s", platform.ArangoPlatformGroupName, platformApi.ArangoPlatformVersion),
-		},
-		ObjectMeta: meta.ObjectMeta{
-			Name:      name,
-			Namespace: "{{ .Release.Namespace }}",
-		},
+	return &packageChartRenderInputChart{
+		Name:    name,
+		Version: packageSpec.Version,
 		Spec: platformApi.ArangoPlatformChartSpec{
 			Definition: sharedApi.Data(chart),
 			Overrides:  sharedApi.Any(packageSpec.Overrides),

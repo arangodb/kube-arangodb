@@ -163,6 +163,30 @@ func GenerateCLIArangoDBOperatorPlatformReadme(root string) error {
 		readmeSections["arangodb_operator_platform_package_chart_cmd"] = section
 	}
 
+	if section, err := GenerateHelpQuoted(cmd, "package", "export"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_package_export_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "package", "copy"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_package_copy_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "package", "import"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_package_import_cmd"] = section
+	}
+
+	if section, err := GenerateHelpQuoted(cmd, "package", "dump"); err != nil {
+		return err
+	} else {
+		readmeSections["arangodb_operator_platform_package_dump_cmd"] = section
+	}
+
 	if section, err := GenerateHelpQuoted(cmd, "license"); err != nil {
 		return err
 	} else {

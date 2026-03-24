@@ -1,0 +1,11 @@
+Arango Platform Release has been installed!
+
+Charts:
+{{- range $key, $value := .Charts }}
+ArangoPlatformChart {{ $value.Name }} in Version {{ $value.Version }}
+{{- end }}
+
+Services:
+{{- range $key, $value := .Services }}
+ArangoPlatformService {{ $value.Name }}
+{{- end }}

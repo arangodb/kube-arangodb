@@ -1,0 +1,18 @@
+{{ range $key, $value := .Charts -}}
+---
+
+apiVersion: platform.arangodb.com/v1beta1
+kind: ArangoPlatformChart
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ "{{" }} .Release.Name {{ "}}" }}
+    helm.sh/chart: {{ "{{" }} .Chart.Name {{ "}}" }}-{{ "{{" }} .Chart.Version {{ "}}" }}
+    app.kubernetes.io/managed-by: {{ "{{" }} .Release.Service {{ "}}" }}
+    app.kubernetes.io/instance: {{ "{{" }} .Release.Name {{ "}}" }}
+    release: {{ "{{" }} .Release.Name {{ "}}" }}
+  name: "{{ $value.Name }}"
+  namespace: {{ "{{" }} .Release.Namespace {{ "}}" }}
+spec:
+{{ $value.Spec | toYaml | indent 2 }}
+
+{{ end -}}

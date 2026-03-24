@@ -343,7 +343,7 @@ NON_EE_SOURCES := $(shell $(NON_EE_SOURCES_QUERY))
 
 YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers \
                      chart/kube-arangodb/templates chart/kube-arangodb-arm64/templates chart/kube-arangodb-enterprise/templates chart/kube-arangodb-enterprise-arm64/templates  \
-                     chart/kube-arangodb-crd/templates chart/platform-storage/templates
+                     chart/kube-arangodb-crd/templates chart/platform-storage/templates pkg/platform/templates
 YAML_EXCLUDE_FILES :=
 YAML_QUERY := find ./ -type f -name '*.yaml' $(foreach EXCLUDE_DIR,$(YAML_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(YAML_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 YAMLS := $(shell $(YAML_QUERY))
