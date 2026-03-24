@@ -193,20 +193,13 @@ Global Flags:
 
 [START_INJECT]: # (arangodb_operator_platform_package_merge_cmd)
 ```
-Installs the specified setup of the platform
+Merges definitions into single file
 
 Usage:
-  arangodb_operator_platform package install [flags] ... packages
+  arangodb_operator_platform package merge ... packages [flags]
 
 Flags:
-  -h, --help                               help for install
-      --license.client.discover            Discovers the LicenseSecret from ArangoDeployment (default true)
-      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
-      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
-      --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
-      --platform.name string               Kubernetes Platform Name (name of the ArangoDeployment)
-      --registry.docker.credentials        Use Docker Credentials
-      --registry.docker.insecure strings   List of insecure registries
+  -h, --help   help for merge
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File

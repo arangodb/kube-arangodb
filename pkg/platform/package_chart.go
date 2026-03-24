@@ -166,31 +166,6 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 
 	builder = builder.File(util.GZipBuilderProcessBytes(licenseData.Full()), "%s/LICENSE", input.Name)
 
-	//	builder.YAMLFile("values.yaml", map[string]any{
-	//		"deployment": "",
-	//	})
-	//
-	//	builder.File("templates/check.yaml", []byte(`
-	//{{- if not .Values.deployment }}
-	//{{- fail "Deployment needs to be defined" }}
-	//{{- end }}
-	//`))
-	//
-
-	//
-	//	for k, v := range r.Releases {
-	//		rel := packageChartRelease(k, v)
-	//		builder.YAMLFile(fmt.Sprintf("templates/release/%s.yaml", rel.GetName()), rel)
-	//		lines = append(lines, fmt.Sprintf("ArangoPlatformService %s", rel.GetName()))
-	//	}
-	//
-	//	builder.File("templates/NOTES.txt", []byte(fmt.Sprintf(`
-	//Arango Platform Release has been installed!
-	//
-	//Components:
-	//%s
-	//`, goStrings.Join(lines, "\n"))))
-
 	if err := builder.Done(); err != nil {
 		return err
 	}
