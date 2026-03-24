@@ -40,10 +40,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MetaV1_Get_FullMethodName    = "/meta.MetaV1/Get"
-	MetaV1_Set_FullMethodName    = "/meta.MetaV1/Set"
-	MetaV1_Delete_FullMethodName = "/meta.MetaV1/Delete"
-	MetaV1_List_FullMethodName   = "/meta.MetaV1/List"
+	MetaV1_Get_FullMethodName      = "/meta.MetaV1/Get"
+	MetaV1_GetBatch_FullMethodName = "/meta.MetaV1/GetBatch"
+	MetaV1_Set_FullMethodName      = "/meta.MetaV1/Set"
+	MetaV1_Delete_FullMethodName   = "/meta.MetaV1/Delete"
+	MetaV1_List_FullMethodName     = "/meta.MetaV1/List"
 )
 
 // MetaV1Client is the client API for MetaV1 service.
@@ -54,6 +55,8 @@ const (
 type MetaV1Client interface {
 	// Get returns the Object from the Meta Store. If TTL is set to 0, result is not cached
 	Get(ctx context.Context, in *ObjectRequest, opts ...grpc.CallOption) (*ObjectResponse, error)
+	// GetBatch returns the Object from the Meta Store in batches. If TTL is set to 0, result is not cached
+	GetBatch(ctx context.Context, in *ObjectBatchRequest, opts ...grpc.CallOption) (*ObjectBatchResponse, error)
 	// Set saves the object in the Meta Store
 	// Optionally, will check Revision for the conflict management
 	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*ObjectResponse, error)
@@ -75,6 +78,16 @@ func (c *metaV1Client) Get(ctx context.Context, in *ObjectRequest, opts ...grpc.
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ObjectResponse)
 	err := c.cc.Invoke(ctx, MetaV1_Get_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *metaV1Client) GetBatch(ctx context.Context, in *ObjectBatchRequest, opts ...grpc.CallOption) (*ObjectBatchResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ObjectBatchResponse)
+	err := c.cc.Invoke(ctx, MetaV1_GetBatch_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +141,8 @@ type MetaV1_ListClient = grpc.ServerStreamingClient[ListResponseChunk]
 type MetaV1Server interface {
 	// Get returns the Object from the Meta Store. If TTL is set to 0, result is not cached
 	Get(context.Context, *ObjectRequest) (*ObjectResponse, error)
+	// GetBatch returns the Object from the Meta Store in batches. If TTL is set to 0, result is not cached
+	GetBatch(context.Context, *ObjectBatchRequest) (*ObjectBatchResponse, error)
 	// Set saves the object in the Meta Store
 	// Optionally, will check Revision for the conflict management
 	Set(context.Context, *SetRequest) (*ObjectResponse, error)
@@ -147,6 +162,9 @@ type UnimplementedMetaV1Server struct{}
 
 func (UnimplementedMetaV1Server) Get(context.Context, *ObjectRequest) (*ObjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedMetaV1Server) GetBatch(context.Context, *ObjectBatchRequest) (*ObjectBatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBatch not implemented")
 }
 func (UnimplementedMetaV1Server) Set(context.Context, *SetRequest) (*ObjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
@@ -192,6 +210,24 @@ func _MetaV1_Get_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MetaV1Server).Get(ctx, req.(*ObjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MetaV1_GetBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ObjectBatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetaV1Server).GetBatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MetaV1_GetBatch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetaV1Server).GetBatch(ctx, req.(*ObjectBatchRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -253,6 +289,10 @@ var MetaV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _MetaV1_Get_Handler,
+		},
+		{
+			MethodName: "GetBatch",
+			Handler:    _MetaV1_GetBatch_Handler,
 		},
 		{
 			MethodName: "Set",

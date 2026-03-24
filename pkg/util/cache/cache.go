@@ -48,7 +48,7 @@ type Cache[K comparable, T any] interface {
 }
 
 type cache[K comparable, T any] struct {
-	lock sync.Mutex
+	lock sync.RWMutex
 
 	items map[K]cacheItem[T]
 
@@ -58,8 +58,8 @@ type cache[K comparable, T any] struct {
 }
 
 func (c *cache[K, T]) Get(ctx context.Context, key K) (T, error) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 
 	if v, ok := c.items[key]; ok {
 		if v.until.After(time.Now()) {
