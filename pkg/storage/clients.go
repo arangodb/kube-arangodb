@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,11 +71,11 @@ func (ls *LocalStorage) createProvisionerClients(ctx context.Context) (Clients, 
 	// Find provisioner endpoints
 	ns := ls.apiObject.GetNamespace()
 	listOptions := k8sutil.LocalStorageListOpt(ls.apiObject.GetName(), roleProvisioner)
-	items, err := ls.deps.Client.Kubernetes().CoreV1().Endpoints(ns).List(context.Background(), listOptions)
+	items, err := ls.deps.Client.Kubernetes().DiscoveryV1().EndpointSlices(ns).List(context.Background(), listOptions)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	addrs := createValidEndpointList(items)
+	addrs := createValidEndpointList(provisioner.DefaultPort, items)
 	if len(addrs) == 0 {
 		// No provisioners available
 		return nil, nil

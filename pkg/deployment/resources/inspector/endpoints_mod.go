@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package inspector
 
 import (
-	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
@@ -29,7 +29,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 )
 
-func (i *inspectorState) EndpointsModInterface() mods.EndpointsMods {
+func (i *inspectorState) EndpointSlicesModInterface() mods.EndpointSlicesMods {
 	return endpointsMod{
 		i: i,
 	}
@@ -39,10 +39,10 @@ type endpointsMod struct {
 	i *inspectorState
 }
 
-func (p endpointsMod) V1() generic.ModClient[*core.Endpoints] {
-	return wrapMod[*core.Endpoints](definitions.Endpoints, p.i.GetThrottles, generic.WithModStatusGetter[*core.Endpoints](inspectorConstants.EndpointsGKv1(), p.clientv1))
+func (p endpointsMod) V1() generic.ModClient[*discovery.EndpointSlice] {
+	return wrapMod[*discovery.EndpointSlice](definitions.EndpointSlices, p.i.GetThrottles, generic.WithModStatusGetter[*discovery.EndpointSlice](inspectorConstants.EndpointSlicesGKv1(), p.clientv1))
 }
 
-func (p endpointsMod) clientv1() generic.ModClient[*core.Endpoints] {
-	return p.i.Client().Kubernetes().CoreV1().Endpoints(p.i.Namespace())
+func (p endpointsMod) clientv1() generic.ModClient[*discovery.EndpointSlice] {
+	return p.i.Client().Kubernetes().DiscoveryV1().EndpointSlices(p.i.Namespace())
 }

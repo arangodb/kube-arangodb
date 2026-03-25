@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangoroute"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpointslices"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/mods"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolume"
@@ -88,7 +88,7 @@ type Inspector interface {
 	serviceaccount.Inspector
 	arangomember.Inspector
 	server.Inspector
-	endpoints.Inspector
+	endpointslices.Inspector
 
 	arangodeployment.Inspector
 

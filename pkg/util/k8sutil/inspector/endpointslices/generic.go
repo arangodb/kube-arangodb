@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package endpoints
+package endpointslices
 
 import (
-	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
-func List(filter ...generic.Filter[*core.Endpoints]) generic.ExtractorList[*core.EndpointsList, *core.Endpoints] {
-	return func(in *core.EndpointsList) []*core.Endpoints {
-		ret := make([]*core.Endpoints, 0, len(in.Items))
+func List(filter ...generic.Filter[*discovery.EndpointSlice]) generic.ExtractorList[*discovery.EndpointSliceList, *discovery.EndpointSlice] {
+	return func(in *discovery.EndpointSliceList) []*discovery.EndpointSlice {
+		ret := make([]*discovery.EndpointSlice, 0, len(in.Items))
 
 		for _, el := range in.Items {
 			z := el.DeepCopy()

@@ -31,7 +31,17 @@ rules:
     resources:
       - "pods"
       - "services"
-      - "endpoints"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
+  - apiGroups:
+      - "discovery.k8s.io"
+    resources:
+      - "endpointslices"
+      - "get"
+      - "list"
+      - "watch"
     verbs:
       - "get"
       - "list"

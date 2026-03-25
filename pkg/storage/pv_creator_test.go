@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,40 +26,45 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/arangodb/kube-arangodb/pkg/storage/provisioner"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // TestCreateValidEndpointList tests createValidEndpointList.
 func TestCreateValidEndpointList(t *testing.T) {
 	tests := []struct {
-		Input    *core.EndpointsList
+		Input    *discovery.EndpointSliceList
 		Expected []string
 	}{
 		{
-			Input:    &core.EndpointsList{},
+			Input:    &discovery.EndpointSliceList{},
 			Expected: []string{},
 		},
 		{
-			Input: &core.EndpointsList{
-				Items: []core.Endpoints{
-					core.Endpoints{
-						Subsets: []core.EndpointSubset{
-							core.EndpointSubset{
-								Addresses: []core.EndpointAddress{
-									core.EndpointAddress{
-										IP: "1.2.3.4",
-									},
+			Input: &discovery.EndpointSliceList{
+				Items: []discovery.EndpointSlice{
+					{
+						Endpoints: []discovery.Endpoint{
+							{
+								Addresses: []string{
+									"1.2.3.4",
 								},
+								Conditions: discovery.EndpointConditions{},
 							},
-							core.EndpointSubset{
-								Addresses: []core.EndpointAddress{
-									core.EndpointAddress{
-										IP: "5.6.7.8",
-									},
-									core.EndpointAddress{
-										IP: "9.10.11.12",
-									},
+							{
+								Addresses: []string{
+									"5.6.7.8",
+									"9.10.11.12",
 								},
+								Conditions: discovery.EndpointConditions{},
+							},
+						},
+						Ports: []discovery.EndpointPort{
+							{
+								Port: util.NewType[int32](provisioner.DefaultPort),
 							},
 						},
 					},
@@ -73,7 +78,7 @@ func TestCreateValidEndpointList(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		output := createValidEndpointList(test.Input)
+		output := createValidEndpointList(provisioner.DefaultPort, test.Input)
 		assert.Equal(t, test.Expected, output)
 	}
 }
