@@ -35,6 +35,9 @@ service MetaV1 {
   // Get returns the Object from the Meta Store. If TTL is set to 0, result is not cached
   rpc Get (ObjectRequest) returns (ObjectResponse);
 
+  // GetBatch returns the Object from the Meta Store in batches. If TTL is set to 0, result is not cached
+  rpc GetBatch (ObjectBatchRequest) returns (ObjectBatchResponse);
+
   // Set saves the object in the Meta Store
   // Optionally, will check Revision for the conflict management
   rpc Set (SetRequest) returns (ObjectResponse);
@@ -53,6 +56,12 @@ message ObjectRequest {
 
   // Secret defines secret for the object encryption
   optional ObjectSecret secret = 2;
+}
+
+// ObjectBatchRequest defines request for MetaV1 Object Batch Request
+message ObjectBatchRequest {
+  // List of the requests
+  repeated ObjectRequest items = 1;
 }
 
 // SetRequest defines request for MetaV1 Object Set Request
@@ -83,6 +92,12 @@ message ObjectResponseMeta {
 
   // Defines if the object is encrypted
   bool encrypted = 3;
+}
+
+// ObjectBatchResponse defines response for MetaV1 Batch Object
+message ObjectBatchResponse {
+  // List of the items
+  repeated ObjectResponse items = 1;
 }
 
 // ObjectResponse defines response for MetaV1 Object

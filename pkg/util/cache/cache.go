@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ type Cache[K comparable, T any] interface {
 }
 
 type cache[K comparable, T any] struct {
-	lock sync.Mutex
+	lock sync.RWMutex
 
 	items map[K]cacheItem[T]
 
@@ -58,6 +58,10 @@ type cache[K comparable, T any] struct {
 }
 
 func (c *cache[K, T]) Get(ctx context.Context, key K) (T, error) {
+	if v, ok := c.get(key); ok {
+		return v, nil
+	}
+
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -86,6 +90,19 @@ func (c *cache[K, T]) Get(ctx context.Context, key K) (T, error) {
 	}
 
 	return el, nil
+}
+
+func (c *cache[K, T]) get(key K) (T, bool) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	if v, ok := c.items[key]; ok {
+		if v.until.After(time.Now()) {
+			return v.Object, true
+		}
+	}
+
+	return util.Default[T](), false
 }
 
 func (c *cache[K, T]) Invalidate(key K) {

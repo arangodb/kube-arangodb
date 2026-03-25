@@ -23,7 +23,6 @@ package cache
 import (
 	"context"
 	"net/url"
-	"sync"
 	"time"
 
 	"github.com/arangodb/go-driver/v2/arangodb"
@@ -94,8 +93,6 @@ type RemoteCache[T RemoteCacheObject] interface {
 type remoteCache[T RemoteCacheObject] struct {
 	collection Object[arangodb.Collection]
 
-	lock sync.RWMutex
-
 	cache Cache[string, T]
 }
 
@@ -104,9 +101,6 @@ func (r *remoteCache[T]) Init(ctx context.Context) error {
 }
 
 func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
 	if k := obj.GetKey(); k != key {
 		return errors.Errorf("Invalid key in the object. Got %s, expected %s", k, key)
 	}
@@ -124,7 +118,9 @@ func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {
 			return err
 		}
 
-		if _, err := client.CreateDocumentWithOptions(ctx, obj, nil); err != nil {
+		if _, err := client.CreateDocumentWithOptions(ctx, obj, &arangodb.CollectionDocumentCreateOptions{
+			IgnoreRevs: util.NewType(GetRemoteCacheObjectRev(obj) == ""),
+		}); err != nil {
 			return err
 		}
 	}
@@ -147,9 +143,6 @@ func (r *remoteCache[T]) cacheRead(ctx context.Context, key string) (T, time.Tim
 }
 
 func (r *remoteCache[T]) Get(ctx context.Context, key string) (T, bool, error) {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-
 	obj, err := r.cache.Get(ctx, key)
 	if err != nil {
 		if adbDriverV2Shared.IsNotFound(err) {
@@ -163,16 +156,10 @@ func (r *remoteCache[T]) Get(ctx context.Context, key string) (T, bool, error) {
 }
 
 func (r *remoteCache[T]) Invalidate(ctx context.Context, key string) {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-
 	r.cache.Invalidate(key)
 }
 
 func (r *remoteCache[T]) Remove(ctx context.Context, key string) (bool, error) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
 	client, err := r.collection.Get(ctx)
 	if err != nil {
 		return false, err

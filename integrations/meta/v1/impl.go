@@ -23,7 +23,6 @@ package v1
 import (
 	"context"
 	"io"
-	"sync"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -94,8 +93,6 @@ var _ svc.Handler = &implementation{}
 type implementation struct {
 	pbMetaV1.UnimplementedMetaV1Server
 
-	lock sync.RWMutex
-
 	cfg Configuration
 
 	auth pbImplAuthorizationV1Shared.Evaluator
@@ -147,9 +144,6 @@ func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, con
 }
 
 func (i *implementation) Get(ctx context.Context, req *pbMetaV1.ObjectRequest) (*pbMetaV1.ObjectResponse, error) {
-	i.lock.RLock()
-	defer i.lock.RUnlock()
-
 	key := i.cfg.Key(req.GetKey())
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:GetKey", key); err != nil {
@@ -177,10 +171,18 @@ func (i *implementation) Get(ctx context.Context, req *pbMetaV1.ObjectRequest) (
 	return obj, nil
 }
 
-func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pbMetaV1.ObjectResponse, error) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
+func (i *implementation) GetBatch(ctx context.Context, request *pbMetaV1.ObjectBatchRequest) (*pbMetaV1.ObjectBatchResponse, error) {
+	resp, err := util.ParallelProcessOutputErr(func(in *pbMetaV1.ObjectRequest) (*pbMetaV1.ObjectResponse, error) {
+		return i.Get(ctx, in)
+	}, 4, request.Items)
+	if err != nil {
+		return nil, err
+	}
 
+	return &pbMetaV1.ObjectBatchResponse{Items: resp}, nil
+}
+
+func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pbMetaV1.ObjectResponse, error) {
 	key := i.cfg.Key(req.GetKey())
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:UpdateKey", key); err != nil {
@@ -236,9 +238,6 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 }
 
 func (i *implementation) Delete(ctx context.Context, req *pbMetaV1.ObjectRequest) (*pbSharedV1.Empty, error) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
 	key := i.cfg.Key(req.GetKey())
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:DeleteKey", key); err != nil {

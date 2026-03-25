@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,6 +52,33 @@ func ParallelProcessOutput[T, O any](caller func(in T) O, threads int, in []T) [
 	wg.Wait()
 
 	return ret
+}
+
+func ParallelProcessOutputErr[T, O any](caller func(in T) (O, error), threads int, in []T) ([]O, error) {
+	r := ParallelInput(IntInput(len(in)))
+	ret := make([]O, len(in))
+	errs := make([]error, len(in))
+	var wg sync.WaitGroup
+
+	for id := 0; id < threads; id++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			for id := range r {
+				ret[id], errs[id] = caller(in[id])
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	if err := errors.Errors(errs...); err != nil {
+		return nil, err
+	}
+
+	return ret, nil
 }
 
 func ParallelProcess[T any](caller func(in T), threads int, in []T) {
