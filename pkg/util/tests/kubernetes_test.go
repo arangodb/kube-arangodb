@@ -28,6 +28,7 @@ import (
 	apps "k8s.io/api/apps/v1"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	rbac "k8s.io/api/rbac/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -76,7 +77,7 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*core.ConfigMap](t)
 	NewMetaObjectRun[*core.ServiceAccount](t)
 	NewMetaObjectRun[*core.Service](t)
-	NewMetaObjectRun[*core.Endpoints](t)
+	NewMetaObjectRun[*discovery.EndpointSlice](t)
 	NewMetaObjectRun[*apps.StatefulSet](t)
 	NewMetaObjectRun[*apps.Deployment](t)
 	NewMetaObjectRun[*rbac.Role](t)
