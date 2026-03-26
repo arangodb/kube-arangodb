@@ -26,6 +26,7 @@ import (
 	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	policy "k8s.io/api/policy/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -44,7 +45,7 @@ func Test_GVK(t *testing.T) {
 	testGVK(t, ArangoRouteGKv1Beta1(), &networkingApi.ArangoRoute{})
 	testGVK(t, ArangoProfileGKv1Beta1(), &schedulerApi.ArangoProfile{})
 	testGVK(t, ArangoTaskGKv1(), &api.ArangoTask{})
-	testGVK(t, EndpointsGKv1(), &core.Endpoints{})
+	testGVK(t, EndpointSlicesGKv1(), &discovery.EndpointSlice{})
 	testGVK(t, NodeGKv1(), &core.Node{})
 	testGVK(t, PodDisruptionBudgetGKv1(), &policy.PodDisruptionBudget{})
 	testGVK(t, PodGKv1(), &core.Pod{})

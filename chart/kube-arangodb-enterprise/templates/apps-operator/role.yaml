@@ -18,7 +18,13 @@ rules:
     resources:
       - "pods"
       - "services"
-      - "endpoints"
+    verbs:
+      - "get"
+      - "update"
+  - apiGroups:
+      - "discovery.k8s.io"
+    resources:
+      - "endpointslices"
     verbs:
       - "get"
       - "update"

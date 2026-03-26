@@ -30,6 +30,7 @@ import (
 	apps "k8s.io/api/apps/v1"
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	rbac "k8s.io/api/rbac/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -148,11 +149,11 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Services(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
-		case **core.Endpoints:
+		case **discovery.EndpointSlice:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := k8s.CoreV1().Endpoints(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
+			_, err := k8s.DiscoveryV1().EndpointSlices(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
@@ -407,11 +408,11 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := k8s.CoreV1().Services(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
-		case **core.Endpoints:
+		case **discovery.EndpointSlice:
 			require.NotNil(t, v)
 
 			vl := *v
-			_, err := k8s.CoreV1().Endpoints(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
+			_, err := k8s.DiscoveryV1().EndpointSlices(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
@@ -819,11 +820,11 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, k8s.CoreV1().Services(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
-		case **core.Endpoints:
+		case **discovery.EndpointSlice:
 			require.NotNil(t, v)
 
 			vl := *v
-			require.NoError(t, k8s.CoreV1().Endpoints(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
+			require.NoError(t, k8s.DiscoveryV1().EndpointSlices(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **core.ServiceAccount:
 			require.NotNil(t, v)
 
@@ -1092,12 +1093,12 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			} else {
 				*v = vn
 			}
-		case **core.Endpoints:
+		case **discovery.EndpointSlice:
 			require.NotNil(t, v)
 
 			vl := *v
 
-			vn, err := k8s.CoreV1().Endpoints(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
+			vn, err := k8s.DiscoveryV1().EndpointSlices(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -1622,7 +1623,7 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/v1/services/%s/%s",
 			object.GetNamespace(),
 			object.GetName()))
-	case *core.Endpoints:
+	case *discovery.EndpointSlice:
 		v.Kind = "Endpoints"
 		v.APIVersion = "v1"
 		v.SetSelfLink(fmt.Sprintf("/api/v1/endpoints/%s/%s",

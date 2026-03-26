@@ -25,8 +25,10 @@ import (
 	"fmt"
 
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -70,7 +72,11 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 		}, false, nil
 	}
 
-	e, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.kubeClient.CoreV1().Endpoints(endpoints.GetNamespace(extension)).Get, endpoints.GetName(), meta.GetOptions{})
+	ep, err := util.WithKubernetesContextTimeoutP2A1(ctx, h.kubeClient.DiscoveryV1().EndpointSlices(endpoints.GetNamespace(extension)).List, meta.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{
+			discovery.LabelServiceName: s.GetName(),
+		}).String(),
+	})
 	if err != nil {
 		if kerrors.IsNotFound(err) {
 			return &operator.Condition{
@@ -136,27 +142,22 @@ func (h *handler) HandleArangoDestinationEndpoints(ctx context.Context, item ope
 		}
 	}
 
-	for _, subset := range e.Subsets {
-		p, ok := util.PickFromList(subset.Ports, func(v core.EndpointPort) bool {
-			return v.Name == destPortName
+	for _, e := range ep.Items {
+		p, ok := util.PickFromList(e.Ports, func(v discovery.EndpointPort) bool {
+			return util.OptionalType(v.Name, "") == destPortName
 		})
-		if !ok {
-			continue
-		}
+		if ok && p.Port != nil {
+			for _, ep := range e.Endpoints {
+				isReady := ep.Conditions.Ready == nil || *ep.Conditions.Ready
 
-		for _, address := range subset.Addresses {
-			target.Destinations = append(target.Destinations, networkingApi.ArangoRouteStatusTargetDestination{
-				Host: address.IP,
-				Port: p.Port,
-			})
-		}
-
-		if s.Spec.PublishNotReadyAddresses {
-			for _, address := range subset.NotReadyAddresses {
-				target.Destinations = append(target.Destinations, networkingApi.ArangoRouteStatusTargetDestination{
-					Host: address.IP,
-					Port: p.Port,
-				})
+				if isReady || s.Spec.PublishNotReadyAddresses {
+					for _, address := range ep.Addresses {
+						target.Destinations = append(target.Destinations, networkingApi.ArangoRouteStatusTargetDestination{
+							Host: address,
+							Port: *p.Port,
+						})
+					}
+				}
 			}
 		}
 	}

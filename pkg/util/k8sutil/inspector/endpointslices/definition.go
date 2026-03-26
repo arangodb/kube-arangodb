@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,21 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package endpoints
+package endpointslices
 
 import (
-	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/base"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
 type Inspector interface {
-	Endpoints() Definition
+	EndpointSlices() Definition
 }
 
 type Definition interface {
 	base.Inspector
 
-	V1() (generic.Inspector[*core.Endpoints], error)
+	V1() (generic.Inspector[*discovery.EndpointSlice], error)
 }

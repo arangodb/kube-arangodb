@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ func NewAlwaysThrottleComponents() Components {
 	return NewThrottleComponents(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
-func NewThrottleComponents(acs, am, at, ar, ap, aps, apsvc, node, pvc, pod, pv, pdb, secret, cm, service, serviceAccount, sm, endpoints time.Duration) Components {
+func NewThrottleComponents(acs, am, at, ar, ap, aps, apsvc, node, pvc, pod, pv, pdb, secret, cm, service, serviceAccount, sm, endpointSlices time.Duration) Components {
 	return &throttleComponents{
 		arangoClusterSynchronization: NewThrottle(acs),
 		arangoMember:                 NewThrottle(am),
@@ -54,7 +54,7 @@ func NewThrottleComponents(acs, am, at, ar, ap, aps, apsvc, node, pvc, pod, pv, 
 		service:                      NewThrottle(service),
 		serviceAccount:               NewThrottle(serviceAccount),
 		serviceMonitor:               NewThrottle(sm),
-		endpoints:                    NewThrottle(endpoints),
+		endpointSlices:               NewThrottle(endpointSlices),
 	}
 }
 
@@ -76,7 +76,7 @@ type Components interface {
 	Service() Throttle
 	ServiceAccount() Throttle
 	ServiceMonitor() Throttle
-	Endpoints() Throttle
+	EndpointSlices() Throttle
 
 	Get(c definitions.Component) Throttle
 	Invalidate(components ...definitions.Component)
@@ -103,7 +103,7 @@ type throttleComponents struct {
 	service                      Throttle
 	serviceAccount               Throttle
 	serviceMonitor               Throttle
-	endpoints                    Throttle
+	endpointSlices               Throttle
 }
 
 func (t *throttleComponents) ConfigMap() Throttle {
@@ -114,8 +114,8 @@ func (t *throttleComponents) PersistentVolume() Throttle {
 	return t.persistentVolume
 }
 
-func (t *throttleComponents) Endpoints() Throttle {
-	return t.endpoints
+func (t *throttleComponents) EndpointSlices() Throttle {
+	return t.endpointSlices
 }
 
 func (t *throttleComponents) Counts() definitions.ComponentCount {
@@ -173,8 +173,8 @@ func (t *throttleComponents) Get(c definitions.Component) Throttle {
 		return t.serviceAccount
 	case definitions.ServiceMonitor:
 		return t.serviceMonitor
-	case definitions.Endpoints:
-		return t.endpoints
+	case definitions.EndpointSlices:
+		return t.endpointSlices
 	default:
 		return NewAlwaysThrottle()
 	}
@@ -199,7 +199,7 @@ func (t *throttleComponents) Copy() Components {
 		service:                      t.service.Copy(),
 		serviceAccount:               t.serviceAccount.Copy(),
 		serviceMonitor:               t.serviceMonitor.Copy(),
-		endpoints:                    t.endpoints.Copy(),
+		endpointSlices:               t.endpointSlices.Copy(),
 	}
 }
 

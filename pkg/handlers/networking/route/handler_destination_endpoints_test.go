@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -62,20 +63,22 @@ func Test_Handler_Destination_Endpoints_Valid(t *testing.T) {
 			},
 		}
 	})
-	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
-		obj.Subsets = []core.EndpointSubset{
+	endpoints := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{
 			{
-				Addresses: []core.EndpointAddress{
-					{
-						IP: "127.0.0.1",
-					},
-				},
-				Ports: []core.EndpointPort{
-					{
-						Name: "",
-						Port: 10244,
-					},
-				},
+				Addresses:  []string{"127.0.0.1"},
+				Conditions: discovery.EndpointConditions{Ready: util.NewType(true)},
+			},
+		}
+		obj.Ports = []discovery.EndpointPort{
+			{
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10244),
+				AppProtocol: nil,
 			},
 		}
 	})
@@ -131,8 +134,19 @@ func Test_Handler_Destination_Endpoints_Empty(t *testing.T) {
 			},
 		}
 	})
-	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
-		obj.Subsets = []core.EndpointSubset{}
+	endpoints := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{}
+		obj.Ports = []discovery.EndpointPort{
+			{
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10244),
+				AppProtocol: nil,
+			},
+		}
 	})
 
 	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc, &endpoints)
@@ -182,20 +196,22 @@ func Test_Handler_Destination_Endpoints_Valid_HTTP1(t *testing.T) {
 			},
 		}
 	})
-	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
-		obj.Subsets = []core.EndpointSubset{
+	endpoints := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{
 			{
-				Addresses: []core.EndpointAddress{
-					{
-						IP: "127.0.0.1",
-					},
-				},
-				Ports: []core.EndpointPort{
-					{
-						Name: "",
-						Port: 10244,
-					},
-				},
+				Addresses:  []string{"127.0.0.1"},
+				Conditions: discovery.EndpointConditions{Ready: util.NewType(true)},
+			},
+		}
+		obj.Ports = []discovery.EndpointPort{
+			{
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10244),
+				AppProtocol: nil,
 			},
 		}
 	})
@@ -252,20 +268,22 @@ func Test_Handler_Destination_Endpoints_Valid_HTTP2(t *testing.T) {
 			},
 		}
 	})
-	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
-		obj.Subsets = []core.EndpointSubset{
+	endpoints := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{
 			{
-				Addresses: []core.EndpointAddress{
-					{
-						IP: "127.0.0.1",
-					},
-				},
-				Ports: []core.EndpointPort{
-					{
-						Name: "",
-						Port: 10244,
-					},
-				},
+				Addresses:  []string{"127.0.0.1"},
+				Conditions: discovery.EndpointConditions{Ready: util.NewType(true)},
+			},
+		}
+		obj.Ports = []discovery.EndpointPort{
+			{
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10244),
+				AppProtocol: nil,
 			},
 		}
 	})
@@ -321,20 +339,22 @@ func Test_Handler_Destination_Endpoints_PortForward(t *testing.T) {
 			},
 		}
 	})
-	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
-		obj.Subsets = []core.EndpointSubset{
+	endpoints := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{
 			{
-				Addresses: []core.EndpointAddress{
-					{
-						IP: "127.0.0.1",
-					},
-				},
-				Ports: []core.EndpointPort{
-					{
-						Name: "",
-						Port: 10245,
-					},
-				},
+				Addresses:  []string{"127.0.0.1"},
+				Conditions: discovery.EndpointConditions{Ready: util.NewType(true)},
+			},
+		}
+		obj.Ports = []discovery.EndpointPort{
+			{
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10245),
+				AppProtocol: nil,
 			},
 		}
 	})
@@ -389,38 +409,46 @@ func Test_Handler_Destination_Endpoints_MultiTargets(t *testing.T) {
 			},
 		}
 	})
-	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
-		obj.Subsets = []core.EndpointSubset{
+	endpoint1 := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment-one", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{
 			{
-				Addresses: []core.EndpointAddress{
-					{
-						IP: "127.0.0.1",
-					},
-				},
-				Ports: []core.EndpointPort{
-					{
-						Name: "",
-						Port: 10245,
-					},
-				},
+				Addresses:  []string{"127.0.0.1"},
+				Conditions: discovery.EndpointConditions{Ready: util.NewType(true)},
 			},
+		}
+		obj.Ports = []discovery.EndpointPort{
 			{
-				Addresses: []core.EndpointAddress{
-					{
-						IP: "127.0.0.2",
-					},
-				},
-				Ports: []core.EndpointPort{
-					{
-						Name: "",
-						Port: 10246,
-					},
-				},
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10245),
+				AppProtocol: nil,
+			},
+		}
+	})
+	endpoint2 := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment-two", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{
+			{
+				Addresses:  []string{"127.0.0.2"},
+				Conditions: discovery.EndpointConditions{Ready: util.NewType(true)},
+			},
+		}
+		obj.Ports = []discovery.EndpointPort{
+			{
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10246),
+				AppProtocol: nil,
 			},
 		}
 	})
 
-	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc, &endpoints)
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &deployment, &extension, &svc, &endpoint1, &endpoint2)
 
 	// Test
 	require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
@@ -471,23 +499,22 @@ func Test_Handler_Destination_Endpoints_MultiDestinations(t *testing.T) {
 			},
 		}
 	})
-	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
-		obj.Subsets = []core.EndpointSubset{
+	endpoints := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{
 			{
-				Addresses: []core.EndpointAddress{
-					{
-						IP: "127.0.0.1",
-					},
-					{
-						IP: "127.0.0.2",
-					},
-				},
-				Ports: []core.EndpointPort{
-					{
-						Name: "",
-						Port: 10245,
-					},
-				},
+				Addresses:  []string{"127.0.0.1", "127.0.0.2"},
+				Conditions: discovery.EndpointConditions{Ready: util.NewType(true)},
+			},
+		}
+		obj.Ports = []discovery.EndpointPort{
+			{
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10245),
+				AppProtocol: nil,
 			},
 		}
 	})

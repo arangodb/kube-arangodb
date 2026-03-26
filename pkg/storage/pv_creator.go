@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import (
 
 	"github.com/dchest/uniuri"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	storage "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -270,15 +271,29 @@ func (ls *LocalStorage) createPV(ctx context.Context, apiObject *api.ArangoLocal
 	return errors.WithStack(errors.Errorf("No more nodes available"))
 }
 
-// createValidEndpointList convers the given endpoints list into
+// createValidEndpointList converts the given endpoints list into
 // valid addresses.
-func createValidEndpointList(list *core.EndpointsList) []string {
+func createValidEndpointList(p int32, list *discovery.EndpointSliceList) []string {
 	result := make([]string, 0, len(list.Items))
-	for _, ep := range list.Items {
-		for _, subset := range ep.Subsets {
-			for _, ip := range subset.Addresses {
-				addr := net.JoinHostPort(ip.IP, strconv.Itoa(provisioner.DefaultPort))
-				result = append(result, addr)
+	for _, es := range list.Items {
+		for _, port := range es.Ports {
+			if port.Port == nil {
+				continue
+			}
+
+			if util.OptionalType[int32](port.Port, 0) != p {
+				continue
+			}
+
+			for _, ep := range es.Endpoints {
+				if ep.Conditions.Ready != nil && !*ep.Conditions.Ready {
+					continue
+				}
+
+				for _, ip := range ep.Addresses {
+					addr := net.JoinHostPort(ip, strconv.Itoa(int(*port.Port)))
+					result = append(result, addr)
+				}
 			}
 		}
 	}

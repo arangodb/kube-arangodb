@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/arangotask"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/configmap"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpoints"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/endpointslices"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/node"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolume"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/persistentvolumeclaim"
@@ -146,7 +146,7 @@ type inspectorState struct {
 	arangoPlatformServices        *arangoPlatformServicesInspector
 	arangoRoutes                  *arangoRoutesInspector
 	arangoClusterSynchronizations *arangoClusterSynchronizationsInspector
-	endpoints                     *endpointsInspector
+	endpointSlices                *endpointSlicesInspector
 
 	throttles throttle.Components
 
@@ -170,7 +170,8 @@ func (i *inspectorState) RegisterInformers(k8s informers.SharedInformerFactory, 
 	k8s.Core().V1().ConfigMaps().Informer().AddEventHandler(i.eventHandler(definitions.ConfigMap))
 	k8s.Core().V1().Services().Informer().AddEventHandler(i.eventHandler(definitions.Service))
 	k8s.Core().V1().ServiceAccounts().Informer().AddEventHandler(i.eventHandler(definitions.ServiceAccount))
-	k8s.Core().V1().Endpoints().Informer().AddEventHandler(i.eventHandler(definitions.Endpoints))
+
+	k8s.Discovery().V1().EndpointSlices().Informer().AddEventHandler(i.eventHandler(definitions.EndpointSlices))
 
 	// Arango
 	arango.Database().V1().ArangoMembers().Informer().AddEventHandler(i.eventHandler(definitions.ArangoMember))
@@ -256,7 +257,7 @@ func (i *inspectorState) AnonymousObjects() []anonymous.Impl {
 		i.arangoTasks,
 		i.arangoRoutes,
 		i.arangoClusterSynchronizations,
-		i.endpoints,
+		i.endpointSlices,
 		i.arangoPlatformStorages,
 		i.arangoPlatformServices,
 	}
@@ -270,8 +271,8 @@ func (i *inspectorState) GetCurrentArangoDeployment() (*api.ArangoDeployment, er
 	return i.deploymentResult.depl, i.deploymentResult.err
 }
 
-func (i *inspectorState) Endpoints() endpoints.Definition {
-	return i.endpoints
+func (i *inspectorState) EndpointSlices() endpointslices.Definition {
+	return i.endpointSlices
 }
 
 func (i *inspectorState) Initialised() bool {
@@ -544,7 +545,7 @@ func (i *inspectorState) validate() error {
 		return err
 	}
 
-	if err := i.endpoints.validate(); err != nil {
+	if err := i.endpointSlices.validate(); err != nil {
 		return err
 	}
 
@@ -575,7 +576,7 @@ func (i *inspectorState) copyCore() *inspectorState {
 		arangoClusterSynchronizations: i.arangoClusterSynchronizations,
 		throttles:                     i.throttles.Copy(),
 		versionInfo:                   i.versionInfo,
-		endpoints:                     i.endpoints,
+		endpointSlices:                i.endpointSlices,
 		deploymentResult:              i.deploymentResult,
 	}
 }

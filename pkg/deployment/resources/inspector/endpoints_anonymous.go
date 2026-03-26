@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package inspector
 
 import (
-	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/anonymous"
@@ -29,16 +29,16 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 )
 
-func (p *endpointsInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
-	g := inspectorConstants.EndpointsGKv1()
+func (p *endpointSlicesInspector) Anonymous(gvk schema.GroupVersionKind) (anonymous.Interface, bool) {
+	g := inspectorConstants.EndpointSlicesGKv1()
 
 	if g.Kind == gvk.Kind && g.Group == gvk.Group {
 		switch gvk.Version {
-		case inspectorConstants.EndpointsVersionV1, DefaultVersion:
+		case inspectorConstants.EndpointSlicesVersionV1, DefaultVersion:
 			if p.v1 == nil || p.v1.err != nil {
 				return nil, false
 			}
-			return anonymous.NewAnonymous[*core.Endpoints](g, p.state.endpoints.v1, generic.WithModStatus[*core.Endpoints](g, p.state.EndpointsModInterface().V1())), true
+			return anonymous.NewAnonymous[*discovery.EndpointSlice](g, p.state.endpointSlices.v1, generic.WithModStatus[*discovery.EndpointSlice](g, p.state.EndpointSlicesModInterface().V1())), true
 		}
 	}
 

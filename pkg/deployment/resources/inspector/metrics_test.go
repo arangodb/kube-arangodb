@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -289,9 +290,9 @@ func Test_Metrics(t *testing.T) {
 		})
 	})
 
-	t.Run(string(definitions.Endpoints), func(t *testing.T) {
-		testModClientMetrics[*core.Endpoints](t, definitions.Endpoints, q.EndpointsModInterface().V1(), func(name string) *core.Endpoints {
-			return &core.Endpoints{
+	t.Run(string(definitions.EndpointSlices), func(t *testing.T) {
+		testModClientMetrics[*discovery.EndpointSlice](t, definitions.EndpointSlices, q.EndpointSlicesModInterface().V1(), func(name string) *discovery.EndpointSlice {
+			return &discovery.EndpointSlice{
 				ObjectMeta: meta.ObjectMeta{
 					Name:      name,
 					Namespace: "test",

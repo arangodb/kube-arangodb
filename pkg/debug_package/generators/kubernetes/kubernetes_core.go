@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ func KubernetesCore(f shared.FactoryGen) {
 		Register("event", true, shared.WithKubernetesItems[*core.Event](kubernetesCoreEventsList)).
 		Register("pod", true, shared.WithKubernetesItems[*core.Pod](kubernetesCorePodsList, shared.WithDefinitions[*core.Pod], kubernetesCorePodLogs)).
 		Register("secret", true, shared.WithKubernetesItems[*core.Secret](kubernetesCoreSecretList, shared.WithModification[*core.Secret](shared.WithDefinitions[*core.Secret], kubernetesCoreSecretModHideSensitiveData))).
-		Register("service", true, shared.WithKubernetesItems[*core.Service](kubernetesCoreServiceList, shared.WithDefinitions[*core.Service], kubernetesCoreServiceEndpoints))
+		Register("service", true, shared.WithKubernetesItems[*core.Service](kubernetesCoreServiceList, shared.WithDefinitions[*core.Service], kubernetesCoreServiceEndpointSlices))
 }
 
 func kubernetesCoreConfigMapsList(ctx context.Context, client kclient.Client, namespace string) ([]*core.ConfigMap, error) {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ package mods
 import (
 	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	policy "k8s.io/api/policy/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -56,8 +57,8 @@ type ServicesMods interface {
 	V1() generic.ModClient[*core.Service]
 }
 
-type EndpointsMods interface {
-	V1() generic.ModClient[*core.Endpoints]
+type EndpointSlicesMods interface {
+	V1() generic.ModClient[*discovery.EndpointSlice]
 }
 
 type ServiceMonitorsMods interface {
@@ -103,7 +104,7 @@ type Mods interface {
 	ConfigMapsModInterface() ConfigMapsMods
 	PersistentVolumeClaimsModInterface() PersistentVolumeClaimsMods
 	ServicesModInterface() ServicesMods
-	EndpointsModInterface() EndpointsMods
+	EndpointSlicesModInterface() EndpointSlicesMods
 	ServiceMonitorsModInterface() ServiceMonitorsMods
 	PodDisruptionBudgetsModInterface() PodDisruptionBudgetsMods
 

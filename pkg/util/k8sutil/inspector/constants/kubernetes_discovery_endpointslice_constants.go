@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,48 +21,48 @@
 package constants
 
 import (
-	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // Endpoints
 const (
-	EndpointsGroup     = core.GroupName
-	EndpointsResource  = "endpoints"
-	EndpointsKind      = "Endpoints"
-	EndpointsVersionV1 = "v1"
+	EndpointSlicesGroup     = discovery.GroupName
+	EndpointSlicesResource  = "endpointslices"
+	EndpointSlicesKind      = "EndpointSlices"
+	EndpointSlicesVersionV1 = "v1"
 )
 
 func init() {
-	register[*core.Endpoints](EndpointsGKv1(), EndpointsGRv1())
+	register[*discovery.EndpointSlice](EndpointSlicesGKv1(), EndpointSlicesGRv1())
 }
 
-func EndpointsGK() schema.GroupKind {
+func EndpointSlicesGK() schema.GroupKind {
 	return schema.GroupKind{
-		Group: EndpointsGroup,
-		Kind:  EndpointsKind,
+		Group: EndpointSlicesGroup,
+		Kind:  EndpointSlicesKind,
 	}
 }
 
-func EndpointsGKv1() schema.GroupVersionKind {
+func EndpointSlicesGKv1() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
-		Group:   EndpointsGroup,
-		Kind:    EndpointsKind,
-		Version: EndpointsVersionV1,
+		Group:   EndpointSlicesGroup,
+		Kind:    EndpointSlicesKind,
+		Version: EndpointSlicesVersionV1,
 	}
 }
 
-func EndpointsGR() schema.GroupResource {
+func EndpointSlicesGR() schema.GroupResource {
 	return schema.GroupResource{
-		Group:    EndpointsGroup,
-		Resource: EndpointsResource,
+		Group:    EndpointSlicesGroup,
+		Resource: EndpointSlicesResource,
 	}
 }
 
-func EndpointsGRv1() schema.GroupVersionResource {
+func EndpointSlicesGRv1() schema.GroupVersionResource {
 	return schema.GroupVersionResource{
-		Group:    EndpointsGroup,
-		Resource: EndpointsResource,
-		Version:  EndpointsVersionV1,
+		Group:    EndpointSlicesGroup,
+		Resource: EndpointSlicesResource,
+		Version:  EndpointSlicesVersionV1,
 	}
 }

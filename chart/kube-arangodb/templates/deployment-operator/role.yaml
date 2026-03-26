@@ -63,12 +63,23 @@ rules:
     resources:
       - "pods"
       - "services"
-      - "endpoints"
       - "persistentvolumeclaims"
       - "events"
       - "secrets"
       - "serviceaccounts"
       - "configmaps"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - "discovery.k8s.io"
+    resources:
+      - "endpointslices"
     verbs:
       - "get"
       - "list"

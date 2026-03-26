@@ -49,6 +49,17 @@ func WithContextTimeoutP1A2[P1, A1, A2 interface{}](ctx context.Context, timeout
 	return f(nCtx, a1, a2)
 }
 
+func WithKubernetesContextTimeoutP2A1[P1, P2, A1 interface{}](ctx context.Context, f func(context.Context, A1) (P1, P2), a1 A1) (P1, P2) {
+	return WithContextTimeoutP2A1(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get(), f, a1)
+}
+
+func WithContextTimeoutP2A1[P1, P2, A1 interface{}](ctx context.Context, timeout time.Duration, f func(context.Context, A1) (P1, P2), a1 A1) (P1, P2) {
+	nCtx, c := context.WithTimeout(ctx, timeout)
+	defer c()
+
+	return f(nCtx, a1)
+}
+
 func WithKubernetesContextTimeoutP2A2[P1, P2, A1, A2 interface{}](ctx context.Context, f func(context.Context, A1, A2) (P1, P2), a1 A1, a2 A2) (P1, P2) {
 	return WithContextTimeoutP2A2(ctx, globals.GetGlobals().Timeouts().Kubernetes().Get(), f, a1, a2)
 }

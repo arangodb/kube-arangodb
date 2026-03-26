@@ -17,9 +17,20 @@ rules:
     resources:
       - "persistentvolumes"
       - "persistentvolumeclaims"
-      - "endpoints"
       - "events"
       - "services"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - "discovery.k8s.io"
+    resources:
+      - "endpointslices"
     verbs:
       - "get"
       - "list"

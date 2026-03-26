@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -68,20 +69,22 @@ func Test_Handler_MultiDest(t *testing.T) {
 			},
 		}
 	})
-	endpoints := tests.NewMetaObject[*core.Endpoints](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *core.Endpoints) {
-		obj.Subsets = []core.EndpointSubset{
+	endpoints := tests.NewMetaObject[*discovery.EndpointSlice](t, tests.FakeNamespace, "deployment", func(t *testing.T, obj *discovery.EndpointSlice) {
+		obj.Labels = map[string]string{
+			discovery.LabelServiceName: "deployment",
+		}
+		obj.Endpoints = []discovery.Endpoint{
 			{
-				Addresses: []core.EndpointAddress{
-					{
-						IP: "127.0.0.1",
-					},
-				},
-				Ports: []core.EndpointPort{
-					{
-						Name: "",
-						Port: 10244,
-					},
-				},
+				Addresses:  []string{"127.0.0.1"},
+				Conditions: discovery.EndpointConditions{Ready: util.NewType(true)},
+			},
+		}
+		obj.Ports = []discovery.EndpointPort{
+			{
+				Name:        util.NewType(""),
+				Protocol:    nil,
+				Port:        util.NewType[int32](10244),
+				AppProtocol: nil,
 			},
 		}
 	})
