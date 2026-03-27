@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	goHttp "net/http"
 	"net/url"
 	"reflect"
 	"sort"
@@ -32,7 +31,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -41,9 +40,11 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/crypto"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -453,27 +454,20 @@ func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext
 	}
 
 	transport := operatorHTTP.RoundTripper(operatorHTTP.WithTransportTLS(operatorHTTP.WithRootCA(ca.AsCertPool())))
-	client := &goHttp.Client{Transport: transport, Timeout: time.Second}
 
-	auth, err := context.GetAuthentication()()
+	auth, err := context.GetAuthentication(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := goHttp.NewRequest(goHttp.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, err
-	}
+	conn := adbDriverV2Connection.NewHttpConnection(adbDriverV2Connection.HttpConfiguration{
+		Transport:          transport,
+		Endpoint:           adbDriverV2Connection.NewRoundRobinEndpoints([]string{endpoint}),
+		Authentication:     auth,
+		DontFollowRedirect: true,
+	})
 
-	req = req.WithContext(ctx)
-
-	if auth != nil && auth.Type() == driver.AuthenticationTypeRaw {
-		if h := auth.Get("value"); h != "" {
-			req.Header.Add("Authorization", h)
-		}
-	}
-
-	resp, err := client.Do(req)
+	resp, err := arangod.GetRequest[any](ctx, conn).Do(ctx).HTTPResponse()
 	if err != nil {
 		return nil, err
 	}
@@ -512,15 +506,14 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 
 	res, err := checkServerValidCertRequest(ctx, context, apiObject, group, member, ca)
 	if err != nil {
-		switch v := err.(type) {
-		case *url.Error:
+		if v, ok := errors.ExtractCause[*url.Error](err); ok {
 			if isCertificateVerificationError(v.Err) {
 				r.planLogger.Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Debug("Validation of cert for %s failed, renewal is required", memberName)
 				return true, true
 			}
 
 			r.planLogger.Err(v.Err).Str("type", reflect.TypeOf(v.Err).String()).Debug("Validation of cert for %s failed, but cert looks fine - continuing", memberName)
-		default:
+		} else {
 			r.planLogger.Err(err).Str("type", reflect.TypeOf(err).String()).Debug("Validation of cert for %s failed, will try again next time", memberName)
 		}
 		return false, false
@@ -589,7 +582,7 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 				return false, false
 			}
 
-			c := client.NewClient(conn.Connection(), r.log)
+			c := client.NewClient(conn.Connection())
 			tls, err := c.GetTLS(ctx)
 			if err != nil {
 				r.planLogger.Err(err).Warn("Unable to get tls details")

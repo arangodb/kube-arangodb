@@ -27,7 +27,7 @@ import (
 
 	"github.com/dchest/uniuri"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
@@ -35,10 +35,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
-func GetCacheObjectForKVStore(t *testing.T) cache.Object[arangodb.Collection] {
+func GetCacheObjectForKVStore(t *testing.T) cache.Object[adbDriverV2.Collection] {
 	return db.NewClient(cache.NewObject(tests.TestArangoDBConfig(t).ClientCache())).
-		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(6))), &arangodb.CreateDatabaseOptions{}).
-		CreateCollection("_meta", db.StaticProps(arangodb.CreateCollectionPropertiesV2{
+		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(6))), &adbDriverV2.CreateDatabaseOptions{}).
+		CreateCollection("_meta", db.StaticProps(adbDriverV2.CreateCollectionPropertiesV2{
 			IsSystem: util.NewType(true),
 		})).
 		WithTTLIndex("system_meta_store_object_ttl", 0, "ttl").

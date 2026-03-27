@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ import (
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/arangodb/go-driver"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
@@ -128,7 +126,7 @@ func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 			backup.Name)
 	}
 
-	exists, err := client.Exists(driver.BackupID(backup.Status.Backup.ID))
+	exists, err := client.Exists(backup.Status.Backup.ID)
 	if err != nil {
 		return err
 	}
@@ -137,7 +135,7 @@ func (h *handler) finalizeBackup(backup *backupApi.ArangoBackup) error {
 		return nil
 	}
 
-	err = client.Delete(driver.BackupID(backup.Status.Backup.ID))
+	err = client.Delete(backup.Status.Backup.ID)
 	if err != nil {
 		return err
 	}
@@ -149,7 +147,7 @@ func (h *handler) finalizeBackupAction(backup *backupApi.ArangoBackup, client Ar
 	if backup.Status.Progress == nil {
 		return nil
 	}
-	status, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
+	status, err := client.Progress(backup.Status.Progress.JobID)
 	if err != nil {
 		return err
 	}
@@ -158,7 +156,7 @@ func (h *handler) finalizeBackupAction(backup *backupApi.ArangoBackup, client Ar
 		return nil
 	}
 
-	if err = client.Abort(driver.BackupTransferJobID(backup.Status.Progress.JobID)); err != nil {
+	if err = client.Abort(backup.Status.Progress.JobID); err != nil {
 		return err
 	}
 

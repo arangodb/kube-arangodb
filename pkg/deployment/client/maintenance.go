@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +22,10 @@ package client
 
 import (
 	"context"
-	"fmt"
 	goHttp "net/http"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 type MaintenanceClient interface {
@@ -38,8 +39,6 @@ type MemberMaintenanceMode string
 const (
 	MemberMaintenanceModeMaintenance MemberMaintenanceMode = "maintenance"
 	MemberMaintenanceModeNormal      MemberMaintenanceMode = "normal"
-
-	MemberMaintenanceUrl = "/_admin/cluster/maintenance/%s"
 
 	DefaultMaintenanceModeTimeout = Seconds(15 * time.Minute)
 )
@@ -62,28 +61,8 @@ func (c *client) DisableMaintenance(ctx context.Context, id string) error {
 }
 
 func (c *client) setMaintenance(ctx context.Context, id string, mode MemberMaintenanceMode, timeout *Seconds) error {
-	req, err := c.c.NewRequest(goHttp.MethodPut, fmt.Sprintf(MemberMaintenanceUrl, id))
-	if err != nil {
-		return err
-	}
-
-	if r, err := req.SetBody(MemberMaintenanceRequest{
+	return arangod.PutRequest[MemberMaintenanceRequest, any](ctx, c.c, MemberMaintenanceRequest{
 		Mode:    mode,
 		Timeout: timeout,
-	}); err != nil {
-		return err
-	} else {
-		req = r
-	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return err
-	}
-
-	return nil
+	}, "_admin", "cluster", "maintenance", id).Do(ctx).AcceptCode(goHttp.StatusOK).Evaluate()
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	goHttp "net/http"
 
-	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 type Inventory struct {
@@ -35,26 +35,6 @@ type InventoryConfiguration struct {
 	Hash string `json:"hash"`
 }
 
-func (c *client) Inventory(ctx context.Context) (*Inventory, error) {
-	req, err := c.c.NewRequest(goHttp.MethodGet, utilConstants.EnvoyInventoryConfigDestination)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return nil, err
-	}
-
-	var l Inventory
-
-	if err := resp.ParseBody("", &l); err != nil {
-		return nil, err
-	}
-
-	return &l, nil
+func (c *client) Inventory(ctx context.Context) (Inventory, error) {
+	return arangod.GetRequest[Inventory](ctx, c.c, "_inventory").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
 }

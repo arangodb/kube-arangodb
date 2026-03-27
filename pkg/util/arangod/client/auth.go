@@ -26,7 +26,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb/go-driver/v2/connection"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -37,17 +37,17 @@ import (
 )
 
 type Authentication interface {
-	Authentication(ctx context.Context) (connection.Authentication, bool, error)
+	Authentication(ctx context.Context) (adbDriverV2Connection.Authentication, bool, error)
 }
 
-type AuthenticationFunc func(ctx context.Context) (connection.Authentication, bool, error)
+type AuthenticationFunc func(ctx context.Context) (adbDriverV2Connection.Authentication, bool, error)
 
-func (f AuthenticationFunc) Authentication(ctx context.Context) (connection.Authentication, bool, error) {
+func (f AuthenticationFunc) Authentication(ctx context.Context) (adbDriverV2Connection.Authentication, bool, error) {
 	return f(ctx)
 }
 
 func DisabledAuth() Authentication {
-	return AuthenticationFunc(func(ctx context.Context) (connection.Authentication, bool, error) {
+	return AuthenticationFunc(func(ctx context.Context) (adbDriverV2Connection.Authentication, bool, error) {
 		return nil, false, nil
 	})
 }
@@ -59,7 +59,7 @@ func FolderArangoDBAuthentication(path string) Authentication {
 
 	folder := cache.NewObject[utilToken.Secret](utilTokenLoader.SecretCacheDirectory(path, 15*time.Second))
 
-	return AuthenticationFunc(func(ctx context.Context) (connection.Authentication, bool, error) {
+	return AuthenticationFunc(func(ctx context.Context) (adbDriverV2Connection.Authentication, bool, error) {
 		secret, err := folder.Get(ctx)
 		if err != nil {
 			return nil, false, err
@@ -69,7 +69,7 @@ func FolderArangoDBAuthentication(path string) Authentication {
 		if err != nil {
 			return nil, false, errors.WithStack(err)
 		}
-		return connection.NewHeaderAuth("Authorization", "bearer %s", jwt), true, nil
+		return adbDriverV2Connection.NewHeaderAuth("Authorization", "bearer %s", jwt), true, nil
 	})
 }
 
@@ -80,7 +80,7 @@ func DirectArangoDBAuthentication(client kubernetes.Interface, depl *api.ArangoD
 
 	secret := cache.NewObject[utilToken.Secret](utilTokenLoader.SecretCacheSecretAPI(client.CoreV1().Secrets(depl.GetNamespace()), pod.JWTSecretFolder(depl.GetName()), 15*time.Second))
 
-	return AuthenticationFunc(func(ctx context.Context) (connection.Authentication, bool, error) {
+	return AuthenticationFunc(func(ctx context.Context) (adbDriverV2Connection.Authentication, bool, error) {
 		secret, err := secret.Get(ctx)
 		if err != nil {
 			return nil, false, err
@@ -90,6 +90,6 @@ func DirectArangoDBAuthentication(client kubernetes.Interface, depl *api.ArangoD
 		if err != nil {
 			return nil, false, errors.WithStack(err)
 		}
-		return connection.NewHeaderAuth("Authorization", "bearer %s", jwt), true, nil
+		return adbDriverV2Connection.NewHeaderAuth("Authorization", "bearer %s", jwt), true, nil
 	})
 }

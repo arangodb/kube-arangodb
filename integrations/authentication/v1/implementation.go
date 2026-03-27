@@ -34,7 +34,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_cookie"
@@ -85,7 +85,7 @@ type implementation struct {
 	ctx context.Context
 	cfg Configuration
 
-	userClient cache.Object[arangodb.Client]
+	userClient cache.Object[adbDriverV2.Client]
 	cache      cache.Object[utilToken.Secret]
 }
 

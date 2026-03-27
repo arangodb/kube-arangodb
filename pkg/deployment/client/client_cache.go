@@ -23,30 +23,33 @@ package client
 import (
 	"context"
 	"net"
+	goHttp "net/http"
 	"strconv"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
-	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 type Cache interface {
-	GetAuth() conn.Auth
+	GetAuth(ctx context.Context) (adbDriverV2Connection.Authentication, error)
 
-	Connection(ctx context.Context, host string) (driver.Connection, error)
+	Connection(host string) (adbDriverV2Connection.Connection, error)
 
-	GetRaw(group api.ServerGroup, id string) (conn.Connection, error)
+	Get(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error)
 
-	Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
-	GetDatabase(ctx context.Context) (driver.Client, error)
-	GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error)
+	GetConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error)
+
+	GetDatabase(ctx context.Context) (adbDriverV2.Client, error)
 }
 
 type CacheGen interface {
@@ -54,44 +57,70 @@ type CacheGen interface {
 	reconciler.DeploymentInfoGetter
 }
 
-func NewClientCache(in CacheGen, factory conn.Factory) Cache {
-	return &cache{
-		in:      in,
-		factory: factory,
+func NewClientCache(in CacheGen, auth cache.Object[adbDriverV2Connection.Authentication], config cache.Object[goHttp.RoundTripper]) Cache {
+	return &cacheObject{
+		in:     in,
+		auth:   auth,
+		config: config,
 	}
 }
 
-type cache struct {
+type cacheObject struct {
 	in CacheGen
 
-	factory conn.Factory
+	auth   cache.Object[adbDriverV2Connection.Authentication]
+	config cache.Object[goHttp.RoundTripper]
 }
 
-func (cc *cache) GetRaw(group api.ServerGroup, id string) (conn.Connection, error) {
-	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
-
-	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
+func (cc *cacheObject) Connection(host string) (adbDriverV2Connection.Connection, error) {
+	transport, err := cc.config.Get(shutdown.Context())
 	if err != nil {
 		return nil, err
 	}
 
-	return cc.factory.RawConnection(cc.extendHost(m.GetEndpoint(endpoint)))
+	auth, err := cc.auth.Get(shutdown.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	conn := adbDriverV2Connection.HttpConfiguration{
+		Authentication:     auth,
+		Endpoint:           cc.extendHosts(host),
+		Transport:          transport,
+		DontFollowRedirect: true,
+	}
+
+	c := adbDriverV2Connection.NewHttpConnection(conn)
+
+	if err := c.SetAuthentication(auth); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
-func (cc *cache) Connection(ctx context.Context, host string) (driver.Connection, error) {
-	return cc.factory.Connection(host)
+func (cc *cacheObject) Client(host string) (adbDriverV2.Client, error) {
+	conn, err := cc.Connection(host)
+	if err != nil {
+		return nil, err
+	}
+
+	return adbDriverV2.NewClient(conn), nil
 }
 
-func (cc *cache) extendHost(host string) string {
+func (cc *cacheObject) extendHosts(hosts ...string) adbDriverV2Connection.Endpoint {
 	scheme := "http"
 	if cc.in.GetSpec().TLS.IsSecure() {
 		scheme = "https"
 	}
 
-	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(shared.ArangoPort))
+	return adbDriverV2Connection.NewRoundRobinEndpoints(util.FormatList(hosts, func(host string) string {
+		return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(shared.ArangoPort))
+	}))
+
 }
 
-func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *cacheObject) getConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
 	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
 
 	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
@@ -99,7 +128,22 @@ func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, err
 		return nil, err
 	}
 
-	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(endpoint)))
+	c, err := cc.Connection(endpoint)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return c, nil
+}
+
+func (cc *cacheObject) getClient(group api.ServerGroup, id string) (adbDriverV2.Client, error) {
+	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
+
+	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := cc.Client(endpoint)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -108,7 +152,13 @@ func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, err
 
 // Get a cached client for the given ID in the given group, creating one
 // if needed.
-func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *cacheObject) GetConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
+	return cc.getConnection(group, id)
+}
+
+// Get a cached client for the given ID in the given group, creating one
+// if needed.
+func (cc *cacheObject) Get(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error) {
 	client, err := cc.getClient(group, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -116,19 +166,19 @@ func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (dri
 
 	if _, err := client.Version(ctx); err == nil {
 		return client, nil
-	} else if driver.IsUnauthorized(err) {
+	} else if adbDriverV2Shared.IsUnauthorized(err) {
 		return cc.getClient(group, id)
 	} else {
 		return client, nil
 	}
 }
 
-func (cc *cache) GetAuth() conn.Auth {
-	return cc.factory.GetAuth()
+func (cc *cacheObject) GetAuth(ctx context.Context) (adbDriverV2Connection.Authentication, error) {
+	return cc.auth.Get(ctx)
 }
 
-func (cc *cache) getDatabaseClient() (driver.Client, error) {
-	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
+func (cc *cacheObject) getDatabaseClient() (adbDriverV2.Client, error) {
+	c, err := cc.Client(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject()))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -137,7 +187,7 @@ func (cc *cache) getDatabaseClient() (driver.Client, error) {
 
 // GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
 // creating one if needed.
-func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
+func (cc *cacheObject) GetDatabase(ctx context.Context) (adbDriverV2.Client, error) {
 	client, err := cc.getDatabaseClient()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -145,39 +195,9 @@ func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
 
 	if _, err := client.Version(ctx); err == nil {
 		return client, nil
-	} else if driver.IsUnauthorized(err) {
+	} else if adbDriverV2Shared.IsUnauthorized(err) {
 		return cc.getDatabaseClient()
 	} else {
 		return client, nil
 	}
-}
-
-// GetAgency returns a cached client for the agency
-func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agency, error) {
-	// Not found, create a new client
-	var dnsNames []string
-	for _, m := range cc.in.GetStatus().Members.Agents {
-		if len(agencyIDs) > 0 {
-			if !utils.StringList(agencyIDs).Has(m.ID) {
-				continue
-			}
-		}
-
-		endpoint, err := cc.in.GenerateMemberEndpoint(api.ServerGroupAgents, m)
-		if err != nil {
-			return nil, err
-		}
-
-		dnsNames = append(dnsNames, cc.extendHost(m.GetEndpoint(endpoint)))
-	}
-
-	if len(dnsNames) == 0 {
-		return nil, errors.Errorf("There is no DNS Name")
-	}
-
-	c, err := cc.factory.Agency(dnsNames...)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@ import (
 	"context"
 	"time"
 
-	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
 )
 
-func TimeoutLoader[T interface{}](loader agencyCache.StateLoader[T], timeout time.Duration) agencyCache.StateLoader[T] {
+func TimeoutLoader[T interface{}](loader leader.StateLoader[T], timeout time.Duration) leader.StateLoader[T] {
 	if timeout <= 0 {
 		return loader
 	}
@@ -39,7 +39,7 @@ func TimeoutLoader[T interface{}](loader agencyCache.StateLoader[T], timeout tim
 }
 
 type timeoutLoader[T interface{}] struct {
-	parent agencyCache.StateLoader[T]
+	parent leader.StateLoader[T]
 
 	timeout time.Duration
 }
@@ -60,7 +60,7 @@ func (i *timeoutLoader[T]) Invalidate() {
 	i.parent.Invalidate()
 }
 
-func (i *timeoutLoader[T]) Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) error {
+func (i *timeoutLoader[T]) Refresh(ctx context.Context, discovery leader.Discovery) error {
 	nctx, c := context.WithTimeout(ctx, i.timeout)
 	defer c()
 

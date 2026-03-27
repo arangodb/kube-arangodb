@@ -30,7 +30,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -42,7 +42,7 @@ import (
 
 const DefaultPoolerTimeout = 10 * time.Second
 
-func NewPooler[T PoolerObject](connection cache.Object[arangodb.Collection], interval time.Duration) Pooler[T] {
+func NewPooler[T PoolerObject](connection cache.Object[adbDriverV2.Collection], interval time.Duration) Pooler[T] {
 	var z = &pooler[T]{
 		connection: connection,
 		state:      make(map[string]Document[T]),
@@ -94,7 +94,7 @@ type pooler[T PoolerObject] struct {
 
 	state map[string]Document[T]
 
-	connection cache.Object[arangodb.Collection]
+	connection cache.Object[adbDriverV2.Collection]
 
 	last     time.Time
 	interval time.Duration
@@ -232,11 +232,11 @@ func (p *pooler[T]) run(ctx context.Context, name string, action DocumentAction,
 		return util.Default[T](), 0, err
 	}
 
-	res, err := operations.WithTransaction[Document[T]](ctx, col.Database(), arangodb.TransactionCollections{
+	res, err := operations.WithTransaction[Document[T]](ctx, col.Database(), adbDriverV2.TransactionCollections{
 		Read:  []string{col.Name()},
 		Write: []string{col.Name()},
-	}, &arangodb.BeginTransactionOptions{}, operations.WithLock(col.Name(), func(ctx context.Context, c arangodb.Transaction, lock *operations.LockDocument) (Document[T], error) {
-		col, err := c.GetCollection(ctx, col.Name(), &arangodb.GetCollectionOptions{SkipExistCheck: true})
+	}, &adbDriverV2.BeginTransactionOptions{}, operations.WithLock(col.Name(), func(ctx context.Context, c adbDriverV2.Transaction, lock *operations.LockDocument) (Document[T], error) {
+		col, err := c.GetCollection(ctx, col.Name(), &adbDriverV2.GetCollectionOptions{SkipExistCheck: true})
 		if err != nil {
 			return util.Default[Document[T]](), err
 		}
@@ -326,7 +326,7 @@ func (p *pooler[T]) Refresh(ctx context.Context) error {
 	return p.refresh(ctx, col)
 }
 
-func (p *pooler[T]) refresh(ctx context.Context, col arangodb.Collection) error {
+func (p *pooler[T]) refresh(ctx context.Context, col adbDriverV2.Collection) error {
 	changes, err := PoolChanges[T](ctx, col.Database(), col.Name(), p.index)
 	if err != nil {
 		return err
@@ -352,10 +352,10 @@ func (p *pooler[T]) refresh(ctx context.Context, col arangodb.Collection) error 
 }
 
 // PoolChanges pools the changes from registry. If no documents found EOF is returned
-func PoolChanges[T proto.Message](ctx context.Context, db arangodb.DatabaseQuery, col string, start uint32) ([]Document[T], error) {
+func PoolChanges[T proto.Message](ctx context.Context, db adbDriverV2.DatabaseQuery, col string, start uint32) ([]Document[T], error) {
 	query := fmt.Sprintf("FOR doc IN %s FILTER doc.sequence >= @start FILTER doc._key != @key SORT doc.sequence ASC RETURN doc", col)
 
-	result, err := db.Query(ctx, query, &arangodb.QueryOptions{
+	result, err := db.Query(ctx, query, &adbDriverV2.QueryOptions{
 		BatchSize: 1024,
 		BindVars:  map[string]interface{}{"start": start, "key": operations.LockDocumentID},
 	})

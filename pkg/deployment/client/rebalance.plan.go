@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 type RebalancePlanRequest struct {
@@ -56,36 +57,10 @@ type RebalancePlanMove struct {
 }
 
 func (c *client) RebalancePlan(ctx context.Context, request *RebalancePlanRequest) (RebalancePlanResponse, error) {
-	req, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/cluster/rebalance")
-	if err != nil {
-		return RebalancePlanResponse{}, err
-	}
-
 	request = util.InitType(request)
 
 	// Always set to 1
 	request.Version = 1
 
-	if r, err := req.SetBody(request); err != nil {
-		return RebalancePlanResponse{}, err
-	} else {
-		req = r
-	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return RebalancePlanResponse{}, err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return RebalancePlanResponse{}, err
-	}
-
-	var d RebalancePlanResponse
-
-	if err := resp.ParseBody("", &d); err != nil {
-		return RebalancePlanResponse{}, err
-	}
-
-	return d, nil
+	return arangod.PostRequest[*RebalancePlanRequest, RebalancePlanResponse](ctx, c.c, request, "_admin", "cluster", "rebalance", "execute").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
 }

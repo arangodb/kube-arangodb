@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package backup
 import (
 	goStrings "strings"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -88,7 +88,7 @@ func isTemporaryError(err error) bool {
 		}
 	}
 
-	if v, ok := err.(driver.ArangoError); ok {
+	if v, ok := err.(adbDriverV2Shared.ArangoError); ok {
 		if temporaryErrorNum.Has(v.ErrorNum) || temporaryCodes.Has(v.Code) {
 			return true
 		}

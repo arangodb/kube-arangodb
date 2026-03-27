@@ -26,7 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
@@ -44,10 +44,10 @@ func arangoDBDatabaseAuth(cmd *cobra.Command) cache.Object[client.Authentication
 	})
 }
 
-func arangoDBDatabaseClient(cmd *cobra.Command) cache.Object[arangodb.Client] {
+func arangoDBDatabaseClient(cmd *cobra.Command) cache.Object[adbDriverV2.Client] {
 	auth := arangoDBDatabaseAuth(cmd)
 
-	return cache.NewObject(func(ctx context.Context) (arangodb.Client, time.Duration, error) {
+	return cache.NewObject(func(ctx context.Context) (adbDriverV2.Client, time.Duration, error) {
 		auth, err := auth.Get(ctx)
 		if err != nil {
 			return nil, 0, err

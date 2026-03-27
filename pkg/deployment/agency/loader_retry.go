@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ import (
 	"sync"
 	"time"
 
-	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
 )
 
-func RetryLoader[T interface{}](loader agencyCache.StateLoader[T], retries int) agencyCache.StateLoader[T] {
+func RetryLoader[T interface{}](loader leader.StateLoader[T], retries int) leader.StateLoader[T] {
 	if retries <= 0 {
 		return loader
 	}
@@ -44,7 +44,7 @@ type retryLoader[T interface{}] struct {
 
 	retries int
 
-	parent agencyCache.StateLoader[T]
+	parent leader.StateLoader[T]
 }
 
 func (i *retryLoader[T]) UpdateTime() time.Time {
@@ -75,7 +75,7 @@ func (i *retryLoader[T]) Invalidate() {
 	i.parent.Invalidate()
 }
 
-func (i *retryLoader[T]) Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) (err error) {
+func (i *retryLoader[T]) Refresh(ctx context.Context, discovery leader.Discovery) (err error) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 

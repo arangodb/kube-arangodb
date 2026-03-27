@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,12 @@ import (
 	"time"
 
 	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -159,7 +161,7 @@ func (a *actionRebuildOutSyncedShards) CheckProgress(ctx context.Context) (bool,
 	return true, false, nil
 }
 
-func (a *actionRebuildOutSyncedShards) rebuildShard(ctx context.Context, clientSync, clientAsync driver.Client, shardID, database string) error {
+func (a *actionRebuildOutSyncedShards) rebuildShard(ctx context.Context, clientSync, clientAsync adbDriverV2.Client, shardID, database string) error {
 	batchID, err := a.createBatch(ctx, clientSync)
 	if err != nil {
 		return errors.Wrapf(err, "Unable to create batch")
@@ -169,7 +171,7 @@ func (a *actionRebuildOutSyncedShards) rebuildShard(ctx context.Context, clientS
 	if err != nil {
 		return err
 	}
-	_, err = clientAsync.Connection().Do(ctx, req)
+	_, err = clientAsync.Connection().Do(ctx, req, nil)
 	if id, ok := conn.IsAsyncJobInProgress(err); ok {
 		a.actionCtx.Add(actionRebuildOutSyncedShardsLocalJobID, id, true)
 		a.actionCtx.Add(actionRebuildOutSyncedShardsLocalDatabase, database, true)
@@ -183,13 +185,13 @@ func (a *actionRebuildOutSyncedShards) rebuildShard(ctx context.Context, clientS
 }
 
 // checkRebuildShardProgress returns: inProgress, error.
-func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Context, clientAsync, clientSync driver.Client, shardID, database, jobID, batchID string) (bool, error) {
+func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Context, clientAsync, clientSync adbDriverV2.Client, shardID, database, jobID, batchID string) (bool, error) {
 	req, err := a.createShardRebuildRequest(clientAsync, shardID, database, batchID)
 	if err != nil {
 		return false, err
 	}
 
-	resp, err := clientAsync.Connection().Do(conn.WithAsyncID(ctx, jobID), req)
+	resp, err := clientAsync.Connection().Do(adbDriverV2Connection.WithAsyncID(ctx, jobID), req, nil)
 	if err != nil {
 		if _, ok := conn.IsAsyncJobInProgress(err); ok {
 			return true, nil
@@ -211,70 +213,44 @@ func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Con
 	// cleanup batch
 	_ = a.deleteBatch(ctx, clientSync, batchID)
 
-	if resp.StatusCode() == goHttp.StatusNoContent {
+	if resp.Code() == goHttp.StatusNoContent {
 		return false, nil
 	} else {
-		return false, errors.Wrapf(err, "rebuild progress failed with status code %d", resp.StatusCode())
+		return false, errors.Wrapf(err, "rebuild progress failed with status code %d", resp.Code())
 	}
 }
 
 //************************** API Calls ************************************
 
 // createShardRebuildRequest creates request for rebuilding shard. Returns request, error.
-func (a *actionRebuildOutSyncedShards) createShardRebuildRequest(clientAsync driver.Client, shardID, database, batchID string) (driver.Request, error) {
+func (a *actionRebuildOutSyncedShards) createShardRebuildRequest(clientAsync adbDriverV2.Client, shardID, database, batchID string) (adbDriverV2Connection.Request, error) {
 	req, err := clientAsync.Connection().NewRequest("POST", path.Join("_db", database, "_api/replication/revisions/tree"))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to create rebuild shard request, shard %s, database: %s", shardID, database)
 	}
-	req = req.SetQuery("batchId", batchID)
-	req = req.SetQuery("collection", shardID)
+	req.AddQuery("batchId", batchID)
+	req.AddQuery("collection", shardID)
 	return req, nil
 }
 
 // createBatch creates batch on the server. Returns batchID, error.
-func (a *actionRebuildOutSyncedShards) createBatch(ctx context.Context, clientSync driver.Client) (string, error) {
-	req, err := clientSync.Connection().NewRequest("POST", path.Join("_api/replication/batch"))
-	if err != nil {
-		return "", errors.Wrapf(err, "Unable to create request for batch creation")
-	}
-	params := struct {
+func (a *actionRebuildOutSyncedShards) createBatch(ctx context.Context, clientSync adbDriverV2.Client) (string, error) {
+	type requestObject struct {
 		TTL float64 `json:"ttl"`
-	}{TTL: actionRebuildOutSyncedShardsBatchTTL.Seconds()}
-	req, err = req.SetBody(params)
-	if err != nil {
-		return "", errors.Wrapf(err, "Unable to add body to the batch creation request")
 	}
-
-	resp, err := clientSync.Connection().Do(ctx, req)
-	if err != nil {
-		return "", errors.Wrapf(err, "Unable to create batch, request failed")
-	}
-	if err := resp.CheckStatus(200); err != nil {
-		return "", errors.Wrapf(err, "Unable to create batch, wrong status code %d", resp.StatusCode())
-	}
-	var batch struct {
+	type responseObject struct {
 		ID string `json:"id"`
 	}
-
-	if err := resp.ParseBody("", &batch); err != nil {
-		return "", errors.Wrapf(err, "Unable to parse batch creation response")
+	resp, err := arangod.PostRequest[requestObject, responseObject](ctx, clientSync.Connection(), requestObject{
+		TTL: actionRebuildOutSyncedShardsBatchTTL.Seconds(),
+	}, "_api/replication/batch").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
+	if err != nil {
+		return "", err
 	}
-	return batch.ID, nil
+	return resp.ID, nil
 }
 
 // deleteBatch removes batch from the server
-func (a *actionRebuildOutSyncedShards) deleteBatch(ctx context.Context, clientSync driver.Client, batchID string) error {
-	req, err := clientSync.Connection().NewRequest("DELETE", path.Join("_api/replication/batch", batchID))
-	if err != nil {
-		return errors.Wrapf(err, "Unable to create request for batch removal")
-	}
-
-	resp, err := clientSync.Connection().Do(ctx, req)
-	if err != nil {
-		return errors.Wrapf(err, "Unable to remove batch, request failed")
-	}
-	if err := resp.CheckStatus(204); err != nil {
-		return errors.Wrapf(err, "Unable to remove batch, wrong status code %d", resp.StatusCode())
-	}
-	return nil
+func (a *actionRebuildOutSyncedShards) deleteBatch(ctx context.Context, clientSync adbDriverV2.Client, batchID string) error {
+	return arangod.DeleteRequest[any](ctx, clientSync.Connection(), "_api/replication/batch", batchID).Do(ctx).AcceptCode(goHttp.StatusNoContent).Evaluate()
 }

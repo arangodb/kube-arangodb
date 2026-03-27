@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ func (a *actionCompactMember) Start(ctx context.Context) (bool, error) {
 			return false, errors.Wrapf(err, "Unable to create client")
 		}
 
-		c := client.NewClient(dbc.Connection(), logger)
+		c := client.NewClient(dbc.Connection())
 
 		if err := c.Compact(ctx, &client.CompactRequest{
 			CompactBottomMostLevel: util.NewType(true),
@@ -97,7 +97,7 @@ func (a actionCompactMember) CheckProgress(ctx context.Context) (bool, bool, err
 			return false, false, errors.Wrapf(err, "Unable to create client")
 		}
 
-		c := client.NewClient(dbc.Connection(), logger)
+		c := client.NewClient(dbc.Connection())
 
 		if err := c.Compact(conn.WithAsyncID(ctx, job), &client.CompactRequest{
 			CompactBottomMostLevel: util.NewType(true),

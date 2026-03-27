@@ -31,5 +31,5 @@ type DeploymentID struct {
 }
 
 func (c *client) DeploymentID(ctx context.Context) (DeploymentID, error) {
-	return arangod.GetRequest[DeploymentID](ctx, c.c, "_admin", "deployment", "id").AcceptCode(200).Response()
+	return arangod.GetRequest[DeploymentID](ctx, c.c, "_admin", "deployment", "id").Do(ctx).AcceptCode(200).Response()
 }

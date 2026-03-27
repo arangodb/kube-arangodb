@@ -112,13 +112,13 @@ func (r *Reconciler) createGatewayConfigConditionPlan(ctx context.Context, _ k8s
 	return plan
 }
 
-func (r *Reconciler) getGatewayInventoryConfig(ctx context.Context, planCtx PlanBuilderContext, group api.ServerGroup, member api.MemberStatus) (*client.Inventory, error) {
+func (r *Reconciler) getGatewayInventoryConfig(ctx context.Context, planCtx PlanBuilderContext, group api.ServerGroup, member api.MemberStatus) (client.Inventory, error) {
 	serverClient, err := planCtx.GetServerClient(ctx, group, member.ID)
 	if err != nil {
-		return nil, err
+		return client.Inventory{}, err
 	}
 
-	internalClient := client.NewClient(serverClient.Connection(), logger)
+	internalClient := client.NewClient(serverClient.Connection())
 
 	lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer c()

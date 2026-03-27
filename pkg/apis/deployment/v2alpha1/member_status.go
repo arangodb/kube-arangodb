@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	driver "github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -62,7 +62,7 @@ type MemberStatus struct {
 	// CleanoutJobID holds the ID of the agency job for cleaning out this server
 	CleanoutJobID string `json:"cleanout-job-id,omitempty"`
 	// ArangoVersion holds the ArangoDB version in member
-	ArangoVersion driver.Version `json:"arango-version,omitempty"`
+	ArangoVersion adbDriverV2.Version `json:"arango-version,omitempty"`
 	// ImageId holds the members ArangoDB image ID
 	ImageID string `json:"image-id,omitempty"`
 	// Image holds image details

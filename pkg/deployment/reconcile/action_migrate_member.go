@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -127,7 +127,7 @@ func (a *actionMigrateMember) CheckProgress(ctx context.Context) (bool, bool, er
 		return false, false, nil
 	}
 
-	clusterClient := client.NewClient(c.Connection(), a.log)
+	clusterClient := client.NewClient(c.Connection())
 
 	resp, err := clusterClient.RebalanceGet(ctx)
 	if err != nil {

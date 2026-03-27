@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 )
 
 type deploymentBasicAuth struct {
@@ -47,7 +47,7 @@ func (d deploymentBasicAuth) Register(cmd *cobra.Command) error {
 	)
 }
 
-func (d deploymentBasicAuth) Authentication(cmd *cobra.Command) (driver.Authentication, error) {
+func (d deploymentBasicAuth) Authentication(cmd *cobra.Command) (adbDriverV2Connection.Authentication, error) {
 	if err := ValidateFlags(d.username, d.password)(cmd, nil); err != nil {
 		return nil, err
 	}
@@ -62,5 +62,5 @@ func (d deploymentBasicAuth) Authentication(cmd *cobra.Command) (driver.Authenti
 		return nil, err
 	}
 
-	return driver.BasicAuthentication(username, password), nil
+	return adbDriverV2Connection.NewBasicAuth(username, password), nil
 }

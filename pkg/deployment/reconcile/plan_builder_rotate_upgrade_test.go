@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -41,7 +41,7 @@ func Test_RotateUpgrade_Condition(t *testing.T) {
 		verify func(t *testing.T, decision upgradeDecision)
 	}
 
-	newImageInfo := func(image string, imageID string, version driver.Version, enterprise bool) api.ImageInfo {
+	newImageInfo := func(image string, imageID string, version adbDriverV2.Version, enterprise bool) api.ImageInfo {
 		return api.ImageInfo{
 			Image:           image,
 			ImageID:         imageID,
@@ -49,7 +49,7 @@ func Test_RotateUpgrade_Condition(t *testing.T) {
 			Enterprise:      enterprise,
 		}
 	}
-	newImageInfoP := func(image string, imageID string, version driver.Version, enterprise bool) *api.ImageInfo {
+	newImageInfoP := func(image string, imageID string, version adbDriverV2.Version, enterprise bool) *api.ImageInfo {
 		p := newImageInfo(image, imageID, version, enterprise)
 		return &p
 	}

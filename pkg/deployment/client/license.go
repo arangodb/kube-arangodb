@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import (
 	"context"
 	goHttp "net/http"
 	"time"
-)
 
-const AdminLicenseUrl = "/_admin/license"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+)
 
 type LicenseClient interface {
 	GetLicense(ctx context.Context) (License, error)
@@ -51,53 +51,17 @@ func (l *License) Expires() time.Time {
 }
 
 func (c *client) GetLicense(ctx context.Context) (License, error) {
-	req, err := c.c.NewRequest(goHttp.MethodGet, AdminLicenseUrl)
-	if err != nil {
-		return License{}, err
-	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return License{}, err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return License{}, err
-	}
-
-	var l License
-
-	if err := resp.ParseBody("", &l); err != nil {
-		return License{}, err
-	}
-
-	return l, nil
+	return arangod.GetRequest[License](ctx, c.c, "_admin", "license").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
 }
 
 func (c *client) SetLicense(ctx context.Context, license string, force bool) error {
-	req, err := c.c.NewRequest(goHttp.MethodPut, AdminLicenseUrl)
-	if err != nil {
-		return err
-	}
-
-	if r, err := req.SetBody(license); err != nil {
-		return err
-	} else {
-		req = r
-	}
+	req := arangod.PutRequest[string, License](ctx, c.c, license, "_admin", "license")
 
 	if force {
-		req = req.SetQuery("force", "true")
+		req = req.Query("force", "true")
 	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusCreated); err != nil {
-		return err
-	}
-
-	return nil
+	return req.
+		Do(ctx).
+		AcceptCode(goHttp.StatusCreated).
+		Evaluate()
 }
