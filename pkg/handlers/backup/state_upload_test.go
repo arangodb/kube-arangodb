@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -82,8 +83,10 @@ func Test_State_Upload_TemporaryGetFailed(t *testing.T) {
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
-		ID: createResponse.ID,
+	obj.Status.Backup = createBackupFromMeta(adbDriverV2.BackupMeta{
+		BackupResponse: adbDriverV2.BackupResponse{
+			ID: createResponse.ID,
+		},
 	}, nil)
 
 	// Act
@@ -109,8 +112,10 @@ func Test_State_Upload_FatalGetFailed(t *testing.T) {
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
-		ID: createResponse.ID,
+	obj.Status.Backup = createBackupFromMeta(adbDriverV2.BackupMeta{
+		BackupResponse: adbDriverV2.BackupResponse{
+			ID: createResponse.ID,
+		},
 	}, nil)
 
 	// Act
@@ -126,7 +131,7 @@ func Test_State_Upload_FatalGetFailed(t *testing.T) {
 
 func Test_State_Upload_BackupMissing(t *testing.T) {
 	// Arrange
-	error := driver.ArangoError{
+	error := adbDriverV2Shared.ArangoError{
 		Code: 404,
 	}
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
@@ -138,8 +143,10 @@ func Test_State_Upload_BackupMissing(t *testing.T) {
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
-		ID: createResponse.ID,
+	obj.Status.Backup = createBackupFromMeta(adbDriverV2.BackupMeta{
+		BackupResponse: adbDriverV2.BackupResponse{
+			ID: createResponse.ID,
+		},
 	}, nil)
 
 	// Act
@@ -165,8 +172,10 @@ func Test_State_Upload_TemporaryUploadFailed(t *testing.T) {
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
-		ID: createResponse.ID,
+	obj.Status.Backup = createBackupFromMeta(adbDriverV2.BackupMeta{
+		BackupResponse: adbDriverV2.BackupResponse{
+			ID: createResponse.ID,
+		},
 	}, nil)
 
 	// Act
@@ -195,8 +204,10 @@ func Test_State_Upload_FatalUploadFailed(t *testing.T) {
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
-		ID: createResponse.ID,
+	obj.Status.Backup = createBackupFromMeta(adbDriverV2.BackupMeta{
+		BackupResponse: adbDriverV2.BackupResponse{
+			ID: createResponse.ID,
+		},
 	}, nil)
 
 	// Act
@@ -225,8 +236,10 @@ func Test_State_Upload_TemporaryUploadFailed_Backoff(t *testing.T) {
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
-		ID: createResponse.ID,
+	obj.Status.Backup = createBackupFromMeta(adbDriverV2.BackupMeta{
+		BackupResponse: adbDriverV2.BackupResponse{
+			ID: createResponse.ID,
+		},
 	}, nil)
 	obj.Status.Backoff = &backupApi.ArangoBackupStatusBackOff{
 		Iterations: 3,
@@ -258,8 +271,10 @@ func Test_State_Upload_FatalUploadFailed_Backoff(t *testing.T) {
 	createResponse, err := mock.Create()
 	require.NoError(t, err)
 
-	obj.Status.Backup = createBackupFromMeta(driver.BackupMeta{
-		ID: createResponse.ID,
+	obj.Status.Backup = createBackupFromMeta(adbDriverV2.BackupMeta{
+		BackupResponse: adbDriverV2.BackupResponse{
+			ID: createResponse.ID,
+		},
 	}, nil)
 	obj.Status.Backoff = &backupApi.ArangoBackupStatusBackOff{
 		Iterations: 3,

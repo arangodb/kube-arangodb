@@ -24,24 +24,24 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 )
 
-type CollectionProps func(ctx context.Context, db arangodb.Database) (*arangodb.CreateCollectionPropertiesV2, error)
+type CollectionProps func(ctx context.Context, db adbDriverV2.Database) (*adbDriverV2.CreateCollectionPropertiesV2, error)
 
-func StaticProps(props arangodb.CreateCollectionPropertiesV2) CollectionProps {
-	return func(ctx context.Context, db arangodb.Database) (*arangodb.CreateCollectionPropertiesV2, error) {
+func StaticProps(props adbDriverV2.CreateCollectionPropertiesV2) CollectionProps {
+	return func(ctx context.Context, db adbDriverV2.Database) (*adbDriverV2.CreateCollectionPropertiesV2, error) {
 		return &props, nil
 	}
 }
 
 func SourceCollectionProps(name string) CollectionProps {
-	return func(ctx context.Context, db arangodb.Database) (*arangodb.CreateCollectionPropertiesV2, error) {
-		col, err := db.GetCollection(ctx, name, &arangodb.GetCollectionOptions{SkipExistCheck: true})
+	return func(ctx context.Context, db adbDriverV2.Database) (*adbDriverV2.CreateCollectionPropertiesV2, error) {
+		col, err := db.GetCollection(ctx, name, &adbDriverV2.GetCollectionOptions{SkipExistCheck: true})
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +51,7 @@ func SourceCollectionProps(name string) CollectionProps {
 			return nil, err
 		}
 
-		return &arangodb.CreateCollectionPropertiesV2{
+		return &adbDriverV2.CreateCollectionPropertiesV2{
 			IsSystem:          util.NewType(prop.IsSystem),
 			WriteConcern:      util.NewType(prop.WriteConcern),
 			ReplicationFactor: util.NewType(prop.ReplicationFactor),
@@ -63,22 +63,22 @@ type Database interface {
 	CreateCollection(name string, props CollectionProps) Collection
 	Collection(name string) Collection
 
-	Get() cache.Object[arangodb.Database]
+	Get() cache.Object[adbDriverV2.Database]
 }
 
 type database struct {
-	cache cache.Object[arangodb.Database]
+	cache cache.Object[adbDriverV2.Database]
 }
 
 func (d database) CreateCollection(name string, props CollectionProps) Collection {
 	return collection{
-		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
+		cache: cache.NewObject(func(ctx context.Context) (adbDriverV2.Collection, time.Duration, error) {
 			db, ttl, err := d.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
 			}
 
-			_, err = db.GetCollection(ctx, name, &arangodb.GetCollectionOptions{})
+			_, err = db.GetCollection(ctx, name, &adbDriverV2.GetCollectionOptions{})
 			if err != nil {
 				if !adbDriverV2Shared.IsNotFound(err) {
 					return nil, 0, err
@@ -96,7 +96,7 @@ func (d database) CreateCollection(name string, props CollectionProps) Collectio
 				}
 			}
 
-			col, err := db.GetCollection(ctx, name, &arangodb.GetCollectionOptions{})
+			col, err := db.GetCollection(ctx, name, &adbDriverV2.GetCollectionOptions{})
 			if err != nil {
 				return nil, 0, err
 			}
@@ -108,13 +108,13 @@ func (d database) CreateCollection(name string, props CollectionProps) Collectio
 
 func (d database) Collection(name string) Collection {
 	return collection{
-		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
+		cache: cache.NewObject(func(ctx context.Context) (adbDriverV2.Collection, time.Duration, error) {
 			db, ttl, err := d.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
 			}
 
-			col, err := db.GetCollection(ctx, name, &arangodb.GetCollectionOptions{})
+			col, err := db.GetCollection(ctx, name, &adbDriverV2.GetCollectionOptions{})
 			if err != nil {
 				return nil, 0, err
 			}
@@ -124,6 +124,6 @@ func (d database) Collection(name string) Collection {
 	}
 }
 
-func (d database) Get() cache.Object[arangodb.Database] {
+func (d database) Get() cache.Object[adbDriverV2.Database] {
 	return d.cache
 }

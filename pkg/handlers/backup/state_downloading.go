@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package backup
 import (
 	"fmt"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -52,9 +52,9 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 		return nil, newFatalErrorf("missing field .spec.download.id")
 	}
 
-	details, err := client.Progress(driver.BackupTransferJobID(backup.Status.Progress.JobID))
+	details, err := client.Progress(backup.Status.Progress.JobID)
 	if err != nil {
-		if driver.IsNotFoundGeneral(err) {
+		if adbDriverV2Shared.IsNotFound(err) {
 			return wrapUpdateStatus(backup,
 				updateStatusState(backupApi.ArangoBackupStateDownloadError,
 					"job with id %s does not exist anymore", backup.Status.Progress.JobID),
@@ -74,9 +74,9 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 	}
 
 	if details.Completed {
-		backupMeta, err := client.Get(driver.BackupID(backup.Spec.Download.ID))
+		backupMeta, err := client.Get(backup.Spec.Download.ID)
 		if err != nil {
-			if driver.IsNotFoundGeneral(err) {
+			if adbDriverV2Shared.IsNotFound(err) {
 				return wrapUpdateStatus(backup,
 					updateStatusState(backupApi.ArangoBackupStateDownloadError,
 						"backup is not present after download"),

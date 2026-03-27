@@ -24,19 +24,19 @@ import (
 	"context"
 	"io"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func QueryV2NextIterator[T any](in arangodb.Cursor, batch int) util.NextIterator[[]T] {
+func QueryV2NextIterator[T any](in adbDriverV2.Cursor, batch int) util.NextIterator[[]T] {
 	return queryV1NextIterator[T]{in: in, batch: batch}
 }
 
 type queryV1NextIterator[T any] struct {
-	in    arangodb.Cursor
+	in    adbDriverV2.Cursor
 	batch int
 }
 

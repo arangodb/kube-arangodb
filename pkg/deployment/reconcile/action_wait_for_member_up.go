@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,12 @@ import (
 	"context"
 	goHttp "net/http"
 
-	driver "github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -191,12 +192,12 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) bool {
 		a.log.Err(h.Error).Debug("Cluster health is missing")
 		return false
 	}
-	sh, found := h.Members[driver.ServerID(a.action.MemberID)]
+	sh, found := h.Members[adbDriverV2.ServerID(a.action.MemberID)]
 	if !found {
 		a.log.Debug("Member not yet found in cluster health")
 		return false
 	}
-	if sh.Status != driver.ServerStatusGood {
+	if sh.Status != adbDriverV2.ServerStatusGood {
 		a.log.Str("status", string(sh.Status)).Debug("Member set status not yet good")
 		return false
 	}
@@ -262,28 +263,5 @@ func (a actionWaitForMemberUp) getServerStatus(ctx context.Context) (client.Serv
 	}
 	conn := cli.Connection()
 
-	req, err := conn.NewRequest("GET", "_admin/status")
-	if err != nil {
-		return client.ServerStatus{}, err
-	}
-
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-
-	resp, err := conn.Do(ctxChild, req)
-	if err != nil {
-		return client.ServerStatus{}, err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return client.ServerStatus{}, err
-	}
-
-	var result client.ServerStatus
-
-	if err := resp.ParseBody("", &result); err != nil {
-		return client.ServerStatus{}, err
-	}
-
-	return result, nil
+	return arangod.GetRequest[client.ServerStatus](ctx, conn, "_admin/status").AcceptCode(goHttp.StatusOK).Response()
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
@@ -83,20 +83,14 @@ func (a *actionResignLeadership) Start(ctx context.Context) (bool, error) {
 
 		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
-		cluster, err := client.Cluster(ctxChild)
-		if err != nil {
-			a.log.Err(err).Error("Unable to get cluster client")
-			return false, errors.WithStack(err)
-		}
 
 		var jobID string
-		ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-		defer cancel()
-		jobCtx := driver.WithJobIDResponse(ctxChild, &jobID)
 		a.log.Debug("Temporary shutdown, resign leadership")
-		if err := cluster.ResignServer(jobCtx, m.ID); err != nil {
+		if id, err := client.ResignServer(ctxChild, adbDriverV2.ServerID(m.ID)); err != nil {
 			a.log.Err(err).Debug("Failed to resign server")
 			return false, errors.WithStack(err)
+		} else {
+			jobID = id
 		}
 
 		m.CleanoutJobID = jobID

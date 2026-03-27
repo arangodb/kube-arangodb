@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/util"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -103,7 +103,7 @@ func (m monitor) UpdateMonitorStatus(ctx context.Context) {
 }
 
 // GetClusterHealth returns current ArangoDeployment cluster health status
-func (m monitor) GetClusterHealth() (*driver.ClusterHealth, error) {
+func (m monitor) GetClusterHealth() (*adbDriverV2.ClusterHealth, error) {
 	c, req, err := m.factory(m.endpoint)
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func (m monitor) GetClusterHealth() (*driver.ClusterHealth, error) {
 		return nil, err
 	}
 
-	var result driver.ClusterHealth
+	var result adbDriverV2.ClusterHealth
 	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (m monitor) GetClusterHealth() (*driver.ClusterHealth, error) {
 }
 
 // GetMemberStatus returns Prometheus monitor metric for specific member
-func (m monitor) GetMemberStatus(id driver.ServerID, member driver.ServerHealth) (string, error) {
+func (m monitor) GetMemberStatus(id adbDriverV2.ServerID, member adbDriverV2.ServerHealth) (string, error) {
 	result := fmt.Sprintf(monitorMetricTemplate, member.Role, id, 0)
 
 	c, req, err := m.factory(m.endpoint)
@@ -159,7 +159,7 @@ func (m monitor) GetMemberStatus(id driver.ServerID, member driver.ServerHealth)
 }
 
 func prepareEndpointURL(uri, uriPath string) (*url.URL, error) {
-	uri = util.FixupEndpointURLScheme(uri)
+	uri = adbDriverV2Connection.FixupEndpointURLScheme(uri)
 
 	u, err := url.Parse(uri)
 	if err != nil {

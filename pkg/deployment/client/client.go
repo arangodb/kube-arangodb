@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,16 +25,12 @@ import (
 	goHttp "net/http"
 	"time"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
-	"github.com/arangodb/kube-arangodb/pkg/logging"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
-func NewClient(c driver.Connection, log logging.Logger) Client {
-	if log != nil {
-		c = loggerConnection(c, log)
-	}
-
+func NewClient(c adbDriverV2Connection.Connection) Client {
 	return &client{
 		c: c,
 	}
@@ -58,167 +54,35 @@ type Client interface {
 
 	Compact(ctx context.Context, request *CompactRequest) error
 
-	Inventory(ctx context.Context) (*Inventory, error)
+	Inventory(ctx context.Context) (Inventory, error)
 
 	DeploymentID(ctx context.Context) (DeploymentID, error)
 }
 
 type client struct {
-	c driver.Connection
-}
-
-func (c *client) parseTLSResponse(response driver.Response) (TLSDetails, error) {
-	if err := response.CheckStatus(goHttp.StatusOK); err != nil {
-		return TLSDetails{}, err
-	}
-
-	var d TLSDetails
-
-	if err := response.ParseBody("", &d); err != nil {
-		return TLSDetails{}, err
-	}
-
-	return d, nil
-}
-
-func (c *client) parseEncryptionResponse(response driver.Response) (EncryptionDetails, error) {
-	if err := response.CheckStatus(goHttp.StatusOK); err != nil {
-		return EncryptionDetails{}, err
-	}
-
-	var d EncryptionDetails
-
-	if err := response.ParseBody("", &d); err != nil {
-		return EncryptionDetails{}, err
-	}
-
-	return d, nil
-}
-
-func (c *client) parseJWTResponse(response driver.Response) (JWTDetails, error) {
-	if err := response.CheckStatus(goHttp.StatusOK); err != nil {
-		return JWTDetails{}, err
-	}
-
-	var d JWTDetails
-
-	if err := response.ParseBody("", &d); err != nil {
-		return JWTDetails{}, err
-	}
-
-	return d, nil
+	c adbDriverV2Connection.Connection
 }
 
 func (c *client) GetTLS(ctx context.Context) (TLSDetails, error) {
-	r, err := c.c.NewRequest(goHttp.MethodGet, "/_admin/server/tls")
-	if err != nil {
-		return TLSDetails{}, err
-	}
-
-	response, err := c.c.Do(ctx, r)
-	if err != nil {
-		return TLSDetails{}, err
-	}
-
-	d, err := c.parseTLSResponse(response)
-	if err != nil {
-		return TLSDetails{}, err
-	}
-
-	return d, nil
+	return arangod.GetRequest[TLSDetails](ctx, c.c, "_admin", "server", "tls").AcceptCode(goHttp.StatusOK).Response()
 }
 
 func (c *client) RefreshTLS(ctx context.Context) (TLSDetails, error) {
-	r, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/server/tls")
-	if err != nil {
-		return TLSDetails{}, err
-	}
-
-	response, err := c.c.Do(ctx, r)
-	if err != nil {
-		return TLSDetails{}, err
-	}
-
-	d, err := c.parseTLSResponse(response)
-	if err != nil {
-		return TLSDetails{}, err
-	}
-
-	return d, nil
+	return arangod.PostRequest[any, TLSDetails](ctx, c.c, nil, "_admin", "server", "tls").AcceptCode(goHttp.StatusOK).Response()
 }
 
 func (c *client) GetEncryption(ctx context.Context) (EncryptionDetails, error) {
-	r, err := c.c.NewRequest(goHttp.MethodGet, "/_admin/server/encryption")
-	if err != nil {
-		return EncryptionDetails{}, err
-	}
-
-	response, err := c.c.Do(ctx, r)
-	if err != nil {
-		return EncryptionDetails{}, err
-	}
-
-	d, err := c.parseEncryptionResponse(response)
-	if err != nil {
-		return EncryptionDetails{}, err
-	}
-
-	return d, nil
+	return arangod.GetRequest[EncryptionDetails](ctx, c.c, "_admin", "server", "encryption").AcceptCode(goHttp.StatusOK).Response()
 }
 
 func (c *client) RefreshEncryption(ctx context.Context) (EncryptionDetails, error) {
-	r, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/server/encryption")
-	if err != nil {
-		return EncryptionDetails{}, err
-	}
-
-	response, err := c.c.Do(ctx, r)
-	if err != nil {
-		return EncryptionDetails{}, err
-	}
-
-	d, err := c.parseEncryptionResponse(response)
-	if err != nil {
-		return EncryptionDetails{}, err
-	}
-
-	return d, nil
+	return arangod.PostRequest[any, EncryptionDetails](ctx, c.c, nil, "_admin", "server", "encryption").AcceptCode(goHttp.StatusOK).Response()
 }
 
 func (c *client) GetJWT(ctx context.Context) (JWTDetails, error) {
-	r, err := c.c.NewRequest(goHttp.MethodGet, "/_admin/server/jwt")
-	if err != nil {
-		return JWTDetails{}, err
-	}
-
-	response, err := c.c.Do(ctx, r)
-	if err != nil {
-		return JWTDetails{}, err
-	}
-
-	d, err := c.parseJWTResponse(response)
-	if err != nil {
-		return JWTDetails{}, err
-	}
-
-	return d, nil
+	return arangod.GetRequest[JWTDetails](ctx, c.c, "_admin", "server", "jwt").AcceptCode(goHttp.StatusOK).Response()
 }
 
 func (c *client) RefreshJWT(ctx context.Context) (JWTDetails, error) {
-	r, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/server/jwt")
-	if err != nil {
-		return JWTDetails{}, err
-	}
-
-	response, err := c.c.Do(ctx, r)
-	if err != nil {
-		return JWTDetails{}, err
-	}
-
-	d, err := c.parseJWTResponse(response)
-	if err != nil {
-		return JWTDetails{}, err
-	}
-
-	return d, nil
+	return arangod.PostRequest[any, JWTDetails](ctx, c.c, nil, "_admin", "server", "jwt").AcceptCode(goHttp.StatusOK).Response()
 }

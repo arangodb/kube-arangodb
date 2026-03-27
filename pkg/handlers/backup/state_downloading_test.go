@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -60,11 +60,11 @@ func Test_State_Downloading_Success(t *testing.T) {
 		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "S3 URL",
 		},
-		ID: string(backupMeta.ID),
+		ID: backupMeta.ID,
 	}
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
-		JobID: string(progress),
+		JobID: progress,
 	}
 
 	// Act
@@ -95,7 +95,7 @@ func Test_State_Downloading_Success(t *testing.T) {
 		checkBackup(t, newObj, backupApi.ArangoBackupStateDownloading, false)
 		require.NotNil(t, newObj.Status.Progress)
 		require.Equal(t, fmt.Sprintf("%d%%", p), newObj.Status.Progress.Progress)
-		require.Equal(t, string(progress), newObj.Status.Progress.JobID)
+		require.Equal(t, progress, newObj.Status.Progress.JobID)
 	})
 
 	t.Run("Finished", func(t *testing.T) {
@@ -143,11 +143,11 @@ func Test_State_Downloading_FailedDownload(t *testing.T) {
 		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "S3 URL",
 		},
-		ID: string(backupMeta.ID),
+		ID: backupMeta.ID,
 	}
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
-		JobID: string(progress),
+		JobID: progress,
 	}
 
 	// Act
@@ -187,11 +187,11 @@ func Test_State_Downloading_FailedProgress(t *testing.T) {
 		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "S3 URL",
 		},
-		ID: string(backupMeta.ID),
+		ID: backupMeta.ID,
 	}
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
-		JobID: string(progress),
+		JobID: progress,
 	}
 
 	// Act
@@ -229,11 +229,11 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "S3 URL",
 		},
-		ID: string(backupMeta.ID),
+		ID: backupMeta.ID,
 	}
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
-		JobID: string(progress),
+		JobID: progress,
 	}
 
 	// Act
@@ -249,7 +249,7 @@ func Test_State_Downloading_TemporaryFailedProgress(t *testing.T) {
 
 func Test_State_Downloading_NotFoundProgress(t *testing.T) {
 	// Arrange
-	error := driver.ArangoError{
+	error := adbDriverV2Shared.ArangoError{
 		Code: 404,
 	}
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
@@ -273,11 +273,11 @@ func Test_State_Downloading_NotFoundProgress(t *testing.T) {
 		ArangoBackupSpecOperation: backupApi.ArangoBackupSpecOperation{
 			RepositoryURL: "S3 URL",
 		},
-		ID: string(backupMeta.ID),
+		ID: backupMeta.ID,
 	}
 
 	obj.Status.Progress = &backupApi.ArangoBackupProgress{
-		JobID: string(progress),
+		JobID: progress,
 	}
 
 	// Act

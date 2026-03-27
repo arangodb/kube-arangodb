@@ -29,7 +29,8 @@ var rebalancerV2 = &feature{
 	description:        "Rebalancer V2 feature",
 	version:            newFeatureVersion("3.10.0", NoVersionLimit),
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
+	deprecated:         "Only Rebalancer V2 feature allowed",
 }
 
 func RebalancerV2() Feature {

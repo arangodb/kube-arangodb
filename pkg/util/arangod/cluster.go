@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ package arangod
 
 import (
 	"context"
+	goHttp "net/http"
 
-	driver "github.com/arangodb/go-driver"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 )
 
 // NumberOfServers is the JSON structure return for the numberOfServers API call.
@@ -51,86 +51,27 @@ func (n NumberOfServers) GetDBServers() int {
 }
 
 // GetNumberOfServers fetches the number of servers the cluster wants to have.
-func GetNumberOfServers(ctx context.Context, conn driver.Connection) (NumberOfServers, error) {
-	req, err := conn.NewRequest("GET", "_admin/cluster/numberOfServers")
-	if err != nil {
-		return NumberOfServers{}, errors.WithStack(err)
-	}
-	resp, err := conn.Do(ctx, req)
-	if err != nil {
-		return NumberOfServers{}, errors.WithStack(err)
-	}
-	if err := resp.CheckStatus(200); err != nil {
-		return NumberOfServers{}, errors.WithStack(err)
-	}
-	var result NumberOfServers
-	if err := resp.ParseBody("", &result); err != nil {
-		return NumberOfServers{}, errors.WithStack(err)
-	}
-	return result, nil
+func GetNumberOfServers(ctx context.Context, conn adbDriverV2Connection.Connection) (NumberOfServers, error) {
+	return GetRequest[NumberOfServers](ctx, conn, "_admin/cluster/numberOfServers").AcceptCode(goHttp.StatusOK).Response()
 }
 
 // SetNumberOfServers updates the number of servers the cluster has.
-func SetNumberOfServers(ctx context.Context, conn driver.Connection, noCoordinators, noDBServers *int) error {
-	req, err := conn.NewRequest("PUT", "_admin/cluster/numberOfServers")
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	input := NumberOfServers{
+func SetNumberOfServers(ctx context.Context, conn adbDriverV2Connection.Connection, noCoordinators, noDBServers *int) error {
+	return PutRequest[NumberOfServers, any](ctx, conn, NumberOfServers{
 		Coordinators: noCoordinators,
 		DBServers:    noDBServers,
-	}
-	if _, err := req.SetBody(input); err != nil {
-		return errors.WithStack(err)
-	}
-	resp, err := conn.Do(ctx, req)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if err := resp.CheckStatus(200); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	}, "_admin/cluster/numberOfServers").AcceptCode(goHttp.StatusOK).Evaluate()
 }
 
 // CleanNumberOfServers removes the server count
-func CleanNumberOfServers(ctx context.Context, conn driver.Connection) error {
-	req, err := conn.NewRequest("PUT", "_admin/cluster/numberOfServers")
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	input := map[string]interface{}{
+func CleanNumberOfServers(ctx context.Context, conn adbDriverV2Connection.Connection) error {
+	return PutRequest[map[string]interface{}, any](ctx, conn, map[string]interface{}{
 		"numberOfCoordinators": nil,
 		"numberOfDBServers":    nil,
-	}
-	if _, err := req.SetBody(input); err != nil {
-		return errors.WithStack(err)
-	}
-	resp, err := conn.Do(ctx, req)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if err := resp.CheckStatus(200); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	}, "_admin/cluster/numberOfServers").AcceptCode(goHttp.StatusOK).Evaluate()
 }
 
 // RemoveServerFromCluster tries to remove a coordinator or DBServer from the cluster.
-func RemoveServerFromCluster(ctx context.Context, conn driver.Connection, id driver.ServerID) error {
-	req, err := conn.NewRequest("POST", "_admin/cluster/removeServer")
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if _, err := req.SetBody(id); err != nil {
-		return errors.WithStack(err)
-	}
-	resp, err := conn.Do(ctx, req)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if err := resp.CheckStatus(200); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+func RemoveServerFromCluster(ctx context.Context, conn adbDriverV2Connection.Connection, id adbDriverV2.ServerID) error {
+	return PostRequest[adbDriverV2.ServerID, any](ctx, conn, id, "_admin/cluster/removeServer").AcceptCode(goHttp.StatusOK).Evaluate()
 }

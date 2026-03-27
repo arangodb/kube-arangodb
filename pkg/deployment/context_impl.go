@@ -33,16 +33,15 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
-	"github.com/arangodb/arangosync-client/client"
-	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
-	"github.com/arangodb/go-driver/http"
+	syncClient "github.com/arangodb/arangosync-client/client"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -171,7 +170,7 @@ func (d *Deployment) UpdateMember(ctx context.Context, member api.MemberStatus) 
 }
 
 // GetDatabaseWithWrap wraps client to the database with provided connection.
-func (d *Deployment) GetDatabaseWithWrap(wrappers ...conn.ConnectionWrap) (driver.Client, error) {
+func (d *Deployment) GetDatabaseWithWrap(wrappers ...util.ModR[adbDriverV2Connection.Connection]) (adbDriverV2.Client, error) {
 	c, err := d.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -185,14 +184,12 @@ func (d *Deployment) GetDatabaseWithWrap(wrappers ...conn.ConnectionWrap) (drive
 		}
 	}
 
-	return driver.NewClient(driver.ClientConfig{
-		Connection: dbConn,
-	})
+	return adbDriverV2.NewClient(dbConn), nil
 }
 
 // GetDatabaseAsyncClient returns asynchronous client to the database.
-func (d *Deployment) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
-	c, err := d.GetDatabaseWithWrap(conn.NewAsyncConnection)
+func (d *Deployment) GetDatabaseAsyncClient(ctx context.Context) (adbDriverV2.Client, error) {
+	c, err := d.GetDatabaseWithWrap(adbDriverV2Connection.NewConnectionAsyncWrapper)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -200,19 +197,17 @@ func (d *Deployment) GetDatabaseAsyncClient(ctx context.Context) (driver.Client,
 }
 
 // GetServerAsyncClient returns an async client for a specific server.
-func (d *Deployment) GetServerAsyncClient(id string) (driver.Client, error) {
+func (d *Deployment) GetServerAsyncClient(id string) (adbDriverV2.Client, error) {
 	c, err := d.GetMembersState().GetMemberClient(id)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return driver.NewClient(driver.ClientConfig{
-		Connection: conn.NewAsyncConnection(c.Connection()),
-	})
+	return adbDriverV2.NewClient(adbDriverV2Connection.NewConnectionAsyncWrapper(c.Connection())), nil
 }
 
 // GetServerClient returns a cached client for a specific server.
-func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error) {
 	c, err := d.clientCache.Get(ctx, group, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -221,27 +216,21 @@ func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup,
 }
 
 // GetAuthentication return authentication for members
-func (d *Deployment) GetAuthentication() conn.Auth {
+func (d *Deployment) GetAuthentication() client.Auth {
 	return d.clientCache.GetAuth()
 }
 
-// GetAgency returns a connection to the agency.
-func (d *Deployment) GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error) {
-	return d.clientCache.GetAgency(ctx, agencyIDs...)
-}
-
-func (d *Deployment) getConnConfig() (http.ConnectionConfig, error) {
+func (d *Deployment) getConnConfig() (adbDriverV2Connection.HttpConfiguration, error) {
 	transport := operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(util.BoolSwitch(d.GetSpec().TLS.IsSecure(), operatorHTTP.Insecure, nil)))
 
-	connConfig := http.ConnectionConfig{
-		Transport:          transport,
-		DontFollowRedirect: true,
+	connConfig := adbDriverV2Connection.HttpConfiguration{
+		Transport: transport,
 	}
 
 	return connConfig, nil
 }
 
-func (d *Deployment) getAuth() (driver.Authentication, error) {
+func (d *Deployment) getAuth() (adbDriverV2Connection.Authentication, error) {
 	if !d.GetSpec().Authentication.IsAuthenticated() {
 		return nil, nil
 	}
@@ -261,7 +250,7 @@ func (d *Deployment) getAuth() (driver.Authentication, error) {
 		return nil, err
 	}
 
-	return driver.RawAuthentication(fmt.Sprintf("bearer %s", header)), nil
+	return adbDriverV2Connection.NewHeaderAuth("Authorization", fmt.Sprintf("bearer %s", header)), nil
 }
 
 func (d *Deployment) getJWTSecret() (utilToken.Secret, error) {
@@ -286,7 +275,7 @@ func (d *Deployment) getJWTSecret() (utilToken.Secret, error) {
 }
 
 // GetSyncServerClient returns a cached client for a specific arangosync server.
-func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
+func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (syncClient.API, error) {
 	// Fetch monitoring token
 	secretName := d.GetSpec().Sync.Monitoring.GetTokenSecretName()
 	monitoringToken, err := k8sutil.GetTokenSecretString(ctx, d.GetCachedStatus().Secret().V1().Read(), secretName)
@@ -303,7 +292,7 @@ func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGr
 	if group == api.ServerGroupSyncWorkers {
 		port = shared.ArangoSyncWorkerPort
 	}
-	source := client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(port))}
+	source := syncClient.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(port))}
 
 	c, err := replication.GetSyncServerClient(&d.syncClientCache, monitoringToken, source)
 	if err != nil {
@@ -488,20 +477,6 @@ func (d *Deployment) DisableScalingCluster(ctx context.Context) error {
 
 func (d *Deployment) EnableScalingCluster(ctx context.Context) error {
 	return d.clusterScalingIntegration.EnableScalingCluster(ctx)
-}
-
-// GetAgencyData returns agency plan.
-func (d *Deployment) GetAgencyData(ctx context.Context, i interface{}, keyParts ...string) error {
-	a, err := d.GetAgency(ctx)
-	if err != nil {
-		return err
-	}
-
-	if err = a.ReadKey(ctx, keyParts, i); err != nil {
-		return err
-	}
-
-	return err
 }
 
 func (d *Deployment) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {

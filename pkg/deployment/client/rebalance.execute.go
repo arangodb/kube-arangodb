@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	goHttp "net/http"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 type RebalanceExecuteRequest struct {
@@ -54,30 +55,10 @@ func (c *client) RebalanceExecuteMoves(ctx context.Context, moves ...RebalanceEx
 }
 
 func (c *client) RebalanceExecute(ctx context.Context, request *RebalanceExecuteRequest) error {
-	req, err := c.c.NewRequest(goHttp.MethodPost, "/_admin/cluster/rebalance/execute")
-	if err != nil {
-		return err
-	}
-
 	request = util.InitType(request)
 
 	// Always set to 1
 	request.Version = 1
 
-	if r, err := req.SetBody(request); err != nil {
-		return err
-	} else {
-		req = r
-	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusAccepted); err != nil {
-		return err
-	}
-
-	return nil
+	return arangod.PostRequest[*RebalanceExecuteRequest, any](ctx, c.c, request, "_admin", "cluster", "rebalance", "execute").AcceptCode(goHttp.StatusAccepted).Evaluate()
 }

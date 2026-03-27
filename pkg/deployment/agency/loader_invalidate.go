@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ import (
 	"sync"
 	"time"
 
-	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
 )
 
-func InvalidateOnErrorLoader[T interface{}](loader agencyCache.StateLoader[T]) agencyCache.StateLoader[T] {
+func InvalidateOnErrorLoader[T interface{}](loader leader.StateLoader[T]) leader.StateLoader[T] {
 	return &invalidateOnErrorLoader[T]{
 		parent: loader,
 	}
@@ -37,7 +37,7 @@ func InvalidateOnErrorLoader[T interface{}](loader agencyCache.StateLoader[T]) a
 type invalidateOnErrorLoader[T interface{}] struct {
 	lock sync.Mutex
 
-	parent agencyCache.StateLoader[T]
+	parent leader.StateLoader[T]
 }
 
 func (i *invalidateOnErrorLoader[T]) UpdateTime() time.Time {
@@ -68,7 +68,7 @@ func (i *invalidateOnErrorLoader[T]) Invalidate() {
 	i.parent.Invalidate()
 }
 
-func (i *invalidateOnErrorLoader[T]) Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) (err error) {
+func (i *invalidateOnErrorLoader[T]) Refresh(ctx context.Context, discovery leader.Discovery) (err error) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 

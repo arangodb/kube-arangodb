@@ -35,10 +35,9 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
+	syncClient "github.com/arangodb/arangosync-client/client"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -47,6 +46,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
@@ -87,12 +87,12 @@ func (c *testContext) IsFeatureImageSupported(feature features.Feature) bool {
 	return true
 }
 
-func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error) {
+func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (syncClient.API, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -144,12 +144,12 @@ func (c *testContext) ACS() sutil.ACS {
 	return acs.NewACS("", c.Inspector)
 }
 
-func (c *testContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
+func (c *testContext) GetDatabaseAsyncClient(ctx context.Context) (adbDriverV2.Client, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c *testContext) GetServerAsyncClient(id string) (driver.Client, error) {
+func (c *testContext) GetServerAsyncClient(id string) (adbDriverV2.Client, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -259,8 +259,8 @@ func (c *testContext) WithStatusUpdate(ctx context.Context, action reconciler.De
 	return nil
 }
 
-func (c *testContext) GetAuthentication() conn.Auth {
-	return func() (authentication driver.Authentication, err error) {
+func (c *testContext) GetAuthentication() client.Auth {
+	return func() (authentication adbDriverV2Connection.Authentication, err error) {
 		return nil, nil
 	}
 }
@@ -318,10 +318,6 @@ func (c *testContext) UpdateMember(_ context.Context, member api.MemberStatus) e
 	panic("implement me")
 }
 
-func (c *testContext) GetAgency(_ context.Context, _ ...string) (agency.Agency, error) {
-	panic("implement me")
-}
-
 func (c *testContext) CreateMember(_ context.Context, group api.ServerGroup, id string, mods ...CreateMemberMod) (string, error) {
 	panic("implement me")
 }
@@ -357,7 +353,7 @@ func (c *testContext) DeleteSecret(secretName string) error {
 	panic("implement me")
 }
 
-func (c *testContext) GetDeploymentHealth() (driver.ClusterHealth, error) {
+func (c *testContext) GetDeploymentHealth() (adbDriverV2.ClusterHealth, error) {
 	panic("implement me")
 }
 
@@ -394,7 +390,7 @@ func (c *testContext) GetPvc(_ context.Context, pvcName string) (*core.Persisten
 
 // GetExpectedPodArguments creates command line arguments for a server in the given group with given ID.
 func (c *testContext) GetExpectedPodArguments(apiObject meta.Object, deplSpec api.DeploymentSpec, group api.ServerGroup,
-	agents api.MemberStatusList, id string, version driver.Version) []string {
+	agents api.MemberStatusList, id string, version adbDriverV2.Version) []string {
 	return nil // not implemented
 }
 
@@ -1341,12 +1337,12 @@ func (FakeStateInspector) RefreshState(_ context.Context, _ api.DeploymentStatus
 	panic("implement me")
 }
 
-func (FakeStateInspector) GetMemberClient(_ string) (driver.Client, error) {
+func (FakeStateInspector) GetMemberClient(_ string) (adbDriverV2.Client, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (FakeStateInspector) GetMemberSyncClient(_ string) (client.API, error) {
+func (FakeStateInspector) GetMemberSyncClient(_ string) (syncClient.API, error) {
 	//TODO implement me
 	panic("implement me")
 }

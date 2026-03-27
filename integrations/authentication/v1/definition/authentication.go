@@ -25,20 +25,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arangodb/go-driver/v2/connection"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
-func NewRootRequestModifier(client AuthenticationV1Client) connection.Authentication {
+func NewRootRequestModifier(client AuthenticationV1Client) adbDriverV2Connection.Authentication {
 	return authenticationModifier(NewRootFetcher(client))
 }
 
 type authenticationModifier cache.ObjectFetcher[string]
 
-func (a authenticationModifier) RequestModifier(r connection.Request) error {
+func (a authenticationModifier) RequestModifier(r adbDriverV2Connection.Request) error {
 	ctx, c := context.WithTimeout(shutdown.Context(), time.Second)
 	defer c()
 

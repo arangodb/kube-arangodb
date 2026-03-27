@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,29 +22,12 @@ package client
 
 import (
 	"context"
-	"fmt"
 	goHttp "net/http"
 	"time"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
-const DeleteExpiredJobsURL = "/_api/job/expired"
-
 func (c *client) DeleteExpiredJobs(ctx context.Context, timeout time.Duration) error {
-	req, err := c.c.NewRequest(goHttp.MethodDelete, DeleteExpiredJobsURL)
-	if err != nil {
-		return err
-	}
-
-	req.SetQuery("stamp", fmt.Sprintf("%d", time.Now().UTC().Add(-1*timeout).Unix()))
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return err
-	}
-
-	return nil
+	return arangod.DeleteRequest[any](ctx, c.c, "_api", "job", "expired").AcceptCode(goHttp.StatusOK).Evaluate()
 }

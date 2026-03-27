@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,28 +26,27 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
-	driver "github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/agency"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 type Cache interface {
-	GetAuth() conn.Auth
+	GetAuth() Auth
 
-	Connection(ctx context.Context, host string) (driver.Connection, error)
+	Connection(host string) (adbDriverV2Connection.Connection, error)
 
-	GetRaw(group api.ServerGroup, id string) (conn.Connection, error)
+	Get(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error)
 
-	Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
-	GetDatabase(ctx context.Context) (driver.Client, error)
-	GetAgency(ctx context.Context, agencyIDs ...string) (agency.Agency, error)
+	GetConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error)
+
+	GetDatabase(ctx context.Context) (adbDriverV2.Client, error)
 }
 
 type CacheGen interface {
@@ -55,10 +54,15 @@ type CacheGen interface {
 	reconciler.DeploymentInfoGetter
 }
 
-func NewClientCache(in CacheGen, factory conn.Factory) Cache {
+type Auth func() (adbDriverV2Connection.Authentication, error)
+
+type Config func() (adbDriverV2Connection.HttpConfiguration, error)
+
+func NewClientCache(in CacheGen, auth Auth, config Config) Cache {
 	return &cache{
-		in:      in,
-		factory: factory,
+		in:     in,
+		auth:   auth,
+		config: config,
 	}
 }
 
@@ -66,24 +70,39 @@ type cache struct {
 	mutex sync.Mutex
 	in    CacheGen
 
-	factory conn.Factory
+	auth   Auth
+	config Config
 }
 
-func (cc *cache) GetRaw(group api.ServerGroup, id string) (conn.Connection, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
-
-	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
+func (cc *cache) Connection(host string) (adbDriverV2Connection.Connection, error) {
+	conn, err := cc.config()
 	if err != nil {
 		return nil, err
 	}
 
-	return cc.factory.RawConnection(cc.extendHost(m.GetEndpoint(endpoint)))
+	conn.Endpoint = adbDriverV2Connection.NewRoundRobinEndpoints([]string{host})
+
+	auth, err := cc.auth()
+	if err != nil {
+		return nil, err
+	}
+
+	c := adbDriverV2Connection.NewHttpConnection(conn)
+
+	if err := c.SetAuthentication(auth); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
-func (cc *cache) Connection(ctx context.Context, host string) (driver.Connection, error) {
-	return cc.factory.Connection(host)
+func (cc *cache) Client(host string) (adbDriverV2.Client, error) {
+	conn, err := cc.Connection(host)
+	if err != nil {
+		return nil, err
+	}
+
+	return adbDriverV2.NewClient(conn), nil
 }
 
 func (cc *cache) extendHost(host string) string {
@@ -95,7 +114,7 @@ func (cc *cache) extendHost(host string) string {
 	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(shared.ArangoPort))
 }
 
-func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *cache) getConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
@@ -105,7 +124,24 @@ func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, err
 		return nil, err
 	}
 
-	c, err := cc.factory.Client(cc.extendHost(m.GetEndpoint(endpoint)))
+	c, err := cc.Connection(endpoint)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return c, nil
+}
+
+func (cc *cache) getClient(group api.ServerGroup, id string) (adbDriverV2.Client, error) {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
+	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
+
+	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := cc.Client(endpoint)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -114,7 +150,13 @@ func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, err
 
 // Get a cached client for the given ID in the given group, creating one
 // if needed.
-func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error) {
+func (cc *cache) GetConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
+	return cc.getConnection(group, id)
+}
+
+// Get a cached client for the given ID in the given group, creating one
+// if needed.
+func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error) {
 	client, err := cc.getClient(group, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -122,22 +164,22 @@ func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (dri
 
 	if _, err := client.Version(ctx); err == nil {
 		return client, nil
-	} else if driver.IsUnauthorized(err) {
+	} else if adbDriverV2Shared.IsUnauthorized(err) {
 		return cc.getClient(group, id)
 	} else {
 		return client, nil
 	}
 }
 
-func (cc *cache) GetAuth() conn.Auth {
-	return cc.factory.GetAuth()
+func (cc *cache) GetAuth() Auth {
+	return cc.auth
 }
 
-func (cc *cache) getDatabaseClient() (driver.Client, error) {
+func (cc *cache) getDatabaseClient() (adbDriverV2.Client, error) {
 	cc.mutex.Lock()
 	defer cc.mutex.Unlock()
 
-	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
+	c, err := cc.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -146,7 +188,7 @@ func (cc *cache) getDatabaseClient() (driver.Client, error) {
 
 // GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
 // creating one if needed.
-func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
+func (cc *cache) GetDatabase(ctx context.Context) (adbDriverV2.Client, error) {
 	client, err := cc.getDatabaseClient()
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -154,42 +196,9 @@ func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
 
 	if _, err := client.Version(ctx); err == nil {
 		return client, nil
-	} else if driver.IsUnauthorized(err) {
+	} else if adbDriverV2Shared.IsUnauthorized(err) {
 		return cc.getDatabaseClient()
 	} else {
 		return client, nil
 	}
-}
-
-// GetAgency returns a cached client for the agency
-func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agency, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-
-	// Not found, create a new client
-	var dnsNames []string
-	for _, m := range cc.in.GetStatus().Members.Agents {
-		if len(agencyIDs) > 0 {
-			if !utils.StringList(agencyIDs).Has(m.ID) {
-				continue
-			}
-		}
-
-		endpoint, err := cc.in.GenerateMemberEndpoint(api.ServerGroupAgents, m)
-		if err != nil {
-			return nil, err
-		}
-
-		dnsNames = append(dnsNames, cc.extendHost(m.GetEndpoint(endpoint)))
-	}
-
-	if len(dnsNames) == 0 {
-		return nil, errors.Errorf("There is no DNS Name")
-	}
-
-	c, err := cc.factory.Agency(dnsNames...)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
 }

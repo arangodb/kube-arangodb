@@ -23,8 +23,8 @@ package client
 import (
 	"context"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/connection"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 )
 
 func NewFactory(auth Authentication, client HTTPClient) Factory {
@@ -35,8 +35,8 @@ func NewFactory(auth Authentication, client HTTPClient) Factory {
 }
 
 type Factory interface {
-	Connection(ctx context.Context, hosts ...string) (connection.Connection, error)
-	Client(ctx context.Context, hosts ...string) (arangodb.Client, error)
+	Connection(ctx context.Context, hosts ...string) (adbDriverV2Connection.Connection, error)
+	Client(ctx context.Context, hosts ...string) (adbDriverV2.Client, error)
 }
 
 type factory struct {
@@ -44,15 +44,15 @@ type factory struct {
 	client HTTPClient
 }
 
-func (f factory) Connection(ctx context.Context, hosts ...string) (connection.Connection, error) {
+func (f factory) Connection(ctx context.Context, hosts ...string) (adbDriverV2Connection.Connection, error) {
 	client, err := f.client.GetClient(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	connConfig := connection.HttpConfiguration{
+	connConfig := adbDriverV2Connection.HttpConfiguration{
 		Transport: client,
-		Endpoint:  connection.NewRoundRobinEndpoints(hosts),
+		Endpoint:  adbDriverV2Connection.NewRoundRobinEndpoints(hosts),
 	}
 
 	if auth, ok, err := f.auth.Authentication(ctx); err != nil {
@@ -61,14 +61,14 @@ func (f factory) Connection(ctx context.Context, hosts ...string) (connection.Co
 		connConfig.Authentication = auth
 	}
 
-	return connection.NewHttpConnection(connConfig), nil
+	return adbDriverV2Connection.NewHttpConnection(connConfig), nil
 }
 
-func (f factory) Client(ctx context.Context, hosts ...string) (arangodb.Client, error) {
+func (f factory) Client(ctx context.Context, hosts ...string) (adbDriverV2.Client, error) {
 	conn, err := f.Connection(ctx, hosts...)
 	if err != nil {
 		return nil, err
 	}
 
-	return arangodb.NewClient(conn), nil
+	return adbDriverV2.NewClient(conn), nil
 }

@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -625,7 +625,7 @@ func withSecureWrap(member api.MemberStatus,
 	}
 }
 
-func skipResignLeadership(mode api.DeploymentMode, v driver.Version) bool {
+func skipResignLeadership(mode api.DeploymentMode, v adbDriverV2.Version) bool {
 	return mode == api.DeploymentModeCluster && features.Maintenance().Enabled() && ((v.CompareTo("3.6.0") >= 0 && v.CompareTo("3.6.14") <= 0) ||
 		(v.CompareTo("3.7.0") >= 0 && v.CompareTo("3.7.12") <= 0))
 }
@@ -645,7 +645,7 @@ func waitForMemberActions(group api.ServerGroup, member api.MemberStatus) api.Pl
 	}
 }
 
-func getUpgradeOrder(spec api.DeploymentSpec, from, to driver.Version) api.DeploymentSpecOrder {
+func getUpgradeOrder(spec api.DeploymentSpec, from, to adbDriverV2.Version) api.DeploymentSpecOrder {
 	if upgrade := spec.Upgrade; upgrade == nil || upgrade.Order == nil {
 		if to.CompareTo("3.12.4") >= 0 && from.CompareTo("3.12.4") < 0 && from.CompareTo("3.12.0") >= 0 && from != "" && to != "" {
 			return api.DeploymentSpecOrderCoordinatorFirst
