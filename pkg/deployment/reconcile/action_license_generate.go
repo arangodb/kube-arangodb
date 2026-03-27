@@ -151,11 +151,12 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	if q := spec.License.ExpirationGracePeriod; q != nil {
-		expiration = expiration - q.Duration
+	if v := util.OptionalType(spec.License.ExpirationGracePeriod, meta.Duration{}).Duration; v > 0 {
+		expiration = expiration - v
 	} else {
-		expiration = time.Duration(math.Round(api.LicenseExpirationGraceRatio * float64(expiration)))
+		expiration = expiration - calculateInternalLicenseExpiration(expiration)
 	}
+
 	if expiration <= 0 {
 		a.log.Error("Unable to get license - invalid after evaluation")
 		return true, nil
@@ -165,7 +166,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 
 	if expires.After(license.Expires()) {
 		// License will expire before grace period, reduce to 75%
-		expires = time.Now().Add(time.Duration(math.Round(float64(time.Until(license.Expires())) * api.LicenseExpirationGraceRatio)))
+		expires = time.Now().Add(time.Duration(math.Round(float64(time.Until(license.Expires())) * 0)))
 	}
 
 	cache := a.actionCtx.ACS().CurrentClusterCache()
@@ -248,4 +249,22 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 	return true, nil
+}
+
+func roundToSeconds(dur time.Duration, ratio float64) time.Duration {
+	return time.Duration(float64(dur) * ratio).Round(time.Second)
+}
+
+func calculateInternalLicenseExpiration(lifetime time.Duration) time.Duration {
+	min, max := roundToSeconds(lifetime, api.LicenseExpirationMinGraceRatio), roundToSeconds(lifetime, api.LicenseExpirationMaxGraceRatio)
+
+	if max >= api.LicenseExpirationMinGracePeriod {
+		return max
+	}
+
+	if min <= api.LicenseExpirationMinGracePeriod {
+		return min
+	}
+
+	return api.LicenseExpirationMinGracePeriod
 }
