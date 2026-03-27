@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@
 package backup
 
 import (
-	"github.com/arangodb/go-driver"
-
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 )
 
@@ -55,7 +53,7 @@ func stateDownloadHandler(h *handler, backup *backupApi.ArangoBackup) (*backupAp
 		)
 	}
 
-	jobID, err := client.Download(driver.BackupID(backup.Spec.Download.ID))
+	jobID, err := client.Download(backup.Spec.Download.ID)
 	if err != nil {
 		return wrapUpdateStatus(backup,
 			updateStatusState(backupApi.ArangoBackupStateDownloadError,
@@ -67,7 +65,7 @@ func stateDownloadHandler(h *handler, backup *backupApi.ArangoBackup) (*backupAp
 
 	return wrapUpdateStatus(backup,
 		updateStatusState(backupApi.ArangoBackupStateDownloading, ""),
-		updateStatusJob(string(jobID), "0%"),
+		updateStatusJob(jobID, "0%"),
 		updateStatusAvailable(false),
 	)
 }

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,28 +24,17 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func (r *Reconciler) createRebalancerGeneratePlanCore(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
-
-	if features.RebalancerV2().ImageSupported(status.CurrentImage) {
-		return r.createRebalancerV2GeneratePlan(spec, status)
-	}
-
-	return r.createRebalancerGeneratePlan(ctx, apiObject, spec, status, context)
+	return r.createRebalancerV2GeneratePlan(spec, status)
 }
 
 func (r *Reconciler) createRebalancerCheckPlanCore(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	context PlanBuilderContext) api.Plan {
-
-	if features.RebalancerV2().ImageSupported(status.CurrentImage) {
-		return r.createRebalancerV2CheckPlan(spec, status)
-	}
-
-	return r.createRebalancerCheckPlan(ctx, apiObject, spec, status, context)
+	return r.createRebalancerV2CheckPlan(spec, status)
 }

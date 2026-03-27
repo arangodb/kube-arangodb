@@ -29,12 +29,12 @@ import (
 
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/http"
-	"github.com/arangodb/go-driver/util/connection/wrappers/async"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
@@ -78,7 +78,7 @@ func sharedHTTPSTransportShortTimeout() goHttp.RoundTripper {
 }
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
-func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string, asyncSupport bool) (driver.Client, error) {
+func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string, asyncSupport bool) (adbDriverV2.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.GetAcceptedSpec().ClusterDomain, group.AsRole(), id)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false, asyncSupport)
@@ -89,7 +89,7 @@ func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, api
 }
 
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
-func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool, asyncSupport bool) (driver.Client, error) {
+func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool, asyncSupport bool) (adbDriverV2.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, apiObject.GetAcceptedSpec().ClusterDomain)
 	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout, asyncSupport)
@@ -101,7 +101,7 @@ func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interf
 
 // CreateArangodImageIDClient creates a go-driver client for an ArangoDB instance
 // running in an Image-ID pod.
-func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, ip string, asyncSupport bool) (driver.Client, error) {
+func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, ip string, asyncSupport bool) (adbDriverV2.Client, error) {
 	// Create connection
 	c, err := createArangodClientForDNSName(ctx, nil, nil, ip, false, asyncSupport)
 	if err != nil {
@@ -111,37 +111,30 @@ func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObjec
 }
 
 // CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodClientForDNSName(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool, asyncSupport bool) (driver.Client, error) {
+func createArangodClientForDNSName(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool, asyncSupport bool) (adbDriverV2.Client, error) {
 	connConfig := createArangodHTTPConfigForDNSNames(apiObject, []string{dnsName}, shortTimeout)
 	// TODO deal with TLS with proper CA checking
-	conn, err := http.NewConnection(connConfig)
+	conn := adbDriverV2Connection.NewHttpConnection(connConfig)
+
+	auth, err := createArangodClientAuthentication(ctx, cli, apiObject)
 	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if err := conn.SetAuthentication(auth); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	if asyncSupport {
 		// Wrap connection with async wrapper
-		conn = async.NewConnectionAsyncWrapper(conn)
+		conn = adbDriverV2Connection.NewConnectionAsyncWrapper(conn)
 	}
 
 	// Create client
-	config := driver.ClientConfig{
-		Connection: conn,
-	}
-	auth, err := createArangodClientAuthentication(ctx, cli, apiObject)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	config.Authentication = auth
-	c, err := driver.NewClient(config)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
+	return adbDriverV2.NewClient(conn), nil
 }
 
 // createArangodHTTPConfigForDNSNames creates a go-driver HTTP connection config for a given DNS names.
-func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) http.ConnectionConfig {
+func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool) adbDriverV2Connection.HttpConfiguration {
 	scheme := "http"
 	transport := sharedHTTPTransport
 	if shortTimeout {
@@ -154,18 +147,18 @@ func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsName
 			transport = sharedHTTPSTransportShortTimeout
 		}
 	}
-	connConfig := http.ConnectionConfig{
+	connConfig := adbDriverV2Connection.HttpConfiguration{
 		Transport:          transport(),
 		DontFollowRedirect: true,
-	}
-	for _, dnsName := range dnsNames {
-		connConfig.Endpoints = append(connConfig.Endpoints, scheme+"://"+net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoPort)))
+		Endpoint: adbDriverV2Connection.NewRoundRobinEndpoints(util.FormatList(dnsNames, func(a string) string {
+			return scheme + "://" + net.JoinHostPort(a, strconv.Itoa(shared.ArangoPort))
+		})),
 	}
 	return connConfig
 }
 
 // createArangodClientAuthentication creates a go-driver authentication for the servers in the given deployment.
-func createArangodClientAuthentication(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment) (driver.Authentication, error) {
+func createArangodClientAuthentication(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment) (adbDriverV2Connection.Authentication, error) {
 	if apiObject != nil && apiObject.GetAcceptedSpec().IsAuthenticated() {
 		// Authentication is enabled.
 		// Should we skip using it?
@@ -181,7 +174,7 @@ func createArangodClientAuthentication(ctx context.Context, cli typedCore.CoreV1
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
-			return driver.RawAuthentication(fmt.Sprintf("bearer %s", jwt)), nil
+			return adbDriverV2Connection.NewHeaderAuth("Authorization", fmt.Sprintf("bearer %s", jwt)), nil
 		}
 	} else {
 		// Authentication is not enabled.

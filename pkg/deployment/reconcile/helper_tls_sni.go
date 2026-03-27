@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,11 +25,10 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
-	"github.com/arangodb/kube-arangodb/pkg/logging"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -67,8 +66,8 @@ func mapTLSSNIConfig(sni api.TLSSNISpec, cachedStatus inspectorInterface.Inspect
 	return fetchedSecrets, nil
 }
 
-func compareTLSSNIConfig(ctx context.Context, log logging.Logger, c driver.Connection, m map[string]string, refresh bool) (bool, error) {
-	tlsClient := client.NewClient(c, log)
+func compareTLSSNIConfig(ctx context.Context, c adbDriverV2Connection.Connection, m map[string]string, refresh bool) (bool, error) {
+	tlsClient := client.NewClient(c)
 
 	f := tlsClient.GetTLS
 	if refresh {

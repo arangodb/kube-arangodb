@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -175,11 +175,11 @@ func (ac *actionContext) ACS() sutil.ACS {
 	return ac.context.ACS()
 }
 
-func (ac *actionContext) GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error) {
+func (ac *actionContext) GetDatabaseAsyncClient(ctx context.Context) (adbDriverV2.Client, error) {
 	return ac.context.GetDatabaseAsyncClient(ctx)
 }
 
-func (ac *actionContext) GetServerAsyncClient(id string) (driver.Client, error) {
+func (ac *actionContext) GetServerAsyncClient(id string) (adbDriverV2.Client, error) {
 	return ac.context.GetServerAsyncClient(id)
 }
 

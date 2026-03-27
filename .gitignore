@@ -22,3 +22,5 @@ tools/codegen/boilerplate.go.txt
 .checksum.mod
 
 ./cache/
+
+jobs/

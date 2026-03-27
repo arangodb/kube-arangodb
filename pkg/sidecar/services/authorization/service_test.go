@@ -32,7 +32,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
@@ -51,8 +51,8 @@ import (
 
 func Handler(t *testing.T) svc.Handler {
 	return NewAuthorizer(db.NewClient(cache.NewObject(tests.TestArangoDBConfig(t).ClientCache())).
-		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(8))), &arangodb.CreateDatabaseOptions{}).
-		CreateCollection("_users", db.StaticProps(arangodb.CreateCollectionPropertiesV2{
+		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(8))), &adbDriverV2.CreateDatabaseOptions{}).
+		CreateCollection("_users", db.StaticProps(adbDriverV2.CreateCollectionPropertiesV2{
 			IsSystem: util.NewType(true),
 		})).Database(), pbImplAuthorizationV1.ConfigurationTypeCentralPermissive)
 }

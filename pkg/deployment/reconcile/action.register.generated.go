@@ -156,20 +156,11 @@ var (
 	_ Action        = &actionPlaceHolder{}
 	_ actionFactory = newPlaceHolderAction
 
-	_ Action        = &actionRebalancerCheck{}
-	_ actionFactory = newRebalancerCheckAction
-
 	_ Action        = &actionRebalancerCheckV2{}
 	_ actionFactory = newRebalancerCheckV2Action
 
-	_ Action        = &actionRebalancerClean{}
-	_ actionFactory = newRebalancerCleanAction
-
 	_ Action        = &actionRebalancerCleanV2{}
 	_ actionFactory = newRebalancerCleanV2Action
-
-	_ Action        = &actionRebalancerGenerate{}
-	_ actionFactory = newRebalancerGenerateAction
 
 	_ Action        = &actionRebalancerGenerateV2{}
 	_ actionFactory = newRebalancerGenerateV2Action
@@ -930,20 +921,6 @@ func init() {
 		registerAction(action, function)
 	}
 
-	// RebalancerCheck
-	{
-		// Get Action type
-		action := api.ActionTypeRebalancerCheck
-
-		// Get Action defition
-		function := newRebalancerCheckAction
-
-		// Wrap action main function
-
-		// Register action
-		registerAction(action, function)
-	}
-
 	// RebalancerCheckV2
 	{
 		// Get Action type
@@ -958,20 +935,6 @@ func init() {
 		registerAction(action, function)
 	}
 
-	// RebalancerClean
-	{
-		// Get Action type
-		action := api.ActionTypeRebalancerClean
-
-		// Get Action defition
-		function := newRebalancerCleanAction
-
-		// Wrap action main function
-
-		// Register action
-		registerAction(action, function)
-	}
-
 	// RebalancerCleanV2
 	{
 		// Get Action type
@@ -979,20 +942,6 @@ func init() {
 
 		// Get Action defition
 		function := newRebalancerCleanV2Action
-
-		// Wrap action main function
-
-		// Register action
-		registerAction(action, function)
-	}
-
-	// RebalancerGenerate
-	{
-		// Get Action type
-		action := api.ActionTypeRebalancerGenerate
-
-		// Get Action defition
-		function := newRebalancerGenerateAction
 
 		// Wrap action main function
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -194,8 +194,9 @@ func Test_State_Unavailable_FatalGetFailed(t *testing.T) {
 
 func Test_State_Unavailable_MissingBackup(t *testing.T) {
 	// Arrange
-	error := driver.ArangoError{
-		Code: 404,
+	error := adbDriverV2Shared.ArangoError{
+		Code:     404,
+		HasError: true,
 	}
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
 		getError: error,

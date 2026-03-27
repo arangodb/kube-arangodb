@@ -75,7 +75,7 @@ func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	client := client.NewClient(c.Connection(), a.log)
+	client := client.NewClient(c.Connection())
 
 	if license, err := client.GetLicense(ctxChild); err != nil {
 		a.log.Err(err).Error("Unable to get license")

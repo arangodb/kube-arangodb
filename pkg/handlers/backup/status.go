@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
@@ -120,7 +120,7 @@ func updateStatusBackupDownload(downloaded *bool) updateStatusFunc {
 	}
 }
 
-func updateStatusBackup(backupMeta driver.BackupMeta) updateStatusFunc {
+func updateStatusBackup(backupMeta adbDriverV2.BackupMeta) updateStatusFunc {
 	return func(status *backupApi.ArangoBackupStatus) {
 		status.Backup = createBackupFromMeta(backupMeta, status.Backup)
 	}
@@ -142,7 +142,7 @@ func createStateMessage(from, to state.State, message string) string { // nolint
 	return fmt.Sprintf("Transiting from %s to %s: %s", from, to, message)
 }
 
-func createBackupFromMeta(backupMeta driver.BackupMeta, old *backupApi.ArangoBackupDetails) *backupApi.ArangoBackupDetails {
+func createBackupFromMeta(backupMeta adbDriverV2.BackupMeta, old *backupApi.ArangoBackupDetails) *backupApi.ArangoBackupDetails {
 	var obj *backupApi.ArangoBackupDetails
 
 	if old == nil {
@@ -155,16 +155,16 @@ func createBackupFromMeta(backupMeta driver.BackupMeta, old *backupApi.ArangoBac
 	obj.PotentiallyInconsistent = util.NewType[bool](backupMeta.PotentiallyInconsistent)
 	obj.SizeInBytes = backupMeta.SizeInBytes
 	obj.CreationTimestamp = meta.Time{
-		Time: backupMeta.DateTime,
+		Time: backupMeta.CreationTime,
 	}
 	obj.NumberOfDBServers = backupMeta.NumberOfDBServers
 	obj.Version = backupMeta.Version
-	obj.ID = string(backupMeta.ID)
+	obj.ID = backupMeta.ID
 
 	return obj
 }
 
-func keysToHashList(l []driver.BackupMetaSha256) sharedApi.HashList {
+func keysToHashList(l []adbDriverV2.BackupMetaSha256) sharedApi.HashList {
 	if len(l) == 0 {
 		return nil
 	}

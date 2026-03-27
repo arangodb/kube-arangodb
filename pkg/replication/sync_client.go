@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	certificates "github.com/arangodb-helper/go-certificates"
-	"github.com/arangodb/arangosync-client/client"
+	syncClient "github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
@@ -38,7 +38,7 @@ import (
 )
 
 // createSyncMasterClient creates an arangosync client for the given endpoint.
-func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec) (client.API, error) {
+func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec) (syncClient.API, error) {
 	// Endpoint
 	source, err := dr.createArangoSyncEndpoint(epSpec)
 	if err != nil {
@@ -92,12 +92,12 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 		}
 		tlsAuth.CACertificate = caCert
 	}
-	auth := client.NewAuthentication(tlsAuth, jwtSecret)
+	auth := syncClient.NewAuthentication(tlsAuth, jwtSecret)
 	auth.Username = username
 	auth.Password = password
 
 	// Create client
-	c, err := dr.clientCache.GetClient(client.NewExternalEndpoints(source), auth, insecureSkipVerify)
+	c, err := dr.clientCache.GetClient(syncClient.NewExternalEndpoints(source), auth, insecureSkipVerify)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -105,7 +105,7 @@ func (dr *DeploymentReplication) createSyncMasterClient(epSpec api.EndpointSpec)
 }
 
 // createArangoSyncEndpoint creates the endpoints for the given spec.
-func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpec) (client.Endpoint, error) {
+func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpec) (syncClient.Endpoint, error) {
 	if epSpec.HasDeploymentName() {
 		deploymentName := epSpec.GetDeploymentName()
 		depls := dr.deps.Client.Arango().DatabaseV1().ArangoDeployments(dr.apiObject.GetNamespace())
@@ -115,42 +115,42 @@ func (dr *DeploymentReplication) createArangoSyncEndpoint(epSpec api.EndpointSpe
 			return nil, errors.WithStack(err)
 		}
 		dnsName := k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(depl, depl.GetAcceptedSpec().ClusterDomain)
-		return client.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoSyncMasterPort))}, nil
+		return syncClient.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(shared.ArangoSyncMasterPort))}, nil
 	}
-	return client.Endpoint(epSpec.MasterEndpoint), nil
+	return syncClient.Endpoint(epSpec.MasterEndpoint), nil
 }
 
 // createArangoSyncTLSAuthentication creates the authentication needed to authenticate
 // the destination syncmaster at the source syncmaster.
-func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.DeploymentReplicationSpec) (client.TLSAuthentication, error) {
+func (dr *DeploymentReplication) createArangoSyncTLSAuthentication(spec api.DeploymentReplicationSpec) (syncClient.TLSAuthentication, error) {
 	// Fetch secret names of source
 	clientAuthKeyfileSecretName, _, _, tlsCASecretName, err := dr.getEndpointSecretNames(spec.Source)
 	if err != nil {
-		return client.TLSAuthentication{}, errors.WithStack(err)
+		return syncClient.TLSAuthentication{}, errors.WithStack(err)
 	}
 
 	// Fetch keyfile
 	secrets := dr.deps.Client.Kubernetes().CoreV1().Secrets(dr.apiObject.GetNamespace())
 	keyFileContent, err := k8sutil.GetTLSKeyfileSecret(secrets, clientAuthKeyfileSecretName)
 	if err != nil {
-		return client.TLSAuthentication{}, errors.WithStack(err)
+		return syncClient.TLSAuthentication{}, errors.WithStack(err)
 	}
 	kf, err := certificates.NewKeyfile(keyFileContent)
 	if err != nil {
-		return client.TLSAuthentication{}, errors.WithStack(err)
+		return syncClient.TLSAuthentication{}, errors.WithStack(err)
 	}
 	if err = kf.Validate(); err != nil {
-		return client.TLSAuthentication{}, errors.WithStack(err)
+		return syncClient.TLSAuthentication{}, errors.WithStack(err)
 	}
 
 	// Fetch TLS CA certificate for source
 	caCert, err := k8sutil.GetCACertficateSecret(context.TODO(), secrets, tlsCASecretName)
 	if err != nil {
-		return client.TLSAuthentication{}, errors.WithStack(err)
+		return syncClient.TLSAuthentication{}, errors.WithStack(err)
 	}
 
 	// Create authentication
-	result := client.TLSAuthentication{
+	result := syncClient.TLSAuthentication{
 		TLSClientAuthentication: tasks.TLSClientAuthentication{
 			ClientCertificate: kf.EncodeCertificates(),
 			ClientKey:         kf.EncodePrivateKey(),

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ func (a *actionJWTRefresh) CheckProgress(ctx context.Context) (bool, bool, error
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	if invalid, err := isMemberJWTTokenInvalid(ctxChild, client.NewClient(c.Connection(), a.log), folder.Data, true); err != nil {
+	if invalid, err := isMemberJWTTokenInvalid(ctxChild, client.NewClient(c.Connection()), folder.Data, true); err != nil {
 		a.log.Err(err).Warn("Error while getting JWT Status")
 		return true, false, nil
 	} else if invalid {

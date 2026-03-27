@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -107,21 +108,22 @@ func (a actionBootstrapSetPassword) setUserPassword(ctx context.Context, user, s
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	if u, err := client.User(ctxChild, user); err != nil {
-		if !driver.IsNotFoundGeneral(err) {
+		if !adbDriverV2Shared.IsNotFound(err) {
 			return "", err
 		}
 
 		err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			_, err := client.CreateUser(ctxChild, user, &driver.UserOptions{Password: password})
+			_, err := client.CreateUser(ctxChild, user, &adbDriverV2.UserOptions{Password: password})
 			return err
 		})
 
 		return password, errors.WithStack(err)
 	} else {
 		err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			return u.Update(ctxChild, driver.UserOptions{
+			_, err := client.UpdateUser(ctxChild, u.Name(), &adbDriverV2.UserOptions{
 				Password: password,
 			})
+			return err
 		})
 
 		return password, errors.WithStack(err)

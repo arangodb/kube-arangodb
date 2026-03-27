@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
@@ -79,7 +79,7 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 				continue
 			}
 
-			var c driver.Client
+			var c adbDriverV2.Client
 			err := globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
 				c, err = planCtx.GetMembersState().GetMemberClient(m.ID)
@@ -94,7 +94,7 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 			var ok bool
 			err = globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
 				var err error
-				ok, err = compareTLSSNIConfig(ctxChild, r.log, c.Connection(), fetchedSecrets, false)
+				ok, err = compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, false)
 				return err
 			})
 			if err != nil {

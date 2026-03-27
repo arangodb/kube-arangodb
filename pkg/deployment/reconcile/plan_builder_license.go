@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -175,7 +175,7 @@ func (r *Reconciler) updateClusterLicenseKey(ctx context.Context, spec api.Deplo
 		return api.Plan{actions.NewAction(api.ActionTypeLicenseSet, member.Group, member.Member, "Generating license")}
 	}
 
-	internalClient := client.NewClient(c.Connection(), r.log)
+	internalClient := client.NewClient(c.Connection())
 
 	license, err := internalClient.GetLicense(ctxChild)
 	if err != nil {
@@ -224,7 +224,7 @@ func (r *Reconciler) updateClusterLicenseAPI(ctx context.Context, spec api.Deplo
 		return api.Plan{actions.NewAction(api.ActionTypeLicenseGenerate, member.Group, member.Member, "Generating license")}
 	}
 
-	internalClient := client.NewClient(c.Connection(), r.log)
+	internalClient := client.NewClient(c.Connection())
 
 	currentLicense, err := internalClient.GetLicense(ctxChild)
 	if err != nil {

@@ -27,7 +27,7 @@ import (
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
@@ -54,7 +54,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		return nil, false, errors.Errorf("client not found")
 	}
 
-	i.users = cache.NewCache[string, arangodb.User](func(ctx context.Context, in string) (arangodb.User, time.Time, error) {
+	i.users = cache.NewCache[string, adbDriverV2.User](func(ctx context.Context, in string) (adbDriverV2.User, time.Time, error) {
 		client, err := i.userClient.Get(ctx)
 		if err != nil {
 			return nil, util.Default[time.Time](), err
@@ -68,7 +68,7 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 			}
 		}
 
-		if user, err := client.CreateUser(ctx, in, &arangodb.UserOptions{
+		if user, err := client.CreateUser(ctx, in, &adbDriverV2.UserOptions{
 			Password: string(uuid.NewUUID()),
 			Active:   util.NewType(true),
 		}); err != nil {
@@ -87,9 +87,9 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 }
 
 type impl struct {
-	userClient cache.Object[arangodb.Client]
+	userClient cache.Object[adbDriverV2.Client]
 
-	users cache.Cache[string, arangodb.User]
+	users cache.Cache[string, adbDriverV2.User]
 }
 
 func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, current *pbImplEnvoyAuthV3Shared.Response) error {

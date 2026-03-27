@@ -23,12 +23,14 @@ package deployment
 import (
 	"context"
 	"fmt"
+	goHttp "net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	goStrings "strings"
 	"testing"
+	"time"
 
 	monitoringFakeClient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	"github.com/stretchr/testify/require"
@@ -38,8 +40,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	recordfake "k8s.io/client-go/tools/record"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
-	driver "github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -50,7 +52,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/inspector"
 	arangofake "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/throttle"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
@@ -617,7 +621,16 @@ func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.Ara
 		stopCh:              make(chan struct{}),
 		log:                 logger,
 	}
-	d.clientCache = client.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
+	d.clientCache = client.NewClientCache(d, cache.NewObject(func(ctx context.Context) (adbDriverV2Connection.Authentication, time.Duration, error) {
+		auth, err := d.getAuth()
+		if err != nil {
+			return nil, 0, err
+		}
+
+		return auth, 30 * time.Second, nil
+	}), cache.NewObject(func(ctx context.Context) (goHttp.RoundTripper, time.Duration, error) {
+		return operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(util.BoolSwitch(d.GetSpec().TLS.IsSecure(), operatorHTTP.Insecure, nil))), 10 * time.Minute, nil
+	}))
 	d.acs = acs.NewACS("", i)
 
 	require.NoError(t, d.acs.CurrentClusterCache().Refresh(context.Background()))
@@ -651,7 +664,7 @@ func createTestPorts(group api.ServerGroup, ports ...int) []core.ContainerPort {
 	}
 }
 
-func createTestImagesWithVersion(enterprise bool, version driver.Version) api.ImageInfoList {
+func createTestImagesWithVersion(enterprise bool, version adbDriverV2.Version) api.ImageInfoList {
 	i := createTestImageForVersion(string(version))
 	return api.ImageInfoList{
 		{

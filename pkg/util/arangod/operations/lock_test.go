@@ -29,7 +29,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -39,8 +39,8 @@ import (
 
 func Test_ArangoDB_Lock(t *testing.T) {
 	database, err := db.NewClient(cache.NewObject(tests.TestArangoDBConfig(t).ClientCache())).
-		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(6))), &arangodb.CreateDatabaseOptions{}).
-		CreateCollection("testing", db.StaticProps(arangodb.CreateCollectionPropertiesV2{})).Database().Get().Get(t.Context())
+		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(6))), &adbDriverV2.CreateDatabaseOptions{}).
+		CreateCollection("testing", db.StaticProps(adbDriverV2.CreateCollectionPropertiesV2{})).Database().Get().Get(t.Context())
 	require.NoError(t, err)
 
 	type documentType struct {
@@ -51,7 +51,7 @@ func Test_ArangoDB_Lock(t *testing.T) {
 	documentKey := fmt.Sprintf("document-%s", goStrings.ToLower(uniuri.NewLen(6)))
 
 	getDocument := func(t *testing.T) documentType {
-		col, err := database.GetCollection(t.Context(), "testing", &arangodb.GetCollectionOptions{})
+		col, err := database.GetCollection(t.Context(), "testing", &adbDriverV2.GetCollectionOptions{})
 		require.NoError(t, err)
 
 		var z documentType
@@ -61,8 +61,8 @@ func Test_ArangoDB_Lock(t *testing.T) {
 		return z
 	}
 
-	updateDocument := func(t *testing.T, c arangodb.Transaction, d documentType) {
-		col, err := c.GetCollection(t.Context(), "testing", &arangodb.GetCollectionOptions{})
+	updateDocument := func(t *testing.T, c adbDriverV2.Transaction, d documentType) {
+		col, err := c.GetCollection(t.Context(), "testing", &adbDriverV2.GetCollectionOptions{})
 		require.NoError(t, err)
 
 		_, err = col.UpdateDocument(t.Context(), documentKey, &d)
@@ -70,9 +70,9 @@ func Test_ArangoDB_Lock(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
-		_, err := WithTransaction[documentType](t.Context(), database, arangodb.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c arangodb.Transaction) (documentType, error) {
+		_, err := WithTransaction[documentType](t.Context(), database, adbDriverV2.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c adbDriverV2.Transaction) (documentType, error) {
 
-			col, err := c.GetCollection(t.Context(), "testing", &arangodb.GetCollectionOptions{})
+			col, err := c.GetCollection(t.Context(), "testing", &adbDriverV2.GetCollectionOptions{})
 			require.NoError(t, err)
 
 			var z documentType
@@ -92,7 +92,7 @@ func Test_ArangoDB_Lock(t *testing.T) {
 	})
 
 	t.Run("First", func(t *testing.T) {
-		_, err := WithTransaction[documentType](t.Context(), database, arangodb.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c arangodb.Transaction) (documentType, error) {
+		_, err := WithTransaction[documentType](t.Context(), database, adbDriverV2.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c adbDriverV2.Transaction) (documentType, error) {
 			var d documentType
 
 			d.Key = documentKey
@@ -110,7 +110,7 @@ func Test_ArangoDB_Lock(t *testing.T) {
 	})
 
 	t.Run("Second", func(t *testing.T) {
-		_, err := WithTransaction[documentType](t.Context(), database, arangodb.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c arangodb.Transaction) (documentType, error) {
+		_, err := WithTransaction[documentType](t.Context(), database, adbDriverV2.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c adbDriverV2.Transaction) (documentType, error) {
 			var d documentType
 
 			d.Key = documentKey
@@ -128,7 +128,7 @@ func Test_ArangoDB_Lock(t *testing.T) {
 	})
 
 	t.Run("With error", func(t *testing.T) {
-		_, err := WithTransaction[documentType](t.Context(), database, arangodb.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c arangodb.Transaction) (documentType, error) {
+		_, err := WithTransaction[documentType](t.Context(), database, adbDriverV2.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c adbDriverV2.Transaction) (documentType, error) {
 			var d documentType
 
 			d.Key = documentKey
@@ -146,8 +146,8 @@ func Test_ArangoDB_Lock(t *testing.T) {
 	})
 
 	t.Run("With Init Lock", func(t *testing.T) {
-		_, err := WithTransaction[string](t.Context(), database, arangodb.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c arangodb.Transaction) (string, error) {
-			_, err := WithLock[string]("testing", func(ctx context.Context, c arangodb.Transaction, lock *LockDocument) (string, error) {
+		_, err := WithTransaction[string](t.Context(), database, adbDriverV2.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c adbDriverV2.Transaction) (string, error) {
+			_, err := WithLock[string]("testing", func(ctx context.Context, c adbDriverV2.Transaction, lock *LockDocument) (string, error) {
 				return "", nil
 			})(ctx, c)
 			require.NoError(t, err)
@@ -157,19 +157,19 @@ func Test_ArangoDB_Lock(t *testing.T) {
 	})
 
 	t.Run("With Lock", func(t *testing.T) {
-		_, err := WithTransaction[string](t.Context(), database, arangodb.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c arangodb.Transaction) (string, error) {
-			_, err := WithLock[string]("testing", func(ctx context.Context, c arangodb.Transaction, lock *LockDocument) (string, error) {
+		_, err := WithTransaction[string](t.Context(), database, adbDriverV2.TransactionCollections{Write: []string{"testing"}}, nil, func(ctx context.Context, c adbDriverV2.Transaction) (string, error) {
+			_, err := WithLock[string]("testing", func(ctx context.Context, c adbDriverV2.Transaction, lock *LockDocument) (string, error) {
 				return "", nil
 			})(ctx, c)
 			require.NoError(t, err)
 
-			_, err = WithLock[string]("testing", func(ctx context.Context, c arangodb.Transaction, lock *LockDocument) (string, error) {
+			_, err = WithLock[string]("testing", func(ctx context.Context, c adbDriverV2.Transaction, lock *LockDocument) (string, error) {
 				return "", nil
 			})(ctx, c)
 			require.NoError(t, err)
 
-			_, err = WithLock[string]("testing", func(ctx context.Context, c arangodb.Transaction, lock *LockDocument) (string, error) {
-				_, err := WithTransaction[string](t.Context(), database, arangodb.TransactionCollections{Write: []string{"testing"}}, nil, WithLock[string]("testing", func(ctx context.Context, c arangodb.Transaction, lock *LockDocument) (string, error) {
+			_, err = WithLock[string]("testing", func(ctx context.Context, c adbDriverV2.Transaction, lock *LockDocument) (string, error) {
+				_, err := WithTransaction[string](t.Context(), database, adbDriverV2.TransactionCollections{Write: []string{"testing"}}, nil, WithLock[string]("testing", func(ctx context.Context, c adbDriverV2.Transaction, lock *LockDocument) (string, error) {
 					return "", nil
 				}))
 				require.Error(t, err)

@@ -26,7 +26,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -37,16 +37,16 @@ import (
 )
 
 type ClientProvider interface {
-	ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error)
+	ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (adbDriverV2.Client, error)
 }
 
-type ClientProviderFunc func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error)
+type ClientProviderFunc func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (adbDriverV2.Client, error)
 
-func (c ClientProviderFunc) ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
+func (c ClientProviderFunc) ArangoClient(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (adbDriverV2.Client, error) {
 	return c(ctx, client, depl)
 }
 
-func ArangoClientProvider(ctx context.Context, c kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
+func ArangoClientProvider(ctx context.Context, c kubernetes.Interface, depl *api.ArangoDeployment) (adbDriverV2.Client, error) {
 	return client.NewFactory(client.DirectArangoDBAuthentication(c, depl), client.HTTPClientFactory(
 		http.ShortTransport(),
 		http.WithTransportTLS(http.Insecure),

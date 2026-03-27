@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import (
 	"context"
 	goHttp "net/http"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -35,7 +36,7 @@ import (
 )
 
 func init() {
-	global.MustRegister("deployment.id", func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
+	global.MustRegister("deployment.id", func(conn adbDriverV2Connection.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 			did, err := ExtractDeploymentID(ctx, conn)
 			if err != nil {
@@ -51,8 +52,8 @@ func init() {
 	})
 }
 
-func ExtractDeploymentID(ctx context.Context, conn driver.Connection) (string, error) {
-	if handler := arangod.GetRequestWithTimeout[client.DeploymentID](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "deployment", "id"); handler.Code() == goHttp.StatusOK {
+func ExtractDeploymentID(ctx context.Context, conn adbDriverV2Connection.Connection) (string, error) {
+	if handler := arangod.GetRequestWithTimeout[client.DeploymentID](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "deployment", "id").Do(ctx); handler.Code() == goHttp.StatusOK {
 		resp, err := handler.Response()
 		if err != nil {
 			return "", err
@@ -61,7 +62,7 @@ func ExtractDeploymentID(ctx context.Context, conn driver.Connection) (string, e
 		return resp.Id, nil
 	}
 
-	health, err := arangod.GetRequestWithTimeout[driver.ClusterHealth](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "cluster", "health").AcceptCode(goHttp.StatusOK).Response()
+	health, err := arangod.GetRequestWithTimeout[adbDriverV2.ClusterHealth](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "cluster", "health").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
 	if err == nil {
 		return health.ID, nil
 	} else {

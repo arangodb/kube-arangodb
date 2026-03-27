@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
@@ -50,15 +50,8 @@ func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	cluster, err := c.Cluster(ctxChild)
-	if err != nil {
-		r.log.Err(err).Warn("Unable to get Cluster client")
-		return nil
-	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	health, err := cluster.Health(ctxChild)
+	health, err := c.Health(ctxChild)
 	if err != nil {
 		r.log.Err(err).Warn("Unable to get Cluster health")
 		return nil
@@ -67,7 +60,7 @@ func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k
 	membersHealth := health.Health
 
 	for _, e := range status.Members.AsList() {
-		delete(membersHealth, driver.ServerID(e.Member.ID))
+		delete(membersHealth, adbDriverV2.ServerID(e.Member.ID))
 	}
 
 	if len(membersHealth) == 0 {
@@ -76,8 +69,8 @@ func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k
 
 	for id, member := range membersHealth {
 		switch member.Role {
-		case driver.ServerRoleCoordinator:
-			if member.Status != driver.ServerStatusFailed {
+		case adbDriverV2.ServerRoleCoordinator:
+			if member.Status != adbDriverV2.ServerStatusFailed {
 				continue
 			}
 
@@ -86,8 +79,8 @@ func (r *Reconciler) createClusterOperationPlan(ctx context.Context, apiObject k
 					actions.NewAction(api.ActionTypeClusterMemberCleanup, api.ServerGroupCoordinators, sharedReconcile.WithPredefinedMember(string(id))),
 				}
 			}
-		case driver.ServerRoleDBServer:
-			if member.Status != driver.ServerStatusFailed {
+		case adbDriverV2.ServerRoleDBServer:
+			if member.Status != adbDriverV2.ServerStatusFailed {
 				continue
 			}
 

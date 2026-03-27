@@ -15,6 +15,7 @@
 - (Maintenance) Bump Envoy to v1.37.2 and go-control-plane/envoy to v1.37.0
 - (Bugfix) Add missing `testing` build tag to `pkg/util/tests/azure.go`
 - (Design) Add Platform Metrics Integration design document
+- (Feature) Remove DriverV1, fix gateway inventory non-JSON responses, imagePullSecrets rotation loop, and backup finalizer infinite loop
 
 ## [1.4.3](https://github.com/arangodb/kube-arangodb/tree/1.4.3) (2026-04-23)
 - (Bugfix) Fix Community image discovery

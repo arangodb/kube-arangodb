@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -47,9 +47,9 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 		return nil, newFatalErrorf("missing field .status.backup")
 	}
 
-	backupMeta, err := client.Get(driver.BackupID(backup.Status.Backup.ID))
+	backupMeta, err := client.Get(backup.Status.Backup.ID)
 	if err != nil {
-		if driver.IsNotFoundGeneral(err) {
+		if adbDriverV2Shared.IsNotFound(err) {
 			return wrapUpdateStatus(backup,
 				updateStatusState(backupApi.ArangoBackupStateDeleted, ""),
 				updateStatusAvailable(false),
@@ -62,8 +62,8 @@ func stateReadyHandler(h *handler, backup *backupApi.ArangoBackup) (*backupApi.A
 	}
 
 	if backup.Spec.Lifetime != nil {
-		if backupMeta.DateTime.Add(backup.Spec.Lifetime.Duration).Before(time.Now()) {
-			err = client.Delete(driver.BackupID(backup.Status.Backup.ID))
+		if backupMeta.CreationTime.Add(backup.Spec.Lifetime.Duration).Before(time.Now()) {
+			err = client.Delete(backup.Status.Backup.ID)
 			if err != nil {
 				return nil, err
 			}

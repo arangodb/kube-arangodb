@@ -274,16 +274,6 @@ actions:
   TopologyMemberAssignment:
     enterprise: true
     description: Update TopologyAwareness Members assignments
-  RebalancerGenerate:
-    enterprise: true
-    description: Generates the Rebalancer plan
-    isInternal: true
-  RebalancerCheck:
-    enterprise: true
-    description: Check Rebalancer job progress
-  RebalancerClean:
-    enterprise: true
-    description: Cleans Rebalancer jobs
   RebalancerGenerateV2:
     description: Generates the Rebalancer plan
     isInternal: true

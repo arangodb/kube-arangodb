@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -131,12 +131,12 @@ func createArangoDeployment(t *testing.T, h *handler, deployments ...*api.Arango
 	}
 }
 
-func compareBackupMeta(t *testing.T, backupMeta driver.BackupMeta, backup *backupApi.ArangoBackup) {
+func compareBackupMeta(t *testing.T, backupMeta adbDriverV2.BackupMeta, backup *backupApi.ArangoBackup) {
 	require.NotNil(t, backup.Status.Backup)
-	require.Equal(t, string(backupMeta.ID), backup.Status.Backup.ID)
+	require.Equal(t, backupMeta.ID, backup.Status.Backup.ID)
 	require.Equal(t, backupMeta.PotentiallyInconsistent, *backup.Status.Backup.PotentiallyInconsistent)
 	require.Equal(t, backupMeta.SizeInBytes, backup.Status.Backup.SizeInBytes)
-	require.Equal(t, backupMeta.DateTime.UTC().Unix(), backup.Status.Backup.CreationTimestamp.Time.UTC().Unix())
+	require.Equal(t, backupMeta.CreationTime.UTC().Unix(), backup.Status.Backup.CreationTimestamp.Time.UTC().Unix())
 	require.Equal(t, backupMeta.NumberOfDBServers, backup.Status.Backup.NumberOfDBServers)
 	require.Equal(t, backupMeta.Version, backup.Status.Backup.Version)
 }

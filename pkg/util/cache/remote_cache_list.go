@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -48,7 +48,7 @@ func (r *remoteCache[T]) List(ctx context.Context, size int, prefix string) (uti
 
 	query += " SORT doc._key RETURN doc._key"
 
-	resp, err := db.Query(ctx, query, &arangodb.QueryOptions{
+	resp, err := db.Query(ctx, query, &adbDriverV2.QueryOptions{
 		BatchSize: size,
 		BindVars:  bindVars,
 	})

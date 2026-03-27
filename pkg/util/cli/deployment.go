@@ -21,7 +21,6 @@
 package cli
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/url"
 	"slices"
@@ -29,10 +28,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/http"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
 
 func NewDeployment(prefix string) Deployment {
@@ -115,8 +115,8 @@ func NewDeployment(prefix string) Deployment {
 type Deployment interface {
 	FlagRegisterer
 
-	Connection(cmd *cobra.Command) (driver.Connection, error)
-	Authentication(cmd *cobra.Command) (driver.Authentication, error)
+	Connection(cmd *cobra.Command) (adbDriverV2Connection.Connection, error)
+	Authentication(cmd *cobra.Command) (adbDriverV2Connection.Authentication, error)
 }
 
 type deployment struct {
@@ -151,24 +151,13 @@ func (d deployment) Validate(cmd *cobra.Command) error {
 	)(cmd, nil)
 }
 
-func (d deployment) Connection(cmd *cobra.Command) (driver.Connection, error) {
-	var t tls.Config
-
-	if insecure, err := d.insecure.Get(cmd); err != nil {
-		return nil, err
-	} else {
-		t.InsecureSkipVerify = insecure
-	}
-
-	endpoint, err := d.endpoint.Get(cmd)
+func (d deployment) Connection(cmd *cobra.Command) (adbDriverV2Connection.Connection, error) {
+	insecure, err := d.insecure.Get(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := http.NewConnection(http.ConnectionConfig{
-		Endpoints: endpoint,
-		TLSConfig: &t,
-	})
+	endpoint, err := d.endpoint.Get(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -178,17 +167,20 @@ func (d deployment) Connection(cmd *cobra.Command) (driver.Connection, error) {
 		return nil, err
 	}
 
-	if auth != nil {
-		conn, err = conn.SetAuthentication(auth)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return conn, nil
+	return adbDriverV2Connection.NewHttpConnection(adbDriverV2Connection.HttpConfiguration{
+		Authentication: auth,
+		Endpoint:       adbDriverV2Connection.NewRoundRobinEndpoints(endpoint),
+		ContentType:    adbDriverV2Connection.ApplicationJSON,
+		ArangoDBConfig: adbDriverV2Connection.ArangoDBConfiguration{},
+		Transport: operatorHTTP.RoundTripperWithShortTransport(
+			operatorHTTP.WithTransportTLS(
+				util.BoolSwitch(insecure, operatorHTTP.Insecure, nil),
+			),
+		),
+	}), nil
 }
 
-func (d deployment) Authentication(cmd *cobra.Command) (driver.Authentication, error) {
+func (d deployment) Authentication(cmd *cobra.Command) (adbDriverV2Connection.Authentication, error) {
 	auth, err := d.authentication.Get(cmd)
 	if err != nil {
 		return nil, err

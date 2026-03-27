@@ -43,6 +43,7 @@ func (r *Reconciler) createMemberGatewayConfigConditionPlan(ctx context.Context,
 	for _, m := range status.Members.AsListInGroup(api.ServerGroupGateways) {
 		inv, err := r.getGatewayInventoryConfig(ctx, planCtx, m.Group, m.Member)
 		if err != nil {
+			r.log.Str("member", m.Member.ID).Err(err).Debug("Failed to get gateway inventory config")
 			if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue {
 				plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config is not present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, false, "Config is not present", "Config is not present", ""))
 			}
@@ -50,6 +51,7 @@ func (r *Reconciler) createMemberGatewayConfigConditionPlan(ctx context.Context,
 			continue
 		}
 
+		r.log.Str("member", m.Member.ID).Str("hash", inv.Configuration.Hash).Debug("Gateway inventory config received")
 		if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != inv.Configuration.Hash {
 			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config Present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, true, "Config Present", "Config Present", inv.Configuration.Hash))
 		}
@@ -112,18 +114,29 @@ func (r *Reconciler) createGatewayConfigConditionPlan(ctx context.Context, _ k8s
 	return plan
 }
 
-func (r *Reconciler) getGatewayInventoryConfig(ctx context.Context, planCtx PlanBuilderContext, group api.ServerGroup, member api.MemberStatus) (*client.Inventory, error) {
-	serverClient, err := planCtx.GetServerClient(ctx, group, member.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	internalClient := client.NewClient(serverClient.Connection(), logger)
-
-	lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
+func (r *Reconciler) getGatewayInventoryConfig(ctx context.Context, planCtx PlanBuilderContext, group api.ServerGroup, member api.MemberStatus) (client.Inventory, error) {
+	// Use GetServerClient to get a validated connection. The timeout must
+	// be large enough to cover both the internal Version() health check
+	// in GetServerClient and the Inventory() call itself, which goes
+	// through Envoy's ext_authz filter.
+	lCtx, c := context.WithTimeout(ctx, 5*time.Second)
 	defer c()
 
-	return internalClient.Inventory(lCtx)
+	serverClient, err := planCtx.GetServerClient(lCtx, group, member.ID)
+	if err != nil {
+		r.log.Str("member", member.ID).Err(err).Debug("Failed to get server client for gateway inventory")
+		return client.Inventory{}, err
+	}
+
+	internalClient := client.NewClient(serverClient.Connection())
+
+	inv, err := internalClient.Inventory(lCtx)
+	if err != nil {
+		r.log.Str("member", member.ID).Err(err).Debug("Failed to fetch gateway inventory")
+		return client.Inventory{}, err
+	}
+
+	return inv, nil
 }
 
 func (r *Reconciler) createGatewaySidecarEnablementPlan(ctx context.Context, _ k8sutil.APIObject, spec api.DeploymentSpec,

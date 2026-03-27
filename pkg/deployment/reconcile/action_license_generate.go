@@ -132,7 +132,7 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 	}
 	a.log.Str("id", generatedLicense.ID).Info("License Generated")
 
-	client := client.NewClient(c.Connection(), a.log)
+	client := client.NewClient(c.Connection())
 
 	if err := client.SetLicense(ctxChild, generatedLicense.License, true); err != nil {
 		a.log.Err(err).Error("Unable to set license")

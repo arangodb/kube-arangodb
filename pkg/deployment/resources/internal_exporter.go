@@ -23,7 +23,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -33,7 +33,7 @@ import (
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
-func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, version driver.Version) []string {
+func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, groupSpec api.ServerGroupSpec, version adbDriverV2.Version) []string {
 	tokenpath := filepath.Join(shared.ExporterJWTVolumeMountDir, utilConstants.SecretKeyToken)
 	options := k8sutil.CreateOptionPairs(64)
 
@@ -81,7 +81,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, 
 	return options.Sort().AsArgs()
 }
 
-func getArangoExporterInternalEndpoint(version driver.Version) string {
+func getArangoExporterInternalEndpoint(version adbDriverV2.Version) string {
 	path := shared.ArangoExporterInternalEndpoint
 	if version.CompareTo("3.8.0") >= 0 {
 		path = shared.ArangoExporterInternalEndpointV2

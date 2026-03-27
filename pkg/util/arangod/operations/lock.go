@@ -25,18 +25,18 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type LockFunc[T any] func(ctx context.Context, c arangodb.Transaction, lock *LockDocument) (T, error)
+type LockFunc[T any] func(ctx context.Context, c adbDriverV2.Transaction, lock *LockDocument) (T, error)
 
 func WithLock[T any](collection string, process LockFunc[T]) TransactionFunc[T] {
-	return func(ctx context.Context, c arangodb.Transaction) (T, error) {
-		col, err := c.GetCollection(ctx, collection, &arangodb.GetCollectionOptions{SkipExistCheck: true})
+	return func(ctx context.Context, c adbDriverV2.Transaction) (T, error) {
+		col, err := c.GetCollection(ctx, collection, &adbDriverV2.GetCollectionOptions{SkipExistCheck: true})
 		if err != nil {
 			return util.Default[T](), errors.Wrapf(err, "Failed to get collection %s", collection)
 		}

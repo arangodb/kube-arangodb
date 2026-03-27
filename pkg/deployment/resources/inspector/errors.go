@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,22 +23,22 @@ package inspector
 import (
 	"fmt"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 )
 
-func newMinK8SVersion(ver driver.Version) error {
+func newMinK8SVersion(ver adbDriverV2.Version) error {
 	return minK8SVersion{ver: ver}
 }
 
 type minK8SVersion struct {
-	ver driver.Version
+	ver adbDriverV2.Version
 }
 
 func (m minK8SVersion) Error() string {
 	return fmt.Sprintf("Kubernetes %s or lower is not supported anymore", m.ver)
 }
 
-func IsK8SVersion(err error) (driver.Version, bool) {
+func IsK8SVersion(err error) (adbDriverV2.Version, bool) {
 	if err == nil {
 		return "", false
 	}
