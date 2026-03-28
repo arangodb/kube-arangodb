@@ -32,7 +32,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV1 "github.com/arangodb/go-driver"
 
 	"github.com/arangodb/kube-arangodb/cmd"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -221,8 +221,8 @@ func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) 
 			av := util.First(util.LastFromList(d.Features[i].Releases).OperatorVersion, d.Features[i].OperatorVersion)
 			bv := util.First(util.LastFromList(d.Features[j].Releases).OperatorVersion, d.Features[j].OperatorVersion)
 
-			a := driver.Version(util.TypeOrDefault[string](av, "1.0.0"))
-			b := driver.Version(util.TypeOrDefault[string](bv, "1.0.0"))
+			a := adbDriverV1.Version(util.TypeOrDefault[string](av, "1.0.0"))
+			b := adbDriverV1.Version(util.TypeOrDefault[string](bv, "1.0.0"))
 
 			if c := a.CompareTo(b); c != 0 {
 				return c > 0
@@ -230,8 +230,8 @@ func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) 
 		}
 
 		{
-			a := driver.Version(util.TypeOrDefault[string](d.Features[i].Releases[0].OperatorVersion, "1.0.0"))
-			b := driver.Version(util.TypeOrDefault[string](d.Features[j].Releases[0].OperatorVersion, "1.0.0"))
+			a := adbDriverV1.Version(util.TypeOrDefault[string](d.Features[i].Releases[0].OperatorVersion, "1.0.0"))
+			b := adbDriverV1.Version(util.TypeOrDefault[string](d.Features[j].Releases[0].OperatorVersion, "1.0.0"))
 
 			if c := a.CompareTo(b); c != 0 {
 				return c > 0

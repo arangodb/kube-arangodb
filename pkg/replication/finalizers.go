@@ -29,7 +29,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	syncClient "github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
+	adbDriverV1 "github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -195,9 +195,9 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 
 	// From here on this code should be launched only once unless abort option is changed
 	// or replication is not in cancelling state.
-	sourceServerMode := driver.ServerModeDefault
+	sourceServerMode := adbDriverV1.ServerModeDefault
 	if util.TypeOrDefault[bool](p.Spec.Cancellation.SourceReadOnly) {
-		sourceServerMode = driver.ServerModeReadOnly
+		sourceServerMode = adbDriverV1.ServerModeReadOnly
 	}
 	req := syncClient.CancelSynchronizationRequest{
 		Force:            abort,
@@ -277,7 +277,7 @@ func (dr *DeploymentReplication) ensureInSync(ctx context.Context, c syncClient.
 		dr.status.Conditions.Update(api.ConditionTypeEnsuredInSync, false, "Consistent", "Data on both data centers is not the same") {
 		// If `GetSynchronizationBarrierStatus` could return active barrier then it would not create the above condition.
 		if err := c.Master().CreateSynchronizationBarrier(ctx); err != nil {
-			if driver.IsPreconditionFailed(err) {
+			if adbDriverV1.IsPreconditionFailed(err) {
 				dr.log.Info("Can not create synchronization barrier because synchronization is not running")
 				return false, 0, 0, nil
 			}
