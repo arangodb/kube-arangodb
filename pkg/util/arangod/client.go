@@ -148,7 +148,8 @@ func createArangodHTTPConfigForDNSNames(apiObject *api.ArangoDeployment, dnsName
 		}
 	}
 	connConfig := adbDriverV2Connection.HttpConfiguration{
-		Transport: transport(),
+		Transport:          transport(),
+		DontFollowRedirect: true,
 		Endpoint: adbDriverV2Connection.NewRoundRobinEndpoints(util.FormatList(dnsNames, func(a string) string {
 			return scheme + "://" + net.JoinHostPort(a, strconv.Itoa(shared.ArangoPort))
 		})),

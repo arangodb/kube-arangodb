@@ -23,8 +23,8 @@ package client
 import (
 	"context"
 	"net"
+	goHttp "net/http"
 	"strconv"
-	"sync"
 
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
@@ -33,12 +33,14 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
+	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 type Cache interface {
-	GetAuth() Auth
+	GetAuth(ctx context.Context) (adbDriverV2Connection.Authentication, error)
 
 	Connection(host string) (adbDriverV2Connection.Connection, error)
 
@@ -54,37 +56,37 @@ type CacheGen interface {
 	reconciler.DeploymentInfoGetter
 }
 
-type Auth func() (adbDriverV2Connection.Authentication, error)
-
-type Config func() (adbDriverV2Connection.HttpConfiguration, error)
-
-func NewClientCache(in CacheGen, auth Auth, config Config) Cache {
-	return &cache{
+func NewClientCache(in CacheGen, auth cache.Object[adbDriverV2Connection.Authentication], config cache.Object[goHttp.RoundTripper]) Cache {
+	return &cacheObject{
 		in:     in,
 		auth:   auth,
 		config: config,
 	}
 }
 
-type cache struct {
-	mutex sync.Mutex
-	in    CacheGen
+type cacheObject struct {
+	in CacheGen
 
-	auth   Auth
-	config Config
+	auth   cache.Object[adbDriverV2Connection.Authentication]
+	config cache.Object[goHttp.RoundTripper]
 }
 
-func (cc *cache) Connection(host string) (adbDriverV2Connection.Connection, error) {
-	conn, err := cc.config()
+func (cc *cacheObject) Connection(host string) (adbDriverV2Connection.Connection, error) {
+	transport, err := cc.config.Get(shutdown.Context())
 	if err != nil {
 		return nil, err
 	}
 
-	conn.Endpoint = adbDriverV2Connection.NewRoundRobinEndpoints([]string{host})
-
-	auth, err := cc.auth()
+	auth, err := cc.auth.Get(shutdown.Context())
 	if err != nil {
 		return nil, err
+	}
+
+	conn := adbDriverV2Connection.HttpConfiguration{
+		Authentication:     auth,
+		Endpoint:           adbDriverV2Connection.NewRoundRobinEndpoints([]string{host}),
+		Transport:          transport,
+		DontFollowRedirect: true,
 	}
 
 	c := adbDriverV2Connection.NewHttpConnection(conn)
@@ -96,7 +98,7 @@ func (cc *cache) Connection(host string) (adbDriverV2Connection.Connection, erro
 	return c, nil
 }
 
-func (cc *cache) Client(host string) (adbDriverV2.Client, error) {
+func (cc *cacheObject) Client(host string) (adbDriverV2.Client, error) {
 	conn, err := cc.Connection(host)
 	if err != nil {
 		return nil, err
@@ -105,7 +107,7 @@ func (cc *cache) Client(host string) (adbDriverV2.Client, error) {
 	return adbDriverV2.NewClient(conn), nil
 }
 
-func (cc *cache) extendHost(host string) string {
+func (cc *cacheObject) extendHost(host string) string {
 	scheme := "http"
 	if cc.in.GetSpec().TLS.IsSecure() {
 		scheme = "https"
@@ -114,9 +116,7 @@ func (cc *cache) extendHost(host string) string {
 	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(shared.ArangoPort))
 }
 
-func (cc *cache) getConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
+func (cc *cacheObject) getConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
 	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
 
 	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
@@ -131,9 +131,7 @@ func (cc *cache) getConnection(group api.ServerGroup, id string) (adbDriverV2Con
 	return c, nil
 }
 
-func (cc *cache) getClient(group api.ServerGroup, id string) (adbDriverV2.Client, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
+func (cc *cacheObject) getClient(group api.ServerGroup, id string) (adbDriverV2.Client, error) {
 	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
 
 	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
@@ -150,13 +148,13 @@ func (cc *cache) getClient(group api.ServerGroup, id string) (adbDriverV2.Client
 
 // Get a cached client for the given ID in the given group, creating one
 // if needed.
-func (cc *cache) GetConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
+func (cc *cacheObject) GetConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
 	return cc.getConnection(group, id)
 }
 
 // Get a cached client for the given ID in the given group, creating one
 // if needed.
-func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error) {
+func (cc *cacheObject) Get(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error) {
 	client, err := cc.getClient(group, id)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -171,14 +169,11 @@ func (cc *cache) Get(ctx context.Context, group api.ServerGroup, id string) (adb
 	}
 }
 
-func (cc *cache) GetAuth() Auth {
-	return cc.auth
+func (cc *cacheObject) GetAuth(ctx context.Context) (adbDriverV2Connection.Authentication, error) {
+	return cc.auth.Get(ctx)
 }
 
-func (cc *cache) getDatabaseClient() (adbDriverV2.Client, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-
+func (cc *cacheObject) getDatabaseClient() (adbDriverV2.Client, error) {
 	c, err := cc.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -188,7 +183,7 @@ func (cc *cache) getDatabaseClient() (adbDriverV2.Client, error) {
 
 // GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
 // creating one if needed.
-func (cc *cache) GetDatabase(ctx context.Context) (adbDriverV2.Client, error) {
+func (cc *cacheObject) GetDatabase(ctx context.Context) (adbDriverV2.Client, error) {
 	client, err := cc.getDatabaseClient()
 	if err != nil {
 		return nil, errors.WithStack(err)

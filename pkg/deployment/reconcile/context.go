@@ -23,10 +23,11 @@ package reconcile
 import (
 	"context"
 
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 )
@@ -60,5 +61,5 @@ type Context interface {
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetAuthentication return authentication for members
-	GetAuthentication() client.Auth
+	GetAuthentication(ctx context.Context) (adbDriverV2Connection.Authentication, error)
 }

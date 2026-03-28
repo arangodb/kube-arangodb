@@ -54,8 +54,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
@@ -160,7 +162,7 @@ func (d *Deployment) IsFeatureImageSupported(feature features.Feature) bool {
 func (d *Deployment) IsSyncEnabled() bool {
 	d.currentObjectLock.RLock()
 	defer d.currentObjectLock.RUnlock()
-	d.GetAuthentication()
+
 	if d.currentObject.GetAcceptedSpec().Sync.IsEnabled() {
 		return true
 	}
@@ -274,7 +276,16 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	d.memberState = memberState.NewStateInspector(d)
 
-	d.clientCache = deploymentClient.NewClientCache(d, d.getAuth, d.getConnConfig)
+	d.clientCache = deploymentClient.NewClientCache(d, cache.NewObject(func(ctx context.Context) (adbDriverV2Connection.Authentication, time.Duration, error) {
+		auth, err := d.getAuth()
+		if err != nil {
+			return nil, 0, err
+		}
+
+		return auth, 30 * time.Second, nil
+	}), cache.NewObject(func(ctx context.Context) (goHttp.RoundTripper, time.Duration, error) {
+		return operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(util.BoolSwitch(d.GetSpec().TLS.IsSecure(), operatorHTTP.Insecure, nil))), 10 * time.Minute, nil
+	}))
 
 	d.reconciler = reconcile.NewReconciler(apiObject.GetNamespace(), apiObject.GetName(), d)
 	d.resilience = resilience.NewResilience(apiObject.GetNamespace(), apiObject.GetName(), d)

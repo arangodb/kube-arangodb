@@ -41,7 +41,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
@@ -53,7 +52,6 @@ import (
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
-	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
@@ -216,18 +214,8 @@ func (d *Deployment) GetServerClient(ctx context.Context, group api.ServerGroup,
 }
 
 // GetAuthentication return authentication for members
-func (d *Deployment) GetAuthentication() client.Auth {
-	return d.clientCache.GetAuth()
-}
-
-func (d *Deployment) getConnConfig() (adbDriverV2Connection.HttpConfiguration, error) {
-	transport := operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(util.BoolSwitch(d.GetSpec().TLS.IsSecure(), operatorHTTP.Insecure, nil)))
-
-	connConfig := adbDriverV2Connection.HttpConfiguration{
-		Transport: transport,
-	}
-
-	return connConfig, nil
+func (d *Deployment) GetAuthentication(ctx context.Context) (adbDriverV2Connection.Authentication, error) {
+	return d.clientCache.GetAuth(ctx)
 }
 
 func (d *Deployment) getAuth() (adbDriverV2Connection.Authentication, error) {

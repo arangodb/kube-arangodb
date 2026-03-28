@@ -454,15 +454,16 @@ func checkServerValidCertRequest(ctx context.Context, context PlanBuilderContext
 
 	transport := operatorHTTP.RoundTripper(operatorHTTP.WithTransportTLS(operatorHTTP.WithRootCA(ca.AsCertPool())))
 
-	auth, err := context.GetAuthentication()()
+	auth, err := context.GetAuthentication(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	conn := adbDriverV2Connection.NewHttpConnection(adbDriverV2Connection.HttpConfiguration{
-		Transport:      transport,
-		Endpoint:       adbDriverV2Connection.NewRoundRobinEndpoints([]string{endpoint}),
-		Authentication: auth,
+		Transport:          transport,
+		Endpoint:           adbDriverV2Connection.NewRoundRobinEndpoints([]string{endpoint}),
+		Authentication:     auth,
+		DontFollowRedirect: true,
 	})
 
 	resp, err := arangod.GetRequest[any](ctx, conn).HTTPResponse()

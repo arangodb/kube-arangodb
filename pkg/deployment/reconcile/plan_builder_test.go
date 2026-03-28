@@ -46,7 +46,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	agencyCache "github.com/arangodb/kube-arangodb/pkg/deployment/agency"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
@@ -259,10 +258,8 @@ func (c *testContext) WithStatusUpdate(ctx context.Context, action reconciler.De
 	return nil
 }
 
-func (c *testContext) GetAuthentication() client.Auth {
-	return func() (authentication adbDriverV2Connection.Authentication, err error) {
-		return nil, nil
-	}
+func (c *testContext) GetAuthentication(ctx context.Context) (adbDriverV2Connection.Authentication, error) {
+	return nil, nil
 }
 
 func (c *testContext) GetName() string {
