@@ -232,7 +232,8 @@ func Test_State_Uploading_TemporaryFailedProgress(t *testing.T) {
 func Test_State_Uploading_NotFoundProgress(t *testing.T) {
 	// Arrange
 	error := adbDriverV2Shared.ArangoError{
-		Code: 404,
+		Code:     404,
+		HasError: true,
 	}
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
 		progressError: error,

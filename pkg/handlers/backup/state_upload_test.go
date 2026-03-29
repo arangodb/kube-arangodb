@@ -132,7 +132,8 @@ func Test_State_Upload_FatalGetFailed(t *testing.T) {
 func Test_State_Upload_BackupMissing(t *testing.T) {
 	// Arrange
 	error := adbDriverV2Shared.ArangoError{
-		Code: 404,
+		Code:     404,
+		HasError: true,
 	}
 	handler, mock := newErrorsFakeHandler(mockErrorsArangoClientBackup{
 		getError: error,
