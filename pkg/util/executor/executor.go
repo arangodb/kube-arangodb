@@ -79,6 +79,9 @@ func (h *handler) Timeout(ctx context.Context, t Thread, f RunFunc, timeout, int
 	timeoutT := time.NewTimer(timeout)
 	defer timeoutT.Stop()
 
+	tickerT := time.NewTicker(interval)
+	defer tickerT.Stop()
+
 	for {
 		err := f(ctx, h.log, t, h)
 		if err != nil {
@@ -89,14 +92,12 @@ func (h *handler) Timeout(ctx context.Context, t Thread, f RunFunc, timeout, int
 			return err
 		}
 
-		t.Wait(interval)
-
 		select {
 		case <-timeoutT.C:
 			return os.ErrDeadlineExceeded
 		case <-ctx.Done():
 			return os.ErrDeadlineExceeded
-		default:
+		case <-tickerT.C:
 			continue
 		}
 	}
