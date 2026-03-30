@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,10 +44,13 @@ func Test_ServiceReconcile(t *testing.T) {
 	chart := tests.NewMetaObject[*platformApi.ArangoPlatformChart](t, ns, "secret",
 		func(t *testing.T, obj *platformApi.ArangoPlatformChart) {})
 
+	chart2 := tests.NewMetaObject[*platformApi.ArangoPlatformChart](t, ns, "example",
+		func(t *testing.T, obj *platformApi.ArangoPlatformChart) {})
+
 	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, ns, "example",
 		func(t *testing.T, obj *api.ArangoDeployment) {})
 
-	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &extension, &chart, &deployment)
+	refresh := tests.CreateObjects(t, handler.kubeClient, handler.client, &extension, &chart, &deployment, &chart2)
 
 	t.Run("Missing chart section", func(t *testing.T) {
 		// Test
@@ -158,8 +161,12 @@ func Test_ServiceReconcile(t *testing.T) {
 		tests.Update(t, handler.kubeClient, handler.client, &chart, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
 			obj.Spec.Definition = suite.GetChart(t, "secret", "1.0.0")
 		})
+		tests.Update(t, handler.kubeClient, handler.client, &chart2, func(t *testing.T, obj *platformApi.ArangoPlatformChart) {
+			obj.Spec.Definition = suite.GetChart(t, "example", "1.0.1")
+		})
 
 		require.NoError(t, tests.Handle(chartHandler, tests.NewItem(t, operation.Update, chart)))
+		require.NoError(t, tests.Handle(chartHandler, tests.NewItem(t, operation.Update, chart2)))
 		require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
 
 		// Refresh
@@ -305,6 +312,66 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.Equal(t, "PLACEHOLDER", cm.Data)
 	})
 
+	t.Run("Upgrade Release if Chart Changed", func(t *testing.T) {
+		// Arrange
+		tests.Update(t, handler.kubeClient, handler.client, &extension, func(t *testing.T, obj *platformApi.ArangoPlatformService) {
+			obj.Spec.Chart = &sharedApi.Object{Name: chart2.GetName()}
+		})
+
+		// Test
+		require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+		// Refresh
+		refresh(t)
+
+		// Validate
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.SpecValidCondition))
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.DeploymentFoundCondition))
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ChartFoundCondition))
+		require.Equal(t, chart2.Status.Info.Checksum, extension.Status.Conditions.Hash(platformApi.ChartFoundCondition))
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ReadyCondition))
+		require.NotNil(t, extension.Status.Deployment)
+
+		release, err := handler.helm.Status(context.Background(), "example")
+		require.NoError(t, err)
+		require.NotNil(t, release)
+
+		require.Equal(t, release.Version, extension.Status.Release.Version)
+		require.Equal(t, 3, extension.Status.Release.Version)
+	})
+
+	t.Run("Upgrade Release if Chart Reverted", func(t *testing.T) {
+		// Arrange
+		tests.Update(t, handler.kubeClient, handler.client, &extension, func(t *testing.T, obj *platformApi.ArangoPlatformService) {
+			obj.Spec.Chart = &sharedApi.Object{Name: chart.GetName()}
+		})
+
+		// Test
+		require.NoError(t, tests.Handle(handler, tests.NewItem(t, operation.Update, extension)))
+
+		// Refresh
+		refresh(t)
+
+		// Validate
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.SpecValidCondition))
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.DeploymentFoundCondition))
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ChartFoundCondition))
+		require.Equal(t, chart.Status.Info.Checksum, extension.Status.Conditions.Hash(platformApi.ChartFoundCondition))
+		require.True(t, extension.Status.Conditions.IsTrue(platformApi.ReadyCondition))
+		require.NotNil(t, extension.Status.Deployment)
+
+		release, err := handler.helm.Status(context.Background(), "example")
+		require.NoError(t, err)
+		require.NotNil(t, release)
+
+		require.Equal(t, release.Version, extension.Status.Release.Version)
+		require.Equal(t, 4, extension.Status.Release.Version)
+
+		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
+		require.NotNil(t, cm)
+		require.Equal(t, "PLACEHOLDER", cm.Data)
+	})
+
 	t.Run("Ensure Import Works", func(t *testing.T) {
 		// Arrange
 		tests.Update(t, handler.kubeClient, handler.client, &extension, func(t *testing.T, obj *platformApi.ArangoPlatformService) {
@@ -346,7 +413,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.NotNil(t, release)
 
 		require.Equal(t, release.Version, extension.Status.Release.Version)
-		require.Equal(t, 2, extension.Status.Release.Version)
+		require.Equal(t, 4, extension.Status.Release.Version)
 
 		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
@@ -380,7 +447,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.NotNil(t, release)
 
 		require.Equal(t, release.Version, extension.Status.Release.Version)
-		require.Equal(t, 3, extension.Status.Release.Version)
+		require.Equal(t, 5, extension.Status.Release.Version)
 
 		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
@@ -415,7 +482,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.NotNil(t, release)
 
 		require.Equal(t, release.Version, extension.Status.Release.Version)
-		require.Equal(t, 3, extension.Status.Release.Version)
+		require.Equal(t, 6, extension.Status.Release.Version)
 
 		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
@@ -447,7 +514,7 @@ func Test_ServiceReconcile(t *testing.T) {
 		require.NotNil(t, release)
 
 		require.Equal(t, release.Version, extension.Status.Release.Version)
-		require.Equal(t, 4, extension.Status.Release.Version)
+		require.Equal(t, 7, extension.Status.Release.Version)
 
 		cm := suite.GetConfigMap(t, handler.kubeClient, ns, "secret", "example")
 		require.NotNil(t, cm)
