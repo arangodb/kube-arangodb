@@ -29,11 +29,11 @@ import (
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
