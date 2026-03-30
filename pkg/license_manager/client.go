@@ -102,6 +102,11 @@ type LicenseResponse struct {
 }
 
 type Identity struct {
+	Customer IdentityCustomer `json:"customer,omitempty"`
+}
+
+type IdentityCustomer struct {
+	Name string `json:"name"`
 }
 
 type RegistryResponse struct {

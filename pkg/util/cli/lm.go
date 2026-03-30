@@ -22,6 +22,7 @@ package cli
 
 import (
 	"fmt"
+	goHttp "net/http"
 
 	"github.com/google/uuid"
 	"github.com/regclient/regclient/config"
@@ -45,6 +46,12 @@ func NewLicenseManager(prefix string) LicenseManager {
 
 				return nil
 			},
+		},
+
+		proxy: Flag[bool]{
+			Name:        fmt.Sprintf("%s.proxy", prefix),
+			Default:     false,
+			Description: "Uses System Proxy",
 		},
 
 		client: licenseManagerClient{
@@ -106,6 +113,7 @@ type LicenseManager interface {
 type LicenseManagerEndpointProvider interface {
 	Endpoint(cmd *cobra.Command) (string, error)
 	Stages(cmd *cobra.Command) ([]string, error)
+	Proxy(cmd *cobra.Command) (bool, error)
 }
 
 type LicenseManagerAuthProvider interface {
@@ -127,6 +135,12 @@ type licenseManager struct {
 	endpoint Flag[string]
 
 	client licenseManagerClient
+
+	proxy Flag[bool]
+}
+
+func (l licenseManager) Proxy(cmd *cobra.Command) (bool, error) {
+	return l.proxy.Get(cmd)
 }
 
 func (l licenseManager) Endpoint(cmd *cobra.Command) (string, error) {
@@ -160,6 +174,7 @@ func (l licenseManager) Register(cmd *cobra.Command) error {
 		cmd,
 		l.endpoint,
 		l.client,
+		l.proxy,
 	)
 }
 
@@ -219,14 +234,23 @@ func LicenseManagerClient(cmd *cobra.Command, endpoint LicenseManagerEndpointPro
 		return nil, err
 	}
 
-	c := lmanager.NewClient(host, clientID, clientSecret)
+	p, err := endpoint.Proxy(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	c := lmanager.NewClient(host, clientID, clientSecret, func(in *goHttp.Transport) {
+		if p {
+			in.Proxy = goHttp.ProxyFromEnvironment
+		}
+	})
 
 	id, err := c.Identity(cmd.Context())
 	if err != nil {
 		return nil, err
 	}
 
-	logger.JSON("identity", id).Info("Using identity for client")
+	logger.Str("identity", id.Customer.Name).Info("Using identity for client")
 
 	return c, nil
 }

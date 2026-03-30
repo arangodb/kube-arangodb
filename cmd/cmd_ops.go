@@ -27,8 +27,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/license"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
+	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 var (
@@ -39,7 +39,7 @@ var (
 )
 
 func init() {
-	license.RegisterCommand(&cmdOps)
+	cmdMain.AddCommand(version.Command())
 }
 
 func CommandOps() *cobra.Command {

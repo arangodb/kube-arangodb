@@ -48,6 +48,7 @@ func license() (*cobra.Command, error) {
 		licenseInventory,
 		licenseActivate,
 		licenseGenerate,
+		licenseCheck,
 	); err != nil {
 		return nil, err
 	}
