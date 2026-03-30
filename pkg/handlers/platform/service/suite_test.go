@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
+	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -38,7 +39,10 @@ import (
 )
 
 func newFakeHandler(t *testing.T) (*handler, string, operator.Handler) {
-	client, ns := external.ExternalClient(t)
+	client, ns := external.ExternalClient(t, external.ResetAllCRDsOpts(crds.CRDOptions{
+		WithSchema:   false,
+		WithPreserve: false,
+	}))
 
 	op := operator.NewOperator("mock", ns, util.Image{Image: "mock"})
 	recorder := event.NewEventRecorder("mock", client.Kubernetes())

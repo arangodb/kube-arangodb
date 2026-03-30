@@ -181,12 +181,18 @@ func packageInstallRunInstallRelease(cmd *cobra.Command, h executor.Handler, cli
 				return errors.Errorf("Unable to change Deployment name for %s", name)
 			}
 
+			var changed bool
+
 			if svc.Spec.Chart.GetName() != chart.GetName() {
-				return errors.Errorf("Unable to change Chart name for %s", name)
+				svc.Spec.Chart = &sharedApi.Object{Name: chart.Name}
+				changed = true
 			}
 
 			if !svc.Spec.Values.Equals(sharedApi.Any(packageSpec.Overrides)) {
 				svc.Spec.Values = sharedApi.Any(packageSpec.Overrides)
+				changed = true
+			}
+			if changed {
 				_, err := client.Arango().PlatformV1beta1().ArangoPlatformServices(deployment.GetNamespace()).Update(ctx, svc, meta.UpdateOptions{})
 				if err != nil {
 					return err
