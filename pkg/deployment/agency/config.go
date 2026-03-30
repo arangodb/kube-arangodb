@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,22 +24,13 @@ import (
 	"context"
 	goHttp "net/http"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
-func GetAgencyConfig(ctx context.Context, connection conn.Connection) (*Config, error) {
-	resp, code, err := conn.NewExecutor[any, Config](connection).ExecuteGet(ctx, "/_api/agency/config")
-	if err != nil {
-		return nil, err
-	}
-
-	if code != goHttp.StatusOK {
-		return nil, errors.Errorf("Unknown response code %d", code)
-	}
-
-	return resp, nil
+func GetAgencyConfig(ctx context.Context, connection adbDriverV2Connection.Connection) (Config, error) {
+	return arangod.GetRequest[Config](ctx, connection, "/_api/agency/config").AcceptCode(goHttp.StatusOK).Response()
 }
 
 type Config struct {

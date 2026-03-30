@@ -24,29 +24,29 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 )
 
-func NewClient(c cache.Object[arangodb.Client]) Client {
+func NewClient(c cache.Object[adbDriverV2.Client]) Client {
 	return client{c}
 }
 
 type Client interface {
-	CreateDatabase(name string, options *arangodb.CreateDatabaseOptions) Database
+	CreateDatabase(name string, options *adbDriverV2.CreateDatabaseOptions) Database
 	Database(name string) Database
 
-	Get() cache.Object[arangodb.Client]
+	Get() cache.Object[adbDriverV2.Client]
 }
 
 type client struct {
-	cache cache.Object[arangodb.Client]
+	cache cache.Object[adbDriverV2.Client]
 }
 
-func (c client) CreateDatabase(name string, options *arangodb.CreateDatabaseOptions) Database {
+func (c client) CreateDatabase(name string, options *adbDriverV2.CreateDatabaseOptions) Database {
 	return database{
-		cache: cache.NewObject(func(ctx context.Context) (arangodb.Database, time.Duration, error) {
+		cache: cache.NewObject(func(ctx context.Context) (adbDriverV2.Database, time.Duration, error) {
 			client, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
@@ -63,12 +63,12 @@ func (c client) CreateDatabase(name string, options *arangodb.CreateDatabaseOpti
 
 func (c client) Database(name string) Database {
 	return database{
-		cache: cache.NewObject(func(ctx context.Context) (arangodb.Database, time.Duration, error) {
+		cache: cache.NewObject(func(ctx context.Context) (adbDriverV2.Database, time.Duration, error) {
 			client, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
 			}
-			db, err := client.GetDatabase(ctx, name, &arangodb.GetDatabaseOptions{SkipExistCheck: true})
+			db, err := client.GetDatabase(ctx, name, &adbDriverV2.GetDatabaseOptions{SkipExistCheck: true})
 			if err != nil {
 				return nil, 0, err
 			}
@@ -78,6 +78,6 @@ func (c client) Database(name string) Database {
 	}
 }
 
-func (c client) Get() cache.Object[arangodb.Client] {
+func (c client) Get() cache.Object[adbDriverV2.Client] {
 	return c.cache
 }

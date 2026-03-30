@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func runCheckTest(t *testing.T, name string, version driver.Version, enterprise bool, expected bool, checker ...func(c Check) Check) {
+func runCheckTest(t *testing.T, name string, version adbDriverV2.Version, enterprise bool, expected bool, checker ...func(c Check) Check) {
 	t.Run(name, func(t *testing.T) {
 		c := NewCheck(api.ImageInfo{
 			ArangoDBVersion: version,

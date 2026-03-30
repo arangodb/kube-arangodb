@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,13 +25,12 @@ import (
 	"sync"
 	"time"
 
-	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
-
 	agencyConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/config"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 )
 
-func getLoader[T interface{}]() agencyCache.StateLoader[T] {
+func getLoader[T interface{}]() leader.StateLoader[T] {
 	loader := getLoaderBase[T]()
 
 	loader = TimeoutLoader[T](loader, globals.GetGlobalTimeouts().Agency().Get())
@@ -46,7 +45,7 @@ func getLoader[T interface{}]() agencyCache.StateLoader[T] {
 	return loader
 }
 
-func NewSimpleStateLoader[T interface{}]() agencyCache.StateLoader[T] {
+func NewSimpleStateLoader[T interface{}]() leader.StateLoader[T] {
 	return &simpleStateLoader[T]{}
 }
 
@@ -92,7 +91,7 @@ func (s *simpleStateLoader[T]) Invalidate() {
 	s.valid = false
 }
 
-func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) error {
+func (s *simpleStateLoader[T]) Refresh(ctx context.Context, discovery leader.Discovery) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 

@@ -25,7 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -63,7 +63,7 @@ func buildInventory(cmd *cobra.Command) (*inventory.Spec, error) {
 		return nil, err
 	}
 
-	resp, err := arangod.GetRequestWithTimeout[driver.VersionInfo](cmd.Context(), globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_api", "version").
+	resp, err := arangod.GetRequestWithTimeout[adbDriverV2.VersionInfo](cmd.Context(), globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_api", "version").
 		AcceptCode(goHttp.StatusOK).
 		Response()
 	if err != nil {

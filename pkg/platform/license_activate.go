@@ -90,7 +90,7 @@ func licenseActivateExecute(cmd *cobra.Command, logger logging.Logger, mc lmanag
 		return err
 	}
 
-	c := client.NewClient(conn, logger)
+	c := client.NewClient(conn)
 
 	inv, err := buildInventory(cmd)
 	if err != nil {

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import (
 	"context"
 	goHttp "net/http"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -34,9 +35,9 @@ import (
 )
 
 func init() {
-	global.MustRegister("server.mode", func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
+	global.MustRegister("server.mode", func(conn adbDriverV2Connection.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
-			resp := arangod.GetRequestWithTimeout[driver.ClusterHealth](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "cluster", "health")
+			resp := arangod.GetRequestWithTimeout[adbDriverV2.ClusterHealth](ctx, globals.GetGlobals().Timeouts().ArangoD().Get(), conn, "_admin", "cluster", "health")
 
 			if resp.Code() == goHttp.StatusOK {
 				return errors.Errors(

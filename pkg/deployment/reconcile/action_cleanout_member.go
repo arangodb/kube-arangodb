@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@ package reconcile
 import (
 	"context"
 
-	driver "github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
@@ -70,23 +71,17 @@ func (a *actionCleanOutMember) Start(ctx context.Context) (bool, error) {
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	cluster, err := c.Cluster(ctxChild)
-	if err != nil {
-		a.log.Err(err).Debug("Failed to access cluster")
-		return false, errors.WithStack(err)
-	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
 	var jobID string
-	ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
-	if err := cluster.CleanOutServer(ctxJobID, a.action.MemberID); err != nil {
-		if driver.IsNotFoundGeneral(err) {
+	if id, err := c.CleanOutServer(ctxChild, adbDriverV2.ServerID(a.action.MemberID)); err != nil {
+		if adbDriverV2Shared.IsNotFound(err) {
 			// Member not found, it could be that it never connected to the cluster
 			return true, nil
 		}
 		a.log.Err(err).Debug("Failed to cleanout member")
 		return false, errors.WithStack(err)
+	} else {
+		jobID = id
 	}
 	a.log.Str("job-id", jobID).Debug("Cleanout member started")
 	// Update status

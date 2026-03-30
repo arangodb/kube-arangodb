@@ -23,7 +23,7 @@ package v1
 import (
 	"fmt"
 
-	driver "github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 )
 
 type License string
@@ -35,10 +35,10 @@ const (
 
 // ImageInfo contains an ID of an image and the ArangoDB version inside the image.
 type ImageInfo struct {
-	Image           string         `json:"image"`                      // Human provided name of the image
-	ImageID         string         `json:"image-id,omitempty"`         // Unique ID (with SHA256) of the image
-	ArangoDBVersion driver.Version `json:"arangodb-version,omitempty"` // ArangoDB version within the image
-	Enterprise      bool           `json:"enterprise,omitempty"`       // If set, this is an enterprise image
+	Image           string              `json:"image"`                      // Human provided name of the image
+	ImageID         string              `json:"image-id,omitempty"`         // Unique ID (with SHA256) of the image
+	ArangoDBVersion adbDriverV2.Version `json:"arangodb-version,omitempty"` // ArangoDB version within the image
+	Enterprise      bool                `json:"enterprise,omitempty"`       // If set, this is an enterprise image
 }
 
 func (i *ImageInfo) String() string {

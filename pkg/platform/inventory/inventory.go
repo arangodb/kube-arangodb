@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -35,7 +35,7 @@ import (
 
 type Items []*Item
 
-func FetchInventorySpec(ctx context.Context, logger logging.Logger, threads int, conn driver.Connection, cfg *Configuration) (*Spec, error) {
+func FetchInventorySpec(ctx context.Context, logger logging.Logger, threads int, conn adbDriverV2Connection.Connection, cfg *Configuration) (*Spec, error) {
 	obj, err := FetchInventory(ctx, logger, threads, conn, cfg)
 
 	if err != nil {
@@ -75,7 +75,7 @@ func FetchInventorySpec(ctx context.Context, logger logging.Logger, threads int,
 	}, nil
 }
 
-func FetchInventory(ctx context.Context, logger logging.Logger, threads int, conn driver.Connection, cfg *Configuration) (Items, error) {
+func FetchInventory(ctx context.Context, logger logging.Logger, threads int, conn adbDriverV2Connection.Connection, cfg *Configuration) (Items, error) {
 	var out []*Item
 	done := make(chan struct{})
 	in := make(chan *Item)
@@ -103,7 +103,7 @@ func FetchInventory(ctx context.Context, logger logging.Logger, threads int, con
 	return out, nil
 }
 
-func runExecution(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
+func runExecution(conn adbDriverV2Connection.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 	return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 		for _, executor := range global.Items() {
 			log.Str("name", executor.K).Info("Starting executor")
@@ -118,7 +118,7 @@ func runExecution(conn driver.Connection, cfg *Configuration, out chan<- *Item) 
 	}
 }
 
-type Executor func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc
+type Executor func(conn adbDriverV2Connection.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc
 
 func (i *Item) Validate() error {
 	if i == nil {

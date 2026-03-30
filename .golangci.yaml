@@ -33,6 +33,12 @@ linters-settings:
   importas:
     no-unaliased: true
     alias:
+      - alias: adbDriverV1
+        pkg: github.com/arangodb/go-driver
+      - alias: adbDriverV2
+        pkg: github.com/arangodb/go-driver/v2/arangodb
+      - alias: adbDriverV2Connection
+        pkg: github.com/arangodb/go-driver/v2/connection
       - alias: adbDriverV2Shared
         pkg: github.com/arangodb/go-driver/v2/arangodb/shared
       - alias: sidecarSvcAuthnDefinition
@@ -261,6 +267,8 @@ linters-settings:
         pkg: net/http
       - alias: jwt
         pkg: github.com/golang-jwt/jwt/v5
+      - alias: syncClient
+        pkg: github.com/arangodb/arangosync-client/client
   gci:
     sections:
       - standard

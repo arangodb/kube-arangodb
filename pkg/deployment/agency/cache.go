@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ import (
 
 	"github.com/rs/zerolog"
 
-	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/generated/metric_descriptions"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -39,7 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 )
 
-type Connections map[string]conn.Connection
+type Connections map[string]adbDriverV2Connection.Connection
 
 type health struct {
 	namespace, name string
@@ -226,7 +226,7 @@ type cache struct {
 
 	lock sync.RWMutex
 
-	loader agencyCache.StateLoader[state.Root]
+	loader leader.StateLoader[state.Root]
 
 	health Health
 
@@ -345,7 +345,7 @@ func (c *cache) reload(ctx context.Context, size int, clients Connections) (*sta
 
 	c.health = health
 
-	if err := c.loader.Refresh(ctx, StaticLeaderDiscovery(leaderCli)); err != nil {
+	if err := c.loader.Refresh(ctx, leader.StaticLeaderDiscovery(leaderCli)); err != nil {
 		return nil, 0, err
 	}
 
@@ -374,7 +374,7 @@ func (c *cache) ShardsInSyncMap() (state.ShardsSyncStatus, bool) {
 
 // getLeader returns config and client to a leader agency, and health to check if agencies are on the same page.
 // If there is no quorum for the leader then error is returned.
-func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (conn.Connection, health, error) {
+func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (adbDriverV2Connection.Connection, health, error) {
 	configs := make([]*Config, len(clients))
 	errs := make([]error, len(clients))
 	names := make([]string, 0, len(clients))
@@ -400,7 +400,7 @@ func (c *cache) getLeader(ctx context.Context, size int, clients Connections) (c
 			}
 
 			// Write config on the same index where client is (It will be helpful later).
-			configs[id] = config
+			configs[id] = &config
 		}(i)
 	}
 	wg.Wait()

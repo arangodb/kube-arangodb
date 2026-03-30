@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package backup
 import (
 	goHttp "net/http"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -52,7 +52,7 @@ type ArangoBackupProgress struct {
 
 // ArangoBackupCreateResponse create response
 type ArangoBackupCreateResponse struct {
-	driver.BackupMeta
+	adbDriverV2.BackupMeta
 	PotentiallyInconsistent bool
 }
 
@@ -64,18 +64,18 @@ type ArangoBackupClient interface {
 	// pass empty string to create a new backup
 	CreateAsync(jobID string) (ArangoBackupCreateResponse, error)
 
-	Get(driver.BackupID) (driver.BackupMeta, error)
+	Get(string) (adbDriverV2.BackupMeta, error)
 
-	Upload(driver.BackupID) (driver.BackupTransferJobID, error)
-	Download(driver.BackupID) (driver.BackupTransferJobID, error)
+	Upload(string) (string, error)
+	Download(string) (string, error)
 
-	Progress(driver.BackupTransferJobID) (ArangoBackupProgress, error)
-	Abort(driver.BackupTransferJobID) error
+	Progress(string) (ArangoBackupProgress, error)
+	Abort(string) error
 
-	Exists(driver.BackupID) (bool, error)
-	Delete(driver.BackupID) error
+	Exists(string) (bool, error)
+	Delete(string) error
 
 	HealthCheck() error
 
-	List() (map[driver.BackupID]driver.BackupMeta, error)
+	List() (map[string]adbDriverV2.BackupMeta, error)
 }

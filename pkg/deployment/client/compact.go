@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ package client
 import (
 	"context"
 	goHttp "net/http"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 type CompactRequest struct {
@@ -30,31 +32,6 @@ type CompactRequest struct {
 	ChangeLevel            *bool `json:"changeLevel,omitempty"`
 }
 
-const CompactUrl = "/_admin/compact"
-
 func (c *client) Compact(ctx context.Context, request *CompactRequest) error {
-	req, err := c.c.NewRequest(goHttp.MethodPut, CompactUrl)
-	if err != nil {
-		return err
-	}
-
-	if request == nil {
-		request = new(CompactRequest)
-	}
-
-	req, err = req.SetBody(request)
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return err
-	}
-
-	return nil
+	return arangod.PutRequest[*CompactRequest, any](ctx, c.c, request, "_admin", "compact").AcceptCode(goHttp.StatusOK).Evaluate()
 }

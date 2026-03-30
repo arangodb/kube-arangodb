@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -43,14 +43,14 @@ func Test_Errors_Temporary(t *testing.T) {
 
 	for _, code := range temporaryErrorNum {
 		checks[fmt.Sprintf("errorNum-%d", code)] = check{
-			err: driver.ArangoError{
+			err: adbDriverV2Shared.ArangoError{
 				ErrorNum: code,
 			},
 			temporary: true,
 		}
 
 		checks[fmt.Sprintf("errorNumCaused-%d", code)] = check{
-			err: errors.WithStack(driver.ArangoError{
+			err: errors.WithStack(adbDriverV2Shared.ArangoError{
 				ErrorNum: code,
 			}),
 			temporary: true,
@@ -74,7 +74,7 @@ func Test_Errors_Temporary(t *testing.T) {
 		id++
 
 		checks[name] = check{
-			err: driver.ArangoError{
+			err: adbDriverV2Shared.ArangoError{
 				ErrorNum: n,
 			},
 			temporary: false,
@@ -83,14 +83,14 @@ func Test_Errors_Temporary(t *testing.T) {
 
 	for _, code := range temporaryCodes {
 		checks[fmt.Sprintf("code-%d", code)] = check{
-			err: errors.WithStack(driver.ArangoError{
+			err: errors.WithStack(adbDriverV2Shared.ArangoError{
 				Code: code,
 			}),
 			temporary: true,
 		}
 
 		checks[fmt.Sprintf("codeCaused-%d", code)] = check{
-			err: driver.ArangoError{
+			err: adbDriverV2Shared.ArangoError{
 				Code: code,
 			},
 			temporary: true,

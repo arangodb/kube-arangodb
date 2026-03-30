@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@
 package backup
 
 import (
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/util/connection/wrappers/async"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -68,7 +68,7 @@ func syncBackup(client ArangoBackupClient, backup *backupApi.ArangoBackup) (*bac
 
 	backupMeta, err := client.Get(response.ID)
 	if err != nil {
-		if driver.IsNotFoundGeneral(err) {
+		if adbDriverV2Shared.IsNotFound(err) {
 			return wrapUpdateStatus(backup,
 				updateStatusState(backupApi.ArangoBackupStateFailed, "backup is not present after creation"),
 				cleanStatusJob(),
@@ -98,7 +98,7 @@ func asyncBackup(client ArangoBackupClient, backup *backupApi.ArangoBackup) (*ba
 		)
 	}
 
-	jobID, isAsyncId := async.IsAsyncJobInProgress(err)
+	jobID, isAsyncId := adbDriverV2Connection.IsAsyncJobInProgress(err)
 	if !isAsyncId {
 		return wrapUpdateStatus(backup,
 			updateStatusState(backupApi.ArangoBackupStateCreateError, "Create backup failed with error: %s", err.Error()),

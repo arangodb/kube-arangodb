@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
+	syncClient "github.com/arangodb/arangosync-client/client"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
@@ -47,10 +47,10 @@ type StateInspector interface {
 	RefreshState(ctx context.Context, members api.DeploymentStatusMemberElements)
 
 	// GetMemberClient returns member connection to an ArangoDB server.
-	GetMemberClient(id string) (driver.Client, error)
+	GetMemberClient(id string) (adbDriverV2.Client, error)
 
 	// GetMemberSyncClient returns member connection to an ArangoSync server.
-	GetMemberSyncClient(id string) (client.API, error)
+	GetMemberSyncClient(id string) (syncClient.API, error)
 
 	MemberState(id string) (State, bool)
 
@@ -119,7 +119,7 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	results := make([]State, len(members))
 	mode := s.deployment.GetMode()
 	servingGroup := mode.ServingGroup()
-	var client driver.Client
+	var client adbDriverV2.Client
 	members.ForEach(func(id int) {
 		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
 		defer cancel()
@@ -151,9 +151,7 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	} else {
 		// Fetch health only in cluster mode.
 		h.Error = globals.GetGlobalTimeouts().ArangoDCheck().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-			if cluster, err := client.Cluster(ctxChild); err != nil {
-				return err
-			} else if health, err := cluster.Health(ctxChild); err != nil {
+			if health, err := client.Health(ctxChild); err != nil {
 				return err
 			} else {
 				h.Members = health.Health
@@ -167,9 +165,9 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 
 				switch members[i].Group.Type() {
 				case api.ServerGroupTypeArangoD:
-					if v, ok := h.Members[driver.ServerID(m.Member.ID)]; ok {
-						results[i].IsClusterHealthy = v.Status == driver.ServerStatusGood
-						if results[i].IsServing() && v.SyncStatus == driver.ServerSyncStatusServing {
+					if v, ok := h.Members[adbDriverV2.ServerID(m.Member.ID)]; ok {
+						results[i].IsClusterHealthy = v.Status == adbDriverV2.ServerStatusGood
+						if results[i].IsServing() && v.SyncStatus == adbDriverV2.ServerSyncStatusServing {
 							if cs.client == nil || util.Rand().Intn(100) > 50 {
 								// Set client from nil or take next client with 50% probability.
 								cs.client = results[i].client
@@ -220,9 +218,9 @@ func (s *stateInspector) fetchArangosyncMemberState(ctx context.Context, m api.D
 		state.NotReachableErr = err
 	} else {
 		// convert arangosync VersionInfo to go-driver VersionInfo for simplicity:
-		state.Version = driver.VersionInfo{
+		state.Version = adbDriverV2.VersionInfo{
 			Server:  m.Group.AsRole(),
-			Version: driver.Version(v.Version),
+			Version: adbDriverV2.Version(v.Version),
 			License: GetImageLicense(m.Member.Image),
 			Details: map[string]interface{}{
 				"arangosync-build": v.Build,
@@ -283,7 +281,7 @@ func (s *stateInspector) fetchServerMemberState(ctx context.Context, m api.Deplo
 }
 
 // GetMemberClient returns member client to a server.
-func (s *stateInspector) GetMemberClient(id string) (driver.Client, error) {
+func (s *stateInspector) GetMemberClient(id string) (adbDriverV2.Client, error) {
 	if state, ok := s.MemberState(id); ok {
 		if state.NotReachableErr != nil {
 			// ArangoDB client can be set, but it might be old value.
@@ -299,7 +297,7 @@ func (s *stateInspector) GetMemberClient(id string) (driver.Client, error) {
 }
 
 // GetMemberSyncClient returns member client to a server.
-func (s *stateInspector) GetMemberSyncClient(id string) (client.API, error) {
+func (s *stateInspector) GetMemberSyncClient(id string) (syncClient.API, error) {
 	if state, ok := s.MemberState(id); ok {
 		if state.NotReachableErr != nil {
 			// ArangoSync client can be set, but it might be old value.
@@ -331,7 +329,7 @@ func (s *stateInspector) MemberState(id string) (State, bool) {
 // In the cluster mode only one field should be set: error or members.
 type Health struct {
 	// Members is a map of members of the cluster.
-	Members map[driver.ServerID]driver.ServerHealth
+	Members map[adbDriverV2.ServerID]adbDriverV2.ServerHealth
 	// Errors is set when it is not possible to fetch a cluster info.
 	Error error
 }
@@ -343,17 +341,17 @@ type State struct {
 	// IsClusterHealthy describes if member is healthy in a cluster. It is relevant only in cluster mode.
 	IsClusterHealthy bool
 	// Version of this specific member.
-	Version driver.VersionInfo
+	Version adbDriverV2.VersionInfo
 	// client to this specific ArangoDB member.
-	client driver.Client
+	client adbDriverV2.Client
 	// client to this specific ArangoSync member.
-	syncClient client.API
+	syncClient syncClient.API
 	// serving describes if a member can serve requests.
 	serving bool
 }
 
 // GetDatabaseClient returns client to the database.
-func (s State) GetDatabaseClient() (driver.Client, error) {
+func (s State) GetDatabaseClient() (adbDriverV2.Client, error) {
 	if s.client != nil {
 		return s.client, nil
 	}

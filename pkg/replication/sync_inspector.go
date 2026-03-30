@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/arangodb/arangosync-client/client"
+	syncClient "github.com/arangodb/arangosync-client/client"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -89,7 +89,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			if err != nil {
 				dr.log.Err(err).Warn("Failed to fetch endpoints from destination syncmaster")
 			}
-			destStatus, err := destClient.Master().Status(ctx, client.GetSyncStatusDetailsFull)
+			destStatus, err := destClient.Master().Status(ctx, syncClient.GetSyncStatusDetailsFull)
 			if err != nil {
 				dr.log.Err(err).Warn("Failed to fetch status from destination syncmaster")
 			} else {
@@ -130,7 +130,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 			if err != nil {
 				dr.log.Err(err).Warn("Failed to create source syncmaster client")
 			} else {
-				sourceStatus, err := sourceClient.Master().Status(ctx, client.GetSyncStatusDetailsShort)
+				sourceStatus, err := sourceClient.Master().Status(ctx, syncClient.GetSyncStatusDetailsShort)
 				if err != nil {
 					dr.log.Err(err).Warn("Failed to fetch status from source syncmaster")
 				}
@@ -155,7 +155,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 
 			// Cancel sync if needed
 			if cancelSyncNeeded {
-				req := client.CancelSynchronizationRequest{}
+				req := syncClient.CancelSynchronizationRequest{}
 				dr.log.Info("Canceling synchronization")
 				if _, err := destClient.Master().CancelSynchronization(ctx, req); err != nil {
 					dr.log.Err(err).Warn("Failed to cancel synchronization")
@@ -180,7 +180,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 						dr.reportInvalidConfigError(false, err, msg)
 						hasError = true
 					} else {
-						req := client.SynchronizationRequest{
+						req := syncClient.SynchronizationRequest{
 							Source:         source,
 							Authentication: auth,
 						}
@@ -217,7 +217,7 @@ func (dr *DeploymentReplication) inspectDeploymentReplication(lastInterval time.
 
 // isIncomingEndpoint returns true when given sync status's endpoint
 // intersects with the given endpoint spec.
-func (dr *DeploymentReplication) isIncomingEndpoint(status client.SyncInfo, epSpec api.EndpointSpec) (bool, error) {
+func (dr *DeploymentReplication) isIncomingEndpoint(status syncClient.SyncInfo, epSpec api.EndpointSpec) (bool, error) {
 	ep, err := dr.createArangoSyncEndpoint(epSpec)
 	if err != nil {
 		return false, errors.WithStack(err)
@@ -228,7 +228,7 @@ func (dr *DeploymentReplication) isIncomingEndpoint(status client.SyncInfo, epSp
 // hasOutgoingEndpoint returns true when given sync status has an outgoing
 // item that intersects with the given endpoint spec.
 // Returns: outgoing-ID, outgoing-found, error
-func (dr *DeploymentReplication) hasOutgoingEndpoint(status client.SyncInfo, epSpec api.EndpointSpec, reportedEndpoint client.Endpoint) (string, bool, error) {
+func (dr *DeploymentReplication) hasOutgoingEndpoint(status syncClient.SyncInfo, epSpec api.EndpointSpec, reportedEndpoint syncClient.Endpoint) (string, bool, error) {
 	ep, err := dr.createArangoSyncEndpoint(epSpec)
 	if err != nil {
 		return "", false, errors.WithStack(err)
@@ -243,7 +243,7 @@ func (dr *DeploymentReplication) hasOutgoingEndpoint(status client.SyncInfo, epS
 }
 
 // inspectIncomingSynchronizationStatus returns the synchronization status for the incoming sync
-func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus client.SyncInfo) api.SynchronizationStatus {
+func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus syncClient.SyncInfo) api.SynchronizationStatus {
 	const maxReportedIncomingSyncErrorsPerDatabase = 10
 
 	var totalShardsFromStatus, shardsInSync int
@@ -252,10 +252,10 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus
 		db := dbs[shard.Database]
 		db.ShardsTotal++
 		totalShardsFromStatus++
-		if shard.Status == client.SyncStatusRunning {
+		if shard.Status == syncClient.SyncStatusRunning {
 			db.ShardsInSync++
 			shardsInSync++
-		} else if shard.Status == client.SyncStatusFailed && len(db.Errors) < maxReportedIncomingSyncErrorsPerDatabase {
+		} else if shard.Status == syncClient.SyncStatusFailed && len(db.Errors) < maxReportedIncomingSyncErrorsPerDatabase {
 			db.Errors = append(db.Errors, api.DatabaseSynchronizationError{
 				Collection: shard.Collection,
 				Shard:      strconv.Itoa(shard.ShardIndex),
@@ -276,7 +276,7 @@ func (dr *DeploymentReplication) inspectIncomingSynchronizationStatus(destStatus
 	}
 	return api.SynchronizationStatus{
 		Progress:  progress,
-		AllInSync: destStatus.Status == client.SyncStatusRunning && shardsInSync == totalShards,
+		AllInSync: destStatus.Status == syncClient.SyncStatusRunning && shardsInSync == totalShards,
 		Databases: dbs,
 		Error:     "",
 	}

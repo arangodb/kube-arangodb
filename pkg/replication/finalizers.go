@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
+	syncClient "github.com/arangodb/arangosync-client/client"
+	adbDriverV1 "github.com/arangodb/go-driver"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -152,7 +152,7 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	}
 
 	// Get status from sync master.
-	syncInfo, err := destClient.Master().Status(ctx, client.GetSyncStatusDetailsShort)
+	syncInfo, err := destClient.Master().Status(ctx, syncClient.GetSyncStatusDetailsShort)
 	if err != nil {
 		return false, errors.WithMessage(err, "Failed to get status from target master")
 	}
@@ -160,11 +160,11 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 	// Check progress of a cancellation.
 	if syncStatus, err := dr.getCancellationProgress(syncInfo); err != nil {
 		return false, err
-	} else if syncStatus == client.SyncStatusInactive {
+	} else if syncStatus == syncClient.SyncStatusInactive {
 		return false, nil
-	} else if syncStatus == client.SyncStatusFailed {
+	} else if syncStatus == syncClient.SyncStatusFailed {
 		return false, errors.WithMessagef(err, "unexpected synchronization status \"%s\"", syncStatus)
-	} else if syncStatus == client.SyncStatusCancelling {
+	} else if syncStatus == syncClient.SyncStatusCancelling {
 		// Synchronization is cancelling, so request was already sent.
 		if !abort {
 			return true, nil
@@ -195,11 +195,11 @@ func (dr *DeploymentReplication) inspectFinalizerDeplReplStopSync(ctx context.Co
 
 	// From here on this code should be launched only once unless abort option is changed
 	// or replication is not in cancelling state.
-	sourceServerMode := driver.ServerModeDefault
+	sourceServerMode := adbDriverV1.ServerModeDefault
 	if util.TypeOrDefault[bool](p.Spec.Cancellation.SourceReadOnly) {
-		sourceServerMode = driver.ServerModeReadOnly
+		sourceServerMode = adbDriverV1.ServerModeReadOnly
 	}
-	req := client.CancelSynchronizationRequest{
+	req := syncClient.CancelSynchronizationRequest{
 		Force:            abort,
 		ForceTimeout:     AbortTimeout,
 		SourceServerMode: sourceServerMode,
@@ -244,15 +244,15 @@ func finalizerExists(p *api.ArangoDeploymentReplication, finalizer string) bool 
 	return false
 }
 
-func (dr *DeploymentReplication) getCancellationProgress(syncInfo client.SyncInfo) (client.SyncStatus, error) {
+func (dr *DeploymentReplication) getCancellationProgress(syncInfo syncClient.SyncInfo) (syncClient.SyncStatus, error) {
 	if syncInfo.IsInactive() {
 		if len(syncInfo.Source) > 0 {
 			return "", errors.New("Inactive target data center is still configured with the endpoint set to a source DC")
 		}
-		return client.SyncStatusInactive, nil
+		return syncClient.SyncStatusInactive, nil
 	}
 
-	if syncInfo.Status == client.SyncStatusInactive {
+	if syncInfo.Status == syncClient.SyncStatusInactive {
 		// There are some not finished shards but status is inactive, so it was na canceled.
 		return "", errors.New("Target data center is inactive but some shards are not closed")
 	}
@@ -263,7 +263,7 @@ func (dr *DeploymentReplication) getCancellationProgress(syncInfo client.SyncInf
 // ensureInSync checks whether data is consistent on both data centers.
 // During this check both data centers will be in read-only mode.
 // Return nil when data is consistent or when consistency was already checked.
-func (dr *DeploymentReplication) ensureInSync(ctx context.Context, c client.API) (bool, int, int, error) {
+func (dr *DeploymentReplication) ensureInSync(ctx context.Context, c syncClient.API) (bool, int, int, error) {
 	if dr.status.Conditions.IsTrue(api.ConditionTypeEnsuredInSync) {
 		return true, 0, 0, nil
 	}
@@ -277,7 +277,7 @@ func (dr *DeploymentReplication) ensureInSync(ctx context.Context, c client.API)
 		dr.status.Conditions.Update(api.ConditionTypeEnsuredInSync, false, "Consistent", "Data on both data centers is not the same") {
 		// If `GetSynchronizationBarrierStatus` could return active barrier then it would not create the above condition.
 		if err := c.Master().CreateSynchronizationBarrier(ctx); err != nil {
-			if driver.IsPreconditionFailed(err) {
+			if adbDriverV1.IsPreconditionFailed(err) {
 				dr.log.Info("Can not create synchronization barrier because synchronization is not running")
 				return false, 0, 0, nil
 			}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -81,18 +81,20 @@ func Test_Refresh_Cleanup(t *testing.T) {
 	// Arrange
 	handler, client := newErrorsFakeHandler(mockErrorsArangoClientBackup{})
 
-	id := driver.BackupID(uuid.NewUUID())
-	client.state.backups = map[driver.BackupID]driver.BackupMeta{
+	id := string(uuid.NewUUID())
+	client.state.backups = map[string]adbDriverV2.BackupMeta{
 		id: {
-			ID:                      id,
-			Version:                 "3.12.0",
-			DateTime:                time.Now().Add(-time.Hour),
-			NumberOfFiles:           123,
-			NumberOfDBServers:       3,
-			SizeInBytes:             123,
-			PotentiallyInconsistent: false,
-			Available:               true,
-			NumberOfPiecesPresent:   123,
+			Version:               "3.12.0",
+			Available:             true,
+			NumberOfPiecesPresent: 123,
+			BackupResponse: adbDriverV2.BackupResponse{
+				ID:                      id,
+				CreationTime:            time.Now().Add(-time.Hour),
+				NumberOfFiles:           123,
+				NumberOfDBServers:       3,
+				SizeInBytes:             123,
+				PotentiallyInconsistent: false,
+			},
 		},
 	}
 
@@ -132,7 +134,7 @@ func Test_Refresh_Cleanup(t *testing.T) {
 
 	t.Run("Do not refresh if backup is creating", func(t *testing.T) {
 		// Arrange
-		fakeId := driver.BackupID(uuid.NewUUID())
+		fakeId := string(uuid.NewUUID())
 		createBackup := backupApi.ArangoBackup{
 
 			ObjectMeta: meta.ObjectMeta{
@@ -143,7 +145,7 @@ func Test_Refresh_Cleanup(t *testing.T) {
 					State: backupApi.ArangoBackupStateCreating,
 				},
 				Backup: &backupApi.ArangoBackupDetails{
-					ID: string(fakeId),
+					ID: fakeId,
 				},
 			},
 		}

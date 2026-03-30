@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -48,11 +48,11 @@ var (
 )
 
 type InfoV1 struct {
-	Version   driver.Version `json:"version"`
-	Build     string         `json:"build"`
-	Edition   License        `json:"edition"`
-	GoVersion string         `json:"go_version"`
-	BuildDate string         `json:"build_date,omitempty"`
+	Version   adbDriverV2.Version `json:"version"`
+	Build     string              `json:"build"`
+	Edition   License             `json:"edition"`
+	GoVersion string              `json:"go_version"`
+	BuildDate string              `json:"build_date,omitempty"`
 }
 
 func (i InfoV1) IsEnterprise() bool {
@@ -65,7 +65,7 @@ func (i InfoV1) String() string {
 
 func GetVersionV1() InfoV1 {
 	return InfoV1{
-		Version:   driver.Version(version),
+		Version:   adbDriverV2.Version(version),
 		Build:     build,
 		Edition:   edition,
 		GoVersion: goVersion,

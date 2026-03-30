@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,24 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
-package reconcile
+package arangod
 
-type actionRebalancerClean struct {
-	actionEmpty
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
+func Test_PathMerger(t *testing.T) {
+	run := func(expected string, path ...string) {
+		t.Run(expected, func(t *testing.T) {
+			require.Equal(t, expected, newPath(path...))
+		})
+	}
+
+	run("/_admin/cluster/maintenance", "/_admin/cluster/maintenance")
+	run("/_admin/cluster/maintenance", "/_admin", "/cluster/maintenance")
+	run("/_admin/cluster/maintenance", "/_admin/", "/cluster/maintenance")
 }

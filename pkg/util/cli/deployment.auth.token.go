@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
+
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 type deploymentTokenAuth struct {
@@ -47,7 +49,7 @@ func (d deploymentTokenAuth) Register(cmd *cobra.Command) error {
 	)
 }
 
-func (d deploymentTokenAuth) Authentication(cmd *cobra.Command) (driver.Authentication, error) {
+func (d deploymentTokenAuth) Authentication(cmd *cobra.Command) (adbDriverV2Connection.Authentication, error) {
 	if err := ValidateFlags(d.token)(cmd, nil); err != nil {
 		return nil, err
 	}
@@ -57,5 +59,5 @@ func (d deploymentTokenAuth) Authentication(cmd *cobra.Command) (driver.Authenti
 		return nil, err
 	}
 
-	return driver.RawAuthentication(fmt.Sprintf("bearer %s", token)), nil
+	return adbDriverV2Connection.NewHeaderAuth(utilConstants.HTTPAuthorizationHeader, fmt.Sprintf("bearer %s", token)), nil
 }
