@@ -33,6 +33,7 @@ import (
 	"k8s.io/client-go/util/flowcontrol"
 
 	"github.com/arangodb/kube-arangodb/pkg/crd"
+	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -40,7 +41,19 @@ import (
 
 const TEST_KUBECONFIG util.EnvironmentVariable = "TEST_KUBECONFIG"
 
-func ExternalClient(t *testing.T) (kclient.Client, string) {
+func ResetAllCRDsOpts(v crds.CRDOptions) util.Mod[crd.EnsureCRDOptions] {
+	return func(in *crd.EnsureCRDOptions) {
+		opts := crd.GetDefaultCRDOptions()
+
+		for _, k := range util.MapKeys(opts) {
+			opts[k] = v
+		}
+
+		in.CRDOptions = opts
+	}
+}
+
+func ExternalClient(t *testing.T, mods ...util.Mod[crd.EnsureCRDOptions]) (kclient.Client, string) {
 	if !TEST_KUBECONFIG.Exists() {
 		t.Skipf("TEST_KUBECONFIG is not set")
 	}
@@ -54,7 +67,9 @@ func ExternalClient(t *testing.T) (kclient.Client, string) {
 	require.NoError(t, err)
 
 	require.True(t, t.Run("Ensure CRDs", func(t *testing.T) {
-		require.NoError(t, crd.EnsureCRDWithOptions(shutdown.Context(), client, crd.EnsureCRDOptions{}))
+		var opts crd.EnsureCRDOptions
+		util.ApplyMods(&opts, mods...)
+		require.NoError(t, crd.EnsureCRDWithOptions(shutdown.Context(), client, opts))
 	}), "Unable to install CRDs")
 
 	ns, err := client.Kubernetes().CoreV1().Namespaces().Create(shutdown.Context(), &core.Namespace{

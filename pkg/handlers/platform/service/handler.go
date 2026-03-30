@@ -271,9 +271,6 @@ func (h *handler) HandleChart(ctx context.Context, item operation.Item, extensio
 	}
 
 	if !status.Chart.Equals(chart) {
-		if !apiErrors.IsNotFound(err) {
-			return false, err
-		}
 
 		status.Chart = nil
 
