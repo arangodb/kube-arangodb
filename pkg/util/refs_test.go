@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -194,4 +194,15 @@ func Test_FirstNotDefault(t *testing.T) {
 		require.Equal(t, &z1, FirstNotDefault[*z](nil, &z1))
 		require.Equal(t, &z2, FirstNotDefault[*z](&z2, &z1))
 	})
+}
+
+func testIsDefault[T any](t *testing.T, v T, def bool) {
+	t.Run(TypeOf[T]().String(), func(t *testing.T) {
+		require.Equal(t, def, IsDefault[T](v))
+	})
+}
+
+func Test_IsDefault(t *testing.T) {
+	testIsDefault[any](t, nil, true)
+	testIsDefault[any](t, map[string]string{}, false)
 }

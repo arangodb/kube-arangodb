@@ -29,6 +29,7 @@ import (
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -84,7 +85,7 @@ func (cc *cacheObject) Connection(host string) (adbDriverV2Connection.Connection
 
 	conn := adbDriverV2Connection.HttpConfiguration{
 		Authentication:     auth,
-		Endpoint:           adbDriverV2Connection.NewRoundRobinEndpoints([]string{host}),
+		Endpoint:           cc.extendHosts(host),
 		Transport:          transport,
 		DontFollowRedirect: true,
 	}
@@ -107,13 +108,16 @@ func (cc *cacheObject) Client(host string) (adbDriverV2.Client, error) {
 	return adbDriverV2.NewClient(conn), nil
 }
 
-func (cc *cacheObject) extendHost(host string) string {
+func (cc *cacheObject) extendHosts(hosts ...string) adbDriverV2Connection.Endpoint {
 	scheme := "http"
 	if cc.in.GetSpec().TLS.IsSecure() {
 		scheme = "https"
 	}
 
-	return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(shared.ArangoPort))
+	return adbDriverV2Connection.NewRoundRobinEndpoints(util.FormatList(hosts, func(host string) string {
+		return scheme + "://" + net.JoinHostPort(host, strconv.Itoa(shared.ArangoPort))
+	}))
+
 }
 
 func (cc *cacheObject) getConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error) {
@@ -174,7 +178,7 @@ func (cc *cacheObject) GetAuth(ctx context.Context) (adbDriverV2Connection.Authe
 }
 
 func (cc *cacheObject) getDatabaseClient() (adbDriverV2.Client, error) {
-	c, err := cc.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
+	c, err := cc.Client(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject()))
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
