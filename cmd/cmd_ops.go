@@ -39,7 +39,7 @@ var (
 )
 
 func init() {
-	cmdMain.AddCommand(version.Command())
+	cmdOps.AddCommand(version.Command())
 }
 
 func CommandOps() *cobra.Command {

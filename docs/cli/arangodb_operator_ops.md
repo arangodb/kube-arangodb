@@ -18,6 +18,7 @@ Available Commands:
   debug-package Generate debug package for debugging
   help          Help about any command
   task          
+  version       Show the version
 
 Flags:
   -h, --help   help for arangodb_operator_ops

@@ -24,8 +24,6 @@ Available Commands:
   sidecar         Runs the sidecar as a daemon with serving group
   storage         
   task          
-  version         
-  version         Show the version
   version         Show the version
   webhook         
 
