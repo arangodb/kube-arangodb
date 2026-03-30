@@ -27,6 +27,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
+
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 )
 
 func testRefs[T interface{}](t *testing.T, in, v1, def T) {
@@ -198,6 +200,9 @@ func Test_FirstNotDefault(t *testing.T) {
 
 func testIsDefault[T any](t *testing.T, v T, def bool) {
 	t.Run(TypeOf[T]().String(), func(t *testing.T) {
+		defer func() {
+			require.Nil(t, recover())
+		}()
 		require.Equal(t, def, IsDefault[T](v))
 	})
 }
@@ -205,4 +210,8 @@ func testIsDefault[T any](t *testing.T, v T, def bool) {
 func Test_IsDefault(t *testing.T) {
 	testIsDefault[any](t, nil, true)
 	testIsDefault[any](t, map[string]string{}, false)
+	testIsDefault[string](t, "", true)
+	testIsDefault[string](t, "xx", false)
+	testIsDefault[adbDriverV2.Version](t, "", true)
+	testIsDefault[adbDriverV2.VersionInfo](t, adbDriverV2.VersionInfo{}, true)
 }

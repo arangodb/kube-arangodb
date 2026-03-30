@@ -87,7 +87,21 @@ func IsDefault[T any](in T) bool {
 		return true
 	}
 
-	return t.IsZero() || t.IsNil()
+	if t.IsZero() {
+		return true
+	}
+
+	switch t.Kind() {
+	case reflect.Chan,
+		reflect.Func,
+		reflect.Interface,
+		reflect.Map,
+		reflect.Pointer,
+		reflect.Slice:
+		return t.IsNil()
+	default:
+		return false
+	}
 }
 
 // Default returns generic default value for type T
