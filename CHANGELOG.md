@@ -37,6 +37,7 @@
 - (Feature) Switch Endpoints to EndpointSlices
 - (Feature) Ensure License Grace Period
 - (Feature) (Platform) Allow Service Chart change
+- (Feature) Proxy CLI Options
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService

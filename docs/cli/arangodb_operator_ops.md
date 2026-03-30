@@ -17,7 +17,6 @@ Available Commands:
   crd           CRD operations
   debug-package Generate debug package for debugging
   help          Help about any command
-  license       License
   task          
 
 Flags:
