@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,45 +18,41 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package main
+package platform
 
 import (
-	"errors"
-	"os"
+	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/logging"
-	"github.com/arangodb/kube-arangodb/pkg/platform"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
-	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
-func main() {
-	if err := mainE(); err != nil {
-		var v cli.CommandExitCode
-		if errors.As(err, &v) {
-			os.Exit(v.ExitCode)
-		}
+func licenseCheck() (*cobra.Command, error) {
+	var cmd cobra.Command
 
-		os.Exit(1)
+	cmd.Use = "check"
+	cmd.Short = "Check the connection"
+
+	if err := cli.RegisterFlags(&cmd, flagLicenseManager); err != nil {
+		return nil, err
 	}
+
+	cmd.RunE = getRunner().With(licenseCheckRun).Run
+
+	return &cmd, nil
 }
 
-func mainE() error {
-	c, err := platform.NewInstaller()
+func licenseCheckRun(cmd *cobra.Command, args []string) error {
+	mc, err := cli.LicenseManagerClient(cmd, flagLicenseManager, flagLicenseManager)
 	if err != nil {
 		return err
 	}
 
-	c.AddCommand(version.Command())
-
-	if err := logging.Init(c); err != nil {
+	id, err := mc.Identity(cmd.Context())
+	if err != nil {
 		return err
 	}
 
-	if err := c.ExecuteContext(shutdown.Context()); err != nil {
-		return err
-	}
+	logger.Info("Identity: %s", id.Customer.Name)
 
 	return nil
 }

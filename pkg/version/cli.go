@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,23 +18,27 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package cmd
+package version
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/kube-arangodb/pkg/version"
+	"github.com/arangodb/kube-arangodb/pkg/util/license"
 )
 
-func init() {
-	cmdMain.AddCommand(cmdVersion)
-}
+func Command() *cobra.Command {
+	var l = cobra.Command{
+		Use:   "version",
+		Short: "Show the version",
+		Long:  "Show the version",
+		Run:   versionRun,
+	}
 
-var cmdVersion = &cobra.Command{
-	Use: "version",
-	Run: versionRun,
+	license.RegisterCommand(&l)
+
+	return &l
 }
 
 func versionRun(cmd *cobra.Command, args []string) {
-	println(version.GetVersionV1().String())
+	println(GetVersionV1().String())
 }

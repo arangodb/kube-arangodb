@@ -21,11 +21,10 @@ Available Commands:
   features        Describe all operator features
   help            Help about any command
   integration     
-  license         License
   sidecar         Runs the sidecar as a daemon with serving group
   storage         
   task          
-  version         
+  version         Show the version
   webhook         
 
 Flags:

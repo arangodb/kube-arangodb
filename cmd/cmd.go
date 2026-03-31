@@ -67,7 +67,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/admission"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-	"github.com/arangodb/kube-arangodb/pkg/util/license"
 	"github.com/arangodb/kube-arangodb/pkg/util/metrics"
 	"github.com/arangodb/kube-arangodb/pkg/util/probe"
 	"github.com/arangodb/kube-arangodb/pkg/util/retry"
@@ -197,7 +196,7 @@ var (
 )
 
 func init() {
-	license.RegisterCommand(&cmdMain)
+	cmdMain.AddCommand(version.Command())
 
 	if err := initE(); err != nil {
 		panic(err.Error())

@@ -51,6 +51,12 @@ func NewRegistry() Registry {
 			Default:     nil,
 			Hidden:      true,
 		},
+
+		flagProxy: Flag[bool]{
+			Name:        "registry.proxy",
+			Description: "Uses System Proxy",
+			Default:     false,
+		},
 	}
 }
 
@@ -64,6 +70,7 @@ type registry struct {
 	flagRegistryUseCredentials Flag[bool]
 	flagRegistryInsecure       Flag[[]string]
 	flagRegistryList           Flag[[]string]
+	flagProxy                  Flag[bool]
 }
 
 func (r registry) GetName() string {
@@ -76,6 +83,7 @@ func (r registry) Register(cmd *cobra.Command) error {
 		r.flagRegistryList,
 		r.flagRegistryInsecure,
 		r.flagRegistryUseCredentials,
+		r.flagProxy,
 	)
 }
 
@@ -84,6 +92,7 @@ func (r registry) Validate(cmd *cobra.Command) error {
 		r.flagRegistryList,
 		r.flagRegistryInsecure,
 		r.flagRegistryUseCredentials,
+		r.flagProxy,
 	)(cmd, nil)
 }
 
@@ -94,10 +103,18 @@ func (r registry) Client(cmd *cobra.Command, hosts map[string]util.ModR[config.H
 		ReqConcurrent: 8,
 	}))
 
-	flags = append(flags, regclient.WithRegOpts(reg.WithTransport(&goHttp.Transport{
-		MaxConnsPerHost: 64,
-		MaxIdleConns:    100,
-	})))
+	var tr goHttp.Transport
+
+	tr.MaxConnsPerHost = 64
+	tr.MaxIdleConns = 100
+
+	if proxy, err := r.flagProxy.Get(cmd); err != nil {
+		return nil, err
+	} else if proxy {
+		tr.Proxy = goHttp.ProxyFromEnvironment
+	}
+
+	flags = append(flags, regclient.WithRegOpts(reg.WithTransport(&tr)))
 
 	configs := map[string]config.Host{}
 

@@ -70,8 +70,10 @@ Flags:
       --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
       --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --license.proxy                      Uses System Proxy
       --registry.docker.credentials        Use Docker Credentials
       --registry.docker.insecure strings   List of insecure registries
+      --registry.proxy                     Uses System Proxy
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
@@ -93,8 +95,10 @@ Flags:
       --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
       --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --license.proxy                      Uses System Proxy
       --registry.docker.credentials        Use Docker Credentials
       --registry.docker.insecure strings   List of insecure registries
+      --registry.proxy                     Uses System Proxy
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
@@ -135,8 +139,10 @@ Flags:
       --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
       --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --license.proxy                      Uses System Proxy
       --registry.docker.credentials        Use Docker Credentials
       --registry.docker.insecure strings   List of insecure registries
+      --registry.proxy                     Uses System Proxy
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
@@ -157,6 +163,7 @@ Flags:
   -h, --help                               help for import
       --registry.docker.credentials        Use Docker Credentials
       --registry.docker.insecure strings   List of insecure registries
+      --registry.proxy                     Uses System Proxy
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
@@ -179,9 +186,11 @@ Flags:
       --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
       --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
+      --license.proxy                      Uses System Proxy
       --platform.name string               Kubernetes Platform Name (name of the ArangoDeployment)
       --registry.docker.credentials        Use Docker Credentials
       --registry.docker.insecure strings   List of insecure registries
+      --registry.proxy                     Uses System Proxy
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
@@ -218,6 +227,7 @@ Usage:
 
 Available Commands:
   activate    Activates the License on ArangoDB Endpoint
+  check       Check the connection
   generate    Generate the License
   inventory   Inventory Generator
 
@@ -278,6 +288,7 @@ Flags:
       --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --license.interval duration      Interval of the license synchronization
+      --license.proxy                  Uses System Proxy
       --telemetry                      Enables Telemetry (default true)
 
 Global Flags:
@@ -302,6 +313,7 @@ Flags:
       --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
       --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
+      --license.proxy                  Uses System Proxy
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
