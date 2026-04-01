@@ -121,6 +121,9 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	servingGroup := mode.ServingGroup()
 	var client driver.Client
 	members.ForEach(func(id int) {
+		ctx, c := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+		defer c()
+
 		switch members[id].Group.Type() {
 		case api.ServerGroupTypeArangoSync:
 			results[id] = s.fetchArangosyncMemberState(ctx, members[id])
