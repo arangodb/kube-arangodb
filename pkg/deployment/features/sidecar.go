@@ -29,16 +29,16 @@ var gatewaySidecar = &feature{
 	name:               "gateway-sidecar",
 	description:        "Enables Gateway Integration",
 	enterpriseRequired: true,
-	enabledByDefault:   true,
-	dependencies:       []Feature{jwtRotation, gateway},
+	enabledByDefault:   false,
+	dependencies:       []Feature{JWTRotation(), JWTAsymmetricKey(), Gateway()},
 }
 
 var centralServices = &feature{
 	name:               "central-services",
 	description:        "Enables Central Services",
 	enterpriseRequired: true,
-	enabledByDefault:   true,
-	dependencies:       []Feature{gatewaySidecar},
+	enabledByDefault:   false,
+	dependencies:       []Feature{GatewayIntegration()},
 }
 
 func GatewayIntegration() Feature {

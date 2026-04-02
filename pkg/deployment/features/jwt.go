@@ -37,8 +37,8 @@ var jwtAsymmetricKey = &feature{
 	name:               "jwt-asymmetric-key",
 	description:        "Uses Asymmetric Key as a default in ArangoDB",
 	enterpriseRequired: false,
-	enabledByDefault:   true,
-	hidden:             true,
+	enabledByDefault:   false,
+	hidden:             false,
 	version:            newFeatureVersion("3.12.8", NoVersionLimit),
 }
 
