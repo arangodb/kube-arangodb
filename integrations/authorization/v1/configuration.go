@@ -36,7 +36,7 @@ type ConfigurationType string
 
 func (c ConfigurationType) Validate() error {
 	switch c {
-	case ConfigurationTypeAlways, ConfigurationTypeCentral, ConfigurationTypeCentralPermissive:
+	case ConfigurationTypeAlways, ConfigurationTypeCentral, ConfigurationTypeCentralPermissive, ConfigurationTypeNever:
 		return nil
 	default:
 		return errors.Errorf("Configuration type '%s' is not supported", string(c))
@@ -48,6 +48,7 @@ func (c ConfigurationType) String() string {
 }
 
 const (
+	ConfigurationTypeNever             ConfigurationType = "never"
 	ConfigurationTypeAlways            ConfigurationType = "always"
 	ConfigurationTypeCentral           ConfigurationType = "central"
 	ConfigurationTypeCentralPermissive ConfigurationType = "central-permissive"
@@ -63,6 +64,8 @@ type Configuration struct {
 
 func (c Configuration) Plugin(ctx context.Context) (pbImplAuthorizationV1Shared.Plugin, error) {
 	switch c.Type {
+	case ConfigurationTypeNever:
+		return pbImplAuthorizationV1Shared.NewNeverPlugin(), nil
 	case ConfigurationTypeAlways:
 		return pbImplAuthorizationV1Shared.NewAlwaysPlugin(), nil
 	case ConfigurationTypeCentral:

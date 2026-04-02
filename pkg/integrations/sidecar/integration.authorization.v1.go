@@ -24,12 +24,13 @@ import (
 	core "k8s.io/api/core/v1"
 
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type IntegrationAuthorizationV1 struct {
-	Core *Core
+	Core   *Core
+	Status *api.DeploymentStatus
 }
 
 func (i IntegrationAuthorizationV1) Name() []string {
@@ -41,6 +42,18 @@ func (i IntegrationAuthorizationV1) Validate() error {
 }
 
 func (i IntegrationAuthorizationV1) Envs() ([]core.EnvVar, error) {
+	var v = pbImplAuthorizationV1.ConfigurationTypeNever
+
+	if features.CentralServices().Enabled() && i.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		if features.RBACEnforced().Enabled() {
+			v = pbImplAuthorizationV1.ConfigurationTypeCentral
+		} else {
+			v = pbImplAuthorizationV1.ConfigurationTypeCentralPermissive
+		}
+	} else {
+		v = pbImplAuthorizationV1.ConfigurationTypeAlways
+	}
+
 	var envs = []core.EnvVar{
 		{
 			Name:  "INTEGRATION_AUTHORIZATION_V1",
@@ -48,7 +61,7 @@ func (i IntegrationAuthorizationV1) Envs() ([]core.EnvVar, error) {
 		},
 		{
 			Name:  "INTEGRATION_AUTHORIZATION_V1_TYPE",
-			Value: util.BoolSwitch(features.RBACEnforced().Enabled(), pbImplAuthorizationV1.ConfigurationTypeCentral, pbImplAuthorizationV1.ConfigurationTypeCentralPermissive).String(),
+			Value: v.String(),
 		},
 	}
 
