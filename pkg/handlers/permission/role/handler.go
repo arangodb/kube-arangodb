@@ -233,7 +233,7 @@ func (h *handler) HandleDeployment(ctx context.Context, item operation.Item, ext
 }
 
 func (h *handler) HandleDeploymentSidecarConnection(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionRole, status *permissionApi.ArangoPermissionRoleStatus, depl *api.ArangoDeployment) (bool, error) {
-	conn, err := integration.NewIntegrationConnectionFromDeployment(h.kubeClient, depl, utilToken.WithRelativeDuration(time.Minute))
+	conn, enabled, err := integration.NewIntegrationConnectionFromDeployment(h.kubeClient, depl, utilToken.WithRelativeDuration(time.Minute))
 	if err != nil {
 		logger.Err(err).Warn("Deployment is not reachable")
 
@@ -242,6 +242,14 @@ func (h *handler) HandleDeploymentSidecarConnection(ctx context.Context, item op
 		}
 
 		return false, operator.Stop("Deployment sidecar not reachable")
+	}
+
+	if !enabled {
+		if status.Conditions.Remove(permissionApi.SidecarReachableCondition) {
+			return true, operator.Reconcile("Conditions updated")
+		}
+
+		return false, nil
 	}
 
 	defer conn.Close()

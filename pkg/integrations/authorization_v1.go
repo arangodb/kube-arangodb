@@ -51,7 +51,7 @@ func (a *authorizationV1) Description() string {
 
 func (a *authorizationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
-		fs.StringVar((*string)(&a.config.Type), "type", string(pbImplAuthorizationV1.ConfigurationTypeCentral), "Type of the Authorization Integration"),
+		fs.StringVar((*string)(&a.config.Type), "type", string(pbImplAuthorizationV1.ConfigurationTypeNever), "Type of the Authorization Integration"),
 	)
 }
 

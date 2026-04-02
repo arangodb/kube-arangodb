@@ -87,11 +87,11 @@ func NewIntegrationConnection(opts ...grpc.DialOption) (*grpc.ClientConn, error)
 	return grpc.NewClient(addr, opts...)
 }
 
-func NewIntegrationConnectionFromDeployment(client kubernetes.Interface, depl *api.ArangoDeployment, mods ...util.ModR[utilToken.Claims]) (*grpc.ClientConn, error) {
+func NewIntegrationConnectionFromDeployment(client kubernetes.Interface, depl *api.ArangoDeployment, mods ...util.ModR[utilToken.Claims]) (*grpc.ClientConn, bool, error) {
 	spec := depl.GetAcceptedSpec()
 
 	if !depl.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
-		return nil, errors.Errorf("Integration Service is not enabled")
+		return nil, false, nil
 	}
 
 	auth := cache.NewObject[utilToken.Secret](utilTokenLoader.SecretCacheSecretAPI(client.CoreV1().Secrets(depl.GetNamespace()), pod.JWTSecretFolder(depl.GetName()), 15*time.Second))
@@ -107,5 +107,10 @@ func NewIntegrationConnectionFromDeployment(client kubernetes.Interface, depl *a
 	}
 	opts = append(opts, authentication.NewInterceptorClientOptions(authentication.NewSecretAuthentication(auth, mods...))...)
 
-	return grpc.NewClient(fmt.Sprintf("%s:%d", k8sutil.CreateSidecarClientServiceName(depl.GetName()), shared.InternalSidecarContainerPortGRPC), opts...)
+	con, err := grpc.NewClient(fmt.Sprintf("%s:%d", k8sutil.CreateSidecarClientServiceName(depl.GetName()), shared.InternalSidecarContainerPortGRPC), opts...)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return con, true, nil
 }

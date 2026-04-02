@@ -198,9 +198,13 @@ func (h *handler) finalizerPolicyRemoval(ctx context.Context, extension *permiss
 		return nil
 	}
 
-	conn, err := integration.NewIntegrationConnectionFromDeployment(h.kubeClient, depl, utilToken.WithRelativeDuration(time.Minute))
+	conn, enabled, err := integration.NewIntegrationConnectionFromDeployment(h.kubeClient, depl, utilToken.WithRelativeDuration(time.Minute))
 	if err != nil {
 		return err
+	}
+
+	if !enabled {
+		return nil
 	}
 
 	defer conn.Close()

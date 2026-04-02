@@ -194,9 +194,13 @@ func (h *handler) finalizerRoleRemoval(ctx context.Context, extension *permissio
 		return nil
 	}
 
-	conn, err := integration.NewIntegrationConnectionFromDeployment(h.kubeClient, depl, utilToken.WithRelativeDuration(time.Minute))
+	conn, enabled, err := integration.NewIntegrationConnectionFromDeployment(h.kubeClient, depl, utilToken.WithRelativeDuration(time.Minute))
 	if err != nil {
 		return err
+	}
+
+	if !enabled {
+		return nil
 	}
 
 	defer conn.Close()
