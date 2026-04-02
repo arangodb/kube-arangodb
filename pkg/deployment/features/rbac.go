@@ -30,7 +30,7 @@ var rbacEnforced = &feature{
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 	hidden:             true,
-	dependencies:       []Feature{gatewaySidecar},
+	dependencies:       []Feature{GatewayIntegration()},
 }
 
 func RBACEnforced() Feature {
