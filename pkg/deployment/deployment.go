@@ -35,6 +35,8 @@ import (
 
 	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	"github.com/arangodb/arangosync-client/client"
+	"github.com/arangodb/go-driver"
+	"github.com/arangodb/go-driver/http"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
@@ -54,6 +56,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -293,7 +296,35 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	d.memberState = memberState.NewStateInspector(d)
 
-	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(d.getAuth, d.getConnConfig))
+	getConnConfigCache := cache.NewObject(func(ctx context.Context) (http.ConnectionConfig, time.Duration, error) {
+		conn, err := d.getConnConfig()
+		if err != nil {
+			return http.ConnectionConfig{}, 0, err
+		}
+
+		return conn, time.Minute, nil
+	})
+
+	getAuthCache := cache.NewObject(func(ctx context.Context) (driver.Authentication, time.Duration, error) {
+		auth, err := d.getAuth()
+		if err != nil {
+			return nil, 0, err
+		}
+
+		return auth, time.Minute, nil
+	})
+
+	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(func() (driver.Authentication, error) {
+		ctx, c := context.WithTimeout(shutdown.Context(), 15*time.Second)
+		defer c()
+
+		return getAuthCache.Get(ctx)
+	}, func() (http.ConnectionConfig, error) {
+		ctx, c := context.WithTimeout(shutdown.Context(), 15*time.Second)
+		defer c()
+
+		return getConnConfigCache.Get(ctx)
+	}))
 
 	d.reconciler = reconcile.NewReconciler(apiObject.GetNamespace(), apiObject.GetName(), d)
 	d.resilience = resilience.NewResilience(apiObject.GetNamespace(), apiObject.GetName(), d)

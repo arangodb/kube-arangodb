@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import (
 	"context"
 	"net"
 	"strconv"
-	"sync"
 
 	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	driver "github.com/arangodb/go-driver"
@@ -63,15 +62,12 @@ func NewClientCache(in CacheGen, factory conn.Factory) Cache {
 }
 
 type cache struct {
-	mutex sync.Mutex
-	in    CacheGen
+	in CacheGen
 
 	factory conn.Factory
 }
 
 func (cc *cache) GetRaw(group api.ServerGroup, id string) (conn.Connection, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
 	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
 
 	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
@@ -96,8 +92,6 @@ func (cc *cache) extendHost(host string) string {
 }
 
 func (cc *cache) getClient(group api.ServerGroup, id string) (driver.Client, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
 	m, _, _ := cc.in.GetStatus().Members.ElementByID(id)
 
 	endpoint, err := cc.in.GenerateMemberEndpoint(group, m)
@@ -134,9 +128,6 @@ func (cc *cache) GetAuth() conn.Auth {
 }
 
 func (cc *cache) getDatabaseClient() (driver.Client, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-
 	c, err := cc.factory.Client(cc.extendHost(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject())))
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -163,9 +154,6 @@ func (cc *cache) GetDatabase(ctx context.Context) (driver.Client, error) {
 
 // GetAgency returns a cached client for the agency
 func (cc *cache) GetAgency(_ context.Context, agencyIDs ...string) (agency.Agency, error) {
-	cc.mutex.Lock()
-	defer cc.mutex.Unlock()
-
 	// Not found, create a new client
 	var dnsNames []string
 	for _, m := range cc.in.GetStatus().Members.Agents {

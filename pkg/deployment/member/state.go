@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -121,19 +121,19 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	servingGroup := mode.ServingGroup()
 	var client driver.Client
 	members.ForEach(func(id int) {
-		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoDCheck().WithTimeout(ctx)
-		defer cancel()
+		ctx, c := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+		defer c()
 
 		switch members[id].Group.Type() {
 		case api.ServerGroupTypeArangoSync:
-			results[id] = s.fetchArangosyncMemberState(ctxChild, members[id])
+			results[id] = s.fetchArangosyncMemberState(ctx, members[id])
 		case api.ServerGroupTypeArangoD:
-			results[id] = s.fetchServerMemberState(ctxChild, members[id], servingGroup)
+			results[id] = s.fetchServerMemberState(ctx, members[id], servingGroup)
 			if results[id].IsServing() {
 				client = results[id].client
 			}
 		case api.ServerGroupTypeGateway:
-			results[id] = s.fetchGatewayMemberState(ctxChild, members[id])
+			results[id] = s.fetchGatewayMemberState(ctx, members[id])
 		default:
 			assertion.InvalidGroupKey.Assert(true, "Unable to fetch Health for an unknown group: %s", members[id].Group.AsRole())
 			results[id] = State{
