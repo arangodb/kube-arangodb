@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ package inspector
 
 import (
 	"context"
+	"sort"
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -118,7 +119,14 @@ func (p *inspectorVersion[S]) GetSimple(name string) (S, bool) {
 }
 
 func (p *inspectorVersion[S]) Iterate(action generic.Action[S], filters ...generic.Filter[S]) error {
-	for _, item := range p.items {
+	keys := util.MapKeys(p.items)
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		item, ok := p.items[key]
+		if !ok {
+			continue
+		}
 		if err := p.iterate(item, action, filters...); err != nil {
 			return err
 		}

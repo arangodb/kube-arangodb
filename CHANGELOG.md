@@ -40,6 +40,7 @@
 - (Feature) Proxy CLI Options
 - (Bugfix) Reduce JWT Generation Calls
 - (Maintenance) Adjust Sidecar & JWT Features
+- (Bugfix) Allow run without central service
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
