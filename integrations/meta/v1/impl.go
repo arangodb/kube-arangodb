@@ -274,6 +274,7 @@ func (i *implementation) List(req *pbMetaV1.ListRequest, server pbMetaV1.MetaV1_
 		log.Err(err).Debug("Failed to list objects")
 		return err
 	}
+	defer resp.Close()
 
 	for {
 		keys, err := resp.Next(server.Context())

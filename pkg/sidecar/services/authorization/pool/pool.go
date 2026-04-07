@@ -362,6 +362,7 @@ func PoolChanges[T proto.Message](ctx context.Context, db adbDriverV2.DatabaseQu
 	if err != nil {
 		return nil, err
 	}
+	defer result.Close()
 
 	var ret []Document[T]
 

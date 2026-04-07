@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ import (
 
 type NextIterator[T any] interface {
 	Next(ctx context.Context) (T, error)
+	// Close releases any resources held by the iterator.
+	// It is safe to call Close multiple times.
+	Close() error
 }
 
 func NewStaticNextIterator[T any](objs ...T) NextIterator[T] {
@@ -55,4 +58,8 @@ func (s *staticNextIterator[T]) Next(ctx context.Context) (T, error) {
 	obj := s.objects[s.id]
 	s.id++
 	return obj, nil
+}
+
+func (s *staticNextIterator[T]) Close() error {
+	return nil
 }

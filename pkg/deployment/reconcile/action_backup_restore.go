@@ -112,7 +112,7 @@ func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi
 	defer cancel()
 
 	if _, err := dbc.BackupRestore(ctxChild, backup.Status.Backup.ID); err != nil {
-		if id, ok := conn.IsAsyncJobInProgress(err); ok {
+		if id, ok := adbDriverV2Connection.IsAsyncJobInProgress(err); ok {
 			a.actionCtx.Add(LocalJobID, id, true)
 			a.actionCtx.Add(actionBackupRestoreLocalBackupName, backup.GetName(), true)
 
@@ -188,7 +188,7 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 	// Params does not matter in async fetch
 	_, restoreError := dbc.BackupRestore(adbDriverV2Connection.WithAsyncID(ctxChild, job), "")
 	if restoreError != nil {
-		if _, ok := conn.IsAsyncJobInProgress(restoreError); ok {
+		if _, ok := adbDriverV2Connection.IsAsyncJobInProgress(restoreError); ok {
 			// Job still in progress
 			return false, false, nil
 		}

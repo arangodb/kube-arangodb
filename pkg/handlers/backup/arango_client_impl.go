@@ -229,11 +229,11 @@ func (ac *arangoClientBackupImpl) Download(backupID string) (string, error) {
 	}
 }
 
-func (ac *arangoClientBackupImpl) Progress(jobID string) (ArangoBackupProgress, error) {
+func (ac *arangoClientBackupImpl) Progress(jobID string, transferType adbDriverV2.TransferType) (ArangoBackupProgress, error) {
 	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
 	defer cancel()
 
-	mon, err := ac.driver.TransferMonitor(jobID, adbDriverV2.TransferTypeUpload)
+	mon, err := ac.driver.TransferMonitor(jobID, transferType)
 	if err != nil {
 		return ArangoBackupProgress{}, err
 	}
@@ -302,11 +302,11 @@ func (ac *arangoClientBackupImpl) Delete(backupID string) error {
 	return ac.driver.BackupDelete(ctx, backupID)
 }
 
-func (ac *arangoClientBackupImpl) Abort(jobID string) error {
+func (ac *arangoClientBackupImpl) Abort(jobID string, transferType adbDriverV2.TransferType) error {
 	ctx, cancel := globals.GetGlobalTimeouts().BackupArangoClientTimeout().WithTimeout(context.Background())
 	defer cancel()
 
-	mon, err := ac.driver.TransferMonitor(jobID, adbDriverV2.TransferTypeUpload)
+	mon, err := ac.driver.TransferMonitor(jobID, transferType)
 	if err != nil {
 		return err
 	}

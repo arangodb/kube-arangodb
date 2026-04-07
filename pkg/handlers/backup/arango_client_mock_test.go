@@ -93,7 +93,7 @@ func (m *mockArangoClientBackup) List() (map[string]adbDriverV2.BackupMeta, erro
 	return m.state.backups, nil
 }
 
-func (m *mockArangoClientBackup) Abort(d string) error {
+func (m *mockArangoClientBackup) Abort(d string, _ adbDriverV2.TransferType) error {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
@@ -147,7 +147,7 @@ func (m *mockArangoClientBackup) Download(string) (string, error) {
 	return id, nil
 }
 
-func (m *mockArangoClientBackup) Progress(id string) (ArangoBackupProgress, error) {
+func (m *mockArangoClientBackup) Progress(id string, _ adbDriverV2.TransferType) (ArangoBackupProgress, error) {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 

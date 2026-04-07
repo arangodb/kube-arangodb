@@ -23,6 +23,7 @@ package backup
 import (
 	"fmt"
 
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -52,7 +53,7 @@ func stateDownloadingHandler(h *handler, backup *backupApi.ArangoBackup) (*backu
 		return nil, newFatalErrorf("missing field .spec.download.id")
 	}
 
-	details, err := client.Progress(backup.Status.Progress.JobID)
+	details, err := client.Progress(backup.Status.Progress.JobID, adbDriverV2.TransferTypeDownload)
 	if err != nil {
 		if adbDriverV2Shared.IsNotFound(err) {
 			return wrapUpdateStatus(backup,

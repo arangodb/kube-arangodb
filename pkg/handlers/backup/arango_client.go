@@ -69,8 +69,8 @@ type ArangoBackupClient interface {
 	Upload(string) (string, error)
 	Download(string) (string, error)
 
-	Progress(string) (ArangoBackupProgress, error)
-	Abort(string) error
+	Progress(jobID string, transferType adbDriverV2.TransferType) (ArangoBackupProgress, error)
+	Abort(jobID string, transferType adbDriverV2.TransferType) error
 
 	Exists(string) (bool, error)
 	Delete(string) error

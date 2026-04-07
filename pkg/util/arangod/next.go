@@ -40,6 +40,10 @@ type queryV1NextIterator[T any] struct {
 	batch int
 }
 
+func (q queryV1NextIterator[T]) Close() error {
+	return q.in.Close()
+}
+
 func (q queryV1NextIterator[T]) Next(ctx context.Context) ([]T, error) {
 	if q.batch <= 0 {
 		return nil, errors.Errorf("batch out of range")

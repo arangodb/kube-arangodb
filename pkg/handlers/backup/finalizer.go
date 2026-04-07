@@ -26,6 +26,8 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/utils"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -147,7 +149,17 @@ func (h *handler) finalizeBackupAction(backup *backupApi.ArangoBackup, client Ar
 	if backup.Status.Progress == nil {
 		return nil
 	}
-	status, err := client.Progress(backup.Status.Progress.JobID)
+
+	// Determine the in-progress transfer type from the backup state.
+	var transferType adbDriverV2.TransferType
+	switch backup.Status.State {
+	case backupApi.ArangoBackupStateDownload, backupApi.ArangoBackupStateDownloading, backupApi.ArangoBackupStateDownloadError:
+		transferType = adbDriverV2.TransferTypeDownload
+	default:
+		transferType = adbDriverV2.TransferTypeUpload
+	}
+
+	status, err := client.Progress(backup.Status.Progress.JobID, transferType)
 	if err != nil {
 		return err
 	}
@@ -156,7 +168,7 @@ func (h *handler) finalizeBackupAction(backup *backupApi.ArangoBackup, client Ar
 		return nil
 	}
 
-	if err = client.Abort(backup.Status.Progress.JobID); err != nil {
+	if err = client.Abort(backup.Status.Progress.JobID, transferType); err != nil {
 		return err
 	}
 

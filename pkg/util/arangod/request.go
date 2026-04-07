@@ -53,6 +53,9 @@ type request[OUT any] struct {
 
 	conn    adbDriverV2Connection.Connection
 	request adbDriverV2Connection.Request
+
+	// timeout, if non-zero, is applied to the context passed to Do.
+	timeout time.Duration
 }
 
 func (r *request[OUT]) Query(key, value string) Request[OUT] {
@@ -67,6 +70,12 @@ func (r *request[OUT]) Query(key, value string) Request[OUT] {
 func (r *request[OUT]) Do(ctx context.Context) Response[OUT] {
 	r.lock.Lock()
 	defer r.lock.Unlock()
+
+	if r.timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, r.timeout)
+		defer cancel()
+	}
 
 	resp, closer, err := r.conn.Stream(ctx, r.request)
 	if err != nil {
@@ -180,11 +189,15 @@ func NewRequest[IN, OUT any](ctx context.Context, conn adbDriverV2Connection.Con
 	return &request[OUT]{request: req, conn: conn}
 }
 
-func GetRequestWithTimeout[OUT any](ctx context.Context, timeout time.Duration, conn adbDriverV2Connection.Connection, path ...string) Request[OUT] {
-	nctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
+func withTimeout[OUT any](r Request[OUT], timeout time.Duration) Request[OUT] {
+	if rq, ok := r.(*request[OUT]); ok {
+		rq.timeout = timeout
+	}
+	return r
+}
 
-	return GetRequest[OUT](nctx, conn, path...)
+func GetRequestWithTimeout[OUT any](ctx context.Context, timeout time.Duration, conn adbDriverV2Connection.Connection, path ...string) Request[OUT] {
+	return withTimeout(GetRequest[OUT](ctx, conn, path...), timeout)
 }
 
 func GetRequest[OUT any](ctx context.Context, conn adbDriverV2Connection.Connection, path ...string) Request[OUT] {
@@ -192,10 +205,7 @@ func GetRequest[OUT any](ctx context.Context, conn adbDriverV2Connection.Connect
 }
 
 func DeleteRequestWithTimeout[OUT any](ctx context.Context, timeout time.Duration, conn adbDriverV2Connection.Connection, path ...string) Request[OUT] {
-	nctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	return DeleteRequest[OUT](nctx, conn, path...)
+	return withTimeout(DeleteRequest[OUT](ctx, conn, path...), timeout)
 }
 
 func DeleteRequest[OUT any](ctx context.Context, conn adbDriverV2Connection.Connection, path ...string) Request[OUT] {
@@ -203,10 +213,7 @@ func DeleteRequest[OUT any](ctx context.Context, conn adbDriverV2Connection.Conn
 }
 
 func PostRequestWithTimeout[IN, OUT any](ctx context.Context, timeout time.Duration, conn adbDriverV2Connection.Connection, body IN, path ...string) Request[OUT] {
-	nctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	return PostRequest[IN, OUT](nctx, conn, body, path...)
+	return withTimeout(PostRequest[IN, OUT](ctx, conn, body, path...), timeout)
 }
 
 func PostRequest[IN, OUT any](ctx context.Context, conn adbDriverV2Connection.Connection, body IN, path ...string) Request[OUT] {
@@ -214,10 +221,7 @@ func PostRequest[IN, OUT any](ctx context.Context, conn adbDriverV2Connection.Co
 }
 
 func PutRequestWithTimeout[IN, OUT any](ctx context.Context, timeout time.Duration, conn adbDriverV2Connection.Connection, body IN, path ...string) Request[OUT] {
-	nctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	return PutRequest[IN, OUT](nctx, conn, body, path...)
+	return withTimeout(PutRequest[IN, OUT](ctx, conn, body, path...), timeout)
 }
 
 func PutRequest[IN, OUT any](ctx context.Context, conn adbDriverV2Connection.Connection, body IN, path ...string) Request[OUT] {

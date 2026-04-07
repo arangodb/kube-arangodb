@@ -62,5 +62,5 @@ func (c *client) RebalancePlan(ctx context.Context, request *RebalancePlanReques
 	// Always set to 1
 	request.Version = 1
 
-	return arangod.PostRequest[*RebalancePlanRequest, RebalancePlanResponse](ctx, c.c, request, "_admin", "cluster", "rebalance", "execute").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
+	return arangod.PostRequest[*RebalancePlanRequest, RebalancePlanResponse](ctx, c.c, request, "_admin", "cluster", "rebalance").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
 }

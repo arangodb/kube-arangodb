@@ -172,7 +172,7 @@ func (a *actionRebuildOutSyncedShards) rebuildShard(ctx context.Context, clientS
 		return err
 	}
 	_, err = clientAsync.Connection().Do(ctx, req, nil)
-	if id, ok := conn.IsAsyncJobInProgress(err); ok {
+	if id, ok := adbDriverV2Connection.IsAsyncJobInProgress(err); ok {
 		a.actionCtx.Add(actionRebuildOutSyncedShardsLocalJobID, id, true)
 		a.actionCtx.Add(actionRebuildOutSyncedShardsLocalDatabase, database, true)
 		a.actionCtx.Add(actionRebuildOutSyncedShardsLocalShard, shardID, true)
@@ -193,7 +193,7 @@ func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Con
 
 	resp, err := clientAsync.Connection().Do(adbDriverV2Connection.WithAsyncID(ctx, jobID), req, nil)
 	if err != nil {
-		if _, ok := conn.IsAsyncJobInProgress(err); ok {
+		if _, ok := adbDriverV2Connection.IsAsyncJobInProgress(err); ok {
 			return true, nil
 		}
 
