@@ -42,7 +42,7 @@ func Register() (*cobra.Command, error) {
 	cmd.Use = "sidecar"
 	cmd.Short = "Runs the sidecar as a daemon with serving group"
 
-	if err := cli.RegisterFlags(&cmd,
+	flags := []cli.FlagRegisterer{
 		flagAddress,
 		flagGatewayAddress,
 		flagKeyfile,
@@ -51,7 +51,12 @@ func Register() (*cobra.Command, error) {
 		flagHealthAddress,
 		flagArangodb,
 		flagCentralServicesEnabled,
-	); err != nil {
+	}
+	for _, item := range global.Items() {
+		flags = append(flags, item.V.Flags...)
+	}
+
+	if err := cli.RegisterFlags(&cmd, flags...); err != nil {
 		return nil, err
 	}
 
@@ -137,8 +142,8 @@ func runWithContext(ctx context.Context, cmd *cobra.Command) error {
 		handlers = append(handlers, handler)
 	}
 
-	for _, handler := range global.Items() {
-		if handler, ok, err := handler.V(ctx, cmd); err != nil {
+	for _, item := range global.Items() {
+		if handler, ok, err := item.V.Build(ctx, cmd); err != nil {
 			return err
 		} else if ok {
 			handlers = append(handlers, handler)

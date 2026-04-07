@@ -88,7 +88,7 @@ func (b *storageV2) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 }
 
 func (b *storageV2) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	return pbImplStorageV2.New(b.Configuration)
+	return pbImplStorageV2.New(ctx, b.Configuration)
 }
 
 func (*storageV2) Init(ctx context.Context, cmd *cobra.Command) error {

@@ -26,9 +26,34 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/cli"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-type registerHandler func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error)
+// HandlerBuilder is the function used to build a sidecar handler.
+type HandlerBuilder func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error)
 
-var global = util.NewRegisterer[string, registerHandler]()
+// Subtype groups everything an integration contributes to the sidecar:
+// its handler builder and the flags it owns. Each integration is
+// self-contained and registers its own flags via init().
+type Subtype struct {
+	// Build constructs the handler for this integration. The bool return
+	// indicates whether the handler should be added to the running set.
+	Build HandlerBuilder
+
+	// Flags are the CLI flags owned by this integration. They are
+	// registered onto the parent sidecar command together with the
+	// common flags.
+	Flags []cli.FlagRegisterer
+}
+
+var global = util.NewRegisterer[string, Subtype]()
+
+// register is a helper used by integration init() functions to register
+// themselves with the global sidecar registry.
+func register(name string, build HandlerBuilder, flags ...cli.FlagRegisterer) {
+	global.MustRegister(name, Subtype{
+		Build: build,
+		Flags: flags,
+	})
+}

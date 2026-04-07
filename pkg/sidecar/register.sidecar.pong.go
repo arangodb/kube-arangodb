@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	global.Register("pong", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
+	register("pong", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
 		svc, err := pbImplPongV1.New()
 		if err != nil {
 			return nil, false, err
