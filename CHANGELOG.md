@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.4.2](https://github.com/arangodb/kube-arangodb/tree/1.4.2) (2026-04-08)
 - (Bugfix) (Platform) Permission Token CRD
 - (Feature) Add Backup Owner during creation
 - (Feature) (Platform) MetaStore Secrets
