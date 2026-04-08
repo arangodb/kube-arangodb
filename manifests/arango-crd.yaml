@@ -536,6 +536,105 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/version: 389a7f8c66c9426fd0d6ee08590b7eaa
+    arangodb.com/x-preserve-unknown-fields: "true"
+  name: arangopermissionpolicies.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionPolicy
+    listKind: ArangoPermissionPolicyList
+    plural: arangopermissionpolicies
+    shortNames:
+      - arangopolicy
+    singular: arangopermissionpolicy
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Policy is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
+    arangodb.com/x-preserve-unknown-fields: "true"
+  name: arangopermissionroles.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionRole
+    listKind: ArangoPermissionRoleList
+    plural: arangopermissionroles
+    shortNames:
+      - arangorole
+    singular: arangopermissionrole
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Role is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/version: 82c86e31586062462e30751bf7a113e2
+    arangodb.com/x-preserve-unknown-fields: "true"
+  name: arangopermissiontokens.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionToken
+    listKind: ArangoPermissionTokenList
+    plural: arangopermissiontokens
+    shortNames:
+      - arangotoken
+    singular: arangopermissiontoken
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Token is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
     arangodb.com/version: f9390d93cf372a2517385099bb1c97b5
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoplatformcharts.platform.arangodb.com

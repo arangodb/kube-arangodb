@@ -440,7 +440,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: e8dbe5bb4de09bcb634bf0b32f80e99c
+    arangodb.com/schema: b5d080c09115650334986dd5d0ebe89a
     arangodb.com/version: 3da979e8cc522c84fa8d7bf3d04599a4
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangomlbatchjobs.ml.arangodb.com
@@ -1142,6 +1142,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -1697,6 +1699,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -2258,6 +2262,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -3544,7 +3550,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: c43cb0b30ecddeaebfedc6bbec5b2883
+    arangodb.com/schema: d959e9622c47c0c83e7b871f942e3d98
     arangodb.com/version: 071152afd23e0c6212e6ff16de3ec2fb
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangomlcronjobs.ml.arangodb.com
@@ -4331,6 +4337,8 @@ spec:
                                                     x-kubernetes-int-or-string: true
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         properties:
@@ -4886,6 +4894,8 @@ spec:
                                                     x-kubernetes-int-or-string: true
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         properties:
@@ -5447,6 +5457,8 @@ spec:
                                                     x-kubernetes-int-or-string: true
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         properties:
@@ -6747,7 +6759,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 85ef8c8914631640d41037993204bb43
+    arangodb.com/schema: 96acdba7ece31b3a28619689da6bad9c
     arangodb.com/version: 53cff97ca37fa8e1878e879386a41cc3
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangomlextensions.ml.arangodb.com
@@ -7295,6 +7307,8 @@ spec:
                                   x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        stopSignal:
+                          type: string
                       type: object
                     livenessProbe:
                       properties:
@@ -8982,6 +8996,8 @@ spec:
                                   x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        stopSignal:
+                          type: string
                       type: object
                     livenessProbe:
                       properties:
@@ -10642,6 +10658,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -12296,6 +12314,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -13954,6 +13974,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -15608,6 +15630,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -17266,6 +17290,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -18920,6 +18946,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -20627,6 +20655,8 @@ spec:
                                   x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        stopSignal:
+                          type: string
                       type: object
                     livenessProbe:
                       properties:
@@ -22316,6 +22346,8 @@ spec:
                                   x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        stopSignal:
+                          type: string
                       type: object
                     livenessProbe:
                       properties:
@@ -23627,6 +23659,8 @@ spec:
                                   x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        stopSignal:
+                          type: string
                       type: object
                     listenPort:
                       format: int32
@@ -24487,6 +24521,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -26143,6 +26179,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -27803,6 +27841,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -29459,6 +29499,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -31119,6 +31161,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -32775,6 +32819,8 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
                               properties:
@@ -33960,7 +34006,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 6c3e120f176842f86f05159bb083101a
+    arangodb.com/schema: 8fd09a3b52a71131603ad7de3b6f91bf
     arangodb.com/version: 0784b0c3ed19a07f82be89cf732e688a
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangomlstorages.ml.arangodb.com
@@ -34227,6 +34273,8 @@ spec:
                                       x-kubernetes-int-or-string: true
                                   type: object
                               type: object
+                            stopSignal:
+                              type: string
                           type: object
                         listenPort:
                           description: ListenPort defines on which port the sidecar container will be listening for connections
@@ -34648,6 +34696,273 @@ spec:
                   type: object
               required:
                 - bucketName
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/schema: 411e0c26e8aeaeb9f8809f8921ec9461
+    arangodb.com/version: 389a7f8c66c9426fd0d6ee08590b7eaa
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangopermissionpolicies.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionPolicy
+    listKind: ArangoPermissionPolicyList
+    plural: arangopermissionpolicies
+    shortNames:
+      - arangopolicy
+    singular: arangopermissionpolicy
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Policy is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                deployment:
+                  description: Deployment keeps the Deployment Reference
+                  properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                policy:
+                  description: Policy defined the Authorization Policy
+                  properties:
+                    statements:
+                      description: Statements list of the policy Statements
+                      items:
+                        properties:
+                          actions:
+                            description: |-
+                              Actions defines the list of actions.
+                              Action needs to be defined in format `<namespace>:<name>`
+                            items:
+                              type: string
+                            type: array
+                          effect:
+                            description: Effect defines the statement effect.
+                            enum:
+                              - Allow
+                              - Deny
+                            type: string
+                          resources:
+                            description: Resources defines the list of resources
+                            items:
+                              type: string
+                            type: array
+                        required:
+                          - actions
+                          - effect
+                          - resources
+                        type: object
+                      type: array
+                  required:
+                    - statements
+                  type: object
+              required:
+                - deployment
+                - policy
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/schema: cf8117c2fdb494822501ee6a968e04f4
+    arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangopermissionroles.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionRole
+    listKind: ArangoPermissionRoleList
+    plural: arangopermissionroles
+    shortNames:
+      - arangorole
+    singular: arangopermissionrole
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Role is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                deployment:
+                  description: Deployment keeps the Deployment Reference
+                  properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                policy:
+                  description: Policy defined the Authorization Policy
+                  properties:
+                    statements:
+                      description: Statements list of the policy Statements
+                      items:
+                        properties:
+                          actions:
+                            description: |-
+                              Actions defines the list of actions.
+                              Action needs to be defined in format `<namespace>:<name>`
+                            items:
+                              type: string
+                            type: array
+                          effect:
+                            description: Effect defines the statement effect.
+                            enum:
+                              - Allow
+                              - Deny
+                            type: string
+                          resources:
+                            description: Resources defines the list of resources
+                            items:
+                              type: string
+                            type: array
+                        required:
+                          - actions
+                          - effect
+                          - resources
+                        type: object
+                      type: array
+                  required:
+                    - statements
+                  type: object
+              required:
+                - deployment
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/schema: 1c21f9107dc799e846d052afc2b24b80
+    arangodb.com/version: 82c86e31586062462e30751bf7a113e2
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangopermissiontokens.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionToken
+    listKind: ArangoPermissionTokenList
+    plural: arangopermissiontokens
+    shortNames:
+      - arangotoken
+    singular: arangopermissiontoken
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Token is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                deployment:
+                  description: Deployment keeps the Deployment Reference
+                  properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                policy:
+                  description: Policy defined the Authorization Policy
+                  properties:
+                    statements:
+                      description: Statements list of the policy Statements
+                      items:
+                        properties:
+                          actions:
+                            description: |-
+                              Actions defines the list of actions.
+                              Action needs to be defined in format `<namespace>:<name>`
+                            items:
+                              type: string
+                            type: array
+                          effect:
+                            description: Effect defines the statement effect.
+                            enum:
+                              - Allow
+                              - Deny
+                            type: string
+                          resources:
+                            description: Resources defines the list of resources
+                            items:
+                              type: string
+                            type: array
+                        required:
+                          - actions
+                          - effect
+                          - resources
+                        type: object
+                      type: array
+                  required:
+                    - statements
+                  type: object
+                roles:
+                  description: Roles keeps the roles assigned to the token
+                  items:
+                    type: string
+                  type: array
+                ttl:
+                  description: TTL Defines the TTL of the token.
+                  type: string
+              required:
+                - deployment
               type: object
             status:
               description: Object with preserved fields for backward compatibility
@@ -35138,7 +35453,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 3d6fa0f863c5b5434137762d8eeb367e
+    arangodb.com/schema: 3d17b129967c8f6b713b72b7b1484889
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoprofiles.scheduler.arangodb.com
@@ -35190,6 +35505,7 @@ spec:
                         all:
                           properties:
                             env:
+                              description: Env keeps the information about environment variables provided to the container
                               items:
                                 properties:
                                   name:
@@ -35237,6 +35553,7 @@ spec:
                                 type: object
                               type: array
                             envFrom:
+                              description: EnvFrom keeps the information about environment variable sources provided to the container
                               items:
                                 properties:
                                   configMapRef:
@@ -35258,6 +35575,7 @@ spec:
                                 type: object
                               type: array
                             volumeMounts:
+                              description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                               items:
                                 properties:
                                   mountPath:
@@ -35281,14 +35599,31 @@ spec:
                           additionalProperties:
                             properties:
                               args:
+                                description: |-
+                                  Arguments to the entrypoint.
+                                  The container image's CMD is used if this is not provided.
+                                  Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                                  cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                                  to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                                  produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                  of whether the variable exists or not. Cannot be updated.
                                 items:
                                   type: string
                                 type: array
                               command:
+                                description: |-
+                                  Entrypoint array. Not executed within a shell.
+                                  The container image's ENTRYPOINT is used if this is not provided.
+                                  Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                                  cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                                  to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                                  produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                  of whether the variable exists or not. Cannot be updated.
                                 items:
                                   type: string
                                 type: array
                               env:
+                                description: Env keeps the information about environment variables provided to the container
                                 items:
                                   properties:
                                     name:
@@ -35336,6 +35671,7 @@ spec:
                                   type: object
                                 type: array
                               envFrom:
+                                description: EnvFrom keeps the information about environment variable sources provided to the container
                                 items:
                                   properties:
                                     configMapRef:
@@ -35357,10 +35693,13 @@ spec:
                                   type: object
                                 type: array
                               image:
+                                description: Image define image details
                                 type: string
                               imagePullPolicy:
+                                description: ImagePullPolicy define Image pull policy
                                 type: string
                               lifecycle:
+                                description: Lifecycle keeps actions that the management system should take in response to container lifecycle events.
                                 properties:
                                   postStart:
                                     properties:
@@ -35452,8 +35791,13 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
+                                description: |-
+                                  LivenessProbe keeps configuration of periodic probe of container liveness.
+                                  Container will be restarted if the probe fails.
                                 properties:
                                   exec:
                                     properties:
@@ -35519,6 +35863,11 @@ spec:
                                     type: integer
                                 type: object
                               ports:
+                                description: |-
+                                  Ports contains list of ports to expose from the container. Not specifying a port here
+                                  DOES NOT prevent that port from being exposed. Any port which is
+                                  listening on the default "0.0.0.0" address inside a container will be
+                                  accessible from the network.
                                 items:
                                   properties:
                                     containerPort:
@@ -35536,6 +35885,9 @@ spec:
                                   type: object
                                 type: array
                               readinessProbe:
+                                description: |-
+                                  ReadinessProbe keeps configuration of periodic probe of container service readiness.
+                                  Container will be removed from service endpoints if the probe fails.
                                 properties:
                                   exec:
                                     properties:
@@ -35601,6 +35953,7 @@ spec:
                                     type: integer
                                 type: object
                               resources:
+                                description: Resources holds resource requests & limits for container
                                 properties:
                                   claims:
                                     items:
@@ -35623,6 +35976,7 @@ spec:
                                     type: object
                                 type: object
                               securityContext:
+                                description: SecurityContext holds container-level security attributes and common container settings.
                                 properties:
                                   allowPrivilegeEscalation:
                                     type: boolean
@@ -35689,6 +36043,12 @@ spec:
                                     type: object
                                 type: object
                               startupProbe:
+                                description: |-
+                                  StartupProbe indicates that the Pod has successfully initialized.
+                                  If specified, no other probes are executed until this completes successfully.
+                                  If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+                                  This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+                                  when it might take a long time to load data or warm a cache, than during steady-state operation.
                                 properties:
                                   exec:
                                     properties:
@@ -35754,6 +36114,7 @@ spec:
                                     type: integer
                                 type: object
                               volumeMounts:
+                                description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                                 items:
                                   properties:
                                     mountPath:
@@ -35773,6 +36134,10 @@ spec:
                                   type: object
                                 type: array
                               workingDir:
+                                description: |-
+                                  Container's working directory.
+                                  If not specified, the container runtime's default will be used, which
+                                  might be configured in the container image.
                                 type: string
                             type: object
                           type: object
@@ -35780,6 +36145,7 @@ spec:
                     pod:
                       properties:
                         affinity:
+                          description: Affinity defines scheduling constraints for workload
                           properties:
                             nodeAffinity:
                               properties:
@@ -36113,28 +36479,49 @@ spec:
                         annotations:
                           additionalProperties:
                             type: string
+                          description: |-
+                            Annotations is an unstructured key value map stored with a resource that may be
+                            set by external tools to store and retrieve arbitrary metadata. They are not
+                            queryable and should be preserved when modifying objects.
                           type: object
                         automountServiceAccountToken:
+                          description: AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
                           type: boolean
                         hostIPC:
+                          description: HostIPC defines to use the host's ipc namespace.
                           type: boolean
                         hostNetwork:
+                          description: |-
+                            HostNetwork requests Host network for this pod. Use the host's network namespace.
+                            If this option is set, the ports that will be used must be specified.
                           type: boolean
                         hostPID:
+                          description: HostPID define to use the host's pid namespace.
                           type: boolean
                         imagePullSecrets:
+                          description: ImagePullSecrets define Secrets used to pull Image from registry
                           items:
                             type: string
                           type: array
                         labels:
                           additionalProperties:
                             type: string
+                          description: |-
+                            Map of string keys and values that can be used to organize and categorize
+                            (scope and select) objects. May match selectors of replication controllers
+                            and services.
                           type: object
                         nodeSelector:
                           additionalProperties:
                             type: string
+                          description: NodeSelector is a selector that must be true for the workload to fit on a node.
                           type: object
                         ownerReferences:
+                          description: |-
+                            List of objects depended by this object. If ALL objects in the list have
+                            been deleted, this object will be garbage collected. If this object is managed by a controller,
+                            then an entry in this list will point to this controller, with the controller field set to true.
+                            There cannot be more than one managing controller.
                           items:
                             properties:
                               apiVersion:
@@ -36152,6 +36539,7 @@ spec:
                             type: object
                           type: array
                         podSecurityContext:
+                          description: PodSecurityContext holds pod-level security attributes and common container settings.
                           properties:
                             appArmorProfile:
                               properties:
@@ -36222,12 +36610,22 @@ spec:
                               type: object
                           type: object
                         schedulerName:
+                          description: |-
+                            SchedulerName specifies, the pod will be dispatched by specified scheduler.
+                            If not specified, the pod will be dispatched by default scheduler.
                           type: string
                         serviceAccountName:
+                          description: ServiceAccountName is the name of the ServiceAccount to use to run this pod.
                           type: string
                         shareProcessNamespace:
+                          description: |-
+                            ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
+                            When this is set containers will be able to view and signal processes from other containers
+                            in the same pod, and the first process in each container will not be assigned PID 1.
+                            HostPID and ShareProcessNamespace cannot both be set.
                           type: boolean
                         tolerations:
+                          description: Tolerations defines tolerations
                           items:
                             properties:
                               effect:
@@ -36244,6 +36642,7 @@ spec:
                             type: object
                           type: array
                         volumes:
+                          description: Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
                           items:
                             properties:
                               awsElasticBlockStore:
@@ -36991,6 +37390,7 @@ spec:
                           description: All applies generic values to all Containers
                           properties:
                             env:
+                              description: Env keeps the information about environment variables provided to the container
                               items:
                                 properties:
                                   name:
@@ -37038,6 +37438,7 @@ spec:
                                 type: object
                               type: array
                             envFrom:
+                              description: EnvFrom keeps the information about environment variable sources provided to the container
                               items:
                                 properties:
                                   configMapRef:
@@ -37059,6 +37460,7 @@ spec:
                                 type: object
                               type: array
                             volumeMounts:
+                              description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                               items:
                                 properties:
                                   mountPath:
@@ -37082,14 +37484,31 @@ spec:
                           additionalProperties:
                             properties:
                               args:
+                                description: |-
+                                  Arguments to the entrypoint.
+                                  The container image's CMD is used if this is not provided.
+                                  Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                                  cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                                  to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                                  produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                  of whether the variable exists or not. Cannot be updated.
                                 items:
                                   type: string
                                 type: array
                               command:
+                                description: |-
+                                  Entrypoint array. Not executed within a shell.
+                                  The container image's ENTRYPOINT is used if this is not provided.
+                                  Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                                  cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                                  to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                                  produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                  of whether the variable exists or not. Cannot be updated.
                                 items:
                                   type: string
                                 type: array
                               env:
+                                description: Env keeps the information about environment variables provided to the container
                                 items:
                                   properties:
                                     name:
@@ -37137,6 +37556,7 @@ spec:
                                   type: object
                                 type: array
                               envFrom:
+                                description: EnvFrom keeps the information about environment variable sources provided to the container
                                 items:
                                   properties:
                                     configMapRef:
@@ -37158,10 +37578,13 @@ spec:
                                   type: object
                                 type: array
                               image:
+                                description: Image define image details
                                 type: string
                               imagePullPolicy:
+                                description: ImagePullPolicy define Image pull policy
                                 type: string
                               lifecycle:
+                                description: Lifecycle keeps actions that the management system should take in response to container lifecycle events.
                                 properties:
                                   postStart:
                                     properties:
@@ -37253,8 +37676,13 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
+                                description: |-
+                                  LivenessProbe keeps configuration of periodic probe of container liveness.
+                                  Container will be restarted if the probe fails.
                                 properties:
                                   exec:
                                     properties:
@@ -37320,8 +37748,17 @@ spec:
                                     type: integer
                                 type: object
                               method:
+                                description: Method defines the merge method
+                                enum:
+                                  - override
+                                  - append
                                 type: string
                               ports:
+                                description: |-
+                                  Ports contains list of ports to expose from the container. Not specifying a port here
+                                  DOES NOT prevent that port from being exposed. Any port which is
+                                  listening on the default "0.0.0.0" address inside a container will be
+                                  accessible from the network.
                                 items:
                                   properties:
                                     containerPort:
@@ -37339,6 +37776,9 @@ spec:
                                   type: object
                                 type: array
                               readinessProbe:
+                                description: |-
+                                  ReadinessProbe keeps configuration of periodic probe of container service readiness.
+                                  Container will be removed from service endpoints if the probe fails.
                                 properties:
                                   exec:
                                     properties:
@@ -37404,6 +37844,7 @@ spec:
                                     type: integer
                                 type: object
                               resources:
+                                description: Resources holds resource requests & limits for container
                                 properties:
                                   claims:
                                     items:
@@ -37426,6 +37867,7 @@ spec:
                                     type: object
                                 type: object
                               securityContext:
+                                description: SecurityContext holds container-level security attributes and common container settings.
                                 properties:
                                   allowPrivilegeEscalation:
                                     type: boolean
@@ -37492,6 +37934,12 @@ spec:
                                     type: object
                                 type: object
                               startupProbe:
+                                description: |-
+                                  StartupProbe indicates that the Pod has successfully initialized.
+                                  If specified, no other probes are executed until this completes successfully.
+                                  If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+                                  This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+                                  when it might take a long time to load data or warm a cache, than during steady-state operation.
                                 properties:
                                   exec:
                                     properties:
@@ -37557,6 +38005,7 @@ spec:
                                     type: integer
                                 type: object
                               volumeMounts:
+                                description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                                 items:
                                   properties:
                                     mountPath:
@@ -37576,6 +38025,10 @@ spec:
                                   type: object
                                 type: array
                               workingDir:
+                                description: |-
+                                  Container's working directory.
+                                  If not specified, the container runtime's default will be used, which
+                                  might be configured in the container image.
                                 type: string
                             type: object
                           description: Containers applies values per container
@@ -37584,14 +38037,31 @@ spec:
                           description: Default applies generic values to default Container (first one on the list)
                           properties:
                             args:
+                              description: |-
+                                Arguments to the entrypoint.
+                                The container image's CMD is used if this is not provided.
+                                Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                                cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                                to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                                produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                of whether the variable exists or not. Cannot be updated.
                               items:
                                 type: string
                               type: array
                             command:
+                              description: |-
+                                Entrypoint array. Not executed within a shell.
+                                The container image's ENTRYPOINT is used if this is not provided.
+                                Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+                                cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+                                to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                                produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                of whether the variable exists or not. Cannot be updated.
                               items:
                                 type: string
                               type: array
                             env:
+                              description: Env keeps the information about environment variables provided to the container
                               items:
                                 properties:
                                   name:
@@ -37639,6 +38109,7 @@ spec:
                                 type: object
                               type: array
                             envFrom:
+                              description: EnvFrom keeps the information about environment variable sources provided to the container
                               items:
                                 properties:
                                   configMapRef:
@@ -37660,10 +38131,13 @@ spec:
                                 type: object
                               type: array
                             image:
+                              description: Image define image details
                               type: string
                             imagePullPolicy:
+                              description: ImagePullPolicy define Image pull policy
                               type: string
                             lifecycle:
+                              description: Lifecycle keeps actions that the management system should take in response to container lifecycle events.
                               properties:
                                 postStart:
                                   properties:
@@ -37755,8 +38229,13 @@ spec:
                                           x-kubernetes-int-or-string: true
                                       type: object
                                   type: object
+                                stopSignal:
+                                  type: string
                               type: object
                             livenessProbe:
+                              description: |-
+                                LivenessProbe keeps configuration of periodic probe of container liveness.
+                                Container will be restarted if the probe fails.
                               properties:
                                 exec:
                                   properties:
@@ -37822,8 +38301,17 @@ spec:
                                   type: integer
                               type: object
                             method:
+                              description: Method defines the merge method
+                              enum:
+                                - override
+                                - append
                               type: string
                             ports:
+                              description: |-
+                                Ports contains list of ports to expose from the container. Not specifying a port here
+                                DOES NOT prevent that port from being exposed. Any port which is
+                                listening on the default "0.0.0.0" address inside a container will be
+                                accessible from the network.
                               items:
                                 properties:
                                   containerPort:
@@ -37841,6 +38329,9 @@ spec:
                                 type: object
                               type: array
                             readinessProbe:
+                              description: |-
+                                ReadinessProbe keeps configuration of periodic probe of container service readiness.
+                                Container will be removed from service endpoints if the probe fails.
                               properties:
                                 exec:
                                   properties:
@@ -37906,6 +38397,7 @@ spec:
                                   type: integer
                               type: object
                             resources:
+                              description: Resources holds resource requests & limits for container
                               properties:
                                 claims:
                                   items:
@@ -37928,6 +38420,7 @@ spec:
                                   type: object
                               type: object
                             securityContext:
+                              description: SecurityContext holds container-level security attributes and common container settings.
                               properties:
                                 allowPrivilegeEscalation:
                                   type: boolean
@@ -37994,6 +38487,12 @@ spec:
                                   type: object
                               type: object
                             startupProbe:
+                              description: |-
+                                StartupProbe indicates that the Pod has successfully initialized.
+                                If specified, no other probes are executed until this completes successfully.
+                                If this probe fails, the Pod will be restarted, just as if the livenessProbe failed.
+                                This can be used to provide different probe parameters at the beginning of a Pod's lifecycle,
+                                when it might take a long time to load data or warm a cache, than during steady-state operation.
                               properties:
                                 exec:
                                   properties:
@@ -38059,6 +38558,7 @@ spec:
                                   type: integer
                               type: object
                             volumeMounts:
+                              description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                               items:
                                 properties:
                                   mountPath:
@@ -38078,6 +38578,10 @@ spec:
                                 type: object
                               type: array
                             workingDir:
+                              description: |-
+                                Container's working directory.
+                                If not specified, the container runtime's default will be used, which
+                                might be configured in the container image.
                               type: string
                           type: object
                       type: object
@@ -38085,6 +38589,7 @@ spec:
                       description: Pod Template
                       properties:
                         affinity:
+                          description: Affinity defines scheduling constraints for workload
                           properties:
                             nodeAffinity:
                               properties:
@@ -38418,28 +38923,49 @@ spec:
                         annotations:
                           additionalProperties:
                             type: string
+                          description: |-
+                            Annotations is an unstructured key value map stored with a resource that may be
+                            set by external tools to store and retrieve arbitrary metadata. They are not
+                            queryable and should be preserved when modifying objects.
                           type: object
                         automountServiceAccountToken:
+                          description: AutomountServiceAccountToken indicates whether a service account token should be automatically mounted.
                           type: boolean
                         hostIPC:
+                          description: HostIPC defines to use the host's ipc namespace.
                           type: boolean
                         hostNetwork:
+                          description: |-
+                            HostNetwork requests Host network for this pod. Use the host's network namespace.
+                            If this option is set, the ports that will be used must be specified.
                           type: boolean
                         hostPID:
+                          description: HostPID define to use the host's pid namespace.
                           type: boolean
                         imagePullSecrets:
+                          description: ImagePullSecrets define Secrets used to pull Image from registry
                           items:
                             type: string
                           type: array
                         labels:
                           additionalProperties:
                             type: string
+                          description: |-
+                            Map of string keys and values that can be used to organize and categorize
+                            (scope and select) objects. May match selectors of replication controllers
+                            and services.
                           type: object
                         nodeSelector:
                           additionalProperties:
                             type: string
+                          description: NodeSelector is a selector that must be true for the workload to fit on a node.
                           type: object
                         ownerReferences:
+                          description: |-
+                            List of objects depended by this object. If ALL objects in the list have
+                            been deleted, this object will be garbage collected. If this object is managed by a controller,
+                            then an entry in this list will point to this controller, with the controller field set to true.
+                            There cannot be more than one managing controller.
                           items:
                             properties:
                               apiVersion:
@@ -38457,6 +38983,7 @@ spec:
                             type: object
                           type: array
                         podSecurityContext:
+                          description: PodSecurityContext holds pod-level security attributes and common container settings.
                           properties:
                             appArmorProfile:
                               properties:
@@ -38527,12 +39054,22 @@ spec:
                               type: object
                           type: object
                         schedulerName:
+                          description: |-
+                            SchedulerName specifies, the pod will be dispatched by specified scheduler.
+                            If not specified, the pod will be dispatched by default scheduler.
                           type: string
                         serviceAccountName:
+                          description: ServiceAccountName is the name of the ServiceAccount to use to run this pod.
                           type: string
                         shareProcessNamespace:
+                          description: |-
+                            ShareProcessNamespace defines to share a single process namespace between all of the containers in a pod.
+                            When this is set containers will be able to view and signal processes from other containers
+                            in the same pod, and the first process in each container will not be assigned PID 1.
+                            HostPID and ShareProcessNamespace cannot both be set.
                           type: boolean
                         tolerations:
+                          description: Tolerations defines tolerations
                           items:
                             properties:
                               effect:
@@ -38549,6 +39086,7 @@ spec:
                             type: object
                           type: array
                         volumes:
+                          description: Volumes keeps list of volumes that can be mounted by containers belonging to the pod.
                           items:
                             properties:
                               awsElasticBlockStore:
@@ -39263,7 +39801,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 0aecc742a097984d7a5b193eb6f2fb30
+    arangodb.com/schema: 75dccf5c3dbb263b88ada3e3b49b3b72
     arangodb.com/version: ed2f810b803d33ebf147bc1c5d4ff3aa
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoroutes.networking.arangodb.com
@@ -39501,6 +40039,12 @@ spec:
                     service:
                       description: Service defines service upstream reference
                       properties:
+                        mode:
+                          description: Mode defines the resolve mode for the service discovery
+                          enum:
+                            - dns
+                            - ip
+                          type: string
                         name:
                           description: Name of the object
                           type: string
@@ -39569,7 +40113,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: f6cb501d1dce91b4fd080c8d74be490f
+    arangodb.com/schema: 3974830c2089afe26eb3dd79fe738b9b
     arangodb.com/version: 3a84787f93098eaa4c16cdf2a22a8e75
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerbatchjobs.scheduler.arangodb.com
@@ -40276,6 +40820,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -40831,6 +41377,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -41392,6 +41940,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -42678,7 +43228,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 3f2bde3253c1fec8abad3d33f1b6b1f3
+    arangodb.com/schema: 992e43865b951d553d7e360e22a759bf
     arangodb.com/version: 843d96cd15169630a12f575b515d93bc
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulercronjobs.scheduler.arangodb.com
@@ -43465,6 +44015,8 @@ spec:
                                                     x-kubernetes-int-or-string: true
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         properties:
@@ -44020,6 +44572,8 @@ spec:
                                                     x-kubernetes-int-or-string: true
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         properties:
@@ -44581,6 +45135,8 @@ spec:
                                                     x-kubernetes-int-or-string: true
                                                 type: object
                                             type: object
+                                          stopSignal:
+                                            type: string
                                         type: object
                                       livenessProbe:
                                         properties:
@@ -45886,7 +46442,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 6b1cc5b26c9cd4ac1671c6e574eed1d3
+    arangodb.com/schema: 51e6e65a5bc94e518ea3db5cce69a0ea
     arangodb.com/version: c810d7d13258ab790de55a136c8baffc
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerdeployments.scheduler.arangodb.com
@@ -46549,6 +47105,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -47104,6 +47662,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -47665,6 +48225,8 @@ spec:
                                             x-kubernetes-int-or-string: true
                                         type: object
                                     type: object
+                                  stopSignal:
+                                    type: string
                                 type: object
                               livenessProbe:
                                 properties:
@@ -48951,7 +49513,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 2a82a24c7dba8dc208be40d31ac0ce2f
+    arangodb.com/schema: 21219a68b6988da8789d5dca9e970d4b
     arangodb.com/version: 338fb8407ae44a030186b06db2f80722
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerpods.scheduler.arangodb.com
@@ -49481,6 +50043,8 @@ spec:
                                     x-kubernetes-int-or-string: true
                                 type: object
                             type: object
+                          stopSignal:
+                            type: string
                         type: object
                       livenessProbe:
                         properties:
@@ -50036,6 +50600,8 @@ spec:
                                     x-kubernetes-int-or-string: true
                                 type: object
                             type: object
+                          stopSignal:
+                            type: string
                         type: object
                       livenessProbe:
                         properties:
@@ -50597,6 +51163,8 @@ spec:
                                     x-kubernetes-int-or-string: true
                                 type: object
                             type: object
+                          stopSignal:
+                            type: string
                         type: object
                       livenessProbe:
                         properties:
@@ -51948,7 +52516,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: ae9c0adbe594a8cb533cd848bc810ae7
+    arangodb.com/schema: a0738e3839289370248a6b0664644267
     arangodb.com/version: a7cd6bb879625020634bea59274db2e4
     arangodb.com/x-preserve-unknown-fields: "false"
   name: graphanalyticsengines.analytics.arangodb.com
@@ -52493,6 +53061,8 @@ spec:
                                   x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        stopSignal:
+                          type: string
                       type: object
                     livenessProbe:
                       properties:
@@ -53836,6 +54406,8 @@ spec:
                                   x-kubernetes-int-or-string: true
                               type: object
                           type: object
+                        stopSignal:
+                          type: string
                       type: object
                     listenPort:
                       format: int32

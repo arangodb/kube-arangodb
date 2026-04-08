@@ -6,7 +6,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -18,7 +18,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -39,7 +39,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-deployment-replication
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -68,7 +68,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-webhook
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -91,7 +91,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -111,7 +111,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-deployment-replication
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -131,7 +131,7 @@ metadata:
   name: arango-deployment-replication-operator-rbac-webhook
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -152,7 +152,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -181,10 +181,21 @@ rules:
     resources:
       - "pods"
       - "services"
-      - "endpoints"
       - "persistentvolumeclaims"
       - "events"
       - "secrets"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
+  - apiGroups:
+      - "discovery.k8s.io"
+    resources:
+      - "endpointslices"
     verbs:
       - "get"
       - "list"
@@ -209,7 +220,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -230,7 +241,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -264,7 +275,7 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.1
+    helm.sh/chart: kube-arangodb-1.4.2
     app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: deployment-replication
     release: deployment-replication
@@ -282,7 +293,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.4.1
+        helm.sh/chart: kube-arangodb-1.4.2
         app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: deployment-replication
         release: deployment-replication
@@ -325,7 +336,7 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb-enterprise:1.4.1
+          image: arangodb/kube-arangodb-enterprise:1.4.2
           args:
             - --threads=8
             - --api.secondary-name=arango-deployment-replication-operator

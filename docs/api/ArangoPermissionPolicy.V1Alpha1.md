@@ -10,7 +10,7 @@ title: ArangoPermissionPolicy V1Alpha1
 
 ### .spec.deployment.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/shared/v1/object.go#L53)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/shared/v1/object.go#L53)</sup>
 
 This field is **required**
 
@@ -20,7 +20,7 @@ Name of the object
 
 ### .spec.policy.statements\[int\].actions
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/permission/v1alpha1/policy/statement.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/permission/v1alpha1/policy/statement.go#L44)</sup>
 
 This field is **required**
 
@@ -31,7 +31,7 @@ Action needs to be defined in format `<namespace>:<name>`
 
 ### .spec.policy.statements\[int\].effect
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/permission/v1alpha1/policy/statement.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/permission/v1alpha1/policy/statement.go#L39)</sup>
 
 This field is **required**
 
@@ -45,7 +45,7 @@ Possible Values:
 
 ### .spec.policy.statements\[int\].resources
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.1/pkg/apis/permission/v1alpha1/policy/statement.go#L48)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/permission/v1alpha1/policy/statement.go#L48)</sup>
 
 This field is **required**
 
