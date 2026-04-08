@@ -23,7 +23,6 @@ package arangod
 import (
 	"context"
 	"fmt"
-	"io"
 	goHttp "net/http"
 	"path"
 	goStrings "strings"
@@ -77,19 +76,22 @@ func (r *request[OUT]) Do(ctx context.Context) Response[OUT] {
 		defer cancel()
 	}
 
-	resp, closer, err := r.conn.Stream(ctx, r.request)
+	// Route through the connection's Do (instead of Stream) so any wrappers
+	// installed on the connection — most importantly the AsyncConnectionWrapper —
+	// get a chance to intercept the request.
+	var output OUT
+	resp, err := r.conn.Do(ctx, r.request, &output)
 	if err != nil {
+		// If we got a response back along with the error (e.g. body decode failed
+		// after a non-success status), preserve it so AcceptCode/Code can still
+		// inspect the status. Otherwise surface the error directly.
+		if resp != nil {
+			return response[OUT]{resp: resp, output: output, err: err}
+		}
 		return NewResponseError[OUT](err)
 	}
 
-	defer closer.Close()
-
-	data, err := io.ReadAll(closer)
-	if err != nil {
-		return NewResponseError[OUT](err)
-	}
-
-	return response[OUT]{resp: resp, data: data}
+	return response[OUT]{resp: resp, output: output}
 }
 
 type Request[OUT any] interface {
@@ -138,8 +140,12 @@ func (r responseError[OUT]) AcceptCode(codes ...int) Response[OUT] {
 }
 
 type response[OUT any] struct {
-	resp adbDriverV2Connection.Response
-	data []byte
+	resp   adbDriverV2Connection.Response
+	output OUT
+	// err is set when conn.Do returned a response together with an error
+	// (e.g. body could not be decoded into OUT). It is surfaced from
+	// Response()/Evaluate() unless AcceptCode short-circuits first.
+	err error
 }
 
 func (r response[OUT]) HTTPResponse() (*goHttp.Response, error) {
@@ -163,11 +169,14 @@ func (r response[OUT]) AcceptCode(codes ...int) Response[OUT] {
 }
 
 func (r response[OUT]) Response() (OUT, error) {
-	return util.Unmarshal[OUT](r.data)
+	if r.err != nil {
+		return util.Default[OUT](), r.err
+	}
+	return r.output, nil
 }
 
 func (r response[OUT]) Evaluate() error {
-	return nil
+	return r.err
 }
 
 func newPath(p ...string) string {
