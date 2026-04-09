@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
@@ -76,7 +76,7 @@ func (r actionRebalancerGenerateV2) Start(ctx context.Context) (bool, error) {
 	nctx, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
-	resp, err := client.NewClient(c.Connection(), r.log).RebalancePlan(nctx, &client.RebalancePlanRequest{
+	resp, err := client.NewClient(c.Connection()).RebalancePlan(nctx, &client.RebalancePlanRequest{
 		MaximumNumberOfMoves: util.NewType(spec.Rebalancer.GetParallelMoves()),
 	})
 	if err != nil {
@@ -109,13 +109,7 @@ func (r actionRebalancerGenerateV2) Start(ctx context.Context) (bool, error) {
 			}
 		}
 
-		cluster, err := c.Cluster(ctx)
-		if err != nil {
-			r.log.Err(err).Warn("Unable to get cluster")
-			return true, nil
-		}
-
-		if err := r.executeActions(ctx, spec.Rebalancer.GetParallelMoves(), c, cluster, actions); err != nil {
+		if err := r.executeActions(ctx, spec.Rebalancer.GetParallelMoves(), c, actions); err != nil {
 			r.log.Err(err).Warn("Unable to execute actions")
 			return true, nil
 		}
@@ -137,14 +131,14 @@ func (r actionRebalancerGenerateV2) Start(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func (r actionRebalancerGenerateV2) executeActions(ctx context.Context, size int, client driver.Client, cluster driver.Cluster, a RebalanceActions) error {
+func (r actionRebalancerGenerateV2) executeActions(ctx context.Context, size int, client adbDriverV2.Client, a RebalanceActions) error {
 	if len(a) > size {
 		a = a[0:size]
 	}
 
 	r.actionCtx.Metrics().GetRebalancer().AddMoves(len(a))
 
-	ids, errors := runMoveJobs(ctx, client, cluster, a)
+	ids, errors := runMoveJobs(ctx, client, a)
 
 	r.actionCtx.Metrics().GetRebalancer().AddFailures(len(errors))
 

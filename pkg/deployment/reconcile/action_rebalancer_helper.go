@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 )
 
 type RebalanceActions []RebalanceAction
@@ -39,11 +39,11 @@ type RebalanceAction struct {
 	DependsOn []int `json:"depends_on,omitempty"`
 }
 
-func runMoveJobs(ctx context.Context, client driver.Client, cluster driver.Cluster, a RebalanceActions) ([]string, []error) {
+func runMoveJobs(ctx context.Context, client adbDriverV2.Client, a RebalanceActions) ([]string, []error) {
 	var errors []error
 	var ids []string
 	for _, z := range a {
-		id, ok, err := runMoveJob(ctx, client, cluster, z)
+		id, ok, err := runMoveJob(ctx, client, z)
 		if err != nil {
 			errors = append(errors, err)
 			continue
@@ -59,26 +59,27 @@ func runMoveJobs(ctx context.Context, client driver.Client, cluster driver.Clust
 	return ids, errors
 }
 
-func runMoveJob(ctx context.Context, client driver.Client, cluster driver.Cluster, a RebalanceAction) (string, bool, error) {
+func runMoveJob(ctx context.Context, client adbDriverV2.Client, a RebalanceAction) (string, bool, error) {
 	if len(a.DependsOn) != 0 {
 		return "", false, nil
 	}
 
-	db, err := client.Database(ctx, a.Database)
+	db, err := client.GetDatabase(ctx, a.Database, nil)
 	if err != nil {
 		return "", false, err
 	}
 
-	col, err := db.Collection(ctx, a.Collection)
+	col, err := db.GetCollection(ctx, a.Collection, nil)
 	if err != nil {
 		return "", false, err
 	}
 
 	var jobID string
-	jctx := driver.WithJobIDResponse(ctx, &jobID)
 
-	if err := cluster.MoveShard(jctx, col, driver.ShardID(a.Shard), driver.ServerID(a.From), driver.ServerID(a.To)); err != nil {
+	if id, err := client.MoveShard(ctx, col, adbDriverV2.ShardID(a.Shard), adbDriverV2.ServerID(a.From), adbDriverV2.ServerID(a.To)); err != nil {
 		return "", false, err
+	} else {
+		jobID = id
 	}
 
 	return jobID, jobID != "", nil

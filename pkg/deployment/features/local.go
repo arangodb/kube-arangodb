@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
@@ -179,7 +179,7 @@ func cmdRun(_ *cobra.Command, _ []string) {
 // - any feature dependency is disabled.
 // - a given version is lower than minimum feature version.
 // - feature expects enterprise but a given enterprise arg is not true.
-func Supported(f Feature, v driver.Version, enterprise bool) bool {
+func Supported(f Feature, v adbDriverV2.Version, enterprise bool) bool {
 	if !f.Enabled() {
 		return false
 	}

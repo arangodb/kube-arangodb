@@ -21,7 +21,7 @@
 package features
 
 import (
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
@@ -86,7 +86,7 @@ func UpgradeIndexOrderIssue() Feature { return upgradeIndexOrderIssue }
 
 func UpgradeCheckSkip() Feature { return upgradeCheckSkip }
 
-func IsUpgradeIndexOrderIssueEnabled(group api.ServerGroup, from, to driver.Version) bool {
+func IsUpgradeIndexOrderIssueEnabled(group api.ServerGroup, from, to adbDriverV2.Version) bool {
 	if !UpgradeIndexOrderIssue().Enabled() {
 		return false
 	}

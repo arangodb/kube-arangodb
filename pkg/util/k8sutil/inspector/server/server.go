@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,11 @@
 
 package server
 
-import "github.com/arangodb/go-driver"
+import (
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+)
 
 // Inspector for secrets
 type Inspector interface {
-	GetVersionInfo() driver.Version
+	GetVersionInfo() adbDriverV2.Version
 }

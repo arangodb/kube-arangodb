@@ -251,6 +251,7 @@ func (i *implementation) ListObjects(req *pbStorageV2.StorageV2ListObjectsReques
 		log.Err(err).Debug("listObjects failed")
 		return err
 	}
+	defer lister.Close()
 
 	for {
 		files, err := lister.Next(ctx)

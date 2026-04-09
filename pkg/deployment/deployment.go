@@ -33,10 +33,8 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/http"
+	syncClient "github.com/arangodb/arangosync-client/client"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
@@ -59,6 +57,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
+	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
@@ -136,7 +135,7 @@ type Deployment struct {
 	resources                 *resources.Resources
 	chaosMonkey               *chaos.Monkey
 	acs                       sutil.ACS
-	syncClientCache           client.ClientCache
+	syncClientCache           syncClient.ClientCache
 	haveServiceMonitorCRD     bool
 
 	memberState memberState.StateInspector
@@ -210,9 +209,9 @@ func (d *Deployment) RefreshAgencyCache(ctx context.Context) (uint64, error) {
 		if size := info.Size; size != nil {
 			rsize := int(*size)
 
-			clients := agency.Connections{}
+			clients := map[string]adbDriverV2Connection.Connection{}
 			for _, m := range d.GetStatus().Members.Agents {
-				a, err := d.clientCache.GetRaw(api.ServerGroupAgents, m.ID)
+				a, err := d.clientCache.GetConnection(api.ServerGroupAgents, m.ID)
 				if err != nil {
 					return 0, err
 				}
@@ -247,26 +246,7 @@ func (d *Deployment) SetAgencyMaintenanceMode(ctx context.Context, enabled bool)
 		data = "off"
 	}
 
-	conn := client.Connection()
-	r, err := conn.NewRequest(goHttp.MethodPut, "/_admin/cluster/maintenance")
-	if err != nil {
-		return err
-	}
-
-	if _, err := r.SetBody(data); err != nil {
-		return err
-	}
-
-	resp, err := conn.Do(ctx, r)
-	if err != nil {
-		return err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return err
-	}
-
-	return nil
+	return arangod.PutRequest[string, any](ctx, client.Connection(), data, "/_admin/cluster/maintenance").Do(ctx).AcceptCode(goHttp.StatusOK).Evaluate()
 }
 
 // New creates a new Deployment from the given API object.
@@ -296,34 +276,15 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 
 	d.memberState = memberState.NewStateInspector(d)
 
-	getConnConfigCache := cache.NewObject(func(ctx context.Context) (http.ConnectionConfig, time.Duration, error) {
-		conn, err := d.getConnConfig()
-		if err != nil {
-			return http.ConnectionConfig{}, 0, err
-		}
-
-		return conn, time.Minute, nil
-	})
-
-	getAuthCache := cache.NewObject(func(ctx context.Context) (driver.Authentication, time.Duration, error) {
+	d.clientCache = deploymentClient.NewClientCache(d, cache.NewObject(func(ctx context.Context) (adbDriverV2Connection.Authentication, time.Duration, error) {
 		auth, err := d.getAuth()
 		if err != nil {
 			return nil, 0, err
 		}
 
-		return auth, time.Minute, nil
-	})
-
-	d.clientCache = deploymentClient.NewClientCache(d, conn.NewFactory(func() (driver.Authentication, error) {
-		ctx, c := context.WithTimeout(shutdown.Context(), 15*time.Second)
-		defer c()
-
-		return getAuthCache.Get(ctx)
-	}, func() (http.ConnectionConfig, error) {
-		ctx, c := context.WithTimeout(shutdown.Context(), 15*time.Second)
-		defer c()
-
-		return getConnConfigCache.Get(ctx)
+		return auth, 30 * time.Second, nil
+	}), cache.NewObject(func(ctx context.Context) (goHttp.RoundTripper, time.Duration, error) {
+		return operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(util.BoolSwitch(d.GetSpec().TLS.IsSecure(), operatorHTTP.Insecure, nil))), 10 * time.Minute, nil
 	}))
 
 	d.reconciler = reconcile.NewReconciler(apiObject.GetNamespace(), apiObject.GetName(), d)

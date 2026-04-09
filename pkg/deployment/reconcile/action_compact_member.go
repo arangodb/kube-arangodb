@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"context"
 
 	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
@@ -60,13 +61,13 @@ func (a *actionCompactMember) Start(ctx context.Context) (bool, error) {
 			return false, errors.Wrapf(err, "Unable to create client")
 		}
 
-		c := client.NewClient(dbc.Connection(), logger)
+		c := client.NewClient(dbc.Connection())
 
 		if err := c.Compact(ctx, &client.CompactRequest{
 			CompactBottomMostLevel: util.NewType(true),
 			ChangeLevel:            util.NewType(true),
 		}); err != nil {
-			if id, ok := conn.IsAsyncJobInProgress(err); ok {
+			if id, ok := adbDriverV2Connection.IsAsyncJobInProgress(err); ok {
 				a.actionCtx.Add(LocalJobID, id, true)
 
 				return false, nil
@@ -97,13 +98,13 @@ func (a actionCompactMember) CheckProgress(ctx context.Context) (bool, bool, err
 			return false, false, errors.Wrapf(err, "Unable to create client")
 		}
 
-		c := client.NewClient(dbc.Connection(), logger)
+		c := client.NewClient(dbc.Connection())
 
-		if err := c.Compact(conn.WithAsyncID(ctx, job), &client.CompactRequest{
+		if err := c.Compact(adbDriverV2Connection.WithAsyncID(ctx, job), &client.CompactRequest{
 			CompactBottomMostLevel: util.NewType(true),
 			ChangeLevel:            util.NewType(true),
 		}); err != nil {
-			if _, ok := conn.IsAsyncJobInProgress(err); ok {
+			if _, ok := adbDriverV2Connection.IsAsyncJobInProgress(err); ok {
 				return false, false, nil
 			}
 

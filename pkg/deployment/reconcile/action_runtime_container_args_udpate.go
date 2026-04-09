@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,14 +23,15 @@ package reconcile
 import (
 	"context"
 	"fmt"
+	goHttp "net/http"
 	goStrings "strings"
 
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/definitions"
 )
@@ -250,23 +251,7 @@ func (a actionRuntimeContainerArgsLogLevelUpdate) setLogLevel(ctx context.Contex
 	}
 	conn := cli.Connection()
 
-	req, err := conn.NewRequest("PUT", "_admin/log/level")
-	if err != nil {
-		return err
-	}
-
-	if _, err := req.SetBody(logLevels); err != nil {
-		return err
-	}
-
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	resp, err := conn.Do(ctxChild, req)
-	if err != nil {
-		return err
-	}
-
-	return resp.CheckStatus(200)
+	return arangod.PutRequest[map[string]string, any](ctx, conn, logLevels, "_admin/log/level").Do(ctx).AcceptCode(goHttp.StatusOK).Evaluate()
 }
 
 // getTopicAndLevel returns topics and log level from the argument.

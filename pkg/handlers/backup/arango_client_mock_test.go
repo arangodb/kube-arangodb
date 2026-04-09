@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/util/connection/wrappers/async"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -57,8 +57,8 @@ func newMockArangoClientBackupFactory(mock *mockArangoClientBackupState) ArangoC
 
 func newMockArangoClientBackup(errors mockErrorsArangoClientBackup) *mockArangoClientBackupState {
 	return &mockArangoClientBackupState{
-		backups:    map[driver.BackupID]driver.BackupMeta{},
-		progresses: map[driver.BackupTransferJobID]ArangoBackupProgress{},
+		backups:    map[string]adbDriverV2.BackupMeta{},
+		progresses: map[string]ArangoBackupProgress{},
 		errors:     errors,
 	}
 }
@@ -70,8 +70,8 @@ type mockErrorsArangoClientBackup struct {
 type mockArangoClientBackupState struct {
 	lock sync.Mutex
 
-	backups    map[driver.BackupID]driver.BackupMeta
-	progresses map[driver.BackupTransferJobID]ArangoBackupProgress
+	backups    map[string]adbDriverV2.BackupMeta
+	progresses map[string]ArangoBackupProgress
 	createDone bool
 
 	errors mockErrorsArangoClientBackup
@@ -82,7 +82,7 @@ type mockArangoClientBackup struct {
 	state  *mockArangoClientBackupState
 }
 
-func (m *mockArangoClientBackup) List() (map[driver.BackupID]driver.BackupMeta, error) {
+func (m *mockArangoClientBackup) List() (map[string]adbDriverV2.BackupMeta, error) {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
@@ -93,7 +93,7 @@ func (m *mockArangoClientBackup) List() (map[driver.BackupID]driver.BackupMeta, 
 	return m.state.backups, nil
 }
 
-func (m *mockArangoClientBackup) Abort(d driver.BackupTransferJobID) error {
+func (m *mockArangoClientBackup) Abort(d string, _ adbDriverV2.TransferType) error {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
@@ -106,7 +106,7 @@ func (m *mockArangoClientBackup) Abort(d driver.BackupTransferJobID) error {
 	return nil
 }
 
-func (m *mockArangoClientBackup) Exists(id driver.BackupID) (bool, error) {
+func (m *mockArangoClientBackup) Exists(id string) (bool, error) {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
@@ -119,7 +119,7 @@ func (m *mockArangoClientBackup) Exists(id driver.BackupID) (bool, error) {
 	return ok, nil
 }
 
-func (m *mockArangoClientBackup) Delete(id driver.BackupID) error {
+func (m *mockArangoClientBackup) Delete(id string) error {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
@@ -132,7 +132,7 @@ func (m *mockArangoClientBackup) Delete(id driver.BackupID) error {
 	return nil
 }
 
-func (m *mockArangoClientBackup) Download(driver.BackupID) (driver.BackupTransferJobID, error) {
+func (m *mockArangoClientBackup) Download(string) (string, error) {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
@@ -140,14 +140,14 @@ func (m *mockArangoClientBackup) Download(driver.BackupID) (driver.BackupTransfe
 		return "", m.state.errors.downloadError
 	}
 
-	id := driver.BackupTransferJobID(uuid.NewUUID())
+	id := string(uuid.NewUUID())
 
 	m.state.progresses[id] = ArangoBackupProgress{}
 
 	return id, nil
 }
 
-func (m *mockArangoClientBackup) Progress(id driver.BackupTransferJobID) (ArangoBackupProgress, error) {
+func (m *mockArangoClientBackup) Progress(id string, _ adbDriverV2.TransferType) (ArangoBackupProgress, error) {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
@@ -158,7 +158,7 @@ func (m *mockArangoClientBackup) Progress(id driver.BackupTransferJobID) (Arango
 	return m.state.progresses[id], nil
 }
 
-func (m *mockArangoClientBackup) Upload(driver.BackupID) (driver.BackupTransferJobID, error) {
+func (m *mockArangoClientBackup) Upload(string) (string, error) {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
@@ -166,26 +166,26 @@ func (m *mockArangoClientBackup) Upload(driver.BackupID) (driver.BackupTransferJ
 		return "", m.state.errors.uploadError
 	}
 
-	id := driver.BackupTransferJobID(uuid.NewUUID())
+	id := string(uuid.NewUUID())
 
 	m.state.progresses[id] = ArangoBackupProgress{}
 
 	return id, nil
 }
 
-func (m *mockArangoClientBackup) Get(id driver.BackupID) (driver.BackupMeta, error) {
+func (m *mockArangoClientBackup) Get(id string) (adbDriverV2.BackupMeta, error) {
 	m.state.lock.Lock()
 	defer m.state.lock.Unlock()
 
 	if m.state.errors.getError != nil {
-		return driver.BackupMeta{}, m.state.errors.getError
+		return adbDriverV2.BackupMeta{}, m.state.errors.getError
 	}
 
 	if meta, ok := m.state.backups[id]; ok {
 		return meta, nil
 	}
 
-	return driver.BackupMeta{}, errors.Errorf("not found")
+	return adbDriverV2.BackupMeta{}, errors.Errorf("not found")
 }
 
 func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
@@ -196,7 +196,7 @@ func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 		return ArangoBackupCreateResponse{}, m.state.errors.createError
 	}
 
-	id := driver.BackupID(uuid.NewUUID())
+	id := string(uuid.NewUUID())
 
 	inconsistent := false
 
@@ -210,16 +210,18 @@ func (m *mockArangoClientBackup) Create() (ArangoBackupCreateResponse, error) {
 
 	servers := uint(util.Rand().Uint32())
 
-	meta := driver.BackupMeta{
-		ID:                      id,
-		Version:                 mockVersion,
-		NumberOfDBServers:       servers,
-		DateTime:                time.Now(),
-		SizeInBytes:             util.Rand().Uint64(),
-		PotentiallyInconsistent: inconsistent,
-		NumberOfFiles:           uint(util.Rand().Uint32()),
-		NumberOfPiecesPresent:   servers,
-		Available:               true,
+	meta := adbDriverV2.BackupMeta{
+		Version:               mockVersion,
+		NumberOfPiecesPresent: servers,
+		Available:             true,
+		BackupResponse: adbDriverV2.BackupResponse{
+			ID:                      id,
+			NumberOfDBServers:       servers,
+			CreationTime:            time.Now(),
+			SizeInBytes:             util.Rand().Uint64(),
+			PotentiallyInconsistent: inconsistent,
+			NumberOfFiles:           uint(util.Rand().Uint32()),
+		},
 	}
 
 	m.state.backups[id] = meta
@@ -240,9 +242,9 @@ func (m *mockArangoClientBackup) CreateAsync(jobID string) (ArangoBackupCreateRe
 	}
 
 	if jobID == "" {
-		return ArangoBackupCreateResponse{}, async.NewErrorAsyncJobInProgress(strconv.Itoa(util.Rand().Int()))
+		return ArangoBackupCreateResponse{}, adbDriverV2Connection.NewErrorAsyncJobInProgress(strconv.Itoa(util.Rand().Int()))
 	}
-	return ArangoBackupCreateResponse{}, async.NewErrorAsyncJobInProgress(jobID)
+	return ArangoBackupCreateResponse{}, adbDriverV2Connection.NewErrorAsyncJobInProgress(jobID)
 }
 
 func (m *mockArangoClientBackup) HealthCheck() error {
@@ -253,7 +255,7 @@ func (m *mockArangoClientBackup) getIDs() []string {
 	ret := make([]string, 0, len(m.state.backups))
 
 	for key := range m.state.backups {
-		ret = append(ret, string(key))
+		ret = append(ret, key)
 	}
 
 	return ret
@@ -263,7 +265,7 @@ func (m *mockArangoClientBackup) getProgressIDs() []string {
 	ret := make([]string, 0, len(m.state.progresses))
 
 	for key := range m.state.progresses {
-		ret = append(ret, string(key))
+		ret = append(ret, key)
 	}
 
 	return ret

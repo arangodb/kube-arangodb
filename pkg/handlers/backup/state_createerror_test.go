@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ func Test_State_CreateError_Retry_WhenBackoffEnabled(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
+		ID:                backupMeta.ID,
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
 	}
@@ -79,7 +79,7 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C1(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
+		ID:                backupMeta.ID,
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
 	}
@@ -111,7 +111,7 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C2(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
+		ID:                backupMeta.ID,
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
 	}
@@ -145,7 +145,7 @@ func Test_State_CreateError_Retry_WhenBackoffDisabled_C3(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
+		ID:                backupMeta.ID,
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
 	}
@@ -175,7 +175,7 @@ func Test_State_CreateError_Transfer_To_Failed(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                string(backupMeta.ID),
+		ID:                backupMeta.ID,
 		Version:           backupMeta.Version,
 		CreationTimestamp: meta.Now(),
 	}

@@ -24,7 +24,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -37,16 +37,16 @@ type Collection interface {
 	WithTTLIndex(name string, ttl time.Duration, path ...string) Collection
 	WithUniqueIndex(name string, path ...string) Collection
 
-	Get() cache.Object[arangodb.Collection]
+	Get() cache.Object[adbDriverV2.Collection]
 }
 
 type collection struct {
-	cache cache.Object[arangodb.Collection]
+	cache cache.Object[adbDriverV2.Collection]
 }
 
 func (c collection) WithUniqueIndex(name string, path ...string) Collection {
 	return collection{
-		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
+		cache: cache.NewObject(func(ctx context.Context) (adbDriverV2.Collection, time.Duration, error) {
 			col, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
@@ -60,7 +60,7 @@ func (c collection) WithUniqueIndex(name string, path ...string) Collection {
 				return col, ttl, nil
 			}
 
-			if _, _, err := col.EnsurePersistentIndex(ctx, path, &arangodb.CreatePersistentIndexOptions{
+			if _, _, err := col.EnsurePersistentIndex(ctx, path, &adbDriverV2.CreatePersistentIndexOptions{
 				Name:   name,
 				Unique: util.NewType(true),
 			}); err != nil {
@@ -74,7 +74,7 @@ func (c collection) WithUniqueIndex(name string, path ...string) Collection {
 
 func (c collection) WithTTLIndex(name string, gttl time.Duration, path ...string) Collection {
 	return collection{
-		cache: cache.NewObject(func(ctx context.Context) (arangodb.Collection, time.Duration, error) {
+		cache: cache.NewObject(func(ctx context.Context) (adbDriverV2.Collection, time.Duration, error) {
 			col, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
@@ -88,7 +88,7 @@ func (c collection) WithTTLIndex(name string, gttl time.Duration, path ...string
 				return col, ttl, nil
 			}
 
-			if _, _, err := col.EnsureTTLIndex(ctx, path, int(gttl/time.Second), &arangodb.CreateTTLIndexOptions{
+			if _, _, err := col.EnsureTTLIndex(ctx, path, int(gttl/time.Second), &adbDriverV2.CreateTTLIndexOptions{
 				Name: name,
 			}); err != nil {
 				return nil, 0, err
@@ -101,7 +101,7 @@ func (c collection) WithTTLIndex(name string, gttl time.Duration, path ...string
 
 func (c collection) Database() Database {
 	return database{
-		cache: cache.NewObject(func(ctx context.Context) (arangodb.Database, time.Duration, error) {
+		cache: cache.NewObject(func(ctx context.Context) (adbDriverV2.Database, time.Duration, error) {
 			col, ttl, err := c.cache.GetWithTTL(ctx)
 			if err != nil {
 				return nil, 0, err
@@ -112,6 +112,6 @@ func (c collection) Database() Database {
 	}
 }
 
-func (c collection) Get() cache.Object[arangodb.Collection] {
+func (c collection) Get() cache.Object[adbDriverV2.Collection] {
 	return c.cache
 }

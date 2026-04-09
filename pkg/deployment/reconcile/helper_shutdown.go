@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -166,11 +166,10 @@ func (s shutdownHelperAPI) Start(ctx context.Context) (bool, error) {
 			s.log.Err(err).Debug("Failed to create member client")
 			return false, errors.WithStack(err)
 		}
-		removeFromCluster := false
-		s.log.Bool("removeFromCluster", removeFromCluster).Debug("Shutting down member")
+		s.log.Debug("Shutting down member")
 		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
-		if err := c.ShutdownV2(ctxChild, removeFromCluster, true); err != nil {
+		if err := c.Shutdown(ctxChild, "_system", util.NewType(true)); err != nil {
 			// Shutdown failed. Let's check if we're already done
 			if ready, _, err := s.CheckProgress(ctxChild); err == nil && ready {
 				// We're done
@@ -205,7 +204,7 @@ func (s shutdownHelperAPI) CheckProgress(ctx context.Context) (bool, bool, error
 			if err != nil {
 				s.log.Err(err).Warn("Failed to create member client")
 			} else {
-				internal := client.NewClient(c.Connection(), s.log)
+				internal := client.NewClient(c.Connection())
 
 				if err := internal.DeleteExpiredJobs(ctx, ActionShutdownJobExpiredTerminationTimeout); err != nil {
 					s.log.Err(err).Warn("Unable to kill async jobs on member")

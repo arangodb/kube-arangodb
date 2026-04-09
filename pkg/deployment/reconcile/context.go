@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -61,5 +61,5 @@ type Context interface {
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetAuthentication return authentication for members
-	GetAuthentication() conn.Auth
+	GetAuthentication(ctx context.Context) (adbDriverV2Connection.Authentication, error)
 }

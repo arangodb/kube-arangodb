@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -340,7 +340,7 @@ func (h *handler) HandleDeploymentConnection(ctx context.Context, item operation
 	return operator.HandleP5(ctx, item, extension, status, depl, conn, h.HandleArangoDBUser)
 }
 
-func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment, conn arangodb.Client) (bool, error) {
+func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment, conn adbDriverV2.Client) (bool, error) {
 	if status.User == nil {
 		name := fmt.Sprintf("operator-%s-%s", extension.GetName(), goStrings.ToLower(uniuri.NewLen(6)))
 		logger.Str("name", name).Info("Create ArangoDB User")
@@ -355,7 +355,7 @@ func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, e
 			return true, operator.Reconcile("ArangoDB User name used")
 		}
 
-		user, err := conn.CreateUser(ctx, name, &arangodb.UserOptions{
+		user, err := conn.CreateUser(ctx, name, &adbDriverV2.UserOptions{
 			Password: string(uuid.NewUUID()),
 			Active:   util.NewType(true),
 		})

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 package versions
 
 import (
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
@@ -36,11 +36,11 @@ type Check interface {
 	Enterprise() Check
 	Community() Check
 
-	Above(version driver.Version) Check
-	AboveOrEqual(version driver.Version) Check
+	Above(version adbDriverV2.Version) Check
+	AboveOrEqual(version adbDriverV2.Version) Check
 
-	Below(version driver.Version) Check
-	BelowOrEqual(version driver.Version) Check
+	Below(version adbDriverV2.Version) Check
+	BelowOrEqual(version adbDriverV2.Version) Check
 
 	Evaluate() bool
 }
@@ -49,7 +49,7 @@ type check struct {
 	version api.ImageInfo
 }
 
-func (c check) Below(version driver.Version) Check {
+func (c check) Below(version adbDriverV2.Version) Check {
 	if c.version.ArangoDBVersion.CompareTo(version) == 1 {
 		return c
 	}
@@ -57,7 +57,7 @@ func (c check) Below(version driver.Version) Check {
 	return falseCheck{}
 }
 
-func (c check) BelowOrEqual(version driver.Version) Check {
+func (c check) BelowOrEqual(version adbDriverV2.Version) Check {
 	if c.version.ArangoDBVersion.CompareTo(version) <= 0 {
 		return c
 	}
@@ -65,7 +65,7 @@ func (c check) BelowOrEqual(version driver.Version) Check {
 	return falseCheck{}
 }
 
-func (c check) Above(version driver.Version) Check {
+func (c check) Above(version adbDriverV2.Version) Check {
 	if c.version.ArangoDBVersion.CompareTo(version) == -1 {
 		return c
 	}
@@ -73,7 +73,7 @@ func (c check) Above(version driver.Version) Check {
 	return falseCheck{}
 }
 
-func (c check) AboveOrEqual(version driver.Version) Check {
+func (c check) AboveOrEqual(version adbDriverV2.Version) Check {
 	if c.version.ArangoDBVersion.CompareTo(version) >= 0 {
 		return c
 	}
@@ -104,19 +104,19 @@ func (c check) Evaluate() bool {
 type falseCheck struct {
 }
 
-func (f falseCheck) Below(version driver.Version) Check {
+func (f falseCheck) Below(version adbDriverV2.Version) Check {
 	return f
 }
 
-func (f falseCheck) BelowOrEqual(version driver.Version) Check {
+func (f falseCheck) BelowOrEqual(version adbDriverV2.Version) Check {
 	return f
 }
 
-func (f falseCheck) Above(version driver.Version) Check {
+func (f falseCheck) Above(version adbDriverV2.Version) Check {
 	return f
 }
 
-func (f falseCheck) AboveOrEqual(version driver.Version) Check {
+func (f falseCheck) AboveOrEqual(version adbDriverV2.Version) Check {
 	return f
 }
 

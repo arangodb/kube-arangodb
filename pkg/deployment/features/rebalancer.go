@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ var rebalancerV2 = &feature{
 	description:        "Rebalancer V2 feature",
 	version:            newFeatureVersion("3.10.0", NoVersionLimit),
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
+	deprecated:         "Only Rebalancer V2 feature allowed",
 }
 
 func RebalancerV2() Feature {

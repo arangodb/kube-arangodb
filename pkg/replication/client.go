@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,21 +21,21 @@
 package replication
 
 import (
-	"github.com/arangodb/arangosync-client/client"
+	syncClient "github.com/arangodb/arangosync-client/client"
 	"github.com/arangodb/arangosync-client/tasks"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func GetSyncServerClient(clientCache *client.ClientCache, token string, source client.Endpoint) (client.API, error) {
+func GetSyncServerClient(clientCache *syncClient.ClientCache, token string, source syncClient.Endpoint) (syncClient.API, error) {
 	tlsAuth := tasks.TLSAuthentication{
 		TLSClientAuthentication: tasks.TLSClientAuthentication{
 			ClientToken: token,
 		},
 	}
-	auth := client.NewAuthentication(tlsAuth, "")
+	auth := syncClient.NewAuthentication(tlsAuth, "")
 	insecureSkipVerify := true
-	c, err := clientCache.GetClient(client.NewExternalEndpoints(source), auth, insecureSkipVerify)
+	c, err := clientCache.GetClient(syncClient.NewExternalEndpoints(source), auth, insecureSkipVerify)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
-	"github.com/arangodb/go-driver"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -111,8 +111,8 @@ func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi
 	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
-	if err := dbc.Backup().Restore(ctxChild, driver.BackupID(backup.Status.Backup.ID), nil); err != nil {
-		if id, ok := conn.IsAsyncJobInProgress(err); ok {
+	if _, err := dbc.BackupRestore(ctxChild, backup.Status.Backup.ID); err != nil {
+		if id, ok := adbDriverV2Connection.IsAsyncJobInProgress(err); ok {
 			a.actionCtx.Add(LocalJobID, id, true)
 			a.actionCtx.Add(actionBackupRestoreLocalBackupName, backup.GetName(), true)
 
@@ -134,7 +134,7 @@ func (a actionBackupRestore) restoreSync(ctx context.Context, backup *backupApi.
 	}
 
 	// The below action can take a while so the full parent timeout context is used.
-	restoreError := dbc.Backup().Restore(ctx, driver.BackupID(backup.Status.Backup.ID), nil)
+	_, restoreError := dbc.BackupRestore(ctx, backup.Status.Backup.ID)
 	if restoreError != nil {
 		a.log.Err(restoreError).Error("Restore failed")
 	}
@@ -186,9 +186,9 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 	defer cancel()
 
 	// Params does not matter in async fetch
-	restoreError := dbc.Backup().Restore(conn.WithAsyncID(ctxChild, job), "", nil)
+	_, restoreError := dbc.BackupRestore(adbDriverV2Connection.WithAsyncID(ctxChild, job), "")
 	if restoreError != nil {
-		if _, ok := conn.IsAsyncJobInProgress(restoreError); ok {
+		if _, ok := adbDriverV2Connection.IsAsyncJobInProgress(restoreError); ok {
 			// Job still in progress
 			return false, false, nil
 		}

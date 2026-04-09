@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package features
 import (
 	"sort"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/version"
@@ -33,7 +33,7 @@ const (
 	Enabled  = "true"
 	Disabled = "false"
 
-	NoVersionLimit driver.Version = ""
+	NoVersionLimit adbDriverV2.Version = ""
 )
 
 type Features []Feature
@@ -60,7 +60,7 @@ type Feature interface {
 	Name() string
 	Description() string
 	Dependencies() []Feature
-	Version() (driver.Version, driver.Version)
+	Version() (adbDriverV2.Version, adbDriverV2.Version)
 	EnterpriseRequired() bool
 	OperatorEnterpriseRequired() bool
 	EnabledByDefault() bool
@@ -68,7 +68,7 @@ type Feature interface {
 	EnabledPointer() *bool
 	Deprecated() (bool, string)
 	Hidden() bool
-	Supported(v driver.Version, enterprise bool) bool
+	Supported(v adbDriverV2.Version, enterprise bool) bool
 	ImageSupported(i *api.ImageInfo) bool
 	GetDependencies() []string
 	Reset()
@@ -84,7 +84,7 @@ type feature struct {
 	dependencies                                                              []Feature
 }
 
-func newFeatureVersion(min, max driver.Version) featureVersion {
+func newFeatureVersion(min, max adbDriverV2.Version) featureVersion {
 	return featureVersion{
 		min: min,
 		max: max,
@@ -92,8 +92,8 @@ func newFeatureVersion(min, max driver.Version) featureVersion {
 }
 
 type featureVersion struct {
-	min driver.Version
-	max driver.Version
+	min adbDriverV2.Version
+	max adbDriverV2.Version
 }
 
 func (f feature) Dependencies() []Feature {
@@ -134,7 +134,7 @@ func (f feature) GetDependencies() []string {
 	return deps
 }
 
-func (f feature) Supported(v driver.Version, enterprise bool) bool {
+func (f feature) Supported(v adbDriverV2.Version, enterprise bool) bool {
 	return Supported(&f, v, enterprise)
 }
 
@@ -167,7 +167,7 @@ func (f *feature) EnabledPointer() *bool {
 	return &f.enabled
 }
 
-func (f feature) Version() (driver.Version, driver.Version) {
+func (f feature) Version() (adbDriverV2.Version, adbDriverV2.Version) {
 	return f.version.min, f.version.max
 }
 
