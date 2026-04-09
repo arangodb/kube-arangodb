@@ -7,6 +7,7 @@
 - (Maintenance) Bump go-jose to v4.1.4 (CVE-2026-34986)
 - (Feature) (OIDC) State
 - (Maintenance) Bump google.golang.org/grpc to v1.80.0 (CVE-2026-33186)
+- (Feature) (Platform) Storage V2 Central Service
 
 ## [1.4.2](https://github.com/arangodb/kube-arangodb/tree/1.4.2) (2026-04-08)
 - (Bugfix) (Platform) Permission Token CRD
@@ -49,7 +50,6 @@
 - (Bugfix) Reduce JWT Generation Calls
 - (Maintenance) Adjust Sidecar & JWT Features
 - (Bugfix) Allow run without central service
-- (Feature) (Platform) Storage V2 Central Service
 
 ## [1.4.1](https://github.com/arangodb/kube-arangodb/tree/1.4.1) (2026-01-27)
 - (Bugfix) (Platform) Ensure Helm History limit in ArangoPlatformService
