@@ -178,17 +178,15 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		}
 	}
 
-	never := func() func() (integrationsSidecar.Integration, bool) {
-		return func() (integrationsSidecar.Integration, bool) {
-			return nil, false
-		}
+	never := func() (integrationsSidecar.Integration, bool) {
+		return nil, false
 	}
 
-	central := func(integration integrationsSidecar.Integration) func() (integrationsSidecar.Integration, bool) {
+	central := func(in func() (integrationsSidecar.Integration, bool)) func() (integrationsSidecar.Integration, bool) {
 		if features.CentralServices().Enabled() {
-			return never()
+			return never
 		}
-		return always(integration)
+		return in
 	}
 
 	if changed, ready, err := r.ensureArangoProfilesFactory(ctx, cachedStatus,
