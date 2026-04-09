@@ -240,7 +240,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		gen(utilConstants.ProfilesIntegrationShutdown, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationShutdownV1{})),
 		genf(utilConstants.ProfilesIntegrationShutdown, utilConstants.ProfilesIntegrationV1, "debug", always(integrationsSidecar.ExtensionShutdownV1Debug{})),
 		gen(utilConstants.ProfilesIntegrationEnvoy, utilConstants.ProfilesIntegrationV3, always(integrationsSidecar.IntegrationEnvoyV3{Spec: spec})),
-		gen(utilConstants.ProfilesIntegrationStorage, utilConstants.ProfilesIntegrationV1, func() (integrationsSidecar.Integration, bool) {
+		gen(utilConstants.ProfilesIntegrationStorage, utilConstants.ProfilesIntegrationV1, central(func() (integrationsSidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Beta1(); err == nil {
 				if p, ok := v.GetSimple(deploymentName); ok {
 					if p.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
@@ -252,7 +252,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			}
 
 			return nil, false
-		}),
+		})),
 		gen(utilConstants.ProfilesIntegrationMeta, utilConstants.ProfilesIntegrationV1, central(integrationsSidecar.IntegrationMetaV1{})),
 		gen(utilConstants.ProfilesIntegrationEvents, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationEventsV1{})),
 		gen(utilConstants.ProfilesIntegrationStorage, utilConstants.ProfilesIntegrationV2, func() (integrationsSidecar.Integration, bool) {
