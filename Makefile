@@ -30,7 +30,12 @@ RELEASE_MODE ?= community
 
 MAIN_DIR := $(ROOT)/pkg/entry/$(RELEASE_MODE)
 
-GOBUILDDIR := $(SCRIPTDIR)/.gobuild
+ifndef KEEP_GOPATH
+	GOBUILDDIR := $(SCRIPTDIR)/.gobuild
+	GOPATH := $(GOBUILDDIR)
+else
+	GOBUILDDIR := $(GOPATH)
+endif
 
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
