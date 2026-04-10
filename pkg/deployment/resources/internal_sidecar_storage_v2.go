@@ -29,8 +29,8 @@ import (
 
 	pbImplStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/aws"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 

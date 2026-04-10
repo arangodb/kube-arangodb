@@ -68,8 +68,17 @@ func ProxyClientOpts() []grpc.DialOption {
 }
 
 func ProxyServer(obj cache.Object[*grpc.ClientConn]) []grpc.ServerOption {
+	handler := sproxy.TransparentHandler(Proxy(obj))
+
 	return []grpc.ServerOption{
-		grpc.UnknownServiceHandler(sproxy.TransparentHandler(Proxy(obj))),
+		grpc.UnknownServiceHandler(func(srv any, stream grpc.ServerStream) error {
+			method, _ := grpc.MethodFromServerStream(stream)
+			err := handler(srv, stream)
+			if err != nil {
+				logger.Str("method", method).Err(err).Str("code", status.Code(err).String()).Warn("Proxy response error")
+			}
+			return err
+		}),
 
 		grpc.ForceServerCodecV2(sproxy.Codec()),
 	}
@@ -78,21 +87,24 @@ func ProxyServer(obj cache.Object[*grpc.ClientConn]) []grpc.ServerOption {
 func Proxy(obj cache.Object[*grpc.ClientConn]) sproxy.StreamDirector {
 	return func(ctx context.Context, fullMethodName string) (sproxy.Mode, []sproxy.Backend, error) {
 		if goStrings.HasPrefix(fullMethodName, "/grpc.health.v1.Health/") {
+			logger.Str("method", fullMethodName).Debug("Proxy Request skipped - handled locally")
 			return sproxy.One2One, nil, status.Errorf(codes.Unimplemented, "handled locally")
 		}
 
 		inMD, _ := metadata.FromIncomingContext(ctx)
 		outCtx := metadata.NewOutgoingContext(ctx, inMD)
 
-		logger.Str("method", fullMethodName).Debug("Proxy Request")
+		logger.Str("method", fullMethodName).Info("Proxy Request")
 
 		return sproxy.One2One, []sproxy.Backend{
 			&sproxy.SingleBackend{
 				GetConn: func(ctx context.Context) (context.Context, *grpc.ClientConn, error) {
 					conn, err := obj.Get(ctx)
 					if err != nil {
+						logger.Str("method", fullMethodName).Err(err).Info("Proxy upstream connection failed")
 						return outCtx, nil, status.Errorf(codes.Unavailable, "Upstream Service not available")
 					}
+					logger.Str("method", fullMethodName).Str("target", conn.Target()).Info("Proxy upstream connected")
 					return outCtx, conn, nil
 				},
 			},
