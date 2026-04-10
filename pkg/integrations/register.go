@@ -208,9 +208,12 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 		return errors.Wrapf(err, "Unable to parse external config")
 	}
 
-	internalConfig.Options = append(internalConfig.Options, svc.ProxyServer(integration.NewIntegrationConnectionCache(svc.ProxyClientOpts()...))...)
+	proxyOpts, proxyHealth := svc.ProxyServer(integration.NewIntegrationConnectionCache(svc.ProxyClientOpts()...))
+	internalConfig.Options = append(internalConfig.Options, proxyOpts...)
 
 	var internalHandlers, externalHandlers, healthHandlers, allHandlers []svc.Handler
+
+	internalHandlers = append(internalHandlers, proxyHealth)
 
 	var services []pbImplPongV1.Service
 

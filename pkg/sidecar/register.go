@@ -166,9 +166,13 @@ func runWithHealth(ctx context.Context, cmd *cobra.Command, handlers ...svc.Hand
 
 	healthHandler := health.Start(ctx)
 
+	var svcs []svc.Handler
+	svcs = append(svcs, health)
+	svcs = append(svcs, handlers...)
+
 	logger.Str("address", healthHandler.Address()).Info("Health handler started")
 
-	return runServer(cmd.Context(), cmd, health, handlers...)
+	return runServer(cmd.Context(), cmd, health, svcs...)
 }
 
 func runServer(ctx context.Context, cmd *cobra.Command, health svc.Health, handlers ...svc.Handler) error {

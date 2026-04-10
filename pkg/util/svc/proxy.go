@@ -23,11 +23,13 @@ package svc
 import (
 	"context"
 	goStrings "strings"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	sproxy "github.com/siderolabs/grpc-proxy/proxy"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	pbHealth "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
@@ -67,7 +69,7 @@ func ProxyClientOpts() []grpc.DialOption {
 	}
 }
 
-func ProxyServer(obj cache.Object[*grpc.ClientConn]) []grpc.ServerOption {
+func ProxyServer(obj cache.Object[*grpc.ClientConn]) ([]grpc.ServerOption, Handler) {
 	handler := sproxy.TransparentHandler(Proxy(obj))
 
 	return []grpc.ServerOption{
@@ -75,14 +77,55 @@ func ProxyServer(obj cache.Object[*grpc.ClientConn]) []grpc.ServerOption {
 			method, _ := grpc.MethodFromServerStream(stream)
 			err := handler(srv, stream)
 			if err != nil {
-				logger.Str("method", method).Err(err).Str("code", status.Code(err).String()).Warn("Proxy response error")
+				code := status.Code(err)
+				if code == codes.Unavailable || code == codes.Internal {
+					logger.Str("method", method).Err(err).Str("code", code.String()).Warn("Proxy response error")
+				}
 			}
 			return err
 		}),
 
 		grpc.ForceServerCodecV2(sproxy.Codec()),
+	}, &proxyHealthHandler{conn: obj}
+}
+
+type proxyHealthHandler struct {
+	conn cache.Object[*grpc.ClientConn]
+}
+
+func (p *proxyHealthHandler) Name() string {
+	return "proxy-upstream"
+}
+
+func (p *proxyHealthHandler) Health(ctx context.Context) HealthState {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	conn, err := p.conn.Get(ctx)
+	if err != nil {
+		logger.Err(err).Warn("Proxy upstream health check failed: connection error")
+		return Unhealthy
+	}
+
+	resp, err := pbHealth.NewHealthClient(conn).Check(ctx, &pbHealth.HealthCheckRequest{})
+	if err != nil {
+		logger.Err(err).Warn("Proxy upstream health check failed")
+		return Unhealthy
+	}
+
+	switch resp.GetStatus() {
+	case pbHealth.HealthCheckResponse_SERVING:
+		return Healthy
+	case pbHealth.HealthCheckResponse_NOT_SERVING:
+		logger.Warn("Proxy upstream health check: not serving")
+		return Unhealthy
+	default:
+		logger.Str("status", resp.GetStatus().String()).Warn("Proxy upstream health check: unknown status")
+		return Degraded
 	}
 }
+
+func (p *proxyHealthHandler) Register(_ *grpc.Server) {}
 
 func Proxy(obj cache.Object[*grpc.ClientConn]) sproxy.StreamDirector {
 	return func(ctx context.Context, fullMethodName string) (sproxy.Mode, []sproxy.Backend, error) {
@@ -101,10 +144,10 @@ func Proxy(obj cache.Object[*grpc.ClientConn]) sproxy.StreamDirector {
 				GetConn: func(ctx context.Context) (context.Context, *grpc.ClientConn, error) {
 					conn, err := obj.Get(ctx)
 					if err != nil {
-						logger.Str("method", fullMethodName).Err(err).Info("Proxy upstream connection failed")
+						logger.Str("method", fullMethodName).Err(err).Warn("Proxy upstream connection failed")
 						return outCtx, nil, status.Errorf(codes.Unavailable, "Upstream Service not available")
 					}
-					logger.Str("method", fullMethodName).Str("target", conn.Target()).Info("Proxy upstream connected")
+					logger.Str("method", fullMethodName).Str("target", conn.Target()).Debug("Proxy upstream connected")
 					return outCtx, conn, nil
 				},
 			},
