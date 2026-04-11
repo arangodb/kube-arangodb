@@ -10,7 +10,17 @@ nav_order: 4
 
 In order to connect to the MinIO, or any other S3 Compatible storage in the ArangoPlatform:
 
-## MinIO Access Keys
+## Provided Helm Chart
+
+In order to create Storage Integration provided MinIO Chart can be used:
+
+```yaml
+helm- upgrade -i platform-storage-integration ./chart/platform-storage/ --set deployment.name=<ArangoDeployment Name>
+```
+
+## Generic
+
+### MinIO Access Keys
 
 Storage Integration requires static credentials in order to access MinIO API. Credentials can be provided via the Kubernetes Secret.
 
@@ -18,13 +28,13 @@ Storage Integration requires static credentials in order to access MinIO API. Cr
 kubectl create secret generic credentials --from-literal 'accessKey=<MinIO Access Key ID>' --from-literal 'secretKey=<MinIO Secret Access Key>'
 ```
 
-## MinIO TLS Certificate
+### MinIO TLS Certificate
 
 ```shell
 kubectl create secret generic ca --from-file 'ca.crt=<Certificate Path>'
 ```
 
-## Object
+### Object
 
 Once the Secret is created, we are able to create ArangoPlatformStorage.
 

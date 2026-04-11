@@ -18,6 +18,7 @@ Available Commands:
   debug-package Generate debug package for debugging
   help          Help about any command
   task          
+  version       Show the version
 
 Flags:
   -h, --help   help for arangodb_operator_ops
@@ -114,6 +115,9 @@ Flags:
       --generator.arango-ml-extension           Define if generator arango-ml-extension is enabled (default true)
       --generator.arango-ml-storage             Define if generator arango-ml-storage is enabled (default true)
       --generator.arango-networking-route       Define if generator arango-networking-route is enabled (default true)
+      --generator.arango-permission-policy      Define if generator arango-permission-policy is enabled (default true)
+      --generator.arango-permission-role        Define if generator arango-permission-role is enabled (default true)
+      --generator.arango-permission-token       Define if generator arango-permission-token is enabled (default true)
       --generator.arango-platform-chart         Define if generator arango-platform-chart is enabled (default true)
       --generator.arango-platform-service       Define if generator arango-platform-service is enabled (default true)
       --generator.arango-platform-storage       Define if generator arango-platform-storage is enabled (default true)

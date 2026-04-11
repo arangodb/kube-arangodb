@@ -16,7 +16,7 @@ Integration Sidecar is supported in a basic resources managed by Kubernetes:
 
 - Pod
 
-To enable integration sidecar for specific deployment label needs to be defined:
+To enable integrations for specific deployment label needs to be defined:
 
 ```yaml
 metadata:
@@ -38,6 +38,42 @@ metadata:
     profiles.arangodb.com/deployment: << deployment name >>
 ```
 
+### Arango Token
+
+Enables the token in the all Containers and InitContainers in the Pod.
+
+Label can be on the ServiceAccount or Pod.
+
+Pod:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    profiles.arangodb.com/deployment: << deployment name >>
+    permissions.arangodb.com/token: << ArangoPermissionToken name >>
+```
+
+ServiceAccount:
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa
+  labels:
+    permissions.arangodb.com/token: << ArangoPermissionToken name >>
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    profiles.arangodb.com/deployment: << deployment name >>
+spec:
+  serviceAccountName: sa
+```
+
 ### Integrations
 
 To enable integration in specific version, labels needs to be added:
@@ -45,6 +81,7 @@ To enable integration in specific version, labels needs to be added:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/<< integration name >>: << integration version >>
 ```
 
@@ -57,19 +94,8 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/authn: v1
-```
-
-#### [Authorization V0](./integration/authorization.v0.md)
-
-Authorization Integration Sidecar
-
-To enable:
-
-```yaml
-metadata:
-  labels:
-    integration.profiles.arangodb.com/authz: v0
 ```
 
 #### [Scheduler V2](./integration/scheduler.v2.md)
@@ -81,22 +107,8 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/sched: v2
-```
-
-#### [Storage V1](./integration/storage.v1.md)
-
-Storage Integration Sidecar (legacy)
-
-To enable:
-
-```yaml
-metadata:
-  labels:
-    integration.profiles.arangodb.com/storage: v1
-    
-    # Optionally, enable DebugPackage integration
-    storage.integration.profiles.arangodb.com/debug: "enabled"
 ```
 
 #### [Storage V2](./integration/storage.v2.md)
@@ -108,6 +120,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/storage: v2
 ```
 
@@ -120,6 +133,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/shutdown: v1
 ```
 
@@ -132,6 +146,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/meta: v1
 ```
 
@@ -144,6 +159,7 @@ To enable:
 ```yaml
 metadata:
   labels:
+    profiles.arangodb.com/deployment: << deployment name >>
     integration.profiles.arangodb.com/events: v1
 ```
 
@@ -154,6 +170,12 @@ metadata:
 Integration Service API Address
 
 Example: `localhost:1234`
+
+#### INTEGRATION_API_UNIX
+
+Integration Service API Unix Handler File Address
+
+Example: `/var/run/sidecar/socket/api.sock`
 
 #### INTEGRATION_SERVICE_ADDRESS
 
@@ -167,6 +189,36 @@ Integration Service HTTP Address
 
 Example: `localhost:1234`
 
+#### INTEGRATION_HTTP_UNIX
+
+Integration Service HTTP Unix Handler File Address
+
+Example: `/var/run/sidecar/socket/http.sock`
+
+#### INTEGRATION_HTTP_ADDRESS_FULL
+
+Integration Service HTTP Address with protocol
+
+Example: `http://localhost:1234`
+
+#### CENTRAL_INTEGRATION_API_ADDRESS
+
+Integration Service API Address via the Serving Sidecar
+
+Example: `localhost:1234`
+
+#### CENTRAL_INTEGRATION_HTTP_ADDRESS
+
+Integration Service HTTP Address via the Serving Sidecar
+
+Example: `localhost:1234`
+
+#### CENTRAL_INTEGRATION_HTTP_ADDRESS_FULL
+
+Integration Service HTTP Address via the Serving Sidecar with protocol
+
+Example: `http://localhost:1234`
+
 #### ARANGO_DEPLOYMENT_NAME
 
 ArangoDeployment name.
@@ -178,6 +230,14 @@ Example: `deployment`
 HTTP/S Endpoint of the ArangoDeployment Internal Service.
 
 Example: `https://deployment.default.svc:8529`
+
+#### ARANGO_TOKEN (optional)
+
+Optional path to the ArangoToken mounted into the Pod.
+
+File is updated in the runtime, with short, predefined, TTL.
+
+Example: `/var/run/secrets/arango/token/token`
 
 #### ARANGO_DEPLOYMENT_CA (optional)
 
