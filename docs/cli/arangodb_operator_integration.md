@@ -16,6 +16,7 @@ Available Commands:
   client      
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
+  version     Show the version
 
 Flags:
       --database.endpoint string                                                            Endpoint of ArangoDB (Env: DATABASE_ENDPOINT) (default "localhost")
@@ -47,7 +48,7 @@ Flags:
       --integration.authorization.v1                                                        Enable AuthorizationV1 Integration Service (Env: INTEGRATION_AUTHORIZATION_V1)
       --integration.authorization.v1.external                                               Defines if External access to service authorization.v1 is enabled (Env: INTEGRATION_AUTHORIZATION_V1_EXTERNAL)
       --integration.authorization.v1.internal                                               Defines if Internal access to service authorization.v1 is enabled (Env: INTEGRATION_AUTHORIZATION_V1_INTERNAL) (default true)
-      --integration.authorization.v1.type string                                            Type of the Authorization Integration (Env: INTEGRATION_AUTHORIZATION_V1_TYPE) (default "always")
+      --integration.authorization.v1.type string                                            Type of the Authorization Integration (Env: INTEGRATION_AUTHORIZATION_V1_TYPE) (default "never")
       --integration.config.v1                                                               Enable ConfigV1 Integration Service (Env: INTEGRATION_CONFIG_V1)
       --integration.config.v1.external                                                      Defines if External access to service config.v1 is enabled (Env: INTEGRATION_CONFIG_V1_EXTERNAL)
       --integration.config.v1.internal                                                      Defines if Internal access to service config.v1 is enabled (Env: INTEGRATION_CONFIG_V1_INTERNAL) (default true)
@@ -134,7 +135,9 @@ Flags:
       --services.external.tls.keyfile string                                                Path to the keyfile (Env: SERVICES_EXTERNAL_TLS_KEYFILE)
       --services.gateway.address string                                                     Address to expose internal gateway services (Env: SERVICES_GATEWAY_ADDRESS) (default "127.0.0.1:9192")
       --services.gateway.enabled                                                            Defines if internal gateway is enabled (Env: SERVICES_GATEWAY_ENABLED) (default true)
+      --services.gateway.unix string                                                        Path of the UNIX file handler for http connections (Env: SERVICES_GATEWAY_UNIX)
       --services.tls.keyfile string                                                         Path to the keyfile (Env: SERVICES_TLS_KEYFILE)
+      --services.unix string                                                                Path of the UNIX file handler (Env: SERVICES_UNIX)
 
 Use "arangodb_operator_integration [command] --help" for more information about a command.
 ```
