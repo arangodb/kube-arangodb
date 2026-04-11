@@ -27,6 +27,7 @@ import (
 	goStrings "strings"
 	"sync"
 
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/cobra"
 
@@ -208,12 +209,13 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 		return errors.Wrapf(err, "Unable to parse external config")
 	}
 
-	proxyOpts, proxyHealth := svc.ProxyServer(integration.NewIntegrationConnectionCache(svc.ProxyClientOpts()...))
-	internalConfig.Options = append(internalConfig.Options, proxyOpts...)
-
 	var internalHandlers, externalHandlers, healthHandlers, allHandlers []svc.Handler
 
-	internalHandlers = append(internalHandlers, proxyHealth)
+	if utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Exists() {
+		proxyOpts, proxyHealth := svc.ProxyServer(integration.NewIntegrationConnectionCache(svc.ProxyClientOpts()...))
+		internalConfig.Options = append(internalConfig.Options, proxyOpts...)
+		internalHandlers = append(internalHandlers, proxyHealth)
+	}
 
 	var services []pbImplPongV1.Service
 
