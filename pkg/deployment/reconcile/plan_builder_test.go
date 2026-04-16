@@ -856,6 +856,8 @@ func TestCreatePlan(t *testing.T) {
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
+				ad.Status.CurrentImage = &api.ImageInfo{}
+				ad.Spec.Authentication.JWTSecretName = util.NewType[string](api.JWTSecretNameDisabled)
 				ad.Spec.DBServers = api.ServerGroupSpec{
 					Count: util.NewType[int](3),
 					VolumeClaimTemplate: &core.PersistentVolumeClaim{
@@ -979,6 +981,7 @@ func TestCreatePlan(t *testing.T) {
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
+				ad.Status.CurrentImage = &api.ImageInfo{}
 				ad.Spec.Coordinators = api.ServerGroupSpec{
 					Count: util.NewType[int](3),
 					VolumeClaimTemplate: &core.PersistentVolumeClaim{
@@ -1073,6 +1076,8 @@ func TestCreatePlan(t *testing.T) {
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
+				ad.Status.CurrentImage = &api.ImageInfo{}
+				ad.Spec.Authentication.JWTSecretName = util.NewType[string](api.JWTSecretNameDisabled)
 				ad.Spec.Agents = api.ServerGroupSpec{
 					Count: util.NewType[int](2),
 					VolumeClaimTemplate: &core.PersistentVolumeClaim{
@@ -1097,6 +1102,8 @@ func TestCreatePlan(t *testing.T) {
 				ArangoDeployment: deploymentTemplate.DeepCopy(),
 			},
 			Helper: func(ad *api.ArangoDeployment) {
+				ad.Status.CurrentImage = &api.ImageInfo{}
+				ad.Spec.Authentication.JWTSecretName = util.NewType[string](api.JWTSecretNameDisabled)
 				ad.Spec.Agents = api.ServerGroupSpec{
 					Count: util.NewType[int](2),
 				}
