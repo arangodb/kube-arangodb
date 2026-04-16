@@ -22,6 +22,8 @@ package openid
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	goHttp "net/http"
 	"net/url"
 	"time"
@@ -162,15 +164,24 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 		return nil
 	}
 
-	return i.initOpenIDFlow(request, cfg)
+	return i.initOpenIDFlow(request, cfg, file)
 }
 
-func (i *impl) initOpenIDFlow(request *pbEnvoyAuthV3.CheckRequest, cfg oauth2.Config) error {
+func (i *impl) initOpenIDFlow(request *pbEnvoyAuthV3.CheckRequest, cfg oauth2.Config, ocfg platformAuthenticationApi.OpenID) error {
+	var state string
+	if ocfg.Features.GetStateMaxAge() > 0 {
+		stateBytes := make([]byte, 32)
+		if _, err := rand.Read(stateBytes); err != nil {
+			return err
+		}
+		state = base64.RawURLEncoding.EncodeToString(stateBytes)
+	}
+
 	var headers = []*pbEnvoyCoreV3.HeaderValueOption{
 		{
 			Header: &pbEnvoyCoreV3.HeaderValue{
 				Key:   "Location",
-				Value: cfg.AuthCodeURL(""),
+				Value: cfg.AuthCodeURL(state),
 			},
 		},
 		{
@@ -201,6 +212,24 @@ func (i *impl) initOpenIDFlow(request *pbEnvoyAuthV3.CheckRequest, cfg oauth2.Co
 		},
 	},
 	)
+
+	if ocfg.Features.GetStateMaxAge() > 0 {
+		headers = append(headers, &pbEnvoyCoreV3.HeaderValueOption{
+			Header: &pbEnvoyCoreV3.HeaderValue{
+				Key: "Set-Cookie",
+				Value: (&goHttp.Cookie{
+					Name:     platformAuthenticationApi.OpenIDJWTState,
+					Value:    state,
+					Secure:   true,
+					SameSite: goHttp.SameSiteNoneMode,
+					HttpOnly: true,
+					MaxAge:   ocfg.Features.GetStateMaxAge(),
+					Path:     "/",
+				}).String(),
+			},
+		},
+		)
+	}
 
 	// Cleanup old cookies
 	for _, cookie := range pbImplEnvoyAuthV3Shared.ExtractRequestCookies(request).Filter(func(in *goHttp.Cookie) bool {
@@ -234,6 +263,34 @@ func (i *impl) initOpenIDFlow(request *pbEnvoyAuthV3.CheckRequest, cfg oauth2.Co
 }
 
 func (i *impl) handleOpenIDResponse(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, requestUrl *url.URL, cfg oauth2.Config, ocfg platformAuthenticationApi.OpenID) error {
+	// Validate state parameter against stored cookie for CSRF protection
+	if ocfg.Features.GetStateMaxAge() > 0 {
+		responseState := requestUrl.Query().Get("state")
+		if responseState == "" {
+			logger.Error("Missing state parameter in OpenID callback")
+			return pbImplEnvoyAuthV3Shared.DeniedResponse{
+				Code: goHttp.StatusForbidden,
+			}
+		}
+
+		var stateValid bool
+		for _, cookie := range pbImplEnvoyAuthV3Shared.ExtractRequestCookies(request).Filter(func(in *goHttp.Cookie) bool {
+			return in.Name == platformAuthenticationApi.OpenIDJWTState
+		}).Get() {
+			if cookie.Value == responseState {
+				stateValid = true
+				break
+			}
+		}
+
+		if !stateValid {
+			logger.Error("Invalid state parameter in OpenID callback")
+			return pbImplEnvoyAuthV3Shared.DeniedResponse{
+				Code: goHttp.StatusForbidden,
+			}
+		}
+	}
+
 	oauth2Token, err := cfg.Exchange(ctx, requestUrl.Query().Get("code"))
 	if err != nil {
 		logger.Str("token", requestUrl.Query().Get("code")).Err(err).Error("Request failure")
@@ -277,6 +334,37 @@ func (i *impl) handleOpenIDResponse(ctx context.Context, request *pbEnvoyAuthV3.
 	}
 
 	// We are able to get the session, continue
+	responseHeaders := []*pbEnvoyCoreV3.HeaderValueOption{
+		{
+			Header: &pbEnvoyCoreV3.HeaderValue{
+				Key:   "Location",
+				Value: redirect,
+			},
+		},
+		{
+			Header: &pbEnvoyCoreV3.HeaderValue{
+				Key:   "Set-Cookie",
+				Value: cookie.String(),
+			},
+		},
+	}
+
+	if ocfg.Features.GetStateMaxAge() > 0 {
+		responseHeaders = append(responseHeaders, &pbEnvoyCoreV3.HeaderValueOption{
+			Header: &pbEnvoyCoreV3.HeaderValue{
+				Key: "Set-Cookie",
+				Value: (&goHttp.Cookie{
+					Name:     platformAuthenticationApi.OpenIDJWTState,
+					MaxAge:   -1,
+					Secure:   true,
+					SameSite: goHttp.SameSiteNoneMode,
+					HttpOnly: true,
+					Path:     "/",
+				}).String(),
+			},
+		})
+	}
+
 	return pbImplEnvoyAuthV3Shared.NewCustomStaticResponse(&pbEnvoyAuthV3.CheckResponse{
 		Status: &status.Status{
 			Code: goHttp.StatusUnauthorized,
@@ -287,20 +375,7 @@ func (i *impl) handleOpenIDResponse(ctx context.Context, request *pbEnvoyAuthV3.
 				Status: &typev3.HttpStatus{
 					Code: typev3.StatusCode_TemporaryRedirect,
 				},
-				Headers: []*pbEnvoyCoreV3.HeaderValueOption{
-					{
-						Header: &pbEnvoyCoreV3.HeaderValue{
-							Key:   "Location",
-							Value: redirect,
-						},
-					},
-					{
-						Header: &pbEnvoyCoreV3.HeaderValue{
-							Key:   "Set-Cookie",
-							Value: cookie.String(),
-						},
-					},
-				},
+				Headers: responseHeaders,
 			},
 		},
 	})
