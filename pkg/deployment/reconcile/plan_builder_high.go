@@ -47,6 +47,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 	}
 
 	q := recoverPlanAppender(r.log, newPlanAppender(NewWithPlanBuilder(ctx, apiObject, spec, status, builderCtx), status.BackOff, currentPlan).
+		ApplyIfEmpty(r.deploymentStartupInit).
 		ApplyIfEmpty(r.updateMemberPodTemplateSpec).
 		ApplyIfEmpty(r.updateMemberPhasePlan).
 		ApplyIfEmpty(r.createCleanOutPlan).
@@ -73,10 +74,23 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyWithBackOff(BackOffCheck, time.Minute, r.emptyPlanBuilder)).
 		ApplyIfEmptyWithBackOff(TimezoneCheck, time.Minute, r.createTimezoneUpdatePlan).
 		Apply(r.createBackupInProgressConditionPlan). // Discover backups always
-		Apply(r.createMaintenanceConditionPlan).      // Discover maintenance always
-		Apply(r.cleanupConditions)                    // Cleanup Conditions
+		Apply(r.createMaintenanceConditionPlan). // Discover maintenance always
+		Apply(r.cleanupConditions) // Cleanup Conditions
 
 	return q.Plan(), q.BackOff(), true
+}
+
+// updateMemberPodTemplateSpec creates plan to update member Spec
+func (r *Reconciler) deploymentStartupInit(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	var plan api.Plan
+
+	if status.CurrentImage == nil {
+		plan = plan.Before(actions.NewClusterAction(api.ActionTypeSetCurrentImage, "Init the image section").SetImage(spec.GetImage()))
+	}
+
+	return plan
 }
 
 // updateMemberPodTemplateSpec creates plan to update member Spec
