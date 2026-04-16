@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) Fix Community image discovery
 - (Maintenance) Bump go-jose to v4.1.4 (CVE-2026-34986)
+- (Feature) (OIDC) State
 
 ## [1.4.2](https://github.com/arangodb/kube-arangodb/tree/1.4.2) (2026-04-08)
 - (Bugfix) (Platform) Permission Token CRD
