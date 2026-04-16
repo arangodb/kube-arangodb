@@ -502,6 +502,12 @@ func (d *Deployment) isUpToDateStatus(spec api.DeploymentSpec, status api.Deploy
 		return
 	}
 
+	if v, ok := status.Conditions.Get(api.ConditionTypeStorageReady); ok && !v.IsTrue() {
+		upToDate = false
+		reason = "Storage is not ready"
+		return
+	}
+
 	for _, m := range status.Members.AsList() {
 		member := m.Member
 		if member.Conditions.IsTrue(api.ConditionTypeRestart) || member.Conditions.IsTrue(api.ConditionTypePendingRestart) {

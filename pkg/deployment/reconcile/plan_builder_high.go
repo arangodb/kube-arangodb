@@ -22,6 +22,8 @@ package reconcile
 
 import (
 	"context"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"time"
 
 	core "k8s.io/api/core/v1"
@@ -48,6 +50,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 
 	q := recoverPlanAppender(r.log, newPlanAppender(NewWithPlanBuilder(ctx, apiObject, spec, status, builderCtx), status.BackOff, currentPlan).
 		ApplyIfEmpty(r.deploymentStartupInit).
+		ApplyIfEmpty(r.deploymentUpdate).
 		ApplyIfEmpty(r.updateMemberPodTemplateSpec).
 		ApplyIfEmpty(r.updateMemberPhasePlan).
 		ApplyIfEmpty(r.createCleanOutPlan).
@@ -74,10 +77,43 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyWithBackOff(BackOffCheck, time.Minute, r.emptyPlanBuilder)).
 		ApplyIfEmptyWithBackOff(TimezoneCheck, time.Minute, r.createTimezoneUpdatePlan).
 		Apply(r.createBackupInProgressConditionPlan). // Discover backups always
-		Apply(r.createMaintenanceConditionPlan).      // Discover maintenance always
-		Apply(r.cleanupConditions)                    // Cleanup Conditions
+		Apply(r.createMaintenanceConditionPlan). // Discover maintenance always
+		Apply(r.cleanupConditions) // Cleanup Conditions
 
 	return q.Plan(), q.BackOff(), true
+}
+
+// deploymentUpdate creates plan to update deployment condition
+func (r *Reconciler) deploymentUpdate(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	var plan api.Plan
+
+	isStorageReady := func() *bool {
+		if v, err := context.ACS().CurrentClusterCache().ArangoPlatformStorage().V1Beta1(); err == nil {
+			if p, ok := v.GetSimple(context.GetAPIObject().GetName()); ok {
+				return util.NewType(p.Status.Conditions.IsTrue(platformApi.ReadyCondition))
+			}
+		}
+
+		return nil
+	}
+
+	if v := isStorageReady(); v != nil {
+		if *v != status.Conditions.IsTrue(api.ConditionTypeStorageReady) {
+			if *v {
+				plan = append(plan, sharedReconcile.UpdateConditionActionV2("Storage Ready", api.ConditionTypeStorageReady, true, "Storage Ready", "Storage Ready", ""))
+			} else {
+				plan = append(plan, sharedReconcile.UpdateConditionActionV2("Storage Not Ready", api.ConditionTypeStorageReady, false, "Storage Not Ready", "Storage Not Ready", ""))
+			}
+		}
+	} else {
+		if _, ok := status.Conditions.Get(api.ConditionTypeStorageReady); ok {
+			plan = append(plan, sharedReconcile.RemoveConditionActionV2("Storage Condition Removed", api.ConditionTypeStorageReady))
+		}
+	}
+
+	return plan
 }
 
 // updateMemberPodTemplateSpec creates plan to update member Spec
