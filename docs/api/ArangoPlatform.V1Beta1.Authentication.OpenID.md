@@ -10,7 +10,7 @@ title: ArangoPlatform V1Beta1 Authentication OpenID
 
 ### .claims.username
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/platform/v1beta1/authentication/openid.go#L254)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/platform/v1beta1/authentication/openid.go#L268)</sup>
 
 Username defines the claim key to extract username
 
@@ -52,7 +52,7 @@ Endpoint defines the OpenID callback Endpoint
 
 ### .features.refreshEnabled
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/platform/v1beta1/authentication/openid.go#L240)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/platform/v1beta1/authentication/openid.go#L241)</sup>
 
 > [!WARNING]
 > ***ALPHA***
@@ -62,6 +62,17 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 RefreshEnabled defines if the Refresh OpenID Functionality is enabled
 
 Default Value: `false`
+
+***
+
+### .features.stateMaxAge
+
+Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.2/pkg/apis/platform/v1beta1/authentication/openid.go#L246)</sup>
+
+StateMaxAge defines the maximum age in seconds for the OIDC state cookie used for CSRF protection.
+When set to 0 or negative value, the state parameter is disabled.
+
+Default Value: `300`
 
 ***
 
