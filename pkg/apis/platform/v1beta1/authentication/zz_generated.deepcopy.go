@@ -140,6 +140,11 @@ func (in *OpenIDFeatures) DeepCopyInto(out *OpenIDFeatures) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.StateMaxAge != nil {
+		in, out := &in.StateMaxAge, &out.StateMaxAge
+		*out = new(int)
+		**out = **in
+	}
 	return
 }
 

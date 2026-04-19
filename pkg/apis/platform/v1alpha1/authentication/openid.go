@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import (
 const (
 	OpenIDJWTRedirect  = "X-ArangoDB-OpenID-Redirect"
 	OpenIDJWTSessionID = "X-ArangoDB-OpenID-Session-ID"
+	OpenIDJWTState     = "X-ArangoDB-OpenID-State"
 	OpenIDRedirectURL  = "/oauth2/idpresponse"
 )
 
@@ -238,6 +239,11 @@ type OpenIDFeatures struct {
 	// +doc/grade: Alpha
 	// +doc/grade: Experimental Feature, in development
 	RefreshEnabled *bool `json:"refreshEnabled,omitempty"`
+
+	// StateMaxAge defines the maximum age in seconds for the OIDC state cookie used for CSRF protection.
+	// When set to 0 or negative value, the state parameter is disabled.
+	// +doc/default: 300
+	StateMaxAge *int `json:"stateMaxAge,omitempty"`
 }
 
 func (o *OpenIDFeatures) GetRefreshEnabled() bool {
@@ -246,6 +252,14 @@ func (o *OpenIDFeatures) GetRefreshEnabled() bool {
 	}
 
 	return *o.RefreshEnabled
+}
+
+func (o *OpenIDFeatures) GetStateMaxAge() int {
+	if o == nil || o.StateMaxAge == nil {
+		return 300
+	}
+
+	return *o.StateMaxAge
 }
 
 type OpenIDClaims struct {
