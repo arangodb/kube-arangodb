@@ -22,16 +22,16 @@ package reconcile
 
 import (
 	"context"
-	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 	"time"
 
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/compare"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -77,8 +77,8 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyWithBackOff(BackOffCheck, time.Minute, r.emptyPlanBuilder)).
 		ApplyIfEmptyWithBackOff(TimezoneCheck, time.Minute, r.createTimezoneUpdatePlan).
 		Apply(r.createBackupInProgressConditionPlan). // Discover backups always
-		Apply(r.createMaintenanceConditionPlan). // Discover maintenance always
-		Apply(r.cleanupConditions) // Cleanup Conditions
+		Apply(r.createMaintenanceConditionPlan).      // Discover maintenance always
+		Apply(r.cleanupConditions)                    // Cleanup Conditions
 
 	return q.Plan(), q.BackOff(), true
 }

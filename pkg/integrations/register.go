@@ -27,7 +27,6 @@ import (
 	goStrings "strings"
 	"sync"
 
-	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/spf13/cobra"
 
@@ -38,6 +37,7 @@ import (
 	integrationsClients "github.com/arangodb/kube-arangodb/pkg/integrations/clients"
 	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/integration"
