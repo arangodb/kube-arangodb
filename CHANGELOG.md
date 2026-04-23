@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.4.3](https://github.com/arangodb/kube-arangodb/tree/1.4.3) (2026-04-23)
 - (Bugfix) Fix Community image discovery
 - (Maintenance) Bump go-jose to v4.1.4 (CVE-2026-34986)
 - (Feature) (OIDC) State
