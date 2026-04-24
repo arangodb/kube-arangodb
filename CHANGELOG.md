@@ -1,13 +1,13 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) Storage V2 Central Service
 
 ## [1.4.3](https://github.com/arangodb/kube-arangodb/tree/1.4.3) (2026-04-23)
 - (Bugfix) Fix Community image discovery
 - (Maintenance) Bump go-jose to v4.1.4 (CVE-2026-34986)
 - (Feature) (OIDC) State
 - (Maintenance) Bump google.golang.org/grpc to v1.80.0 (CVE-2026-33186)
-- (Feature) (Platform) Storage V2 Central Service
 
 ## [1.4.2](https://github.com/arangodb/kube-arangodb/tree/1.4.2) (2026-04-08)
 - (Bugfix) (Platform) Permission Token CRD
