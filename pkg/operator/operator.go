@@ -358,7 +358,6 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	prometheus.MustRegister(operator)
 
 	operator.Start(o.Threads, stop)
-	o.Dependencies.AnalyticsProbe.SetReady()
 
 	<-stop
 }
