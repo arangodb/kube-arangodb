@@ -25,7 +25,6 @@ import (
 
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
@@ -35,10 +34,6 @@ import (
 
 func WithArangoBackupUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[backupApi.ArangoBackupStatus, *backupApi.ArangoBackup], obj *backupApi.ArangoBackup, status backupApi.ArangoBackupStatus, opts meta.UpdateOptions) (*backupApi.ArangoBackup, error) {
 	return WithUpdateStatusInterfaceRetry[backupApi.ArangoBackupStatus, *backupApi.ArangoBackup](ctx, client, obj, status, opts)
-}
-
-func WithAnalyticsGAEUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[analyticsApi.GraphAnalyticsEngineStatus, *analyticsApi.GraphAnalyticsEngine], obj *analyticsApi.GraphAnalyticsEngine, status analyticsApi.GraphAnalyticsEngineStatus, opts meta.UpdateOptions) (*analyticsApi.GraphAnalyticsEngine, error) {
-	return WithUpdateStatusInterfaceRetry[analyticsApi.GraphAnalyticsEngineStatus, *analyticsApi.GraphAnalyticsEngine](ctx, client, obj, status, opts)
 }
 
 func WithNetworkingArangoRouteUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[networkingApi.ArangoRouteStatus, *networkingApi.ArangoRoute], obj *networkingApi.ArangoRoute, status networkingApi.ArangoRouteStatus, opts meta.UpdateOptions) (*networkingApi.ArangoRoute, error) {

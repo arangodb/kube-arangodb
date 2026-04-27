@@ -86,9 +86,6 @@ func AllDefinitions() []Definition {
 		SchedulerBatchJobDefinitionWithOptions(),
 		SchedulerCronJobDefinitionWithOptions(),
 
-		// Analytics
-		AnalyticsGAEDefinitionWithOptions(),
-
 		// Networking
 		NetworkingRouteDefinitionWithOptions(),
 

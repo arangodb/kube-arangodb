@@ -19,7 +19,6 @@ rules:
       - "apps"
       - "batch"
       # Arango
-      - "analytics.arangodb.com"
     resources:
       - "*"
     verbs:

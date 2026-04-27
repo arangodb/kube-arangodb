@@ -54,27 +54,6 @@ spec:
           type: object
           x-kubernetes-preserve-unknown-fields: true
 ---
-# Source: kube-arangodb/templates/analytics-operator/cluster-role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: arango-all-operator-rbac-analytics
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-rules:
-  - apiGroups:
-      - "apiextensions.k8s.io"
-    resources:
-      - "customresourcedefinitions"
-    verbs:
-      - "get"
-      - "list"
-      - "watch"
----
 # Source: kube-arangodb/templates/apps-operator/cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -364,26 +343,6 @@ rules:
     resourceNames:
       - "arango-all-operator.default.operator.arangodb.com"
 ---
-# Source: kube-arangodb/templates/analytics-operator/cluster-role-binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: arango-all-operator-rbac-analytics
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: arango-all-operator-rbac-analytics
-subjects:
-  - kind: ServiceAccount
-    name: arango-all-operator
-    namespace: default
----
 # Source: kube-arangodb/templates/apps-operator/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -603,66 +562,6 @@ subjects:
   - kind: ServiceAccount
     name: arango-all-operator
     namespace: default
----
-# Source: kube-arangodb/templates/analytics-operator/role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: arango-all-operator-rbac-analytics
-  namespace: default
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-rules:
-  - apiGroups:
-      - "analytics.arangodb.com"
-    resources:
-      - "graphanalyticsengines"
-      - "graphanalyticsengines/status"
-    verbs:
-      - "get"
-      - "list"
-      - "create"
-      - "update"
-      - "patch"
-      - "delete"
-      - "watch"
-  - apiGroups:
-      - "database.arangodb.com"
-    resources:
-      - "arangodeployments"
-    verbs:
-      - "get"
-      - "list"
-      - "watch"
-  - apiGroups:
-      - "apps"
-    resources:
-      - "statefulsets"
-    verbs:
-      - "get"
-      - "list"
-      - "create"
-      - "update"
-      - "patch"
-      - "delete"
-      - "watch"
-  - apiGroups:
-      - ""
-    resources:
-      - "secrets"
-      - "services"
-    verbs:
-      - "get"
-      - "list"
-      - "create"
-      - "update"
-      - "patch"
-      - "delete"
-      - "watch"
 ---
 # Source: kube-arangodb/templates/apps-operator/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1466,27 +1365,6 @@ rules:
     verbs:
       - "get"
 ---
-# Source: kube-arangodb/templates/analytics-operator/role-binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: arango-all-operator-rbac-analytics
-  namespace: default
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: arango-all-operator-rbac-analytics
-subjects:
-  - kind: ServiceAccount
-    name: arango-all-operator
-    namespace: default
----
 # Source: kube-arangodb/templates/apps-operator/role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1831,8 +1709,6 @@ spec:
             - --operator.backup
             - --mode.single
             - --operator.apps
-            - --operator.ml
-            - --operator.analytics
             - --operator.networking
             - --operator.scheduler
             - --operator.platform

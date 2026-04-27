@@ -52,12 +52,8 @@ const (
 	LabelKeyArangoActive = "deployment.arangodb.com/active"
 	// LabelValueArangoActive is the value of the label used to mark members as active.
 	LabelValueArangoActive = "true"
-	// LabelKeyAnalyticsGAEStatefulSet is the key of the label used to define k8s StatefulSet for Analytics GAE
-	LabelKeyAnalyticsGAEStatefulSet = "analytics.arangodb.com/statefulset"
 	// AppName is the value for the "app" label
 	AppName = "arangodb"
-	// AppAnalytics is the value for the "app" label
-	AppAnalytics = "analytics"
 )
 
 // AddOwnerRefToObject adds given owner reference to given object

@@ -119,7 +119,7 @@ var (
 		enableBackup                bool // Run backup operator
 		enableApps                  bool // Run apps operator
 		enableML                    bool // Deprecated: ML operator has been removed
-		enableAnalytics             bool // Run analytics operator
+		enableAnalytics             bool // Deprecated: Analytics operator has been removed
 		enableNetworking            bool // Run networking operator
 		enablePlatform              bool // Run platform operator
 		enableScheduler             bool // Run scheduler operator
@@ -186,7 +186,6 @@ var (
 	storageProbe               probe.ReadyProbe
 	backupProbe                probe.ReadyProbe
 	appsProbe                  probe.ReadyProbe
-	analyticsProbe             probe.ReadyProbe
 	networkingProbe            probe.ReadyProbe
 	platformProbe              probe.ReadyProbe
 	schedulerProbe             probe.ReadyProbe
@@ -228,7 +227,8 @@ func initE() error {
 	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
 	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Deprecated: ArangoML operator has been removed")
 	f.MarkHidden("operator.ml")
-	f.BoolVar(&operatorOptions.enableAnalytics, "operator.analytics", false, "Enable to run the Analytics operator")
+	f.BoolVar(&operatorOptions.enableAnalytics, "operator.analytics", false, "Deprecated: Analytics operator has been removed")
+	f.MarkHidden("operator.analytics")
 	f.BoolVar(&operatorOptions.enableNetworking, "operator.networking", false, "Enable to run the Networking operator")
 	f.BoolVar(&operatorOptions.enablePlatform, "operator.platform", false, "Enable to run the Platform operator")
 	f.BoolVar(&operatorOptions.enableScheduler, "operator.scheduler", false, "Enable to run the Scheduler operator")
@@ -395,10 +395,14 @@ func executeMain(cmd *cobra.Command, args []string) {
 		logger.Info("Operator Feature %s (%s) is %s.", name, features.GetFeatureArgName(name), util.BoolSwitch(feature.Enabled(), "enabled", "disabled"))
 	})
 
-	// Warn if deprecated ML flag is used
+	// Warn if deprecated flags are used
 	if operatorOptions.enableML {
 		logger.Warn("Option --operator.ml is deprecated: ArangoML operator has been removed. This flag will be ignored.")
 		operatorOptions.enableML = false
+	}
+	if operatorOptions.enableAnalytics {
+		logger.Warn("Option --operator.analytics is deprecated: Analytics operator has been removed. This flag will be ignored.")
+		operatorOptions.enableAnalytics = false
 	}
 
 	// Check operating mode
@@ -408,23 +412,14 @@ func executeMain(cmd *cobra.Command, args []string) {
 		!operatorOptions.enableBackup &&
 		!operatorOptions.enableApps &&
 		!operatorOptions.enableK2KClusterSync &&
-		!operatorOptions.enableAnalytics &&
 		!operatorOptions.enableNetworking &&
 		!operatorOptions.enableScheduler &&
 		!operatorOptions.enablePlatform {
 		if !operatorOptions.versionOnly {
-			if version.GetVersionV1().IsEnterprise() {
-				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.analytics, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
-			} else {
-				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
-			}
+			logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
 		}
 	} else if operatorOptions.versionOnly {
-		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.analytics, --operator.networking cannot be enabled together with --operator.version")
-	} else if !version.GetVersionV1().IsEnterprise() {
-		if operatorOptions.enableAnalytics {
-			logger.Fatal("Option --operator.analytics can be enabled only on the Enterprise Operator")
-		}
+		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.networking cannot be enabled together with --operator.version")
 	}
 
 	// Log version
@@ -520,7 +515,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 				WithReadinessProbe("storage", cfg.EnableStorage, &storageProbe).
 				WithReadinessProbe("backup", cfg.EnableBackup, &backupProbe).
 				WithReadinessProbe("apps", cfg.EnableApps, &appsProbe).
-				WithReadinessProbe("analytics", cfg.EnableAnalytics, &analyticsProbe).
 				WithReadinessProbe("networking", cfg.EnableNetworking, &networkingProbe).
 				WithReadinessProbe("platform", cfg.EnablePlatform, &platformProbe).
 				WithReadinessProbe("scheduler", cfg.EnableScheduler, &schedulerProbe).
@@ -620,7 +614,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
 		EnableApps:                  operatorOptions.enableApps,
-		EnableAnalytics:             operatorOptions.enableAnalytics,
 		EnableNetworking:            operatorOptions.enableNetworking,
 		EnablePlatform:              operatorOptions.enablePlatform,
 		EnableScheduler:             operatorOptions.enableScheduler,
@@ -642,7 +635,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		StorageProbe:               &storageProbe,
 		BackupProbe:                &backupProbe,
 		AppsProbe:                  &appsProbe,
-		AnalyticsProbe:             &analyticsProbe,
 		NetworkingProbe:            &networkingProbe,
 		PlatformProbe:              &platformProbe,
 		SchedulerProbe:             &schedulerProbe,

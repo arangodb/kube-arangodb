@@ -13,16 +13,6 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
 rules:
-{{ if .Values.operator.features.analytics -}}
-  # analytics.arangodb.com
-  - apiGroups:
-      - "apiextensions.k8s.io"
-    resources:
-      - "customresourcedefinitions"
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
-    resourceNames:
-      - "graphanalyticsengines.analytics.arangodb.com"
-{{- end }}
 {{ if .Values.operator.features.apps -}}
   # apps.arangodb.com
   - apiGroups:

@@ -123,8 +123,6 @@ spec:
 {{ if .Values.operator.features.apps }}
             - --operator.apps
 {{- end }}
-{{ if .Values.operator.features.analytics }}
-            - --operator.analytics
 {{- end }}
 {{ if .Values.operator.features.networking }}
             - --operator.networking

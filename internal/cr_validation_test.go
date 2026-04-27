@@ -33,7 +33,6 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/yaml"
 
-	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	appsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -245,15 +244,6 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				"v1beta1": {
 					objects: map[string]interface{}{
 						"spec": schedulerApi.ArangoSchedulerCronJob{}.Spec,
-					},
-				},
-			},
-		},
-		"analytics-graphanalyticsengine": {
-			fmt.Sprintf("%s/pkg/apis/analytics", root): {
-				"v1alpha1": {
-					objects: map[string]interface{}{
-						"spec": analyticsApi.GraphAnalyticsEngine{}.Spec,
 					},
 				},
 			},

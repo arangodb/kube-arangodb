@@ -125,8 +125,6 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/definition
       - alias: api
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1
-      - alias: analyticsApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1
       - alias: networkingApiv1alpha1
         pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
       - alias: networkingApi
@@ -185,12 +183,6 @@ linters-settings:
         pkg: github.com/arangodb/kube-arangodb/pkg/integrations
       - alias: sharedReconcile
         pkg: github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared
-      - alias: analyticsShared
-        pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/analytics/shared
-      - alias: mlShared
-        pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared
-      - alias: mlSharedTests
-        pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/ml/shared/test
       - alias: enterpriseShared
         pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/shared
       - alias: kresources

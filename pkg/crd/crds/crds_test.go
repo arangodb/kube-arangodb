@@ -153,7 +153,6 @@ func Test_CRDGetters(t *testing.T) {
 		SchedulerDeploymentWithOptions,
 		SchedulerBatchJobWithOptions,
 		SchedulerCronJobWithOptions,
-		AnalyticsGAEWithOptions,
 		NetworkingRouteWithOptions,
 		PlatformStorageWithOptions,
 		PlatformChartWithOptions,

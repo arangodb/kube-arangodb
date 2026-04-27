@@ -210,7 +210,6 @@ Flags:
       --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
       --metrics.excluded-prefixes stringArray                  List of the excluded metrics prefixes
       --mode.single                                            Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions
-      --operator.analytics                                     Enable to run the Analytics operator
       --operator.apps                                          Enable to run the ArangoApps operator
       --operator.backup                                        Enable to run the ArangoBackup operator
       --operator.deployment                                    Enable to run the ArangoDeployment operator

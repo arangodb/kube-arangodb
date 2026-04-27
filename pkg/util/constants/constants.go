@@ -89,7 +89,6 @@ const (
 	AnnotationMetricsScrapePort  = "platform.arangodb.com/port"
 
 	BackupLabelRole      = "backup/role"
-	AnalyticsLabelRole   = "analytics/role"
 	NetworkingLabelRole  = "networking/role"
 	PlatformLabelRole    = "platform/role"
 	SchedulerLabelRole   = "scheduler/role"

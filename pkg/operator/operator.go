@@ -82,7 +82,6 @@ type operatorV2type string
 
 const (
 	backupOperator     operatorV2type = "backup"
-	analyticsOperator  operatorV2type = "analytics"
 	networkingOperator operatorV2type = "networking"
 	platformOperator   operatorV2type = "platform"
 	schedulerOperator  operatorV2type = "scheduler"
@@ -116,7 +115,6 @@ type Config struct {
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool
-	EnableAnalytics             bool
 	EnableNetworking            bool
 	EnablePlatform              bool
 	EnableScheduler             bool
@@ -140,7 +138,6 @@ type Dependencies struct {
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
 	BackupProbe                *probe.ReadyProbe
-	AnalyticsProbe             *probe.ReadyProbe
 	NetworkingProbe            *probe.ReadyProbe
 	PlatformProbe              *probe.ReadyProbe
 	SchedulerProbe             *probe.ReadyProbe
@@ -196,13 +193,6 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-apps-operator", utilConstants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-apps-operator", utilConstants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
-		}
-	}
-	if o.Config.EnableAnalytics {
-		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-analytics-operator", utilConstants.AnalyticsLabelRole, o.onStartAnalytics, o.Dependencies.AnalyticsProbe)
-		} else {
-			go o.runWithoutLeaderElection("arango-analytics-operator", utilConstants.AnalyticsLabelRole, o.onStartAnalytics, o.Dependencies.AnalyticsProbe)
 		}
 	}
 	if o.Config.EnableNetworking {
@@ -333,9 +323,6 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	case backupOperator:
 		o.onStartOperatorV2Backup(operator, eventRecorder, o.Client, arangoInformer)
 		o.Dependencies.BackupProbe.SetReady()
-	case analyticsOperator:
-		o.onStartOperatorV2Analytics(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
-		o.Dependencies.AnalyticsProbe.SetReady()
 	case networkingOperator:
 		o.onStartOperatorV2Networking(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.NetworkingProbe.SetReady()
