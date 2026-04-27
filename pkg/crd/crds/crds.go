@@ -79,12 +79,6 @@ func AllDefinitions() []Definition {
 		BackupsBackupDefinitionWithOptions(),
 		BackupsBackupPolicyDefinitionWithOptions(),
 
-		// ML
-		MLExtensionDefinitionWithOptions(),
-		MLStorageDefinitionWithOptions(),
-		MLCronJobDefinitionWithOptions(),
-		MLBatchJobDefinitionWithOptions(),
-
 		// Scheduler
 		SchedulerProfileDefinitionWithOptions(),
 		SchedulerPodDefinitionWithOptions(),

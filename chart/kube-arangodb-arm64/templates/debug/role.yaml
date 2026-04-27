@@ -20,7 +20,6 @@ rules:
       - "batch"
       # Arango
       - "analytics.arangodb.com"
-      - "ml.arangodb.com"
     resources:
       - "*"
     verbs:

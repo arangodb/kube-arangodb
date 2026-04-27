@@ -99,7 +99,6 @@ Flags:
       --operator.backup                                        Enable to run the ArangoBackup operator
       --operator.deployment                                    Enable to run the ArangoDeployment operator
       --operator.deployment-replication                        Enable to run the ArangoDeploymentReplication operator
-      --operator.ml                                            Enable to run the ArangoML operator
       --operator.networking                                    Enable to run the Networking operator
       --operator.platform                                      Enable to run the Platform operator
       --operator.reconciliation.retry.count int                Count of retries during Object Update operations in the Reconciliation loop (default 25)

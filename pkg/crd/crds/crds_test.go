@@ -30,7 +30,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
-	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
 	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
 	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
@@ -92,10 +91,6 @@ func Test_CRD(t *testing.T) {
 		{deployment.ArangoTaskCRDName, DatabaseTaskDefinitionWithOptions},
 		{replication.ArangoDeploymentReplicationCRDName, ReplicationDeploymentReplicationDefinitionWithOptions},
 		{storage.ArangoLocalStorageCRDName, StorageLocalStorageDefinitionWithOptions},
-		{ml.ArangoMLExtensionCRDName, MLExtensionDefinitionWithOptions},
-		{ml.ArangoMLStorageCRDName, MLStorageDefinitionWithOptions},
-		{ml.ArangoMLCronJobCRDName, MLCronJobDefinitionWithOptions},
-		{ml.ArangoMLBatchJobCRDName, MLBatchJobDefinitionWithOptions},
 		{scheduler.ArangoProfileCRDName, SchedulerProfileDefinitionWithOptions},
 		{scheduler.PodCRDName, SchedulerPodDefinitionWithOptions},
 		{scheduler.DeploymentCRDName, SchedulerDeploymentDefinitionWithOptions},
@@ -151,10 +146,6 @@ func Test_CRDGetters(t *testing.T) {
 		DatabaseDeploymentWithOptions,
 		DatabaseMemberWithOptions,
 		DatabaseTaskWithOptions,
-		MLExtensionWithOptions,
-		MLBatchJobWithOptions,
-		MLCronJobWithOptions,
-		MLStorageWithOptions,
 		ReplicationDeploymentReplicationWithOptions,
 		StorageLocalStorageWithOptions,
 		SchedulerProfileWithOptions,

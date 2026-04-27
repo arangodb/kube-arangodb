@@ -27,7 +27,6 @@ func Register(f shared.FactoryGen) {
 		Extend(Analytics).
 		Extend(Backup).
 		Extend(Database).
-		Extend(ML).
 		Extend(Networking).
 		Extend(Platform).
 		Extend(Scheduler).

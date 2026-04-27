@@ -189,11 +189,7 @@ Define if ArangoClusterSynchronization Operator should be enabled.
 
 Default: `false`
 
-### `operator.features.ml`
 
-Define if ML Operator should be enabled.
-
-Default: `false`
 
 ### `operator.features.analytics`
 

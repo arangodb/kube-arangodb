@@ -31,8 +31,6 @@ import (
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
 	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
-	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1"
-	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1"
 	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1alpha1"
 	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1beta1"
 	permissionv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/permission/v1alpha1"
@@ -55,8 +53,6 @@ type Interface interface {
 	BackupV1() backupv1.BackupV1Interface
 	DatabaseV1() databasev1.DatabaseV1Interface
 	DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface
-	MlV1alpha1() mlv1alpha1.MlV1alpha1Interface
-	MlV1beta1() mlv1beta1.MlV1beta1Interface
 	NetworkingV1alpha1() networkingv1alpha1.NetworkingV1alpha1Interface
 	NetworkingV1beta1() networkingv1beta1.NetworkingV1beta1Interface
 	PermissionV1alpha1() permissionv1alpha1.PermissionV1alpha1Interface
@@ -77,8 +73,6 @@ type Clientset struct {
 	backupV1            *backupv1.BackupV1Client
 	databaseV1          *databasev1.DatabaseV1Client
 	databaseV2alpha1    *databasev2alpha1.DatabaseV2alpha1Client
-	mlV1alpha1          *mlv1alpha1.MlV1alpha1Client
-	mlV1beta1           *mlv1beta1.MlV1beta1Client
 	networkingV1alpha1  *networkingv1alpha1.NetworkingV1alpha1Client
 	networkingV1beta1   *networkingv1beta1.NetworkingV1beta1Client
 	permissionV1alpha1  *permissionv1alpha1.PermissionV1alpha1Client
@@ -114,16 +108,6 @@ func (c *Clientset) DatabaseV1() databasev1.DatabaseV1Interface {
 // DatabaseV2alpha1 retrieves the DatabaseV2alpha1Client
 func (c *Clientset) DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface {
 	return c.databaseV2alpha1
-}
-
-// MlV1alpha1 retrieves the MlV1alpha1Client
-func (c *Clientset) MlV1alpha1() mlv1alpha1.MlV1alpha1Interface {
-	return c.mlV1alpha1
-}
-
-// MlV1beta1 retrieves the MlV1beta1Client
-func (c *Clientset) MlV1beta1() mlv1beta1.MlV1beta1Interface {
-	return c.mlV1beta1
 }
 
 // NetworkingV1alpha1 retrieves the NetworkingV1alpha1Client
@@ -240,14 +224,6 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
-	cs.mlV1alpha1, err = mlv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
-	cs.mlV1beta1, err = mlv1beta1.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
 	cs.networkingV1alpha1, err = networkingv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -314,8 +290,6 @@ func New(c rest.Interface) *Clientset {
 	cs.backupV1 = backupv1.New(c)
 	cs.databaseV1 = databasev1.New(c)
 	cs.databaseV2alpha1 = databasev2alpha1.New(c)
-	cs.mlV1alpha1 = mlv1alpha1.New(c)
-	cs.mlV1beta1 = mlv1beta1.New(c)
 	cs.networkingV1alpha1 = networkingv1alpha1.New(c)
 	cs.networkingV1beta1 = networkingv1beta1.New(c)
 	cs.permissionV1alpha1 = permissionv1alpha1.New(c)
