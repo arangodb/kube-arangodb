@@ -38,8 +38,6 @@ import (
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
@@ -247,52 +245,6 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				"v1beta1": {
 					objects: map[string]interface{}{
 						"spec": schedulerApi.ArangoSchedulerCronJob{}.Spec,
-					},
-				},
-			},
-		},
-		"ml-extension": {
-			fmt.Sprintf("%s/pkg/apis/ml", root): {
-				"v1alpha1": {
-					objects: map[string]interface{}{
-						"spec": mlApiv1alpha1.ArangoMLExtension{}.Spec,
-					},
-				},
-				"v1beta1": {
-					objects: map[string]interface{}{
-						"spec": mlApi.ArangoMLExtension{}.Spec,
-					},
-				},
-			},
-		},
-		"ml-storage": {
-			fmt.Sprintf("%s/pkg/apis/ml", root): {
-				"v1alpha1": {
-					objects: map[string]interface{}{
-						"spec": mlApiv1alpha1.ArangoMLStorage{}.Spec,
-					},
-				},
-				"v1beta1": {
-					objects: map[string]interface{}{
-						"spec": mlApi.ArangoMLStorage{}.Spec,
-					},
-				},
-			},
-		},
-		"ml-job-cron": {
-			fmt.Sprintf("%s/pkg/apis/ml", root): {
-				"v1alpha1": {
-					objects: map[string]interface{}{
-						"spec": mlApiv1alpha1.ArangoMLCronJob{}.Spec,
-					},
-				},
-			},
-		},
-		"ml-job-batch": {
-			fmt.Sprintf("%s/pkg/apis/ml", root): {
-				"v1alpha1": {
-					objects: map[string]interface{}{
-						"spec": mlApiv1alpha1.ArangoMLBatchJob{}.Spec,
 					},
 				},
 			},

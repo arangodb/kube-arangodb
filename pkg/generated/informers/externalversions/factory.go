@@ -33,7 +33,6 @@ import (
 	backup "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/backup"
 	deployment "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/deployment"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
-	ml "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/ml"
 	networking "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/networking"
 	permission "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/permission"
 	platform "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/platform"
@@ -272,7 +271,6 @@ type SharedInformerFactory interface {
 	Apps() apps.Interface
 	Backup() backup.Interface
 	Database() deployment.Interface
-	Ml() ml.Interface
 	Networking() networking.Interface
 	Permission() permission.Interface
 	Platform() platform.Interface
@@ -295,10 +293,6 @@ func (f *sharedInformerFactory) Backup() backup.Interface {
 
 func (f *sharedInformerFactory) Database() deployment.Interface {
 	return deployment.New(f, f.namespace, f.tweakListOptions)
-}
-
-func (f *sharedInformerFactory) Ml() ml.Interface {
-	return ml.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Networking() networking.Interface {

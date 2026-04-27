@@ -42,9 +42,6 @@ import (
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/ml"
-	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
@@ -196,42 +193,6 @@ func CreateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			_, err := arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
-			require.NoError(t, err)
-		case **mlApi.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1beta1().ArangoMLExtensions(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
-			require.NoError(t, err)
-		case **mlApi.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1beta1().ArangoMLStorages(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLBatchJob:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLCronJob:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Create(context.Background(), vl, meta.CreateOptions{})
 			require.NoError(t, err)
 		case **rbac.ClusterRole:
 			require.NotNil(t, v)
@@ -454,42 +415,6 @@ func UpdateObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 			vl := *v
 			_, err := arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
-		case **mlApi.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1beta1().ArangoMLExtensions(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApi.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1beta1().ArangoMLStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLBatchJob:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLCronJob:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Update(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
 		case **rbac.ClusterRole:
 			require.NotNil(t, v)
 
@@ -669,42 +594,6 @@ func UpdateStatusObjects(t *testing.T, k8s kubernetes.Interface, arango arangoCl
 			vl := *v
 			_, err := arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
 			require.NoError(t, err)
-		case **mlApi.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1beta1().ArangoMLExtensions(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApi.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1beta1().ArangoMLStorages(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLBatchJob:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
-		case **mlApiv1alpha1.ArangoMLCronJob:
-			require.NotNil(t, v)
-
-			vl := *v
-			_, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).UpdateStatus(context.Background(), vl, meta.UpdateOptions{})
-			require.NoError(t, err)
 		case **schedulerApiv1alpha1.ArangoProfile:
 			require.NotNil(t, v)
 
@@ -860,36 +749,6 @@ func DeleteObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientSe
 
 			vl := *v
 			require.NoError(t, arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
-		case **mlApi.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-			require.NoError(t, arango.MlV1beta1().ArangoMLExtensions(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
-		case **mlApi.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-			require.NoError(t, arango.MlV1beta1().ArangoMLStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
-		case **mlApiv1alpha1.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-			require.NoError(t, arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
-		case **mlApiv1alpha1.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-			require.NoError(t, arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
-		case **mlApiv1alpha1.ArangoMLBatchJob:
-			require.NotNil(t, v)
-
-			vl := *v
-			require.NoError(t, arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
-		case **mlApiv1alpha1.ArangoMLCronJob:
-			require.NotNil(t, v)
-
-			vl := *v
-			require.NoError(t, arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Delete(context.Background(), vl.GetName(), meta.DeleteOptions{}))
 		case **rbac.ClusterRole:
 			require.NotNil(t, v)
 
@@ -1202,96 +1061,6 @@ func RefreshObjects(t *testing.T, k8s kubernetes.Interface, arango arangoClientS
 			vl := *v
 
 			vn, err := arango.BackupV1().ArangoBackupPolicies(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			if err != nil {
-				if kerrors.IsNotFound(err) {
-					*v = nil
-				} else {
-					require.NoError(t, err)
-				}
-			} else {
-				*v = vn
-			}
-		case **mlApi.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-
-			vn, err := arango.MlV1beta1().ArangoMLExtensions(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			if err != nil {
-				if kerrors.IsNotFound(err) {
-					*v = nil
-				} else {
-					require.NoError(t, err)
-				}
-			} else {
-				*v = vn
-			}
-		case **mlApi.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-
-			vn, err := arango.MlV1beta1().ArangoMLStorages(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			if err != nil {
-				if kerrors.IsNotFound(err) {
-					*v = nil
-				} else {
-					require.NoError(t, err)
-				}
-			} else {
-				*v = vn
-			}
-		case **mlApiv1alpha1.ArangoMLExtension:
-			require.NotNil(t, v)
-
-			vl := *v
-
-			vn, err := arango.MlV1alpha1().ArangoMLExtensions(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			if err != nil {
-				if kerrors.IsNotFound(err) {
-					*v = nil
-				} else {
-					require.NoError(t, err)
-				}
-			} else {
-				*v = vn
-			}
-		case **mlApiv1alpha1.ArangoMLStorage:
-			require.NotNil(t, v)
-
-			vl := *v
-
-			vn, err := arango.MlV1alpha1().ArangoMLStorages(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			if err != nil {
-				if kerrors.IsNotFound(err) {
-					*v = nil
-				} else {
-					require.NoError(t, err)
-				}
-			} else {
-				*v = vn
-			}
-		case **mlApiv1alpha1.ArangoMLBatchJob:
-			require.NotNil(t, v)
-
-			vl := *v
-
-			vn, err := arango.MlV1alpha1().ArangoMLBatchJobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
-			if err != nil {
-				if kerrors.IsNotFound(err) {
-					*v = nil
-				} else {
-					require.NoError(t, err)
-				}
-			} else {
-				*v = vn
-			}
-		case **mlApiv1alpha1.ArangoMLCronJob:
-			require.NotNil(t, v)
-
-			vl := *v
-
-			vn, err := arango.MlV1alpha1().ArangoMLCronJobs(vl.GetNamespace()).Get(context.Background(), vl.GetName(), meta.GetOptions{})
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					*v = nil
@@ -1677,54 +1446,6 @@ func SetMetaBasedOnType(t *testing.T, object meta.Object) {
 		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
 			backupApi.SchemeGroupVersion.String(),
 			backup.ArangoBackupPolicyResourcePlural,
-			object.GetNamespace(),
-			object.GetName()))
-	case *mlApi.ArangoMLExtension:
-		v.Kind = ml.ArangoMLExtensionResourceKind
-		v.APIVersion = mlApi.SchemeGroupVersion.String()
-		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
-			mlApi.SchemeGroupVersion.String(),
-			ml.ArangoMLExtensionResourcePlural,
-			object.GetNamespace(),
-			object.GetName()))
-	case *mlApi.ArangoMLStorage:
-		v.Kind = ml.ArangoMLStorageResourceKind
-		v.APIVersion = mlApi.SchemeGroupVersion.String()
-		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
-			mlApi.SchemeGroupVersion.String(),
-			ml.ArangoMLStorageResourcePlural,
-			object.GetNamespace(),
-			object.GetName()))
-	case *mlApiv1alpha1.ArangoMLExtension:
-		v.Kind = ml.ArangoMLExtensionResourceKind
-		v.APIVersion = mlApiv1alpha1.SchemeGroupVersion.String()
-		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
-			mlApiv1alpha1.SchemeGroupVersion.String(),
-			ml.ArangoMLExtensionResourcePlural,
-			object.GetNamespace(),
-			object.GetName()))
-	case *mlApiv1alpha1.ArangoMLStorage:
-		v.Kind = ml.ArangoMLStorageResourceKind
-		v.APIVersion = mlApiv1alpha1.SchemeGroupVersion.String()
-		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
-			mlApiv1alpha1.SchemeGroupVersion.String(),
-			ml.ArangoMLStorageResourcePlural,
-			object.GetNamespace(),
-			object.GetName()))
-	case *mlApiv1alpha1.ArangoMLBatchJob:
-		v.Kind = ml.ArangoMLBatchJobResourceKind
-		v.APIVersion = mlApiv1alpha1.SchemeGroupVersion.String()
-		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
-			mlApiv1alpha1.SchemeGroupVersion.String(),
-			ml.ArangoMLBatchJobResourcePlural,
-			object.GetNamespace(),
-			object.GetName()))
-	case *mlApiv1alpha1.ArangoMLCronJob:
-		v.Kind = ml.ArangoMLCronJobResourceKind
-		v.APIVersion = mlApiv1alpha1.SchemeGroupVersion.String()
-		v.SetSelfLink(fmt.Sprintf("/api/%s/%s/%s/%s",
-			mlApiv1alpha1.SchemeGroupVersion.String(),
-			ml.ArangoMLCronJobResourcePlural,
 			object.GetNamespace(),
 			object.GetName()))
 	case *rbac.ClusterRole:

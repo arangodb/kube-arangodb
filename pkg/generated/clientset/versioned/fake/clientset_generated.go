@@ -34,10 +34,6 @@ import (
 	fakedatabasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1/fake"
 	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
 	fakedatabasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1/fake"
-	mlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1"
-	fakemlv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1alpha1/fake"
-	mlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1"
-	fakemlv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/ml/v1beta1/fake"
 	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1alpha1"
 	fakenetworkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1alpha1/fake"
 	networkingv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/networking/v1beta1"
@@ -147,16 +143,6 @@ func (c *Clientset) DatabaseV1() databasev1.DatabaseV1Interface {
 // DatabaseV2alpha1 retrieves the DatabaseV2alpha1Client
 func (c *Clientset) DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface {
 	return &fakedatabasev2alpha1.FakeDatabaseV2alpha1{Fake: &c.Fake}
-}
-
-// MlV1alpha1 retrieves the MlV1alpha1Client
-func (c *Clientset) MlV1alpha1() mlv1alpha1.MlV1alpha1Interface {
-	return &fakemlv1alpha1.FakeMlV1alpha1{Fake: &c.Fake}
-}
-
-// MlV1beta1 retrieves the MlV1beta1Client
-func (c *Clientset) MlV1beta1() mlv1beta1.MlV1beta1Interface {
-	return &fakemlv1beta1.FakeMlV1beta1{Fake: &c.Fake}
 }
 
 // NetworkingV1alpha1 retrieves the NetworkingV1alpha1Client

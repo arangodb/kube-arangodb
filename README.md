@@ -131,7 +131,6 @@ To upgrade to the Enterprise Edition, you need to get in touch with the ArangoDB
 
 | Feature | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State | Enabled | Flag | Remarks |
 |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |
-| ArangoML integration | 1.2.36 | 1.2.36 | >= 3.8.0 | Enterprise | Alpha | True | N/A | Support for ArangoML CRDs |
 | AgencyCache | 1.2.30 | 1.2.30 | >= 3.8.0 | Enterprise | Production | True | N/A | Enable Agency Cache mechanism in the Operator (Increase limit of the nodes) |
 | Member Maintenance Support | 1.2.25 | 1.2.16 | >= 3.8.0 | Enterprise | Production | True | N/A | Enable Member Maintenance during planned restarts |
 | [Rebalancer](docs/features/rebalancer.md) | 1.2.15 | 1.2.5 | >= 3.8.0 | Enterprise | Production | True | N/A | N/A |
@@ -216,7 +215,6 @@ Flags:
       --operator.backup                                        Enable to run the ArangoBackup operator
       --operator.deployment                                    Enable to run the ArangoDeployment operator
       --operator.deployment-replication                        Enable to run the ArangoDeploymentReplication operator
-      --operator.ml                                            Enable to run the ArangoML operator
       --operator.networking                                    Enable to run the Networking operator
       --operator.platform                                      Enable to run the Platform operator
       --operator.reconciliation.retry.count int                Count of retries during Object Update operations in the Reconciliation loop (default 25)

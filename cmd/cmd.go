@@ -118,7 +118,7 @@ var (
 		enableStorage               bool // Run local-storage operator
 		enableBackup                bool // Run backup operator
 		enableApps                  bool // Run apps operator
-		enableML                    bool // Run ml operator
+		enableML                    bool // Deprecated: ML operator has been removed
 		enableAnalytics             bool // Run analytics operator
 		enableNetworking            bool // Run networking operator
 		enablePlatform              bool // Run platform operator
@@ -186,7 +186,6 @@ var (
 	storageProbe               probe.ReadyProbe
 	backupProbe                probe.ReadyProbe
 	appsProbe                  probe.ReadyProbe
-	mlProbe                    probe.ReadyProbe
 	analyticsProbe             probe.ReadyProbe
 	networkingProbe            probe.ReadyProbe
 	platformProbe              probe.ReadyProbe
@@ -227,7 +226,8 @@ func initE() error {
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
 	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
-	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Enable to run the ArangoML operator")
+	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Deprecated: ArangoML operator has been removed")
+	f.MarkHidden("operator.ml")
 	f.BoolVar(&operatorOptions.enableAnalytics, "operator.analytics", false, "Enable to run the Analytics operator")
 	f.BoolVar(&operatorOptions.enableNetworking, "operator.networking", false, "Enable to run the Networking operator")
 	f.BoolVar(&operatorOptions.enablePlatform, "operator.platform", false, "Enable to run the Platform operator")
@@ -395,6 +395,12 @@ func executeMain(cmd *cobra.Command, args []string) {
 		logger.Info("Operator Feature %s (%s) is %s.", name, features.GetFeatureArgName(name), util.BoolSwitch(feature.Enabled(), "enabled", "disabled"))
 	})
 
+	// Warn if deprecated ML flag is used
+	if operatorOptions.enableML {
+		logger.Warn("Option --operator.ml is deprecated: ArangoML operator has been removed. This flag will be ignored.")
+		operatorOptions.enableML = false
+	}
+
 	// Check operating mode
 	if !operatorOptions.enableDeployment &&
 		!operatorOptions.enableDeploymentReplication &&
@@ -402,23 +408,22 @@ func executeMain(cmd *cobra.Command, args []string) {
 		!operatorOptions.enableBackup &&
 		!operatorOptions.enableApps &&
 		!operatorOptions.enableK2KClusterSync &&
-		!operatorOptions.enableML &&
 		!operatorOptions.enableAnalytics &&
 		!operatorOptions.enableNetworking &&
 		!operatorOptions.enableScheduler &&
 		!operatorOptions.enablePlatform {
 		if !operatorOptions.versionOnly {
 			if version.GetVersionV1().IsEnterprise() {
-				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml, --operator.analytics, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
+				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.analytics, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
 			} else {
 				logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
 			}
 		}
 	} else if operatorOptions.versionOnly {
-		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.ml, --operator.analytics, --operator.networking cannot be enabled together with --operator.version")
+		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.analytics, --operator.networking cannot be enabled together with --operator.version")
 	} else if !version.GetVersionV1().IsEnterprise() {
-		if operatorOptions.enableML || operatorOptions.enableAnalytics {
-			logger.Fatal("Options --operator.ml, --operator.analytics can be enabled only on the Enterprise Operator")
+		if operatorOptions.enableAnalytics {
+			logger.Fatal("Option --operator.analytics can be enabled only on the Enterprise Operator")
 		}
 	}
 
@@ -515,7 +520,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 				WithReadinessProbe("storage", cfg.EnableStorage, &storageProbe).
 				WithReadinessProbe("backup", cfg.EnableBackup, &backupProbe).
 				WithReadinessProbe("apps", cfg.EnableApps, &appsProbe).
-				WithReadinessProbe("ml", cfg.EnableML, &mlProbe).
 				WithReadinessProbe("analytics", cfg.EnableAnalytics, &analyticsProbe).
 				WithReadinessProbe("networking", cfg.EnableNetworking, &networkingProbe).
 				WithReadinessProbe("platform", cfg.EnablePlatform, &platformProbe).
@@ -616,7 +620,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
 		EnableApps:                  operatorOptions.enableApps,
-		EnableML:                    operatorOptions.enableML,
 		EnableAnalytics:             operatorOptions.enableAnalytics,
 		EnableNetworking:            operatorOptions.enableNetworking,
 		EnablePlatform:              operatorOptions.enablePlatform,
@@ -639,7 +642,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		StorageProbe:               &storageProbe,
 		BackupProbe:                &backupProbe,
 		AppsProbe:                  &appsProbe,
-		MlProbe:                    &mlProbe,
 		AnalyticsProbe:             &analyticsProbe,
 		NetworkingProbe:            &networkingProbe,
 		PlatformProbe:              &platformProbe,

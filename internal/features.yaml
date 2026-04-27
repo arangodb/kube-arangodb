@@ -258,13 +258,6 @@ features:
     releases:
       - operatorVersion: 1.2.41
         state: Production
-  - name: ArangoML integration
-    operatorEditions: Enterprise
-    arangoDBEditions: Enterprise
-    remarks: Support for ArangoML CRDs
-    releases:
-      - operatorVersion: 1.2.36
-        state: Alpha
   - name: ArangoPlatform
     remarks: ArangoPlatform Solution with support for ArangoDeployment Gateway Group
     releases:

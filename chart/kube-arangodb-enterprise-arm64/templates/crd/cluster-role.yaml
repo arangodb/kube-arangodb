@@ -57,19 +57,6 @@ rules:
       - "arangomembers.database.arangodb.com"
       - "arangotasks.database.arangodb.com"
 {{- end }}
-{{ if .Values.operator.features.ml -}}
-  # ml.arangodb.com
-  - apiGroups:
-      - "apiextensions.k8s.io"
-    resources:
-      - "customresourcedefinitions"
-    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
-    resourceNames:
-      - "arangomlbatchjobs.ml.arangodb.com"
-      - "arangomlcronjobs.ml.arangodb.com"
-      - "arangomlextensions.ml.arangodb.com"
-      - "arangomlstorages.ml.arangodb.com"
-{{- end }}
 {{ if .Values.operator.features.networking -}}
   # networking.arangodb.com
   - apiGroups:

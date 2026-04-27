@@ -82,7 +82,6 @@ type operatorV2type string
 
 const (
 	backupOperator     operatorV2type = "backup"
-	mlOperator         operatorV2type = "ml"
 	analyticsOperator  operatorV2type = "analytics"
 	networkingOperator operatorV2type = "networking"
 	platformOperator   operatorV2type = "platform"
@@ -117,7 +116,6 @@ type Config struct {
 	EnableDeployment            bool
 	EnableDeploymentReplication bool
 	EnableStorage               bool
-	EnableML                    bool
 	EnableAnalytics             bool
 	EnableNetworking            bool
 	EnablePlatform              bool
@@ -142,7 +140,6 @@ type Dependencies struct {
 	DeploymentReplicationProbe *probe.ReadyProbe
 	StorageProbe               *probe.ReadyProbe
 	BackupProbe                *probe.ReadyProbe
-	MlProbe                    *probe.ReadyProbe
 	AnalyticsProbe             *probe.ReadyProbe
 	NetworkingProbe            *probe.ReadyProbe
 	PlatformProbe              *probe.ReadyProbe
@@ -199,13 +196,6 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-apps-operator", utilConstants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-apps-operator", utilConstants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
-		}
-	}
-	if o.Config.EnableML {
-		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-ml-operator", utilConstants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
-		} else {
-			go o.runWithoutLeaderElection("arango-ml-operator", utilConstants.MLLabelRole, o.onStartML, o.Dependencies.MlProbe)
 		}
 	}
 	if o.Config.EnableAnalytics {
@@ -343,9 +333,6 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	case backupOperator:
 		o.onStartOperatorV2Backup(operator, eventRecorder, o.Client, arangoInformer)
 		o.Dependencies.BackupProbe.SetReady()
-	case mlOperator:
-		o.onStartOperatorV2ML(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
-		o.Dependencies.MlProbe.SetReady()
 	case analyticsOperator:
 		o.onStartOperatorV2Analytics(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.AnalyticsProbe.SetReady()
@@ -371,8 +358,6 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	prometheus.MustRegister(operator)
 
 	operator.Start(o.Threads, stop)
-	o.Dependencies.MlProbe.SetReady()
-	o.Dependencies.AnalyticsProbe.SetReady()
 
 	<-stop
 }

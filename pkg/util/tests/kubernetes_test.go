@@ -35,8 +35,6 @@ import (
 	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
@@ -88,12 +86,6 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*api.ArangoClusterSynchronization](t)
 	NewMetaObjectRun[*backupApi.ArangoBackup](t)
 	NewMetaObjectRun[*backupApi.ArangoBackupPolicy](t)
-	NewMetaObjectRun[*mlApi.ArangoMLExtension](t)
-	NewMetaObjectRun[*mlApi.ArangoMLStorage](t)
-	NewMetaObjectRun[*mlApiv1alpha1.ArangoMLExtension](t)
-	NewMetaObjectRun[*mlApiv1alpha1.ArangoMLStorage](t)
-	NewMetaObjectRun[*mlApiv1alpha1.ArangoMLBatchJob](t)
-	NewMetaObjectRun[*mlApiv1alpha1.ArangoMLCronJob](t)
 	NewMetaObjectRun[*schedulerApi.ArangoProfile](t)
 	NewMetaObjectRun[*schedulerApi.ArangoSchedulerPod](t)
 	NewMetaObjectRun[*schedulerApi.ArangoSchedulerDeployment](t)

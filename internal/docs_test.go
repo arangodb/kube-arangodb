@@ -41,8 +41,6 @@ import (
 	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	mlApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1alpha1"
-	mlApi "github.com/arangodb/kube-arangodb/pkg/apis/ml/v1beta1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
@@ -300,50 +298,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoBackupPolicy.V1": {
 						"Spec": backupApi.ArangoBackupPolicy{}.Spec,
 					},
-				},
-			},
-		},
-		"ml": map[string]inputPackage{
-			"v1alpha1": {
-				Types: inputPackageTypes{
-					"ArangoMLExtension.V1Alpha1": {
-						"Spec": mlApiv1alpha1.ArangoMLExtension{}.Spec,
-					},
-					"ArangoMLStorage.V1Alpha1": {
-						"Spec": mlApiv1alpha1.ArangoMLStorage{}.Spec,
-					},
-					"ArangoMLCronJob.V1Alpha1": {
-						"Spec": mlApiv1alpha1.ArangoMLCronJob{}.Spec,
-					},
-					"ArangoMLBatchJob.V1Alpha1": {
-						"Spec": mlApiv1alpha1.ArangoMLBatchJob{}.Spec,
-					},
-				},
-				Shared: []string{
-					"scheduler/v1alpha1",
-					"scheduler/v1alpha1/container",
-					"scheduler/v1alpha1/container/resources",
-					"scheduler/v1alpha1/pod",
-					"scheduler/v1alpha1/pod/resources",
-				},
-			},
-			"v1beta1": {
-				Types: inputPackageTypes{
-					"ArangoMLExtension.V1Beta1": {
-						"Spec": mlApi.ArangoMLExtension{}.Spec,
-					},
-					"ArangoMLStorage.V1Beta1": {
-						"Spec": mlApi.ArangoMLStorage{}.Spec,
-					},
-				},
-				Shared: []string{
-					"scheduler/v1beta1",
-					"scheduler/v1beta1/container",
-					"scheduler/v1beta1/container/resources",
-					"scheduler/v1beta1/integration",
-					"scheduler/v1beta1/pod",
-					"scheduler/v1beta1/pod/resources",
-					"scheduler/v1beta1/policy",
 				},
 			},
 		},

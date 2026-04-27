@@ -2,6 +2,8 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) (Platform) Storage V2 Central Service
+- (Feature) Remove ArangoML operator and all related CRDs (ArangoMLExtension, ArangoMLStorage, ArangoMLBatchJob, ArangoMLCronJob)
+- (Maintenance) Deprecate --operator.ml CLI flag (hidden, warns if used)
 
 ## [1.4.3](https://github.com/arangodb/kube-arangodb/tree/1.4.3) (2026-04-23)
 - (Bugfix) Fix Community image discovery
