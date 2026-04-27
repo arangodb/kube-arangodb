@@ -138,7 +138,7 @@ const (
 	// ConditionTypeProfilesReady indicates that the profiles are ready.
 	ConditionTypeProfilesReady ConditionType = "ProfilesReady"
 
-	// ConditionTypeStorageReady indicates that the storage are ready.
+	// ConditionTypeStorageReady indicates that the storage is ready.
 	ConditionTypeStorageReady ConditionType = "StorageReady"
 )
 

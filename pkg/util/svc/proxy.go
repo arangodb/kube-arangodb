@@ -137,7 +137,7 @@ func Proxy(obj cache.Object[*grpc.ClientConn]) sproxy.StreamDirector {
 		inMD, _ := metadata.FromIncomingContext(ctx)
 		outCtx := metadata.NewOutgoingContext(ctx, inMD)
 
-		logger.Str("method", fullMethodName).Info("Proxy Request")
+		logger.Str("method", fullMethodName).Debug("Proxy Request")
 
 		return sproxy.One2One, []sproxy.Backend{
 			&sproxy.SingleBackend{

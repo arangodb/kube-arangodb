@@ -181,6 +181,10 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, grpcListener, 
 		serveError = wg.Wait()
 	}()
 
+	for _, h := range s.service.handlers {
+		health.Update(h.Name(), h.Health(ctx))
+	}
+
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
