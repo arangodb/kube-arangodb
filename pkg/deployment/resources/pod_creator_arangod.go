@@ -30,6 +30,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -399,16 +400,12 @@ func (m *MemberArangoDPod) GetSidecars(pod *core.PodTemplateSpec) error {
 	}
 
 	if m.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) && m.Deployment.Mode.ServingGroup() == m.Group {
-		var c *core.Container
-
 		pod.Labels[k8sutil.LabelKeyArangoSidecar] = "yes"
-		if container, err := m.createServingSidecarExporter(); err != nil {
+		if container, volumes, err := m.createServingSidecarExporter(); err != nil {
 			return err
-		} else {
-			c = container
-		}
-		if c != nil {
-			pod.Spec.Containers = append(pod.Spec.Containers, *c)
+		} else if container != nil {
+			pod.Spec.Containers = append(pod.Spec.Containers, *container)
+			pod.Spec.Volumes = append(pod.Spec.Volumes, volumes...)
 		}
 	}
 
@@ -555,10 +552,28 @@ func (m *MemberArangoDPod) createMetricsExporterSidecarInternalExporter() (*core
 	return &c, nil
 }
 
-func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, error) {
+func (m *MemberArangoDPod) getInternalSidecarStorage() *platformApi.ArangoPlatformStorage {
+	if !features.CentralServices().Enabled() {
+		return nil
+	}
+
+	if v, err := m.context.ACS().CurrentClusterCache().ArangoPlatformStorage().V1Beta1(); err == nil {
+		if p, ok := v.GetSimple(m.context.GetAPIObject().GetName()); ok {
+			if p.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
+				return p
+			}
+		}
+	}
+
+	return nil
+}
+
+func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, []core.Volume, error) {
 	image := m.context.GetOperatorImage()
 
-	args := createInternalSidecarArgs(m.Deployment, m.GroupSpec)
+	storage := m.getInternalSidecarStorage()
+
+	args := createInternalSidecarArgs(m.Deployment, m.GroupSpec, storage)
 
 	baseResources := kresources.CleanContainerResource(
 		kresources.UpscaleResourceRequirements(
@@ -571,7 +586,7 @@ func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, erro
 		baseResources,
 		m.Deployment, m.GroupSpec)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if m.Deployment.Authentication.IsAuthenticated() {
@@ -582,7 +597,14 @@ func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, erro
 		c.VolumeMounts = append(c.VolumeMounts, k8sutil.TlsKeyfileVolumeMount())
 	}
 
-	return &c, nil
+	var volumes []core.Volume
+	if storage != nil {
+		vols, mounts := internalSidecarStorageV2Volumes(storage)
+		volumes = append(volumes, vols...)
+		c.VolumeMounts = append(c.VolumeMounts, mounts...)
+	}
+
+	return &c, volumes, nil
 }
 
 func (m *MemberArangoDPod) ApplyPodSpec(p *core.PodSpec) error {

@@ -28,6 +28,7 @@ import (
 
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -37,7 +38,7 @@ import (
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
-func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec) []string {
+func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGroupSpec, storage *platformApi.ArangoPlatformStorage) []string {
 	options := k8sutil.CreateOptionPairs(64)
 
 	if spec.Authentication.IsAuthenticated() {
@@ -59,6 +60,10 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 
 	if spec.TLS.IsSecure() {
 		options.Add("--sidecar.keyfile", filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile))
+	}
+
+	if storage != nil {
+		options.Merge(internalSidecarStorageV2Args(storage))
 	}
 
 	return options.AsArgs()

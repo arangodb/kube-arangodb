@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authentication"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
@@ -83,6 +84,7 @@ func NewIntegrationConnection(opts ...grpc.DialOption) (*grpc.ClientConn, error)
 	}
 
 	opts = append(opts, authentication.NewInterceptorClientOptions(authentication.NewEnvAuthentication())...)
+	opts = append(opts, ugrpc.DefaultDialOptions()...)
 
 	return grpc.NewClient(addr, opts...)
 }
@@ -106,6 +108,7 @@ func NewIntegrationConnectionFromDeployment(client kubernetes.Interface, depl *a
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	opts = append(opts, authentication.NewInterceptorClientOptions(authentication.NewSecretAuthentication(auth, mods...))...)
+	opts = append(opts, ugrpc.DefaultDialOptions()...)
 
 	con, err := grpc.NewClient(fmt.Sprintf("%s:%d", k8sutil.CreateSidecarClientServiceName(depl.GetName()), shared.InternalSidecarContainerPortGRPC), opts...)
 	if err != nil {

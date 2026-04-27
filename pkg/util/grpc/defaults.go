@@ -18,23 +18,24 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package sidecar
+package grpc
 
 import (
-	"context"
+	"time"
 
-	"github.com/spf13/cobra"
-
-	pbImplPongV1 "github.com/arangodb/kube-arangodb/integrations/pong/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
-func init() {
-	register("pong", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
-		svc, err := pbImplPongV1.New()
-		if err != nil {
-			return nil, false, err
-		}
-		return svc, true, nil
-	})
+func DefaultDialOptions() []grpc.DialOption {
+	return []grpc.DialOption{
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                10 * time.Second,
+			Timeout:             5 * time.Second,
+			PermitWithoutStream: true,
+		}),
+		grpc.WithConnectParams(grpc.ConnectParams{
+			MinConnectTimeout: 5 * time.Second,
+		}),
+	}
 }

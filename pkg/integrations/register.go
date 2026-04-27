@@ -37,6 +37,7 @@ import (
 	integrationsClients "github.com/arangodb/kube-arangodb/pkg/integrations/clients"
 	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/integration"
@@ -208,9 +209,13 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 		return errors.Wrapf(err, "Unable to parse external config")
 	}
 
-	internalConfig.Options = append(internalConfig.Options, svc.ProxyServer(integration.NewIntegrationConnectionCache(svc.ProxyClientOpts()...))...)
-
 	var internalHandlers, externalHandlers, healthHandlers, allHandlers []svc.Handler
+
+	if utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Exists() {
+		proxyOpts, proxyHealth := svc.ProxyServer(integration.NewIntegrationConnectionCache(svc.ProxyClientOpts()...))
+		internalConfig.Options = append(internalConfig.Options, proxyOpts...)
+		internalHandlers = append(internalHandlers, proxyHealth)
+	}
 
 	var services []pbImplPongV1.Service
 

@@ -178,17 +178,15 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		}
 	}
 
-	never := func() func() (integrationsSidecar.Integration, bool) {
-		return func() (integrationsSidecar.Integration, bool) {
-			return nil, false
-		}
+	never := func() (integrationsSidecar.Integration, bool) {
+		return nil, false
 	}
 
-	central := func(integration integrationsSidecar.Integration) func() (integrationsSidecar.Integration, bool) {
+	central := func(in func() (integrationsSidecar.Integration, bool)) func() (integrationsSidecar.Integration, bool) {
 		if features.CentralServices().Enabled() {
-			return never()
+			return never
 		}
-		return always(integration)
+		return in
 	}
 
 	if changed, ready, err := r.ensureArangoProfilesFactory(ctx, cachedStatus,
@@ -230,7 +228,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			}, nil
 		},
 		gen(utilConstants.ProfilesIntegrationAuthz, utilConstants.ProfilesIntegrationV0, always(integrationsSidecar.IntegrationAuthorizationV0{})),
-		gen(utilConstants.ProfilesIntegrationAuthz, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationAuthorizationV1{})),
+		gen(utilConstants.ProfilesIntegrationAuthz, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationAuthorizationV1{Status: status})),
 		gen(utilConstants.ProfilesIntegrationAuthn, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()})),
 		gen(utilConstants.ProfilesIntegrationSched, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationSchedulerV1{})),
 		gen(utilConstants.ProfilesIntegrationSched, utilConstants.ProfilesIntegrationV2, always(integrationsSidecar.IntegrationSchedulerV2{
@@ -253,9 +251,9 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 
 			return nil, false
 		}),
-		gen(utilConstants.ProfilesIntegrationMeta, utilConstants.ProfilesIntegrationV1, central(integrationsSidecar.IntegrationMetaV1{})),
+		gen(utilConstants.ProfilesIntegrationMeta, utilConstants.ProfilesIntegrationV1, central(always(integrationsSidecar.IntegrationMetaV1{}))),
 		gen(utilConstants.ProfilesIntegrationEvents, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationEventsV1{})),
-		gen(utilConstants.ProfilesIntegrationStorage, utilConstants.ProfilesIntegrationV2, func() (integrationsSidecar.Integration, bool) {
+		gen(utilConstants.ProfilesIntegrationStorage, utilConstants.ProfilesIntegrationV2, central(func() (integrationsSidecar.Integration, bool) {
 			if v, err := cachedStatus.ArangoPlatformStorage().V1Beta1(); err == nil {
 				if p, ok := v.GetSimple(deploymentName); ok {
 					if p.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
@@ -267,7 +265,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			}
 
 			return nil, false
-		})); err != nil {
+		}))); err != nil {
 		return err
 	} else if changed {
 		reconcileRequired.Required()

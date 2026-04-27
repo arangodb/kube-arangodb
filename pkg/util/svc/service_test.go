@@ -208,12 +208,13 @@ func Test_Service_Connections(t *testing.T) {
 
 		// Second server
 
+		proxyOpts, _ := ProxyServer(cache.Static(conn))
 		h2, err := NewService(Configuration{
 			Address: "127.0.0.1:0",
 			Gateway: &ConfigurationGateway{
 				Address: "127.0.0.1:0",
 			},
-			Options: ProxyServer(cache.Static(conn)),
+			Options: proxyOpts,
 		}, ProxyGateway(pbPongV1.Name, pbPongV1.RegisterPongV1Handler))
 		require.NoError(t, err)
 

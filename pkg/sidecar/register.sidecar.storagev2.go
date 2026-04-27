@@ -22,56 +22,49 @@ package sidecar
 
 import (
 	"context"
-	"time"
 
 	"github.com/spf13/cobra"
 
-	pbImplMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1"
-	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	pbImplStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-var (
-	flagMetaV1Prefix = cli.Flag[string]{
-		Name:        "meta.v1.prefix",
-		Description: "Prefix applied to all meta keys",
-		Default:     "",
-	}
-	flagMetaV1TTL = cli.Flag[time.Duration]{
-		Name:        "meta.v1.ttl",
-		Description: "Default TTL for meta entries (0 means no TTL)",
-		Default:     0,
-	}
-)
+var storageV2CLI = pbImplStorageV2.NewCLI("storage.v2")
 
 func init() {
-	register("meta-v1", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
+	register("storage-v2", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
 		if v, err := flagCentralServicesEnabled.Get(cmd); err != nil {
 			return nil, false, err
 		} else if !v {
 			return nil, false, nil
 		}
 
-		prefix, err := flagMetaV1Prefix.Get(cmd)
+		cfg, err := storageV2CLI.Configuration(cmd)
 		if err != nil {
 			return nil, false, err
 		}
 
-		ttl, err := flagMetaV1TTL.Get(cmd)
+		if !storageV2BackendConfigured(cfg) {
+			return nil, false, nil
+		}
+
+		handler, err := pbImplStorageV2.New(ctx, cfg)
 		if err != nil {
 			return nil, false, err
 		}
 
-		svc, err := pbImplMetaV1.New(ctx, pbImplMetaV1.Configuration{
-			Prefix: prefix,
-			TTL:    ttl,
-		})
-		if err != nil {
-			return nil, false, err
-		}
-		return svc, true, nil
-	},
-		flagMetaV1Prefix,
-		flagMetaV1TTL,
-	)
+		return handler, true, nil
+	}, storageV2CLI)
+}
+
+func storageV2BackendConfigured(cfg pbImplStorageV2.Configuration) bool {
+	switch cfg.Type {
+	case pbImplStorageV2.ConfigurationTypeS3:
+		return cfg.S3.BucketName != ""
+	case pbImplStorageV2.ConfigurationTypeGCS:
+		return cfg.GCS.BucketName != ""
+	case pbImplStorageV2.ConfigurationTypeAzure:
+		return cfg.AzureBlobStorage.BucketName != ""
+	}
+	return false
 }

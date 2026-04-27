@@ -34,7 +34,7 @@ import (
 )
 
 func init() {
-	global.Register("authentication", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
+	register("authentication", func(ctx context.Context, cmd *cobra.Command) (svc.Handler, bool, error) {
 		path, err := flagAuth.Get(cmd)
 		if err != nil {
 			return nil, false, err

@@ -135,6 +135,7 @@ func (r *Reconciler) createGatewaySidecarEnablementPlan(ctx context.Context, _ k
 			return api.Plan{
 				sharedReconcile.UpdateConditionActionV2("Gateways Sidecar Enabled", api.ConditionTypeGatewaySidecarEnabled, true, "Gateway Enabled", "Gateway Enabled", ""),
 				sharedReconcile.UpdateConditionActionV2("Gateways Sidecar Enabled", api.ConditionTypeProfilesReady, false, "Gateway Enabled", "Gateway Enabled", ""),
+				sharedReconcile.UpdateConditionActionV2("Gateways Sidecar Enabled", api.ConditionTypeStorageReady, false, "Gateway Enabled", "Gateway Enabled", ""),
 			}
 		}
 	} else {
@@ -142,6 +143,7 @@ func (r *Reconciler) createGatewaySidecarEnablementPlan(ctx context.Context, _ k
 			return api.Plan{
 				sharedReconcile.RemoveConditionActionV2("Gateways Sidecar Disabled", api.ConditionTypeGatewaySidecarEnabled),
 				sharedReconcile.UpdateConditionActionV2("Gateways Sidecar Disabled", api.ConditionTypeProfilesReady, false, "Gateway Disabled", "Gateway Disabled", ""),
+				sharedReconcile.UpdateConditionActionV2("Gateways Sidecar Disabled", api.ConditionTypeStorageReady, false, "Gateway Disabled", "Gateway Disabled", ""),
 			}
 		}
 	}

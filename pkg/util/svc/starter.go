@@ -181,25 +181,21 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, grpcListener, 
 		serveError = wg.Wait()
 	}()
 
-	ticker := time.NewTicker(125 * time.Millisecond)
+	for _, h := range s.service.handlers {
+		health.Update(h.Name(), h.Health(ctx))
+	}
+
+	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-done:
 			return serveError
-		default:
+		case <-ticker.C:
 			for _, h := range s.service.handlers {
 				health.Update(h.Name(), h.Health(ctx))
 			}
-			break
-		}
-
-		select {
-		case <-done:
-			return serveError
-		case <-ticker.C:
-			continue
 		}
 	}
 }

@@ -30,7 +30,7 @@ import (
 
 type IntegrationAuthorizationV1 struct {
 	Core   *Core
-	Status *api.DeploymentStatus
+	Status api.DeploymentStatus
 }
 
 func (i IntegrationAuthorizationV1) Name() []string {

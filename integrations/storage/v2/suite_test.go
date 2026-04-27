@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
@@ -42,8 +44,12 @@ func init() {
 
 type configGenerator func(t *testing.T, mods ...util.ModR[Configuration]) Configuration
 
-func Handler(t *testing.T, gen configGenerator, mods ...util.ModR[Configuration]) svc.Handler {
-	handler, err := New(gen(t, mods...))
+func testContext(ctx context.Context) context.Context {
+	return utilConstantsContext.AuthZClientPlugin.Set(ctx, pbImplAuthorizationV1Shared.NewAlwaysPlugin())
+}
+
+func Handler(t *testing.T, ctx context.Context, gen configGenerator, mods ...util.ModR[Configuration]) svc.Handler {
+	handler, err := New(testContext(ctx), gen(t, mods...))
 	require.NoError(t, err)
 
 	return handler
@@ -52,7 +58,7 @@ func Handler(t *testing.T, gen configGenerator, mods ...util.ModR[Configuration]
 func Client(t *testing.T, ctx context.Context, gen configGenerator, mods ...util.ModR[Configuration]) pbStorageV2.StorageV2Client {
 	local, err := svc.NewService(svc.Configuration{
 		Address: "127.0.0.1:0",
-	}, Handler(t, gen, mods...))
+	}, Handler(t, ctx, gen, mods...))
 	require.NoError(t, err)
 
 	start := local.Start(ctx)
