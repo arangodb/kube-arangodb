@@ -103,7 +103,6 @@ Usage:
 
 Flags:
       --debug-package-files                     Collect Debug files from Storage
-      --generator.arango-analytics-gae          Define if generator arango-analytics-gae is enabled (default true)
       --generator.arango-backup-backup          Define if generator arango-backup-backup is enabled (default true)
       --generator.arango-backup-backuppolicy    Define if generator arango-backup-backuppolicy is enabled (default true)
       --generator.arango-database-acs           Define if generator arango-database-acs is enabled (default true)

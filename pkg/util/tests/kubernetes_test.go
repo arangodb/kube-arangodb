@@ -32,7 +32,6 @@ import (
 	rbac "k8s.io/api/rbac/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	analyticsApi "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
@@ -91,7 +90,6 @@ func Test_NewMetaObject(t *testing.T) {
 	NewMetaObjectRun[*schedulerApi.ArangoSchedulerDeployment](t)
 	NewMetaObjectRun[*schedulerApi.ArangoSchedulerBatchJob](t)
 	NewMetaObjectRun[*schedulerApi.ArangoSchedulerCronJob](t)
-	NewMetaObjectRun[*analyticsApi.GraphAnalyticsEngine](t)
 	NewMetaObjectRun[*networkingApi.ArangoRoute](t)
 	NewMetaObjectRun[*platformApi.ArangoPlatformStorage](t)
 	NewMetaObjectRun[*platformApi.ArangoPlatformChart](t)

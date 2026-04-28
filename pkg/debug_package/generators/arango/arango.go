@@ -24,7 +24,6 @@ import "github.com/arangodb/kube-arangodb/pkg/debug_package/shared"
 
 func Register(f shared.FactoryGen) {
 	f.AddSection("arango").
-		Extend(Analytics).
 		Extend(Backup).
 		Extend(Database).
 		Extend(Networking).

@@ -26,7 +26,6 @@ import (
 	fmt "fmt"
 	http "net/http"
 
-	analyticsv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/analytics/v1alpha1"
 	appsv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
@@ -48,7 +47,6 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	AnalyticsV1alpha1() analyticsv1alpha1.AnalyticsV1alpha1Interface
 	AppsV1() appsv1.AppsV1Interface
 	BackupV1() backupv1.BackupV1Interface
 	DatabaseV1() databasev1.DatabaseV1Interface
@@ -68,7 +66,6 @@ type Interface interface {
 // Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	analyticsV1alpha1   *analyticsv1alpha1.AnalyticsV1alpha1Client
 	appsV1              *appsv1.AppsV1Client
 	backupV1            *backupv1.BackupV1Client
 	databaseV1          *databasev1.DatabaseV1Client
@@ -83,11 +80,6 @@ type Clientset struct {
 	schedulerV1alpha1   *schedulerv1alpha1.SchedulerV1alpha1Client
 	schedulerV1beta1    *schedulerv1beta1.SchedulerV1beta1Client
 	storageV1alpha      *storagev1alpha.StorageV1alphaClient
-}
-
-// AnalyticsV1alpha1 retrieves the AnalyticsV1alpha1Client
-func (c *Clientset) AnalyticsV1alpha1() analyticsv1alpha1.AnalyticsV1alpha1Interface {
-	return c.analyticsV1alpha1
 }
 
 // AppsV1 retrieves the AppsV1Client
@@ -204,10 +196,6 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 
 	var cs Clientset
 	var err error
-	cs.analyticsV1alpha1, err = analyticsv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
 	cs.appsV1, err = appsv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -285,7 +273,6 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.analyticsV1alpha1 = analyticsv1alpha1.New(c)
 	cs.appsV1 = appsv1.New(c)
 	cs.backupV1 = backupv1.New(c)
 	cs.databaseV1 = databasev1.New(c)

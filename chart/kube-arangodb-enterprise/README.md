@@ -189,14 +189,6 @@ Define if ArangoClusterSynchronization Operator should be enabled.
 
 Default: `false`
 
-
-
-### `operator.features.analytics`
-
-Define if GAE Operator should be enabled.
-
-Default: `false`
-
 ### `operator.features.networking`
 
 Define if ArangoNetworking Operator should be enabled.

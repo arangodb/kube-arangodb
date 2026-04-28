@@ -21,21 +21,3 @@
 //go:build !enterprise
 
 package operator
-
-import (
-	"k8s.io/client-go/informers"
-
-	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
-	operatorV2 "github.com/arangodb/kube-arangodb/pkg/operatorV2"
-	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
-)
-
-// onStartAnalytics starts the operator and run till given channel is closed.
-func (o *Operator) onStartAnalytics(stop <-chan struct{}) {
-	panic("Unable to start Analytics Operator in Community")
-}
-
-func (o *Operator) onStartOperatorV2Analytics(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
-	panic("Unable to start Analytics Operator in Community")
-}

@@ -25,12 +25,11 @@ package externalversions
 import (
 	fmt "fmt"
 
-	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/analytics/v1alpha1"
 	v1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
-	networkingv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
+	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
 	v1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	permissionv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
@@ -70,11 +69,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=analytics.arangodb.com, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("graphanalyticsengines"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Analytics().V1alpha1().GraphAnalyticsEngines().Informer()}, nil
-
-		// Group=apps.arangodb.com, Version=v1
+	// Group=apps.arangodb.com, Version=v1
 	case v1.SchemeGroupVersion.WithResource("arangojobs"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1().ArangoJobs().Informer()}, nil
 
@@ -105,7 +100,7 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Database().V2alpha1().ArangoTasks().Informer()}, nil
 
 		// Group=networking.arangodb.com, Version=v1alpha1
-	case networkingv1alpha1.SchemeGroupVersion.WithResource("arangoroutes"):
+	case v1alpha1.SchemeGroupVersion.WithResource("arangoroutes"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Networking().V1alpha1().ArangoRoutes().Informer()}, nil
 
 		// Group=networking.arangodb.com, Version=v1beta1

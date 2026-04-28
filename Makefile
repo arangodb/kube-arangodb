@@ -612,7 +612,6 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
 		--set "operator.features.backup=false" \
 		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
-		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=true" \
 		--set "operator.features.scheduler=true" \
 		--set "operator.features.platform=true"))
@@ -624,7 +623,6 @@ $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
 		--set "operator.features.backup=false" \
 		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
-		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
 		--set "operator.features.platform=false"))
@@ -636,7 +634,6 @@ $(eval $(call manifest-generator, storage, kube-arangodb, \
 		--set "operator.features.backup=false" \
 		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
-		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
 		--set "operator.features.platform=false"))
@@ -648,7 +645,6 @@ $(eval $(call manifest-generator, backup, kube-arangodb, \
 		--set "operator.features.backup=true" \
 		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
-		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
 		--set "operator.features.platform=false"))
@@ -660,7 +656,6 @@ $(eval $(call manifest-generator, apps, kube-arangodb, \
 		--set "operator.features.backup=false" \
 		--set "operator.features.apps=true" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
-		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
 		--set "operator.features.platform=false"))
@@ -672,7 +667,6 @@ $(eval $(call manifest-generator, k2kclustersync, kube-arangodb, \
 		--set "operator.features.backup=false" \
 		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=true" \
-		--set "operator.features.analytics=false" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
 		--set "operator.features.platform=false"))
@@ -684,7 +678,6 @@ $(eval $(call manifest-generator, all, kube-arangodb, \
 		--set "operator.features.backup=true" \
 		--set "operator.features.apps=true" \
 		--set "operator.features.k8sToK8sClusterSync=true" \
-		--set "operator.features.analytics=true" \
 		--set "operator.features.networking=true" \
 		--set "operator.features.scheduler=true" \
 		--set "operator.features.platform=true"))
@@ -1023,7 +1016,6 @@ CRDS:=apps-job \
       database-clustersynchronization database-deployment database-member database-task \
       replication-deploymentreplication \
       scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \
-      analytics-graphanalyticsengine \
       networking-route \
       platform-storage platform-chart platform-service \
       permission-token permission-role permission-policy
