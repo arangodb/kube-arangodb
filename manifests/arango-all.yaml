@@ -1,16 +1,3 @@
-# Source: kube-arangodb/templates/apps-operator/service-account-job.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: arango-all-operator-job
-  namespace: default
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
----
 # Source: kube-arangodb/templates/service-account.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -53,27 +40,6 @@ spec:
         openAPIV3Schema:
           type: object
           x-kubernetes-preserve-unknown-fields: true
----
-# Source: kube-arangodb/templates/apps-operator/cluster-role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: arango-all-operator-rbac-apps
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-rules:
-  - apiGroups:
-      - "apiextensions.k8s.io"
-    resources:
-      - "customresourcedefinitions"
-    verbs:
-      - "get"
-      - "list"
-      - "watch"
 ---
 # Source: kube-arangodb/templates/backup-operator/cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -343,26 +309,6 @@ rules:
     resourceNames:
       - "arango-all-operator.default.operator.arangodb.com"
 ---
-# Source: kube-arangodb/templates/apps-operator/cluster-role-binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: arango-all-operator-rbac-apps
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: arango-all-operator-rbac-apps
-subjects:
-  - kind: ServiceAccount
-    name: arango-all-operator
-    namespace: default
----
 # Source: kube-arangodb/templates/backup-operator/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -562,114 +508,6 @@ subjects:
   - kind: ServiceAccount
     name: arango-all-operator
     namespace: default
----
-# Source: kube-arangodb/templates/apps-operator/role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: arango-all-operator-rbac-apps
-  namespace: default
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - "pods"
-      - "services"
-    verbs:
-      - "get"
-      - "update"
-  - apiGroups:
-      - "discovery.k8s.io"
-    resources:
-      - "endpointslices"
-    verbs:
-      - "get"
-      - "update"
-  - apiGroups:
-      - ""
-    resources:
-      - "events"
-    verbs:
-      - "get"
-      - "list"
-      - "create"
-      - "update"
-      - "patch"
-      - "delete"
-      - "watch"
-  - apiGroups:
-      - ""
-    resources:
-      - "secrets"
-    verbs:
-      - "get"
-  - apiGroups:
-      - "apps"
-    resources:
-      - "deployments"
-      - "replicasets"
-    verbs:
-      - "get"
-  - apiGroups:
-      - "batch"
-    resources:
-      - "jobs"
-    verbs:
-      - "get"
-      - "list"
-      - "create"
-      - "update"
-      - "patch"
-      - "delete"
-      - "watch"
-  - apiGroups:
-      - "database.arangodb.com"
-    resources:
-      - "arangodeployments"
-    verbs:
-      - "get"
-      - "list"
-      - "watch"
-  - apiGroups:
-      - "apps.arangodb.com"
-    resources:
-      - "arangojobs"
-      - "arangojobs/status"
-    verbs:
-      - "get"
-      - "list"
-      - "create"
-      - "update"
-      - "patch"
-      - "delete"
-      - "watch"
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: arango-all-operator-rbac-job
-  namespace: default
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-rules:
-  - apiGroups:
-      - "database.arangodb.com"
-    resources:
-      - "arangodeployments"
-    verbs:
-      - "get"
-      - "list"
-      - "watch"
 ---
 # Source: kube-arangodb/templates/backup-operator/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1365,47 +1203,6 @@ rules:
     verbs:
       - "get"
 ---
-# Source: kube-arangodb/templates/apps-operator/role-binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: arango-all-operator-rbac-apps
-  namespace: default
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: arango-all-operator-rbac-apps
-subjects:
-  - kind: ServiceAccount
-    name: arango-all-operator
-    namespace: default
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: arango-all-operator-rbac-job
-  namespace: default
-  labels:
-    app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.3
-    app.kubernetes.io/managed-by: Tiller
-    app.kubernetes.io/instance: all
-    release: all
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: arango-all-operator-rbac-job
-subjects:
-  - kind: ServiceAccount
-    name: arango-all-operator-job
-    namespace: default
----
 # Source: kube-arangodb/templates/backup-operator/role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1708,7 +1505,6 @@ spec:
             - --operator.storage
             - --operator.backup
             - --mode.single
-            - --operator.apps
             - --operator.networking
             - --operator.scheduler
             - --operator.platform
@@ -1729,8 +1525,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: ARANGOJOB_SA_NAME
-              value: "arango-all-operator-job"
           ports:
             - name: metrics
               containerPort: 8528

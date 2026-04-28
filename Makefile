@@ -174,7 +174,6 @@ MANIFESTPATHDEFAULT := manifests/arango$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
-MANIFESTPATHAPPS := manifests/arango-apps$(MANIFESTSUFFIX).yaml
 MANIFESTPATHK2KCLUSTERSYNC := manifests/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/arango-all$(MANIFESTSUFFIX).yaml
@@ -185,7 +184,6 @@ KUSTOMIZEPATHDEFAULT := manifests/kustomize/deployment/arango$(MANIFESTSUFFIX).y
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHAPPS := manifests/kustomize/apps/arango-apps$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize/k2kclustersync/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHALL := manifests/kustomize/all/arango-all$(MANIFESTSUFFIX).yaml
@@ -197,7 +195,6 @@ MANIFESTPATHDEFAULT := manifests/enterprise$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/enterprise-deployment$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENTREPLICATION := manifests/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/enterprise-backup$(MANIFESTSUFFIX).yaml
-MANIFESTPATHAPPS := manifests/enterprise-apps$(MANIFESTSUFFIX).yaml
 MANIFESTPATHK2KCLUSTERSYNC := manifests/enterprise-k2kclustersync$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/enterprise-storage$(MANIFESTSUFFIX).yaml
 MANIFESTPATHALL := manifests/enterprise-all$(MANIFESTSUFFIX).yaml
@@ -208,7 +205,6 @@ KUSTOMIZEPATHDEFAULT := manifests/kustomize/deployment/enterprise$(MANIFESTSUFFI
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize-enterprise/deployment/enterprise-deployment$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize-enterprise/deployment-replication/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize-enterprise/backup/enterprise-backup$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHAPPS := manifests/kustomize-enterprise/apps/enterprise-apps$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize-enterprise/k2kclustersync/enterprise-k2kclustersync$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHSTORAGE := manifests/kustomize-enterprise/storage/enterprise-storage$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHALL := manifests/kustomize-enterprise/all/enterprise-all$(MANIFESTSUFFIX).yaml
@@ -610,7 +606,6 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
 		--set "operator.features.deploymentReplications=false" \
 		--set "operator.features.storage=false" \
 		--set "operator.features.backup=false" \
-		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
 		--set "operator.features.networking=true" \
 		--set "operator.features.scheduler=true" \
@@ -621,7 +616,6 @@ $(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
 		--set "operator.features.deploymentReplications=true" \
 		--set "operator.features.storage=false" \
 		--set "operator.features.backup=false" \
-		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
@@ -632,7 +626,6 @@ $(eval $(call manifest-generator, storage, kube-arangodb, \
 		--set "operator.features.deploymentReplications=false" \
 		--set "operator.features.storage=true" \
 		--set "operator.features.backup=false" \
-		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
@@ -643,18 +636,6 @@ $(eval $(call manifest-generator, backup, kube-arangodb, \
 		--set "operator.features.deploymentReplications=false" \
 		--set "operator.features.storage=false" \
 		--set "operator.features.backup=true" \
-		--set "operator.features.apps=false" \
-		--set "operator.features.k8sToK8sClusterSync=false" \
-		--set "operator.features.networking=false" \
-		--set "operator.features.scheduler=false" \
-		--set "operator.features.platform=false"))
-
-$(eval $(call manifest-generator, apps, kube-arangodb, \
-		--set "operator.features.deployment=false" \
-		--set "operator.features.deploymentReplications=false" \
-		--set "operator.features.storage=false" \
-		--set "operator.features.backup=false" \
-		--set "operator.features.apps=true" \
 		--set "operator.features.k8sToK8sClusterSync=false" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
@@ -665,7 +646,6 @@ $(eval $(call manifest-generator, k2kclustersync, kube-arangodb, \
 		--set "operator.features.deploymentReplications=false" \
 		--set "operator.features.storage=false" \
 		--set "operator.features.backup=false" \
-		--set "operator.features.apps=false" \
 		--set "operator.features.k8sToK8sClusterSync=true" \
 		--set "operator.features.networking=false" \
 		--set "operator.features.scheduler=false" \
@@ -676,7 +656,6 @@ $(eval $(call manifest-generator, all, kube-arangodb, \
 		--set "operator.features.deploymentReplications=true" \
 		--set "operator.features.storage=true" \
 		--set "operator.features.backup=true" \
-		--set "operator.features.apps=true" \
 		--set "operator.features.k8sToK8sClusterSync=true" \
 		--set "operator.features.networking=true" \
 		--set "operator.features.scheduler=true" \
@@ -736,7 +715,6 @@ manifests-verify-env-reset:
 manifest-verify-plain-ce: manifests-verify-env-reset
 	@echo "Trying to install via plain manifests"
 	kubectl apply -f ./manifests/arango-all.yaml
-	kubectl apply -f ./manifests/arango-apps.yaml
 	kubectl apply -f ./manifests/arango-backup.yaml
 	kubectl apply -f ./manifests/arango-crd.yaml
 	kubectl apply -f ./manifests/arango-deployment.yaml
@@ -746,7 +724,6 @@ manifest-verify-plain-ce: manifests-verify-env-reset
 
 manifest-verify-plain-ee: manifests-verify-env-reset
 	kubectl apply -f ./manifests/enterprise-all.yaml
-	kubectl apply -f ./manifests/enterprise-apps.yaml
 	kubectl apply -f ./manifests/enterprise-backup.yaml
 	kubectl apply -f ./manifests/enterprise-crd.yaml
 	kubectl apply -f ./manifests/enterprise-deployment.yaml
@@ -759,7 +736,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ./all
-  - ./apps
   - ./backup
   - ./crd
   - ./deployment
@@ -1011,8 +987,7 @@ generate-proto:
 .PHONY: fix
 fix: license-range fmt license yamlfmt
 
-CRDS:=apps-job \
-      backups-backup backups-backuppolicy \
+CRDS:=backups-backup backups-backuppolicy \
       database-clustersynchronization database-deployment database-member database-task \
       replication-deploymentreplication \
       scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \

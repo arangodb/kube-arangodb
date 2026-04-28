@@ -71,8 +71,6 @@ func AllDefinitions() []Definition {
 		// Storage
 		StorageLocalStorageDefinitionWithOptions(),
 
-		// Apps
-		AppsJobDefinitionWithOptions(),
 		DatabaseTaskDefinitionWithOptions(),
 
 		// Backups

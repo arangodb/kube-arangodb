@@ -25,8 +25,7 @@ package externalversions
 import (
 	fmt "fmt"
 
-	v1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
-	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
+	v1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	deploymentv1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	v2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
 	v1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1"
@@ -69,14 +68,10 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=apps.arangodb.com, Version=v1
-	case v1.SchemeGroupVersion.WithResource("arangojobs"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1().ArangoJobs().Informer()}, nil
-
-		// Group=backup.arangodb.com, Version=v1
-	case backupv1.SchemeGroupVersion.WithResource("arangobackups"):
+	// Group=backup.arangodb.com, Version=v1
+	case v1.SchemeGroupVersion.WithResource("arangobackups"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Backup().V1().ArangoBackups().Informer()}, nil
-	case backupv1.SchemeGroupVersion.WithResource("arangobackuppolicies"):
+	case v1.SchemeGroupVersion.WithResource("arangobackuppolicies"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Backup().V1().ArangoBackupPolicies().Informer()}, nil
 
 		// Group=database.arangodb.com, Version=v1

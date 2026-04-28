@@ -37,7 +37,6 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/stretchr/testify/require"
 
-	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
@@ -276,15 +275,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"scheduler/v1beta1/pod",
 					"scheduler/v1beta1/pod/resources",
 					"scheduler/v1beta1/policy",
-				},
-			},
-		},
-		"apps": map[string]inputPackage{
-			"v1": {
-				Types: inputPackageTypes{
-					"ArangoJob.V1": {
-						"Spec": appsApi.ArangoJob{}.Spec,
-					},
 				},
 			},
 		},

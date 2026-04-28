@@ -33,7 +33,6 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/yaml"
 
-	appsv1 "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	deploymentv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v2alpha1"
@@ -78,15 +77,6 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 
 	// CR file prefix -> packages to parse -> versions -> obj
 	input := map[string]map[string]map[string]genSpec{
-		"apps-job": {
-			fmt.Sprintf("%s/pkg/apis/apps", root): {
-				"v1": {
-					objects: map[string]interface{}{
-						"spec": appsv1.ArangoJob{}.Spec,
-					},
-				},
-			},
-		},
 		"backups-backup": {
 			fmt.Sprintf("%s/pkg/apis/backup", root): {
 				"v1": {

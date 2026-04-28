@@ -15,7 +15,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           name: check-updated-files
-          base-revision: master
+          base-revision: << pipeline.git.base_revision >>
           config-path: .circleci/continue_config.yml
           tag: "3.9"
           mapping: |

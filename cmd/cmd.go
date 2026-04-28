@@ -117,7 +117,7 @@ var (
 		enableDeploymentReplication bool // Run deployment-replication operator
 		enableStorage               bool // Run local-storage operator
 		enableBackup                bool // Run backup operator
-		enableApps                  bool // Run apps operator
+		enableApps                  bool // Deprecated: Apps operator has been removed
 		enableML                    bool // Deprecated: ML operator has been removed
 		enableAnalytics             bool // Deprecated: Analytics operator has been removed
 		enableNetworking            bool // Run networking operator
@@ -185,7 +185,6 @@ var (
 	deploymentReplicationProbe probe.ReadyProbe
 	storageProbe               probe.ReadyProbe
 	backupProbe                probe.ReadyProbe
-	appsProbe                  probe.ReadyProbe
 	networkingProbe            probe.ReadyProbe
 	platformProbe              probe.ReadyProbe
 	schedulerProbe             probe.ReadyProbe
@@ -224,7 +223,8 @@ func initE() error {
 	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Enable to run the ArangoDeploymentReplication operator")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
-	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Enable to run the ArangoApps operator")
+	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Deprecated: Apps operator has been removed")
+	f.MarkHidden("operator.apps")
 	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Deprecated: ArangoML operator has been removed")
 	f.MarkHidden("operator.ml")
 	f.BoolVar(&operatorOptions.enableAnalytics, "operator.analytics", false, "Deprecated: Analytics operator has been removed")
@@ -396,6 +396,10 @@ func executeMain(cmd *cobra.Command, args []string) {
 	})
 
 	// Warn if deprecated flags are used
+	if operatorOptions.enableApps {
+		logger.Warn("Option --operator.apps is deprecated: Apps operator has been removed. This flag will be ignored.")
+		operatorOptions.enableApps = false
+	}
 	if operatorOptions.enableML {
 		logger.Warn("Option --operator.ml is deprecated: ArangoML operator has been removed. This flag will be ignored.")
 		operatorOptions.enableML = false
@@ -410,16 +414,15 @@ func executeMain(cmd *cobra.Command, args []string) {
 		!operatorOptions.enableDeploymentReplication &&
 		!operatorOptions.enableStorage &&
 		!operatorOptions.enableBackup &&
-		!operatorOptions.enableApps &&
 		!operatorOptions.enableK2KClusterSync &&
 		!operatorOptions.enableNetworking &&
 		!operatorOptions.enableScheduler &&
 		!operatorOptions.enablePlatform {
 		if !operatorOptions.versionOnly {
-			logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
+			logger.Fatal("Turn on --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.k2k-cluster-sync, --operator.networking, --operator.scheduler, --operator.platform or any combination of these")
 		}
 	} else if operatorOptions.versionOnly {
-		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.apps, --operator.k2k-cluster-sync, --operator.networking cannot be enabled together with --operator.version")
+		logger.Fatal("Options --operator.deployment, --operator.deployment-replication, --operator.storage, --operator.backup, --operator.k2k-cluster-sync, --operator.networking cannot be enabled together with --operator.version")
 	}
 
 	// Log version
@@ -514,7 +517,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 				WithReadinessProbe("deployment-replication", cfg.EnableDeploymentReplication, &deploymentReplicationProbe).
 				WithReadinessProbe("storage", cfg.EnableStorage, &storageProbe).
 				WithReadinessProbe("backup", cfg.EnableBackup, &backupProbe).
-				WithReadinessProbe("apps", cfg.EnableApps, &appsProbe).
 				WithReadinessProbe("networking", cfg.EnableNetworking, &networkingProbe).
 				WithReadinessProbe("platform", cfg.EnablePlatform, &platformProbe).
 				WithReadinessProbe("scheduler", cfg.EnableScheduler, &schedulerProbe).
@@ -613,7 +615,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		EnableDeploymentReplication: operatorOptions.enableDeploymentReplication,
 		EnableStorage:               operatorOptions.enableStorage,
 		EnableBackup:                operatorOptions.enableBackup,
-		EnableApps:                  operatorOptions.enableApps,
 		EnableNetworking:            operatorOptions.enableNetworking,
 		EnablePlatform:              operatorOptions.enablePlatform,
 		EnableScheduler:             operatorOptions.enableScheduler,
@@ -634,7 +635,6 @@ func newOperatorConfigAndDeps(id, namespace, name string) (operator.Config, oper
 		DeploymentReplicationProbe: &deploymentReplicationProbe,
 		StorageProbe:               &storageProbe,
 		BackupProbe:                &backupProbe,
-		AppsProbe:                  &appsProbe,
 		NetworkingProbe:            &networkingProbe,
 		PlatformProbe:              &platformProbe,
 		SchedulerProbe:             &schedulerProbe,

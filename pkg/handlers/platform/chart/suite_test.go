@@ -25,8 +25,6 @@ import (
 
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
-	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -50,9 +48,9 @@ func newFakeHandler() *handler {
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
-		Group:   appsApi.SchemeGroupVersion.Group,
-		Version: appsApi.SchemeGroupVersion.Version,
-		Kind:    apps.ArangoJobResourceKind,
+		Group:   Group(),
+		Version: Version(),
+		Kind:    Kind(),
 
 		Operation: o,
 

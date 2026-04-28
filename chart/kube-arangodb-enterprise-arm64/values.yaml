@@ -33,7 +33,6 @@ operator:
     storage: false
     storageCRD: true
     backup: false
-    apps: false
     k8sToK8sClusterSync: false
     networking: true
     scheduler: true

@@ -37,8 +37,6 @@ const (
 	EnvOperatorCoreContainerEnv  util.EnvironmentVariable = EnvOperatorCoreContainer
 	EnvOperatorPodIPEnv          util.EnvironmentVariable = EnvOperatorPodIP
 
-	EnvArangoJobSAName = "ARANGOJOB_SA_NAME"
-
 	PathMountServiceAccount          = "/var/run/secrets/kubernetes.io/serviceaccount"
 	PathMountServiceAccountNamespace = PathMountServiceAccount + "/namespace"
 
@@ -92,7 +90,6 @@ const (
 	NetworkingLabelRole  = "networking/role"
 	PlatformLabelRole    = "platform/role"
 	SchedulerLabelRole   = "scheduler/role"
-	AppsLabelRole        = "apps/role"
 	ClusterSyncLabelRole = "clustersync/role"
 	LabelRole            = "role"
 	LabelRoleLeader      = "leader"
