@@ -17,7 +17,7 @@ workflows:
           name: check-updated-files
           base-revision: << pipeline.git.base_revision >>
           config-path: .circleci/continue_config.yml
-          tag: "3.9"
+          tag: "3.12"
           mapping: |
             manifests/.* manifests-verify true
             chart/.* manifests-verify true
