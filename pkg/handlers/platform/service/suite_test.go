@@ -26,8 +26,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
-	appsApi "github.com/arangodb/kube-arangodb/pkg/apis/apps/v1"
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -63,9 +61,9 @@ func newFakeHandler(t *testing.T) (*handler, string, operator.Handler) {
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
-		Group:   appsApi.SchemeGroupVersion.Group,
-		Version: appsApi.SchemeGroupVersion.Version,
-		Kind:    apps.ArangoJobResourceKind,
+		Group:   Group(),
+		Version: Version(),
+		Kind:    Kind(),
 
 		Operation: o,
 

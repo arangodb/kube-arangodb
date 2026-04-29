@@ -26,7 +26,6 @@ import (
 	fmt "fmt"
 	http "net/http"
 
-	appsv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/apps/v1"
 	backupv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/backup/v1"
 	databasev1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v1"
 	databasev2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/deployment/v2alpha1"
@@ -47,7 +46,6 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	AppsV1() appsv1.AppsV1Interface
 	BackupV1() backupv1.BackupV1Interface
 	DatabaseV1() databasev1.DatabaseV1Interface
 	DatabaseV2alpha1() databasev2alpha1.DatabaseV2alpha1Interface
@@ -66,7 +64,6 @@ type Interface interface {
 // Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	appsV1              *appsv1.AppsV1Client
 	backupV1            *backupv1.BackupV1Client
 	databaseV1          *databasev1.DatabaseV1Client
 	databaseV2alpha1    *databasev2alpha1.DatabaseV2alpha1Client
@@ -80,11 +77,6 @@ type Clientset struct {
 	schedulerV1alpha1   *schedulerv1alpha1.SchedulerV1alpha1Client
 	schedulerV1beta1    *schedulerv1beta1.SchedulerV1beta1Client
 	storageV1alpha      *storagev1alpha.StorageV1alphaClient
-}
-
-// AppsV1 retrieves the AppsV1Client
-func (c *Clientset) AppsV1() appsv1.AppsV1Interface {
-	return c.appsV1
 }
 
 // BackupV1 retrieves the BackupV1Client
@@ -196,10 +188,6 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 
 	var cs Clientset
 	var err error
-	cs.appsV1, err = appsv1.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
 	cs.backupV1, err = backupv1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -273,7 +261,6 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.appsV1 = appsv1.New(c)
 	cs.backupV1 = backupv1.New(c)
 	cs.databaseV1 = databasev1.New(c)
 	cs.databaseV2alpha1 = databasev2alpha1.New(c)

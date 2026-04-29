@@ -324,39 +324,6 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: adc765de8dab4e31cd715a172b694a68
-    arangodb.com/x-preserve-unknown-fields: "true"
-  name: arangojobs.apps.arangodb.com
-spec:
-  group: apps.arangodb.com
-  names:
-    kind: ArangoJob
-    listKind: ArangoJobList
-    plural: arangojobs
-    shortNames:
-      - arangojob
-    singular: arangojob
-  scope: Namespaced
-  versions:
-    - additionalPrinterColumns:
-        - description: Deployment name
-          jsonPath: .spec.arangoDeploymentName
-          name: ArangoDeploymentName
-          type: string
-      name: v1
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: true
-      subresources:
-        status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  labels:
     arangodb.com/version: ba7d9af888270bab37493079eff61855
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangolocalstorages.storage.arangodb.com

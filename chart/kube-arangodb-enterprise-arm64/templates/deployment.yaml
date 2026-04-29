@@ -120,9 +120,6 @@ spec:
 {{- if .Values.operator.skipLeaderLabels  }}
             - --leader.label.skip
 {{- end }}
-{{ if .Values.operator.features.apps }}
-            - --operator.apps
-{{- end }}
 {{ if .Values.operator.features.networking }}
             - --operator.networking
 {{- end }}
@@ -163,10 +160,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-{{- if .Values.operator.features.apps }}
-            - name: ARANGOJOB_SA_NAME
-              value: "{{ template "kube-arangodb.operatorName" . }}-job"
-{{- end }}
           ports:
             - name: metrics
               containerPort: 8528

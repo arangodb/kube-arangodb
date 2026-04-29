@@ -32,7 +32,6 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	backupdef "github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	depldef "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -45,7 +44,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/backup"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/job"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/networking/route"
 	permissionPolicy "github.com/arangodb/kube-arangodb/pkg/handlers/permission/policy"
 	permissionRole "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role"
@@ -85,7 +83,6 @@ const (
 	networkingOperator operatorV2type = "networking"
 	platformOperator   operatorV2type = "platform"
 	schedulerOperator  operatorV2type = "scheduler"
-	appsOperator       operatorV2type = "apps"
 )
 
 type Event struct {
@@ -119,7 +116,6 @@ type Config struct {
 	EnablePlatform              bool
 	EnableScheduler             bool
 	EnableBackup                bool
-	EnableApps                  bool
 	EnableK2KClusterSync        bool
 	AllowChaos                  bool
 	ScalingIntegrationEnabled   bool
@@ -141,7 +137,6 @@ type Dependencies struct {
 	NetworkingProbe            *probe.ReadyProbe
 	PlatformProbe              *probe.ReadyProbe
 	SchedulerProbe             *probe.ReadyProbe
-	AppsProbe                  *probe.ReadyProbe
 	K2KClusterSyncProbe        *probe.ReadyProbe
 }
 
@@ -186,13 +181,6 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-backup-operator", utilConstants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-backup-operator", utilConstants.BackupLabelRole, o.onStartBackup, o.Dependencies.BackupProbe)
-		}
-	}
-	if o.Config.EnableApps {
-		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-apps-operator", utilConstants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
-		} else {
-			go o.runWithoutLeaderElection("arango-apps-operator", utilConstants.AppsLabelRole, o.onStartApps, o.Dependencies.AppsProbe)
 		}
 	}
 	if o.Config.EnableNetworking {
@@ -281,11 +269,6 @@ func (o *Operator) onStartBackup(stop <-chan struct{}) {
 	o.onStartOperatorV2(backupOperator, stop)
 }
 
-// onStartApps starts the operator and run till given channel is closed.
-func (o *Operator) onStartApps(stop <-chan struct{}) {
-	o.onStartOperatorV2(appsOperator, stop)
-}
-
 // onStartNetworking starts the operator and run till given channel is closed.
 func (o *Operator) onStartNetworking(stop <-chan struct{}) {
 	o.onStartOperatorV2(networkingOperator, stop)
@@ -317,9 +300,6 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	kubeInformer := informers.NewSharedInformerFactoryWithOptions(o.Client.Kubernetes(), 15*time.Second, informers.WithNamespace(o.Namespace))
 
 	switch operatorType {
-	case appsOperator:
-		o.onStartOperatorV2Apps(operator, eventRecorder, o.Client, arangoInformer)
-		o.Dependencies.AppsProbe.SetReady()
 	case backupOperator:
 		o.onStartOperatorV2Backup(operator, eventRecorder, o.Client, arangoInformer)
 		o.Dependencies.BackupProbe.SetReady()
@@ -347,18 +327,6 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 	operator.Start(o.Threads, stop)
 
 	<-stop
-}
-
-func (o *Operator) onStartOperatorV2Apps(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory) {
-	checkFn := func() error {
-		_, err := o.Client.Arango().AppsV1().ArangoJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
-		return err
-	}
-	o.waitForCRD(apps.ArangoJobCRDName, checkFn)
-
-	if err := job.RegisterInformer(operator, recorder, client, informer); err != nil {
-		panic(err)
-	}
 }
 
 func (o *Operator) onStartOperatorV2Networking(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {

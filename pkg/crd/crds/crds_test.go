@@ -27,7 +27,6 @@ import (
 	"github.com/stretchr/testify/require"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
-	"github.com/arangodb/kube-arangodb/pkg/apis/apps"
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
@@ -82,7 +81,6 @@ func Test_CRD(t *testing.T) {
 		name   string
 		getter func(opts ...func(options *CRDOptions)) Definition
 	}{
-		{apps.ArangoJobCRDName, AppsJobDefinitionWithOptions},
 		{backup.ArangoBackupCRDName, BackupsBackupDefinitionWithOptions},
 		{backup.ArangoBackupPolicyCRDName, BackupsBackupPolicyDefinitionWithOptions},
 		{deployment.ArangoClusterSynchronizationCRDName, DatabaseClusterSynchronizationDefinitionWithOptions},
@@ -139,7 +137,6 @@ func Test_AllDefinitionsDefined(t *testing.T) {
 func Test_CRDGetters(t *testing.T) {
 	// getters are exposed for the usage by customers
 	getters := []func(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition{
-		AppsJobWithOptions,
 		BackupsBackupWithOptions,
 		BackupsBackupPolicyPolicyWithOptions,
 		DatabaseClusterSynchronizationWithOptions,

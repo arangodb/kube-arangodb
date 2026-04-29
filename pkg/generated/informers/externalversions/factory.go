@@ -28,7 +28,6 @@ import (
 	time "time"
 
 	versioned "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	apps "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/apps"
 	backup "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/backup"
 	deployment "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/deployment"
 	internalinterfaces "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions/internalinterfaces"
@@ -266,7 +265,6 @@ type SharedInformerFactory interface {
 	// client.
 	InformerFor(obj runtime.Object, newFunc internalinterfaces.NewInformerFunc) cache.SharedIndexInformer
 
-	Apps() apps.Interface
 	Backup() backup.Interface
 	Database() deployment.Interface
 	Networking() networking.Interface
@@ -275,10 +273,6 @@ type SharedInformerFactory interface {
 	Replication() replication.Interface
 	Scheduler() scheduler.Interface
 	Storage() storage.Interface
-}
-
-func (f *sharedInformerFactory) Apps() apps.Interface {
-	return apps.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Backup() backup.Interface {
