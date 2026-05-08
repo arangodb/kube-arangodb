@@ -148,6 +148,11 @@ var (
 		},
 	}
 
+	flagTTL = cli.Flag[time.Duration]{
+		Name:        "ttl",
+		Description: "TTL",
+	}
+
 	flagLicenseManager = cli.NewLicenseManager("license")
 
 	flagLicenseManagerDiscoverCredentials = cli.Flag[bool]{
