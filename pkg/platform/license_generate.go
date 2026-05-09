@@ -22,10 +22,10 @@ package platform
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/types/known/durationpb"
 	"os"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	lmanager "github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
