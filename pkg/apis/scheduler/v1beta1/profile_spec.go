@@ -25,6 +25,12 @@ import (
 )
 
 type ProfileSpec struct {
+	// Description of the ArangoProfile
+	Description *string `json:"description,omitempty"`
+
+	// Tags assigned to the ArangoProfile
+	Tags []string `json:"tags,omitempty"`
+
 	// Selectors keeps information about ProfileSelectors
 	Selectors *ProfileSelectors `json:"selectors,omitempty"`
 

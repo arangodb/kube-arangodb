@@ -3,6 +3,9 @@ v1alpha1:
     properties:
       spec:
         properties:
+          description:
+            description: Description of the ArangoProfile
+            type: string
           selectors:
             description: Selectors keeps information about ProfileSelectors
             properties:
@@ -28,6 +31,11 @@ v1alpha1:
                     type: object
                 type: object
             type: object
+          tags:
+            description: Tags assigned to the ArangoProfile
+            items:
+              type: string
+            type: array
           template:
             description: Template keeps the Profile Template
             properties:
@@ -1881,6 +1889,9 @@ v1beta1:
     properties:
       spec:
         properties:
+          description:
+            description: Description of the ArangoProfile
+            type: string
           selectors:
             description: Selectors keeps information about ProfileSelectors
             properties:
@@ -1906,6 +1917,11 @@ v1beta1:
                     type: object
                 type: object
             type: object
+          tags:
+            description: Tags assigned to the ArangoProfile
+            items:
+              type: string
+            type: array
           template:
             description: Template keeps the Profile Template
             properties:

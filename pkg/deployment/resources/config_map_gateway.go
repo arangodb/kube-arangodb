@@ -37,6 +37,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	networkingApi "github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -520,6 +521,20 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 		}
 
 		inventory.Platform.Services = services
+	}
+	if c, err := cachedStatus.ArangoProfile().V1Beta1(); err == nil {
+		var profiles = make(map[string]*pbInventoryV1.InventoryProfile)
+
+		if err := c.Iterate(func(at *schedulerApi.ArangoProfile) error {
+			profiles[at.GetName()] = pbInventoryV1.NewInventoryProfile(at)
+			return nil
+		}, func(at *schedulerApi.ArangoProfile) bool {
+			return true
+		}); err != nil {
+			return nil, gateway.Config{}, errors.Wrapf(err, "Unable to iterate over ArangoProfiles")
+		}
+
+		inventory.Profiles = profiles
 	}
 
 	return &inventory, cfg, nil

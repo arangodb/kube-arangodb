@@ -8,11 +8,27 @@ title: ArangoProfile V1Beta1
 
 ## Spec
 
+### .spec.description
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/scheduler/v1beta1/profile_spec.go#L29)</sup>
+
+Description of the ArangoProfile
+
+***
+
 ### .spec.selectors.label
 
 Type: `meta.LabelSelector` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/scheduler/v1beta1/profile_selectors.go#L32)</sup>
 
 Label keeps information about label selector
+
+***
+
+### .spec.tags
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/scheduler/v1beta1/profile_spec.go#L32)</sup>
+
+Tags assigned to the ArangoProfile
 
 ***
 

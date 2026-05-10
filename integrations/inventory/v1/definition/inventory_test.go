@@ -27,6 +27,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
@@ -51,12 +53,83 @@ func Test_State_Marshal(t *testing.T) {
 
 	t.Log(string(data))
 
+	// After unmarshal, protobuf initializes map fields to empty map instead of nil
+	s.Profiles = map[string]*InventoryProfile{}
+
 	res, err := ugrpc.Unmarshal[*Inventory](data)
 	require.NoError(t, err)
 
 	require.NotNil(t, res)
 
 	require.EqualValues(t, &s, res)
+}
+
+func Test_State_Marshal_WithProfiles(t *testing.T) {
+	s := Inventory{
+		Configuration: &InventoryConfiguration{
+			Hash: "xyz",
+		},
+		Arangodb: &ArangoDBConfiguration{
+			Mode:     ArangoDBMode_Cluster,
+			Edition:  ArangoDBEdition_Enterprise,
+			Version:  "1.2.3",
+			Sharding: ArangoDBSharding_Sharded,
+		},
+		Profiles: map[string]*InventoryProfile{
+			"profile-1": {
+				Description: "Test profile",
+				Tags:        []string{"gpu", "ml"},
+			},
+			"profile-2": {
+				Description: "",
+				Tags:        nil,
+			},
+		},
+	}
+
+	data, err := ugrpc.Marshal(&s, func(in *protojson.MarshalOptions) {
+		in.EmitDefaultValues = true
+		in.UseProtoNames = false
+	})
+	require.NoError(t, err)
+
+	t.Log(string(data))
+
+	res, err := ugrpc.Unmarshal[*Inventory](data)
+	require.NoError(t, err)
+
+	require.NotNil(t, res)
+
+	require.EqualValues(t, &s, res)
+}
+
+func Test_NewInventoryProfile(t *testing.T) {
+	t.Run("with description and tags", func(t *testing.T) {
+		profile := &schedulerApi.ArangoProfile{}
+		profile.Spec.Description = util.NewType("my profile")
+		profile.Spec.Tags = []string{"gpu", "ml"}
+
+		result := NewInventoryProfile(profile)
+		require.Equal(t, "my profile", result.Description)
+		require.EqualValues(t, []string{"gpu", "ml"}, result.Tags)
+	})
+
+	t.Run("with nil description", func(t *testing.T) {
+		profile := &schedulerApi.ArangoProfile{}
+		profile.Spec.Tags = []string{"test"}
+
+		result := NewInventoryProfile(profile)
+		require.Equal(t, "", result.Description)
+		require.EqualValues(t, []string{"test"}, result.Tags)
+	})
+
+	t.Run("empty spec", func(t *testing.T) {
+		profile := &schedulerApi.ArangoProfile{}
+
+		result := NewInventoryProfile(profile)
+		require.Equal(t, "", result.Description)
+		require.Nil(t, result.Tags)
+	})
 }
 
 func Test_getShardingFromArgs(t *testing.T) {
