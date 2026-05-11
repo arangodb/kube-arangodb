@@ -25,6 +25,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	lmanager "github.com/arangodb/kube-arangodb/pkg/license_manager"
 	"github.com/arangodb/kube-arangodb/pkg/platform/inventory"
@@ -39,7 +40,7 @@ func licenseGenerate() (*cobra.Command, error) {
 	cmd.Use = "generate"
 	cmd.Short = "Generate the License"
 
-	if err := cli.RegisterFlags(&cmd, flagLicenseManager, flagDeploymentID, flagInventory); err != nil {
+	if err := cli.RegisterFlags(&cmd, flagLicenseManager, flagDeploymentID, flagInventory, flagTTL); err != nil {
 		return nil, err
 	}
 
@@ -73,6 +74,12 @@ func licenseGenerateRun(cmd *cobra.Command, args []string) error {
 	l := logger
 
 	var lr lmanager.LicenseRequest
+
+	if v, err := flagTTL.Get(cmd); err != nil {
+		return err
+	} else if v > 0 {
+		lr.TTL = util.NewType(ugrpc.NewObject(durationpb.New(v)))
+	}
 
 	if did != "" {
 		l = l.Str("ClusterID", did)
