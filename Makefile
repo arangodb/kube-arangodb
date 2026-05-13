@@ -37,6 +37,9 @@ else
 	GOBUILDDIR := $(GOPATH)
 endif
 
+GOTOOLCHAIN := auto
+export GOTOOLCHAIN
+
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
@@ -428,11 +431,11 @@ protolint-fix:
 .PHONY: vulncheck vulncheck-optional
 vulncheck:
 	@echo ">> Checking for known vulnerabilities (required)"
-	GOTOOLCHAIN=auto $(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
+	$(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
 
 vulncheck-optional:
 	@echo ">> Checking for known vulnerabilities (optional)"
-	-GOTOOLCHAIN=auto $(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
+	-$(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
 
 .PHONY: build
 build: docker manifests
