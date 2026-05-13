@@ -8,19 +8,19 @@ replace (
 	github.com/stretchr/testify => github.com/stretchr/testify v1.9.0
 	github.com/ugorji/go => github.com/ugorji/go v0.0.0-20181209151446-772ced7fd4c2
 
-	k8s.io/api => k8s.io/api v0.33.8
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.33.8
-	k8s.io/apimachinery => k8s.io/apimachinery v0.33.8
-	k8s.io/apiserver => k8s.io/apiserver v0.33.8
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.33.8
-	k8s.io/client-go => k8s.io/client-go v0.33.8
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.33.8
-	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.33.8
+	k8s.io/api => k8s.io/api v0.33.12
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.33.12
+	k8s.io/apimachinery => k8s.io/apimachinery v0.33.12
+	k8s.io/apiserver => k8s.io/apiserver v0.33.12
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.33.12
+	k8s.io/client-go => k8s.io/client-go v0.33.12
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.33.12
+	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.33.12
 	k8s.io/code-generator => ./deps/k8s.io/code-generator
-	k8s.io/component-base => k8s.io/component-base v0.33.8
-	k8s.io/kubectl => k8s.io/kubectl v0.33.8
-	k8s.io/kubernetes => k8s.io/kubernetes v0.33.8
-	k8s.io/metrics => k8s.io/metrics v0.33.8
+	k8s.io/component-base => k8s.io/component-base v0.33.12
+	k8s.io/kubectl => k8s.io/kubectl v0.33.12
+	k8s.io/kubernetes => k8s.io/kubernetes v0.33.12
+	k8s.io/metrics => k8s.io/metrics v0.33.12
 )
 
 require (
@@ -60,10 +60,10 @@ require (
 	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/api v0.33.8
-	k8s.io/apiextensions-apiserver v0.33.8
-	k8s.io/apimachinery v0.33.8
-	k8s.io/client-go v0.33.8
+	k8s.io/api v0.33.12
+	k8s.io/apiextensions-apiserver v0.33.12
+	k8s.io/apimachinery v0.33.12
+	k8s.io/client-go v0.33.12
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff
 	sigs.k8s.io/yaml v1.5.0
 )
@@ -78,7 +78,7 @@ require (
 	github.com/arangodb-managed/integration-apis v0.2.1
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/coreos/go-oidc/v3 v3.14.1
-	github.com/envoyproxy/go-control-plane/envoy v1.36.0
+	github.com/envoyproxy/go-control-plane/envoy v1.37.0
 	github.com/evanphx/json-patch v5.9.11+incompatible
 	github.com/go-logr/logr v1.4.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -190,7 +190,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/moby/spdystream v0.5.0 // indirect
+	github.com/moby/spdystream v0.5.1 // indirect
 	github.com/moby/term v0.5.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -225,11 +225,11 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.39.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.64.0 // indirect
-	go.opentelemetry.io/otel v1.40.0 // indirect
-	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel v1.41.0 // indirect
+	go.opentelemetry.io/otel/metric v1.41.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.40.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.41.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.3 // indirect
 	golang.org/x/arch v0.3.0 // indirect
@@ -240,10 +240,10 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/apiserver v0.33.8 // indirect
-	k8s.io/cli-runtime v0.33.8 // indirect
-	k8s.io/component-base v0.33.8 // indirect
-	k8s.io/kubectl v0.33.8 // indirect
+	k8s.io/apiserver v0.33.12 // indirect
+	k8s.io/cli-runtime v0.33.12 // indirect
+	k8s.io/component-base v0.33.12 // indirect
+	k8s.io/kubectl v0.33.12 // indirect
 	oras.land/oras-go/v2 v2.6.0 // indirect
 	sigs.k8s.io/controller-runtime v0.16.3 // indirect
 	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect

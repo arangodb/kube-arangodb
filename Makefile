@@ -12,9 +12,9 @@ ifeq ($(shell uname),Darwin)
 endif
 
 KUBERNETES_VERSION_MINOR:=33
-KUBERNETES_VERSION_PATCH:=8
+KUBERNETES_VERSION_PATCH:=12
 
-ENVOY_IMAGE=envoyproxy/envoy:v1.36.4
+ENVOY_IMAGE=envoyproxy/envoy:v1.37.2
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
