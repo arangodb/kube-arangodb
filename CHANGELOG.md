@@ -11,6 +11,9 @@
 - (Maintenance) Deprecate --operator.apps CLI flag (hidden, warns if used)
 - (Bugfix) Fix CircleCI path-filtering on master branch
 - (Feature) (Platform) License Generate TTL Flag
+- (Maintenance) Bump Kubernetes libraries to v0.33.12
+- (Maintenance) Bump Envoy to v1.37.2 and go-control-plane/envoy to v1.37.0
+- (Bugfix) Add missing `testing` build tag to `pkg/util/tests/azure.go`
 
 ## [1.4.3](https://github.com/arangodb/kube-arangodb/tree/1.4.3) (2026-04-23)
 - (Bugfix) Fix Community image discovery

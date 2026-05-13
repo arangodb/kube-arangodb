@@ -12,9 +12,9 @@ ifeq ($(shell uname),Darwin)
 endif
 
 KUBERNETES_VERSION_MINOR:=33
-KUBERNETES_VERSION_PATCH:=8
+KUBERNETES_VERSION_PATCH:=12
 
-ENVOY_IMAGE=envoyproxy/envoy:v1.36.4
+ENVOY_IMAGE=envoyproxy/envoy:v1.37.2
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -37,6 +37,9 @@ else
 	GOBUILDDIR := $(GOPATH)
 endif
 
+GOTOOLCHAIN := auto
+export GOTOOLCHAIN
+
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
@@ -57,7 +60,7 @@ include $(ROOT)/$(RELEASE_MODE).mk
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.22.3
+GOBASEVERSION := 1.25.10
 GOVERSION := $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION := alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
