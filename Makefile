@@ -57,7 +57,7 @@ include $(ROOT)/$(RELEASE_MODE).mk
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.22.3
+GOBASEVERSION := 1.25.10
 GOVERSION := $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION := alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
