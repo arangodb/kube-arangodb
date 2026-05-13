@@ -34,6 +34,8 @@ message Inventory {
   optional InventoryNetworking networking = 3;
   // ArangoDB Platform Spec
   optional InventoryPlatform platform = 4;
+  // ArangoDB Profiles
+  map<string, InventoryProfile> profiles = 5;
 }
 
 // Platform Inventory Hash
@@ -119,4 +121,12 @@ message ArangoDBConfiguration {
   string version = 3;
   // ArangoDB Sharding Mode
   ArangoDBSharding sharding = 4;
+}
+
+// ArangoDB Profile details
+message InventoryProfile {
+  // Profile Description
+  string description = 1;
+  // Profile Tags
+  repeated string tags = 2;
 }

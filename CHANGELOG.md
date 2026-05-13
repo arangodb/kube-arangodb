@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Scheduler) Add Description and Tags to ArangoProfile and expose in Inventory
 - (Feature) (Platform) Storage V2 Central Service
 - (Feature) Remove ArangoML operator and all related CRDs (ArangoMLExtension, ArangoMLStorage, ArangoMLBatchJob, ArangoMLCronJob)
 - (Maintenance) Deprecate --operator.ml CLI flag (hidden, warns if used)

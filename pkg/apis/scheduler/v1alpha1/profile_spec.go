@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,12 @@ import (
 )
 
 type ProfileSpec struct {
+	// Description of the ArangoProfile
+	Description *string `json:"description,omitempty"`
+
+	// Tags assigned to the ArangoProfile
+	Tags []string `json:"tags,omitempty"`
+
 	// Selectors keeps information about ProfileSelectors
 	Selectors *ProfileSelectors `json:"selectors,omitempty"`
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -69,6 +70,18 @@ func NewArangoDBConfiguration(spec api.DeploymentSpec, status api.DeploymentStat
 	}
 
 	return &cfg
+}
+
+func NewInventoryProfile(profile *schedulerApi.ArangoProfile) *InventoryProfile {
+	var p InventoryProfile
+
+	if d := profile.Spec.Description; d != nil {
+		p.Description = *d
+	}
+
+	p.Tags = profile.Spec.Tags
+
+	return &p
 }
 
 func getShardingFromArgs(args ...string) ArangoDBSharding {
