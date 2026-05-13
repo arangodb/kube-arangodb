@@ -428,11 +428,11 @@ protolint-fix:
 .PHONY: vulncheck vulncheck-optional
 vulncheck:
 	@echo ">> Checking for known vulnerabilities (required)"
-	$(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
+	GOTOOLCHAIN=auto $(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
 
 vulncheck-optional:
 	@echo ">> Checking for known vulnerabilities (optional)"
-	-$(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
+	-GOTOOLCHAIN=auto $(GOPATH)/bin/govulncheck --tags "testing,$(GOBUILDTAGS)" ./...
 
 .PHONY: build
 build: docker manifests
