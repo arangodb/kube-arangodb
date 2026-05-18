@@ -575,6 +575,10 @@ rules:
       - "arangopermissionroles/status"
       - "arangopermissionpolicies"
       - "arangopermissionpolicies/status"
+      - "arangopermissionpolicyrolebindings"
+      - "arangopermissionpolicyrolebindings/status"
+      - "arangopermissionroleuserbindings"
+      - "arangopermissionroleuserbindings/status"
     verbs:
       - "get"
       - "list"

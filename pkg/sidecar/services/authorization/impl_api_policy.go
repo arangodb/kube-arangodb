@@ -79,6 +79,8 @@ func (a *implementation) APIDeletePolicy(ctx context.Context, request *sidecarSv
 		return nil, err
 	}
 
+	identity := authenticator.GetIdentity(ctx)
+
 	offset, err := a.policies.Delete(ctx, request.GetName())
 
 	if err != nil {
@@ -88,6 +90,8 @@ func (a *implementation) APIDeletePolicy(ctx context.Context, request *sidecarSv
 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	logger.Str("policy", request.GetName()).Str("user", identity.GetUser()).Info("Policy deleted")
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse{
 		Name:  request.GetName(),
@@ -112,6 +116,8 @@ func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSv
 		return nil, status.Error(codes.InvalidArgument, "Item cannot be empty")
 	}
 
+	identity := authenticator.GetIdentity(ctx)
+
 	res, offset, err := a.policies.Create(ctx, request.GetName(), request.GetItem())
 
 	if err != nil {
@@ -121,6 +127,8 @@ func (a *implementation) APICreatePolicy(ctx context.Context, request *sidecarSv
 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	logger.Str("policy", request.GetName()).Str("user", identity.GetUser()).Info("Policy created")
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse{
 		Name:  request.GetName(),
@@ -146,6 +154,8 @@ func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSv
 		return nil, status.Error(codes.InvalidArgument, "Item cannot be empty")
 	}
 
+	identity := authenticator.GetIdentity(ctx)
+
 	res, offset, err := a.policies.Update(ctx, request.GetName(), request.GetItem())
 
 	if err != nil {
@@ -159,6 +169,8 @@ func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSv
 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	logger.Str("policy", request.GetName()).Str("user", identity.GetUser()).Info("Policy updated")
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyResponse{
 		Name:  request.GetName(),

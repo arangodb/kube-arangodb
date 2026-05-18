@@ -32,8 +32,15 @@ import (
 )
 
 type Identity struct {
-	User  *string
-	Roles []string
+	User   *string
+	Groups []string
+}
+
+func (i *Identity) GetUser() string {
+	if i == nil || i.User == nil {
+		return ""
+	}
+	return *i.User
 }
 
 func (i *Identity) EvaluatePermission(ctx context.Context, c pbImplAuthorizationV1Shared.Evaluator, action, resource string) error {
@@ -43,7 +50,7 @@ func (i *Identity) EvaluatePermission(ctx context.Context, c pbImplAuthorization
 
 	resp, err := c.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
 		User:     i.User,
-		Roles:    i.Roles,
+		Groups:   i.Groups,
 		Action:   action,
 		Resource: resource,
 	})

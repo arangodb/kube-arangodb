@@ -22,16 +22,24 @@ package policy
 
 import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Statements []Statement
+
+func (a Statements) Hash() string {
+	return util.SHA256FromExtract(func(v Statement) string { return v.Hash() }, a...)
+}
 
 func (a Statements) Validate() error {
 	return shared.ValidateInterfaceList(a)
 }
 
 type Statement struct {
+	// Description is an optional human-readable description of what this statement does
+	Description string `json:"description,omitempty"`
+
 	// Effect defines the statement effect.
 	// +doc/enum: Allow|Action is Allowed
 	// +doc/enum: Deny|Action is Denied
@@ -46,6 +54,10 @@ type Statement struct {
 	// Resources defines the list of resources
 	// +doc/required
 	Resources Resources `json:"resources"`
+}
+
+func (a Statement) Hash() string {
+	return util.SHA256FromStringArray(a.Description, a.Effect.Hash(), a.Actions.Hash(), a.Resources.Hash())
 }
 
 func (a Statement) Validate() error {

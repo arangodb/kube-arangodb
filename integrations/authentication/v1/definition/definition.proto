@@ -104,8 +104,8 @@ message ValidateResponseDetails {
   // user returns the User used in the Token. If a user is not specified, `root` is returned
   optional string user = 2;
 
-  // roles specify list of the roles assigned to the token
-  repeated string roles = 3;
+  // groups specify list of the groups assigned to the token
+  repeated string groups = 3;
 }
 
 // CreateTokenRequest defines request for AuthenticationV1 CreateToken Request
@@ -116,8 +116,8 @@ message CreateTokenRequest {
   // user specify the User for which token should be created. By default, the default user is used (root in most cases)
   optional string user = 2;
 
-  // roles specify list of the roles assigned to the token
-  repeated string roles = 3;
+  // groups specify list of the groups assigned to the token
+  repeated string groups = 3;
 }
 
 // CreateTokenResponse defines response for AuthenticationV1 CreateToken Request
@@ -131,8 +131,8 @@ message CreateTokenResponse {
   // token returns the Token as a string
   string token = 3;
 
-  // roles specify list of the roles assigned to the token
-  repeated string roles = 4;
+  // groups specify list of the groups assigned to the token
+  repeated string groups = 4;
 }
 
 // LoginRequest defines response for AuthenticationV1 Login Request

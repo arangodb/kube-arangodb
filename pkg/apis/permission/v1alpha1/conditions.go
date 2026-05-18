@@ -30,4 +30,5 @@ const (
 	DeploymentReachableCondition sharedApi.ConditionType = "DeploymentReachable"
 	SidecarReachableCondition    sharedApi.ConditionType = "SidecarReachable"
 	SpecValidCondition           sharedApi.ConditionType = "SpecValid"
+	SpecAcceptedCondition        sharedApi.ConditionType = "SpecAccepted"
 )

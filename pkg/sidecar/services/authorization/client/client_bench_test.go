@@ -69,6 +69,16 @@ func generateTestingRoles(size int) map[string]*sidecarSvcAuthzTypes.Role {
 			fmt.Sprintf("policy-%09d", id),
 		}
 
+		role.Scope = &sidecarSvcAuthzTypes.Policy{
+			Statements: []*sidecarSvcAuthzTypes.PolicyStatement{
+				{
+					Effect:    sidecarSvcAuthzTypes.Effect_Allow,
+					Actions:   []string{"*"},
+					Resources: []string{"*"},
+				},
+			},
+		}
+
 		res[name] = &role
 	}
 
@@ -93,7 +103,7 @@ func BenchmarkClientEvaluationPerformance(b *testing.B) {
 	for b.Loop() {
 		res, err := p.Evaluate(b.Context(), &pbAuthorizationV1.AuthorizationV1PermissionRequest{
 			User: util.NewType("test"),
-			Roles: []string{
+			Groups: []string{
 				fmt.Sprintf("role-%09d", rand.Intn(100)),
 			},
 			Action:   "test:GetData",

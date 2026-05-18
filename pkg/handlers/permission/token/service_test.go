@@ -31,6 +31,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
+	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -42,7 +43,7 @@ import (
 )
 
 func extractRoles(t *testing.T, token utilToken.Token) []string {
-	absRoles, ok := token.Claims()[utilToken.ClaimRoles].([]any)
+	absRoles, ok := token.Claims()[utilToken.ClaimGroups].([]any)
 	require.True(t, ok)
 
 	ret := make([]string, len(absRoles))
@@ -334,8 +335,8 @@ func Test_ServiceReconcile(t *testing.T) {
 			obj.Spec.Deployment = &sharedApi.Object{
 				Name: "example",
 			}
-			obj.Spec.Roles = []string{
-				"role",
+			obj.Spec.Roles = []permissionApi.ArangoPermissionScopedBindingRef{
+				{Role: &permissionApi.ArangoPermissionBindingRef{Name: "role"}, Scope: &permissionApi.ArangoPermissionScope{Policy: &permissionApiPolicy.Policy{}}},
 			}
 		})
 		tests.Update(t, handler.kubeClient, handler.client, &jwt, func(t *testing.T, obj *core.Secret) {
@@ -395,7 +396,7 @@ func Test_ServiceReconcile(t *testing.T) {
 				Name: "example",
 			}
 
-			obj.Spec.Roles = []string{}
+			obj.Spec.Roles = []permissionApi.ArangoPermissionScopedBindingRef{}
 		})
 		tests.Update(t, handler.kubeClient, handler.client, &jwt, func(t *testing.T, obj *core.Secret) {
 			obj.Data = map[string][]byte{

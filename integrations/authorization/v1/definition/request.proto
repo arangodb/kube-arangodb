@@ -32,8 +32,8 @@ message AuthorizationV1PermissionRequest {
   // Defines the User
   optional string user = 1;
 
-  // Defines the list of roles
-  repeated string roles = 2;
+  // Defines the list of groups
+  repeated string groups = 2;
 
   // Defines the action
   string action = 3;
@@ -59,8 +59,8 @@ message AuthorizationV1PermissionManyRequest {
   // Defines the User
   optional string user = 1;
 
-  // Defines the list of roles
-  repeated string roles = 2;
+  // Defines the list of groups
+  repeated string groups = 2;
   
   // Defines list of check actions
   repeated AuthorizationV1PermissionManyRequestItem items = 3;

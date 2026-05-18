@@ -48,6 +48,7 @@ func Register() (*cobra.Command, error) {
 		flagKeyfile,
 		flagAuth,
 		flagAuthMode,
+		flagAuthDeletedTTL,
 		flagHealthAddress,
 		flagArangodb,
 		flagCentralServicesEnabled,

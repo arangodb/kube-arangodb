@@ -54,7 +54,7 @@ func (p permissive) Evaluate(ctx context.Context, req *pbAuthorizationV1.Authori
 		Str("user", req.GetUser()).
 		Str("action", req.GetAction()).
 		Str("resource", req.GetResource()).
-		Strs("roles", req.GetRoles()...).
+		Strs("groups", req.GetGroups()...).
 		JSON("context", req.GetContext())
 
 	resp, err := p.parent.Evaluate(ctx, req)

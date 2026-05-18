@@ -30,6 +30,14 @@ type ArangoPermissionPolicyListerExpansion interface{}
 // ArangoPermissionPolicyNamespaceLister.
 type ArangoPermissionPolicyNamespaceListerExpansion interface{}
 
+// ArangoPermissionPolicyRoleBindingListerExpansion allows custom methods to be added to
+// ArangoPermissionPolicyRoleBindingLister.
+type ArangoPermissionPolicyRoleBindingListerExpansion interface{}
+
+// ArangoPermissionPolicyRoleBindingNamespaceListerExpansion allows custom methods to be added to
+// ArangoPermissionPolicyRoleBindingNamespaceLister.
+type ArangoPermissionPolicyRoleBindingNamespaceListerExpansion interface{}
+
 // ArangoPermissionRoleListerExpansion allows custom methods to be added to
 // ArangoPermissionRoleLister.
 type ArangoPermissionRoleListerExpansion interface{}
@@ -37,6 +45,14 @@ type ArangoPermissionRoleListerExpansion interface{}
 // ArangoPermissionRoleNamespaceListerExpansion allows custom methods to be added to
 // ArangoPermissionRoleNamespaceLister.
 type ArangoPermissionRoleNamespaceListerExpansion interface{}
+
+// ArangoPermissionRoleUserBindingListerExpansion allows custom methods to be added to
+// ArangoPermissionRoleUserBindingLister.
+type ArangoPermissionRoleUserBindingListerExpansion interface{}
+
+// ArangoPermissionRoleUserBindingNamespaceListerExpansion allows custom methods to be added to
+// ArangoPermissionRoleUserBindingNamespaceLister.
+type ArangoPermissionRoleUserBindingNamespaceListerExpansion interface{}
 
 // ArangoPermissionTokenListerExpansion allows custom methods to be added to
 // ArangoPermissionTokenLister.

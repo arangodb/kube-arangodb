@@ -137,7 +137,7 @@ func (i *implementation) Validate(ctx context.Context, request *pbAuthentication
 		Details: &pbAuthenticationV1.ValidateResponseDetails{
 			Lifetime: durationpb.New(exp),
 			User:     user,
-			Roles:    roles,
+			Groups:   roles,
 		},
 	}, nil
 }
@@ -187,7 +187,7 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		utilToken.WithCurrentIAT(),
 		utilToken.WithDuration(duration),
 		utilToken.WithUsername(user),
-		utilToken.WithRoles(request.GetRoles()...)).Sign(cache)
+		utilToken.WithGroups(request.GetGroups()...)).Sign(cache)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		Lifetime: durationpb.New(duration),
 		User:     newUser,
 		Token:    signedToken,
-		Roles:    roles,
+		Groups:   roles,
 	}, nil
 }
 
@@ -365,7 +365,7 @@ func (i *implementation) extractTokenDetails(cache utilToken.Secret, t string) (
 
 	var roles []string
 
-	if v, ok := claims[utilToken.ClaimRoles]; ok {
+	if v, ok := claims[utilToken.ClaimGroups]; ok {
 		switch o := v.(type) {
 		case []string:
 			roles = o

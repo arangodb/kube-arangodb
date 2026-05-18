@@ -32,7 +32,6 @@ import (
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/permission/shared"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -51,8 +50,6 @@ type handler struct {
 	eventRecorder event.RecorderInstance
 
 	operator operator.Operator
-
-	provider shared.ClientProvider
 }
 
 func (h *handler) Name() string {
@@ -90,7 +87,6 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 
 	if changed, err := patcher.EnsureFinalizersPresent(ctx, h.client.PermissionV1alpha1().ArangoPermissionRoles(item.Namespace), object,
 		permissionApi.FinalizerArangoPermissionRole,
-		permissionApi.FinalizerArangoPermissionPolicy,
 	); err != nil {
 		return err
 	} else if changed {
@@ -140,12 +136,6 @@ func (h *handler) finalizer(ctx context.Context, extension *permissionApi.Arango
 			}
 
 			return permissionApi.FinalizerArangoPermissionRole, nil
-		case permissionApi.FinalizerArangoPermissionPolicy:
-			if err := h.finalizerPolicyRemoval(ctx, extension); err != nil {
-				return "", err
-			}
-
-			return permissionApi.FinalizerArangoPermissionPolicy, nil
 		}
 	}
 
@@ -170,6 +160,10 @@ func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, e
 
 	if status.Conditions.Update(permissionApi.SpecValidCondition, true, "Spec is valid", "Spec is valid") {
 		logger.WrapObj(item).Debug("Spec is valid")
+		return true, nil
+	}
+
+	if status.Conditions.UpdateWithHash(permissionApi.SpecAcceptedCondition, true, "Spec accepted", "Spec accepted", extension.Spec.Hash()) {
 		return true, nil
 	}
 
@@ -258,6 +252,6 @@ func (h *handler) HandleDeploymentSidecarConnection(ctx context.Context, item op
 		return true, operator.Reconcile("Conditions updated")
 	}
 
-	return operator.HandleP5(ctx, item, extension, status, depl, sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn), h.HandleArangoDBPolicy, h.HandleArangoDBRole)
+	return operator.HandleP5(ctx, item, extension, status, depl, sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn), h.HandleArangoDBRole)
 
 }

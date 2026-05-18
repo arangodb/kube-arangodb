@@ -20,9 +20,16 @@
 
 package policy
 
-import "github.com/arangodb/kube-arangodb/pkg/util/errors"
+import (
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
 
 type Effect string
+
+func (a Effect) Hash() string {
+	return util.SHA256FromString(string(a))
+}
 
 func (a Effect) Validate() error {
 	switch a {

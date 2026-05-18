@@ -30,6 +30,7 @@ import "pkg/sidecar/services/authorization/types/context.proto";
 import "pkg/sidecar/services/authorization/types/effect.proto";
 import "pkg/sidecar/services/authorization/types/policy.proto";
 import "pkg/sidecar/services/authorization/types/role.proto";
+import "pkg/sidecar/services/authorization/types/user_role_binding.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition";
 
@@ -116,6 +117,52 @@ service AuthorizationAPI {
       body: "*"
     };
   }
+
+  // List all role bindings for a user
+  rpc APIListUserRoleBindings(AuthorizationAPIUserRequest) returns (AuthorizationAPIUserRoleBindingListResponse){
+    option (google.api.http) = {
+      get: "/_management/permissions/user/{user}/role"
+    };
+  }
+
+  // Assign a role with scope to a user
+  rpc APIAssignUserRole(AuthorizationAPIUserRoleBindingRequest) returns (AuthorizationAPIUserRoleBindingResponse){
+    option (google.api.http) = {
+      post: "/_management/permissions/user/{user}/role/{role}"
+      body: "*"
+    };
+  }
+
+  // Remove a role from a user
+  rpc APIRemoveUserRole(AuthorizationAPIUserRoleRequest) returns (AuthorizationAPIUserRoleBindingResponse){
+    option (google.api.http) = {
+      delete: "/_management/permissions/user/{user}/role/{role}"
+    };
+  }
+
+  // Replace the scope for a role binding of a user
+  rpc APIReplaceUserRoleScope(AuthorizationAPIUserRoleBindingRequest) returns (AuthorizationAPIUserRoleBindingResponse){
+    option (google.api.http) = {
+      put: "/_management/permissions/user/{user}/role/{role}"
+      body: "*"
+    };
+  }
+
+  // Refresh all poolers and return once completed
+  rpc APIRefresh(AuthorizationAPIRefreshRequest) returns (AuthorizationAPIRefreshResponse){
+    option (google.api.http) = {
+      post: "/_management/permissions/refresh"
+      body: "*"
+    };
+  }
+}
+
+// AuthorizationAPI Refresh Request
+message AuthorizationAPIRefreshRequest {
+}
+
+// AuthorizationAPI Refresh Response
+message AuthorizationAPIRefreshResponse {
 }
 
 // AuthorizationAPI Name based request
@@ -173,6 +220,51 @@ message AuthorizationAPIRoleResponse {
 
   // Role spec
   types.Role item = 3;
+}
+
+// AuthorizationAPI User Request
+message AuthorizationAPIUserRequest {
+  // Name of the user
+  string user = 1;
+}
+
+// AuthorizationAPI User Role Request
+message AuthorizationAPIUserRoleRequest {
+  // Name of the user
+  string user = 1;
+
+  // Name of the role
+  string role = 2;
+}
+
+// AuthorizationAPI User Role Binding Request
+message AuthorizationAPIUserRoleBindingRequest {
+  // Name of the user
+  string user = 1;
+
+  // Name of the role
+  string role = 2;
+
+  // Scope policy for this binding
+  types.Policy scope = 3;
+}
+
+// AuthorizationAPI User Role Binding Response
+message AuthorizationAPIUserRoleBindingResponse {
+  // Name of the user
+  string user = 1;
+
+  // Name of the role
+  string role = 2;
+
+  // Scope policy for this binding
+  types.Policy scope = 3;
+}
+
+// AuthorizationAPI User Role Binding List Response
+message AuthorizationAPIUserRoleBindingListResponse {
+  // List of role bindings for the user
+  repeated types.UserRoleBinding bindings = 1;
 }
 
 // AuthorizationAPI Validate Self Request

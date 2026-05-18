@@ -23,6 +23,7 @@ package role
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -31,6 +32,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -44,11 +46,11 @@ import (
 )
 
 func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionRole, st *permissionApi.ArangoPermissionRoleStatus, depl *api.ArangoDeployment, conn sidecarSvcAuthzDefinition.AuthorizationAPIClient) (bool, error) {
-	if extension.Spec.Policy != nil && !depl.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+	if !depl.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
 		return false, errors.Errorf("Sidecar is not enabled")
 	}
 
-	if extension.Spec.Policy == nil || !depl.GetAcceptedSpec().IsAuthenticated() {
+	if !depl.GetAcceptedSpec().IsAuthenticated() {
 		// Role should be gone
 		if st.Role != nil {
 			_, err := conn.APIDeleteRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
@@ -56,7 +58,7 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 			})
 			if err != nil {
 				if status.Code(err) != codes.NotFound {
-					logger.Err(err).Warn("Failed to delete policy")
+					logger.Err(err).Warn("Failed to delete role")
 					return false, err
 				}
 			}
@@ -73,30 +75,35 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 		return false, nil
 	}
 
-	if st.Policy == nil {
-		if st.Conditions.UpdateWithHash(permissionApi.ReadyRoleCondition, false, "Role Changed", "Role Changed", "") {
-			return true, operator.Reconcile("Policy gone")
-		}
-
-		return false, nil
-	}
-
-	role, err := h.renderRole(st.Policy.GetName())
+	// List bindings targeting this role by label and collect policy sidecar names
+	policies, policyRefs, err := h.collectPoliciesFromBindings(ctx, extension)
 	if err != nil {
-		logger.Err(err).Warn("Failed to render policy")
+		logger.Err(err).Warn("Failed to collect policies from bindings")
 		return false, err
 	}
 
-	name := fmt.Sprintf("managed:operator:%s", extension.GetUID())
+	// Update Status.Policies if changed
+	if !policyRefsEqual(st.Policies, policyRefs) {
+		st.Policies = policyRefs
+		return true, operator.Reconcile("Policies updated")
+	}
+
+	role, err := renderRole(policies)
+	if err != nil {
+		logger.Err(err).Warn("Failed to render role")
+		return false, err
+	}
+
+	name := extension.GetName()
 
 	if st.Role == nil {
-		// Create the policy
+		// Create the role
 		if _, err := conn.APICreateRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIRoleRequest{
 			Name: name,
 			Item: role,
 		}); err != nil {
 			if status.Code(err) != codes.AlreadyExists {
-				logger.Err(err).Warn("Failed to create policy")
+				logger.Err(err).Warn("Failed to create role")
 				return false, err
 			}
 		}
@@ -116,7 +123,7 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 	})
 	if err != nil {
 		if status.Code(err) != codes.NotFound {
-			logger.Err(err).Warn("Failed to get policy")
+			logger.Err(err).Warn("Failed to get role")
 			return false, err
 		}
 
@@ -131,13 +138,13 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 			return true, operator.Reconcile("Role changed")
 		}
 
-		// Create the policy
+		// Update the role
 		if _, err := conn.APIUpdateRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIRoleRequest{
 			Name: name,
 			Item: role,
 		}); err != nil {
 			if status.Code(err) != codes.AlreadyExists {
-				logger.Err(err).Warn("Failed to create policy")
+				logger.Err(err).Warn("Failed to update role")
 				return false, err
 			}
 		}
@@ -159,10 +166,96 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 	return false, nil
 }
 
-func (h *handler) renderRole(policy string) (*sidecarSvcAuthzTypes.Role, error) {
+// collectPoliciesFromBindings lists bindings targeting this role by label and resolves
+// their policy CRD references to sidecar policy names.
+func (h *handler) collectPoliciesFromBindings(ctx context.Context, extension *permissionApi.ArangoPermissionRole) ([]string, []permissionApi.ArangoPermissionBindingRef, error) {
+	bindings, err := h.client.PermissionV1alpha1().ArangoPermissionPolicyRoleBindings(extension.GetNamespace()).List(ctx, meta.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", permission.LabelPolicyRoleBindingRole, extension.GetName()),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var policies []string
+	var policyRefs []permissionApi.ArangoPermissionBindingRef
+	seenNames := map[string]struct{}{}
+	seenRefs := map[string]struct{}{}
+
+	for _, binding := range bindings.Items {
+		if !binding.Status.Conditions.IsTrue(permissionApi.ReadyPolicyCondition) || !binding.Status.Conditions.IsTrue(permissionApi.ReadyRoleCondition) {
+			continue
+		}
+
+		if binding.Spec.Policy == nil {
+			continue
+		}
+
+		ref := binding.Spec.Policy
+		refKey := ref.Hash()
+		if _, ok := seenRefs[refKey]; ok {
+			continue
+		}
+		seenRefs[refKey] = struct{}{}
+		policyRefs = append(policyRefs, *ref)
+
+		// Resolve CRD reference to sidecar name
+		crdName := ref.GetReference()
+		if crdName == "" {
+			continue
+		}
+
+		policyObj, err := h.client.PermissionV1alpha1().ArangoPermissionPolicies(extension.GetNamespace()).Get(ctx, crdName, meta.GetOptions{})
+		if err != nil {
+			continue
+		}
+
+		if !policyObj.Ready() || policyObj.Status.Policy == nil {
+			continue
+		}
+
+		sidecarName := policyObj.Status.Policy.GetName()
+		if _, ok := seenNames[sidecarName]; ok {
+			continue
+		}
+		seenNames[sidecarName] = struct{}{}
+		policies = append(policies, sidecarName)
+	}
+
+	sort.Strings(policies)
+	sort.Slice(policyRefs, func(i, j int) bool {
+		return policyRefs[i].Hash() < policyRefs[j].Hash()
+	})
+
+	return policies, policyRefs, nil
+}
+
+// policyRefsEqual compares two policy ref lists.
+func policyRefsEqual(a, b []permissionApi.ArangoPermissionBindingRef) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].Hash() != b[i].Hash() {
+			return false
+		}
+	}
+	return true
+}
+
+// renderRole builds a sidecar Role with an open scope (allow all) and the given policy names.
+func renderRole(policies []string) (*sidecarSvcAuthzTypes.Role, error) {
 	var r sidecarSvcAuthzTypes.Role
 
-	r.Policies = []string{policy}
+	r.Policies = policies
+	r.Scope = &sidecarSvcAuthzTypes.Policy{
+		Statements: []*sidecarSvcAuthzTypes.PolicyStatement{
+			{
+				Effect:    sidecarSvcAuthzTypes.Effect_Allow,
+				Actions:   []string{"*"},
+				Resources: []string{"*"},
+			},
+		},
+	}
 
 	if err := r.Validate(); err != nil {
 		return nil, err

@@ -18,9 +18,25 @@ Name of the object
 
 ***
 
+### .spec.description
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy_spec.go#L33)</sup>
+
+Description is an optional human-readable description of this policy resource
+
+***
+
+### .spec.policy.description
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy/policy.go#L31)</sup>
+
+Description is an optional human-readable description of this policy
+
+***
+
 ### .spec.policy.statements\[int\].actions
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy/statement.go#L44)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy/statement.go#L52)</sup>
 
 This field is **required**
 
@@ -29,9 +45,17 @@ Action needs to be defined in format `<namespace>:<name>`
 
 ***
 
+### .spec.policy.statements\[int\].description
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy/statement.go#L41)</sup>
+
+Description is an optional human-readable description of what this statement does
+
+***
+
 ### .spec.policy.statements\[int\].effect
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy/statement.go#L39)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy/statement.go#L47)</sup>
 
 This field is **required**
 
@@ -45,7 +69,7 @@ Possible Values:
 
 ### .spec.policy.statements\[int\].resources
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy/statement.go#L48)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/policy/statement.go#L56)</sup>
 
 This field is **required**
 

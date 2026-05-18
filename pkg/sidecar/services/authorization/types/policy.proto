@@ -30,6 +30,9 @@ option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/auth
 message Policy {
   // List of the statements
   repeated PolicyStatement statements = 1;
+
+  // Optional human-readable description
+  string description = 2;
 }
 
 // PolicyStatement Object Definition
@@ -42,4 +45,7 @@ message PolicyStatement {
 
   // List of the actions
   repeated string actions = 3;
+
+  // Optional human-readable description
+  string description = 4;
 }

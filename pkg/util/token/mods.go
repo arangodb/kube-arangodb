@@ -92,12 +92,12 @@ func WithKey(key string, value interface{}) util.ModR[Claims] {
 	}
 }
 
-func WithRoles(roles ...string) util.ModR[Claims] {
+func WithGroups(roles ...string) util.ModR[Claims] {
 	return func(in Claims) Claims {
 		if len(roles) == 0 {
 			roles = []string{}
 		}
-		in[ClaimRoles] = roles
+		in[ClaimGroups] = roles
 		return in
 	}
 }

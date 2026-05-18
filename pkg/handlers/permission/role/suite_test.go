@@ -21,28 +21,19 @@
 package role
 
 import (
-	"context"
 	_ "embed"
 	"testing"
 
-	kubernetes "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
-
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
-	"github.com/arangodb/kube-arangodb/pkg/handlers/permission/shared"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 )
 
-func newFakeHandler(t *testing.T) *handler {
-	c := tests.TestArangoDBConfig(t).Client(t)
-
+func newFakeHandler(_ *testing.T) *handler {
 	f := fakeClientSet.NewSimpleClientset()
 	k := fake.NewSimpleClientset()
 
@@ -51,9 +42,6 @@ func newFakeHandler(t *testing.T) *handler {
 		kubeClient:    k,
 		eventRecorder: event.NewEventRecorder("mock", k).NewInstance(Group(), Version(), Kind()),
 		operator:      operator.NewOperator("mock", "mock", util.Image{Image: "mock"}),
-		provider: shared.ClientProviderFunc(func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (adbDriverV2.Client, error) {
-			return c, nil
-		}),
 	}
 
 	return h

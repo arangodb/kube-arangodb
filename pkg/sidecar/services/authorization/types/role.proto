@@ -22,6 +22,8 @@ syntax = "proto3";
 
 package types;
 
+import "pkg/sidecar/services/authorization/types/policy.proto";
+
 option go_package = "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types";
 
 // Role Object Definition
@@ -29,6 +31,9 @@ message Role {
   // List of the policies
   repeated string policies = 1;
 
-  // List of the users
-  repeated string users = 2;
+  // Inline policy scope applied when this role is evaluated
+  Policy scope = 3;
+
+  // Optional human-readable description
+  string description = 4;
 }
