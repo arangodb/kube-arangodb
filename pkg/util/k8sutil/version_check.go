@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 )
 
 // ArangodVersionCheckInitContainer creates a container configured to check version.
-func ArangodVersionCheckInitContainer(name, executable, operatorImage string, version driver.Version, securityContext *core.SecurityContext) core.Container {
+func ArangodVersionCheckInitContainer(name, executable, operatorImage string, version adbDriverV2.Version, securityContext *core.SecurityContext) core.Container {
 	versionFile := filepath.Join(shared.ArangodVolumeMountDir, "VERSION-1")
 	var command = []string{
 		executable,

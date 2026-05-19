@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,5 +31,5 @@ type DeploymentID struct {
 }
 
 func (c *client) DeploymentID(ctx context.Context) (DeploymentID, error) {
-	return arangod.GetRequest[DeploymentID](ctx, c.c, "_admin", "deployment", "id").AcceptCode(200).Response()
+	return arangod.GetRequest[DeploymentID](ctx, c.c, "_admin", "deployment", "id").Do(ctx).AcceptCode(200).Response()
 }

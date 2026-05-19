@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ import (
 	"sync"
 	"time"
 
-	agencyCache "github.com/arangodb-helper/go-helper/pkg/arangod/agency/cache"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
 )
 
-func DelayLoader[T interface{}](loader agencyCache.StateLoader[T], delay time.Duration) agencyCache.StateLoader[T] {
+func DelayLoader[T interface{}](loader leader.StateLoader[T], delay time.Duration) leader.StateLoader[T] {
 	if delay <= 0 {
 		return loader
 	}
@@ -45,7 +45,7 @@ type delayerLoader[T interface{}] struct {
 	last  time.Time
 	delay time.Duration
 
-	parent agencyCache.StateLoader[T]
+	parent leader.StateLoader[T]
 }
 
 func (i *delayerLoader[T]) UpdateTime() time.Time {
@@ -76,7 +76,7 @@ func (i *delayerLoader[T]) Invalidate() {
 	i.parent.Invalidate()
 }
 
-func (i *delayerLoader[T]) Refresh(ctx context.Context, discovery agencyCache.LeaderDiscovery) error {
+func (i *delayerLoader[T]) Refresh(ctx context.Context, discovery leader.Discovery) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 

@@ -25,8 +25,8 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	"github.com/arangodb/arangosync-client/client"
-	"github.com/arangodb/go-driver"
+	syncClient "github.com/arangodb/arangosync-client/client"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
@@ -141,19 +141,19 @@ type ArangoApplier interface {
 type DeploymentDatabaseClient interface {
 	// GetDatabaseAsyncClient returns a cached client for the entire database (cluster coordinators or single server),
 	// creating one if needed. Only in AsyncMode
-	GetDatabaseAsyncClient(ctx context.Context) (driver.Client, error)
+	GetDatabaseAsyncClient(ctx context.Context) (adbDriverV2.Client, error)
 	// GetServerAsyncClient returns an async client for a specific server.
-	GetServerAsyncClient(id string) (driver.Client, error)
+	GetServerAsyncClient(id string) (adbDriverV2.Client, error)
 }
 
 type DeploymentMemberClient interface {
 	// GetServerClient returns a cached client for a specific server.
-	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (driver.Client, error)
+	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error)
 }
 
 type DeploymentSyncClient interface {
 	// GetSyncServerClient returns a cached client for a specific arangosync server.
-	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (client.API, error)
+	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (syncClient.API, error)
 }
 
 type KubernetesEventGenerator interface {

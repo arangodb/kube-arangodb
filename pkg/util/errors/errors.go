@@ -30,7 +30,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	driver "github.com/arangodb/go-driver"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 )
 
 func Cause(err error) error {
@@ -241,7 +241,7 @@ func libCause(err error) (bool, error) {
 	original := err
 	for {
 		switch e := err.(type) {
-		case *driver.ResponseError:
+		case *adbDriverV2Shared.ResponseError:
 			err = e.Err
 		case *net.DNSConfigError:
 			err = e.Err

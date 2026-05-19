@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,26 +31,35 @@ import (
 
 type ConfigDestinationFileInterface interface {
 	StaticResponse() (string, uint32)
+	GetContentType() string
 }
 
 type ConfigDestinationFile struct {
-	File string
-	Code uint32
+	File        string
+	Code        uint32
+	ContentType string
 }
 
 func (c ConfigDestinationFile) StaticResponse() (string, uint32) {
 	return c.File, c.Code
 }
 
+func (c ConfigDestinationFile) GetContentType() string {
+	return c.ContentType
+}
+
 type ConfigDestinationStaticInterface interface {
 	Validate() error
 	StaticResponse() ([]byte, uint32, error)
+	GetContentType() string
 }
 
 type ConfigDestinationStaticMarshaller[T any] func(in T, opts ...util.Mod[protojson.MarshalOptions]) ([]byte, error)
 
 type ConfigDestinationStatic[T any] struct {
 	Code *uint32 `json:"insecure,omitempty"`
+
+	ContentType string `json:"contentType,omitempty"`
 
 	Response T `json:"response,omitempty"`
 
@@ -90,4 +99,12 @@ func (c *ConfigDestinationStatic[T]) GetCode() uint32 {
 	}
 
 	return *c.Code
+}
+
+func (c *ConfigDestinationStatic[T]) GetContentType() string {
+	if c == nil {
+		return ""
+	}
+
+	return c.ContentType
 }

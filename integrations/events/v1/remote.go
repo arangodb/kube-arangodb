@@ -25,7 +25,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -39,14 +39,14 @@ type RemoteStore[IN proto.Message] interface {
 	Emit(ctx context.Context, events ...IN) error
 }
 
-func NewArangoRemoteStore[IN proto.Message](client cache.Object[arangodb.Collection]) RemoteStore[IN] {
+func NewArangoRemoteStore[IN proto.Message](client cache.Object[adbDriverV2.Collection]) RemoteStore[IN] {
 	return &arangoRemoteStore[IN]{
 		client: client,
 	}
 }
 
 type arangoRemoteStore[IN proto.Message] struct {
-	client cache.Object[arangodb.Collection]
+	client cache.Object[adbDriverV2.Collection]
 }
 
 func (a *arangoRemoteStore[IN]) Init(ctx context.Context) error {

@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/informers"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
@@ -150,7 +150,7 @@ type inspectorState struct {
 
 	throttles throttle.Components
 
-	versionInfo driver.Version
+	versionInfo adbDriverV2.Version
 
 	initialised bool
 }
@@ -334,7 +334,7 @@ func (i *inspectorState) ArangoMember() arangomember.Definition {
 	return i.arangoMembers
 }
 
-func (i *inspectorState) GetVersionInfo() driver.Version {
+func (i *inspectorState) GetVersionInfo() adbDriverV2.Version {
 	return i.versionInfo
 }
 
@@ -402,7 +402,7 @@ func (i *inspectorState) refreshInThreads(ctx context.Context, threads int, load
 	if v, err := n.client.Kubernetes().Discovery().ServerVersion(); err != nil {
 		n.versionInfo = ""
 	} else {
-		n.versionInfo = driver.Version(goStrings.TrimPrefix(v.GitVersion, "v"))
+		n.versionInfo = adbDriverV2.Version(goStrings.TrimPrefix(v.GitVersion, "v"))
 	}
 
 	logger := logger.Str("namespace", i.namespace).Str("name", i.deploymentName)

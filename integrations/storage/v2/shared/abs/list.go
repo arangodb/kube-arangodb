@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,10 @@ type listIterator struct {
 	parent *ios
 
 	pager *runtime.Pager[container.ListBlobsFlatResponse]
+}
+
+func (l *listIterator) Close() error {
+	return nil
 }
 
 func (l *listIterator) Next(ctx context.Context) ([]pbImplStorageV2Shared.File, error) {

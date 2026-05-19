@@ -37,7 +37,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/arangodb-helper/go-certificates"
-	"github.com/arangodb/go-driver/v2/connection"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -170,7 +170,7 @@ func cmdGetAdminMemberRequestGetE(cmd *cobra.Command, args []string) error {
 
 	dnsName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), g.AsRole(), m.ID)
 	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), dnsName)
-	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
+	conn := createClient([]string{endpoint}, certCA, auth, adbDriverV2Connection.ApplicationJSON)
 	body, err := sendStreamRequest(ctx, conn, goHttp.MethodGet, nil, acceptedCode, args...)
 	if body != nil {
 		defer body.Close()
@@ -209,7 +209,7 @@ func cmdAdminGetAgencyStateE(cmd *cobra.Command, _ []string) error {
 
 	dnsName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), d.Status.Members.Agents[0].ID)
 	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), dnsName)
-	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
+	conn := createClient([]string{endpoint}, certCA, auth, adbDriverV2Connection.ApplicationJSON)
 	leaderID, err := getAgencyLeader(ctx, conn)
 	if err != nil {
 		logger.Err(err).Error("failed to get leader ID")
@@ -218,7 +218,7 @@ func cmdAdminGetAgencyStateE(cmd *cobra.Command, _ []string) error {
 
 	dnsLeaderName := k8sutil.CreatePodDNSName(d.GetObjectMeta(), api.ServerGroupAgents.AsRole(), leaderID)
 	leaderEndpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), dnsLeaderName)
-	conn = createClient([]string{leaderEndpoint}, certCA, auth, connection.PlainText)
+	conn = createClient([]string{leaderEndpoint}, certCA, auth, adbDriverV2Connection.PlainText)
 	body, err := getAgencyState(ctx, conn)
 	if body != nil {
 		defer body.Close()
@@ -256,7 +256,7 @@ func cmdAdminGetAgencyDumpE(cmd *cobra.Command, _ []string) error {
 	}
 
 	endpoint := getArangoEndpoint(d.GetAcceptedSpec().IsSecure(), k8sutil.CreateDatabaseClientServiceDNSName(d.GetObjectMeta()))
-	conn := createClient([]string{endpoint}, certCA, auth, connection.ApplicationJSON)
+	conn := createClient([]string{endpoint}, certCA, auth, adbDriverV2Connection.ApplicationJSON)
 	body, err := getAgencyDump(ctx, conn)
 	if body != nil {
 		defer body.Close()
@@ -272,16 +272,16 @@ func cmdAdminGetAgencyDumpE(cmd *cobra.Command, _ []string) error {
 }
 
 // sendStreamRequest sends the request to a member
-func sendStreamRequest(ctx context.Context, conn connection.Connection, method string, body []byte, code int, parts ...string) (io.ReadCloser, error) {
-	url := connection.NewUrl(parts...)
+func sendStreamRequest(ctx context.Context, conn adbDriverV2Connection.Connection, method string, body []byte, code int, parts ...string) (io.ReadCloser, error) {
+	url := adbDriverV2Connection.NewUrl(parts...)
 
-	var mods []connection.RequestModifier
+	var mods []adbDriverV2Connection.RequestModifier
 
 	if body != nil {
-		mods = append(mods, connection.WithBody(body))
+		mods = append(mods, adbDriverV2Connection.WithBody(body))
 	}
 
-	resp, output, err := connection.CallStream(ctx, conn, method, url, mods...)
+	resp, output, err := adbDriverV2Connection.CallStream(ctx, conn, method, url, mods...)
 	if err != nil {
 		return nil, err
 	}
@@ -293,18 +293,18 @@ func sendStreamRequest(ctx context.Context, conn connection.Connection, method s
 }
 
 // sendRequest sends the request to a member and returns object
-func sendRequest[OUT any](ctx context.Context, conn connection.Connection, method string, body []byte, code int, parts ...string) (OUT, error) {
-	url := connection.NewUrl(parts...)
+func sendRequest[OUT any](ctx context.Context, conn adbDriverV2Connection.Connection, method string, body []byte, code int, parts ...string) (OUT, error) {
+	url := adbDriverV2Connection.NewUrl(parts...)
 
-	var mods []connection.RequestModifier
+	var mods []adbDriverV2Connection.RequestModifier
 
 	if body != nil {
-		mods = append(mods, connection.WithBody(body))
+		mods = append(mods, adbDriverV2Connection.WithBody(body))
 	}
 
 	var out OUT
 
-	resp, err := connection.Call(ctx, conn, method, url, &out, mods...)
+	resp, err := adbDriverV2Connection.Call(ctx, conn, method, url, &out, mods...)
 	if err != nil {
 		return util.Default[OUT](), err
 	}
@@ -316,13 +316,13 @@ func sendRequest[OUT any](ctx context.Context, conn connection.Connection, metho
 }
 
 // getAgencyState returns the current state in the agency.
-func getAgencyState(ctx context.Context, conn connection.Connection) (io.ReadCloser, error) {
+func getAgencyState(ctx context.Context, conn adbDriverV2Connection.Connection) (io.ReadCloser, error) {
 	return sendStreamRequest(ctx, conn, goHttp.MethodPost, []byte(`[["/"]]`), goHttp.StatusOK, "_api", "agency", "read")
 }
 
 // getDeploymentAndCredentials returns deployment and necessary credentials to communicate with ArangoDB pods.
 func getDeploymentAndCredentials(ctx context.Context,
-	deploymentName string) (d api.ArangoDeployment, certCA *x509.CertPool, auth connection.Authentication, err error) {
+	deploymentName string) (d api.ArangoDeployment, certCA *x509.CertPool, auth adbDriverV2Connection.Authentication, err error) {
 
 	namespace := os.Getenv(utilConstants.EnvOperatorPodNamespace)
 	if len(namespace) == 0 {
@@ -374,7 +374,7 @@ func getArangoEndpoint(secure bool, dnsName string) string {
 }
 
 // getAgencyLeader returns the leader ID of the agency.
-func getAgencyLeader(ctx context.Context, conn connection.Connection) (string, error) {
+func getAgencyLeader(ctx context.Context, conn adbDriverV2Connection.Connection) (string, error) {
 	output, err := sendRequest[map[string]interface{}](ctx, conn, goHttp.MethodGet, nil, goHttp.StatusOK, "_api", "agency", "config")
 	if err != nil {
 		return "", err
@@ -390,7 +390,7 @@ func getAgencyLeader(ctx context.Context, conn connection.Connection) (string, e
 }
 
 // getAgencyDump returns dump of the agency.
-func getAgencyDump(ctx context.Context, conn connection.Connection) (io.ReadCloser, error) {
+func getAgencyDump(ctx context.Context, conn adbDriverV2Connection.Connection) (io.ReadCloser, error) {
 	return sendStreamRequest(ctx, conn, goHttp.MethodGet, nil, goHttp.StatusOK, "_api", "cluster", "agency-dump")
 }
 
@@ -398,19 +398,19 @@ type JWTAuthentication struct {
 	key, value string
 }
 
-func (j JWTAuthentication) RequestModifier(r connection.Request) error {
+func (j JWTAuthentication) RequestModifier(r adbDriverV2Connection.Request) error {
 	r.AddHeader(j.key, j.value)
 	return nil
 }
 
 // createClient creates client for the provided credentials.
-func createClient(endpoints []string, certCA *x509.CertPool, auth connection.Authentication,
-	contentType string) connection.Connection {
+func createClient(endpoints []string, certCA *x509.CertPool, auth adbDriverV2Connection.Authentication,
+	contentType string) adbDriverV2Connection.Connection {
 
-	conf := connection.HttpConfiguration{
+	conf := adbDriverV2Connection.HttpConfiguration{
 		Authentication: auth,
 		ContentType:    contentType,
-		Endpoint:       connection.NewRoundRobinEndpoints(endpoints),
+		Endpoint:       adbDriverV2Connection.NewRoundRobinEndpoints(endpoints),
 		Transport: &goHttp.Transport{
 			TLSClientConfig: &tls.Config{
 				RootCAs: certCA,
@@ -418,11 +418,11 @@ func createClient(endpoints []string, certCA *x509.CertPool, auth connection.Aut
 		},
 	}
 
-	return connection.NewHttpConnection(conf)
+	return adbDriverV2Connection.NewHttpConnection(conf)
 }
 
 // getJWTTokenFromSecrets returns token from the secret.
-func getJWTTokenFromSecrets(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string, paths ...string) (connection.Authentication, error) {
+func getJWTTokenFromSecrets(ctx context.Context, secrets generic.ReadClient[*core.Secret], name string, paths ...string) (adbDriverV2Connection.Authentication, error) {
 	ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
 	defer cancel()
 

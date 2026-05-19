@@ -210,6 +210,16 @@ func (c *ConfigDestination) appendRouteAction(route *pbEnvoyRouteV3.Route, name 
 			return err
 		}
 
+		if ct := c.Static.GetContentType(); ct != "" {
+			route.ResponseHeadersToAdd = append(route.ResponseHeadersToAdd, &pbEnvoyCoreV3.HeaderValueOption{
+				Header: &pbEnvoyCoreV3.HeaderValue{
+					Key:   "content-type",
+					Value: ct,
+				},
+				AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			})
+		}
+
 		// Return static response
 		route.Action = &pbEnvoyRouteV3.Route_DirectResponse{
 			DirectResponse: &pbEnvoyRouteV3.DirectResponseAction{
@@ -228,6 +238,16 @@ func (c *ConfigDestination) appendRouteAction(route *pbEnvoyRouteV3.Route, name 
 			return errors.Errorf("File response is not defined!")
 		}
 		path, code := c.File.StaticResponse()
+
+		if ct := c.File.GetContentType(); ct != "" {
+			route.ResponseHeadersToAdd = append(route.ResponseHeadersToAdd, &pbEnvoyCoreV3.HeaderValueOption{
+				Header: &pbEnvoyCoreV3.HeaderValue{
+					Key:   "content-type",
+					Value: ct,
+				},
+				AppendAction: pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD,
+			})
+		}
 
 		// Return static response
 		route.Action = &pbEnvoyRouteV3.Route_DirectResponse{

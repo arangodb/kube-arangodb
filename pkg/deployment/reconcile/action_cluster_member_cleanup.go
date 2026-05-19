@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -60,7 +60,7 @@ func (a *actionClusterMemberCleanup) Start(ctx context.Context) (bool, error) {
 }
 
 func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
-	id := driver.ServerID(a.MemberID())
+	id := adbDriverV2.ServerID(a.MemberID())
 
 	c, err := a.actionCtx.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
@@ -69,14 +69,8 @@ func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	cluster, err := c.Cluster(ctxChild)
-	if err != nil {
-		return err
-	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	health, err := cluster.Health(ctxChild)
+	health, err := c.Health(ctxChild)
 	if err != nil {
 		return err
 	}
@@ -86,6 +80,6 @@ func (a *actionClusterMemberCleanup) start(ctx context.Context) error {
 	}
 
 	return globals.GetGlobalTimeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
-		return cluster.RemoveServer(ctxChild, id)
+		return c.RemoveServer(ctxChild, id)
 	})
 }

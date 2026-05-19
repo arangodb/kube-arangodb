@@ -28,7 +28,7 @@ import (
 	kubernetes "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	fakeClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/fake"
@@ -51,7 +51,7 @@ func newFakeHandler(t *testing.T) *handler {
 		kubeClient:    k,
 		eventRecorder: event.NewEventRecorder("mock", k).NewInstance(Group(), Version(), Kind()),
 		operator:      operator.NewOperator("mock", "mock", util.Image{Image: "mock"}),
-		provider: shared.ClientProviderFunc(func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (arangodb.Client, error) {
+		provider: shared.ClientProviderFunc(func(ctx context.Context, client kubernetes.Interface, depl *api.ArangoDeployment) (adbDriverV2.Client, error) {
 			return c, nil
 		}),
 	}

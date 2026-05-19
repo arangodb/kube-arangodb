@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,17 +26,15 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	driver "github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
-	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
 
 // prepareAgencyPodTermination checks if the given agency pod is allowed to terminate
@@ -174,22 +172,7 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 	}
 	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	cluster, err := c.Cluster(ctxChild)
-	if err != nil {
-		log.Err(err).Debug("Failed to access cluster")
-
-		if r.context.GetSpec().Recovery.Get().GetAutoRecover() {
-			if c, ok := kresources.GetContainerStatusByName(p, shared.ServerContainerName); ok {
-				if t := c.State.Terminated; t != nil {
-					return nil
-				}
-			}
-		}
-		return errors.WithStack(err)
-	}
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	cleanedOut, err := cluster.IsCleanedOut(ctxChild, memberStatus.ID)
+	cleanedOut, err := c.IsCleanedOut(ctxChild, adbDriverV2.ServerID(memberStatus.ID))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -230,20 +213,23 @@ func (r *Resources) prepareDBServerPodTermination(ctx context.Context, p *core.P
 		ctxChild, cancelChild := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancelChild()
 
-		ctxJobID := driver.WithJobIDResponse(ctxChild, &jobID)
 		// Ensure the cleanout is triggered
 		if dbserverDataWillBeGone {
 			log.Debug("Server is not yet cleaned out. Triggering a clean out now")
-			if err := cluster.CleanOutServer(ctxJobID, memberStatus.ID); err != nil {
+			if id, err := c.CleanOutServer(ctxChild, adbDriverV2.ServerID(memberStatus.ID)); err != nil {
 				log.Err(err).Debug("Failed to clean out server")
 				return errors.WithStack(err)
+			} else {
+				jobID = id
 			}
 			memberStatus.Phase = api.MemberPhaseDrain
 		} else {
 			log.Debug("Temporary shutdown, resign leadership")
-			if err := cluster.ResignServer(ctxJobID, memberStatus.ID); err != nil {
+			if id, err := c.ResignServer(ctxChild, adbDriverV2.ServerID(memberStatus.ID)); err != nil {
 				log.Err(err).Debug("Failed to resign server")
 				return errors.WithStack(err)
+			} else {
+				jobID = id
 			}
 			memberStatus.Phase = api.MemberPhaseResign
 		}

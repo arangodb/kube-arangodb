@@ -175,6 +175,30 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 			}
 		}
 	}
+	// Ensure the license registry credentials secret always exists so that the
+	// imagePullSecrets in the pod template is consistent from the first pod
+	// creation. The license action will patch it later with actual credentials.
+	{
+		rlmName := pod.GetLicenseRegistryCredentialsSecretName(deploymentName)
+		if _, exists := cachedStatus.Secret().V1().GetSimple(rlmName); !exists {
+			if _, err := secrets.Create(ctx, &core.Secret{
+				ObjectMeta: meta.ObjectMeta{
+					Name: rlmName,
+					OwnerReferences: []meta.OwnerReference{
+						apiObject.AsOwner(),
+					},
+				},
+				Type: core.SecretTypeDockerConfigJson,
+				Data: map[string][]byte{
+					core.DockerConfigJsonKey: []byte("{}"),
+				},
+			}, meta.CreateOptions{}); err != nil && !kerrors.IsAlreadyExists(err) {
+				return errors.Section(err, "License Registry Secret")
+			}
+			reconcileRequired.Required()
+		}
+	}
+
 	if r.context.IsSyncEnabled() {
 		counterMetric.Inc()
 		if err := reconcileRequired.WithError(r.ensureTokenSecret(ctx, cachedStatus, secrets, spec.Sync.Authentication.GetJWTSecretName())); err != nil {

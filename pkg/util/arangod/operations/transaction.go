@@ -24,17 +24,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-type TransactionFunc[T any] func(ctx context.Context, c arangodb.Transaction) (T, error)
+type TransactionFunc[T any] func(ctx context.Context, c adbDriverV2.Transaction) (T, error)
 
-func WithTransaction[T any](ctx context.Context, db arangodb.Database, cols arangodb.TransactionCollections, opts *arangodb.BeginTransactionOptions, process TransactionFunc[T]) (T, error) {
+func WithTransaction[T any](ctx context.Context, db adbDriverV2.Database, cols adbDriverV2.TransactionCollections, opts *adbDriverV2.BeginTransactionOptions, process TransactionFunc[T]) (T, error) {
 	if opts == nil {
-		opts = &arangodb.BeginTransactionOptions{}
+		opts = &adbDriverV2.BeginTransactionOptions{}
 	}
 
 	// Enforce sync
@@ -52,14 +52,14 @@ func WithTransaction[T any](ctx context.Context, db arangodb.Database, cols aran
 		actx, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
 
-		if cerr := tx.Abort(actx, &arangodb.AbortTransactionOptions{}); cerr != nil {
+		if cerr := tx.Abort(actx, &adbDriverV2.AbortTransactionOptions{}); cerr != nil {
 			return util.Default[T](), errors.Errors(err, cerr)
 		}
 
 		return util.Default[T](), errors.Wrapf(err, "Processing failed")
 	}
 
-	if err := tx.Commit(ctx, &arangodb.CommitTransactionOptions{}); err != nil {
+	if err := tx.Commit(ctx, &adbDriverV2.CommitTransactionOptions{}); err != nil {
 		return util.Default[T](), errors.Wrapf(err, "Committing failed")
 	}
 

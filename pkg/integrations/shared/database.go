@@ -27,8 +27,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/connection"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -122,10 +122,10 @@ func (d *Database) New(cmd *cobra.Command) error {
 	return d.Validate()
 }
 
-func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Client] {
+func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[adbDriverV2.Client] {
 	auth := endpoint.AuthClient()
 
-	return cache.NewObject(func(ctx context.Context) (arangodb.Client, time.Duration, error) {
+	return cache.NewObject(func(ctx context.Context) (adbDriverV2.Client, time.Duration, error) {
 		if d == nil {
 			return nil, 0, errors.Errorf("Database Ref is empty")
 		}
@@ -135,13 +135,13 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Clien
 			return nil, 0, err
 		}
 
-		client := arangodb.NewClient(connection.NewHttpConnection(connection.HttpConfiguration{
+		client := adbDriverV2.NewClient(adbDriverV2Connection.NewHttpConnection(adbDriverV2Connection.HttpConfiguration{
 			Authentication: pbAuthenticationV1.NewRootRequestModifier(ac),
-			Endpoint: connection.NewRoundRobinEndpoints([]string{
+			Endpoint: adbDriverV2Connection.NewRoundRobinEndpoints([]string{
 				fmt.Sprintf("%s://%s:%d", d.Proto, d.Endpoint, d.Port),
 			}),
-			ContentType:    connection.ApplicationJSON,
-			ArangoDBConfig: connection.ArangoDBConfiguration{},
+			ContentType:    adbDriverV2Connection.ApplicationJSON,
+			ArangoDBConfig: adbDriverV2Connection.ArangoDBConfiguration{},
 			Transport:      operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
 		}))
 
@@ -151,7 +151,7 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[arangodb.Clien
 
 func (d *Database) SourceCollectionProps() db.CollectionProps {
 	if d == nil || d.Source.Collection == "" {
-		return func(ctx context.Context, db arangodb.Database) (*arangodb.CreateCollectionPropertiesV2, error) {
+		return func(ctx context.Context, db adbDriverV2.Database) (*adbDriverV2.CreateCollectionPropertiesV2, error) {
 			return nil, errors.Errorf("Source Collection is empty")
 		}
 	}

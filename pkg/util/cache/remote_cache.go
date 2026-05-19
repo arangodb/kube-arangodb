@@ -25,7 +25,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -53,7 +53,7 @@ func GetRemoteCacheObjectRev(in RemoteCacheObject) string {
 	return ""
 }
 
-func NewRemoteCacheWithTTL[T RemoteCacheObject](collection Object[arangodb.Collection], ttl time.Duration) RemoteCache[T] {
+func NewRemoteCacheWithTTL[T RemoteCacheObject](collection Object[adbDriverV2.Collection], ttl time.Duration) RemoteCache[T] {
 	r := &remoteCache[T]{
 		collection: collection,
 	}
@@ -63,7 +63,7 @@ func NewRemoteCacheWithTTL[T RemoteCacheObject](collection Object[arangodb.Colle
 	return r
 }
 
-func NewRemoteCache[T RemoteCacheObject](collection Object[arangodb.Collection]) RemoteCache[T] {
+func NewRemoteCache[T RemoteCacheObject](collection Object[adbDriverV2.Collection]) RemoteCache[T] {
 	return NewRemoteCacheWithTTL[T](collection, time.Minute)
 }
 
@@ -91,7 +91,7 @@ type RemoteCache[T RemoteCacheObject] interface {
 }
 
 type remoteCache[T RemoteCacheObject] struct {
-	collection Object[arangodb.Collection]
+	collection Object[adbDriverV2.Collection]
 
 	cache Cache[string, T]
 }
@@ -110,7 +110,7 @@ func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {
 		return err
 	}
 
-	if _, err := client.UpdateDocumentWithOptions(ctx, url.QueryEscape(key), obj, &arangodb.CollectionDocumentUpdateOptions{
+	if _, err := client.UpdateDocumentWithOptions(ctx, url.QueryEscape(key), obj, &adbDriverV2.CollectionDocumentUpdateOptions{
 		// Ignore the revision if it is not set
 		IgnoreRevs: util.NewType(GetRemoteCacheObjectRev(obj) == ""),
 	}); err != nil {
@@ -118,7 +118,7 @@ func (r *remoteCache[T]) Put(ctx context.Context, key string, obj T) error {
 			return err
 		}
 
-		if _, err := client.CreateDocumentWithOptions(ctx, obj, &arangodb.CollectionDocumentCreateOptions{
+		if _, err := client.CreateDocumentWithOptions(ctx, obj, &adbDriverV2.CollectionDocumentCreateOptions{
 			IgnoreRevs: util.NewType(GetRemoteCacheObjectRev(obj) == ""),
 		}); err != nil {
 			return err
@@ -165,7 +165,7 @@ func (r *remoteCache[T]) Remove(ctx context.Context, key string) (bool, error) {
 		return false, err
 	}
 
-	if _, err := client.DeleteDocumentWithOptions(ctx, url.QueryEscape(key), &arangodb.CollectionDocumentDeleteOptions{}); err != nil {
+	if _, err := client.DeleteDocumentWithOptions(ctx, url.QueryEscape(key), &adbDriverV2.CollectionDocumentDeleteOptions{}); err != nil {
 		if !adbDriverV2Shared.IsNotFound(err) {
 			return false, err
 		}

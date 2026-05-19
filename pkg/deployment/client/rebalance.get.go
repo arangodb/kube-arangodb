@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ package client
 import (
 	"context"
 	goHttp "net/http"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 )
 
 type RebalanceGetResponse struct {
@@ -35,25 +37,5 @@ type RebalanceGetResponseResult struct {
 }
 
 func (c *client) RebalanceGet(ctx context.Context) (RebalanceGetResponse, error) {
-	req, err := c.c.NewRequest(goHttp.MethodGet, "/_admin/cluster/rebalance")
-	if err != nil {
-		return RebalanceGetResponse{}, err
-	}
-
-	resp, err := c.c.Do(ctx, req)
-	if err != nil {
-		return RebalanceGetResponse{}, err
-	}
-
-	if err := resp.CheckStatus(goHttp.StatusOK); err != nil {
-		return RebalanceGetResponse{}, err
-	}
-
-	var d RebalanceGetResponse
-
-	if err := resp.ParseBody("", &d); err != nil {
-		return RebalanceGetResponse{}, err
-	}
-
-	return d, nil
+	return arangod.GetRequest[RebalanceGetResponse](ctx, c.c, "_admin", "cluster", "rebalance").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
 }

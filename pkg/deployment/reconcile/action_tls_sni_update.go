@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ func (t *actionUpdateTLSSNI) CheckProgress(ctx context.Context) (bool, bool, err
 
 	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
-	if ok, err := compareTLSSNIConfig(ctxChild, t.log, c.Connection(), fetchedSecrets, true); err != nil {
+	if ok, err := compareTLSSNIConfig(ctxChild, c.Connection(), fetchedSecrets, true); err != nil {
 		t.log.Err(err).Warn("Unable to compare TLS config")
 		return true, false, nil
 	} else {

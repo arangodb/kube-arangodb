@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/backup"
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -170,10 +170,10 @@ func (h *handler) cleanupImportedBackups(backups []backupApi.ArangoBackup) error
 	return nil
 }
 
-func (h *handler) refreshDeploymentBackup(deployment *api.ArangoDeployment, backupMeta driver.BackupMeta, backups []backupApi.ArangoBackup) error {
+func (h *handler) refreshDeploymentBackup(deployment *api.ArangoDeployment, backupMeta adbDriverV2.BackupMeta, backups []backupApi.ArangoBackup) error {
 	for _, backup := range backups {
 		if download := backup.Spec.Download; download != nil {
-			if download.ID == string(backupMeta.ID) {
+			if download.ID == backupMeta.ID {
 				return nil
 			}
 		}
@@ -182,14 +182,14 @@ func (h *handler) refreshDeploymentBackup(deployment *api.ArangoDeployment, back
 			continue
 		}
 
-		if backup.Status.Backup.ID == string(backupMeta.ID) {
+		if backup.Status.Backup.ID == backupMeta.ID {
 			return nil
 		}
 	}
 
 	name := fmt.Sprintf("backup-%s", uuid.NewUUID())
 
-	logger.Str("id", string(backupMeta.ID)).Strs("namespace", deployment.GetNamespace()).Str("namespace", name).Info("Importing ArangoBackup from API")
+	logger.Str("id", backupMeta.ID).Strs("namespace", deployment.GetNamespace()).Str("namespace", name).Info("Importing ArangoBackup from API")
 
 	// New backup found, need to recreate
 	backup := &backupApi.ArangoBackup{

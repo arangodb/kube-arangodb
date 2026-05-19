@@ -21,7 +21,7 @@
 package reconcile
 
 import (
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/rotation"
@@ -46,7 +46,7 @@ type updateUpgradeDecisionItem struct {
 
 type updateUpgradeDecisionMap map[updateUpgradeDecisionItem]updateUpgradeDecision
 
-func (u updateUpgradeDecisionMap) GetFromTo() (from driver.Version, to driver.Version) {
+func (u updateUpgradeDecisionMap) GetFromTo() (from adbDriverV2.Version, to adbDriverV2.Version) {
 	for _, el := range u {
 		if !el.upgrade || !el.upgradeDecision.UpgradeNeeded {
 			continue

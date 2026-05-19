@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,14 +28,14 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 )
 
-func NewManager[T any](ctx context.Context, t Type, client cache.Object[arangodb.Collection]) Manager[T] {
+func NewManager[T any](ctx context.Context, t Type, client cache.Object[adbDriverV2.Collection]) Manager[T] {
 	return manager[T]{
 		t:     t,
 		cache: cache.NewRemoteCache[*session](client),

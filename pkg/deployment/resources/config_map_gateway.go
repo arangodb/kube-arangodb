@@ -144,8 +144,9 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		File: gateway.ConfigDestinationFile{
-			File: path.Join(utilConstants.GatewayVolumeMountDir, utilConstants.InventoryFileName),
-			Code: 200,
+			File:        path.Join(utilConstants.GatewayVolumeMountDir, utilConstants.InventoryFileName),
+			Code:        200,
+			ContentType: "application/json",
 		},
 	}
 
@@ -166,7 +167,8 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 			},
 		},
 		Static: &gateway.ConfigDestinationStatic[*pbInventoryV1.InventoryHash]{
-			Code: util.NewType[uint32](200),
+			ContentType: "application/json",
+			Code:        util.NewType[uint32](200),
 			Response: &pbInventoryV1.InventoryHash{
 				Hash: util.SHA256(inventoryPreData),
 			},

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb/go-driver"
-	"github.com/arangodb/go-driver/util/connection/wrappers/async"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -42,7 +43,7 @@ func ExecuteBasicAQL(db string, aql string, bind map[string]any) Executor {
 }
 
 func ExecuteAQL(db string, aql string, bind map[string]any, telemetry bool) Executor {
-	return func(conn driver.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
+	return func(conn adbDriverV2Connection.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
 			if telemetry {
 				if !cfg.WithTelemetry() {
@@ -52,36 +53,37 @@ func ExecuteAQL(db string, aql string, bind map[string]any, telemetry bool) Exec
 				log.Info("Collecting Telemetry details")
 			}
 
-			c, err := driver.NewClient(driver.ClientConfig{Connection: async.NewConnectionAsyncWrapper(conn)})
+			c := adbDriverV2.NewClient(adbDriverV2Connection.NewConnectionAsyncWrapper(conn))
+
+			d, err := c.GetDatabase(ctx, db, nil)
 			if err != nil {
 				return err
 			}
 
-			d, err := c.Database(ctx, db)
-			if err != nil {
-				return err
-			}
+			nctx := adbDriverV2Connection.WithAsync(ctx)
 
-			nctx := driver.WithAsync(ctx)
-
-			_, err = d.Query(nctx, aql, bind)
+			_, err = d.Query(nctx, aql, &adbDriverV2.QueryOptions{
+				BindVars: bind,
+			})
 			if err == nil {
 				return errors.Errorf("Async execution of the query should be prepared")
 			}
 
-			jobId, ok := async.IsAsyncJobInProgress(err)
+			jobId, ok := adbDriverV2Connection.IsAsyncJobInProgress(err)
 			if !ok {
 				return errors.Wrapf(err, "Async execution of the query should be prepared")
 			}
 
-			var cursor driver.Cursor
+			var cursor adbDriverV2.Cursor
 
 			for {
-				zctx := driver.WithAsyncID(ctx, jobId)
+				zctx := adbDriverV2Connection.WithAsyncID(ctx, jobId)
 
-				query, err := d.Query(zctx, aql, bind)
+				query, err := d.Query(zctx, aql, &adbDriverV2.QueryOptions{
+					BindVars: bind,
+				})
 				if err != nil {
-					_, ok := async.IsAsyncJobInProgress(err)
+					_, ok := adbDriverV2Connection.IsAsyncJobInProgress(err)
 					if !ok {
 						return errors.Wrapf(err, "Async execution of the query should be prepared")
 					}
@@ -99,7 +101,7 @@ func ExecuteAQL(db string, aql string, bind map[string]any, telemetry bool) Exec
 				var ret ugrpc.Object[*Item]
 
 				if _, err := cursor.ReadDocument(ctx, &ret); err != nil {
-					if driver.IsNoMoreDocuments(err) {
+					if adbDriverV2Shared.IsNoMoreDocuments(err) {
 						break
 					}
 

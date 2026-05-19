@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
@@ -77,22 +78,22 @@ func (a *actionRemoveMember) Start(ctx context.Context) (bool, error) {
 
 		ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 		defer cancel()
-		if err := arangod.RemoveServerFromCluster(ctxChild, client.Connection(), driver.ServerID(m.ID)); err != nil {
-			if !driver.IsNotFoundGeneral(err) && !driver.IsPreconditionFailed(err) {
+		if err := arangod.RemoveServerFromCluster(ctxChild, client.Connection(), adbDriverV2.ServerID(m.ID)); err != nil {
+			if !adbDriverV2Shared.IsNotFound(err) && !adbDriverV2Shared.IsPreconditionFailed(err) {
 				a.log.Err(err).Str("member-id", m.ID).Error("Failed to remove server from cluster")
 				// ignore this error, maybe all coordinators are failed and no connection to cluster is possible
-			} else if driver.IsPreconditionFailed(err) {
+			} else if adbDriverV2Shared.IsPreconditionFailed(err) {
 				health, _ := a.actionCtx.GetMembersState().Health()
 				if health.Error != nil {
 					a.log.Err(err).Str("member-id", m.ID).Error("Failed get cluster health")
 				}
 				// We don't care if not found
-				if record, ok := health.Members[driver.ServerID(m.ID)]; ok {
+				if record, ok := health.Members[adbDriverV2.ServerID(m.ID)]; ok {
 
 					// Check if the pod is terminating
 					if m.Conditions.IsTrue(api.ConditionTypeTerminating) {
 
-						if record.Status != driver.ServerStatusFailed {
+						if record.Status != adbDriverV2.ServerStatusFailed {
 							return false, errors.WithStack(errors.Errorf("can not remove server from cluster. Not yet terminated. Retry later"))
 						}
 

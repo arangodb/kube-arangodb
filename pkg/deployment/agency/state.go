@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,30 +24,22 @@ import (
 	"context"
 	goHttp "net/http"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-func GetAgencyState[T interface{}](ctx context.Context, connection conn.Connection) (T, error) {
-	var def T
-
-	resp, code, err := conn.NewExecutor[ReadRequest, []T](connection).Execute(ctx, goHttp.MethodPost, "/_api/agency/read", GetAgencyReadRequestFields())
+func GetAgencyState[T interface{}](ctx context.Context, connection adbDriverV2Connection.Connection) (T, error) {
+	resp, err := arangod.PostRequest[ReadRequest, []T](ctx, connection, GetAgencyReadRequestFields(), "/_api/agency/read").Do(ctx).AcceptCode(goHttp.StatusOK).Response()
 	if err != nil {
-		return def, err
+		return util.Default[T](), err
 	}
 
-	if code != goHttp.StatusOK {
-		return def, errors.Errorf("Unknown response code %d", code)
+	if len(resp) != 1 {
+		return util.Default[T](), errors.Errorf("Invalid response size")
 	}
 
-	if resp == nil {
-		return def, errors.Errorf("Missing response body")
-	}
-
-	if len(*resp) != 1 {
-		return def, errors.Errorf("Invalid response size")
-	}
-
-	return (*resp)[0], nil
+	return (resp)[0], nil
 }

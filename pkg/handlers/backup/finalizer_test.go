@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ func Test_Finalizer_RemoveObject(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                      string(backupMeta.ID),
+		ID:                      backupMeta.ID,
 		PotentiallyInconsistent: &backupMeta.PotentiallyInconsistent,
 		Version:                 backupMeta.Version,
 		CreationTimestamp:       meta.Now(),
@@ -108,7 +108,7 @@ func Test_Finalizer_RemoveObject_WithoutFinalizer(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                      string(backupMeta.ID),
+		ID:                      backupMeta.ID,
 		PotentiallyInconsistent: &backupMeta.PotentiallyInconsistent,
 		Version:                 backupMeta.Version,
 		CreationTimestamp:       meta.Now(),
@@ -149,7 +149,7 @@ func Test_Finalizer_RemoveObject_UnknownFinalizer(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                      string(backupMeta.ID),
+		ID:                      backupMeta.ID,
 		PotentiallyInconsistent: &backupMeta.PotentiallyInconsistent,
 		Version:                 backupMeta.Version,
 		CreationTimestamp:       meta.Now(),
@@ -190,7 +190,7 @@ func Test_Finalizer_RemoveObject_MixedFinalizers(t *testing.T) {
 	require.NoError(t, err)
 
 	obj.Status.Backup = &backupApi.ArangoBackupDetails{
-		ID:                      string(backupMeta.ID),
+		ID:                      backupMeta.ID,
 		PotentiallyInconsistent: &backupMeta.PotentiallyInconsistent,
 		Version:                 backupMeta.Version,
 		CreationTimestamp:       meta.Now(),

@@ -30,8 +30,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/connection"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -48,14 +48,14 @@ type ArangoDBTestConfig struct {
 	Auth     ArangoDBTestConfigAuth
 }
 
-func (a ArangoDBTestConfig) Client(t *testing.T) arangodb.Client {
-	client := arangodb.NewClient(connection.NewHttpConnection(connection.HttpConfiguration{
+func (a ArangoDBTestConfig) Client(t *testing.T) adbDriverV2.Client {
+	client := adbDriverV2.NewClient(adbDriverV2Connection.NewHttpConnection(adbDriverV2Connection.HttpConfiguration{
 		Authentication: a.Auth.Auth(),
-		Endpoint: connection.NewRoundRobinEndpoints([]string{
+		Endpoint: adbDriverV2Connection.NewRoundRobinEndpoints([]string{
 			a.Endpoint,
 		}),
-		ContentType:    connection.ApplicationJSON,
-		ArangoDBConfig: connection.ArangoDBConfiguration{},
+		ContentType:    adbDriverV2Connection.ApplicationJSON,
+		ArangoDBConfig: adbDriverV2Connection.ArangoDBConfiguration{},
 		Transport:      operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
 	}))
 
@@ -65,15 +65,15 @@ func (a ArangoDBTestConfig) Client(t *testing.T) arangodb.Client {
 	return client
 }
 
-func (a ArangoDBTestConfig) ClientCache() func(ctx context.Context) (arangodb.Client, time.Duration, error) {
-	return func(ctx context.Context) (arangodb.Client, time.Duration, error) {
-		client := arangodb.NewClient(connection.NewHttpConnection(connection.HttpConfiguration{
+func (a ArangoDBTestConfig) ClientCache() func(ctx context.Context) (adbDriverV2.Client, time.Duration, error) {
+	return func(ctx context.Context) (adbDriverV2.Client, time.Duration, error) {
+		client := adbDriverV2.NewClient(adbDriverV2Connection.NewHttpConnection(adbDriverV2Connection.HttpConfiguration{
 			Authentication: a.Auth.Auth(),
-			Endpoint: connection.NewRoundRobinEndpoints([]string{
+			Endpoint: adbDriverV2Connection.NewRoundRobinEndpoints([]string{
 				a.Endpoint,
 			}),
-			ContentType:    connection.ApplicationJSON,
-			ArangoDBConfig: connection.ArangoDBConfiguration{},
+			ContentType:    adbDriverV2Connection.ApplicationJSON,
+			ArangoDBConfig: adbDriverV2Connection.ArangoDBConfiguration{},
 			Transport:      operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
 		}))
 
@@ -91,13 +91,13 @@ type ArangoDBTestConfigAuth struct {
 	JWT   *ArangoDBTestConfigAuthJWT
 }
 
-func (a ArangoDBTestConfigAuth) Auth() connection.Authentication {
+func (a ArangoDBTestConfigAuth) Auth() adbDriverV2Connection.Authentication {
 	if v := a.Basic; v != nil {
-		return connection.NewBasicAuth(v.Username, v.Password)
+		return adbDriverV2Connection.NewBasicAuth(v.Username, v.Password)
 	}
 
 	if v := a.JWT; v != nil {
-		return connection.NewHeaderAuth("authorization", "bearer %s", v.Token)
+		return adbDriverV2Connection.NewHeaderAuth("authorization", "bearer %s", v.Token)
 	}
 
 	return nil
@@ -111,9 +111,9 @@ type ArangoDBTestConfigAuthJWT struct {
 	Token string
 }
 
-func TestArangoClientCacheFunc(t *testing.T) func(ctx context.Context) (arangodb.Client, time.Duration, error) {
+func TestArangoClientCacheFunc(t *testing.T) func(ctx context.Context) (adbDriverV2.Client, time.Duration, error) {
 	if !TEST_ARANGODB_ENDPOINT.Exists() {
-		return func(ctx context.Context) (arangodb.Client, time.Duration, error) {
+		return func(ctx context.Context) (adbDriverV2.Client, time.Duration, error) {
 			return nil, 0, errors.Errorf("TEST_ARANGODB_ENDPOINT is not set")
 		}
 	}

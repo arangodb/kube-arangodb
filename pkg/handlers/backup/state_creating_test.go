@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -76,7 +76,7 @@ func Test_State_Creating_Success(t *testing.T) {
 		backups := mock.getIDs()
 		require.Len(t, backups, 1)
 
-		backupMeta, err := mock.Get(driver.BackupID(backups[0]))
+		backupMeta, err := mock.Get(backups[0])
 		require.NoError(t, err)
 
 		compareBackupMeta(t, backupMeta, newObj)
@@ -87,7 +87,7 @@ func Test_State_Creating_Success(t *testing.T) {
 func Test_State_Creating_Failed(t *testing.T) {
 	// Arrange
 	handler, _ := newErrorsFakeHandler(mockErrorsArangoClientBackup{
-		createError: driver.ArangoError{
+		createError: adbDriverV2Shared.ArangoError{
 			Code: 400,
 		},
 	})

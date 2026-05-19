@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arangodb/go-driver"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
-func testIsUpgradeIndexOrderIssueEnabled(enabled bool, group api.ServerGroup, from, to driver.Version) bool {
+func testIsUpgradeIndexOrderIssueEnabled(enabled bool, group api.ServerGroup, from, to adbDriverV2.Version) bool {
 	*upgradeIndexOrderIssue.EnabledPointer() = enabled
 
 	return IsUpgradeIndexOrderIssueEnabled(group, from, to)
