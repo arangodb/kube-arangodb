@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func applyGeneric(t *testing.T, template *core.PodTemplateSpec, ns ...*Generic) func(in func(t *testing.T, pod *core.PodTemplateSpec, spec *Generic)) {
@@ -125,6 +126,73 @@ func Test_Generic(t *testing.T) {
 			require.Len(t, pod.Spec.Containers[0].Env, 1)
 			require.EqualValues(t, "key1", pod.Spec.Containers[0].Env[0].Name)
 			require.EqualValues(t, "value1", pod.Spec.Containers[0].Env[0].Value)
+		})
+	})
+}
+
+func Test_Generic_Security(t *testing.T) {
+	t.Run("Nil security", func(t *testing.T) {
+		applyGeneric(t, &core.PodTemplateSpec{
+			Spec: core.PodSpec{
+				Containers: []core.Container{
+					{Name: "c1"},
+				},
+			},
+		}, &Generic{})(func(t *testing.T, pod *core.PodTemplateSpec, spec *Generic) {
+			require.Nil(t, spec.Security)
+			require.Nil(t, pod.Spec.Containers[0].SecurityContext)
+		})
+	})
+	t.Run("Applied to all containers", func(t *testing.T) {
+		applyGeneric(t, &core.PodTemplateSpec{
+			Spec: core.PodSpec{
+				Containers: []core.Container{
+					{Name: "c1"},
+					{Name: "c2"},
+				},
+			},
+		}, &Generic{
+			Security: &schedulerContainerResourcesApi.Security{
+				SecurityContext: &core.SecurityContext{
+					RunAsNonRoot:             util.NewType(true),
+					AllowPrivilegeEscalation: util.NewType(false),
+				},
+			},
+		})(func(t *testing.T, pod *core.PodTemplateSpec, spec *Generic) {
+			require.NotNil(t, spec.Security)
+			require.Len(t, pod.Spec.Containers, 2)
+			for _, c := range pod.Spec.Containers {
+				require.NotNil(t, c.SecurityContext, "container %s", c.Name)
+				require.NotNil(t, c.SecurityContext.RunAsNonRoot)
+				require.True(t, *c.SecurityContext.RunAsNonRoot)
+				require.NotNil(t, c.SecurityContext.AllowPrivilegeEscalation)
+				require.False(t, *c.SecurityContext.AllowPrivilegeEscalation)
+			}
+		})
+	})
+	t.Run("With merges last wins", func(t *testing.T) {
+		applyGeneric(t, &core.PodTemplateSpec{
+			Spec: core.PodSpec{
+				Containers: []core.Container{
+					{Name: "c1"},
+				},
+			},
+		}, &Generic{
+			Security: &schedulerContainerResourcesApi.Security{
+				SecurityContext: &core.SecurityContext{
+					RunAsUser: util.NewType[int64](1000),
+				},
+			},
+		}, &Generic{
+			Security: &schedulerContainerResourcesApi.Security{
+				SecurityContext: &core.SecurityContext{
+					RunAsUser: util.NewType[int64](2000),
+				},
+			},
+		})(func(t *testing.T, pod *core.PodTemplateSpec, spec *Generic) {
+			require.NotNil(t, pod.Spec.Containers[0].SecurityContext)
+			require.NotNil(t, pod.Spec.Containers[0].SecurityContext.RunAsUser)
+			require.EqualValues(t, 2000, *pod.Spec.Containers[0].SecurityContext.RunAsUser)
 		})
 	})
 }
