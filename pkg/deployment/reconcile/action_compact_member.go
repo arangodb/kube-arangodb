@@ -63,7 +63,7 @@ func (a *actionCompactMember) Start(ctx context.Context) (bool, error) {
 
 		c := client.NewClient(dbc.Connection())
 
-		if err := c.Compact(ctx, &client.CompactRequest{
+		if err := c.Compact(adbDriverV2Connection.WithAsync(ctx), &client.CompactRequest{
 			CompactBottomMostLevel: util.NewType(true),
 			ChangeLevel:            util.NewType(true),
 		}); err != nil {
