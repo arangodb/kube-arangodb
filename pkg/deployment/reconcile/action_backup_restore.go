@@ -111,7 +111,7 @@ func (a actionBackupRestore) restoreAsync(ctx context.Context, backup *backupApi
 	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 
-	if _, err := dbc.BackupRestore(ctxChild, backup.Status.Backup.ID); err != nil {
+	if _, err := dbc.BackupRestore(adbDriverV2Connection.WithAsync(ctxChild), backup.Status.Backup.ID); err != nil {
 		if id, ok := adbDriverV2Connection.IsAsyncJobInProgress(err); ok {
 			a.actionCtx.Add(LocalJobID, id, true)
 			a.actionCtx.Add(actionBackupRestoreLocalBackupName, backup.GetName(), true)
