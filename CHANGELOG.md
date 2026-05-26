@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Improvement) Expose Docker base image as overridable Makefile variable (BASEIMAGE)
 - (Bugfix) Fix async context for backup restore, compact member, and rebuild outsynced shards actions after Driver V1 removal
 - (Feature) (Scheduler) Add Description and Tags to ArangoProfile and expose in Inventory
 - (Feature) (Platform) Storage V2 Central Service
