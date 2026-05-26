@@ -125,6 +125,11 @@ func (in *Generic) DeepCopyInto(out *Generic) {
 		*out = new(resources.VolumeMounts)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Security != nil {
+		in, out := &in.Security, &out.Security
+		*out = new(resources.Security)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

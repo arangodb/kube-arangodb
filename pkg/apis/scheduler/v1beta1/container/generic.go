@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,9 @@ type Generic struct {
 
 	// VolumeMounts define volume mounts assigned to the Container
 	*schedulerContainerResourcesApi.VolumeMounts `json:",inline"`
+
+	// Security keeps the security settings for Container
+	*schedulerContainerResourcesApi.Security `json:",inline"`
 }
 
 func (g *Generic) Apply(template *core.PodTemplateSpec) error {
@@ -47,6 +50,7 @@ func (g *Generic) Apply(template *core.PodTemplateSpec) error {
 		if err := shared.WithErrors(
 			g.Environments.Apply(template, &template.Spec.Containers[id]),
 			g.VolumeMounts.Apply(template, &template.Spec.Containers[id]),
+			g.Security.Apply(template, &template.Spec.Containers[id]),
 		); err != nil {
 			return err
 		}
@@ -87,6 +91,7 @@ func (g *Generic) With(other *Generic) *Generic {
 	return &Generic{
 		Environments: g.Environments.With(other.Environments),
 		VolumeMounts: g.VolumeMounts.With(other.VolumeMounts),
+		Security:     g.Security.With(other.Security),
 	}
 }
 
@@ -98,5 +103,6 @@ func (g *Generic) Validate() error {
 	return shared.WithErrors(
 		shared.PrefixResourceErrors("containerEnvironments", g.Environments.Validate()),
 		shared.PrefixResourceErrors("volumeMounts", g.VolumeMounts.Validate()),
+		shared.PrefixResourceErrors("security", g.Security.Validate()),
 	)
 }
