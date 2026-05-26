@@ -14,7 +14,8 @@ endif
 KUBERNETES_VERSION_MINOR:=33
 KUBERNETES_VERSION_PATCH:=12
 
-ENVOY_IMAGE=envoyproxy/envoy:v1.37.2
+BASEIMAGE ?= ubuntu:24.04
+ENVOY_IMAGE ?= envoyproxy/envoy:v1.37.2
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -61,8 +62,8 @@ include $(ROOT)/$(RELEASE_MODE).mk
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
 GOBASEVERSION := 1.25.10
-GOVERSION := $(GOBASEVERSION)-alpine3.18
-DISTRIBUTION := alpine:3.15
+GOVERSION ?= $(GOBASEVERSION)-alpine3.18
+DISTRIBUTION ?= alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 
 GOBUILDTAGS := $(RELEASE_MODE)
@@ -516,11 +517,11 @@ $(BIN): $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AM
 .PHONY: docker
 docker: clean check-vars $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPERATOR_LINUX_ARM64)
 ifdef PUSHIMAGES
-	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "IMAGE=$(BASEIMAGE)" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
 		--platform $(DOCKER_PLATFORMS) --push -t $(OPERATORIMAGE) .
 else
-	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
+	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "IMAGE=$(BASEIMAGE)" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
 		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
 		--platform $(DOCKER_PLATFORMS) -t $(OPERATORIMAGE) .
 endif
