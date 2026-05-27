@@ -28,7 +28,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"google.golang.org/grpc"
@@ -148,7 +148,7 @@ func (s *fsStorageV2) ListObjects(ctx context.Context, in *pbStorageV2.StorageV2
 			return nil
 		}
 		rel, _ := filepath.Rel(s.filesDir, path)
-		if prefix == "" || strings.HasPrefix(rel, prefix) {
+		if prefix == "" || goStrings.HasPrefix(rel, prefix) {
 			files = append(files, &pbStorageV2.StorageV2Object{
 				Path: &pbStorageV2.StorageV2Path{Path: rel},
 				Info: &pbStorageV2.StorageV2ObjectInfo{

@@ -23,7 +23,7 @@ package integration
 import (
 	"context"
 	"fmt"
-	"strings"
+	goStrings "strings"
 	"sync"
 
 	"google.golang.org/grpc"
@@ -129,7 +129,7 @@ func (m *inMemoryMetaStore) List(ctx context.Context, in *pbMetaV1.ListRequest, 
 	prefix := in.GetPrefix()
 	var keys []string
 	for k := range m.objects {
-		if prefix == "" || strings.HasPrefix(k, prefix) {
+		if prefix == "" || goStrings.HasPrefix(k, prefix) {
 			keys = append(keys, k)
 		}
 	}

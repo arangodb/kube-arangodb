@@ -27,7 +27,7 @@ import (
 	"reflect"
 	"slices"
 	"sort"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -96,7 +96,7 @@ func (b *schemaBuilder) tryGetKubeOpenAPIV2Definitions(t *testing.T, obj interfa
 	var typ, frmt string
 	if o, ok := obj.(openAPISchemaTypeGetter); ok {
 		strs := o.OpenAPISchemaType()
-		t.Logf("Input: %s, type: %s", strings.Join(strs, ", "), reflect.TypeOf(obj).String())
+		t.Logf("Input: %s, type: %s", goStrings.Join(strs, ", "), reflect.TypeOf(obj).String())
 		if len(strs) == 0 {
 			return &apiextensions.JSONSchemaProps{
 				Type:                   "object",
