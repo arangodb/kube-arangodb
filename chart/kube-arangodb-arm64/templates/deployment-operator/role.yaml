@@ -155,6 +155,8 @@ rules:
       - "arangoplatformcharts/status"
       - "arangoplatformservices"
       - "arangoplatformservices/status"
+      - "arangoplatformconnectors"
+      - "arangoplatformconnectors/status"
     verbs:
       - "get"
       - "list"

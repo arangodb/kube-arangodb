@@ -91,6 +91,7 @@ func AllDefinitions() []Definition {
 		PlatformStorageDefinitionWithOptions(),
 		PlatformChartDefinitionWithOptions(),
 		PlatformServiceDefinitionWithOptions(),
+		PlatformConnectorDefinitionWithOptions(),
 
 		// Permission
 		PermissionTokenDefinitionWithOptions(),

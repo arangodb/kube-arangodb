@@ -21,9 +21,11 @@
 package definition
 
 import (
+	"encoding/json"
 	"strconv"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
@@ -82,6 +84,28 @@ func NewInventoryProfile(profile *schedulerApi.ArangoProfile) *InventoryProfile 
 	p.Tags = profile.Spec.Tags
 
 	return &p
+}
+
+func NewInventoryConnector(connector *platformApi.ArangoPlatformConnector) *InventoryConnector {
+	var c InventoryConnector
+
+	if d := connector.Spec.Description; d != nil {
+		c.Description = *d
+	}
+
+	c.Tags = connector.Spec.Tags
+
+	if s := connector.Spec.Schema; s != nil {
+		if data, err := json.Marshal(s); err == nil {
+			c.Schema = string(data)
+		}
+	}
+
+	if v := connector.Spec.Version; v != nil {
+		c.Version = *v
+	}
+
+	return &c
 }
 
 func getShardingFromArgs(args ...string) ArangoDBSharding {

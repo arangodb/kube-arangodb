@@ -1,0 +1,27 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arangoplatformconnectors.platform.arangodb.com
+spec:
+  group: platform.arangodb.com
+  names:
+    kind: ArangoPlatformConnector
+    listKind: ArangoPlatformConnectorList
+    plural: arangoplatformconnectors
+    singular: arangoplatformconnector
+  scope: Namespaced
+  versions:
+    - name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if Connector is valid
+          name: Ready
+          type: string
+      subresources:
+        status: {}

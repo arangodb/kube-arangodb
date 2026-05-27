@@ -64,6 +64,10 @@ func WithArangoPlatformStorageUpdateStatusInterfaceRetry(ctx context.Context, cl
 	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformStorageStatus, *platformApi.ArangoPlatformStorage](ctx, client, obj, status, opts)
 }
 
+func WithArangoPlatformConnectorUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[platformApi.ArangoPlatformConnectorStatus, *platformApi.ArangoPlatformConnector], obj *platformApi.ArangoPlatformConnector, status platformApi.ArangoPlatformConnectorStatus, opts meta.UpdateOptions) (*platformApi.ArangoPlatformConnector, error) {
+	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformConnectorStatus, *platformApi.ArangoPlatformConnector](ctx, client, obj, status, opts)
+}
+
 func WithArangoPlatformChartUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[platformApi.ArangoPlatformChartStatus, *platformApi.ArangoPlatformChart], obj *platformApi.ArangoPlatformChart, status platformApi.ArangoPlatformChartStatus, opts meta.UpdateOptions) (*platformApi.ArangoPlatformChart, error) {
 	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformChartStatus, *platformApi.ArangoPlatformChart](ctx, client, obj, status, opts)
 }

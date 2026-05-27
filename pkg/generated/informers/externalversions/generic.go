@@ -121,6 +121,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=platform.arangodb.com, Version=v1beta1
 	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformcharts"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformCharts().Informer()}, nil
+	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformconnectors"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformConnectors().Informer()}, nil
 	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformServices().Informer()}, nil
 	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformstorages"):

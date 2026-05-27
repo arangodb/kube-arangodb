@@ -29,6 +29,7 @@ func init() {
 		crds.PlatformStorageDefinitionWithOptions,
 		crds.PlatformChartDefinitionWithOptions,
 		crds.PlatformServiceDefinitionWithOptions,
+		crds.PlatformConnectorDefinitionWithOptions,
 	}
 	for _, getDef := range defs {
 		defFn := getDef // bring into scope

@@ -1,0 +1,181 @@
+v1beta1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          description:
+            description: Description of what this connector does
+            type: string
+          schema:
+            description: |-
+              Schema defines the JSON Schema for the connector's input query.
+              AI tools use this to validate parameters before submitting jobs.
+              Uses the same format as CRD validation schemas.
+            properties:
+              $ref:
+                type: string
+              $schema:
+                type: string
+              additionalItems:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              additionalProperties:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              allOf:
+                items:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: array
+              anyOf:
+                items:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: array
+              default:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              definitions:
+                additionalProperties:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: object
+              dependencies:
+                additionalProperties:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: object
+              description:
+                type: string
+              enum:
+                items:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: array
+              example:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              exclusiveMaximum:
+                type: boolean
+              exclusiveMinimum:
+                type: boolean
+              externalDocs:
+                properties:
+                  description:
+                    type: string
+                  url:
+                    type: string
+                type: object
+              format:
+                type: string
+              id:
+                type: string
+              items:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              maxItems:
+                format: int64
+                type: integer
+              maxLength:
+                format: int64
+                type: integer
+              maxProperties:
+                format: int64
+                type: integer
+              maximum:
+                format: double
+                type: number
+              minItems:
+                format: int64
+                type: integer
+              minLength:
+                format: int64
+                type: integer
+              minProperties:
+                format: int64
+                type: integer
+              minimum:
+                format: double
+                type: number
+              multipleOf:
+                format: double
+                type: number
+              not:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              nullable:
+                type: boolean
+              oneOf:
+                items:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: array
+              pattern:
+                type: string
+              patternProperties:
+                additionalProperties:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: object
+              properties:
+                additionalProperties:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                type: object
+              required:
+                items:
+                  type: string
+                type: array
+              title:
+                type: string
+              type:
+                type: string
+              uniqueItems:
+                type: boolean
+              x-kubernetes-embedded-resource:
+                type: boolean
+              x-kubernetes-int-or-string:
+                type: boolean
+              x-kubernetes-list-map-keys:
+                items:
+                  type: string
+                type: array
+              x-kubernetes-list-type:
+                type: string
+              x-kubernetes-map-type:
+                type: string
+              x-kubernetes-preserve-unknown-fields:
+                type: boolean
+              x-kubernetes-validations:
+                items:
+                  properties:
+                    fieldPath:
+                      type: string
+                    message:
+                      type: string
+                    messageExpression:
+                      type: string
+                    optionalOldSelf:
+                      type: boolean
+                    reason:
+                      type: string
+                    rule:
+                      type: string
+                  type: object
+                type: array
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+          tags:
+            description: Tags for discovery and filtering (e.g. "database", "aql", "vector-search")
+            items:
+              type: string
+            type: array
+          version:
+            description: Version of the connector
+            type: string
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

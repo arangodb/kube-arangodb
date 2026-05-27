@@ -30,6 +30,14 @@ type ArangoPlatformChartListerExpansion interface{}
 // ArangoPlatformChartNamespaceLister.
 type ArangoPlatformChartNamespaceListerExpansion interface{}
 
+// ArangoPlatformConnectorListerExpansion allows custom methods to be added to
+// ArangoPlatformConnectorLister.
+type ArangoPlatformConnectorListerExpansion interface{}
+
+// ArangoPlatformConnectorNamespaceListerExpansion allows custom methods to be added to
+// ArangoPlatformConnectorNamespaceLister.
+type ArangoPlatformConnectorNamespaceListerExpansion interface{}
+
 // ArangoPlatformServiceListerExpansion allows custom methods to be added to
 // ArangoPlatformServiceLister.
 type ArangoPlatformServiceListerExpansion interface{}
