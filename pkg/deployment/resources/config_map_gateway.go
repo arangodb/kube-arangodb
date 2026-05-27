@@ -154,6 +154,18 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 	inventory.Arangodb = pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus())
 	inventory.Security = pbInventoryV1.NewInventorySecurity(r.context.GetSpec(), r.context.GetStatus())
 
+	// List connectors from the namespace
+	if connectorList, err := r.context.ACS().CurrentClusterCache().Client().Arango().PlatformV1beta1().ArangoPlatformLinks(r.context.GetAPIObject().GetNamespace()).List(ctx, meta.ListOptions{}); err == nil {
+		connectors := make(map[string]*pbInventoryV1.InventoryConnector)
+		for idx := range connectorList.Items {
+			c := &connectorList.Items[idx]
+			if c.Status.Conditions.IsTrue(platformApi.ReadyCondition) {
+				connectors[c.GetName()] = pbInventoryV1.NewInventoryConnector(c)
+			}
+		}
+		inventory.Connectors = connectors
+	}
+
 	inventoryPreData, err := ugrpc.Marshal(inventory, ugrpc.WithUseProtoNames(true), ugrpc.WithEmitDefaultValues(true))
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway inventory"))

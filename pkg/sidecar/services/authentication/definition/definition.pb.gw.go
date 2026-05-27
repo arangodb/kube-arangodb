@@ -14,7 +14,7 @@ import (
 	"io"
 	"net/http"
 
-	definition_9 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	definition_10 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -38,7 +38,7 @@ var (
 
 func request_SidecarAuthenticationService_GetKeys_0(ctx context.Context, marshaler runtime.Marshaler, client SidecarAuthenticationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -50,7 +50,7 @@ func request_SidecarAuthenticationService_GetKeys_0(ctx context.Context, marshal
 
 func local_request_SidecarAuthenticationService_GetKeys_0(ctx context.Context, marshaler runtime.Marshaler, server SidecarAuthenticationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.GetKeys(ctx, &protoReq)
