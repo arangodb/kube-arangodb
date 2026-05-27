@@ -27,6 +27,7 @@ import (
 	"reflect"
 	"slices"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -41,15 +42,19 @@ type schemaBuilder struct {
 	root   string
 	fields map[string]*ast.Field
 	fs     *token.FileSet
+
+	// visiting tracks types currently being processed to detect cycles
+	visiting map[reflect.Type]bool
 }
 
 type allowAnyType struct{}
 
 func newSchemaBuilder(root string, fields map[string]*ast.Field, fs *token.FileSet) *schemaBuilder {
 	return &schemaBuilder{
-		root:   root,
-		fields: fields,
-		fs:     fs,
+		root:     root,
+		fields:   fields,
+		fs:       fs,
+		visiting: make(map[reflect.Type]bool),
 	}
 }
 
@@ -91,6 +96,13 @@ func (b *schemaBuilder) tryGetKubeOpenAPIV2Definitions(t *testing.T, obj interfa
 	var typ, frmt string
 	if o, ok := obj.(openAPISchemaTypeGetter); ok {
 		strs := o.OpenAPISchemaType()
+		t.Logf("Input: %s, type: %s", strings.Join(strs, ", "), reflect.TypeOf(obj).String())
+		if len(strs) == 0 {
+			return &apiextensions.JSONSchemaProps{
+				Type:                   "object",
+				XPreserveUnknownFields: util.NewType(true),
+			}
+		}
 		require.Len(t, strs, 1)
 		typ = strs[0]
 	}
@@ -155,7 +167,21 @@ func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, parent *Doc
 			}
 			return
 		}
+		// Cycle detection: if we're already processing this type, emit opaque object
+		if b.visiting[obj] {
+			schema = &apiextensions.JSONSchemaProps{
+				Type:                   "object",
+				XPreserveUnknownFields: util.NewType(true),
+			}
+			return
+		}
+		b.visiting[obj] = true
 		schema = b.StructToSchema(t, obj, parent, path)
+		delete(b.visiting, obj)
+		// JSONSchemaProps accepts arbitrary JSON Schema — preserve unknown fields
+		if obj == reflect.TypeOf(apiextensions.JSONSchemaProps{}) && schema != nil {
+			schema.XPreserveUnknownFields = util.NewType(true)
+		}
 	case reflect.Array, reflect.Slice:
 		schema = b.ArrayToSchema(t, obj.Elem(), parent, path)
 	case reflect.Map:

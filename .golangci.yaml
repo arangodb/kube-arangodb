@@ -93,6 +93,12 @@ linters-settings:
         alias: pbImplPongV1
       - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1/definition
         alias: pbPongV1
+      - alias: pbImplConnectorV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/connector/v1
+      - alias: pbConnectorV1
+        pkg: github.com/arangodb/kube-arangodb/integrations/connector/v1/definition
+      - alias: testIntegration
+        pkg: github.com/arangodb/kube-arangodb/pkg/util/tests/integration
       - alias: pbImplSchedulerV1
         pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1
       - alias: pbSchedulerV1
