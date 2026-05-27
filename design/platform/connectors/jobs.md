@@ -41,10 +41,10 @@ Cancelled ◄── Running
 | `id` | UUID | Created |
 | `connector_id` | UUID | Created (from config) |
 | `handler_id` | UUID | Scheduled (handler instance) |
-| `status` | `[]JobStatus` | Every transition (max 10, newest first) |
+| `statuses` | `[]JobStatus` | Every transition (max 10, newest first) |
 | `query` | bytes (JSON) | Created |
 | `timeout` | Duration | Created (optional) |
-| `created_at` | Timestamp | Created |
+| `created` | Timestamp | Created |
 | `result` | string | Scheduled (`/connectors/<cid>/<jid>/`) |
 
 ## Status History
@@ -55,16 +55,16 @@ Status is a list (max 10 entries, most recent first). Each entry:
 |---|---|
 | `state` | JobState |
 | `description` | string |
-| `updated_at` | Timestamp |
+| `updated` | Timestamp |
 
 Example after completion:
 ```json
 {
-  "status": [
-    { "state": "JOB_STATE_COMPLETED", "description": "Query returned 42 documents", "updated_at": "..." },
-    { "state": "JOB_STATE_RUNNING", "description": "Executing AQL query", "updated_at": "..." },
-    { "state": "JOB_STATE_SCHEDULED", "description": "Job scheduled", "updated_at": "..." },
-    { "state": "JOB_STATE_PENDING", "description": "Job created", "updated_at": "..." }
+  "statuses": [
+    { "state": "JOB_STATE_COMPLETED", "description": "Query returned 42 documents", "updated": "..." },
+    { "state": "JOB_STATE_RUNNING", "description": "Executing AQL query", "updated": "..." },
+    { "state": "JOB_STATE_SCHEDULED", "description": "Job scheduled", "updated": "..." },
+    { "state": "JOB_STATE_PENDING", "description": "Job created", "updated": "..." }
   ]
 }
 ```

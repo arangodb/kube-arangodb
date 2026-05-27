@@ -3,9 +3,45 @@ v1beta1:
     properties:
       spec:
         properties:
+          deployment:
+            description: Deployment references the ArangoDeployment this connector belongs to
+            properties:
+              checksum:
+                description: UID keeps the information about object Checksum
+                type: string
+              name:
+                description: Name of the object
+                type: string
+              namespace:
+                description: Namespace of the object. Should default to the namespace of the parent object
+                type: string
+              uid:
+                description: UID keeps the information about object UID
+                type: string
+            required:
+              - name
+            type: object
           description:
             description: Description of what this connector does
             type: string
+          route:
+            description: Route references the ArangoRoute that exposes this connector at /connector/<name>/
+            properties:
+              checksum:
+                description: UID keeps the information about object Checksum
+                type: string
+              name:
+                description: Name of the object
+                type: string
+              namespace:
+                description: Namespace of the object. Should default to the namespace of the parent object
+                type: string
+              uid:
+                description: UID keeps the information about object UID
+                type: string
+            required:
+              - name
+            type: object
           schema:
             description: |-
               Schema defines the JSON Schema for the connector's input query.
@@ -170,6 +206,11 @@ v1beta1:
             items:
               type: string
             type: array
+          type:
+            description: Type defines the connector pattern type
+            enum:
+              - Active
+            type: string
           version:
             description: Version of the connector
             type: string

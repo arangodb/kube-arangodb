@@ -22,11 +22,27 @@ internal API to process jobs.
 Define what your connector does and what input it accepts:
 
 ```yaml
+apiVersion: networking.arangodb.com/v1beta1
+kind: ArangoRoute
+metadata:
+  name: my-connector-route
+spec:
+  deployment: <deployment-name>
+  route:
+    path: /connector/my-connector/
+  destination:
+    path: /_integration/connector/v1/
+---
 apiVersion: platform.arangodb.com/v1beta1
 kind: ArangoPlatformConnector
 metadata:
   name: my-connector
 spec:
+  type: Active
+  deployment:
+    name: <deployment-name>
+  route:
+    name: my-connector-route
   description: "What this connector does"
   tags:
     - my-tag
@@ -39,6 +55,9 @@ spec:
       - myParam
   version: "1.0.0"
 ```
+
+The `ArangoRoute` redirects `/connector/my-connector/*` to the internal
+`/_integration/connector/v1/*` endpoint, giving AI tools a clean URL.
 
 ## Step 2: Implement the Connector Loop
 

@@ -25,6 +25,7 @@ import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 const (
 	ChartFoundCondition      api.ConditionType = "ChartFound"
 	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
+	RouteFoundCondition      api.ConditionType = "RouteFound"
 	SpecValidCondition       api.ConditionType = "SpecValid"
 	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
 	ReadyCondition           api.ConditionType = "Ready"

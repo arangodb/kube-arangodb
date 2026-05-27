@@ -22,9 +22,33 @@ package v1beta1
 
 import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
+
+// ArangoPlatformConnectorType defines the connector pattern type
+type ArangoPlatformConnectorType string
+
+const (
+	// ArangoPlatformConnectorTypeActive is the default connector type.
+	// The connector actively polls for jobs and processes them.
+	// +doc/enum: Active|Connector actively polls for and processes jobs (default)
+	ArangoPlatformConnectorTypeActive ArangoPlatformConnectorType = "Active"
 )
 
 type ArangoPlatformConnectorSpec struct {
+	// Type defines the connector pattern type
+	// +doc/default: Active
+	// +doc/enum: Active|Connector actively polls for and processes jobs
+	Type *ArangoPlatformConnectorType `json:"type,omitempty"`
+
+	// Deployment references the ArangoDeployment this connector belongs to
+	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+
+	// Route references the ArangoRoute that exposes this connector at /connector/<name>/
+	Route *sharedApi.Object `json:"route,omitempty"`
+
 	// Description of what this connector does
 	Description *string `json:"description,omitempty"`
 
@@ -42,6 +66,23 @@ type ArangoPlatformConnectorSpec struct {
 	Version *string `json:"version,omitempty"`
 }
 
+// GetType returns the connector type, defaulting to Active
+func (s *ArangoPlatformConnectorSpec) GetType() ArangoPlatformConnectorType {
+	if s == nil || s.Type == nil {
+		return ArangoPlatformConnectorTypeActive
+	}
+	return *s.Type
+}
+
 func (s *ArangoPlatformConnectorSpec) Validate() error {
-	return nil
+	if s == nil {
+		return nil
+	}
+
+	switch s.GetType() {
+	case ArangoPlatformConnectorTypeActive:
+		return nil
+	default:
+		return errors.Errorf("unsupported connector type: %s", s.GetType())
+	}
 }

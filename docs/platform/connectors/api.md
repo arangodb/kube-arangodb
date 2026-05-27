@@ -40,9 +40,9 @@ Response:
   "job": {
     "id": "550e8400-...",
     "connector_id": "...",
-    "status": [
-      {"state": "JOB_STATE_COMPLETED", "description": "Query returned 42 documents", "updated_at": "..."},
-      {"state": "JOB_STATE_RUNNING", "description": "Executing AQL query", "updated_at": "..."},
+    "statuses": [
+      {"state": "JOB_STATE_COMPLETED", "description": "Query returned 42 documents", "updated": "..."},
+      {"state": "JOB_STATE_RUNNING", "description": "Executing AQL query", "updated": "..."},
       ...
     ],
     "result": "/connectors/<connector-id>/<job-id>/"

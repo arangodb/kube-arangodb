@@ -47,11 +47,11 @@ Each job keeps a status history (up to 10 entries, most recent first):
 
 ```json
 {
-  "status": [
-    {"state": "JOB_STATE_COMPLETED", "description": "Query returned 42 docs", "updated_at": "..."},
-    {"state": "JOB_STATE_RUNNING", "description": "Executing AQL", "updated_at": "..."},
-    {"state": "JOB_STATE_SCHEDULED", "description": "Job scheduled", "updated_at": "..."},
-    {"state": "JOB_STATE_PENDING", "description": "Job created", "updated_at": "..."}
+  "statuses": [
+    {"state": "JOB_STATE_COMPLETED", "description": "Query returned 42 docs", "updated": "..."},
+    {"state": "JOB_STATE_RUNNING", "description": "Executing AQL", "updated": "..."},
+    {"state": "JOB_STATE_SCHEDULED", "description": "Job scheduled", "updated": "..."},
+    {"state": "JOB_STATE_PENDING", "description": "Job created", "updated": "..."}
   ]
 }
 ```

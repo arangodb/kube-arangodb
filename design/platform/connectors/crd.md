@@ -22,41 +22,71 @@ Plural: `arangoplatformconnectors`
 AI tools use these fields to discover connectors via `/_inventory` and
 validate their input before submitting jobs.
 
-## Status
+### Spec
 
-| Field | Type | Description |
-|---|---|---|
-| `conditions` | `ConditionList` | Standard conditions: `SpecValid`, `Ready` |
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `type` | `string` | `Active` | Connector pattern type |
+| `deployment` | `Object` | | Reference to ArangoDeployment |
+| `route` | `Object` | | Reference to ArangoRoute for redirection |
+| `description` | `string` | | Human-readable description |
+| `tags` | `[]string` | | Discovery/filtering labels |
+| `schema` | `JSONSchemaProps` | | JSON Schema for input query |
+| `version` | `string` | | Connector version |
+
+### Status
+
+| Condition | Description |
+|---|---|
+| `SpecValid` | Spec validated (type is supported) |
+| `DeploymentFound` | Referenced ArangoDeployment exists |
+| `RouteFound` | Referenced ArangoRoute exists and is ready |
+| `Ready` | All conditions met |
+
+### Routing
+
+The `route` field references an ArangoRoute that redirects `/connector/<name>/`
+to `/_integration/connector/v1/`. This gives each connector a clean URL.
 
 ## Example
 
 ```yaml
+apiVersion: networking.arangodb.com/v1beta1
+kind: ArangoRoute
+metadata:
+  name: aql-connector-route
+spec:
+  deployment: my-deployment
+  route:
+    path: /connector/aql-connector/
+  destination:
+    path: /_integration/connector/v1/
+---
 apiVersion: platform.arangodb.com/v1beta1
 kind: ArangoPlatformConnector
 metadata:
   name: aql-connector
   namespace: arangodb
 spec:
+  type: Active
+  deployment:
+    name: my-deployment
+  route:
+    name: aql-connector-route
   description: "Execute AQL queries on ArangoDB"
   tags:
     - database
     - aql
     - query
-  schema: |
-    {
-      "type": "object",
-      "properties": {
-        "query": {
-          "type": "string",
-          "description": "AQL query string"
-        },
-        "bindVars": {
-          "type": "object",
-          "description": "Bind variables for the query"
-        }
-      },
-      "required": ["query"]
-    }
+  schema:
+    type: object
+    properties:
+      query:
+        type: string
+      bindVars:
+        type: object
+    required:
+      - query
   version: "1.0.0"
 ```
 
