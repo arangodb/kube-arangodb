@@ -347,6 +347,9 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoPlatformService.V1Beta1": {
 						"Spec": platformApi.ArangoPlatformService{}.Spec,
 					},
+					"ArangoPlatformLink.V1Beta1": {
+						"Spec": platformApi.ArangoPlatformLink{}.Spec,
+					},
 				},
 				Shared: []string{},
 			},

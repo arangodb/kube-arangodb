@@ -1,0 +1,139 @@
+//
+// DISCLAIMER
+//
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package connector;
+
+import "google/api/annotations.proto";
+import "integrations/link/v1/definition/external.proto";
+import "integrations/link/v1/definition/job.proto";
+import "integrations/shared/v1/definition/empty.proto";
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/link/v1/definition";
+
+// LinkV1Internal — used by link processes to pick up and process jobs (GRPC only)
+service LinkV1Internal {
+  // Pick up one pending job, atomically moving it to Scheduled. Returns job ID or empty if none
+  rpc PickUpJob(shared.Empty) returns (PickUpJobResponse) {
+    option (google.api.http) = {
+      post: "/_internal/connector/v1/job/pickup"
+    };
+  }
+
+  // Get full job details by ID
+  rpc GetJob(GetJobRequest) returns (GetJobResponse) {
+    option (google.api.http) = {
+      get: "/_internal/connector/v1/job/{id}"
+    };
+  }
+
+  // Update job status (Running, Completed, or Failed)
+  rpc UpdateJobStatus(UpdateJobStatusRequest) returns (UpdateJobStatusResponse) {
+    option (google.api.http) = {
+      post: "/_internal/connector/v1/job/{id}/status"
+      body: "*"
+    };
+  }
+
+  // Upload a single file to a job's FileStore directory
+  rpc UploadFile(UploadFileRequest) returns (UploadFileResponse) {
+    option (google.api.http) = {
+      post: "/_internal/connector/v1/job/{job_id}/upload/{name}"
+      body: "data"
+    };
+  }
+
+  // Upload multiple files to a job's FileStore directory in one call (streaming, no HTTP)
+  rpc BatchUploadFiles(stream BatchUploadFileRequest) returns (BatchUploadFilesResponse);
+
+  // Update link info (description, tags) — called by the link process at startup
+  rpc UpdateInfo(UpdateInfoRequest) returns (UpdateInfoResponse) {
+    option (google.api.http) = {
+      post: "/_internal/connector/v1/info"
+      body: "*"
+    };
+  }
+}
+
+// Pick Up Job Response
+message PickUpJobResponse {
+  // Job ID moved from Pending to Scheduled, empty if no pending jobs
+  optional string id = 1;
+}
+
+// Update Job Status Request
+message UpdateJobStatusRequest {
+  // Job identifier
+  string id = 1;
+  // New status
+  JobStatus status = 2;
+}
+
+// Update Job Status Response
+message UpdateJobStatusResponse {
+  // Updated job details
+  Job job = 1;
+}
+
+// Upload File Request
+message UploadFileRequest {
+  // Job identifier
+  string job_id = 1;
+  // File name relative to the job's FileStore directory
+  string name = 2;
+  // File content
+  bytes data = 3;
+}
+
+// Upload File Response
+message UploadFileResponse {
+  // Number of bytes written
+  int64 bytes = 1;
+  // SHA256 checksum of the file
+  string checksum = 2;
+}
+
+// Batch Upload File Request (streamed)
+// Multiple files in sequence — set job_id and name on first chunk of each file
+message BatchUploadFileRequest {
+  // Job identifier (must be set on the first message of each file)
+  string job_id = 1;
+  // File name relative to the job's FileStore directory (set on the first chunk of each file)
+  string name = 2;
+  // File data chunk
+  bytes chunk = 3;
+}
+
+// Batch Upload Files Response
+message BatchUploadFilesResponse {
+  // Results per uploaded file
+  repeated UploadFileResponse files = 1;
+}
+
+// Update Info Request
+message UpdateInfoRequest {
+  // Link info to set
+  LinkInfo info = 1;
+}
+
+// Update Info Response
+message UpdateInfoResponse {
+}

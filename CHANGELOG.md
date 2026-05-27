@@ -3,6 +3,7 @@
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) (Gateway) Use HTTP/2 for the default upstream to ArangoDB (hidden feature `gateway-default-http2`, enabled by default)
 - (Maintenance) Merge enterprise module into community, remove build tags and private dependencies
+- (Feature) (Platform) Add ArangoPlatformLink CRD and Connector V1 integration
 - (Bugfix) Add missing CRDs
 - (Improvement) Refactor operator to use context.Context instead of stopCh, add CRD sync timeout (30s) and waitForCRD timeout (15s)
 - (Feature) (RBAC) Design adjustments

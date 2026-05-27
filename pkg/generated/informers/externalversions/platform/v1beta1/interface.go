@@ -30,6 +30,8 @@ import (
 type Interface interface {
 	// ArangoPlatformCharts returns a ArangoPlatformChartInformer.
 	ArangoPlatformCharts() ArangoPlatformChartInformer
+	// ArangoPlatformLinks returns a ArangoPlatformLinkInformer.
+	ArangoPlatformLinks() ArangoPlatformLinkInformer
 	// ArangoPlatformServices returns a ArangoPlatformServiceInformer.
 	ArangoPlatformServices() ArangoPlatformServiceInformer
 	// ArangoPlatformStorages returns a ArangoPlatformStorageInformer.
@@ -50,6 +52,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // ArangoPlatformCharts returns a ArangoPlatformChartInformer.
 func (v *version) ArangoPlatformCharts() ArangoPlatformChartInformer {
 	return &arangoPlatformChartInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoPlatformLinks returns a ArangoPlatformLinkInformer.
+func (v *version) ArangoPlatformLinks() ArangoPlatformLinkInformer {
+	return &arangoPlatformLinkInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ArangoPlatformServices returns a ArangoPlatformServiceInformer.
