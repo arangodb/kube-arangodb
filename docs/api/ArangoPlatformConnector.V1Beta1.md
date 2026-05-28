@@ -8,14 +8,6 @@ title: ArangoPlatformConnector V1Beta1
 
 ## Spec
 
-### .spec.deployment.checksum
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L62)</sup>
-
-UID keeps the information about object Checksum
-
-***
-
 ### .spec.deployment.name
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L53)</sup>
@@ -26,35 +18,13 @@ Name of the object
 
 ***
 
-### .spec.deployment.namespace
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L56)</sup>
-
-Namespace of the object. Should default to the namespace of the parent object
-
-***
-
-### .spec.deployment.uid
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L59)</sup>
-
-UID keeps the information about object UID
-
-***
-
 ### .spec.description
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L53)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L69)</sup>
 
-Description of what this connector does
-
-***
-
-### .spec.route.checksum
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L62)</sup>
-
-UID keeps the information about object Checksum
+Description is a human-readable text explaining what this connector does.
+Shown to AI tools via /_inventory for discovery. Set by the user.
+Example: "Execute AQL queries on ArangoDB"
 
 ***
 
@@ -68,29 +38,15 @@ Name of the object
 
 ***
 
-### .spec.route.namespace
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L56)</sup>
-
-Namespace of the object. Should default to the namespace of the parent object
-
-***
-
-### .spec.route.uid
-
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L59)</sup>
-
-UID keeps the information about object UID
-
-***
-
 ### .spec.schema
 
-Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L63)</sup>
+Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L83)</sup>
 
-Schema defines the JSON Schema for the connector's input query.
-AI tools use this to validate parameters before submitting jobs.
-Uses the same format as CRD validation schemas.
+Schema defines the JSON Schema that describes the expected format of the query
+field when submitting jobs to this connector. AI tools read this from /_inventory
+to validate input before creating a job. Set by the user.
+Uses the standard Kubernetes JSONSchemaProps format (same as CRD validation schemas).
+The platform validates submitted job queries against this schema.
 
 Links:
 * [Kubernetes JSON Schema docs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#specifying-a-structural-schema)
@@ -99,17 +55,22 @@ Links:
 
 ### .spec.tags
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L56)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L74)</sup>
 
-Tags for discovery and filtering (e.g. "database", "aql", "vector-search")
+Tags are labels used by AI tools to discover and filter connectors via /_inventory.
+Set by the user. Use lowercase, descriptive terms.
+Example: ["database", "aql", "query"]
 
 ***
 
 ### .spec.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L44)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L47)</sup>
 
-Type defines the connector pattern type
+Type defines the connector execution pattern.
+Currently only "Active" is supported — the connector runs as a long-lived process
+that polls for pending jobs and processes them sequentially.
+Set by the user when creating the connector. Defaults to "Active" if omitted.
 
 Possible Values: 
 * `"Active"` (default) - Connector actively polls for and processes jobs
@@ -118,7 +79,9 @@ Possible Values:
 
 ### .spec.version
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L66)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/connector_spec.go#L88)</sup>
 
-Version of the connector
+Version is the version string of the connector implementation.
+Set by the user. Shown to AI tools via /_inventory. No format enforced,
+but semantic versioning (e.g. "1.0.0") is recommended.
 

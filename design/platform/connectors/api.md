@@ -1,33 +1,66 @@
 # Connector API
 
-Two gRPC services served from a single implementation.
+The connector system provides two gRPC services served from a single
+implementation. Both are registered on the integration sidecar's gRPC server.
 
-## External API — ConnectorV1External
+## ConnectorV1External — AI Tool / End User API
 
-Used by AI tools. Exposed as REST via gateway.
+**Purpose**: Allows AI tools, scripts, or end users to submit work and track
+results. This is the "consumer" API.
+
+**Audience**: Any authenticated HTTP client that can reach the deployment's
+gateway. When an `ArangoRoute` is configured, users access it at
+`/connector/<name>/`. Without a route, use `/_integration/connector/v1/`
+directly on the gateway.
+
+**All operations are asynchronous**: you create a job, then poll for completion.
+There is no push/notification mechanism currently — the client must poll
+`GET /job/{id}` to check progress. A push-on-change (e.g. WebSocket or
+server-sent events) mechanism may be considered in the future if polling
+proves insufficient.
 
 ### Create Job
+
+Submit a new job. The `query` field must match the connector's JSON Schema.
 
 ```
 POST /_integration/connector/v1/job
 
 {
-  "query": "<base64-encoded JSON matching connector schema>",
+  "query": "<JSON string matching connector schema>",
   "timeout": "30s"
 }
 
 Response: { "id": "<job-uuid>" }
 ```
 
+**Note on encoding**: The `query` field is a proto `bytes` field. In JSON
+serialization, proto bytes are base64-encoded. If you're calling via the
+HTTP gateway, send the query as a JSON string — the gateway handles encoding.
+If you're calling via gRPC directly, send raw bytes.
+
+The job starts in `Pending` state. The connector will pick it up asynchronously.
+
 ### Get Job
+
+Retrieve job state, status history, and result path.
 
 ```
 GET /_integration/connector/v1/job/{id}
 
-Response: { "job": { ... } }
+Response:
+{
+  "job": {
+    "id": "...",
+    "statuses": [{"state": "JOB_STATE_COMPLETED", ...}],
+    "result": "/connectors/<cid>/<jid>/"
+  }
+}
 ```
 
 ### List Jobs
+
+List all jobs, optionally filtered by state.
 
 ```
 GET /_integration/connector/v1/job?state=JOB_STATE_PENDING
@@ -37,17 +70,26 @@ Response: { "jobs": [ ... ] }
 
 ### Cancel Job
 
+Cancel a Pending, Scheduled, or Running job. Cannot cancel Completed or Failed.
+
 ```
 POST /_integration/connector/v1/job/{id}/cancel
 
 Response: { "job": { ... } }
 ```
 
-## Internal API — ConnectorV1Internal
+## ConnectorV1Internal — Connector Process API
 
-Used by connector processes. HTTP + gRPC.
+**Purpose**: Allows the connector binary to claim jobs from the queue, report
+progress, and upload results. This is the "producer" API.
+
+**Audience**: Only the connector process running inside the same pod. Accessible
+via the internal listener at `127.0.0.1:9192` — not reachable from outside the pod.
 
 ### Pick Up Job
+
+Atomically claim one pending job. Moves it to Scheduled state, assigns the
+handler instance, and sets the result FileStore path.
 
 ```
 POST /_internal/connector/v1/job/pickup
@@ -55,10 +97,11 @@ POST /_internal/connector/v1/job/pickup
 Response: { "id": "<job-uuid>" }   // or {} if no pending jobs
 ```
 
-Atomically moves one Pending job to Scheduled. Sets `handler_id` and
-`result` path. Uses MetaStore revision check for concurrency safety.
+Uses MetaStore revision check — safe with multiple connector replicas.
 
 ### Get Job
+
+Get full job details including the `query` payload to execute.
 
 ```
 GET /_internal/connector/v1/job/{id}
@@ -67,6 +110,9 @@ Response: { "job": { ... } }
 ```
 
 ### Update Job Status
+
+Report progress. Valid transitions: Scheduled→Running, Running→Completed,
+Running→Failed, Scheduled→Failed.
 
 ```
 POST /_internal/connector/v1/job/{id}/status
@@ -83,6 +129,8 @@ Response: { "job": { ... } }
 
 ### Upload File
 
+Upload a result file before marking the job as Completed.
+
 ```
 POST /_internal/connector/v1/job/{job_id}/upload/{name}
 
@@ -93,8 +141,8 @@ Response: { "bytes": 1234, "checksum": "<sha256>" }
 
 ### Batch Upload Files (gRPC only)
 
-Client-streaming RPC. Each file starts with a message containing `job_id`
-and `name`, followed by data chunks. Returns results per file.
+Client-streaming RPC for uploading multiple files in one call. Not available
+via HTTP — gRPC clients only.
 
 ## Proto Files
 

@@ -21,6 +21,24 @@ A connector registers itself via the `ArangoPlatformConnector` CRD, declares its
 3. AI tools discover the connector, read its schema, and submit jobs
 4. The connector picks up jobs, executes them, and uploads results
 
+## Resource Model
+
+Connectors are **not serverless** — they run as regular Kubernetes Deployments
+that you manage. The connector pod contains:
+
+- **Your connector container** — your binary that processes jobs
+- **Integration sidecar** — injected automatically by the platform, provides
+  the job queue (MetaStore) and file storage (StorageV2)
+
+The connector runs continuously and polls for jobs. It does **not** run as a
+sidecar of the caller — it is an independent workload with its own resource
+limits that you configure in the Deployment spec.
+
+You are responsible for:
+- Setting CPU/memory limits on the connector container
+- Choosing the number of replicas (multiple instances share the job queue safely)
+- Monitoring the connector's health
+
 ## Sections
 
 - [CRD Reference](connectors/crd.md) — ArangoPlatformConnector resource

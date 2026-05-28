@@ -8,7 +8,12 @@ nav_order: 3
 
 # Connector Jobs
 
-A job represents a unit of work submitted to a connector.
+A job represents a single unit of work submitted to a connector — for example,
+"run this AQL query" or "search this vector index".
+
+Jobs can be created by **any authenticated HTTP client** — AI tools, scripts,
+or end users — via the external API or through the connector's `ArangoRoute`
+(e.g. `POST /connector/aql-connector/job`).
 
 ## Job States
 
@@ -43,7 +48,10 @@ Cancelled ◄── Running
 
 ## Status History
 
-Each job keeps a status history (up to 10 entries, most recent first):
+Each job keeps a status history of **up to 10 entries per job** (most recent
+first). This is the history for a single job — not a global limit. There is
+currently no hard limit on the total number of jobs; they are stored in
+MetaStore (ArangoDB) and persist until explicitly deleted.
 
 ```json
 {
@@ -55,6 +63,22 @@ Each job keeps a status history (up to 10 entries, most recent first):
   ]
 }
 ```
+
+### Accessing Job History
+
+**Via API** — the primary way to access job status and history:
+
+```bash
+# Get a specific job with full status history
+curl https://<gateway>/connector/<name>/job/<job-id>
+
+# List all jobs (optionally filter by state)
+curl https://<gateway>/connector/<name>/job
+curl https://<gateway>/connector/<name>/job?state=JOB_STATE_FAILED
+```
+
+**Via kubectl** — jobs are stored in MetaStore (ArangoDB), not as Kubernetes
+resources, so they are not visible via `kubectl`. Use the API endpoints above.
 
 ## Results
 
