@@ -49,7 +49,7 @@ import (
 	permissionRole "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role"
 	permissionToken "github.com/arangodb/kube-arangodb/pkg/handlers/permission/token"
 	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
-	platformConnector "github.com/arangodb/kube-arangodb/pkg/handlers/platform/connector"
+	platformLink "github.com/arangodb/kube-arangodb/pkg/handlers/platform/link"
 	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
 	platformShutdown "github.com/arangodb/kube-arangodb/pkg/handlers/platform/shutdown"
 	platformStorage "github.com/arangodb/kube-arangodb/pkg/handlers/platform/storage"
@@ -353,7 +353,7 @@ func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recor
 		panic(err)
 	}
 
-	if err := platformConnector.RegisterInformer(operator, recorder, client, informer); err != nil {
+	if err := platformLink.RegisterInformer(operator, recorder, client, informer); err != nil {
 		panic(err)
 	}
 

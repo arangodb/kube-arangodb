@@ -26,7 +26,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
@@ -139,43 +138,11 @@ func Test_NewInventoryProfile(t *testing.T) {
 }
 
 func Test_NewInventoryConnector(t *testing.T) {
-	t.Run("with all fields", func(t *testing.T) {
-		connector := &platformApi.ArangoPlatformConnector{}
-		connector.Spec.Description = util.NewType("Execute AQL queries")
-		connector.Spec.Tags = []string{"database", "aql"}
-		connector.Spec.Version = util.NewType("1.0.0")
-		connector.Spec.Schema = &apiextensions.JSONSchemaProps{
-			Type: "object",
-			Properties: map[string]apiextensions.JSONSchemaProps{
-				"query": {Type: "string"},
-			},
-		}
+	t.Run("empty link", func(t *testing.T) {
+		link := &platformApi.ArangoPlatformLink{}
 
-		result := NewInventoryConnector(connector)
-		require.Equal(t, "Execute AQL queries", result.Description)
-		require.EqualValues(t, []string{"database", "aql"}, result.Tags)
-		require.Equal(t, "1.0.0", result.Version)
-		require.Contains(t, result.Schema, "query")
-		require.Contains(t, result.Schema, "string")
-	})
-
-	t.Run("with nil fields", func(t *testing.T) {
-		connector := &platformApi.ArangoPlatformConnector{}
-
-		result := NewInventoryConnector(connector)
-		require.Equal(t, "", result.Description)
-		require.Nil(t, result.Tags)
-		require.Equal(t, "", result.Schema)
-		require.Equal(t, "", result.Version)
-	})
-
-	t.Run("with description only", func(t *testing.T) {
-		connector := &platformApi.ArangoPlatformConnector{}
-		connector.Spec.Description = util.NewType("My connector")
-
-		result := NewInventoryConnector(connector)
-		require.Equal(t, "My connector", result.Description)
-		require.Equal(t, "", result.Schema)
+		result := NewInventoryConnector(link)
+		require.NotNil(t, result)
 	})
 }
 

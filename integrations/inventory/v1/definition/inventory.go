@@ -21,7 +21,6 @@
 package definition
 
 import (
-	"encoding/json"
 	"strconv"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -86,24 +85,8 @@ func NewInventoryProfile(profile *schedulerApi.ArangoProfile) *InventoryProfile 
 	return &p
 }
 
-func NewInventoryConnector(connector *platformApi.ArangoPlatformConnector) *InventoryConnector {
+func NewInventoryConnector(link *platformApi.ArangoPlatformLink) *InventoryConnector {
 	var c InventoryConnector
-
-	if d := connector.Spec.Description; d != nil {
-		c.Description = *d
-	}
-
-	c.Tags = connector.Spec.Tags
-
-	if s := connector.Spec.Schema; s != nil {
-		if data, err := json.Marshal(s); err == nil {
-			c.Schema = string(data)
-		}
-	}
-
-	if v := connector.Spec.Version; v != nil {
-		c.Version = *v
-	}
 
 	return &c
 }

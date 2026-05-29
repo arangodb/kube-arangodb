@@ -82,7 +82,7 @@ rules:
       - "arangoplatformcharts.platform.arangodb.com"
       - "arangoplatformstorages.platform.arangodb.com"
       - "arangoplatformservices.platform.arangodb.com"
-      - "arangoplatformconnectors.platform.arangodb.com"
+      - "arangoplatformlinks.platform.arangodb.com"
 {{- end }}
 
 {{- end }}

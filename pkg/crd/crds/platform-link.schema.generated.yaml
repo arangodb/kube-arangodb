@@ -1,0 +1,45 @@
+v1beta1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          deployment:
+            description: |-
+              Deployment is a reference to the ArangoDeployment that this link belongs to.
+              Set by the user. Must point to an existing ArangoDeployment in the same namespace.
+              The operator verifies the deployment exists and sets the DeploymentFound condition.
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          route:
+            description: |-
+              Route is a reference to the ArangoRoute that exposes this link's external API
+              at a user-friendly path (e.g. /link/<name>/). The route should redirect to
+              /_integration/link/v1/ so that AI tools can use a clean per-link URL.
+              Set by the user. The operator verifies the route exists and sets the RouteFound condition.
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          type:
+            description: |-
+              Type defines the link execution pattern.
+              Currently only "Active" is supported — the link runs as a long-lived process
+              that polls for pending jobs and processes them sequentially.
+              Set by the user when creating the link. Defaults to "Active" if omitted.
+            enum:
+              - Active
+            type: string
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

@@ -22,8 +22,8 @@ rules:
       - "arangoplatformcharts/status"
       - "arangoplatformservices"
       - "arangoplatformservices/status"
-      - "arangoplatformconnectors"
-      - "arangoplatformconnectors/status"
+      - "arangoplatformlinks"
+      - "arangoplatformlinks/status"
     verbs:
       - "get"
       - "list"

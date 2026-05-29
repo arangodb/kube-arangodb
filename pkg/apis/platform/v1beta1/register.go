@@ -54,8 +54,8 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ArangoPlatformChartList{},
 		&ArangoPlatformService{},
 		&ArangoPlatformServiceList{},
-		&ArangoPlatformConnector{},
-		&ArangoPlatformConnectorList{},
+		&ArangoPlatformLink{},
+		&ArangoPlatformLinkList{},
 	)
 	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

@@ -36,8 +36,8 @@ func (c *FakePlatformV1beta1) ArangoPlatformCharts(namespace string) v1beta1.Ara
 	return newFakeArangoPlatformCharts(c, namespace)
 }
 
-func (c *FakePlatformV1beta1) ArangoPlatformConnectors(namespace string) v1beta1.ArangoPlatformConnectorInterface {
-	return newFakeArangoPlatformConnectors(c, namespace)
+func (c *FakePlatformV1beta1) ArangoPlatformLinks(namespace string) v1beta1.ArangoPlatformLinkInterface {
+	return newFakeArangoPlatformLinks(c, namespace)
 }
 
 func (c *FakePlatformV1beta1) ArangoPlatformServices(namespace string) v1beta1.ArangoPlatformServiceInterface {

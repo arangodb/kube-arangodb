@@ -33,9 +33,9 @@ const (
 	ArangoPlatformServiceResourceKind   = "ArangoPlatformService"
 	ArangoPlatformServiceResourcePlural = "arangoplatformservices"
 
-	ArangoPlatformConnectorCRDName        = ArangoPlatformConnectorResourcePlural + "." + ArangoPlatformGroupName
-	ArangoPlatformConnectorResourceKind   = "ArangoPlatformConnector"
-	ArangoPlatformConnectorResourcePlural = "arangoplatformconnectors"
+	ArangoPlatformLinkCRDName        = ArangoPlatformLinkResourcePlural + "." + ArangoPlatformGroupName
+	ArangoPlatformLinkResourceKind   = "ArangoPlatformLink"
+	ArangoPlatformLinkResourcePlural = "arangoplatformlinks"
 
 	ArangoPlatformGroupName = "platform.arangodb.com"
 )
