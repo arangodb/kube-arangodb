@@ -314,6 +314,7 @@ Flags:
       --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --license.proxy                  Uses System Proxy
+      --ttl duration                   TTL
 
 Global Flags:
       --kubeconfig string   Kubernetes Config File
