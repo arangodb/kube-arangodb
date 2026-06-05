@@ -103,17 +103,12 @@ Usage:
 
 Flags:
       --debug-package-files                     Collect Debug files from Storage
-      --generator.arango-analytics-gae          Define if generator arango-analytics-gae is enabled (default true)
       --generator.arango-backup-backup          Define if generator arango-backup-backup is enabled (default true)
       --generator.arango-backup-backuppolicy    Define if generator arango-backup-backuppolicy is enabled (default true)
       --generator.arango-database-acs           Define if generator arango-database-acs is enabled (default true)
       --generator.arango-database-deployment    Define if generator arango-database-deployment is enabled (default true)
       --generator.arango-database-member        Define if generator arango-database-member is enabled (default true)
       --generator.arango-database-task          Define if generator arango-database-task is enabled (default true)
-      --generator.arango-ml-batchjob            Define if generator arango-ml-batchjob is enabled (default true)
-      --generator.arango-ml-cronjob             Define if generator arango-ml-cronjob is enabled (default true)
-      --generator.arango-ml-extension           Define if generator arango-ml-extension is enabled (default true)
-      --generator.arango-ml-storage             Define if generator arango-ml-storage is enabled (default true)
       --generator.arango-networking-route       Define if generator arango-networking-route is enabled (default true)
       --generator.arango-permission-policy      Define if generator arango-permission-policy is enabled (default true)
       --generator.arango-permission-role        Define if generator arango-permission-role is enabled (default true)
