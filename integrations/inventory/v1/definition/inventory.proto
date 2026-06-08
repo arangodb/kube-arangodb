@@ -36,6 +36,8 @@ message Inventory {
   optional InventoryPlatform platform = 4;
   // ArangoDB Profiles
   map<string, InventoryProfile> profiles = 5;
+  // ArangoDB Platform Connectors
+  map<string, InventoryConnector> connectors = 6;
 }
 
 // Platform Inventory Hash
@@ -129,4 +131,16 @@ message InventoryProfile {
   string description = 1;
   // Profile Tags
   repeated string tags = 2;
+}
+
+// ArangoDB Platform Connector details
+message InventoryConnector {
+  // Connector Description
+  string description = 1;
+  // Connector Tags for discovery
+  repeated string tags = 2;
+  // JSON Schema defining the connector's input query parameters
+  string schema = 3;
+  // Connector Version
+  string version = 4;
 }

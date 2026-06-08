@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
@@ -82,6 +83,12 @@ func NewInventoryProfile(profile *schedulerApi.ArangoProfile) *InventoryProfile 
 	p.Tags = profile.Spec.Tags
 
 	return &p
+}
+
+func NewInventoryConnector(link *platformApi.ArangoPlatformLink) *InventoryConnector {
+	var c InventoryConnector
+
+	return &c
 }
 
 func getShardingFromArgs(args ...string) ArangoDBSharding {

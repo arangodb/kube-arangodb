@@ -14,7 +14,7 @@ import (
 	"io"
 	"net/http"
 
-	definition_9 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	definition_10 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -67,7 +67,7 @@ var filter_AuthorizationAPI_APIListPolicy_0 = &utilities.DoubleArray{Encoding: m
 
 func request_AuthorizationAPI_APIListPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.OffsetRequest
+		protoReq definition_10.OffsetRequest
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -85,7 +85,7 @@ func request_AuthorizationAPI_APIListPolicy_0(ctx context.Context, marshaler run
 
 func local_request_AuthorizationAPI_APIListPolicy_0(ctx context.Context, marshaler runtime.Marshaler, server AuthorizationAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.OffsetRequest
+		protoReq definition_10.OffsetRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := req.ParseForm(); err != nil {
@@ -270,7 +270,7 @@ var filter_AuthorizationAPI_APIListRole_0 = &utilities.DoubleArray{Encoding: map
 
 func request_AuthorizationAPI_APIListRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.OffsetRequest
+		protoReq definition_10.OffsetRequest
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -288,7 +288,7 @@ func request_AuthorizationAPI_APIListRole_0(ctx context.Context, marshaler runti
 
 func local_request_AuthorizationAPI_APIListRole_0(ctx context.Context, marshaler runtime.Marshaler, server AuthorizationAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.OffsetRequest
+		protoReq definition_10.OffsetRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := req.ParseForm(); err != nil {
