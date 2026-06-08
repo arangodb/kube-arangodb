@@ -40,7 +40,7 @@ func Cause(err error) error {
 // CauseWithNil returns Cause of an error.
 // If error returned by Cause is same (no Causer interface implemented), function will return nil instead
 func CauseWithNil(err error) error {
-	if nerr := Cause(err); err == nil {
+	if nerr := Cause(err); nerr == nil {
 		return nil
 	} else if errors.Is(nerr, err) {
 		// Cause returns same error if error object does not implement Causer interface
