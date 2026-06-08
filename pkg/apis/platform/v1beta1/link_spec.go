@@ -44,6 +44,9 @@ type ArangoPlatformLinkSpec struct {
 	// +doc/enum: Active|Link actively polls for and processes jobs
 	Type *ArangoPlatformLinkType `json:"type,omitempty"`
 
+	// Description is an optional human-readable description of this link
+	Description *string `json:"description,omitempty"`
+
 	// Deployment is a reference to the ArangoDeployment that this link belongs to.
 	// Set by the user. Must point to an existing ArangoDeployment in the same namespace.
 	// The operator verifies the deployment exists and sets the DeploymentFound condition.
@@ -60,6 +63,14 @@ type ArangoPlatformLinkSpec struct {
 	// +doc/skip: uid
 	// +doc/skip: checksum
 	Route *sharedApi.Object `json:"route,omitempty"`
+}
+
+// GetDescription returns the link description
+func (s *ArangoPlatformLinkSpec) GetDescription() string {
+	if s == nil || s.Description == nil {
+		return ""
+	}
+	return *s.Description
 }
 
 // GetType returns the link type, defaulting to Active

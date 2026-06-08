@@ -18,6 +18,14 @@ Name of the object
 
 ***
 
+### .spec.description
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/platform/v1beta1/link_spec.go#L48)</sup>
+
+Description is an optional human-readable description of this link
+
+***
+
 ### .spec.route.name
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L53)</sup>

@@ -15,6 +15,9 @@ v1beta1:
             required:
               - name
             type: object
+          description:
+            description: Description is an optional human-readable description of this link
+            type: string
           route:
             description: |-
               Route is a reference to the ArangoRoute that exposes this link's external API

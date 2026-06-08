@@ -215,6 +215,11 @@ func (in *ArangoPlatformLinkSpec) DeepCopyInto(out *ArangoPlatformLinkSpec) {
 		*out = new(ArangoPlatformLinkType)
 		**out = **in
 	}
+	if in.Description != nil {
+		in, out := &in.Description, &out.Description
+		*out = new(string)
+		**out = **in
+	}
 	if in.Deployment != nil {
 		in, out := &in.Deployment, &out.Deployment
 		*out = new(v1.Object)

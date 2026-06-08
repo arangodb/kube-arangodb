@@ -86,9 +86,10 @@ func NewInventoryProfile(profile *schedulerApi.ArangoProfile) *InventoryProfile 
 }
 
 func NewInventoryConnector(link *platformApi.ArangoPlatformLink) *InventoryConnector {
-	var c InventoryConnector
-
-	return &c
+	return &InventoryConnector{
+		Description: link.Spec.GetDescription(),
+		Version:     string(link.Spec.GetType()),
+	}
 }
 
 func getShardingFromArgs(args ...string) ArangoDBSharding {
