@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Design) Add OpenTelemetry integration design for ArangoProfile
 - (Improvement) Expose Docker base image as overridable Makefile variable (BASEIMAGE)
 - (Bugfix) Fix async context for backup restore, compact member, and rebuild outsynced shards actions after Driver V1 removal
 - (Feature) (Scheduler) Allow SecurityContext in ArangoProfile Generic (all) container template
