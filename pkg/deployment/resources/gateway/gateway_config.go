@@ -309,6 +309,14 @@ func (c Config) RenderIntegrationSidecarFilter() (*httpConnectionManagerAPI.Http
 	}, nil
 }
 
+// listenerHttp2ProtocolOptions configures the gateway downstream listener for RFC 8441
+// Extended CONNECT so deployment-ea can tunnel WebSocket upgrades over HTTP/2.
+func listenerHttp2ProtocolOptions() *pbEnvoyCoreV3.Http2ProtocolOptions {
+	return &pbEnvoyCoreV3.Http2ProtocolOptions{
+		AllowConnect: true,
+	}
+}
+
 func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 	httpFilterConfigType, err := anypb.New(&routerAPI.Router{})
 	if err != nil {
@@ -335,6 +343,7 @@ func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 		CodecType:                  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
 		ServerHeaderTransformation: httpConnectionManagerAPI.HttpConnectionManager_PASS_THROUGH,
 		MergeSlashes:               c.Options.GetMergeSlashes(),
+		Http2ProtocolOptions:         listenerHttp2ProtocolOptions(),
 
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
 			RouteConfig: &pbEnvoyRouteV3.RouteConfiguration{

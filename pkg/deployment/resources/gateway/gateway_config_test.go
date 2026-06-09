@@ -33,6 +33,13 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
+func requireListenerHTTP2AllowConnect(t *testing.T, hcm *httpConnectionManagerAPI.HttpConnectionManager) {
+	t.Helper()
+	require.NotNil(t, hcm)
+	require.NotNil(t, hcm.Http2ProtocolOptions)
+	require.True(t, hcm.Http2ProtocolOptions.AllowConnect)
+}
+
 func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap)) string {
 	require.NoError(t, cfg.Validate())
 
@@ -104,6 +111,7 @@ func Test_GatewayConfig(t *testing.T) {
 			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0])
 			var o httpConnectionManagerAPI.HttpConnectionManager
 			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			requireListenerHTTP2AllowConnect(t, &o)
 			rc := o.GetRouteConfig()
 			require.NotNil(t, rc)
 			require.NotNil(t, rc.VirtualHosts)
@@ -144,6 +152,7 @@ func Test_GatewayConfig(t *testing.T) {
 			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0])
 			var o httpConnectionManagerAPI.HttpConnectionManager
 			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			requireListenerHTTP2AllowConnect(t, &o)
 			rc := o.GetRouteConfig()
 			require.NotNil(t, rc)
 			require.NotNil(t, rc.VirtualHosts)
