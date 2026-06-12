@@ -239,53 +239,53 @@ func (o *Operator) handleShutdown() {
 }
 
 // onStartDeployment starts the deployment operator and run till given channel is closed.
-func (o *Operator) onStartDeployment(stop <-chan struct{}) {
+func (o *Operator) onStartDeployment(ctx context.Context) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(depldef.ArangoDeploymentCRDName, checkFn)
-	o.runDeployments(stop)
+	o.waitForCRD(ctx, depldef.ArangoDeploymentCRDName, checkFn)
+	o.runDeployments(ctx)
 }
 
 // onStartDeploymentReplication starts the deployment replication operator and run till given channel is closed.
-func (o *Operator) onStartDeploymentReplication(stop <-chan struct{}) {
+func (o *Operator) onStartDeploymentReplication(ctx context.Context) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(repldef.ArangoDeploymentReplicationCRDName, checkFn)
-	o.runDeploymentReplications(stop)
+	o.waitForCRD(ctx, repldef.ArangoDeploymentReplicationCRDName, checkFn)
+	o.runDeploymentReplications(ctx)
 }
 
 // onStartStorage starts the storage operator and run till given channel is closed.
-func (o *Operator) onStartStorage(stop <-chan struct{}) {
-	o.waitForCRD(lsapi.ArangoLocalStorageCRDName, nil)
-	o.runLocalStorages(stop)
+func (o *Operator) onStartStorage(ctx context.Context) {
+	o.waitForCRD(ctx, lsapi.ArangoLocalStorageCRDName, nil)
+	o.runLocalStorages(ctx)
 }
 
 // onStartBackup starts the operator and run till given channel is closed.
-func (o *Operator) onStartBackup(stop <-chan struct{}) {
-	o.onStartOperatorV2(backupOperator, stop)
+func (o *Operator) onStartBackup(ctx context.Context) {
+	o.onStartOperatorV2(ctx, backupOperator)
 }
 
 // onStartNetworking starts the operator and run till given channel is closed.
-func (o *Operator) onStartNetworking(stop <-chan struct{}) {
-	o.onStartOperatorV2(networkingOperator, stop)
+func (o *Operator) onStartNetworking(ctx context.Context) {
+	o.onStartOperatorV2(ctx, networkingOperator)
 }
 
 // onStartPlatform starts the operator and run till given channel is closed.
-func (o *Operator) onStartPlatform(stop <-chan struct{}) {
-	o.onStartOperatorV2(platformOperator, stop)
+func (o *Operator) onStartPlatform(ctx context.Context) {
+	o.onStartOperatorV2(ctx, platformOperator)
 }
 
-// onStartNetworking starts the operator and run till given channel is closed.
-func (o *Operator) onStartScheduler(stop <-chan struct{}) {
-	o.onStartOperatorV2(schedulerOperator, stop)
+// onStartScheduler starts the operator and run till given channel is closed.
+func (o *Operator) onStartScheduler(ctx context.Context) {
+	o.onStartOperatorV2(ctx, schedulerOperator)
 }
 
 // onStartOperatorV2 run the operatorV2 type
-func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan struct{}) {
+func (o *Operator) onStartOperatorV2(ctx context.Context, operatorType operatorV2type) {
 	operatorName := fmt.Sprintf("arangodb-%s-operator", operatorType)
 	operator := operatorV2.NewOperator(operatorName, o.Namespace, o.Image)
 
@@ -301,16 +301,16 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 
 	switch operatorType {
 	case backupOperator:
-		o.onStartOperatorV2Backup(operator, eventRecorder, o.Client, arangoInformer)
+		o.onStartOperatorV2Backup(ctx, operator, eventRecorder, o.Client, arangoInformer)
 		o.Dependencies.BackupProbe.SetReady()
 	case networkingOperator:
-		o.onStartOperatorV2Networking(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
+		o.onStartOperatorV2Networking(ctx, operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.NetworkingProbe.SetReady()
 	case platformOperator:
-		o.onStartOperatorV2Platform(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
+		o.onStartOperatorV2Platform(ctx, operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.PlatformProbe.SetReady()
 	case schedulerOperator:
-		o.onStartOperatorV2Scheduler(operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
+		o.onStartOperatorV2Scheduler(ctx, operator, eventRecorder, o.Client, arangoInformer, kubeInformer)
 		o.Dependencies.SchedulerProbe.SetReady()
 	}
 
@@ -324,29 +324,29 @@ func (o *Operator) onStartOperatorV2(operatorType operatorV2type, stop <-chan st
 
 	prometheus.MustRegister(operator)
 
-	operator.Start(o.Threads, stop)
+	operator.Start(ctx, o.Threads)
 
-	<-stop
+	<-ctx.Done()
 }
 
-func (o *Operator) onStartOperatorV2Networking(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Networking(ctx context.Context, operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().NetworkingV1beta1().ArangoRoutes(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(networking.ArangoRouteCRDName, checkFn)
+	o.waitForCRD(ctx, networking.ArangoRouteCRDName, checkFn)
 
 	if err := route.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }
 
-func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Platform(ctx context.Context, operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().PlatformV1beta1().ArangoPlatformStorages(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(platform.ArangoPlatformStorageCRDName, checkFn)
+	o.waitForCRD(ctx, platform.ArangoPlatformStorageCRDName, checkFn)
 
 	if err := platformStorage.RegisterInformer(operator, recorder, client, informer); err != nil {
 		panic(err)
@@ -377,36 +377,36 @@ func (o *Operator) onStartOperatorV2Platform(operator operatorV2.Operator, recor
 	}
 }
 
-func (o *Operator) onStartOperatorV2Scheduler(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Scheduler(ctx context.Context, operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().SchedulerV1beta1().ArangoProfiles(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(scheduler.ArangoProfileCRDName, checkFn)
+	o.waitForCRD(ctx, scheduler.ArangoProfileCRDName, checkFn)
 
 	checkFn = func() error {
 		_, err := o.Client.Arango().SchedulerV1beta1().ArangoSchedulerPods(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(scheduler.PodCRDName, checkFn)
+	o.waitForCRD(ctx, scheduler.PodCRDName, checkFn)
 
 	checkFn = func() error {
 		_, err := o.Client.Arango().SchedulerV1beta1().ArangoSchedulerDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(scheduler.DeploymentCRDName, checkFn)
+	o.waitForCRD(ctx, scheduler.DeploymentCRDName, checkFn)
 
 	checkFn = func() error {
 		_, err := o.Client.Arango().SchedulerV1beta1().ArangoSchedulerBatchJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(scheduler.BatchJobCRDName, checkFn)
+	o.waitForCRD(ctx, scheduler.BatchJobCRDName, checkFn)
 
 	checkFn = func() error {
 		_, err := o.Client.Arango().SchedulerV1beta1().ArangoSchedulerCronJobs(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(scheduler.CronJobCRDName, checkFn)
+	o.waitForCRD(ctx, scheduler.CronJobCRDName, checkFn)
 
 	if err := schedulerProfileHandler.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
@@ -429,12 +429,12 @@ func (o *Operator) onStartOperatorV2Scheduler(operator operatorV2.Operator, reco
 	}
 }
 
-func (o *Operator) onStartOperatorV2Backup(operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory) {
+func (o *Operator) onStartOperatorV2Backup(ctx context.Context, operator operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory) {
 	checkFn := func() error {
 		_, err := o.Client.Arango().BackupV1().ArangoBackups(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(backupdef.ArangoBackupCRDName, checkFn)
+	o.waitForCRD(ctx, backupdef.ArangoBackupCRDName, checkFn)
 
 	if err := backup.RegisterInformer(operator, recorder, client, informer); err != nil {
 		panic(err)
@@ -444,7 +444,7 @@ func (o *Operator) onStartOperatorV2Backup(operator operatorV2.Operator, recorde
 		_, err := o.Client.Arango().BackupV1().ArangoBackupPolicies(o.Namespace).List(context.Background(), meta.ListOptions{})
 		return err
 	}
-	o.waitForCRD(backupdef.ArangoBackupPolicyCRDName, checkFn)
+	o.waitForCRD(ctx, backupdef.ArangoBackupPolicyCRDName, checkFn)
 
 	if err := policy.RegisterInformer(operator, recorder, client, informer); err != nil {
 		panic(err)

@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Improvement) Refactor operator to use context.Context instead of stopCh, add CRD sync timeout (30s) and waitForCRD timeout (15s)
 - (Design) Add OpenTelemetry integration design for ArangoProfile
 - (Improvement) Expose Docker base image as overridable Makefile variable (BASEIMAGE)
 - (Bugfix) Fix async context for backup restore, compact member, and rebuild outsynced shards actions after Driver V1 removal

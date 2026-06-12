@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,22 +21,25 @@
 package operator
 
 import (
+	"context"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/crd"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
-	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
 // waitForCRD waits for the CustomResourceDefinition (created externally) to be ready.
-func (o *Operator) waitForCRD(crdName string, checkFn func() error) {
+func (o *Operator) waitForCRD(ctx context.Context, crdName string, checkFn func() error) {
 	log := o.log.Str("crd", crdName)
 	log.Debug("Waiting for CRD to be ready")
 
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
 	for {
 		var err error = nil
-		if !access.VerifyAccess(shutdown.Context(), o.Dependencies.Client, access.GVR(inspectorConstants.CustomResourceDefinitionGRv1(), crdName, access.Get)) {
+		if !access.VerifyAccess(ctx, o.Dependencies.Client, access.GVR(inspectorConstants.CustomResourceDefinitionGRv1(), crdName, access.Get)) {
 			log.Debug("Check by the CheckFun")
 			if checkFn != nil {
 				err = crd.WaitReady(checkFn)
@@ -50,8 +53,13 @@ func (o *Operator) waitForCRD(crdName string, checkFn func() error) {
 			break
 		} else {
 			log.Err(err).Error("Resource initialization failed")
-			log.Info("Retrying in %s...", initRetryWaitTime)
-			time.Sleep(initRetryWaitTime)
+			select {
+			case <-ctx.Done():
+				log.Error("CRD %s not ready within timeout, proceeding", crdName)
+				return
+			case <-time.After(initRetryWaitTime):
+				log.Info("Retrying...")
+			}
 		}
 	}
 
