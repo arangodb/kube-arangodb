@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package operator
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,16 +33,16 @@ func Test_Worker_Empty(t *testing.T) {
 	name, image := newImage(false)
 	o := NewOperator(name, name, image)
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	item := randomItem()
 
 	// Act
-	require.NoError(t, o.Start(0, stopCh))
+	require.NoError(t, o.Start(ctx, 0))
 
 	err := o.ProcessItem(item)
 
-	close(stopCh)
+	cancel()
 
 	// Assert
 	assert.NoError(t, err)
@@ -52,7 +53,7 @@ func Test_Worker_CatchAll(t *testing.T) {
 	name, image := newImage(false)
 	o := NewOperator(name, name, image)
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	item := randomItem()
 
@@ -60,11 +61,11 @@ func Test_Worker_CatchAll(t *testing.T) {
 	require.NoError(t, o.RegisterHandler(m))
 
 	// Act
-	require.NoError(t, o.Start(0, stopCh))
+	require.NoError(t, o.Start(ctx, 0))
 
 	err := o.ProcessItem(item)
 
-	close(stopCh)
+	cancel()
 
 	// Assert
 	assert.NoError(t, err)
@@ -81,7 +82,7 @@ func Test_Worker_EnsureFirstProcessStopLoop(t *testing.T) {
 	name, image := newImage(false)
 	o := NewOperator(name, name, image)
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	item := randomItem()
 
@@ -92,11 +93,11 @@ func Test_Worker_EnsureFirstProcessStopLoop(t *testing.T) {
 	require.NoError(t, o.RegisterHandler(m2))
 
 	// Act
-	require.NoError(t, o.Start(0, stopCh))
+	require.NoError(t, o.Start(ctx, 0))
 
 	err := o.ProcessItem(item)
 
-	close(stopCh)
+	cancel()
 
 	// Assert
 	assert.NoError(t, err)
@@ -115,7 +116,7 @@ func Test_Worker_EnsureObjectIsProcessedBySecondHandler(t *testing.T) {
 	name, image := newImage(false)
 	o := NewOperator(name, name, image)
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	item := randomItem()
 
@@ -126,11 +127,11 @@ func Test_Worker_EnsureObjectIsProcessedBySecondHandler(t *testing.T) {
 	require.NoError(t, o.RegisterHandler(m2))
 
 	// Act
-	require.NoError(t, o.Start(0, stopCh))
+	require.NoError(t, o.Start(ctx, 0))
 
 	err := o.ProcessItem(item)
 
-	close(stopCh)
+	cancel()
 
 	// Assert
 	assert.NoError(t, err)

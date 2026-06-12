@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package operator
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -48,7 +49,7 @@ type Operator interface {
 	Namespace() string
 	Image() string
 
-	Start(threadiness int, stopCh <-chan struct{}) error
+	Start(ctx context.Context, threadiness int) error
 
 	RegisterInformer(informer cache.SharedIndexInformer, group, version, kind string, filters ...InformerFilter) error
 	RegisterStarter(starter Starter) error
@@ -182,7 +183,7 @@ func (o *operator) RegisterInformer(informer cache.SharedIndexInformer, group, v
 	return nil
 }
 
-func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
+func (o *operator) Start(ctx context.Context, threadiness int) error {
 	o.lock.Lock()
 	defer o.lock.Unlock()
 
@@ -192,10 +193,10 @@ func (o *operator) Start(threadiness int, stopCh <-chan struct{}) error {
 
 	o.started = true
 
-	return o.start(threadiness, stopCh)
+	return o.start(ctx, threadiness)
 }
 
-func (o *operator) start(threadiness int, stopCh <-chan struct{}) error {
+func (o *operator) start(ctx context.Context, threadiness int) error {
 	// Execute pre checks
 	logger.Info("Executing Lifecycle PreStart")
 	for _, handler := range o.handlers {
@@ -204,34 +205,29 @@ func (o *operator) start(threadiness int, stopCh <-chan struct{}) error {
 		}
 	}
 
-	logger.Info("Starting informers")
-	for _, starter := range o.starters {
-		starter.Start(stopCh)
-	}
-
-	if err := o.waitForCacheSync(stopCh); err != nil {
-		return err
-	}
-
 	logger.Info("Starting workers")
 	for i := 0; i < threadiness; i++ {
-		go wait.Until(o.worker, time.Second, stopCh)
+		go wait.Until(o.worker, time.Second, ctx.Done())
 	}
+
+	logger.Info("Starting informers")
+	for _, starter := range o.starters {
+		starter.Start(ctx.Done())
+	}
+
+	o.waitForCacheSync(ctx)
 
 	logger.Info("Operator started")
 	return nil
 }
 
-func (o *operator) waitForCacheSync(stopCh <-chan struct{}) error {
-	cacheSync := make([]cache.InformerSynced, len(o.informers))
+func (o *operator) waitForCacheSync(ctx context.Context) {
+	util.ParallelProcess(func(informer cache.SharedInformer) {
+		syncCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		defer cancel()
 
-	for id, informer := range o.informers {
-		cacheSync[id] = informer.HasSynced
-	}
-
-	if ok := cache.WaitForCacheSync(stopCh, cacheSync...); !ok {
-		return errors.Errorf("cache can not sync")
-	}
-
-	return nil
+		if !cache.WaitForCacheSync(syncCtx.Done(), informer.HasSynced) {
+			logger.Warn("Cache sync did not complete within timeout for an informer, proceeding anyway")
+		}
+	}, len(o.informers), o.informers)
 }
