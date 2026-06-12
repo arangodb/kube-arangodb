@@ -82,8 +82,8 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 		}
 
 		return pbImplEnvoyAuthV3Shared.ResponseAuth{
-			User:  resp.GetDetails().GetUser(),
-			Roles: resp.GetDetails().GetRoles(),
+			User:   resp.GetDetails().GetUser(),
+			Groups: resp.GetDetails().GetGroups(),
 		}, time.Now().Add(pbImplEnvoyAuthV3Shared.DefaultTTL), nil
 	})
 
@@ -115,9 +115,9 @@ func (p impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, c
 		}
 
 		current.User = &pbImplEnvoyAuthV3Shared.ResponseAuth{
-			User:  auth.User,
-			Roles: auth.Roles,
-			Token: util.NewType(cookie.Value),
+			User:   auth.User,
+			Groups: auth.Groups,
+			Token:  util.NewType(cookie.Value),
 		}
 
 		ext := request.GetAttributes().GetContextExtensions()

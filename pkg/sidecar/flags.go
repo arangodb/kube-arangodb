@@ -22,6 +22,7 @@ package sidecar
 
 import (
 	"fmt"
+	"time"
 
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -68,5 +69,10 @@ var (
 		Name:        "central",
 		Description: "Defines if central services are enabled",
 		Default:     false,
+	}
+	flagAuthDeletedTTL = cli.Flag[time.Duration]{
+		Name:        "sidecar.auth.deleted-ttl",
+		Description: "TTL for soft-deleted RBAC documents before permanent removal from ArangoDB collections",
+		Default:     30 * 24 * time.Hour,
 	}
 )

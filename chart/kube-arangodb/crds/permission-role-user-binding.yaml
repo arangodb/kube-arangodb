@@ -1,0 +1,29 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: arangopermissionroleuserbindings.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionRoleUserBinding
+    listKind: ArangoPermissionRoleUserBindingList
+    plural: arangopermissionroleuserbindings
+    singular: arangopermissionroleuserbinding
+    shortNames:
+      - arangoroleuserbinding
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: '.status.conditions[?(@.type=="Ready")].status'
+          description: Defines if RoleUserBinding is valid
+          name: Ready
+          type: string
+      subresources:
+        status: {}

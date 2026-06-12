@@ -69,14 +69,14 @@ func (j *jwtAuthentication) ValidateGRPC(ctx context.Context) (*Identity, error)
 			return nil, nil
 		}
 
-		user, roles, _, err := secret.Details(z[1])
+		user, groups, _, err := secret.Details(z[1])
 		if err != nil {
 			return nil, err
 		}
 
 		return &Identity{
-			User:  user,
-			Roles: roles,
+			User:   user,
+			Groups: groups,
 		}, nil
 
 	default:

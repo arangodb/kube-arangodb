@@ -43,8 +43,23 @@ func NewPolicy(in *sidecarSvcAuthzTypes.Policy) (Policy, error) {
 	return p, nil
 }
 
+// PolicyList is a list of policies with a Hash method.
+type PolicyList []*Policy
+
+func (l PolicyList) Hash() string {
+	return util.SHA256FromHashArray(l)
+}
+
 type Policy struct {
 	Statements []Statement
+}
+
+func (p *Policy) Hash() string {
+	if p == nil {
+		return ""
+	}
+
+	return util.SHA256FromHashArray(p.Statements)
 }
 
 func (p *Policy) Evaluate(action, resource string, context map[string][]string) (bool, error) {
@@ -95,6 +110,14 @@ type Statement struct {
 	actions   Matches
 }
 
+func (s Statement) Hash() string {
+	return util.SHA256FromStringArray(
+		fmt.Sprintf("%d", s.Effect),
+		s.actions.Hash(),
+		s.Resources.Hash(),
+	)
+}
+
 func (p *Statement) Evaluate(action, resource string, context map[string][]string) bool {
 	if p == nil {
 		return false
@@ -106,6 +129,10 @@ func (p *Statement) Evaluate(action, resource string, context map[string][]strin
 }
 
 type Matches []Match
+
+func (m Matches) Hash() string {
+	return util.SHA256FromHashArray(m)
+}
 
 func (m Matches) Match(resource string) bool {
 	for _, match := range m {
@@ -168,9 +195,14 @@ func NewMatch(v string) (Match, error) {
 
 type Match interface {
 	Match(resource string) bool
+	Hash() string
 }
 
 type manyMatch []Match
+
+func (m manyMatch) Hash() string {
+	return util.SHA256FromHashArray([]Match(m))
+}
 
 func (m manyMatch) Match(resource string) bool {
 	res := goStrings.Split(resource, ":")
@@ -204,6 +236,8 @@ func (m manyMatch) Match(resource string) bool {
 
 type exactMatch string
 
+func (e exactMatch) Hash() string { return util.SHA256FromString("exact:" + string(e)) }
+
 func (e exactMatch) Match(resource string) bool {
 	return string(e) == resource
 }
@@ -215,17 +249,23 @@ func isAllMatch(in Match) bool {
 
 type allMatch struct{}
 
+func (a allMatch) Hash() string { return util.SHA256FromString("*") }
+
 func (a allMatch) Match(resource string) bool {
 	return true
 }
 
 type suffixMatch string
 
+func (p suffixMatch) Hash() string { return util.SHA256FromString("*" + string(p)) }
+
 func (p suffixMatch) Match(resource string) bool {
 	return goStrings.HasSuffix(resource, string(p))
 }
 
 type prefixMatch string
+
+func (s prefixMatch) Hash() string { return util.SHA256FromString(string(s) + "*") }
 
 func (s prefixMatch) Match(resource string) bool {
 	return goStrings.HasPrefix(resource, string(s))

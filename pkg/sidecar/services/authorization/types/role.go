@@ -24,6 +24,7 @@ import (
 	"sort"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func (x *Role) Hash() string {
@@ -32,8 +33,8 @@ func (x *Role) Hash() string {
 	}
 
 	return util.SHA256FromStringArray(
-		util.SHA256FromStringArray(x.GetUsers()...),
 		util.SHA256FromStringArray(x.GetPolicies()...),
+		x.GetScope().Hash(),
 	)
 }
 
@@ -46,11 +47,13 @@ func (x *Role) Clean() error {
 		return nil
 	}
 
-	sort.Strings(x.Users)
 	sort.Strings(x.Policies)
 
-	x.Users = util.UniqueList(x.Users)
 	x.Policies = util.UniqueList(x.Policies)
+
+	if err := x.GetScope().Clean(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -60,5 +63,9 @@ func (x *Role) Validate() error {
 		return nil
 	}
 
-	return nil
+	if x.Scope == nil {
+		return errors.Errorf("scope is required")
+	}
+
+	return x.GetScope().Validate()
 }

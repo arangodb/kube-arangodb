@@ -25,6 +25,7 @@ import (
 
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -37,35 +38,106 @@ func (a *implementation) Revision() uint64 {
 }
 
 func (a *implementation) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
-	policies, err := a.getUserPolicies(req.GetUser(), req.GetRoles()...)
+	// Superuser: when no user and no roles are specified the caller is the
+	// operator itself (authenticated via the internal JWT) — grant full access.
+	if req.User == nil && len(req.GetRoles()) == 0 {
+		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
+			Message: "Superuser access",
+			Effect:  sidecarSvcAuthzTypes.Effect_Allow,
+		}, nil
+	}
+
+	groups, err := a.getUserGroups(req.GetUser(), req.GetRoles()...)
 	if err != nil {
 		return nil, err
 	}
 
-	return sidecarSvcAuthzClient.EvaluatePolicies(req, policies...)
+	resp, err := groups.Evaluate(req)
+	if err != nil {
+		return nil, err
+	}
+
+	l := logger.Str("user", req.GetUser()).Str("action", req.GetAction()).Str("resource", req.GetResource())
+
+	if resp.GetEffect() == sidecarSvcAuthzTypes.Effect_Deny {
+		l.Str("reason", resp.GetMessage()).Info("Permission denied")
+	} else {
+		l.Debug("Permission granted")
+	}
+
+	return resp, nil
 }
 
-func (a *implementation) getUserPolicies(user string, roles ...string) ([]*sidecarSvcAuthzClient.Policy, error) {
+func (a *implementation) getUserGroups(user string, groupNames ...string) (sidecarSvcAuthzClient.ScopedPolicies, error) {
 	allPolicies := a.policies.Copy()
-	allRoles := a.roles.Copy()
+	allGroups := a.roles.Copy()
 
-	var policyNames = make(map[string]*sidecarSvcAuthzClient.Policy, len(allPolicies))
+	result := make(sidecarSvcAuthzClient.ScopedPolicies, len(groupNames))
 
-	for k, v := range allRoles {
-		if util.ContainsList(roles, k) || util.ContainsList(v.Users, user) {
-			for _, name := range v.Policies {
-				if p, ok := allPolicies[name]; ok {
-					if _, ok := policyNames[name]; !ok {
-						if v, err := sidecarSvcAuthzClient.NewPolicy(p); err != nil {
-							return nil, err
-						} else {
-							policyNames[name] = &v
-						}
-					}
+	// Collect groups from explicit request
+	for name, g := range allGroups {
+		if !util.ContainsList(groupNames, name) {
+			continue
+		}
+
+		if sp, err := a.resolveGroup(g, allPolicies); err != nil {
+			return nil, err
+		} else if sp != nil {
+			result[name] = *sp
+		}
+	}
+
+	// Collect groups from user bindings
+	if user != "" {
+		allBindings := a.userRoleBindings.Copy()
+		prefix := user + ":"
+
+		for key, binding := range allBindings {
+			if len(key) <= len(prefix) || key[:len(prefix)] != prefix {
+				continue
+			}
+
+			groupName := binding.GetRole()
+			if _, exists := result[groupName]; exists {
+				continue
+			}
+
+			if g, ok := allGroups[groupName]; ok {
+				if sp, err := a.resolveGroup(g, allPolicies); err != nil {
+					return nil, err
+				} else if sp != nil {
+					result[groupName] = *sp
 				}
 			}
 		}
 	}
 
-	return util.MapValues(policyNames), nil
+	return result, nil
+}
+
+func (a *implementation) resolveGroup(g *sidecarSvcAuthzTypes.Role, allPolicies map[string]*sidecarSvcAuthzTypes.Policy) (*sidecarSvcAuthzClient.ScopedPolicy, error) {
+	scope := g.GetScope()
+	if scope == nil {
+		return nil, nil
+	}
+
+	var sp sidecarSvcAuthzClient.ScopedPolicy
+
+	if p, err := sidecarSvcAuthzClient.NewPolicy(scope); err != nil {
+		return nil, err
+	} else {
+		sp.Scope = &p
+	}
+
+	for _, policyName := range g.Policies {
+		if p, ok := allPolicies[policyName]; ok {
+			if pol, err := sidecarSvcAuthzClient.NewPolicy(p); err != nil {
+				return nil, err
+			} else {
+				sp.Policies = append(sp.Policies, &pol)
+			}
+		}
+	}
+
+	return &sp, nil
 }

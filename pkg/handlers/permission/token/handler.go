@@ -27,6 +27,8 @@ import (
 	"time"
 
 	"github.com/dchest/uniuri"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	core "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -159,7 +161,7 @@ func (h *handler) finalizer(ctx context.Context, extension *permissionApi.Arango
 
 			return permissionApi.FinalizerArangoPermissionRole, nil
 		case permissionApi.FinalizerArangoPermissionPolicy:
-			if err := h.finalizerPolicyRemoval(ctx, extension); err != nil {
+			if err := h.finalizerManagedPolicyRemoval(ctx, extension); err != nil {
 				return "", err
 			}
 
@@ -189,18 +191,62 @@ func (h *handler) finalizerUserRemoval(ctx context.Context, extension *permissio
 		return nil
 	}
 
+	userName := extension.Status.User.GetName()
+
+	// Detach all groups from the user before deleting
+	if err := h.detachAllUserGroups(ctx, depl, userName); err != nil {
+		return err
+	}
+
 	client, err := h.provider.ArangoClient(ctx, h.kubeClient, depl)
 	if err != nil {
 		logger.Warn("Fail to get client for deleting user")
 		return err
 	}
 
-	if err := client.RemoveUser(ctx, extension.Status.User.GetName()); err != nil {
+	if err := client.RemoveUser(ctx, userName); err != nil {
 		if adbDriverV2Shared.IsNotFound(err) {
 			return nil
 		}
 
 		return err
+	}
+
+	return nil
+}
+
+func (h *handler) detachAllUserGroups(ctx context.Context, depl *api.ArangoDeployment, userName string) error {
+	conn, enabled, err := integration.NewIntegrationConnectionFromDeployment(h.kubeClient, depl, utilToken.WithRelativeDuration(time.Minute))
+	if err != nil {
+		return err
+	}
+	if !enabled {
+		return nil
+	}
+	defer conn.Close()
+
+	client := sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn)
+
+	bindings, err := client.APIListUserRoleBindings(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIUserRequest{
+		User: userName,
+	})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil
+		}
+		return err
+	}
+
+	for _, b := range bindings.GetBindings() {
+		if _, err := client.APIRemoveUserRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleRequest{
+			User: userName,
+			Role: b.GetRole(),
+		}); err != nil {
+			if status.Code(err) == codes.NotFound {
+				continue
+			}
+			return err
+		}
 	}
 
 	return nil
@@ -224,6 +270,10 @@ func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, e
 
 	if status.Conditions.Update(permissionApi.SpecValidCondition, true, "Spec is valid", "Spec is valid") {
 		logger.WrapObj(item).Debug("Spec is valid")
+		return true, nil
+	}
+
+	if status.Conditions.UpdateWithHash(permissionApi.SpecAcceptedCondition, true, "Spec accepted", "Spec accepted", extension.Spec.Hash()) {
 		return true, nil
 	}
 
@@ -283,7 +333,7 @@ func (h *handler) HandleDeployment(ctx context.Context, item operation.Item, ext
 		return true, nil
 	}
 
-	return operator.HandleP4(ctx, item, extension, status, depl, h.HandleDeploymentConnection, h.HandleDeploymentSidecarConnection)
+	return operator.HandleP4(ctx, item, extension, status, depl, h.HandleDeploymentConnection, h.HandleArangoDBPolicy, h.HandleDeploymentSidecarConnection)
 }
 
 func (h *handler) HandleDeploymentSidecarConnection(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment) (bool, error) {
@@ -312,7 +362,7 @@ func (h *handler) HandleDeploymentSidecarConnection(ctx context.Context, item op
 		return true, operator.Reconcile("Conditions updated")
 	}
 
-	return operator.HandleP5(ctx, item, extension, status, depl, sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn), h.HandleArangoDBPolicy, h.HandleArangoDBRole)
+	return operator.HandleP5(ctx, item, extension, status, depl, sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn), h.HandleManagedPolicy, h.HandleArangoDBRole, h.HandleUserGroupBindings)
 
 }
 
@@ -449,7 +499,7 @@ func (h *handler) HandleArangoSecret(ctx context.Context, item operation.Item, e
 		return false, err
 	}
 
-	hash := util.SHA256FromStringArray(status.User.GetName(), secretManager.SigningHash(), extension.Spec.GetTTL().String(), util.SHA256FromStringArray(extension.Spec.Roles...))
+	hash := util.SHA256FromStringArray(status.User.GetName(), secretManager.SigningHash(), extension.Spec.GetTTL().String())
 
 	if status.Secret.GetChecksum() == hash && time.Now().Before(status.Refresh.Time) {
 		// Done
@@ -458,13 +508,14 @@ func (h *handler) HandleArangoSecret(ctx context.Context, item operation.Item, e
 
 	logger.Info("Generating Token")
 
+	// Groups are NOT included in the JWT — they are attached to the user
+	// via the sidecar UserRoleBinding API in HandleDeploymentSidecarConnection.
 	token, err := utilToken.NewClaims().With(
 		utilToken.WithKey("id", uuid.NewUUID()),
 		utilToken.WithDefaultClaims(),
 		utilToken.WithUsername(status.User.GetName()),
 		utilToken.WithCurrentIAT(),
 		utilToken.WithExp(time.Now().Add(extension.Spec.GetTTL())),
-		utilToken.WithRoles(extension.Spec.Roles...),
 	).Sign(secretManager)
 	if err != nil {
 		return false, err

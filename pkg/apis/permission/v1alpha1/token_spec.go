@@ -28,6 +28,7 @@ import (
 	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -43,16 +44,24 @@ type ArangoPermissionTokenSpec struct {
 	// +doc/skip: checksum
 	Deployment *sharedApi.Object `json:"deployment"`
 
-	// Roles keeps the roles assigned to the token
-	Roles []string `json:"roles,omitempty"`
+	// Roles keeps the scoped role references assigned to the token.
+	// Each entry binds a role with a required scope boundary.
+	Roles ArangoPermissionScopedBindingRefList `json:"roles,omitempty"`
 
 	// TTL Defines the TTL of the token.
 	// +doc/type: string
 	// +doc/default: 1h
 	TTL *meta.Duration `json:"ttl,omitempty"`
 
-	// Policy defined the Authorization Policy
+	// Policy defines an inline authorization policy to create for this token
 	Policy *permissionApiPolicy.Policy `json:"policy,omitempty"`
+
+	// Scope defines the boundary policy that constrains what the referenced policy can grant on this token's managed role
+	Scope *permissionApiPolicy.Policy `json:"scope,omitempty"`
+}
+
+func (c *ArangoPermissionTokenSpec) Hash() string {
+	return util.SHA256FromStringArray(c.Deployment.GetName(), c.Roles.Hash(), c.Policy.Hash(), c.Scope.Hash(), c.GetTTL().String())
 }
 
 func (c *ArangoPermissionTokenSpec) GetTTL() time.Duration {
@@ -69,8 +78,9 @@ func (c *ArangoPermissionTokenSpec) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.ValidateOptionalInterfacePath("policy", c.Policy),
 		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
+		shared.ValidateOptionalInterfacePath("policy", c.Policy),
+		shared.ValidateOptionalInterfacePath("scope", c.Scope),
 		shared.ValidateOptionalPath("ttl", c.TTL, func(duration meta.Duration) error {
 			if duration.Duration < ArangoPermissionTokenMinTTL {
 				return errors.Errorf("MinTTL is %s, while TTL has been set to %s", ArangoPermissionTokenMinTTL.String(), duration.Duration.String())

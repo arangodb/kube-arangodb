@@ -26,6 +26,7 @@ import "integrations/shared/v1/definition/empty.proto";
 
 import "pkg/sidecar/services/authorization/types/policy.proto";
 import "pkg/sidecar/services/authorization/types/role.proto";
+import "pkg/sidecar/services/authorization/types/user_role_binding.proto";
 
 import "google/protobuf/duration.proto";
 
@@ -44,6 +45,12 @@ service AuthorizationPoolService {
 
   // Gets Current Role setup.
   rpc GetRole(shared.Empty) returns (stream AuthorizationPoolRoleResponse);
+
+  // Pools user role binding changes from the API.
+  rpc PoolUserRoleBindingChanges(AuthorizationPoolRequest) returns (stream AuthorizationPoolUserRoleBindingResponse);
+
+  // Gets Current UserRoleBinding setup.
+  rpc GetUserRoleBinding(shared.Empty) returns (stream AuthorizationPoolUserRoleBindingResponse);
 }
 
 // AuthorizationPoolService Policy Response
@@ -88,4 +95,22 @@ message AuthorizationPoolRoleResponseItem {
 
   // Role Content
   types.Role item = 3;
+}
+
+// AuthorizationPoolService UserRoleBinding Response
+message AuthorizationPoolUserRoleBindingResponse {
+  // List of the UserRoleBinding Response Items
+  repeated AuthorizationPoolUserRoleBindingResponseItem items = 1;
+}
+
+// AuthorizationPoolService UserRoleBinding Response Item
+message AuthorizationPoolUserRoleBindingResponseItem {
+  // Name (key) of the binding
+  string name = 1;
+
+  // Index of the binding
+  uint32 index = 2;
+
+  // UserRoleBinding Content
+  types.UserRoleBinding item = 3;
 }

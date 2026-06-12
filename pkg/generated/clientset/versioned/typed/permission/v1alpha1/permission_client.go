@@ -33,7 +33,9 @@ import (
 type PermissionV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ArangoPermissionPoliciesGetter
+	ArangoPermissionPolicyRoleBindingsGetter
 	ArangoPermissionRolesGetter
+	ArangoPermissionRoleUserBindingsGetter
 	ArangoPermissionTokensGetter
 }
 
@@ -46,8 +48,16 @@ func (c *PermissionV1alpha1Client) ArangoPermissionPolicies(namespace string) Ar
 	return newArangoPermissionPolicies(c, namespace)
 }
 
+func (c *PermissionV1alpha1Client) ArangoPermissionPolicyRoleBindings(namespace string) ArangoPermissionPolicyRoleBindingInterface {
+	return newArangoPermissionPolicyRoleBindings(c, namespace)
+}
+
 func (c *PermissionV1alpha1Client) ArangoPermissionRoles(namespace string) ArangoPermissionRoleInterface {
 	return newArangoPermissionRoles(c, namespace)
+}
+
+func (c *PermissionV1alpha1Client) ArangoPermissionRoleUserBindings(namespace string) ArangoPermissionRoleUserBindingInterface {
+	return newArangoPermissionRoleUserBindings(c, namespace)
 }
 
 func (c *PermissionV1alpha1Client) ArangoPermissionTokens(namespace string) ArangoPermissionTokenInterface {

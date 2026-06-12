@@ -54,7 +54,7 @@ func Handler(t *testing.T) svc.Handler {
 		CreateDatabase(fmt.Sprintf("db-%s", goStrings.ToLower(uniuri.NewLen(8))), &adbDriverV2.CreateDatabaseOptions{}).
 		CreateCollection("_users", db.StaticProps(adbDriverV2.CreateCollectionPropertiesV2{
 			IsSystem: util.NewType(true),
-		})).Database(), pbImplAuthorizationV1.ConfigurationTypeCentralPermissive)
+		})).Database(), pbImplAuthorizationV1.ConfigurationTypeCentralPermissive, 30*24*time.Hour)
 }
 
 func Server(t *testing.T, ctx context.Context, tm tests.TokenManager) svc.ServiceStarter {

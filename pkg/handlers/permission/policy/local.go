@@ -26,7 +26,7 @@ import (
 )
 
 func Kind() string {
-	return permission.ArangoPermissionRoleResourceKind
+	return permission.ArangoPermissionPolicyResourceKind
 }
 
 func Group() string {

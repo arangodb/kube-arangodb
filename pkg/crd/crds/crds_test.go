@@ -157,6 +157,8 @@ func Test_CRDGetters(t *testing.T) {
 		PermissionTokenWithOptions,
 		PermissionPolicyWithOptions,
 		PermissionRoleWithOptions,
+		PermissionPolicyRoleBindingWithOptions,
+		PermissionRoleUserBindingWithOptions,
 	}
 	require.Equal(t, len(AllDefinitions()), len(getters))
 

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -140,6 +140,36 @@ func (o *Object) Equals(obj meta.Object) bool {
 		}
 	}
 
+	return true
+}
+
+// EqualObject returns true if two Object values represent the same reference.
+func (o *Object) EqualObject(other *Object) bool {
+	if o == nil && other == nil {
+		return true
+	}
+	if o == nil || other == nil {
+		return false
+	}
+
+	return o.GetName() == other.GetName() &&
+		o.GetUID() == other.GetUID() &&
+		o.GetChecksum() == other.GetChecksum()
+}
+
+// Objects is a list of Object references.
+type Objects []Object
+
+// Equal returns true if both lists contain the same objects in the same order.
+func (o Objects) Equal(other Objects) bool {
+	if len(o) != len(other) {
+		return false
+	}
+	for i := range o {
+		if !o[i].EqualObject(&other[i]) {
+			return false
+		}
+	}
 	return true
 }
 

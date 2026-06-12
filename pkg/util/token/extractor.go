@@ -54,7 +54,7 @@ func extractTokenDetails(cache Secret, t string) (*string, []string, time.Durati
 
 	var roles []string
 
-	if v, ok := claims[ClaimRoles]; ok {
+	if v, ok := claims[ClaimGroups]; ok {
 		switch o := v.(type) {
 		case []string:
 			roles = o

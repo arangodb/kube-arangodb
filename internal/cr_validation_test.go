@@ -330,6 +330,27 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				},
 			},
 		},
+		"permission-policy-role-binding": {
+			fmt.Sprintf("%s/pkg/apis/permission", root): {
+				"v1alpha1": {
+					objects: map[string]interface{}{
+						"spec": permissionApi.ArangoPermissionPolicyRoleBinding{}.Spec,
+					},
+				},
+			},
+		},
+		"permission-role-user-binding": {
+			fmt.Sprintf("%s/pkg/apis/permission", root): {
+				"v1alpha1": {
+					objects: map[string]interface{}{
+						"spec": permissionApi.ArangoPermissionRoleUserBinding{}.Spec,
+					},
+					shared: []string{
+						fmt.Sprintf("%s/pkg/apis/permission/v1alpha1/policy", root),
+					},
+				},
+			},
+		},
 	}
 
 	for filePrefix, packagesToVersion := range input {

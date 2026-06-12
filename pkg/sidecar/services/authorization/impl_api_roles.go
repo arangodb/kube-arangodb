@@ -79,6 +79,8 @@ func (a *implementation) APIDeleteRole(ctx context.Context, request *sidecarSvcA
 		return nil, err
 	}
 
+	identity := authenticator.GetIdentity(ctx)
+
 	offset, err := a.roles.Delete(ctx, request.GetName())
 
 	if err != nil {
@@ -88,6 +90,8 @@ func (a *implementation) APIDeleteRole(ctx context.Context, request *sidecarSvcA
 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	logger.Str("role", request.GetName()).Str("user", identity.GetUser()).Info("Role deleted")
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse{
 		Name:  request.GetName(),
@@ -112,6 +116,8 @@ func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcA
 		return nil, status.Error(codes.InvalidArgument, "Item cannot be empty")
 	}
 
+	identity := authenticator.GetIdentity(ctx)
+
 	res, offset, err := a.roles.Create(ctx, request.GetName(), request.GetItem())
 
 	if err != nil {
@@ -121,6 +127,8 @@ func (a *implementation) APICreateRole(ctx context.Context, request *sidecarSvcA
 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	logger.Str("role", request.GetName()).Str("user", identity.GetUser()).Info("Role created")
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse{
 		Name:  request.GetName(),
@@ -146,6 +154,8 @@ func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcA
 		return nil, status.Error(codes.InvalidArgument, "Item cannot be empty")
 	}
 
+	identity := authenticator.GetIdentity(ctx)
+
 	res, offset, err := a.roles.Update(ctx, request.GetName(), request.GetItem())
 
 	if err != nil {
@@ -159,6 +169,8 @@ func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcA
 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	logger.Str("role", request.GetName()).Str("user", identity.GetUser()).Info("Role updated")
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIRoleResponse{
 		Name:  request.GetName(),

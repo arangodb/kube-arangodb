@@ -165,7 +165,7 @@ func (p impl) Token(ctx context.Context, in *pbImplEnvoyAuthV3Shared.ResponseAut
 	resp, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
 		Lifetime: durationpb.New(pbImplEnvoyAuthV3Shared.DefaultLifetime),
 		User:     util.NewType(in.User),
-		Roles:    in.Roles,
+		Groups:   in.Groups,
 	})
 	if err != nil {
 		return "", util.Default[time.Time](), err
