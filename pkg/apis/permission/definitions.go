@@ -33,5 +33,17 @@ const (
 	ArangoPermissionPolicyResourceKind   = "ArangoPermissionPolicy"
 	ArangoPermissionPolicyResourcePlural = "arangopermissionpolicies"
 
+	ArangoPermissionPolicyRoleBindingCRDName        = ArangoPermissionPolicyRoleBindingResourcePlural + "." + ArangoPermissionGroupName
+	ArangoPermissionPolicyRoleBindingResourceKind   = "ArangoPermissionPolicyRoleBinding"
+	ArangoPermissionPolicyRoleBindingResourcePlural = "arangopermissionpolicyrolebindings"
+
+	ArangoPermissionRoleUserBindingCRDName        = ArangoPermissionRoleUserBindingResourcePlural + "." + ArangoPermissionGroupName
+	ArangoPermissionRoleUserBindingResourceKind   = "ArangoPermissionRoleUserBinding"
+	ArangoPermissionRoleUserBindingResourcePlural = "arangopermissionroleuserbindings"
+
 	ArangoPermissionGroupName = "permission.arangodb.com"
+
+	// LabelPolicyRoleBindingRole is a label set on ArangoPermissionPolicyRoleBinding
+	// with the name of the referenced ArangoPermissionRole CRD.
+	LabelPolicyRoleBindingRole = ArangoPermissionGroupName + "/role"
 )

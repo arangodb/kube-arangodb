@@ -37,11 +37,17 @@ type ArangoPermissionTokenStatus struct {
 	// User keeps the ArangoDB User Reference
 	User *sharedApi.Object `json:"user,omitempty"`
 
-	// Role keeps the Role Reference
+	// Role keeps the managed sidecar Role Reference
 	Role *sharedApi.Object `json:"role,omitempty"`
 
-	// Policy keeps the Policy Reference
-	Policy *sharedApi.Object `json:"policy,omitempty"`
+	// Roles keeps the resolved Role references from Spec.Roles
+	Roles sharedApi.Objects `json:"roles,omitempty"`
+
+	// ManagedPolicy keeps the managed inline Policy Reference created from Spec.Policy
+	ManagedPolicy *sharedApi.Object `json:"managedPolicy,omitempty"`
+
+	// Policies keeps the resolved Policy references from Spec.Policies
+	Policies sharedApi.Objects `json:"policies,omitempty"`
 
 	// Secret keeps the Secret Reference
 	Secret *sharedApi.Object `json:"secret,omitempty"`

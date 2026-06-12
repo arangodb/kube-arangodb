@@ -23,15 +23,24 @@ package policy
 import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type Actions []Action
+
+func (a Actions) Hash() string {
+	return util.SHA256FromExtract(func(v Action) string { return v.Hash() }, a...)
+}
 
 func (a Actions) Validate() error {
 	return shared.ValidateInterfaceList(a)
 }
 
 type Action string
+
+func (a Action) Hash() string {
+	return util.SHA256FromString(string(a))
+}
 
 func (a Action) Validate() error {
 	return sidecarSvcAuthzTypes.ValidateAction(string(a))

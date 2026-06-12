@@ -69,6 +69,16 @@ func generateTestingRoles(size int) map[string]*sidecarSvcAuthzTypes.Role {
 			fmt.Sprintf("policy-%09d", id),
 		}
 
+		role.Scope = &sidecarSvcAuthzTypes.Policy{
+			Statements: []*sidecarSvcAuthzTypes.PolicyStatement{
+				{
+					Effect:    sidecarSvcAuthzTypes.Effect_Allow,
+					Actions:   []string{"*"},
+					Resources: []string{"*"},
+				},
+			},
+		}
+
 		res[name] = &role
 	}
 

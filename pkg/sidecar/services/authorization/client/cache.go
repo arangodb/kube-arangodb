@@ -27,7 +27,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string]*sidecarSvcAuthzTypes.Role) internalCache {
+type cachedRole struct {
+	policies []string
+	scope    *Policy
+}
+
+func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string]*sidecarSvcAuthzTypes.Role, userRoleBindings map[string]*sidecarSvcAuthzTypes.UserRoleBinding) internalCache {
 	parsedPolicies := make(map[string]*Policy, len(policies))
 
 	for name, policy := range policies {
@@ -40,69 +45,87 @@ func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string
 		parsedPolicies[name] = &p
 	}
 
-	parsedUsers := make(map[string][]string)
-	parsedRoles := make(map[string][]string)
+	parsedRoles := make(map[string]cachedRole)
 
 	for name, role := range roles {
 		if role == nil {
 			continue
 		}
-		for _, policy := range role.Policies {
-			parsedRoles[name] = append(parsedRoles[name], policy)
 
-			for _, user := range role.Users {
-				parsedUsers[user] = append(parsedUsers[user], policy)
+		cr := cachedRole{}
+
+		cr.policies = append(cr.policies, role.Policies...)
+
+		cr.policies = util.UniqueList(cr.policies)
+		sort.Strings(cr.policies)
+
+		if scope := role.GetScope(); scope != nil {
+			if p, err := NewPolicy(scope); err != nil {
+				logger.Err(err).Str("role", name).Warn("Failed to parse role scope policy")
+			} else {
+				cr.scope = &p
 			}
 		}
-	}
 
-	for k := range parsedRoles {
-		v := util.UniqueList(parsedRoles[k])
-		sort.Strings(v)
-		parsedRoles[k] = v
-	}
-
-	for k := range parsedUsers {
-		v := util.UniqueList(parsedUsers[k])
-		sort.Strings(v)
-		parsedUsers[k] = v
+		parsedRoles[name] = cr
 	}
 
 	return internalCache{
-		users:    parsedUsers,
-		roles:    parsedRoles,
-		policies: parsedPolicies,
+		roles:            parsedRoles,
+		policies:         parsedPolicies,
+		userRoleBindings: userRoleBindings,
 	}
 }
 
 type internalCache struct {
-	users    map[string][]string
-	roles    map[string][]string
-	policies map[string]*Policy
+	roles            map[string]cachedRole
+	policies         map[string]*Policy
+	userRoleBindings map[string]*sidecarSvcAuthzTypes.UserRoleBinding
 }
 
-func (c *internalCache) extractUserPolicies(user string, userRoles ...string) []*Policy {
+func (c *internalCache) extractGroups(user string, groupNames ...string) ScopedPolicies {
 	if c == nil {
 		return nil
 	}
 
-	var policyNames = make(map[string]*Policy, len(c.policies))
+	result := make(ScopedPolicies)
 
-	for _, name := range c.users[user] {
-		if p, ok := c.policies[name]; ok {
-			policyNames[name] = p
-		}
+	// Resolve explicit group names
+	for _, name := range groupNames {
+		c.resolveGroup(name, result)
 	}
 
-	for _, roleName := range userRoles {
-		if role, ok := c.roles[roleName]; ok {
-			for _, name := range role {
-				if p, ok := c.policies[name]; ok {
-					policyNames[name] = p
-				}
+	// Resolve groups from user bindings
+	if user != "" {
+		prefix := user + ":"
+		for key, binding := range c.userRoleBindings {
+			if len(key) <= len(prefix) || key[:len(prefix)] != prefix {
+				continue
 			}
+			c.resolveGroup(binding.GetRole(), result)
 		}
 	}
 
-	return util.MapValues(policyNames)
+	return result
+}
+
+func (c *internalCache) resolveGroup(name string, result ScopedPolicies) {
+	if _, exists := result[name]; exists {
+		return
+	}
+
+	g, ok := c.roles[name]
+	if !ok || g.scope == nil {
+		return
+	}
+
+	sp := ScopedPolicy{Scope: g.scope}
+
+	for _, policyName := range g.policies {
+		if p, ok := c.policies[policyName]; ok {
+			sp.Policies = append(sp.Policies, p)
+		}
+	}
+
+	result[name] = sp
 }

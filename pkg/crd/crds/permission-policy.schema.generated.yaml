@@ -12,9 +12,15 @@ v1alpha1:
             required:
               - name
             type: object
+          description:
+            description: Description is an optional human-readable description of this policy resource
+            type: string
           policy:
             description: Policy defined the Authorization Policy
             properties:
+              description:
+                description: Description is an optional human-readable description of this policy
+                type: string
               statements:
                 description: Statements list of the policy Statements
                 items:
@@ -26,6 +32,9 @@ v1alpha1:
                       items:
                         type: string
                       type: array
+                    description:
+                      description: Description is an optional human-readable description of what this statement does
+                      type: string
                     effect:
                       description: Effect defines the statement effect.
                       enum:

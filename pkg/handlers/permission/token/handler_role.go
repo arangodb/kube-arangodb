@@ -32,6 +32,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
+	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
@@ -44,11 +45,13 @@ import (
 )
 
 func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, st *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment, conn sidecarSvcAuthzDefinition.AuthorizationAPIClient) (bool, error) {
-	if extension.Spec.Policy != nil && !depl.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+	hasPolicies := extension.Spec.Policy != nil
+
+	if hasPolicies && !depl.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
 		return false, errors.Errorf("Sidecar is not enabled")
 	}
 
-	if extension.Spec.Policy == nil || !depl.GetAcceptedSpec().IsAuthenticated() {
+	if !hasPolicies || !depl.GetAcceptedSpec().IsAuthenticated() {
 		// Role should be gone
 		if st.Role != nil {
 			_, err := conn.APIDeleteRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
@@ -56,7 +59,7 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 			})
 			if err != nil {
 				if status.Code(err) != codes.NotFound {
-					logger.Err(err).Warn("Failed to delete policy")
+					logger.Err(err).Warn("Failed to delete role")
 					return false, err
 				}
 			}
@@ -81,7 +84,7 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 		return false, nil
 	}
 
-	if st.Policy == nil {
+	if len(st.Policies) == 0 && st.ManagedPolicy == nil {
 		if st.Conditions.UpdateWithHash(permissionApi.ReadyRoleCondition, false, "Role Changed", "Role Changed", "") {
 			return true, operator.Reconcile("Policy gone")
 		}
@@ -89,22 +92,37 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 		return false, nil
 	}
 
-	role, err := h.renderRole(st.User.GetName(), st.Policy.GetName())
+	scope, err := h.renderScope(extension.Spec.Scope)
 	if err != nil {
-		logger.Err(err).Warn("Failed to render policy")
+		logger.Err(err).Warn("Failed to render scope policy")
+		return false, err
+	}
+
+	// Collect all policy sidecar names
+	var policyNames []string
+	for _, p := range st.Policies {
+		policyNames = append(policyNames, p.GetName())
+	}
+	if st.ManagedPolicy != nil {
+		policyNames = append(policyNames, st.ManagedPolicy.GetName())
+	}
+
+	role, err := h.renderRole(policyNames, scope)
+	if err != nil {
+		logger.Err(err).Warn("Failed to render role")
 		return false, err
 	}
 
 	name := fmt.Sprintf("managed:operator:%s", extension.GetUID())
 
 	if st.Role == nil {
-		// Create the policy
+		// Create the role
 		if _, err := conn.APICreateRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIRoleRequest{
 			Name: name,
 			Item: role,
 		}); err != nil {
 			if status.Code(err) != codes.AlreadyExists {
-				logger.Err(err).Warn("Failed to create policy")
+				logger.Err(err).Warn("Failed to create role")
 				return false, err
 			}
 		}
@@ -124,7 +142,7 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 	})
 	if err != nil {
 		if status.Code(err) != codes.NotFound {
-			logger.Err(err).Warn("Failed to get policy")
+			logger.Err(err).Warn("Failed to get role")
 			return false, err
 		}
 
@@ -139,13 +157,13 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 			return true, operator.Reconcile("Role changed")
 		}
 
-		// Create the policy
+		// Update the role
 		if _, err := conn.APIUpdateRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIRoleRequest{
 			Name: name,
 			Item: role,
 		}); err != nil {
 			if status.Code(err) != codes.AlreadyExists {
-				logger.Err(err).Warn("Failed to create policy")
+				logger.Err(err).Warn("Failed to update role")
 				return false, err
 			}
 		}
@@ -167,11 +185,47 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 	return false, nil
 }
 
-func (h *handler) renderRole(user, policy string) (*sidecarSvcAuthzTypes.Role, error) {
+func (h *handler) renderScope(in *permissionApiPolicy.Policy) (*sidecarSvcAuthzTypes.Policy, error) {
+	if in == nil {
+		return &sidecarSvcAuthzTypes.Policy{}, nil
+	}
+
+	return h.renderPolicy(in)
+}
+
+func (h *handler) renderPolicy(in *permissionApiPolicy.Policy) (*sidecarSvcAuthzTypes.Policy, error) {
+	var r sidecarSvcAuthzTypes.Policy
+
+	for _, st := range in.Statements {
+		var s sidecarSvcAuthzTypes.PolicyStatement
+
+		s.Effect = util.BoolSwitch(st.Effect == permissionApiPolicy.EffectAllow, sidecarSvcAuthzTypes.Effect_Allow, sidecarSvcAuthzTypes.Effect_Deny)
+		s.Resources = util.FormatList(st.Resources, func(a permissionApiPolicy.Resource) string {
+			return string(a)
+		})
+		s.Actions = util.FormatList(st.Actions, func(a permissionApiPolicy.Action) string {
+			return string(a)
+		})
+
+		r.Statements = append(r.Statements, &s)
+	}
+
+	if err := r.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := r.Clean(); err != nil {
+		return nil, err
+	}
+
+	return &r, nil
+}
+
+func (h *handler) renderRole(policies []string, scope *sidecarSvcAuthzTypes.Policy) (*sidecarSvcAuthzTypes.Role, error) {
 	var r sidecarSvcAuthzTypes.Role
 
-	r.Users = []string{user}
-	r.Policies = []string{policy}
+	r.Policies = policies
+	r.Scope = scope
 
 	if err := r.Validate(); err != nil {
 		return nil, err
@@ -199,7 +253,7 @@ func (h *handler) finalizerRoleRemoval(ctx context.Context, extension *permissio
 	}
 
 	if !extension.Status.Deployment.Equals(depl) {
-		logger.Warn("Deleting of the user not allowed due to change in UUID")
+		logger.Warn("Deleting of the role not allowed due to change in UUID")
 		return nil
 	}
 

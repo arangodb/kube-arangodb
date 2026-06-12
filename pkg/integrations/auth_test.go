@@ -25,10 +25,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
 
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
-	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
 func Test_AuthCases(t *testing.T) {
@@ -51,28 +49,27 @@ func Test_AuthCases(t *testing.T) {
 				"v1"))
 		})
 		t.Run("internal", func(t *testing.T) {
-			tgrpc.AsGRPCError(t, executeSync(t, shutdown.Context(),
+			// Health checks bypass authentication
+			require.NoError(t, executeSync(t, shutdown.Context(),
 				fmt.Sprintf("--address=127.0.0.1:%d", internal),
 				"--token=",
 				"client",
 				"health",
-				"v1")).
-				Code(t, codes.Unauthenticated).
-				Errorf(t, "Unauthorized")
+				"v1"))
 		})
 		t.Run("external", func(t *testing.T) {
-			tgrpc.AsGRPCError(t, executeSync(t, shutdown.Context(),
+			// Health checks bypass authentication
+			require.NoError(t, executeSync(t, shutdown.Context(),
 				fmt.Sprintf("--address=127.0.0.1:%d", external),
 				"--token=",
 				"client",
 				"health",
-				"v1")).
-				Code(t, codes.Unauthenticated).
-				Errorf(t, "Unauthorized")
+				"v1"))
 		})
 	})
 
 	t.Run("With auth 1", func(t *testing.T) {
+		// Health checks bypass authentication on all endpoints
 		t.Run("health", func(t *testing.T) {
 			require.NoError(t, executeSync(t, shutdown.Context(),
 				fmt.Sprintf("--address=127.0.0.1:%d", health),
@@ -82,14 +79,12 @@ func Test_AuthCases(t *testing.T) {
 				"v1"))
 		})
 		t.Run("internal", func(t *testing.T) {
-			tgrpc.AsGRPCError(t, executeSync(t, shutdown.Context(),
+			require.NoError(t, executeSync(t, shutdown.Context(),
 				fmt.Sprintf("--address=127.0.0.1:%d", internal),
 				"--token=test1",
 				"client",
 				"health",
-				"v1")).
-				Code(t, codes.Unauthenticated).
-				Errorf(t, "Unauthorized")
+				"v1"))
 		})
 		t.Run("external", func(t *testing.T) {
 			require.NoError(t, executeSync(t, shutdown.Context(),
@@ -102,6 +97,7 @@ func Test_AuthCases(t *testing.T) {
 	})
 
 	t.Run("With auth 2", func(t *testing.T) {
+		// Health checks bypass authentication on all endpoints
 		t.Run("health", func(t *testing.T) {
 			require.NoError(t, executeSync(t, shutdown.Context(),
 				fmt.Sprintf("--address=127.0.0.1:%d", health),
@@ -119,14 +115,12 @@ func Test_AuthCases(t *testing.T) {
 				"v1"))
 		})
 		t.Run("external", func(t *testing.T) {
-			tgrpc.AsGRPCError(t, executeSync(t, shutdown.Context(),
+			require.NoError(t, executeSync(t, shutdown.Context(),
 				fmt.Sprintf("--address=127.0.0.1:%d", external),
 				"--token=test2",
 				"client",
 				"health",
-				"v1")).
-				Code(t, codes.Unauthenticated).
-				Errorf(t, "Unauthorized")
+				"v1"))
 		})
 	})
 }

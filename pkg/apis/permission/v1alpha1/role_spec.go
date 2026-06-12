@@ -21,22 +21,29 @@
 package v1alpha1
 
 import (
-	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ArangoPermissionRoleSpec struct {
+	// Description is an optional human-readable description of this role
+	Description string `json:"description,omitempty"`
+
 	// Deployment keeps the Deployment Reference
 	// +doc/required
 	// +doc/skip: namespace
 	// +doc/skip: uid
 	// +doc/skip: checksum
 	Deployment *sharedApi.Object `json:"deployment"`
+}
 
-	// Policy defined the Authorization Policy
-	Policy *permissionApiPolicy.Policy `json:"policy,omitempty"`
+func (c *ArangoPermissionRoleSpec) Hash() string {
+	if c == nil {
+		return ""
+	}
+	return util.SHA256FromStringArray(c.Description, c.Deployment.GetName())
 }
 
 func (c *ArangoPermissionRoleSpec) Validate() error {
@@ -45,7 +52,6 @@ func (c *ArangoPermissionRoleSpec) Validate() error {
 	}
 
 	return shared.WithErrors(
-		shared.ValidateOptionalInterfacePath("policy", c.Policy),
 		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
 	)
 }

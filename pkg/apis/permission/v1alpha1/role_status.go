@@ -35,6 +35,6 @@ type ArangoPermissionRoleStatus struct {
 	// Role keeps the Role Reference
 	Role *sharedApi.Object `json:"role,omitempty"`
 
-	// Policy keeps the Policy Reference
-	Policy *sharedApi.Object `json:"policy,omitempty"`
+	// Policies keeps references to policies attached via PolicyRoleBindings
+	Policies ArangoPermissionBindingRefList `json:"policies,omitempty"`
 }

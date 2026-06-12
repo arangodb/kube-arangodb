@@ -70,8 +70,9 @@ type client struct {
 
 	cache *internalCache
 
-	policies clientSet[*sidecarSvcAuthzTypes.Policy]
-	roles    clientSet[*sidecarSvcAuthzTypes.Role]
+	policies         clientSet[*sidecarSvcAuthzTypes.Policy]
+	roles            clientSet[*sidecarSvcAuthzTypes.Role]
+	userRoleBindings clientSet[*sidecarSvcAuthzTypes.UserRoleBinding]
 }
 
 func (c *client) Revision() uint64 {
@@ -79,9 +80,9 @@ func (c *client) Revision() uint64 {
 }
 
 func (c *client) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
-	policies := c.get().extractUserPolicies(req.GetUser(), req.GetRoles()...)
+	groups := c.get().extractGroups(req.GetUser(), req.GetRoles()...)
 
-	return EvaluatePolicies(req, policies...)
+	return groups.Evaluate(req)
 }
 
 func (c *client) get() *internalCache {
@@ -113,7 +114,7 @@ func (c *client) Ready(ctx context.Context) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	return errors.Errors(c.policies.ready(), c.roles.ready(), util.BoolSwitch(c.cache == nil, errors.Errorf("nil internalCache"), nil))
+	return errors.Errors(c.policies.ready(), c.roles.ready(), c.userRoleBindings.ready(), util.BoolSwitch(c.cache == nil, errors.Errorf("nil internalCache"), nil))
 }
 
 func (c *client) setRoles(items map[string]*sidecarSvcAuthzTypes.Role) {
@@ -130,9 +131,29 @@ func (c *client) setRoles(items map[string]*sidecarSvcAuthzTypes.Role) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	cache := newCache(c.policies.items, cp)
+	cache := newCache(c.policies.items, cp, c.userRoleBindings.items)
 
 	c.roles.set(cp)
+	c.cache = &cache
+}
+
+func (c *client) setUserRoleBindings(items map[string]*sidecarSvcAuthzTypes.UserRoleBinding) {
+	c.setLock.Lock()
+	defer c.setLock.Unlock()
+
+	c.revision += 1
+
+	cp := make(map[string]*sidecarSvcAuthzTypes.UserRoleBinding, len(items))
+	for k, v := range items {
+		cp[k] = v
+	}
+
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	cache := newCache(c.policies.items, c.roles.items, cp)
+
+	c.userRoleBindings.set(cp)
 	c.cache = &cache
 }
 
@@ -150,7 +171,7 @@ func (c *client) setPolicies(items map[string]*sidecarSvcAuthzTypes.Policy) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	cache := newCache(cp, c.roles.items)
+	cache := newCache(cp, c.roles.items, c.userRoleBindings.items)
 
 	c.policies.set(cp)
 	c.cache = &cache
@@ -201,6 +222,10 @@ func (c *client) runE(ctx context.Context) error {
 
 	g.Go(func() error {
 		return c.runRolesE(gctx)
+	})
+
+	g.Go(func() error {
+		return c.runUserRoleBindingsE(gctx)
 	})
 
 	return g.Wait()
@@ -334,6 +359,72 @@ func (c *client) runRolesE(ctx context.Context) error {
 			}
 
 			c.setRoles(roles)
+		}
+	}
+}
+
+func (c *client) runUserRoleBindingsE(ctx context.Context) error {
+	bindings := map[string]*sidecarSvcAuthzTypes.UserRoleBinding{}
+
+	var index uint32
+
+	client, err := c.client.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	{
+		response, err := client.GetUserRoleBinding(ctx, &pbSharedV1.Empty{})
+		if err != nil {
+			return err
+		}
+
+		for {
+			spec, err := response.Recv()
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				return err
+			}
+
+			for _, item := range spec.GetItems() {
+				bindings[item.GetName()] = item.GetItem()
+				index = item.GetIndex()
+			}
+		}
+	}
+
+	c.setUserRoleBindings(bindings)
+
+	logger.Trace("UserRoleBindings init complete")
+
+	for {
+		changes, err := client.PoolUserRoleBindingChanges(ctx, &sidecarSvcAuthzDefinition.AuthorizationPoolRequest{
+			Start:   index,
+			Timeout: durationpb.New(15 * time.Second),
+		})
+		if err != nil {
+			return err
+		}
+
+		for {
+			spec, err := changes.Recv()
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				return err
+			}
+
+			logger.Int("items", len(spec.Items)).Trace("Received user role bindings update")
+
+			for _, item := range spec.GetItems() {
+				bindings[item.GetName()] = item.GetItem()
+				index = item.GetIndex()
+			}
+
+			c.setUserRoleBindings(bindings)
 		}
 	}
 }

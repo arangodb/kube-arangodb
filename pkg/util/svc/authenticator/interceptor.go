@@ -22,6 +22,7 @@ package authenticator
 
 import (
 	"context"
+	goStrings "strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -29,6 +30,13 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+// isHealthCheck returns true for gRPC health check methods which must be
+// accessible without authentication (used by proxies, load balancers, and
+// Kubernetes probes).
+func isHealthCheck(fullMethod string) bool {
+	return goStrings.HasPrefix(fullMethod, "/grpc.health.v1.Health/")
+}
 
 type identityContext string
 
@@ -61,6 +69,10 @@ func NewInterceptorOptions(auth Authenticator) []grpc.ServerOption {
 
 	return []grpc.ServerOption{
 		grpc.StreamInterceptor(func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+			if isHealthCheck(info.FullMethod) {
+				return handler(srv, ss)
+			}
+
 			identity, err := auth.ValidateGRPC(ss.Context())
 			if err != nil {
 				return status.Error(codes.Unauthenticated, errors.ExtractGRPCCause(err).Error())
@@ -69,6 +81,10 @@ func NewInterceptorOptions(auth Authenticator) []grpc.ServerOption {
 			return handler(srv, serverStreamWithAuth(ss, identity))
 		}),
 		grpc.UnaryInterceptor(func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+			if isHealthCheck(info.FullMethod) {
+				return handler(ctx, req)
+			}
+
 			identity, err := auth.ValidateGRPC(ctx)
 			if err != nil {
 				return nil, status.Error(codes.Unauthenticated, errors.ExtractGRPCCause(err).Error())

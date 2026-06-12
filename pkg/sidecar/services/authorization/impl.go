@@ -42,16 +42,20 @@ type Authorizer interface {
 	svc.Handler
 }
 
-func NewAuthorizer(client db.Database, authType pbImplAuthorizationV1.ConfigurationType) Authorizer {
+func NewAuthorizer(client db.Database, authType pbImplAuthorizationV1.ConfigurationType, deletedTTL time.Duration) Authorizer {
 	return &implementation{
 		policies: pool.NewPooler[*sidecarSvcAuthzTypes.Policy](client.
 			CreateCollection("_policies", db.SourceCollectionProps("_users")).
 			WithUniqueIndex("policies_unique_sequence_index", "sequence").
-			WithTTLIndex("policies_deleted_index", 30*24*time.Hour, "deleted").
+			WithTTLIndex("policies_deleted_index", deletedTTL, "deleted").
 			Get(), pool.DefaultPoolerTimeout),
 		roles: pool.NewPooler[*sidecarSvcAuthzTypes.Role](client.
 			CreateCollection("_roles", db.SourceCollectionProps("_users")).
-			WithTTLIndex("roles_deleted_index", 30*24*time.Hour, "deleted").
+			WithTTLIndex("roles_deleted_index", deletedTTL, "deleted").
+			Get(), pool.DefaultPoolerTimeout),
+		userRoleBindings: pool.NewPooler[*sidecarSvcAuthzTypes.UserRoleBinding](client.
+			CreateCollection("_user_role_bindings", db.SourceCollectionProps("_users")).
+			WithTTLIndex("user_role_bindings_deleted_index", deletedTTL, "deleted").
 			Get(), pool.DefaultPoolerTimeout),
 		authType: authType,
 	}
@@ -64,8 +68,9 @@ type implementation struct {
 	sidecarSvcAuthzDefinition.UnimplementedAuthorizationPoolServiceServer
 	sidecarSvcAuthzDefinition.UnimplementedAuthorizationAPIServer
 
-	policies pool.Pooler[*sidecarSvcAuthzTypes.Policy]
-	roles    pool.Pooler[*sidecarSvcAuthzTypes.Role]
+	policies         pool.Pooler[*sidecarSvcAuthzTypes.Policy]
+	roles            pool.Pooler[*sidecarSvcAuthzTypes.Role]
+	userRoleBindings pool.Pooler[*sidecarSvcAuthzTypes.UserRoleBinding]
 
 	authType pbImplAuthorizationV1.ConfigurationType
 }
@@ -88,7 +93,7 @@ func (a *implementation) Plugin() pbImplAuthorizationV1Shared.Plugin {
 }
 
 func (a *implementation) Health(ctx context.Context) svc.HealthState {
-	if !a.roles.Ready() || !a.policies.Ready() {
+	if !a.roles.Ready() || !a.policies.Ready() || !a.userRoleBindings.Ready() {
 		return svc.Unhealthy
 	}
 	return svc.Healthy
@@ -108,6 +113,9 @@ func (a *implementation) Refresh(ctx context.Context) error {
 		return err
 	}
 	if err := a.roles.Refresh(ctx); err != nil {
+		return err
+	}
+	if err := a.userRoleBindings.Refresh(ctx); err != nil {
 		return err
 	}
 

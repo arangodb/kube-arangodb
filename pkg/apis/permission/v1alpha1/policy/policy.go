@@ -22,13 +22,24 @@ package policy
 
 import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Policy struct {
+	// Description is an optional human-readable description of this policy
+	Description string `json:"description,omitempty"`
+
 	// Statements list of the policy Statements
 	// +doc/required
 	Statements Statements `json:"statements"`
+}
+
+func (a *Policy) Hash() string {
+	if a == nil {
+		return ""
+	}
+	return util.SHA256FromStringArray(a.Description, a.Statements.Hash())
 }
 
 func (a *Policy) Validate() error {

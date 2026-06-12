@@ -57,6 +57,11 @@ func newAuthorizationClient(ctx context.Context, cmd *cobra.Command) (svc.Handle
 		return nil, nil, false, err
 	}
 
-	auth := sidecarSvcAuthz.NewAuthorizer(db.NewClient(c).Database("_system"), pz)
+	deletedTTL, err := flagAuthDeletedTTL.Get(cmd)
+	if err != nil {
+		return nil, nil, false, err
+	}
+
+	auth := sidecarSvcAuthz.NewAuthorizer(db.NewClient(c).Database("_system"), pz, deletedTTL)
 	return auth, auth.Plugin(), true, nil
 }

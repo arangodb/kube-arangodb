@@ -151,8 +151,6 @@ func (h *handler) handle(ctx context.Context, item operation.Item, extension *pe
 
 func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionPolicy, status *permissionApi.ArangoPermissionPolicyStatus) (bool, error) {
 	if err := extension.Spec.Validate(); err != nil {
-		// We have received an error in the spec!
-
 		logger.Err(err).Warn("Invalid Spec on %s", item.String())
 
 		if status.Conditions.Update(permissionApi.SpecValidCondition, false, "Spec is invalid", "Spec is invalid") {
@@ -163,6 +161,10 @@ func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, e
 
 	if status.Conditions.Update(permissionApi.SpecValidCondition, true, "Spec is valid", "Spec is valid") {
 		logger.WrapObj(item).Debug("Spec is valid")
+		return true, nil
+	}
+
+	if status.Conditions.UpdateWithHash(permissionApi.SpecAcceptedCondition, true, "Spec accepted", "Spec accepted", extension.Spec.Hash()) {
 		return true, nil
 	}
 

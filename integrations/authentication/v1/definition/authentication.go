@@ -58,11 +58,11 @@ func NewRootFetcher(client AuthenticationV1Client) cache.ObjectFetcher[string] {
 	return NewFetcher(client, "root")
 }
 
-func NewFetcher(client AuthenticationV1Client, user string, roles ...string) cache.ObjectFetcher[string] {
+func NewFetcher(client AuthenticationV1Client, user string, groups ...string) cache.ObjectFetcher[string] {
 	return func(ctx context.Context) (string, time.Duration, error) {
 		resp, err := client.CreateToken(ctx, &CreateTokenRequest{
-			User:  util.NewType(user),
-			Roles: roles,
+			User:   util.NewType(user),
+			Groups: groups,
 		})
 		if err != nil {
 			return "", 0, err

@@ -40,10 +40,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthorizationPoolService_PoolPolicyChanges_FullMethodName = "/service.AuthorizationPoolService/PoolPolicyChanges"
-	AuthorizationPoolService_GetPolicy_FullMethodName         = "/service.AuthorizationPoolService/GetPolicy"
-	AuthorizationPoolService_PoolRoleChanges_FullMethodName   = "/service.AuthorizationPoolService/PoolRoleChanges"
-	AuthorizationPoolService_GetRole_FullMethodName           = "/service.AuthorizationPoolService/GetRole"
+	AuthorizationPoolService_PoolPolicyChanges_FullMethodName          = "/service.AuthorizationPoolService/PoolPolicyChanges"
+	AuthorizationPoolService_GetPolicy_FullMethodName                  = "/service.AuthorizationPoolService/GetPolicy"
+	AuthorizationPoolService_PoolRoleChanges_FullMethodName            = "/service.AuthorizationPoolService/PoolRoleChanges"
+	AuthorizationPoolService_GetRole_FullMethodName                    = "/service.AuthorizationPoolService/GetRole"
+	AuthorizationPoolService_PoolUserRoleBindingChanges_FullMethodName = "/service.AuthorizationPoolService/PoolUserRoleBindingChanges"
+	AuthorizationPoolService_GetUserRoleBinding_FullMethodName         = "/service.AuthorizationPoolService/GetUserRoleBinding"
 )
 
 // AuthorizationPoolServiceClient is the client API for AuthorizationPoolService service.
@@ -60,6 +62,10 @@ type AuthorizationPoolServiceClient interface {
 	PoolRoleChanges(ctx context.Context, in *AuthorizationPoolRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AuthorizationPoolRoleResponse], error)
 	// Gets Current Role setup.
 	GetRole(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AuthorizationPoolRoleResponse], error)
+	// Pools user role binding changes from the API.
+	PoolUserRoleBindingChanges(ctx context.Context, in *AuthorizationPoolRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AuthorizationPoolUserRoleBindingResponse], error)
+	// Gets Current UserRoleBinding setup.
+	GetUserRoleBinding(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AuthorizationPoolUserRoleBindingResponse], error)
 }
 
 type authorizationPoolServiceClient struct {
@@ -146,6 +152,44 @@ func (c *authorizationPoolServiceClient) GetRole(ctx context.Context, in *defini
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type AuthorizationPoolService_GetRoleClient = grpc.ServerStreamingClient[AuthorizationPoolRoleResponse]
 
+func (c *authorizationPoolServiceClient) PoolUserRoleBindingChanges(ctx context.Context, in *AuthorizationPoolRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AuthorizationPoolUserRoleBindingResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &AuthorizationPoolService_ServiceDesc.Streams[4], AuthorizationPoolService_PoolUserRoleBindingChanges_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[AuthorizationPoolRequest, AuthorizationPoolUserRoleBindingResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuthorizationPoolService_PoolUserRoleBindingChangesClient = grpc.ServerStreamingClient[AuthorizationPoolUserRoleBindingResponse]
+
+func (c *authorizationPoolServiceClient) GetUserRoleBinding(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AuthorizationPoolUserRoleBindingResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &AuthorizationPoolService_ServiceDesc.Streams[5], AuthorizationPoolService_GetUserRoleBinding_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[definition.Empty, AuthorizationPoolUserRoleBindingResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuthorizationPoolService_GetUserRoleBindingClient = grpc.ServerStreamingClient[AuthorizationPoolUserRoleBindingResponse]
+
 // AuthorizationPoolServiceServer is the server API for AuthorizationPoolService service.
 // All implementations must embed UnimplementedAuthorizationPoolServiceServer
 // for forward compatibility.
@@ -160,6 +204,10 @@ type AuthorizationPoolServiceServer interface {
 	PoolRoleChanges(*AuthorizationPoolRequest, grpc.ServerStreamingServer[AuthorizationPoolRoleResponse]) error
 	// Gets Current Role setup.
 	GetRole(*definition.Empty, grpc.ServerStreamingServer[AuthorizationPoolRoleResponse]) error
+	// Pools user role binding changes from the API.
+	PoolUserRoleBindingChanges(*AuthorizationPoolRequest, grpc.ServerStreamingServer[AuthorizationPoolUserRoleBindingResponse]) error
+	// Gets Current UserRoleBinding setup.
+	GetUserRoleBinding(*definition.Empty, grpc.ServerStreamingServer[AuthorizationPoolUserRoleBindingResponse]) error
 	mustEmbedUnimplementedAuthorizationPoolServiceServer()
 }
 
@@ -181,6 +229,12 @@ func (UnimplementedAuthorizationPoolServiceServer) PoolRoleChanges(*Authorizatio
 }
 func (UnimplementedAuthorizationPoolServiceServer) GetRole(*definition.Empty, grpc.ServerStreamingServer[AuthorizationPoolRoleResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method GetRole not implemented")
+}
+func (UnimplementedAuthorizationPoolServiceServer) PoolUserRoleBindingChanges(*AuthorizationPoolRequest, grpc.ServerStreamingServer[AuthorizationPoolUserRoleBindingResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method PoolUserRoleBindingChanges not implemented")
+}
+func (UnimplementedAuthorizationPoolServiceServer) GetUserRoleBinding(*definition.Empty, grpc.ServerStreamingServer[AuthorizationPoolUserRoleBindingResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method GetUserRoleBinding not implemented")
 }
 func (UnimplementedAuthorizationPoolServiceServer) mustEmbedUnimplementedAuthorizationPoolServiceServer() {
 }
@@ -248,6 +302,28 @@ func _AuthorizationPoolService_GetRole_Handler(srv interface{}, stream grpc.Serv
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type AuthorizationPoolService_GetRoleServer = grpc.ServerStreamingServer[AuthorizationPoolRoleResponse]
 
+func _AuthorizationPoolService_PoolUserRoleBindingChanges_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AuthorizationPoolRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AuthorizationPoolServiceServer).PoolUserRoleBindingChanges(m, &grpc.GenericServerStream[AuthorizationPoolRequest, AuthorizationPoolUserRoleBindingResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuthorizationPoolService_PoolUserRoleBindingChangesServer = grpc.ServerStreamingServer[AuthorizationPoolUserRoleBindingResponse]
+
+func _AuthorizationPoolService_GetUserRoleBinding_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(definition.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AuthorizationPoolServiceServer).GetUserRoleBinding(m, &grpc.GenericServerStream[definition.Empty, AuthorizationPoolUserRoleBindingResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuthorizationPoolService_GetUserRoleBindingServer = grpc.ServerStreamingServer[AuthorizationPoolUserRoleBindingResponse]
+
 // AuthorizationPoolService_ServiceDesc is the grpc.ServiceDesc for AuthorizationPoolService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -274,6 +350,16 @@ var AuthorizationPoolService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "GetRole",
 			Handler:       _AuthorizationPoolService_GetRole_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "PoolUserRoleBindingChanges",
+			Handler:       _AuthorizationPoolService_PoolUserRoleBindingChanges_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetUserRoleBinding",
+			Handler:       _AuthorizationPoolService_GetUserRoleBinding_Handler,
 			ServerStreams: true,
 		},
 	},

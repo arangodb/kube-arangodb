@@ -18,7 +18,7 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package role
+package token
 
 import (
 	"context"
@@ -32,155 +32,109 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
-	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/operation"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
-	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/integration"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
-func (h *handler) HandleArangoDBPolicy(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionRole, st *permissionApi.ArangoPermissionRoleStatus, depl *api.ArangoDeployment, conn sidecarSvcAuthzDefinition.AuthorizationAPIClient) (bool, error) {
+func (h *handler) HandleManagedPolicy(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, st *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment, conn sidecarSvcAuthzDefinition.AuthorizationAPIClient) (bool, error) {
 	if extension.Spec.Policy != nil && !depl.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
 		return false, errors.Errorf("Sidecar is not enabled")
 	}
 
 	if extension.Spec.Policy == nil || !depl.GetAcceptedSpec().IsAuthenticated() {
-		// Policy should be gone
-		if st.Policy != nil {
+		// Managed policy should be gone
+		if st.ManagedPolicy != nil {
 			_, err := conn.APIDeletePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
-				Name: st.Policy.GetName(),
+				Name: st.ManagedPolicy.GetName(),
 			})
 			if err != nil {
 				if status.Code(err) != codes.NotFound {
-					logger.Err(err).Warn("Failed to delete policy")
+					logger.Err(err).Warn("Failed to delete managed policy")
 					return false, err
 				}
 			}
 
-			st.Policy = nil
-
-			return true, operator.Reconcile("Policy removed")
-		}
-
-		if st.Conditions.Remove(permissionApi.ReadyPolicyCondition) {
-			return true, operator.Reconcile("Policy removed")
+			st.ManagedPolicy = nil
+			return true, operator.Reconcile("Managed policy removed")
 		}
 
 		return false, nil
 	}
 
-	policies, err := h.renderPolicy(extension.Spec.Policy)
+	policy, err := h.renderPolicy(extension.Spec.Policy)
 	if err != nil {
-		logger.Err(err).Warn("Failed to render policy")
+		logger.Err(err).Warn("Failed to render managed policy")
 		return false, err
 	}
 
-	name := fmt.Sprintf("managed:operator:%s", extension.GetNamespace())
+	name := fmt.Sprintf("managed:operator:%s:policy", extension.GetUID())
 
-	if st.Policy == nil {
-		// Create the policy
+	if st.ManagedPolicy == nil {
 		if _, err := conn.APICreatePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 			Name: name,
-			Item: policies,
+			Item: policy,
 		}); err != nil {
 			if status.Code(err) != codes.AlreadyExists {
-				logger.Err(err).Warn("Failed to create policy")
+				logger.Err(err).Warn("Failed to create managed policy")
 				return false, err
 			}
 		}
-		h.eventRecorder.Normal(extension, "Policy Created", "Policy has been created with hash %s", policies.Hash())
 
-		st.Policy = &sharedApi.Object{
+		h.eventRecorder.Normal(extension, "Managed Policy Created", "Managed policy has been created with hash %s", policy.Hash())
+
+		st.ManagedPolicy = &sharedApi.Object{
 			Name:     name,
-			Checksum: util.NewType(policies.Hash()),
+			Checksum: util.NewType(policy.Hash()),
 		}
 
-		return true, operator.Reconcile("Policy created")
+		return true, operator.Reconcile("Managed policy created")
 	}
 
 	existing, err := conn.APIGetPolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
-		Name: st.Policy.GetName(),
+		Name: st.ManagedPolicy.GetName(),
 	})
 	if err != nil {
 		if status.Code(err) != codes.NotFound {
-			logger.Err(err).Warn("Failed to get policy")
+			logger.Err(err).Warn("Failed to get managed policy")
 			return false, err
 		}
 
-		logger.Str("name", st.Policy.GetName()).Info("Policy gone")
-
-		st.Policy = nil
-		return true, operator.Reconcile("Policy gone")
+		st.ManagedPolicy = nil
+		return true, operator.Reconcile("Managed policy gone")
 	}
 
-	if st.Policy.GetChecksum() != policies.Hash() || existing.Item.Hash() != policies.Hash() {
-		if st.Conditions.UpdateWithHash(permissionApi.ReadyPolicyCondition, false, "Policy Changed", "Policy Changed", policies.Hash()) {
-			return true, operator.Reconcile("Policy changed")
-		}
-
-		// Create the policy
+	if st.ManagedPolicy.GetChecksum() != policy.Hash() || existing.Item.Hash() != policy.Hash() {
 		if _, err := conn.APIUpdatePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIPolicyRequest{
 			Name: name,
-			Item: policies,
+			Item: policy,
 		}); err != nil {
 			if status.Code(err) != codes.AlreadyExists {
-				logger.Err(err).Warn("Failed to create policy")
+				logger.Err(err).Warn("Failed to update managed policy")
 				return false, err
 			}
 		}
 
-		h.eventRecorder.Normal(extension, "Policy Updated", "Policy has been updated with hash %s", policies.Hash())
+		h.eventRecorder.Normal(extension, "Managed Policy Updated", "Managed policy has been updated with hash %s", policy.Hash())
 
-		st.Policy = &sharedApi.Object{
+		st.ManagedPolicy = &sharedApi.Object{
 			Name:     name,
-			Checksum: util.NewType(policies.Hash()),
+			Checksum: util.NewType(policy.Hash()),
 		}
 
-		return true, operator.Reconcile("Policy updated")
-	}
-
-	if st.Conditions.UpdateWithHash(permissionApi.ReadyPolicyCondition, true, "Policy Ready", "Policy Ready", policies.Hash()) {
-		return true, operator.Reconcile("Policy created")
+		return true, operator.Reconcile("Managed policy updated")
 	}
 
 	return false, nil
 }
 
-func (h *handler) renderPolicy(in *permissionApiPolicy.Policy) (*sidecarSvcAuthzTypes.Policy, error) {
-	var r sidecarSvcAuthzTypes.Policy
-
-	for _, st := range in.Statements {
-		var s sidecarSvcAuthzTypes.PolicyStatement
-
-		s.Effect = util.BoolSwitch(st.Effect == permissionApiPolicy.EffectAllow, sidecarSvcAuthzTypes.Effect_Allow, sidecarSvcAuthzTypes.Effect_Deny)
-		s.Resources = util.FormatList(st.Resources, func(a permissionApiPolicy.Resource) string {
-			return string(a)
-		})
-		s.Actions = util.FormatList(st.Actions, func(a permissionApiPolicy.Action) string {
-			return string(a)
-		})
-
-		r.Statements = append(r.Statements, &s)
-	}
-
-	if err := r.Validate(); err != nil {
-		return nil, err
-	}
-
-	if err := r.Clean(); err != nil {
-		return nil, err
-	}
-
-	return &r, nil
-}
-
-func (h *handler) finalizerPolicyRemoval(ctx context.Context, extension *permissionApi.ArangoPermissionRole) error {
-	if extension.Status.Deployment == nil || extension.Status.Policy == nil {
+func (h *handler) finalizerManagedPolicyRemoval(ctx context.Context, extension *permissionApi.ArangoPermissionToken) error {
+	if extension.Status.Deployment == nil || extension.Status.ManagedPolicy == nil {
 		return nil
 	}
 
@@ -189,12 +143,10 @@ func (h *handler) finalizerPolicyRemoval(ctx context.Context, extension *permiss
 		if kerrors.IsNotFound(err) {
 			return nil
 		}
-
 		return err
 	}
 
 	if !extension.Status.Deployment.Equals(depl) {
-		logger.Warn("Deleting of the user not allowed due to change in UUID")
 		return nil
 	}
 
@@ -212,12 +164,11 @@ func (h *handler) finalizerPolicyRemoval(ctx context.Context, extension *permiss
 	client := sidecarSvcAuthzDefinition.NewAuthorizationAPIClient(conn)
 
 	if _, err := client.APIDeletePolicy(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPINamedRequest{
-		Name: extension.Status.Policy.GetName(),
+		Name: extension.Status.ManagedPolicy.GetName(),
 	}); err != nil {
 		if status.Code(err) == codes.NotFound {
 			return nil
 		}
-
 		return err
 	}
 

@@ -24,10 +24,14 @@ import (
 	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ArangoPermissionPolicySpec struct {
+	// Description is an optional human-readable description of this policy resource
+	Description string `json:"description,omitempty"`
+
 	// Deployment keeps the Deployment Reference
 	// +doc/required
 	// +doc/skip: namespace
@@ -38,6 +42,13 @@ type ArangoPermissionPolicySpec struct {
 	// Policy defined the Authorization Policy
 	// +doc/required
 	Policy *permissionApiPolicy.Policy `json:"policy,omitempty"`
+}
+
+func (c *ArangoPermissionPolicySpec) Hash() string {
+	if c == nil {
+		return ""
+	}
+	return util.SHA256FromStringArray(c.Description, c.Deployment.GetName(), c.Policy.Hash())
 }
 
 func (c *ArangoPermissionPolicySpec) Validate() error {

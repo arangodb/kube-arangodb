@@ -151,6 +151,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 	}
 
 	inventory.Arangodb = pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus())
+	inventory.Security = pbInventoryV1.NewInventorySecurity(r.context.GetSpec(), r.context.GetStatus())
 
 	inventoryPreData, err := ugrpc.Marshal(inventory, ugrpc.WithUseProtoNames(true), ugrpc.WithEmitDefaultValues(true))
 	if err != nil {

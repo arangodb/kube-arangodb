@@ -84,6 +84,36 @@ func NewInventoryProfile(profile *schedulerApi.ArangoProfile) *InventoryProfile 
 	return &p
 }
 
+func NewInventorySecurity(spec api.DeploymentSpec, status api.DeploymentStatus) *InventorySecurity {
+	var cfg InventorySecurity
+
+	// Determine Authentication type:
+	// - SSO: Gateway OpenID (SSO) authentication is configured
+	// - Native: ArangoDB JWT authentication is enabled (default)
+	// - None: ArangoDB JWT authentication is disabled (JWTSecretName set to "None")
+	if spec.Gateway.Authentication != nil {
+		cfg.Authentication = SecurityAuthenticationType_AuthenticationSSO
+	} else if spec.Authentication.IsAuthenticated() {
+		cfg.Authentication = SecurityAuthenticationType_AuthenticationNative
+	} else {
+		cfg.Authentication = SecurityAuthenticationType_AuthenticationNone
+	}
+
+	// Determine Authorization type:
+	// - RBAC: Platform Gateway sidecar is enabled, RBAC policies are enforced
+	// - Native: ArangoDB built-in user permissions are used
+	// - None: ArangoDB authentication is disabled, no authorization is performed
+	if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		cfg.Authorization = SecurityAuthorizationType_AuthorizationRBAC
+	} else if spec.Authentication.IsAuthenticated() {
+		cfg.Authorization = SecurityAuthorizationType_AuthorizationNative
+	} else {
+		cfg.Authorization = SecurityAuthorizationType_AuthorizationNone
+	}
+
+	return &cfg
+}
+
 func getShardingFromArgs(args ...string) ArangoDBSharding {
 	for _, arg := range args {
 		if arg == forceOneShardFlag {

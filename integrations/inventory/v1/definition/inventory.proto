@@ -36,6 +36,8 @@ message Inventory {
   optional InventoryPlatform platform = 4;
   // ArangoDB Profiles
   map<string, InventoryProfile> profiles = 5;
+  // Platform Security Configuration
+  optional InventorySecurity security = 6;
 }
 
 // Platform Inventory Hash
@@ -129,4 +131,32 @@ message InventoryProfile {
   string description = 1;
   // Profile Tags
   repeated string tags = 2;
+}
+
+// Security Authentication Type
+enum SecurityAuthenticationType {
+  // No Authentication - ArangoDB JWT authentication is disabled (JWTSecretName set to "None")
+  AuthenticationNone = 0;
+  // Native ArangoDB Authentication - ArangoDB JWT authentication is enabled (default)
+  AuthenticationNative = 1;
+  // SSO Authentication - Gateway OpenID (SSO) authentication is configured
+  AuthenticationSSO = 2;
+}
+
+// Security Authorization Type
+enum SecurityAuthorizationType {
+  // No Authorization - ArangoDB authentication is disabled, no authorization is performed
+  AuthorizationNone = 0;
+  // Native ArangoDB Authorization - ArangoDB built-in user permissions are used
+  AuthorizationNative = 1;
+  // RBAC Authorization - Platform Gateway sidecar is enabled, RBAC policies are enforced
+  AuthorizationRBAC = 2;
+}
+
+// Platform Security Configuration
+message InventorySecurity {
+  // Authentication Type
+  SecurityAuthenticationType authentication = 1;
+  // Authorization Type
+  SecurityAuthorizationType authorization = 2;
 }
