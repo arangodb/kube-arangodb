@@ -49,7 +49,7 @@ func Test_Service_Token(t *testing.T) {
 
 	p.Set(t, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
 		User:     util.NewType("admin"),
-		Groups:   []string{"x"},
+		Roles:    []string{"x"},
 		Action:   "test:Get",
 		Resource: "test",
 	}, &pbAuthorizationV1.AuthorizationV1PermissionResponse{

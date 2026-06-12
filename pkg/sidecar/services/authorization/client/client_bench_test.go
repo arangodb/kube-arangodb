@@ -103,7 +103,7 @@ func BenchmarkClientEvaluationPerformance(b *testing.B) {
 	for b.Loop() {
 		res, err := p.Evaluate(b.Context(), &pbAuthorizationV1.AuthorizationV1PermissionRequest{
 			User: util.NewType("test"),
-			Groups: []string{
+			Roles: []string{
 				fmt.Sprintf("role-%09d", rand.Intn(100)),
 			},
 			Action:   "test:GetData",

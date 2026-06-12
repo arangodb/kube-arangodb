@@ -40,14 +40,14 @@ func (a *implementation) Revision() uint64 {
 func (a *implementation) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
 	// Superuser: when no user and no roles are specified the caller is the
 	// operator itself (authenticated via the internal JWT) — grant full access.
-	if req.User == nil && len(req.GetGroups()) == 0 {
+	if req.User == nil && len(req.GetRoles()) == 0 {
 		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{
 			Message: "Superuser access",
 			Effect:  sidecarSvcAuthzTypes.Effect_Allow,
 		}, nil
 	}
 
-	groups, err := a.getUserGroups(req.GetUser(), req.GetGroups()...)
+	groups, err := a.getUserGroups(req.GetUser(), req.GetRoles()...)
 	if err != nil {
 		return nil, err
 	}

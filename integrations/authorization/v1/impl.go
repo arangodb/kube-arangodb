@@ -124,7 +124,7 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 	for id, v := range request.Items {
 		resp, err := i.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
 			User:     request.User,
-			Groups:   request.GetGroups(),
+			Roles:    request.GetRoles(),
 			Action:   v.GetAction(),
 			Resource: v.GetResource(),
 			Context:  v.GetContext(),
@@ -174,7 +174,7 @@ func (i *implementation) EvaluateToken(ctx context.Context, request *pbAuthoriza
 
 	return i.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
 		User:     util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User),
-		Groups:   resp.GetDetails().GetGroups(),
+		Roles:    resp.GetDetails().GetGroups(),
 		Action:   request.GetAction(),
 		Resource: request.GetResource(),
 		Context:  request.GetContext(),
@@ -201,8 +201,8 @@ func (i *implementation) EvaluateTokenMany(ctx context.Context, request *pbAutho
 	}
 
 	return i.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
-		User:   util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User),
-		Groups: resp.GetDetails().GetGroups(),
-		Items:  request.GetItems(),
+		User:  util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User),
+		Roles: resp.GetDetails().GetGroups(),
+		Items: request.GetItems(),
 	})
 }

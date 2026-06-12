@@ -32,9 +32,9 @@ use the updated permissions automatically.
 
 ### Do I need to re-issue the JWT token?
 
-No. Permissions are evaluated server-side using group and policy data stored
+No. Permissions are evaluated server-side using role and policy data stored
 in the sidecar, not from JWT claims. The JWT identifies the user; the sidecar
-resolves the user's groups and policies at evaluation time. Changing a role
+resolves the user's roles and policies at evaluation time. Changing a role
 or policy takes effect without re-issuing the token.
 
 ## Degraded State Behavior

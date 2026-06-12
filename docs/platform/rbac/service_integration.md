@@ -24,7 +24,7 @@ parse it or extract identity. Just forward it to the sidecar.
 ## Step 2: Evaluate Permissions with EvaluateToken
 
 Call `EvaluateToken` on the authorization sidecar. The sidecar validates the
-JWT, resolves the user's groups (from user bindings), and evaluates the
+JWT, resolves the user's roles (from user bindings), and evaluates the
 permission — all in one call.
 
 ```go
@@ -57,7 +57,7 @@ resp, err := client.EvaluateTokenMany(ctx, &pbAuthorizationV1.AuthorizationV1Per
 // resp.Items[0].GetEffect(), resp.Items[1].GetEffect()
 ```
 
-Your service never needs to extract the user, resolve groups, or handle JWT
+Your service never needs to extract the user, resolve roles, or handle JWT
 validation — `EvaluateToken` does it all.
 
 ### Action Naming Convention
@@ -96,7 +96,7 @@ Example for a file store service:
 
 ## Step 4: Handle the Superuser Case
 
-Requests with no user identity (nil user, no groups) are treated as
+Requests with no user identity (operator-internal JWT) are treated as
 superuser by the sidecar — they bypass evaluation. Your service does not
 need to handle this case; the sidecar returns `Effect_Allow` automatically.
 
@@ -121,4 +121,4 @@ behavior.
 - [ ] Resources follow `<type>:<name>` naming
 - [ ] Actions are documented for administrators
 - [ ] No custom fallback logic — trust the sidecar mode
-- [ ] No JWT parsing — let the sidecar handle validation and group resolution
+- [ ] No JWT parsing — let the sidecar handle validation and role resolution

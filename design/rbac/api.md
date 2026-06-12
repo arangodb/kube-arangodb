@@ -89,26 +89,26 @@ Exposed by the authentication integration service.
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/identity` | Returns the current user's username |
-| `POST` | `/validate` | Validates a token, returns user, groups, and lifetime |
+| `POST` | `/validate` | Validates a token, returns user and lifetime |
 | `POST` | `/login` | Authenticates with username/password, returns JWT |
 | `GET` | `/logout` | Clears cookies, redirects to the login page (root `/`) |
-| `POST` | `/createToken` | Creates a JWT for a specified user with groups |
+| `POST` | `/createToken` | Creates a JWT for a specified user |
 
 **Request and response details:**
 
 - **`/identity`** — No request body. Returns `IdentityResponse { user }` with the
   authenticated user's username extracted from the Bearer token or gRPC metadata.
 - **`/validate`** — Request body: `ValidateRequest { token }` (the JWT string to
-  validate). Returns `ValidateResponse { details { lifetime, user, groups[] } }`
+  validate). Returns `ValidateResponse { details { lifetime, user } }`
   with the parsed token claims, or an error if the token is invalid/expired.
 - **`/login`** — Request body: `LoginRequest { username, password }`. Returns
   `LoginResponse { token }` containing the signed JWT. Sets the token as an HTTP
   cookie for browser-based flows.
 - **`/logout`** — No request body. Clears authentication cookies and returns an
   HTTP redirect (302) to the login page (root `/`). Returns no body.
-- **`/createToken`** — Request body: `CreateTokenRequest { user, groups[], ttl }`.
+- **`/createToken`** — Request body: `CreateTokenRequest { user, ttl }`.
   Returns `CreateTokenResponse { token }` containing a newly signed JWT for the
-  specified user with the given groups and lifetime.
+  specified user with the given lifetime.
 
 Proto: `integrations/authentication/v1/definition/definition.proto`
 Implementation: `integrations/authentication/v1/implementation.go`
@@ -116,7 +116,7 @@ Implementation: `integrations/authentication/v1/implementation.go`
 Key details:
 - `Identity` extracts the user from the Bearer token or gRPC metadata
 - `Validate` parses the JWT and returns `ValidateResponseDetails` with
-  `lifetime`, `user`, and `groups[]`
+  `lifetime` and `user`
 - `CreateToken` signs a new JWT with the deployment's secret
 
 ### Authorization (`/_integration/authorization/v1/`)
@@ -126,7 +126,7 @@ evaluation endpoints used by other services.
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/evaluate` | Evaluate permission for user + groups + action/resource |
+| `POST` | `/evaluate` | Evaluate permission for user + action/resource |
 | `POST` | `/evaluate-many` | Batch evaluate multiple action/resource pairs |
 | `POST` | `/evaluate-token` | Evaluate permission from a JWT token |
 | `POST` | `/evaluate-token-many` | Batch evaluate from a JWT token |
@@ -136,9 +136,9 @@ Implementation: `integrations/authorization/v1/impl.go`
 
 **Request and response details:**
 
-- **`/evaluate`** — Request body: `EvaluateRequest { user, groups[], action, resource, context }`.
+- **`/evaluate`** — Request body: `EvaluateRequest { user, action, resource, context, roles[] (deprecated) }`.
   Returns `EvaluateResponse { effect }` (Allow or Deny).
-- **`/evaluate-many`** — Request body: `EvaluateManyRequest { user, groups[], items[] }` where
+- **`/evaluate-many`** — Request body: `EvaluateManyRequest { user, items[], roles[] (deprecated) }` where
   each item contains `{ action, resource, context }`. Returns `EvaluateManyResponse { results[] }`
   with an effect per item.
 - **`/evaluate-token`** — Request body: `EvaluateTokenRequest { token, action, resource, context }`.
@@ -147,8 +147,8 @@ Implementation: `integrations/authorization/v1/impl.go`
   Returns `EvaluateManyResponse { results[] }`.
 
 Key details:
-- `Evaluate` / `EvaluateMany` accept explicit `user` + `groups` fields
-- `EvaluateToken` / `EvaluateTokenMany` extract user and groups from the JWT
+- `Evaluate` / `EvaluateMany` accept explicit `user` field
+- `EvaluateToken` / `EvaluateTokenMany` extract user from the JWT
 - Evaluation results are logged at the sidecar authorization layer (`sidecar-authz`):
   - **Deny** — logged at Info level with user, action, resource, and reason
   - **Allow** — logged at Debug level with user, action, resource
@@ -215,10 +215,10 @@ not exposed externally.
 |-----|-------------|
 | `GetPolicy` | Initial load of all policies |
 | `PoolPolicyChanges` | Long-poll for policy changes |
-| `GetRole` | Initial load of all groups (stored as roles) |
-| `PoolRoleChanges` | Long-poll for group changes |
-| `GetUserRoleBinding` | Initial load of all user-group bindings |
-| `PoolUserRoleBindingChanges` | Long-poll for user-group binding changes |
+| `GetRole` | Initial load of all roles |
+| `PoolRoleChanges` | Long-poll for role changes |
+| `GetUserRoleBinding` | Initial load of all user-role bindings |
+| `PoolUserRoleBindingChanges` | Long-poll for user-role binding changes |
 
 Key files:
 - `pkg/sidecar/services/authorization/definition/pool.proto`

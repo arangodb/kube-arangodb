@@ -28,7 +28,7 @@ func (a *AuthorizationV1PermissionRequest) Hash() string {
 	}
 	return util.SHA256FromStringArray(
 		a.GetUser(),
-		util.SHA256FromStringArray(a.GetGroups()...),
+		util.SHA256FromStringArray(a.GetRoles()...),
 		a.GetAction(),
 		a.GetResource(),
 		a.GetContext().Hash(),

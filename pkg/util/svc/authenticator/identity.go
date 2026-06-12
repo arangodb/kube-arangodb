@@ -50,7 +50,7 @@ func (i *Identity) EvaluatePermission(ctx context.Context, c pbImplAuthorization
 
 	resp, err := c.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
 		User:     i.User,
-		Groups:   i.Groups,
+		Roles:    i.Groups,
 		Action:   action,
 		Resource: resource,
 	})

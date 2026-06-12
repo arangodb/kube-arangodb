@@ -80,7 +80,7 @@ func (c *client) Revision() uint64 {
 }
 
 func (c *client) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
-	groups := c.get().extractGroups(req.GetUser(), req.GetGroups()...)
+	groups := c.get().extractGroups(req.GetUser(), req.GetRoles()...)
 
 	return groups.Evaluate(req)
 }
