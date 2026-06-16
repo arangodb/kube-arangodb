@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@
 package operator
 
 import (
+	"context"
+
 	kwatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 
@@ -42,7 +44,7 @@ var (
 
 // run the deployments part of the operator.
 // This registers a listener and waits until the process stops.
-func (o *Operator) runDeployments(stop <-chan struct{}) {
+func (o *Operator) runDeployments(ctx context.Context) {
 	rw := k8sutil.NewResourceWatcher(
 		o.Client.Arango().DatabaseV1().RESTClient(),
 		deploymentType.ArangoDeploymentResourcePlural,
@@ -55,7 +57,7 @@ func (o *Operator) runDeployments(stop <-chan struct{}) {
 		})
 
 	o.Dependencies.DeploymentProbe.SetReady()
-	rw.Run(stop)
+	rw.Run(ctx.Done())
 }
 
 // onAddArangoDeployment deployment addition callback

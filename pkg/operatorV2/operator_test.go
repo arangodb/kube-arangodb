@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,10 +55,10 @@ func Test_Operator_InformerProcessing(t *testing.T) {
 	require.NoError(t, o.RegisterInformer(informer.Core().V1().Pods().Informer(), "", "v1", "pods"))
 	require.NoError(t, o.RegisterStarter(informer))
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// Act
-	require.NoError(t, o.Start(4, stopCh))
+	require.NoError(t, o.Start(ctx, 4))
 
 	for _, name := range objects {
 		_, err := client.CoreV1().Pods("test").Create(context.Background(), &core.Pod{
@@ -80,7 +80,7 @@ func Test_Operator_InformerProcessing(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	assert.Len(t, i, 0)
 
-	close(stopCh)
+	cancel()
 	close(i)
 }
 
@@ -105,10 +105,10 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 	require.NoError(t, o.RegisterInformer(informer.Core().V1().Nodes().Informer(), "", "v1", "nodes"))
 	require.NoError(t, o.RegisterStarter(informer))
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// Act
-	require.NoError(t, o.Start(4, stopCh))
+	require.NoError(t, o.Start(ctx, 4))
 
 	for _, name := range objects {
 		_, err := client.CoreV1().Pods("test").Create(context.Background(), &core.Pod{
@@ -141,7 +141,7 @@ func Test_Operator_MultipleInformers(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	assert.Len(t, i, 0)
 
-	close(stopCh)
+	cancel()
 	close(i)
 }
 
@@ -165,10 +165,10 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 	require.NoError(t, o.RegisterInformer(informer.Core().V1().Pods().Informer(), "", "v1", "pods"))
 	require.NoError(t, o.RegisterStarter(informer))
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// Act
-	require.NoError(t, o.Start(4, stopCh))
+	require.NoError(t, o.Start(ctx, 4))
 
 	for _, name := range objects {
 		_, err := client.CoreV1().Pods("test").Create(context.Background(), &core.Pod{
@@ -201,7 +201,7 @@ func Test_Operator_MultipleInformers_IgnoredTypes(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	assert.Len(t, i, 0)
 
-	close(stopCh)
+	cancel()
 	close(i)
 }
 
@@ -243,10 +243,10 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 	require.NoError(t, o.RegisterInformer(informer.Core().V1().ServiceAccounts().Informer(), "", "v1", "sa"))
 	require.NoError(t, o.RegisterStarter(informer))
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// Act
-	require.NoError(t, o.Start(4, stopCh))
+	require.NoError(t, o.Start(ctx, 4))
 
 	for _, name := range objects {
 		_, err := client.CoreV1().Pods("test").Create(context.Background(), &core.Pod{
@@ -306,7 +306,7 @@ func Test_Operator_MultipleInformers_MultipleHandlers(t *testing.T) {
 	assert.Len(t, is, 0)
 	assert.Len(t, id, 0)
 
-	close(stopCh)
+	cancel()
 	close(ip)
 	close(in)
 	close(is)
@@ -333,10 +333,10 @@ func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 	require.NoError(t, o.RegisterInformer(informer.Core().V1().Pods().Informer(), "", "v1", "pods"))
 	require.NoError(t, o.RegisterStarter(informer))
 
-	stopCh := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// Act
-	require.NoError(t, o.Start(4, stopCh))
+	require.NoError(t, o.Start(ctx, 4))
 
 	for _, name := range objects {
 		_, err := client.CoreV1().Pods(name).Create(context.Background(), &core.Pod{
@@ -359,6 +359,6 @@ func Test_Operator_InformerProcessing_Namespaced(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	assert.Len(t, i, 0)
 
-	close(stopCh)
+	cancel()
 	close(i)
 }
