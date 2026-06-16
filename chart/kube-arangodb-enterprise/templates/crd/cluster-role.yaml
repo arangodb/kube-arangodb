@@ -67,7 +67,7 @@ rules:
     resourceNames:
       - "arangoprofiles.scheduler.arangodb.com"
       - "arangoschedulerpods.scheduler.arangodb.com"
-      - "arangoschedulerdeploymets.scheduler.arangodb.com"
+      - "arangoschedulerdeployments.scheduler.arangodb.com"
       - "arangoschedulerbatchjobs.scheduler.arangodb.com"
       - "arangoschedulercronjobs.scheduler.arangodb.com"
 {{- end }}
@@ -82,6 +82,18 @@ rules:
       - "arangoplatformcharts.platform.arangodb.com"
       - "arangoplatformstorages.platform.arangodb.com"
       - "arangoplatformservices.platform.arangodb.com"
+  # permission.arangodb.com
+  - apiGroups:
+      - "apiextensions.k8s.io"
+    resources:
+      - "customresourcedefinitions"
+    verbs: [{{ if .Values.operator.enableCRDCreation }}"create", {{ end }}"get", "list", "watch", "update" ]
+    resourceNames:
+      - "arangopermissionpolicies.permission.arangodb.com"
+      - "arangopermissionpolicyrolebindings.permission.arangodb.com"
+      - "arangopermissionroles.permission.arangodb.com"
+      - "arangopermissionroleuserbindings.permission.arangodb.com"
+      - "arangopermissiontokens.permission.arangodb.com"
 {{- end }}
 
 {{- end }}
