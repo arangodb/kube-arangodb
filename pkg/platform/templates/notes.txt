@@ -1,11 +1,45 @@
+#
+# DISCLAIMER
+#
+# Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Copyright holder is ArangoDB GmbH, Cologne, Germany
+#
+
 Arango Platform Release has been installed!
 
-Charts:
+Release Name: {{ "{{" }} .Release.Name {{ "}}" }}
+Namespace:    {{ "{{" }} .Release.Namespace {{ "}}" }}
+Deployment:   {{ "{{" }} .Values.deployment {{ "}}" }}
+
+Charts ({{ len .Charts }}):
 {{- range $key, $value := .Charts }}
-ArangoPlatformChart {{ $value.Name }} in Version {{ $value.Version }}
+  - {{ $value.Name }} ({{ $value.Version }})
 {{- end }}
 
-Services:
+Services ({{ len .Services }}):
 {{- range $key, $value := .Services }}
-ArangoPlatformService {{ $value.Name }}
+  - {{ $value.Name }} -> chart: {{ $value.ChartRef }}
 {{- end }}
+
+To check the status of installed charts:
+  kubectl get arangoplatformcharts -n {{ "{{" }} .Release.Namespace {{ "}}" }}
+
+To check the status of installed services:
+  kubectl get arangoplatformservices -n {{ "{{" }} .Release.Namespace {{ "}}" }}
+
+To customize chart or service values, edit your values.yaml overrides:
+  charts.<chart-name>.overrides   - override chart default values
+  services.<service-name>.values  - override service values

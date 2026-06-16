@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) (RBAC) Design adjustments
+- (Feature) (Platform) Improve Chart Generator
 - (Design) Add OpenTelemetry integration design for ArangoProfile
 - (Improvement) Expose Docker base image as overridable Makefile variable (BASEIMAGE)
 - (Bugfix) Fix async context for backup restore, compact member, and rebuild outsynced shards actions after Driver V1 removal
@@ -21,7 +22,6 @@
 - (Bugfix) Add missing `testing` build tag to `pkg/util/tests/azure.go`
 - (Design) Add Platform Metrics Integration design document
 - (Feature) Remove DriverV1, fix gateway inventory non-JSON responses, imagePullSecrets rotation loop, and backup finalizer infinite loop
-- (Feature) (RBAC) Design adjustments
 
 ## [1.4.3](https://github.com/arangodb/kube-arangodb/tree/1.4.3) (2026-04-23)
 - (Bugfix) Fix Community image discovery

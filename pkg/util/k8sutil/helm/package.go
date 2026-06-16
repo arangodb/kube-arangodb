@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,9 @@ const (
 )
 
 type Package struct {
+	// Version defines the optional version of the release chart
+	Version *string `json:"version,omitempty"`
+
 	// Packages keeps the map of Packages to be installed
 	Packages map[string]PackageSpec `json:"packages,omitempty"`
 
