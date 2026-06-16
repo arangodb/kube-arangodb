@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import (
 // When the leader election is was won once, but then the leadership is lost, the process is killed.
 // The given ready probe is set, as soon as this process became the leader, or a new leader
 // is detected.
-func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
+func (o *Operator) runLeaderElection(lockName, label string, onStart func(ctx context.Context), readyProbe *probe.ReadyProbe) {
 	namespace := o.Config.Namespace
 	kubecli := o.Dependencies.Client.Kubernetes()
 	log := o.log.Str("lock-name", lockName)
@@ -84,7 +84,7 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 					log.Error("Cannot set leader role on Pod. Terminating process")
 					os.Exit(2)
 				}
-				onStart(ctx.Done())
+				onStart(ctx)
 			},
 			OnStoppedLeading: func() {
 				recordEvent("Stop Leading", fmt.Sprintf("Pod %s is stopping to run as leader", o.Config.PodName))
@@ -99,7 +99,7 @@ func (o *Operator) runLeaderElection(lockName, label string, onStart func(stop <
 	})
 }
 
-func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func(stop <-chan struct{}), readyProbe *probe.ReadyProbe) {
+func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func(ctx context.Context), readyProbe *probe.ReadyProbe) {
 	log := o.log.Str("lock-name", lockName)
 	eventTarget := o.getLeaderElectionEventTarget(log)
 	recordEvent := func(reason, message string) {
@@ -115,7 +115,7 @@ func (o *Operator) runWithoutLeaderElection(lockName, label string, onStart func
 		log.Error("Cannot set leader role on Pod. Terminating process")
 		os.Exit(2)
 	}
-	onStart(ctx.Done())
+	onStart(ctx)
 }
 
 // getLeaderElectionEventTarget returns the object that leader election related

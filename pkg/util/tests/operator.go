@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ func NewTestingOperator(ctx context.Context, t *testing.T, ns string, image util
 	require.NoError(t, operator.RegisterStarter(kubeInformer))
 
 	go func() {
-		require.NoError(t, operator.Start(8, nctx.Done()))
+		require.NoError(t, operator.Start(nctx, 8))
 	}()
 
 	return c
