@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
 package reconcile
 
@@ -24,11 +24,24 @@ import (
 	"context"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
 func (r *Reconciler) createMemberMaintenanceManagementPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
-	return nil
+
+	if !features.Version310().Enabled() {
+		return nil
+	}
+
+	var plan api.Plan
+	for _, member := range status.Members.AsListInGroups(api.ServerGroupDBServers) {
+		if member.Member.Conditions.IsTrue(api.ConditionTypeMemberMaintenanceMode) {
+			plan = append(plan, actions.NewAction(api.ActionTypeDisableMemberMaintenance, member.Group, member.Member, "Disable maintenance due to missing plan"))
+		}
+	}
+	return plan
 }

@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Maintenance) Merge enterprise module into community, remove build tags and private dependencies
 - (Bugfix) Add missing CRDs
 - (Improvement) Refactor operator to use context.Context instead of stopCh, add CRD sync timeout (30s) and waitForCRD timeout (15s)
 - (Feature) (RBAC) Design adjustments

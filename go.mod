@@ -31,8 +31,6 @@ require (
 	github.com/arangodb/arangosync-client v0.9.1
 	github.com/arangodb/go-driver v1.6.6
 	github.com/arangodb/go-driver/v2 v2.2.1-0.20260331113757-417a4c8df1ea
-	//github.com/arangodb/rebalancer v0.1.1
-	//github.com/arangodb/go-agency-helper v0.3.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-semver v0.3.1
 	github.com/dchest/uniuri v1.2.0

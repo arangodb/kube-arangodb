@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,29 +16,24 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
-package pod
+package agency
 
 import (
-	core "k8s.io/api/core/v1"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/enterprise/poll"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
-func (t topology) Args(i Input) k8sutil.OptionPairs {
-	return nil
+func getLoaderBase[T interface{}]() leader.StateLoader[T] {
+	if features.AgencyPoll().Enabled() {
+		return NewAgencyPollStateLoader[T]()
+	} else {
+		return NewSimpleStateLoader[T]()
+	}
 }
 
-func (t topology) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
-	return nil, nil
-}
-
-func (t topology) Envs(i Input) []core.EnvVar {
-	return nil
-}
-
-func (t topology) Verify(i Input, cachedStatus interfaces.Inspector) error {
-	return nil
+func NewAgencyPollStateLoader[T interface{}]() leader.StateLoader[T] {
+	return poll.NewAgencyApplier[T](poll.ApplierConfig{AllowUnsupportedOperations: true})
 }

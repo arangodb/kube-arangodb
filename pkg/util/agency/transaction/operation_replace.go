@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,12 +16,29 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
-package topology
+package transaction
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+type keyArrayReplace struct {
+	KeyChanger
+	newValue     any
+	currentValue any
+}
 
-func WithTopologyMod(s *api.DeploymentStatus, g api.ServerGroup, m *api.MemberStatus) error {
-	return nil
+func NewKeyReplace(key Key, currentValue, newValue any) KeyChanger {
+	return &keyArrayReplace{
+		KeyChanger:   &keyCommon{key: key},
+		newValue:     newValue,
+		currentValue: currentValue,
+	}
+}
+func (k *keyArrayReplace) GetNew() any {
+	return k.newValue
+}
+func (k *keyArrayReplace) GetVal() any {
+	return k.currentValue
+}
+func (k *keyArrayReplace) GetOperation() Operation {
+	return OperationReplace
 }

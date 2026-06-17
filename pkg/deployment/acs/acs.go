@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,18 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
-package reconcile
+package acs
 
-type actionTopologyMemberAssignment struct {
-	actionEmpty
+import (
+	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/enterprise"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
+	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
+)
+
+func NewACS(main types.UID, cache inspectorInterface.Inspector) sutil.ACS {
+	return enterprise.NewACS(main, cache)
 }

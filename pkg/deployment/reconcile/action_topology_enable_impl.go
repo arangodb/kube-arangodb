@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,35 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
 package reconcile
 
-type actionTopologyDisable struct {
-	actionEmpty
+import (
+	"context"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+)
+
+type actionTopologyEnable struct {
+	actionImpl
+
+	actionEmptyCheckProgress
+}
+
+func (t actionTopologyEnable) Start(ctx context.Context) (bool, error) {
+	spec := t.actionCtx.GetSpec()
+
+	if !spec.Topology.IsEnabled() {
+		return true, nil
+	}
+
+	return true, t.actionCtx.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+		if s.Topology != nil {
+			return false
+		}
+
+		s.Topology = api.NewTopologyStatus(spec.Topology)
+		return true
+	})
 }

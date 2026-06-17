@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,30 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
-package reconcile
+package poll
 
-type actionPlaceHolder struct {
-	actionEmpty
+import (
+	"reflect"
+
+	"github.com/arangodb-helper/go-helper/pkg/errors"
+)
+
+func keyAsValue(expected reflect.Type, in string) (reflect.Value, error) {
+	switch expected.Kind() {
+	case reflect.String:
+		return reflect.ValueOf(in), nil
+	default:
+		return reflect.Value{}, errors.Newf("Invalid key type")
+	}
+}
+func castAsValue(a reflect.Value, b reflect.Type) (reflect.Value, bool) {
+	if a.Type() == b {
+		return a, true
+	}
+	if a.CanConvert(b) {
+		return a.Convert(b), true
+	}
+	return reflect.Value{}, false
 }

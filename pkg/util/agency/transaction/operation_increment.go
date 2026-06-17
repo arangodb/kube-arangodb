@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,16 +18,22 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build !enterprise
+package transaction
 
-package reconcile
-
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-
-func planBuilderScaleDownTopologyMissing(context PlanBuilderContext, status api.DeploymentStatus, group api.ServerGroup, in api.MemberStatusList) (api.MemberStatus, bool, error) {
-	return api.MemberStatus{}, false, nil
+type keyIncrement struct {
+	KeyChanger
+	value any
 }
 
-func planBuilderScaleDownTopologyAwarenessMember(context PlanBuilderContext, status api.DeploymentStatus, group api.ServerGroup, in api.MemberStatusList) (api.MemberStatus, bool, error) {
-	return api.MemberStatus{}, false, nil
+func NewKeyIncrement(key Key, value any) KeyChanger {
+	return &keyIncrement{
+		KeyChanger: &keyCommon{key: key},
+		value:      value,
+	}
+}
+func (k *keyIncrement) GetNew() any {
+	return k.value
+}
+func (k *keyIncrement) GetOperation() Operation {
+	return OperationIncrement
 }

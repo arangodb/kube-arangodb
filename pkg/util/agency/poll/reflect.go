@@ -18,12 +18,25 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-//go:build !enterprise
+package poll
 
-package agency
+import (
+	"reflect"
+	"strings"
+)
 
-import "github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
-
-func getLoaderBase[T interface{}]() leader.StateLoader[T] {
-	return NewSimpleStateLoader[T]()
+func structFieldTaggedJSONName(f reflect.StructField) string {
+	if !f.IsExported() {
+		return ""
+	}
+	if v, ok := f.Tag.Lookup("json"); ok {
+		p := strings.Split(v, ",")
+		if z := p[0]; z == "-" {
+			return ""
+		} else {
+			return z
+		}
+	} else {
+		return f.Name
+	}
 }

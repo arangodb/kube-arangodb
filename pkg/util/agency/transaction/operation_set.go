@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,24 @@
 // limitations under the License.
 //
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
-//go:build !enterprise
+//
 
-package reconcile
+package transaction
 
-type actionEnableMemberMaintenance struct {
-	actionEmpty
+type keySet struct {
+	KeyChanger
+	value any
+}
+
+func NewKeySet(key Key, value any) KeyChanger {
+	return &keySet{
+		KeyChanger: &keyCommon{key: key},
+		value:      value,
+	}
+}
+func (k *keySet) GetNew() any {
+	return k.value
+}
+func (k *keySet) GetOperation() Operation {
+	return OperationSet
 }
