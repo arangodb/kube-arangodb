@@ -21,8 +21,8 @@
 package agency
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/poll"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/poll"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 )
 
