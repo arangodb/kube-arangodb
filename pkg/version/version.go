@@ -45,6 +45,7 @@ var (
 	build     = "dev"
 	buildDate = ""
 	goVersion = runtime.Version()
+	edition   = EnterpriseEdition
 )
 
 type InfoV1 struct {

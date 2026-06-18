@@ -22,9 +22,8 @@ LABEL name="kube-arangodb" \
 
 ADD ./LICENSE /licenses/LICENSE
 
-ARG RELEASE_MODE=community
 ARG TARGETARCH
-ADD bin/${RELEASE_MODE}/linux/${TARGETARCH}/arangodb_operator /usr/bin/arangodb_operator
+ADD bin/linux/${TARGETARCH}/arangodb_operator /usr/bin/arangodb_operator
 COPY --from=envoy /usr/local/bin/envoy /usr/local/bin/envoy
 
 ENTRYPOINT [ "/usr/bin/arangodb_operator" ]
