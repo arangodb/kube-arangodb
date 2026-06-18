@@ -23,11 +23,11 @@ package transaction
 import (
 	"context"
 	"fmt"
-	"net/http"
+	goHttp "net/http"
 
 	"github.com/arangodb-helper/go-helper/pkg/errors"
-	"github.com/arangodb/go-driver/v2/arangodb"
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 )
 
 type Options struct {
@@ -77,7 +77,7 @@ func (t *Transaction) GetType() string {
 
 var ErrPrecondition = errors.New("precondition failed")
 
-func WriteTransaction(ctx context.Context, cli arangodb.Client, transaction Transaction) (int64, error) {
+func WriteTransaction(ctx context.Context, cli adbDriverV2.Client, transaction Transaction) (int64, error) {
 	keysToChange := make(map[string]any)
 	for _, v := range transaction.keys {
 		keysToChange[v.GetKey()] = agencyUpdate{
@@ -103,15 +103,15 @@ func WriteTransaction(ctx context.Context, cli arangodb.Client, transaction Tran
 	var result agencyResult
 	resp, err := cli.Post(ctx, &result, []agencyTransaction{at}, "_api", "agency", transaction.GetType())
 	if err != nil {
-		if shared.IsPreconditionFailed(err) {
+		if adbDriverV2Shared.IsPreconditionFailed(err) {
 			return 0, ErrPrecondition
 		}
 		return 0, err
 	}
 	switch resp.Code() {
-	case http.StatusOK, http.StatusAccepted, http.StatusCreated:
+	case goHttp.StatusOK, goHttp.StatusAccepted, goHttp.StatusCreated:
 	// Do nothing.
-	case http.StatusPreconditionFailed:
+	case goHttp.StatusPreconditionFailed:
 		return 0, ErrPrecondition
 	default:
 		return 0, errors.Newf("Unexpected response code %d", resp.Code())

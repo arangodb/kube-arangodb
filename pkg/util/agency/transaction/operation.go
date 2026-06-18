@@ -21,7 +21,7 @@
 package transaction
 
 import (
-	"strings"
+	goStrings "strings"
 
 	"github.com/arangodb-helper/go-helper/pkg/refs"
 )
@@ -76,5 +76,5 @@ func (k *keyCommon) GetVal() any {
 	return nil
 }
 func CreateFullKey(key Key) string {
-	return "/" + strings.Join(key, "/")
+	return "/" + goStrings.Join(key, "/")
 }

@@ -22,7 +22,7 @@ package poll
 
 import (
 	"reflect"
-	"strings"
+	goStrings "strings"
 )
 
 func structFieldTaggedJSONName(f reflect.StructField) string {
@@ -30,7 +30,7 @@ func structFieldTaggedJSONName(f reflect.StructField) string {
 		return ""
 	}
 	if v, ok := f.Tag.Lookup("json"); ok {
-		p := strings.Split(v, ",")
+		p := goStrings.Split(v, ",")
 		if z := p[0]; z == "-" {
 			return ""
 		} else {

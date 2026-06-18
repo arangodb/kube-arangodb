@@ -23,7 +23,7 @@ package poll
 import (
 	"encoding/json"
 	"reflect"
-	"strings"
+	goStrings "strings"
 	"sync"
 
 	"github.com/arangodb-helper/go-helper/pkg/errors"
@@ -224,11 +224,11 @@ func (a *applier[T]) applyItem(value interface{}, key string, item Item) error {
 }
 func prepareKey(in string) []string {
 	for {
-		v := strings.ReplaceAll(in, "//", "/")
+		v := goStrings.ReplaceAll(in, "//", "/")
 		if v == in {
 			break
 		}
 		in = v
 	}
-	return strings.Split(strings.TrimPrefix(in, "/"), "/")
+	return goStrings.Split(goStrings.TrimPrefix(in, "/"), "/")
 }

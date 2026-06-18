@@ -23,8 +23,8 @@ package poll
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
+	goHttp "net/http"
+	goStrings "strings"
 	"time"
 
 	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
@@ -44,13 +44,13 @@ func GetAgencyPoll[T interface{}](ctx context.Context, connection conn.Connectio
 	}
 	url := "/_api/agency/poll"
 	if len(params) > 0 {
-		url = fmt.Sprintf("%s?%s", url, strings.Join(params, "&"))
+		url = fmt.Sprintf("%s?%s", url, goStrings.Join(params, "&"))
 	}
-	resp, code, err := conn.NewExecutor[any, Response[T]](connection).Execute(ctx, http.MethodGet, url, nil)
+	resp, code, err := conn.NewExecutor[any, Response[T]](connection).Execute(ctx, goHttp.MethodGet, url, nil)
 	if err != nil {
 		return def, errors.WithMessage(err, "generic Execute failed")
 	}
-	if code != http.StatusOK {
+	if code != goHttp.StatusOK {
 		return def, errors.Newf("Unexpected response code %d", code)
 	}
 	if resp == nil {

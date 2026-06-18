@@ -22,13 +22,13 @@ package poll
 
 import (
 	"reflect"
-	"strings"
+	goStrings "strings"
 
 	"github.com/arangodb-helper/go-helper/pkg/errors"
 )
 
 func extractStructValue(in reflect.Value, key string, apply ValueApplier) error {
-	if strings.Contains(key, "/") {
+	if goStrings.Contains(key, "/") {
 		return errors.Newf("Forbidden char in a key: '/'")
 	}
 	if in.Kind() != reflect.Pointer {
