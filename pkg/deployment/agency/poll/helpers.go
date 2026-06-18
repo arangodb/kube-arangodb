@@ -18,22 +18,28 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package poll
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/poll"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"reflect"
+
+	"github.com/arangodb-helper/go-helper/pkg/errors"
 )
 
-func getLoaderBase[T interface{}]() leader.StateLoader[T] {
-	if features.AgencyPoll().Enabled() {
-		return NewAgencyPollStateLoader[T]()
-	} else {
-		return NewSimpleStateLoader[T]()
+func keyAsValue(expected reflect.Type, in string) (reflect.Value, error) {
+	switch expected.Kind() {
+	case reflect.String:
+		return reflect.ValueOf(in), nil
+	default:
+		return reflect.Value{}, errors.Newf("Invalid key type")
 	}
 }
-
-func NewAgencyPollStateLoader[T interface{}]() leader.StateLoader[T] {
-	return poll.NewAgencyApplier[T](poll.ApplierConfig{AllowUnsupportedOperations: true})
+func castAsValue(a reflect.Value, b reflect.Type) (reflect.Value, bool) {
+	if a.Type() == b {
+		return a, true
+	}
+	if a.CanConvert(b) {
+		return a.Convert(b), true
+	}
+	return reflect.Value{}, false
 }

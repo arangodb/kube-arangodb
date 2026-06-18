@@ -18,22 +18,32 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package poll
 
 import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/poll"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"reflect"
+
+	"github.com/arangodb-helper/go-helper/pkg/errors"
 )
 
-func getLoaderBase[T interface{}]() leader.StateLoader[T] {
-	if features.AgencyPoll().Enabled() {
-		return NewAgencyPollStateLoader[T]()
-	} else {
-		return NewSimpleStateLoader[T]()
+func changeInteger(out *reflect.Value, diff int) error {
+	var res reflect.Value
+	switch out.Kind() {
+	case reflect.Int:
+		i, ok := out.Interface().(int)
+		if !ok {
+			return errors.Newf("Type mismatch: expected int, got %s", out.Type())
+		}
+		res = reflect.ValueOf(i + diff)
+	case reflect.Uint64:
+		i, ok := out.Interface().(uint64)
+		if !ok {
+			return errors.Newf("Type mismatch: expected uint64, got %s", out.Type())
+		}
+		res = reflect.ValueOf(i + uint64(diff))
+	default:
+		return errors.Newf("Unsupported type of %s", out.Type())
 	}
-}
-
-func NewAgencyPollStateLoader[T interface{}]() leader.StateLoader[T] {
-	return poll.NewAgencyApplier[T](poll.ApplierConfig{AllowUnsupportedOperations: true})
+	out.Set(res)
+	return nil
 }

@@ -18,16 +18,4 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package acs
-
-import (
-	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/enterprise"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
-	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
-)
-
-func NewACS(main types.UID, cache inspectorInterface.Inspector) sutil.ACS {
-	return enterprise.NewACS(main, cache)
-}
+package shared

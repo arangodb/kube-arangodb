@@ -18,22 +18,17 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package agency
+package transaction
 
-import (
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/poll"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/leader"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
-)
-
-func getLoaderBase[T interface{}]() leader.StateLoader[T] {
-	if features.AgencyPoll().Enabled() {
-		return NewAgencyPollStateLoader[T]()
-	} else {
-		return NewSimpleStateLoader[T]()
-	}
+type keyDelete struct {
+	KeyChanger
 }
 
-func NewAgencyPollStateLoader[T interface{}]() leader.StateLoader[T] {
-	return poll.NewAgencyApplier[T](poll.ApplierConfig{AllowUnsupportedOperations: true})
+func NewKeyDelete(key Key) KeyChanger {
+	return &keyDelete{
+		KeyChanger: &keyCommon{key: key},
+	}
+}
+func (k *keyDelete) GetOperation() Operation {
+	return OperationDelete
 }
