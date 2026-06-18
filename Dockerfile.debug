@@ -9,7 +9,6 @@ RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 FROM ${DISTRIBUTION} as artifact
 
-ARG RELEASE_MODE
 ARG TARGETARCH
 ARG VERSION
 
@@ -24,8 +23,8 @@ LABEL name="kube-arangodb" \
 RUN apk add --no-cache libc6-compat
 
 ADD ./LICENSE /licenses/LICENSE
-ADD bin/${RELEASE_MODE}/linux/${TARGETARCH}/arangodb_operator /usr/bin/arangodb_operator
-ADD bin/${RELEASE_MODE}/linux/${TARGETARCH}/arangodb_operator_ops /usr/bin/arangodb_operator_ops
+ADD bin/linux/${TARGETARCH}/arangodb_operator /usr/bin/arangodb_operator
+ADD bin/linux/${TARGETARCH}/arangodb_operator_ops /usr/bin/arangodb_operator_ops
 
 COPY --from=builder /go/bin/dlv /usr/bin/dlv
 
