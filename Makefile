@@ -27,9 +27,7 @@ VERSION_MAJOR := $(shell echo $(VERSION_MAJOR_MINOR) | cut -f 1 -d '.')
 COMMIT := $(shell git rev-parse --short HEAD)
 DOCKERCLI := $(shell which docker)
 DOCKER_PLATFORMS ?= linux/amd64,linux/arm64
-RELEASE_MODE ?= community
-
-MAIN_DIR := $(ROOT)/pkg/entry/$(RELEASE_MODE)
+MAIN_DIR := $(ROOT)/cmd/main
 
 ifndef KEEP_GOPATH
 	GOBUILDDIR := $(SCRIPTDIR)/.gobuild
@@ -44,7 +42,7 @@ export GOTOOLCHAIN
 SRCDIR := $(SCRIPTDIR)
 CACHEVOL := $(PROJECT)-gocache
 BINDIR := $(ROOTDIR)/bin
-VBINDIR := $(BINDIR)/$(RELEASE_MODE)
+VBINDIR := $(BINDIR)
 VENDORDIR := $(ROOTDIR)/deps
 LOCALDIR := $(ROOT)/local
 
@@ -57,7 +55,6 @@ REPOPATH := $(ORGPATH)/$(REPONAME)
 K3D_KUBECONFIG = $(GOBUILDDIR)/.kubeconfig
 K3D_CLUSTER ?= $(REPONAME)
 
-include $(ROOT)/$(RELEASE_MODE).mk
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
@@ -66,7 +63,7 @@ GOVERSION ?= $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION ?= alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 
-GOBUILDTAGS := $(RELEASE_MODE)
+GOBUILDTAGS :=
 
 ifeq ($(TEST_BUILD),1)
 GOBUILDTAGS := $(GOBUILDTAGS),test_build
@@ -170,7 +167,6 @@ ifndef MANIFESTSUFFIX
 endif
 endif
 
-ifeq ($(RELEASE_MODE),community)
 MANIFESTPATHCRD := manifests/arango-crd$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDBASIC := manifests/arango-crd-basic$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDALL := manifests/arango-crd-all$(MANIFESTSUFFIX).yaml
@@ -191,28 +187,6 @@ KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX)
 KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize/k2kclustersync/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHALL := manifests/kustomize/all/arango-all$(MANIFESTSUFFIX).yaml
-else
-MANIFESTPATHCRD := manifests/enterprise-crd$(MANIFESTSUFFIX).yaml
-MANIFESTPATHCRDBASIC := manifests/enterprise-crd-basic$(MANIFESTSUFFIX).yaml
-MANIFESTPATHCRDALL := manifests/enterprise-crd-all$(MANIFESTSUFFIX).yaml
-MANIFESTPATHDEFAULT := manifests/enterprise$(MANIFESTSUFFIX).yaml
-MANIFESTPATHDEPLOYMENT := manifests/enterprise-deployment$(MANIFESTSUFFIX).yaml
-MANIFESTPATHDEPLOYMENTREPLICATION := manifests/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
-MANIFESTPATHBACKUP := manifests/enterprise-backup$(MANIFESTSUFFIX).yaml
-MANIFESTPATHK2KCLUSTERSYNC := manifests/enterprise-k2kclustersync$(MANIFESTSUFFIX).yaml
-MANIFESTPATHSTORAGE := manifests/enterprise-storage$(MANIFESTSUFFIX).yaml
-MANIFESTPATHALL := manifests/enterprise-all$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHCRD := manifests/kustomize-enterprise/crd/enterprise-crd$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHCRDBASIC := manifests/kustomize-enterprise/crd/enterprise-crd-basic$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHCRDALL := manifests/kustomize-enterprise/crd/enterprise-crd-all$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHDEFAULT := manifests/kustomize/deployment/enterprise$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize-enterprise/deployment/enterprise-deployment$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize-enterprise/deployment-replication/enterprise-deployment-replication$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHBACKUP := manifests/kustomize-enterprise/backup/enterprise-backup$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize-enterprise/k2kclustersync/enterprise-k2kclustersync$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHSTORAGE := manifests/kustomize-enterprise/storage/enterprise-storage$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHALL := manifests/kustomize-enterprise/all/enterprise-all$(MANIFESTSUFFIX).yaml
-endif
 
 ifndef DEPLOYMENTNAMESPACE
 	DEPLOYMENTNAMESPACE := default
@@ -262,12 +236,12 @@ define binary_operator
 $(eval _OS:=$(call UPPER_ENV,$1))
 $(eval _ARCH:=$(call UPPER_ENV,$2))
 
-VBIN_OPERATOR_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BINNAME)$3
+VBIN_OPERATOR_$(_OS)_$(_ARCH) := $(BINDIR)/$1/$2/$(BINNAME)$3
 
 .PHONY: $$(VBIN_OPERATOR_$(_OS)_$(_ARCH))
 
 $$(VBIN_OPERATOR_$(_OS)_$(_ARCH)): $$(SOURCES) VERSION
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	@mkdir -p $(BINDIR)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main
 
 bin-all: $$(VBIN_OPERATOR_$(_OS)_$(_ARCH))
@@ -277,12 +251,12 @@ define binary_int
 $(eval _OS:=$(call UPPER_ENV,$1))
 $(eval _ARCH:=$(call UPPER_ENV,$2))
 
-VBIN_INT_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_INT_NAME)$3
+VBIN_INT_$(_OS)_$(_ARCH) := $(BINDIR)/$1/$2/$(BIN_INT_NAME)$3
 
 .PHONY: $$(VBIN_INT_$(_OS)_$(_ARCH))
 
 $$(VBIN_INT_$(_OS)_$(_ARCH)): $$(SOURCES) VERSION
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	@mkdir -p $(BINDIR)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-int
 
 bin-all: $$(VBIN_INT_$(_OS)_$(_ARCH))
@@ -292,12 +266,12 @@ define binary_ops
 $(eval _OS:=$(call UPPER_ENV,$1))
 $(eval _ARCH:=$(call UPPER_ENV,$2))
 
-VBIN_OPS_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_OPS_NAME)$3
+VBIN_OPS_$(_OS)_$(_ARCH) := $(BINDIR)/$1/$2/$(BIN_OPS_NAME)$3
 
 .PHONY: $$(VBIN_OPS_$(_OS)_$(_ARCH))
 
 $$(VBIN_OPS_$(_OS)_$(_ARCH)): $$(SOURCES) VERSION
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	@mkdir -p $(BINDIR)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-ops
 
 bin-all: $$(VBIN_OPS_$(_OS)_$(_ARCH))
@@ -307,12 +281,12 @@ define binary_platform
 $(eval _OS:=$(call UPPER_ENV,$1))
 $(eval _ARCH:=$(call UPPER_ENV,$2))
 
-VBIN_PLATFORM_$(_OS)_$(_ARCH) := $(BINDIR)/$(RELEASE_MODE)/$1/$2/$(BIN_PLATFORM_NAME)$3
+VBIN_PLATFORM_$(_OS)_$(_ARCH) := $(BINDIR)/$1/$2/$(BIN_PLATFORM_NAME)$3
 
 .PHONY: $$(VBIN_PLATFORM_$(_OS)_$(_ARCH))
 
 $$(VBIN_PLATFORM_$(_OS)_$(_ARCH)): $$(SOURCES) VERSION
-	@mkdir -p $(BINDIR)/$(RELEASE_MODE)/$1/$2
+	@mkdir -p $(BINDIR)/$1/$2
 	CGO_ENABLED=0 GOOS=$1 GOARCH=$2 go build $${GOBUILDARGS} --tags "$$(GOBUILDTAGS)" $$(COMPILE_DEBUG_FLAGS) -installsuffix netgo -gcflags=all="$$(GOBUILDGCFLAGS)" -ldflags "$$(GOBUILDLDFLAGS)" -o $$@ ./cmd/main-platform
 
 bin-all: $$(VBIN_PLATFORM_$(_OS)_$(_ARCH))
@@ -351,11 +325,7 @@ DOCS_QUERY := find ./docs/ -type f -name '*.md' $(foreach EXCLUDE_DIR,$(DOCS_EXC
 DOCS := $(shell $(DOCS_QUERY))
 
 LINT_EXCLUDES:=
-ifeq ($(RELEASE_MODE),enterprise)
-LINT_EXCLUDES+=.*\.community\.go$$
-else
-LINT_EXCLUDES+=.*\.enterprise\.go$$
-endif
+LINT_EXCLUDES+=
 
 PROTOSOURCES := $(shell find ./ -type f  -name '*.proto' $(foreach EXCLUDE_DIR,$(EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") | sort)
 
@@ -518,11 +488,11 @@ $(BIN): $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AM
 docker: clean check-vars $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPERATOR_LINUX_ARM64)
 ifdef PUSHIMAGES
 	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "IMAGE=$(BASEIMAGE)" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
-		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
 		--platform $(DOCKER_PLATFORMS) --push -t $(OPERATORIMAGE) .
 else
 	docker buildx build --no-cache -f $(DOCKERFILE) --build-arg "IMAGE=$(BASEIMAGE)" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
-		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "BUILD_SKIP_UPDATE=${BUILD_SKIP_UPDATE}" \
 		--platform $(DOCKER_PLATFORMS) -t $(OPERATORIMAGE) .
 endif
 
@@ -530,12 +500,12 @@ endif
 docker-ubi: check-vars $(VBIN_OPERATOR_LINUX_AMD64)
 ifdef PUSHIMAGES
 	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
-		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" \
 		--build-arg "IMAGE=$(BASEUBIIMAGE)" \
 		--platform $(DOCKER_PLATFORMS) --push -t $(OPERATORUBIIMAGE) .
 else
 	docker buildx build --no-cache -f "$(DOCKERFILE).ubi" --build-arg "ENVOY_IMAGE=$(ENVOY_IMAGE)" --build-arg GOVERSION=$(GOVERSION) --build-arg DISTRIBUTION=$(DISTRIBUTION) \
-		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" --build-arg "RELEASE_MODE=$(RELEASE_MODE)" \
+		--build-arg "VERSION=${VERSION_MAJOR_MINOR_PATCH}" \
 		--build-arg "IMAGE=$(BASEUBIIMAGE)" \
 		--platform $(DOCKER_PLATFORMS) -t $(OPERATORUBIIMAGE) .
 endif
@@ -955,7 +925,7 @@ set-api-version/%:
 synchronize: synchronize-v2alpha1-with-v1
 
 synchronize-v2alpha1-with-v1:
-	@echo ">> Please use only COMMUNITY mode! Current RELEASE_MODE=$(RELEASE_MODE)"
+	
 	@rm -f pkg/apis/deployment/v1/zz_generated.deepcopy.go pkg/apis/deployment/v2alpha1/zz_generated.deepcopy.go
 	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec $(REALPATH) --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do if [ ! -d "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})" ]; then mkdir -p "$(ROOT)/pkg/apis/deployment/v2alpha1/$$(dirname $${file})"; fi; done
 	@for file in $$(find "$(ROOT)/pkg/apis/deployment/v1/" -type f -exec $(REALPATH) --relative-to "$(ROOT)/pkg/apis/deployment/v1/" {} \;); do cat "$(ROOT)/pkg/apis/deployment/v1/$${file}" | $(SED) "s#package v1#package v2alpha1#g" | $(SED) 's#ArangoDeploymentVersion = string(utilConstants.VersionV1)#ArangoDeploymentVersion = string(utilConstants.VersionV2Alpha1)#g' > "$(ROOT)/pkg/apis/deployment/v2alpha1/$${file}"; done
@@ -963,15 +933,10 @@ synchronize-v2alpha1-with-v1:
 	@make set-deployment-api-version-v2alpha1 bin
 	@make set-deployment-api-version-v1 bin
 
-.PHONY: check-all check-enterprise check-community _check
 
-check-all: check-enterprise check-community license-range-verify
+	
 
-check-enterprise:
-	@$(MAKE) _check RELEASE_MODE=enterprise
-
-check-community:
-	@$(MAKE) _check RELEASE_MODE=community
+	
 
 _check: sync-crds
 	@$(MAKE) fmt yamlfmt license-verify linter run-unit-tests bin-all vulncheck-optional
