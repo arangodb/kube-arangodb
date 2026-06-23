@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 
+	definition_10 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -177,7 +178,7 @@ func local_request_LinkV1External_CancelJob_0(ctx context.Context, marshaler run
 
 func request_LinkV1External_GetInfo_0(ctx context.Context, marshaler runtime.Marshaler, client LinkV1ExternalClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetInfoRequest
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -189,7 +190,7 @@ func request_LinkV1External_GetInfo_0(ctx context.Context, marshaler runtime.Mar
 
 func local_request_LinkV1External_GetInfo_0(ctx context.Context, marshaler runtime.Marshaler, server LinkV1ExternalServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetInfoRequest
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.GetInfo(ctx, &protoReq)

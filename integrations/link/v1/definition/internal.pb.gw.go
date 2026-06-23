@@ -204,7 +204,7 @@ func local_request_LinkV1Internal_UploadFile_0(ctx context.Context, marshaler ru
 
 func request_LinkV1Internal_UpdateInfo_0(ctx context.Context, marshaler runtime.Marshaler, client LinkV1InternalClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateInfoRequest
+		protoReq LinkInfo
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -219,7 +219,7 @@ func request_LinkV1Internal_UpdateInfo_0(ctx context.Context, marshaler runtime.
 
 func local_request_LinkV1Internal_UpdateInfo_0(ctx context.Context, marshaler runtime.Marshaler, server LinkV1InternalServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateInfoRequest
+		protoReq LinkInfo
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {

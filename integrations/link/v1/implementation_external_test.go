@@ -34,14 +34,14 @@ func Test_External_CreateJob(t *testing.T) {
 	ctx := context.Background()
 
 	resp, err := impl.CreateJob(ctx, &pbLinkV1.CreateJobRequest{
-		Query: []byte(`{"aql": "RETURN 1"}`),
+		Input: []byte(`{"aql": "RETURN 1"}`),
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, resp.Id)
 
 	job := requireJobState(t, impl, resp.Id, pbLinkV1.JobState_JOB_STATE_PENDING)
 	require.Equal(t, testLinkID, job.LinkId)
-	require.Equal(t, `{"aql": "RETURN 1"}`, string(job.Query))
+	require.Equal(t, `{"aql": "RETURN 1"}`, string(job.Input))
 	require.NotNil(t, job.Created)
 	requireStatusHistory(t, job, pbLinkV1.JobState_JOB_STATE_PENDING)
 }

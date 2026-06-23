@@ -24,7 +24,9 @@ package connector;
 
 import "google/api/annotations.proto";
 import "google/protobuf/duration.proto";
+import "integrations/link/v1/definition/info.proto";
 import "integrations/link/v1/definition/job.proto";
+import "integrations/shared/v1/definition/empty.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/link/v1/definition";
 
@@ -39,7 +41,7 @@ service LinkV1External {
   }
 
   // Get job status and metadata
-  rpc GetJob(GetJobRequest) returns (GetJobResponse) {
+  rpc GetJob(GetJobRequest) returns (Job) {
     option (google.api.http) = {
       get: "/_integration/connector/v1/job/{id}"
     };
@@ -59,18 +61,19 @@ service LinkV1External {
     };
   }
 
-  // Get link info (description, tags)
-  rpc GetInfo(GetInfoRequest) returns (GetInfoResponse) {
+  // Get link info — self-describing tool definition for agentic discovery
+  rpc GetInfo(shared.Empty) returns (GetInfoResponse) {
     option (google.api.http) = {
       get: "/_integration/connector/v1/info"
     };
   }
+
 }
 
 // Create Job Request
 message CreateJobRequest {
-  // Query as JSON (must match connector's JSON Schema)
-  bytes query = 1;
+  // Input as JSON (must match connector's JSON Schema)
+  bytes input = 1;
   // Per-job timeout. If not set, no timeout
   optional google.protobuf.Duration timeout = 2;
 }
@@ -85,12 +88,6 @@ message CreateJobResponse {
 message GetJobRequest {
   // Job identifier
   string id = 1;
-}
-
-// Get Job Response
-message GetJobResponse {
-  // Job details
-  Job job = 1;
 }
 
 // List Jobs Request
@@ -115,18 +112,6 @@ message CancelJobRequest {
 message CancelJobResponse {
   // Job details after cancellation
   Job job = 1;
-}
-
-// Link Info — details about this link for discovery
-message LinkInfo {
-  // Human-readable description of what this link does
-  string description = 1;
-  // Tags for discovery and filtering
-  repeated string tags = 2;
-}
-
-// Get Info Request
-message GetInfoRequest {
 }
 
 // Get Info Response

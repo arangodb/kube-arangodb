@@ -17,11 +17,11 @@ A link runs as a container inside a Kubernetes pod. The platform injects
 an integration sidecar into the pod that provides:
 - A **job queue** (MetaStore) — where submitted jobs wait to be processed
 - A **file store** (StorageV2) — where the link uploads results
-- An **internal HTTP API** at `http://127.0.0.1:9192` — how the link
-  communicates with the platform
+- An **internal gRPC API** at `INTEGRATION_SERVICE_ADDRESS` — how the link
+  communicates with the platform (HTTP gateway also available)
 
-Your link binary is a simple loop: pick up a job, execute it, upload
-results, report completion.
+Your link binary registers its info at startup, then enters a simple loop:
+pick up a job, execute it, upload results, report completion.
 
 ## How It Works
 
@@ -29,7 +29,7 @@ results, report completion.
   AI Tool                    Platform Sidecar                Your Connector
   -------                    ----------------                --------------
 
-  POST /connector/<name>/job
+  POST /link/<name>/job
     ──────────────────────►  Stores job (Pending)
                                     │
                                     │  ◄──── POST /job/pickup ──────  polls every N seconds
@@ -39,19 +39,22 @@ results, report completion.
                                     │
                                     │        ... executes work ...
                                     │
-                                    │  ◄──── POST /job/{id}/upload/result.json
+                                    │  ◄──── BatchUploadFiles ─────── result.0000000.jsonl
+                                    │                                  result.0000001.jsonl ...
                                     │
-                                    │  ◄──── POST /job/{id}/status ── Completed
+                                    │  ◄──── UpdateJobStatus ──────── Completed
                                     │
-  GET /connector/<name>/job/{id}
-    ──────────────────────►  Returns job (Completed + result path)
+  GET /link/<name>/job/{id}
+    ──────────────────────►  Returns job (Completed)
+  StorageV2.List / Receive
+    ──────────────────────►  Lists and reads result files
 ```
 
 ## What Is a Job?
 
 A job is a single unit of work — for example, "run this AQL query" or
 "search this vector index". Each job has:
-- A **query** — JSON input matching the link's schema
+- An **input** — JSON matching the link's input schema
 - A **status history** — tracks Pending → Scheduled → Running → Completed/Failed
 - A **result path** — where output files are stored in FileStore
 
@@ -82,9 +85,12 @@ metadata:
 spec:
   deployment: {{ .Values.arangodb_platform.deployment.name }}
   route:
-    path: /connector/{{ .Release.Name }}/
+    path: /link/{{ .Release.Name }}/
   destination:
     path: /_integration/connector/v1/
+    service:
+      name: {{ .Release.Name }}
+      port: 9193
 ---
 # templates/connector.yaml
 apiVersion: platform.arangodb.com/v1beta1
@@ -114,30 +120,79 @@ The `schema` field defines what input your connector accepts. The platform
 validates submitted jobs against this schema — your link does not need
 to validate the schema itself, but may optionally do so for defense in depth.
 
-## Step 2: Implement the link Loop
+## Step 2: Implement the link
 
-Your link binary polls the internal API for jobs and processes them:
+### Startup: Register Info
 
+Before entering the job loop, your link **must** call `UpdateInfo` to register
+its tool definition with the sidecar. This makes the link healthy and
+discoverable by AI agents:
+
+```go
+client := pbLinkV1.NewLinkV1InternalClient(conn)
+
+info := &pbLinkV1.LinkInfo{
+    Description: "Execute AQL queries on ArangoDB",
+    Tags:        []string{"database", "aql", "query"},
+    InputSchema: `{ "type": "object", "required": ["query"], ... }`,
+    OutputSchema: `{ "contentMediaType": "application/jsonl", ... }`,
+    Examples: []*pbLinkV1.LinkExample{
+        {Name: "Simple query", Input: `{"query": "RETURN 1"}`, Output: "1\n"},
+    },
+    ResultFiles: []string{"result.0000000.jsonl"},
+}
+
+client.UpdateInfo(ctx, info) // retry until sidecar is ready
 ```
-loop forever:
-  1. POST /_internal/connector/v1/job/pickup
-     → if empty: sleep 5 seconds, retry
 
-  2. GET /_internal/connector/v1/job/{id}
-     → parse job.query as JSON
+The request body is `LinkInfo` directly — no wrapper. Include `input_schema`
+and `examples` so AI agents can construct valid inputs without prior
+knowledge. See [API Reference](api.md) for all fields.
 
-  3. POST /_internal/connector/v1/job/{id}/status
-     → { "state": "JOB_STATE_RUNNING", "description": "Executing..." }
+The link should retry this call until the sidecar is available (it starts
+concurrently). Once `UpdateInfo` succeeds, the sidecar marks `link.v1` as
+healthy, the readiness probe passes, and the pod becomes ready.
 
-  4. Execute the work (call external API, run query, etc.)
+### Job Loop
 
-  5. POST /_internal/connector/v1/job/{id}/upload/result.json
-     → upload output file(s)
+Your link binary polls via gRPC for jobs and processes them:
 
-  6. POST /_internal/connector/v1/job/{id}/status
-     → { "state": "JOB_STATE_COMPLETED", "description": "Done" }
-     or { "state": "JOB_STATE_FAILED", "description": "Error: ..." }
+```go
+for {
+    // 1. Pick up a job
+    pickup, _ := client.PickUpJob(ctx, &pbSharedV1.Empty{})
+    if pickup.GetId() == "" {
+        time.Sleep(5 * time.Second)
+        continue
+    }
+
+    // 2. Get job details
+    job, _ := client.GetJob(ctx, &pbLinkV1.GetJobRequest{Id: pickup.GetId()})
+
+    // 3. Mark as running
+    client.UpdateJobStatus(ctx, &pbLinkV1.UpdateJobStatusRequest{
+        Id:     job.Id,
+        Status: &pbLinkV1.JobStatus{State: pbLinkV1.JobState_JOB_STATE_RUNNING},
+    })
+
+    // 4. Execute work + upload results via BatchUploadFiles
+    stream, _ := client.BatchUploadFiles(ctx)
+    // ... write results as JSONL files via io.Writer wrapper ...
+    stream.CloseAndRecv()
+
+    // 5. Mark as completed
+    client.UpdateJobStatus(ctx, &pbLinkV1.UpdateJobStatusRequest{
+        Id:     job.Id,
+        Status: &pbLinkV1.JobStatus{State: pbLinkV1.JobState_JOB_STATE_COMPLETED},
+    })
+}
 ```
+
+For streaming uploads, wrap `BatchUploadFiles` in an `io.Writer` —
+each new file starts with a message containing `job_id` and `name`,
+subsequent writes send data chunks. See the
+[sample AQL connector](https://github.com/arangodb/kube-arangodb-test/tree/master/tests/links/aql)
+for the full `batchFileWriter` implementation.
 
 ### Handling Cancellation
 
@@ -176,14 +231,16 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}
   labels:
-    profiles.arangodb.com/apply: "yes"
     profiles.arangodb.com/deployment: {{ .Values.arangodb_platform.deployment.name }}
 spec:
   template:
     metadata:
       labels:
-        profiles.arangodb.com/apply: "yes"
         profiles.arangodb.com/deployment: {{ .Values.arangodb_platform.deployment.name }}
+        integration.profiles.arangodb.com/link: v1
+        integration.profiles.arangodb.com/meta: v1
+        integration.profiles.arangodb.com/authn: v1
+        integration.profiles.arangodb.com/storage: v2
     spec:
       containers:
         - name: connector
@@ -191,8 +248,54 @@ spec:
           command: ["/bin/my-connector"]
 ```
 
-The `profiles.arangodb.com` labels trigger the platform to inject the
-integration sidecar into your pod.
+The `profiles.arangodb.com/deployment` label triggers sidecar injection.
+The `integration.profiles.arangodb.com` labels enable specific integrations:
+
+| Label | Integration | Purpose |
+|-------|-------------|---------|
+| `link: v1` | Link V1 | Job queue, external API, health reporting |
+| `meta: v1` | Meta V1 | Key-value store for job persistence and handler heartbeats |
+| `authn: v1` | Authentication V1 | JWT validation (required by Meta V1) |
+| `storage: v2` | Storage V2 | File store for result upload (`UploadFile`, `BatchUploadFiles`) |
+
+### Connector ID Profile
+
+The chart must also create an `ArangoProfile` to pass the connector ID
+to the integration sidecar:
+
+```yaml
+# templates/profile.yaml
+apiVersion: scheduler.arangodb.com/v1beta1
+kind: ArangoProfile
+metadata:
+  name: {{ .Release.Name }}-link
+spec:
+  selectors:
+    label:
+      matchLabels:
+        app: {{ .Release.Name }}
+        profiles.arangodb.com/deployment: {{ .Values.arangodb_platform.deployment.name }}
+  template:
+    priority: 127
+    container:
+      containers:
+        integration:
+          env:
+            - name: INTEGRATION_LINK_V1_CONNECTOR_ID
+              value: {{ .Values.link.id | quote }}
+```
+
+### Environment Variables
+
+The platform injects these environment variables into all containers:
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `INTEGRATION_HTTP_ADDRESS_FULL` | `http://127.0.0.1:9203` | Internal HTTP API address |
+| `INTEGRATION_SERVICE_ADDRESS` | `127.0.0.1:9201` | Internal gRPC address |
+| `ARANGODB_ENDPOINT` | `https://cluster.ns.svc:8529` | ArangoDB endpoint |
+
+Your link binary should read these instead of hardcoding addresses.
 
 ### Standard Values
 

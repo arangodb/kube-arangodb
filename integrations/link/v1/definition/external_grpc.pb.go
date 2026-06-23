@@ -28,6 +28,7 @@ package definition
 
 import (
 	context "context"
+	definition "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -55,13 +56,13 @@ type LinkV1ExternalClient interface {
 	// Submit a new job to a link
 	CreateJob(ctx context.Context, in *CreateJobRequest, opts ...grpc.CallOption) (*CreateJobResponse, error)
 	// Get job status and metadata
-	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
+	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*Job, error)
 	// List jobs, optionally filtered by connector or state
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
 	// Cancel a pending or running job
 	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error)
-	// Get link info (description, tags)
-	GetInfo(ctx context.Context, in *GetInfoRequest, opts ...grpc.CallOption) (*GetInfoResponse, error)
+	// Get link info — self-describing tool definition for agentic discovery
+	GetInfo(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*GetInfoResponse, error)
 }
 
 type linkV1ExternalClient struct {
@@ -82,9 +83,9 @@ func (c *linkV1ExternalClient) CreateJob(ctx context.Context, in *CreateJobReque
 	return out, nil
 }
 
-func (c *linkV1ExternalClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error) {
+func (c *linkV1ExternalClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*Job, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetJobResponse)
+	out := new(Job)
 	err := c.cc.Invoke(ctx, LinkV1External_GetJob_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -112,7 +113,7 @@ func (c *linkV1ExternalClient) CancelJob(ctx context.Context, in *CancelJobReque
 	return out, nil
 }
 
-func (c *linkV1ExternalClient) GetInfo(ctx context.Context, in *GetInfoRequest, opts ...grpc.CallOption) (*GetInfoResponse, error) {
+func (c *linkV1ExternalClient) GetInfo(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*GetInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetInfoResponse)
 	err := c.cc.Invoke(ctx, LinkV1External_GetInfo_FullMethodName, in, out, cOpts...)
@@ -131,13 +132,13 @@ type LinkV1ExternalServer interface {
 	// Submit a new job to a link
 	CreateJob(context.Context, *CreateJobRequest) (*CreateJobResponse, error)
 	// Get job status and metadata
-	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
+	GetJob(context.Context, *GetJobRequest) (*Job, error)
 	// List jobs, optionally filtered by connector or state
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
 	// Cancel a pending or running job
 	CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error)
-	// Get link info (description, tags)
-	GetInfo(context.Context, *GetInfoRequest) (*GetInfoResponse, error)
+	// Get link info — self-describing tool definition for agentic discovery
+	GetInfo(context.Context, *definition.Empty) (*GetInfoResponse, error)
 	mustEmbedUnimplementedLinkV1ExternalServer()
 }
 
@@ -151,7 +152,7 @@ type UnimplementedLinkV1ExternalServer struct{}
 func (UnimplementedLinkV1ExternalServer) CreateJob(context.Context, *CreateJobRequest) (*CreateJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateJob not implemented")
 }
-func (UnimplementedLinkV1ExternalServer) GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error) {
+func (UnimplementedLinkV1ExternalServer) GetJob(context.Context, *GetJobRequest) (*Job, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetJob not implemented")
 }
 func (UnimplementedLinkV1ExternalServer) ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
@@ -160,7 +161,7 @@ func (UnimplementedLinkV1ExternalServer) ListJobs(context.Context, *ListJobsRequ
 func (UnimplementedLinkV1ExternalServer) CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelJob not implemented")
 }
-func (UnimplementedLinkV1ExternalServer) GetInfo(context.Context, *GetInfoRequest) (*GetInfoResponse, error) {
+func (UnimplementedLinkV1ExternalServer) GetInfo(context.Context, *definition.Empty) (*GetInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetInfo not implemented")
 }
 func (UnimplementedLinkV1ExternalServer) mustEmbedUnimplementedLinkV1ExternalServer() {}
@@ -257,7 +258,7 @@ func _LinkV1External_CancelJob_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _LinkV1External_GetInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetInfoRequest)
+	in := new(definition.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -269,7 +270,7 @@ func _LinkV1External_GetInfo_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: LinkV1External_GetInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LinkV1ExternalServer).GetInfo(ctx, req.(*GetInfoRequest))
+		return srv.(LinkV1ExternalServer).GetInfo(ctx, req.(*definition.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -74,7 +74,6 @@ Flags:
       --integration.link.v1.connector-id string                                             Link UUID (Env: INTEGRATION_LINK_V1_CONNECTOR_ID)
       --integration.link.v1.external                                                        Defines if External access to service link.v1 is enabled (Env: INTEGRATION_LINK_V1_EXTERNAL) (default true)
       --integration.link.v1.internal                                                        Defines if Internal access to service link.v1 is enabled (Env: INTEGRATION_LINK_V1_INTERNAL) (default true)
-      --integration.link.v1.internal-address string                                         Internal gRPC address for MetaV1 and StorageV2 clients (Env: INTEGRATION_LINK_V1_INTERNAL_ADDRESS) (default "127.0.0.1:9092")
       --integration.meta.v1                                                                 Enable MetaV1 Integration Service (Env: INTEGRATION_META_V1)
       --integration.meta.v1.external                                                        Defines if External access to service meta.v1 is enabled (Env: INTEGRATION_META_V1_EXTERNAL)
       --integration.meta.v1.internal                                                        Defines if Internal access to service meta.v1 is enabled (Env: INTEGRATION_META_V1_INTERNAL) (default true)

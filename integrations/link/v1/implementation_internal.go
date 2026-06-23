@@ -47,15 +47,13 @@ func (i *implementation) PickUpJob(ctx context.Context, _ *pbSharedV1.Empty) (*p
 	}, nil
 }
 
-func (i *implementation) GetJob(ctx context.Context, req *pbLinkV1.GetJobRequest) (*pbLinkV1.GetJobResponse, error) {
+func (i *implementation) GetJob(ctx context.Context, req *pbLinkV1.GetJobRequest) (*pbLinkV1.Job, error) {
 	job, _, err := i.store.Get(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	return &pbLinkV1.GetJobResponse{
-		Job: job,
-	}, nil
+	return job, nil
 }
 
 func (i *implementation) UpdateJobStatus(ctx context.Context, req *pbLinkV1.UpdateJobStatusRequest) (*pbLinkV1.UpdateJobStatusResponse, error) {
@@ -179,7 +177,7 @@ func (i *implementation) BatchUploadFiles(stream pbLinkV1.LinkV1Internal_BatchUp
 	})
 }
 
-func (i *implementation) UpdateInfo(ctx context.Context, req *pbLinkV1.UpdateInfoRequest) (*pbLinkV1.UpdateInfoResponse, error) {
-	i.info = req.GetInfo()
-	return &pbLinkV1.UpdateInfoResponse{}, nil
+func (i *implementation) UpdateInfo(ctx context.Context, info *pbLinkV1.LinkInfo) (*pbSharedV1.Empty, error) {
+	i.info = info
+	return &pbSharedV1.Empty{}, nil
 }

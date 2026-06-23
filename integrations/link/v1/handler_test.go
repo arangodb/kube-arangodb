@@ -68,7 +68,7 @@ func Test_Heartbeat_KeyFormat(t *testing.T) {
 	handlerID := "22222222-2222-2222-2222-222222222222"
 
 	key := handlerKey(linkID, handlerID)
-	require.Equal(t, "links/11111111-1111-1111-1111-111111111111/handlers/22222222-2222-2222-2222-222222222222", key)
+	require.Equal(t, "links:11111111-1111-1111-1111-111111111111:handlers:22222222-2222-2222-2222-222222222222", key)
 }
 
 func Test_Heartbeat_MultipleHandlers(t *testing.T) {

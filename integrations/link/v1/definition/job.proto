@@ -63,8 +63,8 @@ message Job {
   optional string handler_id = 3;
   // Status history (most recent first, max 10 entries). First element is the current status
   repeated JobStatus statuses = 4;
-  // Query as JSON (validated against connector's JSON Schema)
-  bytes query = 5;
+  // Input as JSON (validated against connector's JSON Schema)
+  bytes input = 5;
   // Per-job timeout requested by the caller. If not set, no timeout
   optional google.protobuf.Duration timeout = 6;
   // Timestamp when job was created

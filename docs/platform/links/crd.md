@@ -73,7 +73,7 @@ spec:
 | `route` | `Object` | | Reference to the ArangoRoute that exposes this connector |
 | `description` | `string` | | Human-readable description of what the link does |
 | `tags` | `[]string` | | Labels for discovery and filtering |
-| `schema` | `JSONSchemaProps` | | [JSON Schema](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#specifying-a-structural-schema) defining the link's query input parameters |
+| `schema` | `JSONSchemaProps` | | [JSON Schema](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#specifying-a-structural-schema) defining the link's input parameters |
 | `version` | `string` | | Connector version |
 
 ## Status
@@ -145,7 +145,7 @@ before submitting jobs.
 The `schema` field serves two purposes:
 1. **Discovery** — AI tools read it from `/_inventory` to understand what input
    the link expects
-2. **Validation** — the platform validates submitted job queries against the
+2. **Validation** — the platform validates submitted job inputs against the
    schema before accepting them
 
 Your link binary does **not** need to validate the schema — the platform
@@ -159,11 +159,11 @@ connector spec via the `route` field, and the handler verifies it exists.
 
 ### How Redirection Works
 
-The `ArangoRoute` redirects requests from `/connector/<name>/` to the internal
+The `ArangoRoute` redirects requests from `/link/<name>/` to the internal
 `/_integration/connector/v1/` endpoint. This means:
 
 ```
-Client request:     POST /connector/aql-connector/job
+Client request:     POST /link/aql-link/job
   ↓ (ArangoRoute redirect)
 Internal endpoint:  POST /_integration/connector/v1/job
 ```
@@ -172,9 +172,9 @@ All Link API paths are relative, so the redirect works transparently:
 
 | Client path | Redirected to |
 |---|---|
-| `/connector/aql-connector/job` | `/_integration/connector/v1/job` |
-| `/connector/aql-connector/job/{id}` | `/_integration/connector/v1/job/{id}` |
-| `/connector/aql-connector/job/{id}/cancel` | `/_integration/connector/v1/job/{id}/cancel` |
+| `/link/aql-link/job` | `/_integration/connector/v1/job` |
+| `/link/aql-link/job/{id}` | `/_integration/connector/v1/job/{id}` |
+| `/link/aql-link/job/{id}/cancel` | `/_integration/connector/v1/job/{id}/cancel` |
 
 ### Full Example
 
@@ -188,7 +188,7 @@ metadata:
 spec:
   deployment: my-deployment
   route:
-    path: /connector/aql-connector/
+    path: /link/aql-link/
   destination:
     path: /_integration/connector/v1/
 ---
@@ -227,10 +227,10 @@ The Helm chart should create both the `ArangoPlatformLink` and its
 Each connector needs its own unique route path. If you have multiple connectors,
 each must have a different `ArangoRoute` with a different path:
 
-| Connector | Route path |
+| Link | Route path |
 |---|---|
-| `aql-connector` | `/connector/aql-connector/` |
-| `vector-connector` | `/connector/vector-connector/` |
+| `aql-link` | `/link/aql-link/` |
+| `vector-link` | `/link/vector-link/` |
 
 Route names and connector names are independent — you can name them however
 you like — but by convention use `<connector-name>-route` for the route.

@@ -13,7 +13,7 @@ A job represents a single unit of work submitted to a link — for example,
 
 Jobs can be created by **any authenticated HTTP client** — AI tools, scripts,
 or end users — via the external API or through the link's `ArangoRoute`
-(e.g. `POST /connector/aql-connector/job`).
+(e.g. `POST /link/aql-link/job`).
 
 ## Job States
 
@@ -38,7 +38,7 @@ Cancelled ◄── Running
 
 ## Job Lifecycle
 
-1. **AI tool** creates a job with a query matching the link's schema
+1. **AI tool** creates a job with an input matching the link's schema
 2. Job is stored with status **Pending**
 3. **Connector** picks up the job — status moves to **Scheduled**
 4. Connector updates to **Running** when execution begins
@@ -70,11 +70,11 @@ MetaStore (ArangoDB) and persist until explicitly deleted.
 
 ```bash
 # Get a specific job with full status history
-curl https://<gateway>/connector/<name>/job/<job-id>
+curl https://<gateway>/link/<name>/job/<job-id>
 
 # List all jobs (optionally filter by state)
-curl https://<gateway>/connector/<name>/job
-curl https://<gateway>/connector/<name>/job?state=JOB_STATE_FAILED
+curl https://<gateway>/link/<name>/job
+curl https://<gateway>/link/<name>/job?state=JOB_STATE_FAILED
 ```
 
 **Via kubectl** — jobs are stored in MetaStore (ArangoDB), not as Kubernetes
@@ -82,14 +82,27 @@ resources, so they are not visible via `kubectl`. Use the API endpoints above.
 
 ## Results
 
-Results are stored in FileStore at:
+Results are stored in StorageV2 (FileStore) at:
 
 ```
-/links/<connector-id>/<job-id>/
+/links/<link-id>/<job-id>/
 ```
 
-The `result` field on the job contains this path. Use the FileStore API
-(StorageV2) to read the uploaded files.
+The `result` field on a completed job contains this path prefix. Use the
+**StorageV2** gRPC client to list and read result files directly:
+
+```go
+// List all result files for a job
+objects, err := pbStorageV2.List(ctx, storageClient, job.GetResult())
+
+// Read a specific file
+var buf bytes.Buffer
+_, err := pbStorageV2.Receive(ctx, storageClient, obj.GetPath().GetPath(), &buf)
+```
+
+Files are named by the link — typically `result.<batch>.jsonl` for
+connectors that produce JSONL output in batches. The link's `GetInfo`
+response documents the expected file naming pattern and output format.
 
 ## Timeouts
 
