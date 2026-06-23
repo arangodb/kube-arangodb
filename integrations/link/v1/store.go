@@ -54,15 +54,15 @@ func newJobStore(meta pbMetaV1.MetaV1Client, linkID, handlerID string) *jobStore
 }
 
 func (s *jobStore) jobKey(jobID string) string {
-	return fmt.Sprintf("links/%s/jobs/%s", s.linkID, jobID)
+	return fmt.Sprintf("links:%s:jobs:%s", s.linkID, jobID)
 }
 
 func (s *jobStore) jobKeyPrefix() string {
-	return fmt.Sprintf("links/%s/jobs/", s.linkID)
+	return fmt.Sprintf("links:%s:jobs:", s.linkID)
 }
 
 func handlerKey(linkID, handlerID string) string {
-	return fmt.Sprintf("links/%s/handlers/%s", linkID, handlerID)
+	return fmt.Sprintf("links:%s:handlers:%s", linkID, handlerID)
 }
 
 // FileStorePath returns the FileStore path for a job's results

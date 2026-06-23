@@ -27,6 +27,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pbLinkV1 "github.com/arangodb/kube-arangodb/integrations/link/v1/definition"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 )
 
 func (i *implementation) CreateJob(ctx context.Context, req *pbLinkV1.CreateJobRequest) (*pbLinkV1.CreateJobResponse, error) {
@@ -35,7 +36,7 @@ func (i *implementation) CreateJob(ctx context.Context, req *pbLinkV1.CreateJobR
 	job := &pbLinkV1.Job{
 		Id:      id,
 		LinkId:  i.linkID,
-		Query:   req.GetQuery(),
+		Input:   req.GetInput(),
 		Timeout: req.Timeout,
 		Statuses: []*pbLinkV1.JobStatus{
 			{
@@ -88,6 +89,6 @@ func (i *implementation) CancelJob(ctx context.Context, req *pbLinkV1.CancelJobR
 	return &pbLinkV1.CancelJobResponse{Job: job}, nil
 }
 
-func (i *implementation) GetInfo(ctx context.Context, req *pbLinkV1.GetInfoRequest) (*pbLinkV1.GetInfoResponse, error) {
+func (i *implementation) GetInfo(ctx context.Context, req *pbSharedV1.Empty) (*pbLinkV1.GetInfoResponse, error) {
 	return &pbLinkV1.GetInfoResponse{Info: i.info}, nil
 }

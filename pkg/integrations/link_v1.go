@@ -30,6 +30,7 @@ import (
 	pbImplLinkV1 "github.com/arangodb/kube-arangodb/integrations/link/v1"
 	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
@@ -41,8 +42,7 @@ func init() {
 }
 
 type linkV1 struct {
-	linkID          string
-	internalAddress string
+	linkID string
 }
 
 func (b *linkV1) Name() string {
@@ -56,7 +56,6 @@ func (b *linkV1) Description() string {
 func (b *linkV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 	return errors.Errors(
 		fs.StringVar(&b.linkID, "connector-id", "", "Link UUID"),
-		fs.StringVar(&b.internalAddress, "internal-address", "127.0.0.1:9092", "Internal gRPC address for MetaV1 and StorageV2 clients"),
 	)
 }
 
@@ -65,7 +64,12 @@ func (b *linkV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, 
 		return nil, errors.Errorf("Connector ID is required")
 	}
 
-	conn, err := grpc.NewClient(b.internalAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	addr := utilConstants.INTEGRATION_SERVICE_ADDRESS.Get()
+	if addr == "" {
+		return nil, errors.Errorf("%s is required", utilConstants.INTEGRATION_SERVICE_ADDRESS)
+	}
+
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to connect to internal gRPC")
 	}

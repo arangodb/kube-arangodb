@@ -144,14 +144,14 @@ func Test_Internal_StatusHistoryMaxEntries(t *testing.T) {
 }
 
 func Test_Internal_UploadFile(t *testing.T) {
-	impl := newTestImpl(t)
+	env := newTestEnv(t)
 	ctx := context.Background()
 
-	id := createTestJob(t, impl, "upload")
-	pickUp(t, impl)
+	id := createTestJob(t, env.implementation, "upload")
+	pickUp(t, env.implementation)
 
 	data := []byte(`{"count": 42}`)
-	resp, err := impl.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
+	resp, err := env.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
 		JobId: id,
 		Name:  "result.json",
 		Data:  data,
@@ -159,6 +159,13 @@ func Test_Internal_UploadFile(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(len(data)), resp.Bytes)
 	require.NotEmpty(t, resp.Checksum)
+
+	// Verify file exists in storage via List
+	require.Contains(t, env.ListFiles(id), storagePrefix(testLinkID, id)+"result.json")
+
+	// Verify file content via Receive and unmarshal
+	got := ReadFileJSON[map[string]int](env, id, "result.json")
+	require.Equal(t, 42, got["count"])
 }
 
 func Test_Internal_UploadFile_MissingFields(t *testing.T) {
@@ -170,11 +177,11 @@ func Test_Internal_UploadFile_MissingFields(t *testing.T) {
 }
 
 func Test_Internal_MultipleUploads(t *testing.T) {
-	impl := newTestImpl(t)
+	env := newTestEnv(t)
 	ctx := context.Background()
 
-	id := createTestJob(t, impl, "multi-upload")
-	pickUp(t, impl)
+	id := createTestJob(t, env.implementation, "multi-upload")
+	pickUp(t, env.implementation)
 
 	// Upload multiple files
 	files := map[string][]byte{
@@ -184,7 +191,7 @@ func Test_Internal_MultipleUploads(t *testing.T) {
 	}
 
 	for name, data := range files {
-		resp, err := impl.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
+		resp, err := env.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
 			JobId: id,
 			Name:  name,
 			Data:  data,
@@ -193,4 +200,21 @@ func Test_Internal_MultipleUploads(t *testing.T) {
 		require.Equal(t, int64(len(data)), resp.Bytes)
 		require.NotEmpty(t, resp.Checksum)
 	}
+
+	// Verify all files exist in storage via List
+	names := env.ListFiles(id)
+	prefix := storagePrefix(testLinkID, id)
+	for name := range files {
+		require.Contains(t, names, prefix+name)
+	}
+
+	// Verify JSON files content via Receive and unmarshal
+	gotResult := ReadFileJSON[map[string]int](env, id, "result.json")
+	require.Equal(t, 42, gotResult["count"])
+
+	gotMeta := ReadFileJSON[map[string]string](env, id, "metadata.json")
+	require.Equal(t, "json", gotMeta["format"])
+
+	// Verify non-JSON file via raw read
+	require.Equal(t, files["data.csv"], env.ReadFile(id, "data.csv"))
 }

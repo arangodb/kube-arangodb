@@ -24,6 +24,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
 	pbLinkV1 "github.com/arangodb/kube-arangodb/integrations/link/v1/definition"
@@ -56,8 +57,7 @@ type implementation struct {
 	storage   pbStorageV2.StorageV2Client
 	linkID    string
 	handlerID string
-
-	info *pbLinkV1.LinkInfo
+	info      *pbLinkV1.LinkInfo
 
 	pbLinkV1.UnimplementedLinkV1InternalServer
 	pbLinkV1.UnimplementedLinkV1ExternalServer
@@ -70,6 +70,13 @@ func (i *implementation) Name() string {
 func (i *implementation) Register(registrar *grpc.Server) {
 	pbLinkV1.RegisterLinkV1InternalServer(registrar, i)
 	pbLinkV1.RegisterLinkV1ExternalServer(registrar, i)
+}
+
+func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	if err := pbLinkV1.RegisterLinkV1InternalHandler(ctx, mux, conn); err != nil {
+		return err
+	}
+	return pbLinkV1.RegisterLinkV1ExternalHandler(ctx, mux, conn)
 }
 
 func (i *implementation) Health(ctx context.Context) svc.HealthState {

@@ -32,27 +32,27 @@ import (
 // Test_Lifecycle_Complete tests the full happy path:
 // CreateJob → PickUp → Running → Upload files → Completed
 func Test_Lifecycle_Complete(t *testing.T) {
-	impl := newTestImpl(t)
+	env := newTestEnv(t)
 	ctx := context.Background()
 
 	// 1. Create job
-	id := createTestJob(t, impl, `{"aql": "FOR d IN users RETURN d"}`)
-	requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING)
+	id := createTestJob(t, env.implementation, `{"aql": "FOR d IN users RETURN d"}`)
+	requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_PENDING)
 
 	// 2. Pick up
-	pickedID := pickUp(t, impl)
+	pickedID := pickUp(t, env.implementation)
 	require.Equal(t, id, pickedID)
-	job := requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_SCHEDULED)
+	job := requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_SCHEDULED)
 	require.NotNil(t, job.HandlerId)
 	require.NotNil(t, job.Result)
 
 	// 3. Running
-	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing AQL query")
-	requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING)
+	updateStatus(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing AQL query")
+	requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_RUNNING)
 
 	// 4. Upload result files
 	resultData := []byte(`[{"name":"alice"},{"name":"bob"}]`)
-	resp, err := impl.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
+	resp, err := env.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
 		JobId: id,
 		Name:  "result.json",
 		Data:  resultData,
@@ -61,16 +61,35 @@ func Test_Lifecycle_Complete(t *testing.T) {
 	require.Equal(t, int64(len(resultData)), resp.Bytes)
 	require.NotEmpty(t, resp.Checksum)
 
-	resp, err = impl.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
+	statsData := []byte(`{"count":2,"time_ms":15}`)
+	resp, err = env.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
 		JobId: id,
 		Name:  "stats.json",
-		Data:  []byte(`{"count":2,"time_ms":15}`),
+		Data:  statsData,
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, resp.Checksum)
 
-	// 5. Complete
-	job = updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_COMPLETED, "Query returned 2 documents")
+	// 5. Verify files in storage via List and Receive
+	prefix := storagePrefix(testLinkID, id)
+	names := env.ListFiles(id)
+	require.Contains(t, names, prefix+"result.json")
+	require.Contains(t, names, prefix+"stats.json")
+
+	type resultEntry struct {
+		Name string `json:"name"`
+	}
+	gotResult := ReadFileJSON[[]resultEntry](env, id, "result.json")
+	require.Len(t, gotResult, 2)
+	require.Equal(t, "alice", gotResult[0].Name)
+	require.Equal(t, "bob", gotResult[1].Name)
+
+	gotStats := ReadFileJSON[map[string]int](env, id, "stats.json")
+	require.Equal(t, 2, gotStats["count"])
+	require.Equal(t, 15, gotStats["time_ms"])
+
+	// 6. Complete
+	job = updateStatus(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_COMPLETED, "Query returned 2 documents")
 
 	requireStatusHistory(t, job,
 		pbLinkV1.JobState_JOB_STATE_COMPLETED,

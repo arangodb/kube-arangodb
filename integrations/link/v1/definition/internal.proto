@@ -24,6 +24,7 @@ package connector;
 
 import "google/api/annotations.proto";
 import "integrations/link/v1/definition/external.proto";
+import "integrations/link/v1/definition/info.proto";
 import "integrations/link/v1/definition/job.proto";
 import "integrations/shared/v1/definition/empty.proto";
 
@@ -39,7 +40,7 @@ service LinkV1Internal {
   }
 
   // Get full job details by ID
-  rpc GetJob(GetJobRequest) returns (GetJobResponse) {
+  rpc GetJob(GetJobRequest) returns (Job) {
     option (google.api.http) = {
       get: "/_internal/connector/v1/job/{id}"
     };
@@ -64,8 +65,8 @@ service LinkV1Internal {
   // Upload multiple files to a job's FileStore directory in one call (streaming, no HTTP)
   rpc BatchUploadFiles(stream BatchUploadFileRequest) returns (BatchUploadFilesResponse);
 
-  // Update link info (description, tags) — called by the link process at startup
-  rpc UpdateInfo(UpdateInfoRequest) returns (UpdateInfoResponse) {
+  // Update link info — called by the link process at startup to register its tool definition
+  rpc UpdateInfo(LinkInfo) returns (shared.Empty) {
     option (google.api.http) = {
       post: "/_internal/connector/v1/info"
       body: "*"
@@ -128,12 +129,3 @@ message BatchUploadFilesResponse {
   repeated UploadFileResponse files = 1;
 }
 
-// Update Info Request
-message UpdateInfoRequest {
-  // Link info to set
-  LinkInfo info = 1;
-}
-
-// Update Info Response
-message UpdateInfoResponse {
-}

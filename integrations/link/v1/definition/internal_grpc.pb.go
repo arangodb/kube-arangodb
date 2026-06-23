@@ -57,15 +57,15 @@ type LinkV1InternalClient interface {
 	// Pick up one pending job, atomically moving it to Scheduled. Returns job ID or empty if none
 	PickUpJob(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*PickUpJobResponse, error)
 	// Get full job details by ID
-	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
+	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*Job, error)
 	// Update job status (Running, Completed, or Failed)
 	UpdateJobStatus(ctx context.Context, in *UpdateJobStatusRequest, opts ...grpc.CallOption) (*UpdateJobStatusResponse, error)
 	// Upload a single file to a job's FileStore directory
 	UploadFile(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error)
 	// Upload multiple files to a job's FileStore directory in one call (streaming, no HTTP)
 	BatchUploadFiles(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[BatchUploadFileRequest, BatchUploadFilesResponse], error)
-	// Update link info (description, tags) — called by the link process at startup
-	UpdateInfo(ctx context.Context, in *UpdateInfoRequest, opts ...grpc.CallOption) (*UpdateInfoResponse, error)
+	// Update link info — called by the link process at startup to register its tool definition
+	UpdateInfo(ctx context.Context, in *LinkInfo, opts ...grpc.CallOption) (*definition.Empty, error)
 }
 
 type linkV1InternalClient struct {
@@ -86,9 +86,9 @@ func (c *linkV1InternalClient) PickUpJob(ctx context.Context, in *definition.Emp
 	return out, nil
 }
 
-func (c *linkV1InternalClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error) {
+func (c *linkV1InternalClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*Job, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetJobResponse)
+	out := new(Job)
 	err := c.cc.Invoke(ctx, LinkV1Internal_GetJob_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -129,9 +129,9 @@ func (c *linkV1InternalClient) BatchUploadFiles(ctx context.Context, opts ...grp
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type LinkV1Internal_BatchUploadFilesClient = grpc.ClientStreamingClient[BatchUploadFileRequest, BatchUploadFilesResponse]
 
-func (c *linkV1InternalClient) UpdateInfo(ctx context.Context, in *UpdateInfoRequest, opts ...grpc.CallOption) (*UpdateInfoResponse, error) {
+func (c *linkV1InternalClient) UpdateInfo(ctx context.Context, in *LinkInfo, opts ...grpc.CallOption) (*definition.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateInfoResponse)
+	out := new(definition.Empty)
 	err := c.cc.Invoke(ctx, LinkV1Internal_UpdateInfo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -148,15 +148,15 @@ type LinkV1InternalServer interface {
 	// Pick up one pending job, atomically moving it to Scheduled. Returns job ID or empty if none
 	PickUpJob(context.Context, *definition.Empty) (*PickUpJobResponse, error)
 	// Get full job details by ID
-	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
+	GetJob(context.Context, *GetJobRequest) (*Job, error)
 	// Update job status (Running, Completed, or Failed)
 	UpdateJobStatus(context.Context, *UpdateJobStatusRequest) (*UpdateJobStatusResponse, error)
 	// Upload a single file to a job's FileStore directory
 	UploadFile(context.Context, *UploadFileRequest) (*UploadFileResponse, error)
 	// Upload multiple files to a job's FileStore directory in one call (streaming, no HTTP)
 	BatchUploadFiles(grpc.ClientStreamingServer[BatchUploadFileRequest, BatchUploadFilesResponse]) error
-	// Update link info (description, tags) — called by the link process at startup
-	UpdateInfo(context.Context, *UpdateInfoRequest) (*UpdateInfoResponse, error)
+	// Update link info — called by the link process at startup to register its tool definition
+	UpdateInfo(context.Context, *LinkInfo) (*definition.Empty, error)
 	mustEmbedUnimplementedLinkV1InternalServer()
 }
 
@@ -170,7 +170,7 @@ type UnimplementedLinkV1InternalServer struct{}
 func (UnimplementedLinkV1InternalServer) PickUpJob(context.Context, *definition.Empty) (*PickUpJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PickUpJob not implemented")
 }
-func (UnimplementedLinkV1InternalServer) GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error) {
+func (UnimplementedLinkV1InternalServer) GetJob(context.Context, *GetJobRequest) (*Job, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetJob not implemented")
 }
 func (UnimplementedLinkV1InternalServer) UpdateJobStatus(context.Context, *UpdateJobStatusRequest) (*UpdateJobStatusResponse, error) {
@@ -182,7 +182,7 @@ func (UnimplementedLinkV1InternalServer) UploadFile(context.Context, *UploadFile
 func (UnimplementedLinkV1InternalServer) BatchUploadFiles(grpc.ClientStreamingServer[BatchUploadFileRequest, BatchUploadFilesResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method BatchUploadFiles not implemented")
 }
-func (UnimplementedLinkV1InternalServer) UpdateInfo(context.Context, *UpdateInfoRequest) (*UpdateInfoResponse, error) {
+func (UnimplementedLinkV1InternalServer) UpdateInfo(context.Context, *LinkInfo) (*definition.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateInfo not implemented")
 }
 func (UnimplementedLinkV1InternalServer) mustEmbedUnimplementedLinkV1InternalServer() {}
@@ -286,7 +286,7 @@ func _LinkV1Internal_BatchUploadFiles_Handler(srv interface{}, stream grpc.Serve
 type LinkV1Internal_BatchUploadFilesServer = grpc.ClientStreamingServer[BatchUploadFileRequest, BatchUploadFilesResponse]
 
 func _LinkV1Internal_UpdateInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateInfoRequest)
+	in := new(LinkInfo)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -298,7 +298,7 @@ func _LinkV1Internal_UpdateInfo_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: LinkV1Internal_UpdateInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LinkV1InternalServer).UpdateInfo(ctx, req.(*UpdateInfoRequest))
+		return srv.(LinkV1InternalServer).UpdateInfo(ctx, req.(*LinkInfo))
 	}
 	return interceptor(ctx, in, info, handler)
 }
