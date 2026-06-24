@@ -24,7 +24,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"strings"
+	goStrings "strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -74,8 +74,8 @@ func newTestImpl(t *testing.T) *implementation {
 // storagePrefix normalises a FileStorePath for use with the test storage mock.
 // The mock's ListObjects returns paths relative to its root (no leading '/'),
 // so we strip the leading '/' from the prefix produced by FileStorePath.
-func storagePrefix(linkID, jobID string) string {
-	return strings.TrimPrefix(FileStorePath(linkID, jobID), "/")
+func storagePrefix(linkID, jobID string) string { //nolint:unparam
+	return goStrings.TrimPrefix(FileStorePath(linkID, jobID), "/")
 }
 
 // storageList returns all object paths under the given prefix via pbStorageV2.List.
