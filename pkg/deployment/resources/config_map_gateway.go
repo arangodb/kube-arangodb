@@ -39,6 +39,7 @@ import (
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -350,6 +351,7 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 				Port: shared.ArangoPort,
 			}
 		}),
+		Protocol:      util.NewType(util.BoolSwitch(features.GatewayDefaultHTTP2().Enabled(), gateway.ConfigDestinationProtocolHTTP2, gateway.ConfigDestinationProtocolHTTP1)),
 		AuthExtension: &gateway.ConfigAuthZExtension{},
 		Timeout: &meta.Duration{
 			Duration: utilConstants.MaxEnvoyUpstreamTimeout,

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 
 func init() {
 	registerFeature(gateway)
+	registerFeature(gatewayDefaultHTTP2)
 }
 
 var gateway = &feature{
@@ -36,6 +37,17 @@ var gateway = &feature{
 
 func Gateway() Feature {
 	return gateway
+}
+
+var gatewayDefaultHTTP2 = &feature{
+	name:             "gateway-default-http2",
+	description:      "Use HTTP/2 for the gateway default upstream to ArangoDB",
+	enabledByDefault: true,
+	hidden:           true,
+}
+
+func GatewayDefaultHTTP2() Feature {
+	return gatewayDefaultHTTP2
 }
 
 func IsGatewayEnabled(spec api.DeploymentSpec) bool {
