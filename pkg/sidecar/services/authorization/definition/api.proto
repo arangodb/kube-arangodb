@@ -259,6 +259,9 @@ message AuthorizationAPIUserRoleBindingResponse {
 
   // Scope policy for this binding
   types.Policy scope = 3;
+
+  // Sequence index of the binding in the pool
+  uint32 index = 4;
 }
 
 // AuthorizationAPI User Role Binding List Response

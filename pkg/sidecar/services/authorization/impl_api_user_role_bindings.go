@@ -104,18 +104,19 @@ func (a *implementation) APIAssignUserRole(ctx context.Context, request *sidecar
 
 	key := userRoleBindingKey(request.GetUser(), request.GetRole())
 
-	if _, _, err := a.userRoleBindings.Create(ctx, key, binding); err != nil {
+	if _, index, err := a.userRoleBindings.Create(ctx, key, binding); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		identity := authenticator.GetIdentity(ctx)
+		logger.Str("targetUser", request.GetUser()).Str("role", request.GetRole()).Str("user", identity.GetUser()).Info("User role assigned")
+
+		return &sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingResponse{
+			User:  request.GetUser(),
+			Role:  request.GetRole(),
+			Scope: request.GetScope(),
+			Index: index,
+		}, nil
 	}
-
-	identity := authenticator.GetIdentity(ctx)
-	logger.Str("targetUser", request.GetUser()).Str("role", request.GetRole()).Str("user", identity.GetUser()).Info("User role assigned")
-
-	return &sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingResponse{
-		User:  request.GetUser(),
-		Role:  request.GetRole(),
-		Scope: request.GetScope(),
-	}, nil
 }
 
 func (a *implementation) APIRemoveUserRole(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingResponse, error) {
@@ -137,17 +138,18 @@ func (a *implementation) APIRemoveUserRole(ctx context.Context, request *sidecar
 
 	key := userRoleBindingKey(request.GetUser(), request.GetRole())
 
-	if _, err := a.userRoleBindings.Delete(ctx, key); err != nil {
+	if index, err := a.userRoleBindings.Delete(ctx, key); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		identity := authenticator.GetIdentity(ctx)
+		logger.Str("targetUser", request.GetUser()).Str("role", request.GetRole()).Str("user", identity.GetUser()).Info("User role removed")
+
+		return &sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingResponse{
+			User:  request.GetUser(),
+			Role:  request.GetRole(),
+			Index: index,
+		}, nil
 	}
-
-	identity := authenticator.GetIdentity(ctx)
-	logger.Str("targetUser", request.GetUser()).Str("role", request.GetRole()).Str("user", identity.GetUser()).Info("User role removed")
-
-	return &sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingResponse{
-		User: request.GetUser(),
-		Role: request.GetRole(),
-	}, nil
 }
 
 func (a *implementation) APIReplaceUserRoleScope(ctx context.Context, request *sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingResponse, error) {
@@ -182,16 +184,17 @@ func (a *implementation) APIReplaceUserRoleScope(ctx context.Context, request *s
 
 	key := userRoleBindingKey(request.GetUser(), request.GetRole())
 
-	if _, _, err := a.userRoleBindings.Update(ctx, key, binding); err != nil {
+	if _, index, err := a.userRoleBindings.Update(ctx, key, binding); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		identity := authenticator.GetIdentity(ctx)
+		logger.Str("targetUser", request.GetUser()).Str("role", request.GetRole()).Str("user", identity.GetUser()).Info("User role scope replaced")
+
+		return &sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingResponse{
+			User:  request.GetUser(),
+			Role:  request.GetRole(),
+			Scope: request.GetScope(),
+			Index: index,
+		}, nil
 	}
-
-	identity := authenticator.GetIdentity(ctx)
-	logger.Str("targetUser", request.GetUser()).Str("role", request.GetRole()).Str("user", identity.GetUser()).Info("User role scope replaced")
-
-	return &sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingResponse{
-		User:  request.GetUser(),
-		Role:  request.GetRole(),
-		Scope: request.GetScope(),
-	}, nil
 }

@@ -200,6 +200,33 @@ func Test_EvaluateGroups(t *testing.T) {
 		require.Equal(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetEffect())
 	})
 
+	t.Run("Explicit deny in scope blocks allowed action", func(t *testing.T) {
+		// Scope: allow everything EXCEPT database:read on _system
+		scopeWithDeny := newPolicy(t,
+			&sidecarSvcAuthzTypes.PolicyStatement{
+				Effect: sidecarSvcAuthzTypes.Effect_Allow, Actions: []string{"*"}, Resources: []string{"*"},
+			},
+			&sidecarSvcAuthzTypes.PolicyStatement{
+				Effect: sidecarSvcAuthzTypes.Effect_Deny, Actions: []string{"database:read"}, Resources: []string{"_system"},
+			},
+		)
+		sp := ScopedPolicy{Policies: []*Policy{policy}, Scope: scopeWithDeny}
+		// database:read on _system: policy allows, but scope has explicit deny → denied
+		resp, err := sp.Evaluate(evalReq("database:read", "_system"))
+		require.NoError(t, err)
+		require.Equal(t, sidecarSvcAuthzTypes.Effect_Deny, resp.GetEffect())
+
+		// database:read on other_db: policy allows, scope allows (deny only on _system) → allowed
+		resp, err = sp.Evaluate(evalReq("database:read", "other_db"))
+		require.NoError(t, err)
+		require.Equal(t, sidecarSvcAuthzTypes.Effect_Allow, resp.GetEffect())
+
+		// collection:write on _system: scope allows, but policy doesn't have collection:write → denied by policy
+		resp, err = sp.Evaluate(evalReq("collection:write", "_system"))
+		require.NoError(t, err)
+		require.Equal(t, sidecarSvcAuthzTypes.Effect_Deny, resp.GetEffect())
+	})
+
 	t.Run("Nil scope means group not considered", func(t *testing.T) {
 		sp := ScopedPolicy{Policies: []*Policy{policy}, Scope: nil}
 		resp, err := sp.Evaluate(evalReq("database:read", "mydb"))
