@@ -80,7 +80,7 @@ func (c *client) Revision() uint64 {
 }
 
 func (c *client) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
-	groups := c.get().extractGroups(req.GetUser(), req.GetRoles()...)
+	groups := c.get().extractGroups(req.GetUser())
 
 	return groups.Evaluate(req)
 }
@@ -288,7 +288,11 @@ func (c *client) runPoliciesE(ctx context.Context) error {
 			logger.Int("items", len(spec.Items)).Trace("Received policy update")
 
 			for _, item := range spec.GetItems() {
-				policies[item.GetName()] = item.GetItem()
+				if item.GetItem() == nil || item.GetItem().Deleted() {
+					delete(policies, item.GetName())
+				} else {
+					policies[item.GetName()] = item.GetItem()
+				}
 				index = item.GetIndex()
 			}
 
@@ -354,7 +358,11 @@ func (c *client) runRolesE(ctx context.Context) error {
 			logger.Int("items", len(spec.Items)).Trace("Received roles update")
 
 			for _, item := range spec.GetItems() {
-				roles[item.GetName()] = item.GetItem()
+				if item.GetItem() == nil || item.GetItem().Deleted() {
+					delete(roles, item.GetName())
+				} else {
+					roles[item.GetName()] = item.GetItem()
+				}
 				index = item.GetIndex()
 			}
 
@@ -420,7 +428,11 @@ func (c *client) runUserRoleBindingsE(ctx context.Context) error {
 			logger.Int("items", len(spec.Items)).Trace("Received user role bindings update")
 
 			for _, item := range spec.GetItems() {
-				bindings[item.GetName()] = item.GetItem()
+				if item.GetItem() == nil || item.GetItem().Deleted() {
+					delete(bindings, item.GetName())
+				} else {
+					bindings[item.GetName()] = item.GetItem()
+				}
 				index = item.GetIndex()
 			}
 

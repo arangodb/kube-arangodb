@@ -158,3 +158,16 @@ func Post[IN, T any, ERR error](ctx context.Context, client HTTPClient, in IN, u
 
 	return request[T, ERR](ctx, client, goHttp.MethodPost, url, bytes.NewReader(data), mods...)
 }
+
+func Put[IN, T any, ERR error](ctx context.Context, client HTTPClient, in IN, url string, mods ...util.Mod[goHttp.Request]) Response[T] {
+	data, err := json.Marshal(in)
+	if err != nil {
+		return newResponseError[T, ERR](err, nil)
+	}
+
+	return request[T, ERR](ctx, client, goHttp.MethodPut, url, bytes.NewReader(data), mods...)
+}
+
+func Delete[T any, ERR error](ctx context.Context, client HTTPClient, url string, mods ...util.Mod[goHttp.Request]) Response[T] {
+	return request[T, ERR](ctx, client, goHttp.MethodDelete, url, nil, mods...)
+}

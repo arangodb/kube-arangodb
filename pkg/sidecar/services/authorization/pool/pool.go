@@ -337,8 +337,9 @@ func (p *pooler[T]) refresh(ctx context.Context, col adbDriverV2.Collection) err
 
 		p.offset.Add(doc.Sequence, doc.Name, doc.Spec)
 
+		logger.Str("collection", col.Name()).Str("name", doc.Name).Str("action", string(doc.Action)).Int("sequence", int(doc.Sequence)).Info("Update")
+
 		if doc.Action == DocumentDeleteAction || doc.Spec.Deleted() {
-			// Deleted
 			delete(p.state, doc.Name)
 		} else {
 			p.state[doc.Name] = doc
