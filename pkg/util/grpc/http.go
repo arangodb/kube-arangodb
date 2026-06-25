@@ -54,8 +54,15 @@ func Get[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, u
 }
 
 func Post[IN, T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, in IN, url string, mods ...util.Mod[goHttp.Request]) operatorHTTP.Response[Object[T]] {
-
 	return operatorHTTP.Post[Object[IN], Object[T], *RequestError](ctx, client, NewObject(in), url, mods...)
+}
+
+func Put[IN, T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, in IN, url string, mods ...util.Mod[goHttp.Request]) operatorHTTP.Response[Object[T]] {
+	return operatorHTTP.Put[Object[IN], Object[T], *RequestError](ctx, client, NewObject(in), url, mods...)
+}
+
+func Delete[T proto.Message](ctx context.Context, client operatorHTTP.HTTPClient, url string, mods ...util.Mod[goHttp.Request]) operatorHTTP.Response[Object[T]] {
+	return operatorHTTP.Delete[Object[T], *RequestError](ctx, client, url, mods...)
 }
 
 type RequestError struct {

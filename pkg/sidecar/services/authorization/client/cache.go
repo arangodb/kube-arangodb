@@ -29,7 +29,6 @@ import (
 
 type cachedRole struct {
 	policies []string
-	scope    *Policy
 }
 
 func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string]*sidecarSvcAuthzTypes.Role, userRoleBindings map[string]*sidecarSvcAuthzTypes.UserRoleBinding) internalCache {
@@ -59,14 +58,6 @@ func newCache(policies map[string]*sidecarSvcAuthzTypes.Policy, roles map[string
 		cr.policies = util.UniqueList(cr.policies)
 		sort.Strings(cr.policies)
 
-		if scope := role.GetScope(); scope != nil {
-			if p, err := NewPolicy(scope); err != nil {
-				logger.Err(err).Str("role", name).Warn("Failed to parse role scope policy")
-			} else {
-				cr.scope = &p
-			}
-		}
-
 		parsedRoles[name] = cr
 	}
 
@@ -83,17 +74,12 @@ type internalCache struct {
 	userRoleBindings map[string]*sidecarSvcAuthzTypes.UserRoleBinding
 }
 
-func (c *internalCache) extractGroups(user string, groupNames ...string) ScopedPolicies {
+func (c *internalCache) extractGroups(user string) ScopedPolicies {
 	if c == nil {
 		return nil
 	}
 
 	result := make(ScopedPolicies)
-
-	// Resolve explicit group names
-	for _, name := range groupNames {
-		c.resolveGroup(name, result)
-	}
 
 	// Resolve groups from user bindings
 	if user != "" {
@@ -102,24 +88,35 @@ func (c *internalCache) extractGroups(user string, groupNames ...string) ScopedP
 			if len(key) <= len(prefix) || key[:len(prefix)] != prefix {
 				continue
 			}
-			c.resolveGroup(binding.GetRole(), result)
+			if binding == nil {
+				continue
+			}
+			scope := binding.GetScope()
+			if scope == nil {
+				continue
+			}
+			p, err := NewPolicy(scope)
+			if err != nil {
+				continue
+			}
+			c.resolveGroup(binding.GetRole(), &p, result)
 		}
 	}
 
 	return result
 }
 
-func (c *internalCache) resolveGroup(name string, result ScopedPolicies) {
+func (c *internalCache) resolveGroup(name string, scope *Policy, result ScopedPolicies) {
 	if _, exists := result[name]; exists {
 		return
 	}
 
 	g, ok := c.roles[name]
-	if !ok || g.scope == nil {
+	if !ok || scope == nil {
 		return
 	}
 
-	sp := ScopedPolicy{Scope: g.scope}
+	sp := ScopedPolicy{Scope: scope}
 
 	for _, policyName := range g.policies {
 		if p, ok := c.policies[policyName]; ok {

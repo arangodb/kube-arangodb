@@ -51,10 +51,12 @@ func NewAuthorizer(client db.Database, authType pbImplAuthorizationV1.Configurat
 			Get(), pool.DefaultPoolerTimeout),
 		roles: pool.NewPooler[*sidecarSvcAuthzTypes.Role](client.
 			CreateCollection("_roles", db.SourceCollectionProps("_users")).
+			WithUniqueIndex("roles_unique_sequence_index", "sequence").
 			WithTTLIndex("roles_deleted_index", deletedTTL, "deleted").
 			Get(), pool.DefaultPoolerTimeout),
 		userRoleBindings: pool.NewPooler[*sidecarSvcAuthzTypes.UserRoleBinding](client.
 			CreateCollection("_user_role_bindings", db.SourceCollectionProps("_users")).
+			WithUniqueIndex("user_role_bindings_unique_sequence_index", "sequence").
 			WithTTLIndex("user_role_bindings_deleted_index", deletedTTL, "deleted").
 			Get(), pool.DefaultPoolerTimeout),
 		authType: authType,
@@ -106,6 +108,13 @@ func (a *implementation) Register(registrar *grpc.Server) {
 
 func (a *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
 	return sidecarSvcAuthzDefinition.RegisterAuthorizationAPIHandler(ctx, mux, conn)
+}
+
+func (a *implementation) APIRefresh(ctx context.Context, _ *sidecarSvcAuthzDefinition.AuthorizationAPIRefreshRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRefreshResponse, error) {
+	if err := a.Refresh(ctx); err != nil {
+		return nil, err
+	}
+	return &sidecarSvcAuthzDefinition.AuthorizationAPIRefreshResponse{}, nil
 }
 
 func (a *implementation) Refresh(ctx context.Context) error {
