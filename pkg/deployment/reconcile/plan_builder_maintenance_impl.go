@@ -45,3 +45,27 @@ func (r *Reconciler) createMemberMaintenanceManagementPlan(ctx context.Context, 
 	}
 	return plan
 }
+
+// createHighMemberMaintenanceDisablePlan emits DisableMemberMaintenance for any DBServer that
+// has member maintenance enabled but is no longer Ready. Runs unconditionally (via Apply, not
+// ApplyIfEmpty) so it fires even while the normal plan is busy with recovery/restart actions.
+func (r *Reconciler) createHighMemberMaintenanceDisablePlan(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	planCtx PlanBuilderContext) api.Plan {
+
+	if !features.Version310().Enabled() {
+		return nil
+	}
+
+	var plan api.Plan
+	for _, member := range status.Members.AsListInGroups(api.ServerGroupDBServers) {
+		if member.Member.Conditions.IsTrue(api.ConditionTypeMemberMaintenanceMode) &&
+			!member.Member.Conditions.IsTrue(api.ConditionTypeReady) {
+			r.log.
+				Str("member", member.Member.ID).
+				Info("Scheduling DisableMemberMaintenance: member has maintenance enabled but is not Ready")
+			plan = append(plan, actions.NewAction(api.ActionTypeDisableMemberMaintenance, member.Group, member.Member, "Disable maintenance: member not Ready"))
+		}
+	}
+	return plan
+}
