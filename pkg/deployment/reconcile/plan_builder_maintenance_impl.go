@@ -23,6 +23,8 @@ package reconcile
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -41,6 +43,31 @@ func (r *Reconciler) createMemberMaintenanceManagementPlan(ctx context.Context, 
 	for _, member := range status.Members.AsListInGroups(api.ServerGroupDBServers) {
 		if member.Member.Conditions.IsTrue(api.ConditionTypeMemberMaintenanceMode) {
 			plan = append(plan, actions.NewAction(api.ActionTypeDisableMemberMaintenance, member.Group, member.Member, "Disable maintenance due to missing plan"))
+		}
+	}
+	return plan
+}
+
+// createHighMemberMaintenanceDisablePlan emits DisableMemberMaintenance for any DBServer that
+// has member maintenance enabled but is no longer Ready. Runs unconditionally (via Apply, not
+// ApplyIfEmpty) so it fires even while the normal plan is busy with recovery/restart actions.
+func (r *Reconciler) createHighMemberMaintenanceDisablePlan(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	planCtx PlanBuilderContext) api.Plan {
+
+	if !features.Version310().Enabled() {
+		return nil
+	}
+
+	var plan api.Plan
+	for _, member := range status.Members.AsListInGroups(api.ServerGroupDBServers) {
+		readyCond, hasReady := member.Member.Conditions.Get(api.ConditionTypeReady)
+		if member.Member.Conditions.IsTrue(api.ConditionTypeMemberMaintenanceMode) &&
+			hasReady && readyCond.Status == core.ConditionFalse {
+			r.log.
+				Str("member", member.Member.ID).
+				Info("Scheduling DisableMemberMaintenance: member has maintenance enabled but is not Ready")
+			plan = append(plan, actions.NewAction(api.ActionTypeDisableMemberMaintenance, member.Group, member.Member, "Disable maintenance: member not Ready"))
 		}
 	}
 	return plan
