@@ -14,7 +14,7 @@ import (
 	"io"
 	"net/http"
 
-	definition_9 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	definition_10 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -38,7 +38,7 @@ var (
 
 func request_Operator_GetVersion_0(ctx context.Context, marshaler runtime.Marshaler, client OperatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -50,7 +50,7 @@ func request_Operator_GetVersion_0(ctx context.Context, marshaler runtime.Marsha
 
 func local_request_Operator_GetVersion_0(ctx context.Context, marshaler runtime.Marshaler, server OperatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.GetVersion(ctx, &protoReq)
@@ -59,7 +59,7 @@ func local_request_Operator_GetVersion_0(ctx context.Context, marshaler runtime.
 
 func request_Operator_GetLogLevel_0(ctx context.Context, marshaler runtime.Marshaler, client OperatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -71,7 +71,7 @@ func request_Operator_GetLogLevel_0(ctx context.Context, marshaler runtime.Marsh
 
 func local_request_Operator_GetLogLevel_0(ctx context.Context, marshaler runtime.Marshaler, server OperatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.GetLogLevel(ctx, &protoReq)
@@ -107,7 +107,7 @@ func local_request_Operator_SetLogLevel_0(ctx context.Context, marshaler runtime
 
 func request_Operator_OperatorLiveness_0(ctx context.Context, marshaler runtime.Marshaler, client OperatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -119,7 +119,7 @@ func request_Operator_OperatorLiveness_0(ctx context.Context, marshaler runtime.
 
 func local_request_Operator_OperatorLiveness_0(ctx context.Context, marshaler runtime.Marshaler, server OperatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.OperatorLiveness(ctx, &protoReq)
@@ -128,7 +128,7 @@ func local_request_Operator_OperatorLiveness_0(ctx context.Context, marshaler ru
 
 func request_Operator_OperatorReadiness_0(ctx context.Context, marshaler runtime.Marshaler, client OperatorClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -140,7 +140,7 @@ func request_Operator_OperatorReadiness_0(ctx context.Context, marshaler runtime
 
 func local_request_Operator_OperatorReadiness_0(ctx context.Context, marshaler runtime.Marshaler, server OperatorServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq definition_9.Empty
+		protoReq definition_10.Empty
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.OperatorReadiness(ctx, &protoReq)

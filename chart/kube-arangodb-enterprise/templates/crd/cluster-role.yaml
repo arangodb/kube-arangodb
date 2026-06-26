@@ -82,6 +82,7 @@ rules:
       - "arangoplatformcharts.platform.arangodb.com"
       - "arangoplatformstorages.platform.arangodb.com"
       - "arangoplatformservices.platform.arangodb.com"
+      - "arangoplatformlinks.platform.arangodb.com"
   # permission.arangodb.com
   - apiGroups:
       - "apiextensions.k8s.io"

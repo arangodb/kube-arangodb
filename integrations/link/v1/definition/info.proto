@@ -1,0 +1,57 @@
+//
+// DISCLAIMER
+//
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+syntax = "proto3";
+
+package connector;
+
+option go_package = "github.com/arangodb/kube-arangodb/integrations/link/v1/definition";
+
+// Link Info — self-describing tool definition for agentic discovery and invocation.
+// Provides everything an AI agent needs to discover, understand, and invoke this tool
+// without prior knowledge of the connector implementation.
+message LinkInfo {
+  // Human-readable description of what this link does
+  string description = 1;
+  // Tags for discovery and filtering (e.g. "database", "aql", "query")
+  repeated string tags = 2;
+  // JSON Schema defining the expected structure of CreateJobRequest.query bytes.
+  // Agents use this to construct valid job inputs autonomously.
+  string input_schema = 3;
+  // JSON Schema describing the structure of job result files.
+  // Allows agents to interpret outputs without connector-specific logic.
+  string output_schema = 4;
+  // Example input/output pairs demonstrating typical usage.
+  // Agents use these for few-shot learning when constructing queries.
+  repeated LinkExample examples = 5;
+  // Result files produced by successful jobs (e.g. ["result.json", "summary.txt"]).
+  // Tells agents which files to fetch from the job's FileStore after completion.
+  repeated string result_files = 6;
+}
+
+// LinkExample — a sample input/output pair for agent few-shot learning
+message LinkExample {
+  // Short label for this example (e.g. "Count documents", "Lookup by key")
+  string name = 1;
+  // Example query as JSON string matching input_schema
+  string input = 2;
+  // Expected output as JSON string matching output_schema
+  string output = 3;
+}

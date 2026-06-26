@@ -1,0 +1,220 @@
+//
+// DISCLAIMER
+//
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+package v1
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	pbLinkV1 "github.com/arangodb/kube-arangodb/integrations/link/v1/definition"
+)
+
+func Test_Internal_PickUpJob_Empty(t *testing.T) {
+	impl := newTestImpl(t)
+
+	resp, err := impl.PickUpJob(context.Background(), nil)
+	require.NoError(t, err)
+	require.Nil(t, resp.Id)
+}
+
+func Test_Internal_PickUpJob_Success(t *testing.T) {
+	impl := newTestImpl(t)
+
+	id := createTestJob(t, impl, "test")
+	pickedID := pickUp(t, impl)
+	require.Equal(t, id, pickedID)
+
+	job := requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_SCHEDULED)
+	require.NotNil(t, job.HandlerId)
+	require.NotEmpty(t, *job.HandlerId)
+	require.NotNil(t, job.Result)
+	require.Contains(t, *job.Result, testLinkID)
+	require.Contains(t, *job.Result, id)
+
+	requireStatusHistory(t, job,
+		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
+		pbLinkV1.JobState_JOB_STATE_PENDING,
+	)
+}
+
+func Test_Internal_PickUpJob_SecondReturnsEmpty(t *testing.T) {
+	impl := newTestImpl(t)
+
+	createTestJob(t, impl, "only-one")
+	pickUp(t, impl)
+
+	resp, err := impl.PickUpJob(context.Background(), nil)
+	require.NoError(t, err)
+	require.Nil(t, resp.Id)
+}
+
+func Test_Internal_FullLifecycle(t *testing.T) {
+	impl := newTestImpl(t)
+
+	id := createTestJob(t, impl, `{"aql": "FOR d IN col RETURN d"}`)
+
+	// Pending → Scheduled
+	pickUp(t, impl)
+
+	// Scheduled → Running
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing query")
+
+	// Running → Completed
+	job := updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_COMPLETED, "Done")
+
+	requireStatusHistory(t, job,
+		pbLinkV1.JobState_JOB_STATE_COMPLETED,
+		pbLinkV1.JobState_JOB_STATE_RUNNING,
+		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
+		pbLinkV1.JobState_JOB_STATE_PENDING,
+	)
+}
+
+func Test_Internal_FailedJob(t *testing.T) {
+	impl := newTestImpl(t)
+
+	id := createTestJob(t, impl, "bad-query")
+	pickUp(t, impl)
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing")
+
+	job := updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FAILED, "Syntax error")
+
+	require.Equal(t, "Syntax error", job.Statuses[0].Description)
+	requireStatusHistory(t, job,
+		pbLinkV1.JobState_JOB_STATE_FAILED,
+		pbLinkV1.JobState_JOB_STATE_RUNNING,
+		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
+		pbLinkV1.JobState_JOB_STATE_PENDING,
+	)
+}
+
+func Test_Internal_InvalidTransition(t *testing.T) {
+	impl := newTestImpl(t)
+
+	id := createTestJob(t, impl, "invalid")
+
+	// Pending → Completed is invalid (must go through Scheduled)
+	_, err := impl.UpdateJobStatus(context.Background(), &pbLinkV1.UpdateJobStatusRequest{
+		Id: id,
+		Status: &pbLinkV1.JobStatus{
+			State: pbLinkV1.JobState_JOB_STATE_COMPLETED,
+		},
+	})
+	require.Error(t, err)
+}
+
+func Test_Internal_StatusHistoryMaxEntries(t *testing.T) {
+	impl := newTestImpl(t)
+
+	id := createTestJob(t, impl, "history")
+	pickUp(t, impl)
+
+	// Push many status updates to exceed maxStatusHistory
+	for i := 0; i < 15; i++ {
+		updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Running")
+		updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FAILED, "Failed")
+
+		// Re-create and pick up fresh for next iteration since Failed is terminal
+		id = createTestJob(t, impl, "history")
+		pickUp(t, impl)
+	}
+
+	job := requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_SCHEDULED)
+	require.LessOrEqual(t, len(job.Statuses), maxStatusHistory)
+}
+
+func Test_Internal_UploadFile(t *testing.T) {
+	env := newTestEnv(t)
+	ctx := context.Background()
+
+	id := createTestJob(t, env.implementation, "upload")
+	pickUp(t, env.implementation)
+
+	data := []byte(`{"count": 42}`)
+	resp, err := env.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
+		JobId: id,
+		Name:  "result.json",
+		Data:  data,
+	})
+	require.NoError(t, err)
+	require.Equal(t, int64(len(data)), resp.Bytes)
+	require.NotEmpty(t, resp.Checksum)
+
+	// Verify file exists in storage via List
+	require.Contains(t, env.ListFiles(id), storagePrefix(testLinkID, id)+"result.json")
+
+	// Verify file content via Receive and unmarshal
+	got := ReadFileJSON[map[string]int](env, id, "result.json")
+	require.Equal(t, 42, got["count"])
+}
+
+func Test_Internal_UploadFile_MissingFields(t *testing.T) {
+	impl := newTestImpl(t)
+	ctx := context.Background()
+
+	_, err := impl.UploadFile(ctx, &pbLinkV1.UploadFileRequest{})
+	require.Error(t, err)
+}
+
+func Test_Internal_MultipleUploads(t *testing.T) {
+	env := newTestEnv(t)
+	ctx := context.Background()
+
+	id := createTestJob(t, env.implementation, "multi-upload")
+	pickUp(t, env.implementation)
+
+	// Upload multiple files
+	files := map[string][]byte{
+		"result.json":   []byte(`{"count": 42}`),
+		"metadata.json": []byte(`{"format": "json"}`),
+		"data.csv":      []byte("a,b,c\n1,2,3\n"),
+	}
+
+	for name, data := range files {
+		resp, err := env.UploadFile(ctx, &pbLinkV1.UploadFileRequest{
+			JobId: id,
+			Name:  name,
+			Data:  data,
+		})
+		require.NoError(t, err)
+		require.Equal(t, int64(len(data)), resp.Bytes)
+		require.NotEmpty(t, resp.Checksum)
+	}
+
+	// Verify all files exist in storage via List
+	names := env.ListFiles(id)
+	prefix := storagePrefix(testLinkID, id)
+	for name := range files {
+		require.Contains(t, names, prefix+name)
+	}
+
+	// Verify JSON files content via Receive and unmarshal
+	gotResult := ReadFileJSON[map[string]int](env, id, "result.json")
+	require.Equal(t, 42, gotResult["count"])
+
+	gotMeta := ReadFileJSON[map[string]string](env, id, "metadata.json")
+	require.Equal(t, "json", gotMeta["format"])
+
+	// Verify non-JSON file via raw read
+	require.Equal(t, files["data.csv"], env.ReadFile(id, "data.csv"))
+}
