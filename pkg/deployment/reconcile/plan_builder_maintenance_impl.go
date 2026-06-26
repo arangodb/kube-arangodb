@@ -23,6 +23,8 @@ package reconcile
 import (
 	"context"
 
+	core "k8s.io/api/core/v1"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
@@ -59,8 +61,9 @@ func (r *Reconciler) createHighMemberMaintenanceDisablePlan(ctx context.Context,
 
 	var plan api.Plan
 	for _, member := range status.Members.AsListInGroups(api.ServerGroupDBServers) {
+		readyCond, hasReady := member.Member.Conditions.Get(api.ConditionTypeReady)
 		if member.Member.Conditions.IsTrue(api.ConditionTypeMemberMaintenanceMode) &&
-			!member.Member.Conditions.IsTrue(api.ConditionTypeReady) {
+			hasReady && readyCond.Status == core.ConditionFalse {
 			r.log.
 				Str("member", member.Member.ID).
 				Info("Scheduling DisableMemberMaintenance: member has maintenance enabled but is not Ready")

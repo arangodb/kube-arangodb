@@ -40,12 +40,14 @@ func newDBServerMember(id string, maintenanceMode, ready bool) api.MemberStatus 
 			Status: core.ConditionTrue,
 		})
 	}
+	status := core.ConditionFalse
 	if ready {
-		m.Conditions = append(m.Conditions, api.Condition{
-			Type:   api.ConditionTypeReady,
-			Status: core.ConditionTrue,
-		})
+		status = core.ConditionTrue
 	}
+	m.Conditions = append(m.Conditions, api.Condition{
+		Type:   api.ConditionTypeReady,
+		Status: status,
+	})
 	return m
 }
 
