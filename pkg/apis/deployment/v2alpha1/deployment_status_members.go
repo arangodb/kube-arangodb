@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,9 +33,11 @@ type DeploymentStatusMembers struct {
 	Agents       MemberStatusList `json:"agents,omitempty"`
 	DBServers    MemberStatusList `json:"dbservers,omitempty"`
 	Coordinators MemberStatusList `json:"coordinators,omitempty"`
-	SyncMasters  MemberStatusList `json:"syncmasters,omitempty"`
-	SyncWorkers  MemberStatusList `json:"syncworkers,omitempty"`
-	Gateways     MemberStatusList `json:"gateways,omitempty"`
+	// Deprecated: ArangoSync has been removed
+	SyncMasters MemberStatusList `json:"syncmasters,omitempty"`
+	// Deprecated: ArangoSync has been removed
+	SyncWorkers MemberStatusList `json:"syncworkers,omitempty"`
+	Gateways    MemberStatusList `json:"gateways,omitempty"`
 }
 
 // Equal checks for equality

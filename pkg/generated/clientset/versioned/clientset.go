@@ -34,8 +34,6 @@ import (
 	permissionv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/permission/v1alpha1"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1"
 	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1"
-	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
-	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1"
 	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1beta1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/storage/v1alpha"
@@ -54,8 +52,6 @@ type Interface interface {
 	PermissionV1alpha1() permissionv1alpha1.PermissionV1alpha1Interface
 	PlatformV1alpha1() platformv1alpha1.PlatformV1alpha1Interface
 	PlatformV1beta1() platformv1beta1.PlatformV1beta1Interface
-	ReplicationV1() replicationv1.ReplicationV1Interface
-	ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface
 	SchedulerV1alpha1() schedulerv1alpha1.SchedulerV1alpha1Interface
 	SchedulerV1beta1() schedulerv1beta1.SchedulerV1beta1Interface
 	StorageV1alpha() storagev1alpha.StorageV1alphaInterface
@@ -64,19 +60,17 @@ type Interface interface {
 // Clientset contains the clients for groups.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	backupV1            *backupv1.BackupV1Client
-	databaseV1          *databasev1.DatabaseV1Client
-	databaseV2alpha1    *databasev2alpha1.DatabaseV2alpha1Client
-	networkingV1alpha1  *networkingv1alpha1.NetworkingV1alpha1Client
-	networkingV1beta1   *networkingv1beta1.NetworkingV1beta1Client
-	permissionV1alpha1  *permissionv1alpha1.PermissionV1alpha1Client
-	platformV1alpha1    *platformv1alpha1.PlatformV1alpha1Client
-	platformV1beta1     *platformv1beta1.PlatformV1beta1Client
-	replicationV1       *replicationv1.ReplicationV1Client
-	replicationV2alpha1 *replicationv2alpha1.ReplicationV2alpha1Client
-	schedulerV1alpha1   *schedulerv1alpha1.SchedulerV1alpha1Client
-	schedulerV1beta1    *schedulerv1beta1.SchedulerV1beta1Client
-	storageV1alpha      *storagev1alpha.StorageV1alphaClient
+	backupV1           *backupv1.BackupV1Client
+	databaseV1         *databasev1.DatabaseV1Client
+	databaseV2alpha1   *databasev2alpha1.DatabaseV2alpha1Client
+	networkingV1alpha1 *networkingv1alpha1.NetworkingV1alpha1Client
+	networkingV1beta1  *networkingv1beta1.NetworkingV1beta1Client
+	permissionV1alpha1 *permissionv1alpha1.PermissionV1alpha1Client
+	platformV1alpha1   *platformv1alpha1.PlatformV1alpha1Client
+	platformV1beta1    *platformv1beta1.PlatformV1beta1Client
+	schedulerV1alpha1  *schedulerv1alpha1.SchedulerV1alpha1Client
+	schedulerV1beta1   *schedulerv1beta1.SchedulerV1beta1Client
+	storageV1alpha     *storagev1alpha.StorageV1alphaClient
 }
 
 // BackupV1 retrieves the BackupV1Client
@@ -117,16 +111,6 @@ func (c *Clientset) PlatformV1alpha1() platformv1alpha1.PlatformV1alpha1Interfac
 // PlatformV1beta1 retrieves the PlatformV1beta1Client
 func (c *Clientset) PlatformV1beta1() platformv1beta1.PlatformV1beta1Interface {
 	return c.platformV1beta1
-}
-
-// ReplicationV1 retrieves the ReplicationV1Client
-func (c *Clientset) ReplicationV1() replicationv1.ReplicationV1Interface {
-	return c.replicationV1
-}
-
-// ReplicationV2alpha1 retrieves the ReplicationV2alpha1Client
-func (c *Clientset) ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface {
-	return c.replicationV2alpha1
 }
 
 // SchedulerV1alpha1 retrieves the SchedulerV1alpha1Client
@@ -220,14 +204,6 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
-	cs.replicationV1, err = replicationv1.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
-	cs.replicationV2alpha1, err = replicationv2alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
-	if err != nil {
-		return nil, err
-	}
 	cs.schedulerV1alpha1, err = schedulerv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -269,8 +245,6 @@ func New(c rest.Interface) *Clientset {
 	cs.permissionV1alpha1 = permissionv1alpha1.New(c)
 	cs.platformV1alpha1 = platformv1alpha1.New(c)
 	cs.platformV1beta1 = platformv1beta1.New(c)
-	cs.replicationV1 = replicationv1.New(c)
-	cs.replicationV2alpha1 = replicationv2alpha1.New(c)
 	cs.schedulerV1alpha1 = schedulerv1alpha1.New(c)
 	cs.schedulerV1beta1 = schedulerv1beta1.New(c)
 	cs.storageV1alpha = storagev1alpha.New(c)

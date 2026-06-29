@@ -33,8 +33,6 @@ import (
 	permissionv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
-	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	v1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -129,14 +127,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformServices().Informer()}, nil
 	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformstorages"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformStorages().Informer()}, nil
-
-		// Group=replication.database.arangodb.com, Version=v1
-	case replicationv1.SchemeGroupVersion.WithResource("arangodeploymentreplications"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Replication().V1().ArangoDeploymentReplications().Informer()}, nil
-
-		// Group=replication.database.arangodb.com, Version=v2alpha1
-	case replicationv2alpha1.SchemeGroupVersion.WithResource("arangodeploymentreplications"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Replication().V2alpha1().ArangoDeploymentReplications().Informer()}, nil
 
 		// Group=scheduler.arangodb.com, Version=v1alpha1
 	case schedulerv1alpha1.SchemeGroupVersion.WithResource("arangoprofiles"):

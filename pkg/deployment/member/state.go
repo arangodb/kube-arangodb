@@ -27,7 +27,6 @@ import (
 
 	"github.com/rs/zerolog"
 
-	syncClient "github.com/arangodb/arangosync-client/client"
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -49,9 +48,6 @@ type StateInspector interface {
 
 	// GetMemberClient returns member connection to an ArangoDB server.
 	GetMemberClient(id string) (adbDriverV2.Client, error)
-
-	// GetMemberSyncClient returns member connection to an ArangoSync server.
-	GetMemberSyncClient(id string) (syncClient.API, error)
 
 	MemberState(id string) (State, bool)
 
@@ -127,7 +123,7 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 
 		switch members[id].Group.Type() {
 		case api.ServerGroupTypeArangoSync:
-			results[id] = s.fetchArangosyncMemberState(ctx, members[id])
+			// Deprecated: ArangoSync has been removed, skip
 		case api.ServerGroupTypeArangoD:
 			results[id] = s.fetchServerMemberState(ctx, members[id], servingGroup)
 			if results[id].IsServing() {
@@ -207,31 +203,6 @@ func (s *stateInspector) RefreshState(ctx context.Context, members api.Deploymen
 	s.health = h
 }
 
-func (s *stateInspector) fetchArangosyncMemberState(ctx context.Context, m api.DeploymentStatusMemberElement) State {
-	var state State
-	c, err := s.deployment.GetSyncServerClient(ctx, m.Group, m.Member.ID)
-	if err != nil {
-		state.NotReachableErr = err
-		return state
-	}
-
-	if v, err := c.Version(ctx); err != nil {
-		state.NotReachableErr = err
-	} else {
-		// convert arangosync VersionInfo to go-driver VersionInfo for simplicity:
-		state.Version = adbDriverV2.VersionInfo{
-			Server:  m.Group.AsRole(),
-			Version: adbDriverV2.Version(v.Version),
-			License: GetImageLicense(m.Member.Image),
-			Details: map[string]interface{}{
-				"arangosync-build": v.Build,
-			},
-		}
-		state.syncClient = c
-	}
-	return state
-}
-
 func (s *stateInspector) fetchGatewayMemberState(ctx context.Context, m api.DeploymentStatusMemberElement) State {
 	// by default, it is not serving. It will be changed if it serves.
 	var state State
@@ -306,22 +277,6 @@ func (s *stateInspector) GetMemberClient(id string) (adbDriverV2.Client, error) 
 	return nil, errors.Errorf("failed to get ArangoDB member client: %s", id)
 }
 
-// GetMemberSyncClient returns member client to a server.
-func (s *stateInspector) GetMemberSyncClient(id string) (syncClient.API, error) {
-	if state, ok := s.MemberState(id); ok {
-		if state.NotReachableErr != nil {
-			// ArangoSync client can be set, but it might be old value.
-			return nil, state.NotReachableErr
-		}
-
-		if state.syncClient != nil {
-			return state.syncClient, nil
-		}
-	}
-
-	return nil, errors.Errorf("failed to get ArangoSync member client: %s", id)
-}
-
 func (s *stateInspector) MemberState(id string) (State, bool) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -354,8 +309,6 @@ type State struct {
 	Version adbDriverV2.VersionInfo
 	// client to this specific ArangoDB member.
 	client adbDriverV2.Client
-	// client to this specific ArangoSync member.
-	syncClient syncClient.API
 	// serving describes if a member can serve requests.
 	serving bool
 }

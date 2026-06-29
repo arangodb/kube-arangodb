@@ -30,7 +30,6 @@ operator:
   threads: 8
   features:
     deployment: true
-    deploymentReplications: true
     storage: false
     storageCRD: true
     backup: false

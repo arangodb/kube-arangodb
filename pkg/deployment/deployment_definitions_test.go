@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,14 +33,7 @@ var (
 	defaultDBServerTerminationTimeout    = int64(api.ServerGroupDBServers.DefaultTerminationGracePeriod().Seconds())
 	defaultCoordinatorTerminationTimeout = int64(api.ServerGroupCoordinators.DefaultTerminationGracePeriod().Seconds())
 	defaultSingleTerminationTimeout      = int64(api.ServerGroupSingle.DefaultTerminationGracePeriod().Seconds())
-	defaultSyncMasterTerminationTimeout  = int64(api.ServerGroupSyncMasters.DefaultTerminationGracePeriod().Seconds())
-	defaultSyncWorkerTerminationTimeout  = int64(api.ServerGroupSyncWorkers.DefaultTerminationGracePeriod().Seconds())
-
-	securityContext api.ServerGroupSpecSecurityContext
-
-	nodeSelectorTest = map[string]string{
-		"test": "test",
-	}
+	securityContext                      api.ServerGroupSpecSecurityContext
 
 	arch = api.ArangoDeploymentArchitectureDefault
 
@@ -58,18 +51,6 @@ var (
 
 	singleStatus = api.MemberStatus{
 		ID:           "single1",
-		Phase:        api.MemberPhaseNone,
-		Architecture: &arch,
-	}
-
-	firstSyncMaster = api.MemberStatus{
-		ID:           "syncMaster1",
-		Phase:        api.MemberPhaseNone,
-		Architecture: &arch,
-	}
-
-	firstSyncWorker = api.MemberStatus{
-		ID:           "syncWorker1",
 		Phase:        api.MemberPhaseNone,
 		Architecture: &arch,
 	}

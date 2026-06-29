@@ -105,9 +105,6 @@ spec:
 {{- if .Values.operator.features.deployment }}
             - --operator.deployment
 {{- end -}}
-{{ if .Values.operator.features.deploymentReplications }}
-            - --operator.deployment-replication
-{{- end -}}
 {{ if .Values.operator.features.storage }}
             - --operator.storage
 {{- end }}

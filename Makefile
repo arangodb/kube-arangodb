@@ -172,7 +172,6 @@ MANIFESTPATHCRDBASIC := manifests/arango-crd-basic$(MANIFESTSUFFIX).yaml
 MANIFESTPATHCRDALL := manifests/arango-crd-all$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEFAULT := manifests/arango$(MANIFESTSUFFIX).yaml
 MANIFESTPATHDEPLOYMENT := manifests/arango-deployment$(MANIFESTSUFFIX).yaml
-MANIFESTPATHDEPLOYMENTREPLICATION := manifests/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 MANIFESTPATHBACKUP := manifests/arango-backup$(MANIFESTSUFFIX).yaml
 MANIFESTPATHK2KCLUSTERSYNC := manifests/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 MANIFESTPATHSTORAGE := manifests/arango-storage$(MANIFESTSUFFIX).yaml
@@ -182,7 +181,6 @@ KUSTOMIZEPATHCRDBASIC := manifests/kustomize/crd/arango-crd-basic$(MANIFESTSUFFI
 KUSTOMIZEPATHCRDALL := manifests/kustomize/crd/arango-crd-all$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEFAULT := manifests/kustomize/deployment/arango$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHDEPLOYMENT := manifests/kustomize/deployment/arango-deployment$(MANIFESTSUFFIX).yaml
-KUSTOMIZEPATHDEPLOYMENTREPLICATION := manifests/kustomize/deployment-replication/arango-deployment-replication$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHBACKUP := manifests/kustomize/backup/arango-backup$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHK2KCLUSTERSYNC := manifests/kustomize/k2kclustersync/arango-k2kclustersync$(MANIFESTSUFFIX).yaml
 KUSTOMIZEPATHSTORAGE := manifests/kustomize/storage/arango-storage$(MANIFESTSUFFIX).yaml
@@ -585,15 +583,6 @@ $(eval $(call manifest-generator, deployment, kube-arangodb, \
 		--set "operator.features.scheduler=true" \
 		--set "operator.features.platform=true"))
 
-$(eval $(call manifest-generator, deployment-replication, kube-arangodb, \
-		--set "operator.features.deployment=false" \
-		--set "operator.features.deploymentReplications=true" \
-		--set "operator.features.storage=false" \
-		--set "operator.features.backup=false" \
-		--set "operator.features.k8sToK8sClusterSync=false" \
-		--set "operator.features.networking=false" \
-		--set "operator.features.scheduler=false" \
-		--set "operator.features.platform=false"))
 
 $(eval $(call manifest-generator, storage, kube-arangodb, \
 		--set "operator.features.deployment=false" \
@@ -692,7 +681,6 @@ manifest-verify-plain-ce: manifests-verify-env-reset
 	kubectl apply -f ./manifests/arango-backup.yaml
 	kubectl apply -f ./manifests/arango-crd.yaml
 	kubectl apply -f ./manifests/arango-deployment.yaml
-	kubectl apply -f ./manifests/arango-deployment-replication.yaml
 	kubectl apply -f ./manifests/arango-k2kclustersync.yaml
 	kubectl apply -f ./manifests/arango-storage.yaml
 
@@ -701,7 +689,6 @@ manifest-verify-plain-ee: manifests-verify-env-reset
 	kubectl apply -f ./manifests/enterprise-backup.yaml
 	kubectl apply -f ./manifests/enterprise-crd.yaml
 	kubectl apply -f ./manifests/enterprise-deployment.yaml
-	kubectl apply -f ./manifests/enterprise-deployment-replication.yaml
 	kubectl apply -f ./manifests/enterprise-k2kclustersync.yaml
 	kubectl apply -f ./manifests/enterprise-storage.yaml
 
@@ -713,7 +700,6 @@ resources:
   - ./backup
   - ./crd
   - ./deployment
-  - ./deployment-replication
   - ./k2kclustersync
 endef
 export KUSTOMIZE_YAML
@@ -849,15 +835,14 @@ vendor:
 	@go mod vendor -e
 
 set-deployment-api-version-v2alpha1: export API_VERSION=2alpha1
-set-deployment-api-version-v2alpha1: set-api-version/deployment set-api-version/replication
+set-deployment-api-version-v2alpha1: set-api-version/deployment
 
 set-deployment-api-version-v1: export API_VERSION=1
-set-deployment-api-version-v1: set-api-version/deployment set-api-version/replication
+set-deployment-api-version-v1: set-api-version/deployment
 
 set-typed-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+" \
 	      "$(ROOT)/pkg/deployment/" \
-	      "$(ROOT)/pkg/replication/" \
 	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
@@ -875,7 +860,6 @@ set-typed-api-version/%:
 set-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+" \
 	      "$(ROOT)/pkg/deployment/" \
-	      "$(ROOT)/pkg/replication/" \
 	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
@@ -891,7 +875,6 @@ set-api-version/%:
 	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
 	@grep -rHn "DatabaseV[A-Za-z0-9]\+()" \
 		  "$(ROOT)/pkg/deployment/" \
-	      "$(ROOT)/pkg/replication/" \
 	      "$(ROOT)/pkg/integrations/" \
 	      "$(ROOT)/pkg/operator/" \
 	      "$(ROOT)/pkg/operatorV2/" \
@@ -905,22 +888,6 @@ set-api-version/%:
 	      "$(ROOT)/integrations/" \
 	  | cut -d ':' -f 1 | sort | uniq \
 	  | xargs -n 1 $(SED) -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
-	@grep -rHn "ReplicationV[A-Za-z0-9]\+()" \
-		  "$(ROOT)/pkg/deployment/" \
-		  "$(ROOT)/pkg/replication/" \
-	      "$(ROOT)/pkg/integrations/" \
-		  "$(ROOT)/pkg/operator/" \
-	      "$(ROOT)/pkg/operatorV2/" \
-		  "$(ROOT)/pkg/util/" \
-		  "$(ROOT)/pkg/handlers" \
-		  "$(ROOT)/pkg/apis/backup/" \
-	      "$(ROOT)/pkg/apis/networking/" \
-	      "$(ROOT)/pkg/apis/scheduler/" \
-	      "$(ROOT)/pkg/apis/platform/" \
-	      "$(ROOT)/pkg/upgrade/" \
-	      "$(ROOT)/integrations/" \
-	  | cut -d ':' -f 1 | sort | uniq \
-	  | xargs -n 1 $(SED) -i "s#ReplicationV[A-Za-z0-9]\+()\.#ReplicationV$(API_VERSION)().#g"
 
 synchronize: synchronize-v2alpha1-with-v1
 
@@ -958,7 +925,6 @@ fix: license-range fmt license yamlfmt
 
 CRDS:=backups-backup backups-backuppolicy \
       database-clustersynchronization database-deployment database-member database-task \
-      replication-deploymentreplication \
       scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \
       networking-route \
       platform-storage platform-chart platform-service \

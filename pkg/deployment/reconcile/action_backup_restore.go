@@ -24,7 +24,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
@@ -199,7 +198,7 @@ func (a actionBackupRestore) CheckProgress(ctx context.Context) (bool, bool, err
 		}
 
 		// Add wait grace period for restore jobs - async job creation is asynchronous
-		if ok := conn.IsAsyncErrorNotFound(restoreError); ok {
+		if ok := adbDriverV2Connection.IsNotFoundError(restoreError); ok {
 			if s := a.action.StartTime; s != nil && !s.Time.IsZero() {
 				if time.Since(s.Time) < 10*time.Second {
 					// Retry

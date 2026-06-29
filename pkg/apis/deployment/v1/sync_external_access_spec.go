@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,7 +45,6 @@ type SyncExternalAccessSpec struct {
 	// Note that to remove all access packages, leave an empty array in place (`[]`).
 	// Completely removing the setting results in not modifying the list.
 	// +doc/type: []string
-	// +doc/link: See the ArangoDeploymentReplication specification|deployment-replication-resource-reference.md
 	AccessPackageSecretNames []string `json:"accessPackageSecretNames,omitempty"`
 }
 

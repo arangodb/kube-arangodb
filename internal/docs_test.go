@@ -43,7 +43,6 @@ import (
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
-	replicationApi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	storageApi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -298,15 +297,6 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					},
 				},
 				Shared: []string{},
-			},
-		},
-		"replication": map[string]inputPackage{
-			"v1": {
-				Types: inputPackageTypes{
-					"ArangoDeploymentReplication.V1": {
-						"Spec": replicationApi.ArangoDeploymentReplication{}.Spec,
-					},
-				},
 			},
 		},
 		"scheduler": map[string]inputPackage{

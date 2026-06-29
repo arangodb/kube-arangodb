@@ -37,8 +37,6 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/networking"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
-	repldef "github.com/arangodb/kube-arangodb/pkg/apis/replication"
-	replapi "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
 	lsapi "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
 	"github.com/arangodb/kube-arangodb/pkg/deployment"
@@ -63,7 +61,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operatorV2 "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
-	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/storage"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -88,68 +85,63 @@ const (
 )
 
 type Event struct {
-	Type                  kwatch.EventType
-	Deployment            *api.ArangoDeployment
-	DeploymentReplication *replapi.ArangoDeploymentReplication
-	LocalStorage          *lsapi.ArangoLocalStorage
+	Type         kwatch.EventType
+	Deployment   *api.ArangoDeployment
+	LocalStorage *lsapi.ArangoLocalStorage
 }
 
 type Operator struct {
 	Config
 	Dependencies
 
-	log                    logging.Logger
-	deployments            map[string]*deployment.Deployment
-	deploymentReplications map[string]*replication.DeploymentReplication
-	localStorages          map[string]*storage.LocalStorage
+	log           logging.Logger
+	deployments   map[string]*deployment.Deployment
+	localStorages map[string]*storage.LocalStorage
 }
 
 type Config struct {
-	ID                          string
-	Namespace                   string
-	PodName                     string
-	ServiceAccount              string
-	Image                       util.Image
-	SkipLeaderLabel             bool
-	EnableDeployment            bool
-	EnableDeploymentReplication bool
-	EnableStorage               bool
-	EnableNetworking            bool
-	EnablePlatform              bool
-	EnableScheduler             bool
-	EnableBackup                bool
-	EnableK2KClusterSync        bool
-	AllowChaos                  bool
-	ScalingIntegrationEnabled   bool
-	SingleMode                  bool
-	ReconciliationDelay         time.Duration
-	ShutdownDelay               time.Duration
-	ShutdownTimeout             time.Duration
-	Threads                     int
+	ID                        string
+	Namespace                 string
+	PodName                   string
+	ServiceAccount            string
+	Image                     util.Image
+	SkipLeaderLabel           bool
+	EnableDeployment          bool
+	EnableStorage             bool
+	EnableNetworking          bool
+	EnablePlatform            bool
+	EnableScheduler           bool
+	EnableBackup              bool
+	EnableK2KClusterSync      bool
+	AllowChaos                bool
+	ScalingIntegrationEnabled bool
+	SingleMode                bool
+	ReconciliationDelay       time.Duration
+	ShutdownDelay             time.Duration
+	ShutdownTimeout           time.Duration
+	Threads                   int
 }
 
 type Dependencies struct {
-	Client                     kclient.Client
-	EventRecorder              record.EventRecorder
-	LivenessProbe              *probe.LivenessProbe
-	DeploymentProbe            *probe.ReadyProbe
-	DeploymentReplicationProbe *probe.ReadyProbe
-	StorageProbe               *probe.ReadyProbe
-	BackupProbe                *probe.ReadyProbe
-	NetworkingProbe            *probe.ReadyProbe
-	PlatformProbe              *probe.ReadyProbe
-	SchedulerProbe             *probe.ReadyProbe
-	K2KClusterSyncProbe        *probe.ReadyProbe
+	Client              kclient.Client
+	EventRecorder       record.EventRecorder
+	LivenessProbe       *probe.LivenessProbe
+	DeploymentProbe     *probe.ReadyProbe
+	StorageProbe        *probe.ReadyProbe
+	BackupProbe         *probe.ReadyProbe
+	NetworkingProbe     *probe.ReadyProbe
+	PlatformProbe       *probe.ReadyProbe
+	SchedulerProbe      *probe.ReadyProbe
+	K2KClusterSyncProbe *probe.ReadyProbe
 }
 
 // NewOperator instantiates a new operator from given config & dependencies.
 func NewOperator(config Config, deps Dependencies) (*Operator, error) {
 	o := &Operator{
-		Config:                 config,
-		Dependencies:           deps,
-		deployments:            make(map[string]*deployment.Deployment),
-		deploymentReplications: make(map[string]*replication.DeploymentReplication),
-		localStorages:          make(map[string]*storage.LocalStorage),
+		Config:        config,
+		Dependencies:  deps,
+		deployments:   make(map[string]*deployment.Deployment),
+		localStorages: make(map[string]*storage.LocalStorage),
 	}
 	o.log = logger.WrapObj(o)
 	return o, nil
@@ -162,13 +154,6 @@ func (o *Operator) Run() {
 			go o.runLeaderElection("arango-deployment-operator", utilConstants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
 		} else {
 			go o.runWithoutLeaderElection("arango-deployment-operator", utilConstants.LabelRole, o.onStartDeployment, o.Dependencies.DeploymentProbe)
-		}
-	}
-	if o.Config.EnableDeploymentReplication {
-		if !o.Config.SingleMode {
-			go o.runLeaderElection("arango-deployment-replication-operator", utilConstants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
-		} else {
-			go o.runWithoutLeaderElection("arango-deployment-replication-operator", utilConstants.LabelRole, o.onStartDeploymentReplication, o.Dependencies.DeploymentReplicationProbe)
 		}
 	}
 	if o.Config.EnableStorage {
@@ -248,16 +233,6 @@ func (o *Operator) onStartDeployment(ctx context.Context) {
 	}
 	o.waitForCRD(ctx, depldef.ArangoDeploymentCRDName, checkFn)
 	o.runDeployments(ctx)
-}
-
-// onStartDeploymentReplication starts the deployment replication operator and run till given channel is closed.
-func (o *Operator) onStartDeploymentReplication(ctx context.Context) {
-	checkFn := func() error {
-		_, err := o.Client.Arango().DatabaseV1().ArangoDeployments(o.Namespace).List(context.Background(), meta.ListOptions{})
-		return err
-	}
-	o.waitForCRD(ctx, repldef.ArangoDeploymentReplicationCRDName, checkFn)
-	o.runDeploymentReplications(ctx)
 }
 
 // onStartStorage starts the storage operator and run till given channel is closed.

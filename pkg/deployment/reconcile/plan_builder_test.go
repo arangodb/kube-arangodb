@@ -35,7 +35,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	syncClient "github.com/arangodb/arangosync-client/client"
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
@@ -87,11 +86,6 @@ func (c *testContext) IsFeatureImageSupported(feature features.Feature) bool {
 }
 
 func (c *testContext) GetServerClient(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c *testContext) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (syncClient.API, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -1342,11 +1336,6 @@ func (FakeStateInspector) RefreshState(_ context.Context, _ api.DeploymentStatus
 }
 
 func (FakeStateInspector) GetMemberClient(_ string) (adbDriverV2.Client, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (FakeStateInspector) GetMemberSyncClient(_ string) (syncClient.API, error) {
 	//TODO implement me
 	panic("implement me")
 }

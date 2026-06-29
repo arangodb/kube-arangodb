@@ -33,7 +33,6 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/record"
 
-	syncClient "github.com/arangodb/arangosync-client/client"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -135,7 +134,6 @@ type Deployment struct {
 	resources                 *resources.Resources
 	chaosMonkey               *chaos.Monkey
 	acs                       sutil.ACS
-	syncClientCache           syncClient.ClientCache
 	haveServiceMonitorCRD     bool
 
 	memberState memberState.StateInspector
@@ -159,18 +157,8 @@ func (d *Deployment) IsFeatureImageSupported(feature features.Feature) bool {
 	return true
 }
 
+// Deprecated: IsSyncEnabled always returns false. ArangoSync has been removed.
 func (d *Deployment) IsSyncEnabled() bool {
-	d.currentObjectLock.RLock()
-	defer d.currentObjectLock.RUnlock()
-
-	if d.currentObject.GetAcceptedSpec().Sync.IsEnabled() {
-		return true
-	}
-
-	if d.currentObject.Status.Conditions.IsTrue(api.ConditionTypeSyncEnabled) {
-		return true
-	}
-
 	return false
 }
 

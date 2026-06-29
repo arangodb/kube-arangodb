@@ -25,9 +25,10 @@ import (
 	"fmt"
 	goHttp "net/http"
 
-	"github.com/arangodb-helper/go-helper/pkg/errors"
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type Options struct {
@@ -114,10 +115,10 @@ func WriteTransaction(ctx context.Context, cli adbDriverV2.Client, transaction T
 	case goHttp.StatusPreconditionFailed:
 		return 0, ErrPrecondition
 	default:
-		return 0, errors.Newf("Unexpected response code %d", resp.Code())
+		return 0, errors.Errorf("Unexpected response code %d", resp.Code())
 	}
 	if len(result.Results) != 1 {
-		return 0, errors.Newf("Unexpected results length %d, but expected 1", len(result.Results))
+		return 0, errors.Errorf("Unexpected results length %d, but expected 1", len(result.Results))
 	}
 	transactionID := result.Results[0]
 	if transactionID == 0 {

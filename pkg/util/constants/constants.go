@@ -69,7 +69,6 @@ const (
 	SecretAccessPackageYaml = "accessPackage.yaml" // Key in Secret.data used to store a YAML encoded access package
 
 	FinalizerDeplRemoveChildFinalizers = "database.arangodb.com/remove-child-finalizers" // Finalizer added to ArangoDeployment, indicating the need to remove finalizers from all children
-	FinalizerDeplReplStopSync          = "replication.database.arangodb.com/stop-sync"   // Finalizer added to ArangoDeploymentReplication, indicating the need to stop synchronization
 	FinalizerPodAgencyServing          = "agent.database.arangodb.com/agency-serving"    // Finalizer added to Agents, indicating the need for keeping enough agents alive
 	FinalizerPodDrainDBServer          = "dbserver.database.arangodb.com/drain"          // Finalizer added to DBServers, indicating the need for draining that dbserver
 	FinalizerPodGracefulShutdown       = "database.arangodb.com/graceful-shutdown"       // Finalizer added to All members, indicating the need for graceful shutdown
@@ -102,7 +101,6 @@ const (
 func ManagedFinalizers() []string {
 	return []string{
 		FinalizerDeplRemoveChildFinalizers,
-		FinalizerDeplReplStopSync,
 		FinalizerPodAgencyServing,
 		FinalizerPodDrainDBServer,
 		FinalizerPodGracefulShutdown,

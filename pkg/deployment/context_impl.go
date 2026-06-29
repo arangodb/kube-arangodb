@@ -23,8 +23,6 @@ package deployment
 import (
 	"context"
 	"fmt"
-	"net"
-	"strconv"
 
 	monitoringApi "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
@@ -33,13 +31,11 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	syncClient "github.com/arangodb/arangosync-client/client"
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	backupApi "github.com/arangodb/kube-arangodb/pkg/apis/backup/v1"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
@@ -47,7 +43,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
-	"github.com/arangodb/kube-arangodb/pkg/replication"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -260,33 +255,6 @@ func (d *Deployment) getJWTSecret() (utilToken.Secret, error) {
 	}
 
 	return utilToken.NewSecret(jwt), nil
-}
-
-// GetSyncServerClient returns a cached client for a specific arangosync server.
-func (d *Deployment) GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (syncClient.API, error) {
-	// Fetch monitoring token
-	secretName := d.GetSpec().Sync.Monitoring.GetTokenSecretName()
-	monitoringToken, err := k8sutil.GetTokenSecretString(ctx, d.GetCachedStatus().Secret().V1().Read(), secretName)
-	if err != nil {
-		d.log.Err(err).Str("secret-name", secretName).Debug("Failed to get sync monitoring secret")
-		return nil, errors.WithStack(err)
-	}
-
-	// Fetch server DNS name
-	dnsName := k8sutil.CreatePodDNSNameWithDomain(d.currentObject, d.GetSpec().ClusterDomain, group.AsRole(), id)
-
-	// Build client
-	port := shared.ArangoSyncMasterPort
-	if group == api.ServerGroupSyncWorkers {
-		port = shared.ArangoSyncWorkerPort
-	}
-	source := syncClient.Endpoint{"https://" + net.JoinHostPort(dnsName, strconv.Itoa(port))}
-
-	c, err := replication.GetSyncServerClient(&d.syncClientCache, monitoringToken, source)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
 }
 
 // CreateMember adds a new member to the given group.

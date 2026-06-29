@@ -23,7 +23,7 @@ package poll
 import (
 	"reflect"
 
-	"github.com/arangodb-helper/go-helper/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func changeInteger(out *reflect.Value, diff int) error {
@@ -32,17 +32,17 @@ func changeInteger(out *reflect.Value, diff int) error {
 	case reflect.Int:
 		i, ok := out.Interface().(int)
 		if !ok {
-			return errors.Newf("Type mismatch: expected int, got %s", out.Type())
+			return errors.Errorf("Type mismatch: expected int, got %s", out.Type())
 		}
 		res = reflect.ValueOf(i + diff)
 	case reflect.Uint64:
 		i, ok := out.Interface().(uint64)
 		if !ok {
-			return errors.Newf("Type mismatch: expected uint64, got %s", out.Type())
+			return errors.Errorf("Type mismatch: expected uint64, got %s", out.Type())
 		}
 		res = reflect.ValueOf(i + uint64(diff))
 	default:
-		return errors.Newf("Unsupported type of %s", out.Type())
+		return errors.Errorf("Unsupported type of %s", out.Type())
 	}
 	out.Set(res)
 	return nil

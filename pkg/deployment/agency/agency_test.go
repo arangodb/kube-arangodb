@@ -26,8 +26,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/poll"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/state"
-	"github.com/arangodb/kube-arangodb/pkg/util/agency/poll"
 )
 
 func Test_AgencyApply(t *testing.T) {

@@ -41,8 +41,6 @@ import (
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	platformApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
-	replicationv1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v1"
-	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/replication/v2alpha1"
 	schedulerApiv1alpha1 "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	storagev1alpha "github.com/arangodb/kube-arangodb/pkg/apis/storage/v1alpha"
@@ -147,20 +145,6 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				"v2alpha1": {
 					objects: map[string]interface{}{
 						"spec": deploymentv2alpha1.ArangoTask{}.Spec,
-					},
-				},
-			},
-		},
-		"replication-deploymentreplication": {
-			fmt.Sprintf("%s/pkg/apis/replication", root): {
-				"v1": {
-					objects: map[string]interface{}{
-						"spec": replicationv1.ArangoDeploymentReplication{}.Spec,
-					},
-				},
-				"v2alpha1": {
-					objects: map[string]interface{}{
-						"spec": replicationv2alpha1.ArangoDeploymentReplication{}.Spec,
 					},
 				},
 			},

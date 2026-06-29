@@ -12683,7 +12683,6 @@ v1:
               - MMFiles
             type: string
           sync:
-            description: Sync holds Deployment-to-Deployment synchronization configuration settings
             properties:
               auth:
                 properties:
@@ -30078,7 +30077,6 @@ v2alpha1:
               - MMFiles
             type: string
           sync:
-            description: Sync holds Deployment-to-Deployment synchronization configuration settings
             properties:
               auth:
                 properties:

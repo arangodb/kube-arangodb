@@ -40,10 +40,6 @@ import (
 	fakeplatformv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1alpha1/fake"
 	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1"
 	fakeplatformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1/fake"
-	replicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1"
-	fakereplicationv1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v1/fake"
-	replicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1"
-	fakereplicationv2alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/replication/v2alpha1/fake"
 	schedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1"
 	fakeschedulerv1alpha1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1alpha1/fake"
 	schedulerv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/scheduler/v1beta1"
@@ -154,16 +150,6 @@ func (c *Clientset) PlatformV1alpha1() platformv1alpha1.PlatformV1alpha1Interfac
 // PlatformV1beta1 retrieves the PlatformV1beta1Client
 func (c *Clientset) PlatformV1beta1() platformv1beta1.PlatformV1beta1Interface {
 	return &fakeplatformv1beta1.FakePlatformV1beta1{Fake: &c.Fake}
-}
-
-// ReplicationV1 retrieves the ReplicationV1Client
-func (c *Clientset) ReplicationV1() replicationv1.ReplicationV1Interface {
-	return &fakereplicationv1.FakeReplicationV1{Fake: &c.Fake}
-}
-
-// ReplicationV2alpha1 retrieves the ReplicationV2alpha1Client
-func (c *Clientset) ReplicationV2alpha1() replicationv2alpha1.ReplicationV2alpha1Interface {
-	return &fakereplicationv2alpha1.FakeReplicationV2alpha1{Fake: &c.Fake}
 }
 
 // SchedulerV1alpha1 retrieves the SchedulerV1alpha1Client
