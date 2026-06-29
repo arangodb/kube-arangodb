@@ -87,3 +87,7 @@ func WithArangoPermissionPolicyUpdateStatusInterfaceRetry(ctx context.Context, c
 func WithArangoPermissionPolicyRoleBindingUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionPolicyRoleBindingStatus, *permissionApi.ArangoPermissionPolicyRoleBinding], obj *permissionApi.ArangoPermissionPolicyRoleBinding, status permissionApi.ArangoPermissionPolicyRoleBindingStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionPolicyRoleBinding, error) {
 	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionPolicyRoleBindingStatus, *permissionApi.ArangoPermissionPolicyRoleBinding](ctx, client, obj, status, opts)
 }
+
+func WithArangoPermissionRoleUserBindingUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionRoleUserBindingStatus, *permissionApi.ArangoPermissionRoleUserBinding], obj *permissionApi.ArangoPermissionRoleUserBinding, status permissionApi.ArangoPermissionRoleUserBindingStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionRoleUserBinding, error) {
+	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionRoleUserBindingStatus, *permissionApi.ArangoPermissionRoleUserBinding](ctx, client, obj, status, opts)
+}

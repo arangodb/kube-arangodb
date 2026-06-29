@@ -18,7 +18,7 @@ before reaching the database.
 | CRD | Purpose |
 |---|---|
 | ArangoPermissionPolicy | Defines a reusable policy (statements with effect/actions/resources) |
-| ArangoPermissionRole | Defines a role with an inline scope policy |
+| ArangoPermissionRole | Defines a role that groups named policies (attached via ArangoPermissionPolicyRoleBinding) |
 | ArangoPermissionPolicyRoleBinding | Binds a named policy to a role |
 | ArangoPermissionRoleUserBinding | Binds a role to a user with a per-user scope |
 | ArangoPermissionToken | Creates JWT tokens referencing an ArangoPermissionPolicy with an inline scope |

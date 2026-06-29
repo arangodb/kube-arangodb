@@ -92,12 +92,6 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 		return false, nil
 	}
 
-	scope, err := h.renderScope(extension.Spec.Scope)
-	if err != nil {
-		logger.Err(err).Warn("Failed to render scope policy")
-		return false, err
-	}
-
 	// Collect all policy sidecar names
 	var policyNames []string
 	for _, p := range st.Policies {
@@ -107,7 +101,7 @@ func (h *handler) HandleArangoDBRole(ctx context.Context, item operation.Item, e
 		policyNames = append(policyNames, st.ManagedPolicy.GetName())
 	}
 
-	role, err := h.renderRole(policyNames, scope)
+	role, err := h.renderRole(policyNames)
 	if err != nil {
 		logger.Err(err).Warn("Failed to render role")
 		return false, err
@@ -193,6 +187,29 @@ func (h *handler) renderScope(in *permissionApiPolicy.Policy) (*sidecarSvcAuthzT
 	return h.renderPolicy(in)
 }
 
+// renderBindingScope renders the scope boundary for a user-role binding. The scope
+// is either an inline policy or a reference to an ArangoPermissionPolicy CRD.
+func (h *handler) renderBindingScope(ctx context.Context, namespace string, scope *permissionApi.ArangoPermissionScope) (*sidecarSvcAuthzTypes.Policy, error) {
+	if scope == nil {
+		return &sidecarSvcAuthzTypes.Policy{}, nil
+	}
+
+	if scope.Policy != nil {
+		return h.renderScope(scope.Policy)
+	}
+
+	if scope.Ref != nil {
+		p, err := h.client.PermissionV1alpha1().ArangoPermissionPolicies(namespace).Get(ctx, scope.Ref.GetReference(), meta.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		return h.renderScope(p.Spec.Policy)
+	}
+
+	return &sidecarSvcAuthzTypes.Policy{}, nil
+}
+
 func (h *handler) renderPolicy(in *permissionApiPolicy.Policy) (*sidecarSvcAuthzTypes.Policy, error) {
 	var r sidecarSvcAuthzTypes.Policy
 
@@ -221,11 +238,10 @@ func (h *handler) renderPolicy(in *permissionApiPolicy.Policy) (*sidecarSvcAuthz
 	return &r, nil
 }
 
-func (h *handler) renderRole(policies []string, scope *sidecarSvcAuthzTypes.Policy) (*sidecarSvcAuthzTypes.Role, error) {
+func (h *handler) renderRole(policies []string) (*sidecarSvcAuthzTypes.Role, error) {
 	var r sidecarSvcAuthzTypes.Role
 
 	r.Policies = policies
-	r.Scope = scope
 
 	if err := r.Validate(); err != nil {
 		return nil, err

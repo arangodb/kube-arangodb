@@ -26,7 +26,6 @@ import (
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
-	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func (a *implementation) Ready(ctx context.Context) error {
@@ -47,7 +46,7 @@ func (a *implementation) Evaluate(ctx context.Context, req *pbAuthorizationV1.Au
 		}, nil
 	}
 
-	groups, err := a.getUserGroups(req.GetUser(), req.GetRoles()...)
+	groups, err := a.getUserGroups(req.GetUser())
 	if err != nil {
 		return nil, err
 	}
@@ -68,46 +67,38 @@ func (a *implementation) Evaluate(ctx context.Context, req *pbAuthorizationV1.Au
 	return resp, nil
 }
 
-func (a *implementation) getUserGroups(user string, groupNames ...string) (sidecarSvcAuthzClient.ScopedPolicies, error) {
+// getUserGroups resolves the scoped policies for a user from the user-role
+// bindings only. The scope is taken from each binding; the (deprecated) role
+// scope is intentionally ignored. Roles passed explicitly in the request are not
+// considered - only roles bound to the user via an ArangoPermissionRoleUserBinding
+// (or token) grant access.
+func (a *implementation) getUserGroups(user string) (sidecarSvcAuthzClient.ScopedPolicies, error) {
+	result := make(sidecarSvcAuthzClient.ScopedPolicies)
+
+	if user == "" {
+		return result, nil
+	}
+
 	allPolicies := a.policies.Copy()
 	allGroups := a.roles.Copy()
+	allBindings := a.userRoleBindings.Copy()
+	prefix := user + ":"
 
-	result := make(sidecarSvcAuthzClient.ScopedPolicies, len(groupNames))
-
-	// Collect groups from explicit request
-	for name, g := range allGroups {
-		if !util.ContainsList(groupNames, name) {
+	for key, binding := range allBindings {
+		if len(key) <= len(prefix) || key[:len(prefix)] != prefix {
 			continue
 		}
 
-		if sp, err := a.resolveGroup(g, allPolicies); err != nil {
-			return nil, err
-		} else if sp != nil {
-			result[name] = *sp
+		groupName := binding.GetRole()
+		if _, exists := result[groupName]; exists {
+			continue
 		}
-	}
 
-	// Collect groups from user bindings
-	if user != "" {
-		allBindings := a.userRoleBindings.Copy()
-		prefix := user + ":"
-
-		for key, binding := range allBindings {
-			if len(key) <= len(prefix) || key[:len(prefix)] != prefix {
-				continue
-			}
-
-			groupName := binding.GetRole()
-			if _, exists := result[groupName]; exists {
-				continue
-			}
-
-			if g, ok := allGroups[groupName]; ok {
-				if sp, err := a.resolveGroup(g, allPolicies); err != nil {
-					return nil, err
-				} else if sp != nil {
-					result[groupName] = *sp
-				}
+		if g, ok := allGroups[groupName]; ok {
+			if sp, err := a.resolveGroupWithScope(g, binding.GetScope(), allPolicies); err != nil {
+				return nil, err
+			} else if sp != nil {
+				result[groupName] = *sp
 			}
 		}
 	}
@@ -115,8 +106,7 @@ func (a *implementation) getUserGroups(user string, groupNames ...string) (sidec
 	return result, nil
 }
 
-func (a *implementation) resolveGroup(g *sidecarSvcAuthzTypes.Role, allPolicies map[string]*sidecarSvcAuthzTypes.Policy) (*sidecarSvcAuthzClient.ScopedPolicy, error) {
-	scope := g.GetScope()
+func (a *implementation) resolveGroupWithScope(g *sidecarSvcAuthzTypes.Role, scope *sidecarSvcAuthzTypes.Policy, allPolicies map[string]*sidecarSvcAuthzTypes.Policy) (*sidecarSvcAuthzClient.ScopedPolicy, error) {
 	if scope == nil {
 		return nil, nil
 	}
