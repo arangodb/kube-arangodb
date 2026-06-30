@@ -94,11 +94,11 @@ Actions follow `<namespace>:<name>`. Common namespaces:
 
 ## Roles and Scopes
 
-### Why is scope required on roles?
+### Where is the scope defined?
 
-The scope defines the boundary of what the role grants. Every role must
-declare its scope so the authorization system has a clear picture of
-permissions even without resolving named policy references.
+The scope is defined per user-role assignment, not on the role. A role groups
+named policies; the scope boundary is set on the `ArangoPermissionRoleUserBinding`
+(or token) that grants the role to a user. Roles no longer carry their own scope.
 
 ### Can I assign the same role to different users with different scopes?
 

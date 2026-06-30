@@ -242,20 +242,12 @@ func policyRefsEqual(a, b []permissionApi.ArangoPermissionBindingRef) bool {
 	return true
 }
 
-// renderRole builds a sidecar Role with an open scope (allow all) and the given policy names.
+// renderRole builds a sidecar Role with the given policy names. The role no longer
+// carries a scope - the scope boundary is defined per user-role binding.
 func renderRole(policies []string) (*sidecarSvcAuthzTypes.Role, error) {
 	var r sidecarSvcAuthzTypes.Role
 
 	r.Policies = policies
-	r.Scope = &sidecarSvcAuthzTypes.Policy{
-		Statements: []*sidecarSvcAuthzTypes.PolicyStatement{
-			{
-				Effect:    sidecarSvcAuthzTypes.Effect_Allow,
-				Actions:   []string{"*"},
-				Resources: []string{"*"},
-			},
-		},
-	}
 
 	if err := r.Validate(); err != nil {
 		return nil, err

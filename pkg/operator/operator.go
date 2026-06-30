@@ -48,6 +48,7 @@ import (
 	permissionPolicy "github.com/arangodb/kube-arangodb/pkg/handlers/permission/policy"
 	permissionPolicyRoleBinding "github.com/arangodb/kube-arangodb/pkg/handlers/permission/policy_role_binding"
 	permissionRole "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role"
+	permissionRoleUserBinding "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role_user_binding"
 	permissionToken "github.com/arangodb/kube-arangodb/pkg/handlers/permission/token"
 	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
@@ -378,6 +379,10 @@ func (o *Operator) onStartOperatorV2Platform(ctx context.Context, operator opera
 	}
 
 	if err := permissionPolicyRoleBinding.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := permissionRoleUserBinding.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }

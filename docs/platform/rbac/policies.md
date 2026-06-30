@@ -57,13 +57,13 @@ patterns as actions:
 
 ## Roles
 
-A role defines an inline scope policy. The scope constrains what the role
-grants when evaluated.
+A role is a named container that groups one or more policies. A role does not
+define a scope of its own - the scope boundary is set per user-role assignment
+(see `ArangoPermissionRoleUserBinding` and tokens below).
 
 ### Structure
 
-A role contains:
-- `scope` - Required inline policy that is always evaluated with the role
+A role contains only a `deployment` reference and an optional `description`.
 
 Roles do not directly reference named policies. To attach a policy to a role,
 use an `ArangoPermissionPolicyRoleBinding` (see below).
@@ -99,13 +99,13 @@ The resulting sidecar role `managed:operator:<editor-uid>` will have:
   "policies": [
     "managed:operator:read-only",
     "managed:operator:write-reports"
-  ],
-  "scope": { ... }
+  ]
 }
 ```
 
-During evaluation, all three policies are resolved and their statements are
-evaluated together. An explicit Deny in any policy overrides Allows from others.
+During evaluation, the role's policies are resolved and their statements are
+evaluated together, bounded by the scope of the user-role binding (or token)
+that grants the role. An explicit Deny in any policy overrides Allows from others.
 
 ## Binding CRDs
 

@@ -24,7 +24,6 @@ import (
 	"sort"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func (x *Role) Hash() string {
@@ -63,8 +62,11 @@ func (x *Role) Validate() error {
 		return nil
 	}
 
+	// Scope is deprecated and no longer required on the role - the scope boundary is
+	// defined per user-role binding. Validate it only when present, for backward
+	// compatibility with roles that still carry an inline scope.
 	if x.Scope == nil {
-		return errors.Errorf("scope is required")
+		return nil
 	}
 
 	return x.GetScope().Validate()

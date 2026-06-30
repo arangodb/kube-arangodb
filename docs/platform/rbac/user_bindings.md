@@ -96,16 +96,18 @@ curl -X PUT https://<gateway>/_management/permissions/user/alice/role/editor \
 
 ## How Scoping Works
 
-When a user's permissions are evaluated, the system collects policies from
-multiple sources:
+A user's permissions are evaluated only against the roles bound to that user
+(via an `ArangoPermissionRoleUserBinding` or a token). For each bound role two
+things are combined:
 
-1. **Role's named policies** - Referenced by name in the role definition
-2. **Role's scope** - Inline policy on the role itself
-3. **Binding's scope** - Inline policy specific to this user-role assignment
+1. **Role's named policies** - The policies attached to the role
+2. **Binding's scope** - Inline policy specific to this user-role assignment
 
-All collected policies are evaluated together using the standard deny-by-default
-algorithm. This means a binding scope can further **restrict** access by adding
-Deny statements, or **grant** additional access by adding Allow statements.
+The effective permission is the **intersection**: an action is granted only when
+the role's policies allow it **and** the binding scope allows it. Roles do not
+carry a scope of their own. Evaluation uses the standard deny-by-default
+algorithm, so a binding scope can further **restrict** access (an explicit Deny,
+or simply not allowing an action) while never granting beyond the role's policies.
 
 ### Example: Same Role, Different Scopes
 

@@ -45,15 +45,32 @@ func (h *handler) HandleUserGroupBindings(ctx context.Context, item operation.It
 
 	userName := st.User.GetName()
 
-	// Build desired group set from resolved roles + managed group
+	// Build desired group set from resolved roles + managed group, each with its
+	// scope boundary. The scope is carried on the user-role binding (the role's own
+	// scope is deprecated and ignored during evaluation).
+	scopeByRole := make(map[string]*sidecarSvcAuthzTypes.Policy)
+	for _, ref := range extension.Spec.Roles {
+		scope, err := h.renderBindingScope(ctx, extension.GetNamespace(), ref.Scope)
+		if err != nil {
+			logger.Err(err).Warn("Failed to render role binding scope")
+			return false, err
+		}
+		scopeByRole[ref.Role.GetReference()] = scope
+	}
+
 	desired := make(map[string]*sidecarSvcAuthzTypes.Policy)
 
 	for _, roleRef := range st.Roles {
-		desired[roleRef.GetName()] = nil // scope handled by the group itself
+		desired[roleRef.GetName()] = scopeByRole[roleRef.GetName()]
 	}
 
 	if st.Role != nil {
-		desired[st.Role.GetName()] = nil
+		scope, err := h.renderScope(extension.Spec.Scope)
+		if err != nil {
+			logger.Err(err).Warn("Failed to render managed role scope")
+			return false, err
+		}
+		desired[st.Role.GetName()] = scope
 	}
 
 	// Get current bindings for this user
@@ -77,9 +94,13 @@ func (h *handler) HandleUserGroupBindings(ctx context.Context, item operation.It
 	changed := false
 
 	// Attach missing groups
-	for groupName := range desired {
+	for groupName, scope := range desired {
 		if current[groupName] {
 			continue
+		}
+
+		if scope == nil {
+			scope = &sidecarSvcAuthzTypes.Policy{}
 		}
 
 		logger.Str("user", userName).Str("group", groupName).Info("Attaching group to user")
@@ -87,7 +108,7 @@ func (h *handler) HandleUserGroupBindings(ctx context.Context, item operation.It
 		_, err := conn.APIAssignUserRole(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIUserRoleBindingRequest{
 			User:  userName,
 			Role:  groupName,
-			Scope: &sidecarSvcAuthzTypes.Policy{}, // empty scope — the group's own scope is the boundary
+			Scope: scope,
 		})
 		if err != nil {
 			if status.Code(err) != codes.AlreadyExists {

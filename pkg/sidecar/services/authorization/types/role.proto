@@ -31,8 +31,12 @@ message Role {
   // List of the policies
   repeated string policies = 1;
 
-  // Inline policy scope applied when this role is evaluated
-  Policy scope = 3;
+  // Inline policy scope applied when this role is evaluated.
+  //
+  // Deprecated: scope is now defined per user-role binding (see
+  // ArangoPermissionRoleUserBinding / token scoped bindings) and resolved from the
+  // binding during evaluation. Retained for backward compatibility; will be removed.
+  Policy scope = 3 [deprecated = true];
 
   // Optional human-readable description
   string description = 4;

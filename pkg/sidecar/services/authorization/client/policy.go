@@ -123,6 +123,12 @@ func (p *Statement) Evaluate(action, resource string, context map[string][]strin
 		return false
 	}
 
+	// An empty action is malformed input and must never match: a wildcard (`*`)
+	// matcher otherwise matches the empty string and would grant access.
+	if action == "" {
+		return false
+	}
+
 	// Skip context
 
 	return p.actions.Match(action) && p.Resources.Match(resource)

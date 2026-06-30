@@ -31,6 +31,7 @@ const (
 	FinalizerArangoPermissionRole              = permission.ArangoPermissionTokenCRDName + "/role"
 	FinalizerArangoPermissionPolicy            = permission.ArangoPermissionTokenCRDName + "/policy"
 	FinalizerArangoPermissionPolicyRoleBinding = permission.ArangoPermissionPolicyRoleBindingCRDName + "/binding"
+	FinalizerArangoPermissionRoleUserBinding   = permission.ArangoPermissionRoleUserBindingCRDName + "/binding"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
