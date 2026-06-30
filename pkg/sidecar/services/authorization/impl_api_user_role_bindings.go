@@ -28,6 +28,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	"github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/pool"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
@@ -105,6 +106,10 @@ func (a *implementation) APIAssignUserRole(ctx context.Context, request *sidecar
 	key := userRoleBindingKey(request.GetUser(), request.GetRole())
 
 	if _, index, err := a.userRoleBindings.Create(ctx, key, binding); err != nil {
+		if pool.IsPoolAlreadyExistsError(err) {
+			return nil, status.Error(codes.AlreadyExists, "User role binding already exists")
+		}
+
 		return nil, status.Error(codes.Internal, err.Error())
 	} else {
 		identity := authenticator.GetIdentity(ctx)
@@ -185,6 +190,10 @@ func (a *implementation) APIReplaceUserRoleScope(ctx context.Context, request *s
 	key := userRoleBindingKey(request.GetUser(), request.GetRole())
 
 	if _, index, err := a.userRoleBindings.Update(ctx, key, binding); err != nil {
+		if pool.IsPoolNotFound(err) {
+			return nil, status.Error(codes.NotFound, "User role binding not found")
+		}
+
 		return nil, status.Error(codes.Internal, err.Error())
 	} else {
 		identity := authenticator.GetIdentity(ctx)

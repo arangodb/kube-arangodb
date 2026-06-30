@@ -394,43 +394,48 @@ func (h *handler) HandleArangoDBUser(ctx context.Context, item operation.Item, e
 	if status.User == nil {
 		name := fmt.Sprintf("operator-%s-%s", extension.GetName(), goStrings.ToLower(uniuri.NewLen(6)))
 		logger.Str("name", name).Info("Create ArangoDB User")
-		if _, err := conn.User(ctx, name); err != nil {
-			if !adbDriverV2Shared.IsNotFound(err) {
-				return false, err
-			}
-		} else {
-			status.User = &sharedApi.Object{
-				Name: name,
-			}
-			return true, operator.Reconcile("ArangoDB User name used")
-		}
 
-		user, err := conn.CreateUser(ctx, name, &adbDriverV2.UserOptions{
-			Password: string(uuid.NewUUID()),
-			Active:   util.NewType(true),
-		})
-		if err != nil {
+		if err := h.ensureArangoDBUser(ctx, conn, name); err != nil {
 			return false, err
 		}
 
 		status.User = &sharedApi.Object{
-			Name: user.Name(),
+			Name: name,
 		}
 
 		return true, operator.Reconcile("ArangoDB User created")
 	}
 
+	// Ensure the user still exists. A not-found here is most likely cluster
+	// propagation lag, so ignore it and (re)create the user with the same name -
+	// a conflict simply means it already exists. This avoids flapping (dropping
+	// status.User and regenerating a new random user every reconcile).
 	if _, err := conn.User(ctx, status.User.GetName()); err != nil {
 		if !adbDriverV2Shared.IsNotFound(err) {
 			return false, err
 		}
 
-		logger.Str("name", status.User.GetName()).Warn("User Not Found, Recreate")
-		status.User = nil
-		return true, operator.Reconcile("ArangoDB User gone")
+		if err := h.ensureArangoDBUser(ctx, conn, status.User.GetName()); err != nil {
+			return false, err
+		}
 	}
 
 	return operator.HandleP4(ctx, item, extension, status, depl, h.HandleArangoSecret)
+}
+
+// ensureArangoDBUser creates the ArangoDB user, treating a conflict (already
+// exists) as success.
+func (h *handler) ensureArangoDBUser(ctx context.Context, conn adbDriverV2.Client, name string) error {
+	if _, err := conn.CreateUser(ctx, name, &adbDriverV2.UserOptions{
+		Password: string(uuid.NewUUID()),
+		Active:   util.NewType(true),
+	}); err != nil {
+		if !adbDriverV2Shared.IsConflict(err) {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (h *handler) HandleArangoSecret(ctx context.Context, item operation.Item, extension *permissionApi.ArangoPermissionToken, status *permissionApi.ArangoPermissionTokenStatus, depl *api.ArangoDeployment) (bool, error) {
