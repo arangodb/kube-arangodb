@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Inventory Collector
 - (Feature) (RBAC) Add ArangoPermissionRoleUserBinding handler
 - (Feature) (Gateway) Use HTTP/2 for the default upstream to ArangoDB (hidden feature `gateway-default-http2`, enabled by default)
 - (Bugfix) (RBAC) Fix scope evaluation, pool propagation, missing indexes, and add APIRefresh endpoint
