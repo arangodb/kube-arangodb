@@ -24,6 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -110,7 +111,16 @@ func (a *MemberGatewayContainer) GetResourceRequirementsDefaultScale() float64 {
 }
 
 func (a *MemberGatewayContainer) GetLifecycle() (*core.Lifecycle, error) {
-	return k8sutil.NewLifecycleFinalizers()
+	lifecycle, err := k8sutil.NewLifecycleFinalizers()
+	if err != nil {
+		return nil, err
+	}
+
+	if features.Collector().Enabled() {
+		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler()
+	}
+
+	return lifecycle, nil
 }
 
 func (a *MemberGatewayContainer) GetImagePullPolicy() core.PullPolicy {
