@@ -23,72 +23,69 @@ package collect
 import (
 	"sync"
 
-	pbEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-const (
-	// serviceID identifies the collector as the source of the emitted events.
-	serviceID = "collector"
+// Metric is a single event body value: a key with a float value. Collectors push metrics, which the
+// collector assembles into the body of the emitted event.
+type Metric = util.KV[string, float32]
 
-	// dimensionBootID is the event dimension carrying the unique boot identifier.
-	dimensionBootID = "bootID"
-)
-
-// Event is a single event produced by a Collector. It is the events integration Event message.
-type Event = pbEventsV1.Event
-
-// ECollector is a single source of events. It pushes every event it produces to the provided pusher
-// and returns an error if it failed. Returning an error fails the whole collection, which is then
-// retried on the next interval - so a collector should only return an error when it could not
-// collect, not when it simply has nothing to push.
-type ECollector interface {
-	CollectEvents(out util.Pusher[*Event]) error
+// ECollector is a single source of values of type T. It pushes every value it produces to the
+// provided pusher and returns an error if it failed. Returning an error fails the whole collection,
+// which is then retried on the next interval - so a collector should only return an error when it
+// could not collect, not when it simply has nothing to push.
+type ECollector[T any] interface {
+	CollectEvents(out util.Pusher[T]) error
 }
 
-// Collector is the registry of all event collectors. Collectors register once (typically from an
-// init function) and Collect fans them into a single list.
-type Collector interface {
+// Collector is a registry of ECollector[T]. Collectors register once (typically from an init
+// function) and Collect fans them into a single list.
+type Collector[T any] interface {
 	// Register adds a collector to the registry.
-	Register(c ECollector)
+	Register(c ECollector[T])
 
-	// Collect runs every registered collector and returns the aggregated events, or the first
+	// Collect runs every registered collector and returns the aggregated values, or the first
 	// collector error.
-	Collect() ([]*Event, error)
+	Collect() ([]T, error)
 }
 
-var collectorObject = &collector{}
-
-// GetCollector returns the global collector registry.
-func GetCollector() Collector {
-	return collectorObject
+// NewCollector creates an empty Collector registry.
+func NewCollector[T any]() Collector[T] {
+	return &collector[T]{}
 }
 
-type collector struct {
+var registry = NewCollector[Metric]()
+
+// GetCollector returns the global registry of event metric collectors.
+func GetCollector() Collector[Metric] {
+	return registry
+}
+
+type collector[T any] struct {
 	lock sync.Mutex
 
-	collectors []ECollector
+	collectors []ECollector[T]
 }
 
-func (c *collector) Register(e ECollector) {
+func (c *collector[T]) Register(e ECollector[T]) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	c.collectors = append(c.collectors, e)
 }
 
-// Collect runs every registered collector concurrently in the background, each pushing its events
+// Collect runs every registered collector concurrently in the background, each pushing its values
 // into a shared collector. It waits until all of them have completed, then returns the aggregated
 // list (or the first collector error).
-func (c *collector) Collect() ([]*Event, error) {
+func (c *collector[T]) Collect() ([]T, error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	out := util.NewCollector[*Event]()
+	out := util.NewCollector[T]()
 
 	for _, e := range c.collectors {
 		e := e
-		if err := out.Run(func(p util.Pusher[*Event]) error {
+		if err := out.Run(func(p util.Pusher[T]) error {
 			return e.CollectEvents(p)
 		}); err != nil {
 			return nil, err

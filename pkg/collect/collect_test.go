@@ -21,7 +21,7 @@
 package collect
 
 import (
-	"sort"
+	"runtime"
 	"testing"
 	"time"
 
@@ -30,89 +30,96 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-// fakeCollector is a test ECollector pushing a fixed set of events, or returning an error.
+// fakeCollector is a test ECollector pushing a fixed set of metrics, or returning an error.
 type fakeCollector struct {
-	events []*Event
-	err    error
+	metrics []Metric
+	err     error
 }
 
-func (f fakeCollector) CollectEvents(out util.Pusher[*Event]) error {
+func (f fakeCollector) CollectEvents(out util.Pusher[Metric]) error {
 	if f.err != nil {
 		return f.err
 	}
-	out.Push(f.events...)
+	out.Push(f.metrics...)
 	return nil
 }
 
-func TestBootCollector(t *testing.T) {
-	out := util.NewCollector[*Event]()
-
-	require.NoError(t, bootCollector{}.CollectEvents(out))
-	require.NoError(t, out.Done())
-
-	events := out.Collect()
-	require.Len(t, events, 1)
-	require.Equal(t, eventTypeBoot, events[0].GetType())
-	require.Equal(t, serviceID, events[0].GetServiceId())
-	// The boot id and timestamp are stamped centrally, not by the collector.
-	require.Nil(t, events[0].GetCreated())
-	require.Empty(t, events[0].GetDimensions())
-}
-
 func TestRegistry_Collect(t *testing.T) {
-	c := &collector{}
+	c := NewCollector[Metric]()
 
-	c.Register(fakeCollector{events: []*Event{{Type: "a"}}})
-	c.Register(fakeCollector{events: []*Event{{Type: "b"}, {Type: "c"}}})
+	c.Register(fakeCollector{metrics: []Metric{{K: "a", V: 1}}})
+	c.Register(fakeCollector{metrics: []Metric{{K: "b", V: 2}, {K: "c", V: 3}}})
 
-	events, err := c.Collect()
+	metrics, err := c.Collect()
 	require.NoError(t, err)
 
-	types := make([]string, 0, len(events))
-	for _, e := range events {
-		types = append(types, e.GetType())
+	values := map[string]float32{}
+	for _, m := range metrics {
+		values[m.K] = m.V
 	}
-	sort.Strings(types)
-	require.Equal(t, []string{"a", "b", "c"}, types)
+	require.Equal(t, map[string]float32{"a": 1, "b": 2, "c": 3}, values)
 }
 
 func TestRegistry_CollectEmpty(t *testing.T) {
-	c := &collector{}
+	c := NewCollector[Metric]()
 
-	events, err := c.Collect()
+	metrics, err := c.Collect()
 	require.NoError(t, err)
-	require.Empty(t, events)
+	require.Empty(t, metrics)
 }
 
 func TestRegistry_CollectError(t *testing.T) {
-	c := &collector{}
+	c := NewCollector[Metric]()
 
-	c.Register(fakeCollector{events: []*Event{{Type: "a"}}})
+	c.Register(fakeCollector{metrics: []Metric{{K: "a", V: 1}}})
 	c.Register(fakeCollector{err: errBoom})
 
-	events, err := c.Collect()
+	metrics, err := c.Collect()
 	require.ErrorIs(t, err, errBoom)
-	require.Nil(t, events)
+	require.Nil(t, metrics)
 }
 
-func TestStamp(t *testing.T) {
+func TestBuildEvent(t *testing.T) {
 	created := time.Date(2026, 6, 30, 12, 0, 0, 0, time.UTC)
 
-	events := []*Event{
-		{Type: "a"},
-		{Type: "b", Dimensions: map[string]string{"existing": "value"}},
+	event := buildEvent([]Metric{{K: "cpu", V: 4}, {K: "memory", V: 1024}}, "boot-123", created)
+
+	require.Equal(t, eventTypeStartup, event.GetType())
+	require.Equal(t, serviceID, event.GetServiceId())
+	require.Equal(t, created, event.GetCreated().AsTime())
+	require.Equal(t, "boot-123", event.GetDimensions()[dimensionBootID])
+	require.Equal(t, map[string]float32{"cpu": 4, "memory": 1024}, event.GetBody())
+}
+
+func TestBuildEvent_NoMetrics(t *testing.T) {
+	created := time.Date(2026, 6, 30, 12, 0, 0, 0, time.UTC)
+
+	event := buildEvent(nil, "boot-123", created)
+
+	require.Equal(t, eventTypeStartup, event.GetType())
+	require.Equal(t, "boot-123", event.GetDimensions()[dimensionBootID])
+	require.Empty(t, event.GetBody())
+}
+
+func TestResourceCollector(t *testing.T) {
+	out := util.NewCollector[Metric]()
+
+	require.NoError(t, resourceCollector{}.CollectEvents(out))
+	require.NoError(t, out.Done())
+
+	values := map[string]float32{}
+	for _, m := range out.Collect() {
+		values[m.K] = m.V
 	}
 
-	stamp(events, "boot-123", created)
+	require.Equal(t, float32(runtime.NumCPU()), values[metricCPU])
+	require.Greater(t, values[metricMemory], float32(0))
+}
 
-	for _, e := range events {
-		require.NotNil(t, e.GetCreated())
-		require.Equal(t, created, e.GetCreated().AsTime())
-		require.Equal(t, "boot-123", e.GetDimensions()[dimensionBootID])
-	}
-
-	// Pre-existing dimensions are preserved.
-	require.Equal(t, "value", events[1].GetDimensions()["existing"])
+func TestTotalMemory(t *testing.T) {
+	mem, err := totalMemory()
+	require.NoError(t, err)
+	require.Greater(t, mem, uint64(0))
 }
 
 var errBoom = boomError("boom")

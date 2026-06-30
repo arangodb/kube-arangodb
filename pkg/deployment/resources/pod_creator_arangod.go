@@ -281,10 +281,23 @@ func (a *ArangoDContainer) GetResourceRequirementsDefaultScale() float64 {
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
+	var lifecycle *core.Lifecycle
+	var err error
+
 	if features.GracefulShutdown().Enabled() {
-		return k8sutil.NewLifecyclePort()
+		lifecycle, err = k8sutil.NewLifecyclePort()
+	} else {
+		lifecycle, err = k8sutil.NewLifecycleFinalizers()
 	}
-	return k8sutil.NewLifecycleFinalizers()
+	if err != nil {
+		return nil, err
+	}
+
+	if features.Collector().Enabled() {
+		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler()
+	}
+
+	return lifecycle, nil
 }
 
 func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {

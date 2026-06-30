@@ -40,9 +40,21 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	pbEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/version"
+)
+
+const (
+	// serviceID identifies the collector as the source of the emitted event.
+	serviceID = "collector"
+
+	// eventTypeStartup is the type of the event emitted on every pod startup.
+	eventTypeStartup = "startup"
+
+	// dimensionBootID is the event dimension carrying the unique boot identifier.
+	dimensionBootID = "bootID"
 )
 
 const (
@@ -126,51 +138,53 @@ func run(ctx context.Context, opts Options) error {
 }
 
 // collect performs a single collection cycle for the given boot: it runs every registered collector,
-// each pushing its events into a shared collector, waits until all of them have completed and prints
-// the aggregated events to stdout. Every collected event is stamped with the boot id and the start
-// timestamp so all activity from a single pod boot can be correlated.
+// each pushing its metrics into a shared collector, waits until all of them have completed, builds a
+// single startup event whose body is the collected metrics and prints it to stdout. The event is
+// tagged with the boot id and the start timestamp so it can be correlated to a single pod boot.
 func collect(bootID string, created time.Time) error {
-	events, err := GetCollector().Collect()
+	metrics, err := GetCollector().Collect()
 	if err != nil {
 		return err
 	}
 
-	stamp(events, bootID, created)
+	event := buildEvent(metrics, bootID, created)
 
-	if err := print(events); err != nil {
+	if err := print(event); err != nil {
 		return err
 	}
 
-	logger.Str("bootID", bootID).Int("events", len(events)).Debug("Collected events")
+	logger.Str("bootID", bootID).Int("metrics", len(metrics)).Debug("Collected metrics")
 	return nil
 }
 
-// stamp injects the shared boot id and start timestamp into every collected event, so events from a
-// single boot can be correlated regardless of which collector produced them.
-func stamp(events []*Event, bootID string, created time.Time) {
-	ts := timestamppb.New(created)
+// buildEvent assembles the startup event from the collected metrics, tagging it with the boot id and
+// the start timestamp.
+func buildEvent(metrics []Metric, bootID string, created time.Time) *pbEventsV1.Event {
+	body := make(map[string]float32, len(metrics))
+	for _, m := range metrics {
+		body[m.K] = m.V
+	}
 
-	for _, e := range events {
-		e.Created = ts
-
-		if e.Dimensions == nil {
-			e.Dimensions = map[string]string{}
-		}
-		e.Dimensions[dimensionBootID] = bootID
+	return &pbEventsV1.Event{
+		Type:      eventTypeStartup,
+		ServiceId: serviceID,
+		Created:   timestamppb.New(created),
+		Dimensions: map[string]string{
+			dimensionBootID: bootID,
+		},
+		Body: body,
 	}
 }
 
-// print writes every event to stdout as a single JSON line.
-func print(events []*Event) error {
-	for _, e := range events {
-		data, err := protojson.Marshal(e)
-		if err != nil {
-			return errors.Wrapf(err, "unable to marshal event")
-		}
+// print writes the event to stdout as a single JSON line.
+func print(event *pbEventsV1.Event) error {
+	data, err := protojson.Marshal(event)
+	if err != nil {
+		return errors.Wrapf(err, "unable to marshal event")
+	}
 
-		if _, err := fmt.Fprintln(os.Stdout, string(data)); err != nil {
-			return errors.Wrapf(err, "unable to write event")
-		}
+	if _, err := fmt.Fprintln(os.Stdout, string(data)); err != nil {
+		return errors.Wrapf(err, "unable to write event")
 	}
 
 	return nil
