@@ -23,7 +23,7 @@ package poll
 import (
 	"reflect"
 
-	"github.com/arangodb-helper/go-helper/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func keyAsValue(expected reflect.Type, in string) (reflect.Value, error) {
@@ -31,7 +31,7 @@ func keyAsValue(expected reflect.Type, in string) (reflect.Value, error) {
 	case reflect.String:
 		return reflect.ValueOf(in), nil
 	default:
-		return reflect.Value{}, errors.Newf("Invalid key type")
+		return reflect.Value{}, errors.Errorf("Invalid key type")
 	}
 }
 func castAsValue(a reflect.Value, b reflect.Type) (reflect.Value, bool) {

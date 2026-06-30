@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,16 +61,9 @@ func (r *Reconciler) createScaleMemberPlan(ctx context.Context, apiObject k8suti
 		plan = append(plan, r.createScalePlan(status, status.Members.DBServers, api.ServerGroupDBServers, spec.DBServers.GetCount(), context)...)
 		plan = append(plan, r.createScalePlan(status, status.Members.Coordinators, api.ServerGroupCoordinators, spec.Coordinators.GetCount(), context)...)
 	}
-	if spec.GetMode().SupportsSync() {
-		// Scale syncmasters & syncworkers
-		if context.IsSyncEnabled() {
-			plan = append(plan, r.createScalePlan(status, status.Members.SyncMasters, api.ServerGroupSyncMasters, spec.SyncMasters.GetCount(), context)...)
-			plan = append(plan, r.createScalePlan(status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, spec.SyncWorkers.GetCount(), context)...)
-		} else {
-			plan = append(plan, r.createScalePlan(status, status.Members.SyncMasters, api.ServerGroupSyncMasters, 0, context)...)
-			plan = append(plan, r.createScalePlan(status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, 0, context)...)
-		}
-	}
+	// Deprecated: ArangoSync has been removed, always scale sync groups to 0
+	plan = append(plan, r.createScalePlan(status, status.Members.SyncMasters, api.ServerGroupSyncMasters, 0, context)...)
+	plan = append(plan, r.createScalePlan(status, status.Members.SyncWorkers, api.ServerGroupSyncWorkers, 0, context)...)
 	if features.IsGatewayEnabled(spec) {
 		plan = append(plan, r.createScalePlan(status, status.Members.Gateways, api.ServerGroupGateways, spec.Gateways.GetCount(), context)...)
 	} else {

@@ -6148,7 +6148,7 @@ Default Value: `false`
 
 ### .spec.sync.externalAccess.accessPackageSecretNames
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/deployment/v1/sync_external_access_spec.go#L49)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/deployment/v1/sync_external_access_spec.go#L48)</sup>
 
 AccessPackageSecretNames setting specifies the names of zero of more `Secrets` that will be created by the deployment
 operator containing "access packages". An access package contains those `Secrets` that are needed
@@ -6156,9 +6156,6 @@ to access the SyncMasters of this `ArangoDeployment`.
 By removing a name from this setting, the corresponding `Secret` is also deleted.
 Note that to remove all access packages, leave an empty array in place (`[]`).
 Completely removing the setting results in not modifying the list.
-
-Links:
-* [See the ArangoDeploymentReplication specification](deployment-replication-resource-reference.md)
 
 ***
 

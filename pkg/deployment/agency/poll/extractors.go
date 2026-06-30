@@ -23,7 +23,7 @@ package poll
 import (
 	"reflect"
 
-	"github.com/arangodb-helper/go-helper/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ValueApplier func(out reflect.Value) error
@@ -49,7 +49,7 @@ func applyPointerCover(out reflect.Value, apply ValueApplier) error {
 }
 func extract(in reflect.Value, apply ValueApplier, keys ...string) error {
 	if in.Kind() != reflect.Pointer {
-		return errors.Newf("Pointer is required")
+		return errors.Errorf("Pointer is required")
 	}
 	if len(keys) == 0 {
 		return apply(in)
@@ -75,12 +75,12 @@ func extract(in reflect.Value, apply ValueApplier, keys ...string) error {
 			return extract(out.Addr(), apply, keys[1:]...)
 		})
 	default:
-		return errors.Newf("Unknown kind %s for keys %s", ine.Kind().String(), keys)
+		return errors.Errorf("Unknown kind %s for keys %s", ine.Kind().String(), keys)
 	}
 }
 func remove(in reflect.Value, keys ...string) error {
 	if in.Kind() != reflect.Pointer {
-		return errors.Newf("Pointer is required")
+		return errors.Errorf("Pointer is required")
 	}
 	if len(keys) == 0 {
 		return nil
@@ -107,6 +107,6 @@ func remove(in reflect.Value, keys ...string) error {
 			return remove(out.Addr(), keys[1:]...)
 		})
 	default:
-		return errors.Newf("Unknown kind %s for keys %s", ine.Kind().String(), keys)
+		return errors.Errorf("Unknown kind %s for keys %s", ine.Kind().String(), keys)
 	}
 }

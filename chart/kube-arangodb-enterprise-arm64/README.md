@@ -18,7 +18,6 @@ Chart can be installed in two methods:
 
 Possible Operators:
 - `ArangoDeployment` - enabled by default
-- `ArangoDeploymentReplications` - enabled by default
 - `ArangoLocalStorage` - disabled by default
 - `ArangoBackup` - disabled by default
 - `ArangoClusterSynchronization` - disabled by default
@@ -28,7 +27,6 @@ To install Operators in mode "One per Helm Release" we can use:
 ```
 helm install --name arango-deployment kube-arangodb.tar.gz \
              --set operator.features.deployment=true \
-             --set operator.features.deploymentReplications=false \
              --set operator.features.storage=false \
              --set operator.features.backup=false \
              --set operator.features.k8sToK8sClusterSync=false
@@ -154,12 +152,6 @@ Default: `Recreate`
 ### `operator.features.deployment`
 
 Define if ArangoDeployment Operator should be enabled.
-
-Default: `true`
-
-### `operator.features.deploymentReplications`
-
-Define if ArangoDeploymentReplications Operator should be enabled.
 
 Default: `true`
 

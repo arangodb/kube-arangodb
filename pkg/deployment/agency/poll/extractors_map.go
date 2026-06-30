@@ -23,19 +23,19 @@ package poll
 import (
 	"reflect"
 
-	"github.com/arangodb-helper/go-helper/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func extractMapValue(in reflect.Value, key reflect.Value, apply ValueApplier) error {
 	if in.Kind() != reflect.Pointer {
-		return errors.Newf("Pointer is required")
+		return errors.Errorf("Pointer is required")
 	}
 	ine := in.Elem()
 	if ine.Kind() != reflect.Map {
-		return errors.Newf("Map pointer is required")
+		return errors.Errorf("Map pointer is required")
 	}
 	if v, ok := castAsValue(key, ine.Type().Key()); !ok {
-		return errors.Newf("Invalid Map key - got %s, expected %s", key.Type(), ine.Type().Key().String())
+		return errors.Errorf("Invalid Map key - got %s, expected %s", key.Type(), ine.Type().Key().String())
 	} else {
 		key = v
 	}
@@ -59,14 +59,14 @@ func extractMapValue(in reflect.Value, key reflect.Value, apply ValueApplier) er
 }
 func removeMapValue(in reflect.Value, key reflect.Value) error {
 	if in.Kind() != reflect.Pointer {
-		return errors.Newf("Pointer is required")
+		return errors.Errorf("Pointer is required")
 	}
 	ine := in.Elem()
 	if ine.Kind() != reflect.Map {
-		return errors.Newf("Map pointer is required")
+		return errors.Errorf("Map pointer is required")
 	}
 	if v, ok := castAsValue(key, ine.Type().Key()); !ok {
-		return errors.Newf("Invalid Map key - got %s, expected %s", key.Type(), ine.Type().Key().String())
+		return errors.Errorf("Invalid Map key - got %s, expected %s", key.Type(), ine.Type().Key().String())
 	} else {
 		key = v
 	}

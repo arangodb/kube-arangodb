@@ -23,7 +23,6 @@ package reconcile
 import (
 	"context"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -108,7 +107,7 @@ func (a actionCompactMember) CheckProgress(ctx context.Context) (bool, bool, err
 				return false, false, nil
 			}
 
-			if ok := conn.IsAsyncErrorNotFound(err); ok {
+			if ok := adbDriverV2Connection.IsNotFoundError(err); ok {
 				// Job not found
 				return false, true, err
 			}

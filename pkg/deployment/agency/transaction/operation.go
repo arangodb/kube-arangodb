@@ -23,7 +23,7 @@ package transaction
 import (
 	goStrings "strings"
 
-	"github.com/arangodb-helper/go-helper/pkg/refs"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type Operation string
@@ -55,7 +55,7 @@ type keyCommon struct {
 }
 
 func (o *Operation) Get() Operation {
-	return refs.TypeOrDefault(o, OperationSet)
+	return util.TypeOrDefault(o, OperationSet)
 }
 func (k Key) CreateSubKey(elements ...string) Key {
 	NewKey := make(Key, 0, len(k)+len(elements))

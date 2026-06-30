@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"net"
 	"path"
-	"path/filepath"
 	"strconv"
 	"sync"
 
@@ -227,69 +226,6 @@ func withArangodNumactl(spec api.ServerGroupSpec, args ...string) []string {
 	return vs
 }
 
-// createArangoSyncArgs creates command line arguments for an arangosync server in the given group.
-func createArangoSyncArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
-	options := k8sutil.CreateOptionPairs(64)
-	var runCmd string
-	port := input.GroupSpec.GetPort()
-
-	if input.Deployment.Sync.Monitoring.GetTokenSecretName() != "" {
-		options.Addf("--monitoring.token", "$(%s)", utilConstants.EnvArangoSyncMonitoringToken)
-	}
-	masterSecretPath := filepath.Join(shared.MasterJWTSecretVolumeMountDir, utilConstants.SecretKeyToken)
-	options.Add("--master.jwt-secret", masterSecretPath)
-
-	var masterEndpoint []string
-	switch input.Group {
-	case api.ServerGroupSyncMasters:
-		runCmd = "master"
-		masterEndpoint = input.Deployment.Sync.ExternalAccess.ResolveMasterEndpoint(k8sutil.CreateSyncMasterClientServiceDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain), int(port))
-		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
-		clientCAPath := filepath.Join(shared.ClientAuthCAVolumeMountDir, utilConstants.SecretCACertificate)
-		options.Add("--server.keyfile", keyPath)
-		options.Add("--server.client-cafile", clientCAPath)
-		options.Add("--mq.type", "direct")
-		if input.Deployment.IsAuthenticated() {
-			clusterSecretPath := filepath.Join(shared.ClusterJWTSecretVolumeMountDir, utilConstants.SecretKeyToken)
-			options.Add("--cluster.jwt-secret", clusterSecretPath)
-		}
-		dbServiceName := k8sutil.CreateDatabaseClientServiceName(input.ApiObject.GetName())
-		scheme := "http"
-		if input.Deployment.IsSecure() {
-			scheme = "https"
-		}
-		options.Addf("--cluster.endpoint", "%s://%s:%d", scheme, dbServiceName, shared.ArangoPort)
-	case api.ServerGroupSyncWorkers:
-		runCmd = "worker"
-		masterEndpointHost := k8sutil.CreateSyncMasterClientServiceName(input.ApiObject.GetName())
-		masterEndpoint = []string{"https://" + net.JoinHostPort(masterEndpointHost, strconv.Itoa(shared.ArangoSyncMasterPort))}
-	}
-	for _, ep := range masterEndpoint {
-		options.Add("--master.endpoint", ep)
-	}
-	serverEndpoint := "https://" + net.JoinHostPort(k8sutil.CreatePodDNSNameWithDomain(input.ApiObject, input.Deployment.ClusterDomain, input.Group.AsRole(), input.Member.ID), strconv.Itoa(int(port)))
-	options.Add("--server.endpoint", serverEndpoint)
-	options.Add("--server.port", strconv.Itoa(int(port)))
-
-	options.Append(additionalOptions...)
-
-	args := []string{
-		"run",
-		runCmd,
-	}
-
-	args = append(args, options.Copy().Sort().AsArgs()...)
-
-	if a := input.GroupSpec.Args; len(a) > 0 {
-		args = append(args, a...)
-	}
-	if a := input.ArangoMember.Spec.Overrides.GetArgs(); len(a) > 0 {
-		args = append(args, a...)
-	}
-
-	return args
-}
-
 func createArangoGatewayArgs(input pod.Input, additionalOptions ...k8sutil.OptionPair) []string {
 	options := k8sutil.CreateOptionPairs(64)
 	if input.Deployment.Gateway.IsDynamic() {
@@ -329,7 +265,6 @@ func (r *Resources) RenderPodTemplateForMember(ctx context.Context, acs sutil.AC
 }
 
 func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec api.DeploymentSpec, status api.DeploymentStatus, memberID string, imageInfo api.ImageInfo) (*core.Pod, error) {
-	log := r.log.Str("section", "member")
 	apiObject := r.context.GetAPIObject()
 	m, group, found := status.Members.ElementByID(memberID)
 	if !found {
@@ -389,23 +324,8 @@ func (r *Resources) RenderPodForMember(ctx context.Context, acs sutil.ACS, spec 
 			cachedStatus: cache,
 		}
 	case api.ServerGroupTypeArangoSync:
-		// Check image
-		if !imageInfo.Enterprise {
-			log.Str("image", spec.GetImage()).Debug("Image is not an enterprise image")
-			return nil, errors.WithStack(errors.Errorf("Image '%s' does not contain an Enterprise version of ArangoDB", spec.GetImage()))
-		}
-		// Check if the sync image is overwritten by the SyncSpec
-		if spec.Sync.HasSyncImage() {
-			input.Image.Image = spec.Sync.GetSyncImage()
-		}
-
-		podCreator = &MemberSyncPod{
-			Input: input,
-
-			podName:      podName,
-			resources:    r,
-			cachedStatus: cache,
-		}
+		// Deprecated: ArangoSync has been removed
+		return nil, errors.Errorf("ArangoSync has been removed")
 	case api.ServerGroupTypeGateway:
 		input.Image.Image = r.context.GetOperatorImage()
 		if spec.Gateway.GetImage() != "" {

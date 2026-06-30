@@ -24,19 +24,19 @@ import (
 	"reflect"
 	goStrings "strings"
 
-	"github.com/arangodb-helper/go-helper/pkg/errors"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func extractStructValue(in reflect.Value, key string, apply ValueApplier) error {
 	if goStrings.Contains(key, "/") {
-		return errors.Newf("Forbidden char in a key: '/'")
+		return errors.Errorf("Forbidden char in a key: '/'")
 	}
 	if in.Kind() != reflect.Pointer {
-		return errors.Newf("Pointer is required")
+		return errors.Errorf("Pointer is required")
 	}
 	ine := in.Elem()
 	if ine.Kind() != reflect.Struct {
-		return errors.Newf("Struct pointer is required")
+		return errors.Errorf("Struct pointer is required")
 	}
 	for id := 0; id < ine.NumField(); id++ {
 		if structFieldTaggedJSONName(ine.Type().Field(id)) == key {
@@ -47,11 +47,11 @@ func extractStructValue(in reflect.Value, key string, apply ValueApplier) error 
 }
 func removeStructValue(in reflect.Value, key string) error {
 	if in.Kind() != reflect.Pointer {
-		return errors.Newf("Pointer is required")
+		return errors.Errorf("Pointer is required")
 	}
 	ine := in.Elem()
 	if ine.Kind() != reflect.Struct {
-		return errors.Newf("Map pointer is required")
+		return errors.Errorf("Map pointer is required")
 	}
 	for id := 0; id < ine.NumField(); id++ {
 		if f := ine.Type().Field(id); structFieldTaggedJSONName(f) == key {

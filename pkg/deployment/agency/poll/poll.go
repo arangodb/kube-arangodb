@@ -27,11 +27,11 @@ import (
 	goStrings "strings"
 	"time"
 
-	"github.com/arangodb-helper/go-helper/pkg/errors"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 func GetAgencyPoll[T interface{}](ctx context.Context, connection adbDriverV2Connection.Connection, index uint64, timeout time.Duration) (Response[T], error) {

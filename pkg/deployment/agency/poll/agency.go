@@ -23,9 +23,8 @@ package poll
 import (
 	"encoding/json"
 
-	"github.com/arangodb-helper/go-helper/pkg/refs"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/agency/transaction"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/transaction"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type Response[T interface{}] struct {
@@ -85,8 +84,8 @@ func (i *Item) UnmarshalJSON(bytes []byte) error {
 	copy(data, bytes)
 	// Fallback to old agency set
 	i.ItemLazy = ItemLazy{
-		Operation: refs.NewType(transaction.OperationSet),
-		Data:      refs.NewType[json.RawMessage](data),
+		Operation: util.NewType(transaction.OperationSet),
+		Data:      util.NewType[json.RawMessage](data),
 	}
 	return nil
 }

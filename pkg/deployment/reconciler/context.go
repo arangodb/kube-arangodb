@@ -25,7 +25,6 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	syncClient "github.com/arangodb/arangosync-client/client"
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -151,11 +150,6 @@ type DeploymentMemberClient interface {
 	GetServerClient(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error)
 }
 
-type DeploymentSyncClient interface {
-	// GetSyncServerClient returns a cached client for a specific arangosync server.
-	GetSyncServerClient(ctx context.Context, group api.ServerGroup, id string) (syncClient.API, error)
-}
-
 type KubernetesEventGenerator interface {
 	// CreateEvent creates a given event.
 	// On error, the error is logged.
@@ -168,7 +162,6 @@ type KubernetesEventGenerator interface {
 type DeploymentClient interface {
 	DeploymentDatabaseClient
 	DeploymentMemberClient
-	DeploymentSyncClient
 }
 
 // DeploymentGetter provides functionalities to get deployment resources.

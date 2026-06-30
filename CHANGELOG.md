@@ -4,6 +4,7 @@
 - (Feature) (RBAC) Add ArangoPermissionRoleUserBinding handler
 - (Feature) (Gateway) Use HTTP/2 for the default upstream to ArangoDB (hidden feature `gateway-default-http2`, enabled by default)
 - (Bugfix) (RBAC) Fix scope evaluation, pool propagation, missing indexes, and add APIRefresh endpoint
+- (Feature) Remove Replication operator, ArangoDeploymentReplication CRD, go-helper and go-driver v1 dependencies
 - (Maintenance) Merge enterprise module into community, remove build tags and private dependencies
 - (Bugfix) Add missing CRDs
 - (Improvement) Refactor operator to use context.Context instead of stopCh, add CRD sync timeout (30s) and waitForCRD timeout (15s)

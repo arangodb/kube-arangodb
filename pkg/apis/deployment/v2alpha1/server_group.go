@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,12 +87,14 @@ func (g ServerGroup) RecreateAllowed() bool {
 }
 
 const (
-	ServerGroupUnknown        ServerGroup = 0
-	ServerGroupSingle         ServerGroup = 1
-	ServerGroupAgents         ServerGroup = 2
-	ServerGroupDBServers      ServerGroup = 3
-	ServerGroupCoordinators   ServerGroup = 4
-	ServerGroupSyncMasters    ServerGroup = 5
+	ServerGroupUnknown      ServerGroup = 0
+	ServerGroupSingle       ServerGroup = 1
+	ServerGroupAgents       ServerGroup = 2
+	ServerGroupDBServers    ServerGroup = 3
+	ServerGroupCoordinators ServerGroup = 4
+	// Deprecated: ArangoSync has been removed
+	ServerGroupSyncMasters ServerGroup = 5
+	// Deprecated: ArangoSync has been removed
 	ServerGroupSyncWorkers    ServerGroup = 6
 	ServerGroupGateways       ServerGroup = 7
 	ServerGroupImageDiscovery ServerGroup = -1

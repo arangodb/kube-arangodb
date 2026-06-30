@@ -77,11 +77,6 @@ type ArangoDIdentity struct {
 	ipAddress string
 }
 
-// ArangoSyncIdentity helps to resolve the ArangoSync identity, e.g.: image ID, version of the entrypoint.
-type ArangoSyncIdentity struct {
-	interfaces.ContainerCreator
-}
-
 // GatewayIdentity helps to resolve the Gateway identity, e.g.: image ID, version of the entrypoint.
 type GatewayIdentity struct {
 	interfaces.ContainerCreator
@@ -512,11 +507,6 @@ func (a *ImageUpdatePod) AsInput() pod.Input {
 
 func (i *ImageUpdatePod) Profiles() (schedulerApi.ProfileTemplates, error) {
 	return nil, nil
-}
-
-// GetExecutor returns the fixed path to the ArangoSync binary in the container.
-func (a *ArangoSyncIdentity) GetExecutor() string {
-	return resources.ArangoSyncExecutor
 }
 
 func getVolumes(input pod.Input) pod.Volumes {

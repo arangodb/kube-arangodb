@@ -31,7 +31,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform"
-	"github.com/arangodb/kube-arangodb/pkg/apis/replication"
 	"github.com/arangodb/kube-arangodb/pkg/apis/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/apis/storage"
 )
@@ -87,7 +86,6 @@ func Test_CRD(t *testing.T) {
 		{deployment.ArangoDeploymentCRDName, DatabaseDeploymentDefinitionWithOptions},
 		{deployment.ArangoMemberCRDName, DatabaseMemberDefinitionWithOptions},
 		{deployment.ArangoTaskCRDName, DatabaseTaskDefinitionWithOptions},
-		{replication.ArangoDeploymentReplicationCRDName, ReplicationDeploymentReplicationDefinitionWithOptions},
 		{storage.ArangoLocalStorageCRDName, StorageLocalStorageDefinitionWithOptions},
 		{scheduler.ArangoProfileCRDName, SchedulerProfileDefinitionWithOptions},
 		{scheduler.PodCRDName, SchedulerPodDefinitionWithOptions},
@@ -143,7 +141,6 @@ func Test_CRDGetters(t *testing.T) {
 		DatabaseDeploymentWithOptions,
 		DatabaseMemberWithOptions,
 		DatabaseTaskWithOptions,
-		ReplicationDeploymentReplicationWithOptions,
 		StorageLocalStorageWithOptions,
 		SchedulerProfileWithOptions,
 		SchedulerPodWithOptions,

@@ -65,9 +65,6 @@ func AllDefinitions() []Definition {
 		// ACS
 		DatabaseClusterSynchronizationDefinitionWithOptions(),
 
-		// ArangoSync
-		ReplicationDeploymentReplicationDefinitionWithOptions(),
-
 		// Storage
 		StorageLocalStorageDefinitionWithOptions(),
 

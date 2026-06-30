@@ -26,9 +26,8 @@ import (
 	goStrings "strings"
 	"sync"
 
-	"github.com/arangodb-helper/go-helper/pkg/errors"
-
-	"github.com/arangodb/kube-arangodb/pkg/util/agency/transaction"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/agency/transaction"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type ApplierConfig struct {
@@ -128,7 +127,7 @@ func (a *applier[T]) applyItem(value interface{}, key string, item Item) error {
 	case transaction.OperationPush:
 		err := extract(reflect.ValueOf(value), func(out reflect.Value) error {
 			if out.Kind() != reflect.Slice && out.Kind() != reflect.Array {
-				return errors.Newf("Only Slice or Array are supported")
+				return errors.Errorf("Only Slice or Array are supported")
 			}
 			z := reflect.New(out.Type().Elem())
 			if err := json.Unmarshal(item.GetData(), z.Interface()); err != nil {
@@ -146,10 +145,10 @@ func (a *applier[T]) applyItem(value interface{}, key string, item Item) error {
 	case transaction.OperationPop:
 		err := extract(reflect.ValueOf(value), func(out reflect.Value) error {
 			if out.Kind() != reflect.Slice && out.Kind() != reflect.Array {
-				return errors.Newf("Only Slice or Array are supported")
+				return errors.Errorf("Only Slice or Array are supported")
 			}
 			if out.Len() == 0 {
-				return errors.Newf("Slice is already empty")
+				return errors.Errorf("Slice is already empty")
 			}
 			out.SetLen(out.Len() - 1)
 			return nil
@@ -158,10 +157,10 @@ func (a *applier[T]) applyItem(value interface{}, key string, item Item) error {
 	case transaction.OperationErase:
 		err := extract(reflect.ValueOf(value), func(out reflect.Value) error {
 			if out.Kind() != reflect.Slice {
-				return errors.Newf("Only Slice is supported")
+				return errors.Errorf("Only Slice is supported")
 			}
 			if out.Len() == 0 {
-				return errors.Newf("Slice is already empty")
+				return errors.Errorf("Slice is already empty")
 			}
 			if posBytes := item.GetPosition(); len(posBytes) > 0 {
 				var pos int
@@ -169,7 +168,7 @@ func (a *applier[T]) applyItem(value interface{}, key string, item Item) error {
 					return err
 				}
 				if pos < 0 || pos >= out.Len() {
-					return errors.Newf("pos field is not valid: value len is %d but pos is %d", out.Len(), pos)
+					return errors.Errorf("pos field is not valid: value len is %d but pos is %d", out.Len(), pos)
 				}
 				// copy everything except element at pos
 				ret := reflect.MakeSlice(out.Type(), out.Len()-1, out.Len()-1)
@@ -209,7 +208,7 @@ func (a *applier[T]) applyItem(value interface{}, key string, item Item) error {
 				out.Set(ret)
 				return nil
 			}
-			return errors.Newf("Erase operation should have pos or val fields non-empty")
+			return errors.Errorf("Erase operation should have pos or val fields non-empty")
 		}, parts...)
 		return wrap(errors.WithMessage(err, "extract failed"))
 	case "observe", "unobserve":
@@ -219,7 +218,7 @@ func (a *applier[T]) applyItem(value interface{}, key string, item Item) error {
 		if a.cfg.AllowUnsupportedOperations {
 			return nil
 		}
-		return wrap(errors.Newf("Unknown operation \"%s\"", op))
+		return wrap(errors.Errorf("Unknown operation \"%s\"", op))
 	}
 }
 func prepareKey(in string) []string {

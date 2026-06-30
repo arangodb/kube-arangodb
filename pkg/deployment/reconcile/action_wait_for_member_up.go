@@ -95,7 +95,8 @@ func (a *actionWaitForMemberUp) CheckProgress(ctx context.Context) (bool, bool, 
 			return a.checkProgressCluster(ctx), false, nil
 		}
 	case api.ServerGroupTypeArangoSync:
-		return a.checkProgressArangoSync(ctxChild), false, nil
+		// Deprecated: ArangoSync has been removed
+		return true, false, nil
 	case api.ServerGroupTypeGateway:
 		return a.checkProgressGateway(), false, nil
 	default:
@@ -235,24 +236,6 @@ func (a *actionWaitForMemberUp) checkProgressCluster(ctx context.Context) bool {
 		return false
 	}
 
-	return true
-}
-
-// checkProgressArangoSync checks the progress of the action in the case
-// of a sync master / worker.
-func (a *actionWaitForMemberUp) checkProgressArangoSync(ctx context.Context) bool {
-	c, err := a.actionCtx.GetMembersState().GetMemberSyncClient(a.action.MemberID)
-	if err != nil {
-		a.log.Err(err).Debug("Failed to create arangosync client")
-		return false
-	}
-
-	// When replication is in initial-sync state, then it can take a long time to be in running state.
-	// This is the reason why Health of ArangoSync can not be checked here.
-	if _, err := c.Version(ctx); err != nil {
-		a.log.Err(err).Debug("Member is not ready yet")
-		return false
-	}
 	return true
 }
 

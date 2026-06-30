@@ -166,7 +166,7 @@ type DeploymentSpec struct {
 	// TLS holds TLS configuration settings
 	TLS TLSSpec `json:"tls"`
 
-	// Sync holds Deployment-to-Deployment synchronization configuration settings
+	// Deprecated: ArangoSync has been removed. Sync holds Deployment-to-Deployment synchronization configuration settings
 	Sync SyncSpec `json:"sync"`
 
 	// License holds license settings
@@ -450,8 +450,11 @@ func (s *DeploymentSpec) SetDefaults(deploymentName string) {
 	s.Agents.SetDefaults(ServerGroupAgents, s.GetMode().HasAgents(), s.GetMode())
 	s.DBServers.SetDefaults(ServerGroupDBServers, s.GetMode().HasDBServers(), s.GetMode())
 	s.Coordinators.SetDefaults(ServerGroupCoordinators, s.GetMode().HasCoordinators(), s.GetMode())
-	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, s.Sync.IsEnabled(), s.GetMode())
-	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, s.Sync.IsEnabled(), s.GetMode())
+	// Deprecated: ArangoSync has been removed, force count to 0
+	s.SyncMasters.SetDefaults(ServerGroupSyncMasters, false, s.GetMode())
+	s.SyncMasters.Count = util.NewType(0)
+	s.SyncWorkers.SetDefaults(ServerGroupSyncWorkers, false, s.GetMode())
+	s.SyncWorkers.Count = util.NewType(0)
 	s.Gateways.SetDefaults(ServerGroupGateways, s.IsGatewayEnabled(), s.GetMode())
 	s.Metrics.SetDefaults(deploymentName+"-exporter-jwt-token", s.Authentication.IsAuthenticated())
 	s.Chaos.SetDefaults()

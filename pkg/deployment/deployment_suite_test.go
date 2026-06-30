@@ -110,6 +110,7 @@ func createTestTLSVolume(serverGroupString, ID string) core.Volume {
 		k8sutil.CreateTLSKeyfileSecretName(testDeploymentName, serverGroupString, ID))
 }
 
+//nolint:unparam
 func createTestLifecycle(group api.ServerGroup) *core.Lifecycle {
 	switch group.Type() {
 	case api.ServerGroupTypeArangoSync:
@@ -517,68 +518,6 @@ func createTestCommandForAgent(name string, tls, auth, encryptionRocksDB bool) [
 	return command
 }
 
-//nolint:unparam
-func createTestCommandForSyncMaster(name string, tls, auth, monitoring bool, customEndpoints ...string) []string {
-	command := []string{resources.ArangoSyncExecutor, "run", "master"}
-
-	if tls {
-		command = append(command, "--cluster.endpoint=https://"+testDeploymentName+":8529")
-	} else {
-		command = append(command, "--cluster.endpoint=http://"+testDeploymentName+":8529")
-	}
-
-	if auth {
-		command = append(command, "--cluster.jwt-secret=/secrets/cluster/jwt/token")
-	}
-
-	if len(customEndpoints) == 0 {
-		customEndpoints = []string{
-			"https://" + testDeploymentName + "-sync.default.svc:8629",
-		}
-	}
-
-	for _, customEndpoint := range customEndpoints {
-		command = append(command, "--master.endpoint="+customEndpoint)
-	}
-
-	command = append(command, "--master.jwt-secret=/secrets/master/jwt/token")
-
-	if monitoring {
-		command = append(command, "--monitoring.token="+"$("+utilConstants.EnvArangoSyncMonitoringToken+")")
-	}
-
-	command = append(command, "--mq.type=direct", "--server.client-cafile=/secrets/client-auth/ca/ca.crt")
-
-	command = append(command, "--server.endpoint=https://"+testDeploymentName+
-		"-syncmaster-"+name+".test-int."+testNamespace+".svc:8629",
-		"--server.keyfile=/secrets/tls/tls.keyfile", "--server.port=8629")
-
-	return command
-}
-
-func createTestCommandForSyncWorker(name string, tls, monitoring bool) []string {
-	command := []string{resources.ArangoSyncExecutor, "run", "worker"}
-
-	scheme := "http"
-	if tls {
-		scheme = "https"
-	}
-
-	command = append(command,
-		"--master.endpoint=https://"+testDeploymentName+"-sync:8629",
-		"--master.jwt-secret=/secrets/master/jwt/token")
-
-	if monitoring {
-		command = append(command, "--monitoring.token="+"$("+utilConstants.EnvArangoSyncMonitoringToken+")")
-	}
-
-	command = append(command,
-		"--server.endpoint="+scheme+"://"+testDeploymentName+"-syncworker-"+name+".test-int."+testNamespace+".svc:8729",
-		"--server.port=8729")
-
-	return command
-}
-
 func createTestDeployment(t *testing.T, config Config, arangoDeployment *api.ArangoDeployment) (*Deployment, *recordfake.FakeRecorder) {
 
 	eventRecorder := recordfake.NewFakeRecorder(10)
@@ -676,6 +615,7 @@ func createTestImagesWithVersion(enterprise bool, version adbDriverV2.Version) a
 	}
 }
 
+//nolint:unparam
 func createTestImages(enterprise bool) api.ImageInfoList {
 	return createTestImagesWithVersion(enterprise, testVersion)
 }

@@ -14,7 +14,6 @@ Each of these uses involves a different custom resource:
 - Use an [ArangoMember](docs/api/ArangoMember.V1.md) resource to observe and adjust individual deployment members.
 - Use an [ArangoBackup](docs/backup-resource.md) and [ArangoBackupPolicy](docs/backuppolicy-resource.md) resources to create ArangoDB backups.
 - Use an [ArangoLocalStorage](docs/storage-resource.md) resource to provide local `PersistentVolumes` for optimal I/O performance.
-- Use an [ArangoDeploymentReplication](docs/deployment-replication-resource-reference.md) resource to configure ArangoDB Datacenter-to-Datacenter Replication.
 - Use an [ArangoPlatformChart](docs/arango-platform-chart-resource.md) and [ArangoProfile](docs/arango-profile-resource.md) resources to customize [ArangoDB Platform](docs/platform.md) deployments.
 
 Continue with [Using the ArangoDB Kubernetes Operator](docs/using-the-operator.md)
@@ -203,7 +202,7 @@ Flags:
       --kubernetes.qps float32                                 Number of queries per second for k8s API. If set to 0 or less, API calls won't be throttled (default 32)
       --leader.label.skip                                      Skips Leader Label for the Pod
       --log.format string                                      Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
-      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, arangod-request, assertion, authz-pool-client, backup-operator, backup-policy-operator, chaos-monkey, cli-utils, crd, deployment, deployment-ci, deployment-reconcile, deployment-replication, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, grpc-service, helm, http, inspector, integration-authn-v1, integration-authorization-v1, integration-config-v1, integration-envoy-auth-v3, integration-envoy-auth-v3-impl-auth-bearer, integration-envoy-auth-v3-impl-auth-cookie, integration-envoy-auth-v3-impl-custom-openid, integration-envoy-auth-v3-impl-pass-mode, integration-events-v1, integration-meta-v1, integration-pong-v1, integration-scheduler-v2, integration-shutdown-v1, integration-storage-v1-s3, integration-storage-v2, integrations, k8s-client, kubernetes, kubernetes-access, kubernetes-admission, kubernetes-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-v2, operator-v2-event, operator-v2-worker, panics, permission-role-user-binding-operator, permission-token-operator, permission-token-webhook, platform-chart-operator, platform-pod-shutdown, platform-service-operator, platform-storage-operator, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, sidecar, sidecar-authz, sidecar-authz-pool, sidecar-service-client-authentication, webhook (default [info])
+      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, arangod-request, assertion, authz-pool-client, backup-operator, backup-policy-operator, chaos-monkey, cli-utils, crd, deployment, deployment-ci, deployment-reconcile, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, grpc-service, helm, http, inspector, integration-authn-v1, integration-authorization-v1, integration-config-v1, integration-envoy-auth-v3, integration-envoy-auth-v3-impl-auth-bearer, integration-envoy-auth-v3-impl-auth-cookie, integration-envoy-auth-v3-impl-custom-openid, integration-envoy-auth-v3-impl-pass-mode, integration-events-v1, integration-meta-v1, integration-pong-v1, integration-scheduler-v2, integration-shutdown-v1, integration-storage-v1-s3, integration-storage-v2, integrations, k8s-client, kubernetes, kubernetes-access, kubernetes-admission, kubernetes-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-v2, operator-v2-event, operator-v2-worker, panics, permission-role-user-binding-operator, permission-token-operator, permission-token-webhook, platform-chart-operator, platform-pod-shutdown, platform-service-operator, platform-storage-operator, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, sidecar, sidecar-authz, sidecar-authz-pool, sidecar-service-client-authentication, webhook (default [info])
       --log.sampling                                           If true, operator will try to minimize duplication of logging events (default true)
       --log.stdout                                             If true, operator will log to the stdout (default true)
       --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
@@ -211,7 +210,6 @@ Flags:
       --mode.single                                            Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions
       --operator.backup                                        Enable to run the ArangoBackup operator
       --operator.deployment                                    Enable to run the ArangoDeployment operator
-      --operator.deployment-replication                        Enable to run the ArangoDeploymentReplication operator
       --operator.networking                                    Enable to run the Networking operator
       --operator.platform                                      Enable to run the Platform operator
       --operator.reconciliation.retry.count int                Count of retries during Object Update operations in the Reconciliation loop (default 25)
@@ -258,8 +256,6 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/arango-storage.yaml
-# To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/arango-deployment-replication.yaml
 ```
 
 ##### Enterprise Edition
@@ -268,8 +264,6 @@ kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/enterprise-storage.yaml
-# To use `ArangoDeploymentReplication`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/enterprise-deployment-replication.yaml
 ```
 
 ### Installation of latest release using kustomize
@@ -385,6 +379,4 @@ DOCKERNAMESPACE=<your dockerhub account> make
 kubectl apply -f manifests/arango-deployment-dev.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f manifests/arango-storage-dev.yaml
-# To use `ArangoDeploymentReplication`, also run
-kubectl apply -f manifests/arango-deployment-replication-dev.yaml
 ```

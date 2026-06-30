@@ -26,7 +26,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/arangodb-helper/go-helper/pkg/arangod/conn"
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
@@ -198,7 +197,7 @@ func (a *actionRebuildOutSyncedShards) checkRebuildShardProgress(ctx context.Con
 		}
 
 		// Add wait grace period
-		if ok := conn.IsAsyncErrorNotFound(err); ok {
+		if ok := adbDriverV2Connection.IsNotFoundError(err); ok {
 			if s := a.action.StartTime; s != nil && !s.Time.IsZero() {
 				if time.Since(s.Time) < 10*time.Second {
 					// Retry
