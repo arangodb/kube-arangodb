@@ -113,18 +113,14 @@ var (
 		}
 	}
 	operatorOptions struct {
-		enableDeployment            bool // Run deployment operator
-		enableDeploymentReplication bool // Deprecated: Replication operator has been removed
-		enableStorage               bool // Run local-storage operator
-		enableBackup                bool // Run backup operator
-		enableApps                  bool // Deprecated: Apps operator has been removed
-		enableML                    bool // Deprecated: ML operator has been removed
-		enableAnalytics             bool // Deprecated: Analytics operator has been removed
-		enableNetworking            bool // Run networking operator
-		enablePlatform              bool // Run platform operator
-		enableScheduler             bool // Run scheduler operator
-		versionOnly                 bool // Run only version endpoint, explicitly disabled with other
-		enableK2KClusterSync        bool // Run k2kClusterSync operator
+		enableDeployment     bool // Run deployment operator
+		enableStorage        bool // Run local-storage operator
+		enableBackup         bool // Run backup operator
+		enableNetworking     bool // Run networking operator
+		enablePlatform       bool // Run platform operator
+		enableScheduler      bool // Run scheduler operator
+		versionOnly          bool // Run only version endpoint, explicitly disabled with other
+		enableK2KClusterSync bool // Run k2kClusterSync operator
 
 		operatorFeatureConfigMap string // ConfigMap name
 
@@ -219,16 +215,12 @@ func initE() error {
 	f.String("api.jwt-secret-name", "", "Name of secret which will contain JWT to authenticate API requests.")
 	f.String("api.jwt-key-secret-name", "", "Name of secret containing key used to sign JWT. If there is no such secret present, value will be saved here")
 	f.BoolVar(&operatorOptions.enableDeployment, "operator.deployment", false, "Enable to run the ArangoDeployment operator")
-	f.BoolVar(&operatorOptions.enableDeploymentReplication, "operator.deployment-replication", false, "Deprecated: Replication operator has been removed")
-	f.MarkHidden("operator.deployment-replication")
+	f.Bool("operator.deployment-replication", false, "Deprecated: Replication operator has been removed")
 	f.BoolVar(&operatorOptions.enableStorage, "operator.storage", false, "Enable to run the ArangoLocalStorage operator")
 	f.BoolVar(&operatorOptions.enableBackup, "operator.backup", false, "Enable to run the ArangoBackup operator")
-	f.BoolVar(&operatorOptions.enableApps, "operator.apps", false, "Deprecated: Apps operator has been removed")
-	f.MarkHidden("operator.apps")
-	f.BoolVar(&operatorOptions.enableML, "operator.ml", false, "Deprecated: ArangoML operator has been removed")
-	f.MarkHidden("operator.ml")
-	f.BoolVar(&operatorOptions.enableAnalytics, "operator.analytics", false, "Deprecated: Analytics operator has been removed")
-	f.MarkHidden("operator.analytics")
+	f.Bool("operator.apps", false, "Deprecated: Apps operator has been removed")
+	f.Bool("operator.ml", false, "Deprecated: ArangoML operator has been removed")
+	f.Bool("operator.analytics", false, "Deprecated: Analytics operator has been removed")
 	f.BoolVar(&operatorOptions.enableNetworking, "operator.networking", false, "Enable to run the Networking operator")
 	f.BoolVar(&operatorOptions.enablePlatform, "operator.platform", false, "Enable to run the Platform operator")
 	f.BoolVar(&operatorOptions.enableScheduler, "operator.scheduler", false, "Enable to run the Scheduler operator")
@@ -275,6 +267,10 @@ func initE() error {
 	f.StringArrayVar(&webhookOptions.webhooks.validating, "webhook.validating", nil, "Validating webhook which should have injected internal CA")
 
 	if err := errors.Errors(
+		f.MarkDeprecated("operator.deployment-replication", "Replication operator has been removed"),
+		f.MarkDeprecated("operator.apps", "Apps operator has been removed"),
+		f.MarkDeprecated("operator.ml", "ArangoML operator has been removed"),
+		f.MarkDeprecated("operator.analytics", "Analytics operator has been removed"),
 		f.MarkDeprecated("operator.k2k-cluster-sync", "Enabled within deployment operator"),
 		f.MarkDeprecated("operator.alpine-image", "Value is not used anymore"),
 		f.MarkDeprecated("operator.metrics-exporter-image", "Value is not used anymore"),
@@ -394,23 +390,6 @@ func executeMain(cmd *cobra.Command, args []string) {
 	features.Iterate(func(name string, feature features.Feature) {
 		logger.Info("Operator Feature %s (%s) is %s.", name, features.GetFeatureArgName(name), util.BoolSwitch(feature.Enabled(), "enabled", "disabled"))
 	})
-
-	// Warn if deprecated flags are used
-	if operatorOptions.enableApps {
-		logger.Warn("Option --operator.apps is deprecated: Apps operator has been removed. This flag will be ignored.")
-		operatorOptions.enableApps = false
-	}
-	if operatorOptions.enableML {
-		logger.Warn("Option --operator.ml is deprecated: ArangoML operator has been removed. This flag will be ignored.")
-		operatorOptions.enableML = false
-	}
-	if operatorOptions.enableAnalytics {
-		logger.Warn("Option --operator.analytics is deprecated: Analytics operator has been removed. This flag will be ignored.")
-		operatorOptions.enableAnalytics = false
-	}
-	if operatorOptions.enableDeploymentReplication {
-		logger.Fatal("Option --operator.deployment-replication is no longer supported: Replication operator has been removed.")
-	}
 
 	// Check operating mode
 	if !operatorOptions.enableDeployment &&
