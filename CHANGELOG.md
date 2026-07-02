@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Disable member maintenance when a not-Ready DBServer leads failover-capable shards
 - (Bugfix) Do not fail on removed operator flags; deprecate, hide and ignore --operator.deployment-replication, --operator.apps, --operator.ml and --operator.analytics
 - (Feature) (RBAC) Add ArangoPermissionRoleUserBinding handler
 - (Feature) (Gateway) Use HTTP/2 for the default upstream to ArangoDB (hidden feature `gateway-default-http2`, enabled by default)
