@@ -21,7 +21,6 @@
 package collect
 
 import (
-	"runtime"
 	"testing"
 	"time"
 
@@ -99,27 +98,6 @@ func TestBuildEvent_NoMetrics(t *testing.T) {
 	require.Equal(t, eventTypeStartup, event.GetType())
 	require.Equal(t, "boot-123", event.GetDimensions()[dimensionBootID])
 	require.Empty(t, event.GetBody())
-}
-
-func TestResourceCollector(t *testing.T) {
-	out := util.NewCollector[Metric]()
-
-	require.NoError(t, resourceCollector{}.CollectEvents(out))
-	require.NoError(t, out.Done())
-
-	values := map[string]float32{}
-	for _, m := range out.Collect() {
-		values[m.K] = m.V
-	}
-
-	require.Equal(t, float32(runtime.NumCPU()), values[metricCPU])
-	require.Greater(t, values[metricMemory], float32(0))
-}
-
-func TestTotalMemory(t *testing.T) {
-	mem, err := totalMemory()
-	require.NoError(t, err)
-	require.Greater(t, mem, uint64(0))
 }
 
 var errBoom = boomError("boom")

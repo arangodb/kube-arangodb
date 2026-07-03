@@ -18,6 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
+//go:build linux
+
 package collect
 
 import (
@@ -29,6 +31,10 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
+
+// The resource collector reports host-level CPU and memory. Total memory is read from /proc/meminfo,
+// a Linux-only interface, so this collector is compiled and registered on Linux only. See
+// collector_resource_other.go for the no-op on other platforms.
 
 const (
 	// metricCPU is the number of CPUs available to the process.
