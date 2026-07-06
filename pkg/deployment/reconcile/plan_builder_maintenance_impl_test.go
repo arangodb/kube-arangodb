@@ -218,4 +218,14 @@ func Test_createHighMemberMaintenanceDisablePlan(t *testing.T) {
 
 		require.Empty(t, plan)
 	})
+
+	t.Run("agency cache unavailable returns empty plan", func(t *testing.T) {
+		var status api.DeploymentStatus
+		addDBServer(&status, newDBServerMember("dbserver1", true, false))
+
+		// Even a not-Ready leader with maintenance must not be touched when the agency cache is unavailable.
+		plan := r.createHighMemberMaintenanceDisablePlan(ctx, depl, spec, status, &testContext{AgencyStateUnavailable: true})
+
+		require.Empty(t, plan)
+	})
 }

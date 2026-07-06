@@ -80,7 +80,8 @@ type testContext struct {
 	Inspector inspectorInterface.Inspector
 	state     member.StateInspector
 
-	AgencyState state.State
+	AgencyState            state.State
+	AgencyStateUnavailable bool
 }
 
 func (c *testContext) IsFeatureImageSupported(feature features.Feature) bool {
@@ -185,7 +186,7 @@ func (c *testContext) WithAgencyCache(action func(state.State)) bool {
 }
 
 func (c *testContext) GetAgencyCache() (state.State, bool) {
-	return c.AgencyState, true
+	return c.AgencyState, !c.AgencyStateUnavailable
 }
 
 func (c *testContext) SecretsModInterface() generic.ModClient[*core.Secret] {
