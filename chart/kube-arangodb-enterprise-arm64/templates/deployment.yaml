@@ -90,6 +90,7 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: {{ .Values.operator.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.operator.securityContext.runAsGroup }}
       containers:
         - name: operator
           imagePullPolicy: {{ .Values.operator.imagePullPolicy }}
