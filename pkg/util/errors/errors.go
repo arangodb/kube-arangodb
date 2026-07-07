@@ -201,6 +201,11 @@ func IsConnectionReset(err error) bool {
 
 // IsContextCanceled returns true if the given error is caused by a context cancelation.
 func IsContextCanceled(err error) bool {
+	// Also follow the standard Unwrap() chain (e.g. *url.Error from net/http, go-driver v1 wrappers)
+	// which is not covered by the Cause()/libCause chains below.
+	if errors.Is(err, context.Canceled) {
+		return true
+	}
 	err = errors.Cause(err)
 	if err == context.Canceled {
 		return true
@@ -213,6 +218,11 @@ func IsContextCanceled(err error) bool {
 
 // IsContextDeadlineExpired returns true if the given error is caused by a context deadline expiration.
 func IsContextDeadlineExpired(err error) bool {
+	// Also follow the standard Unwrap() chain (e.g. *url.Error from net/http, go-driver v1 wrappers)
+	// which is not covered by the Cause()/libCause chains below.
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
 	err = errors.Cause(err)
 	if err == context.DeadlineExceeded {
 		return true
@@ -226,6 +236,9 @@ func IsContextDeadlineExpired(err error) bool {
 // IsContextCanceledOrExpired returns true if the given error is caused by a context cancelation
 // or deadline expiration.
 func IsContextCanceledOrExpired(err error) bool {
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
 	err = errors.Cause(err)
 	if err == context.Canceled || err == context.DeadlineExceeded {
 		return true
