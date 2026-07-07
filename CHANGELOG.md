@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Detect context deadline/cancellation through standard Unwrap() error chains (e.g. net/http *url.Error, go-driver v1)
 - (Bugfix) Disable member maintenance when a not-Ready DBServer leads failover-capable shards
 - (Bugfix) Do not fail on removed operator flags; deprecate, hide and ignore --operator.deployment-replication, --operator.apps, --operator.ml and --operator.analytics
 - (Feature) (RBAC) Add ArangoPermissionRoleUserBinding handler
