@@ -12,7 +12,7 @@ ifeq ($(shell uname),Darwin)
 endif
 
 KUBERNETES_VERSION_MINOR:=33
-KUBERNETES_VERSION_PATCH:=12
+KUBERNETES_VERSION_PATCH:=13
 
 BASEIMAGE ?= ubuntu:24.04
 ENVOY_IMAGE ?= envoyproxy/envoy:v1.37.5
@@ -58,7 +58,7 @@ K3D_CLUSTER ?= $(REPONAME)
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.25.10
+GOBASEVERSION := 1.25.12
 GOVERSION ?= $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION ?= alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
