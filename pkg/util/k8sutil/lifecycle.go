@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	kresources "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources"
 )
@@ -140,12 +141,24 @@ func GetLifecycleEnv() []core.EnvVar {
 	}
 }
 
-// LifecycleVolumeMount creates a volume mount structure for shared lifecycle emptyDir.
+// LifecycleVolumeMount creates a read-write volume mount for the shared lifecycle emptyDir. It is
+// used by the init-lifecycle container, which copies the operator binary into the volume.
 func LifecycleVolumeMount() core.VolumeMount {
 	return core.VolumeMount{
 		Name:      lifecycleVolumeName,
 		MountPath: LifecycleVolumeMountDir,
 	}
+}
+
+// LifecycleVolumeMountReadOnly creates a volume mount for the shared lifecycle emptyDir used by the
+// runtime containers, which only exec the copied binary. It is mounted read-only when the
+// secured-containers feature is enabled, and read-write otherwise to preserve existing behaviour.
+func LifecycleVolumeMountReadOnly() core.VolumeMount {
+	m := LifecycleVolumeMount()
+	if features.SecuredContainers().Enabled() {
+		m.ReadOnly = true
+	}
+	return m
 }
 
 // LifecycleVolume creates a volume mount structure for shared lifecycle emptyDir.

@@ -660,7 +660,7 @@ func CreateArangoDVolumes(status api.MemberStatus, input pod.Input, spec api.Dep
 
 	volumes.AddVolumeMount(k8sutil.ArangodVolumeMount())
 
-	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMountReadOnly())
 
 	if status.PersistentVolumeClaim != nil {
 		vol := k8sutil.CreateVolumeWithPersitantVolumeClaim(shared.ArangodVolumeName,
@@ -809,7 +809,7 @@ func addLifecycleSidecar(coreNames []string, sidecars []core.Container) error {
 			}
 
 			if !k8sutil.VolumeMountExists(sidecar.VolumeMounts, shared.LifecycleVolumeName) {
-				sidecars[i].VolumeMounts = append(sidecars[i].VolumeMounts, k8sutil.LifecycleVolumeMount())
+				sidecars[i].VolumeMounts = append(sidecars[i].VolumeMounts, k8sutil.LifecycleVolumeMountReadOnly())
 			}
 
 			sidecars[i].Env = k8sutil.AppendLifecycleEnv(sidecars[i].Env)
