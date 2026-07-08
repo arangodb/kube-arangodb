@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -152,6 +152,12 @@ func (s *ServerGroupSpecSecurityContext) NewPodSecurityContext(secured bool) *co
 
 		if psc.FSGroup == nil {
 			psc.FSGroup = util.NewType[int64](shared.DefaultFSGroup)
+		}
+
+		if psc.SeccompProfile == nil {
+			psc.SeccompProfile = &core.SeccompProfile{
+				Type: core.SeccompProfileTypeRuntimeDefault,
+			}
 		}
 	}
 

@@ -30,7 +30,15 @@ spec:
   replicas: {{ .Values.operator.replicaCount }}
 {{- end }}
   strategy:
+{{- if .Values.operator.updateStrategy }}
 {{ toYaml .Values.operator.updateStrategy | indent 4 }}
+{{- else if or .Values.operator.debug (le (int .Values.operator.replicaCount) 1) }}
+    type: Recreate
+{{- else }}
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+{{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ template "kube-arangodb.name" . }}
@@ -58,6 +66,7 @@ spec:
 {{ toYaml .Values.operator.nodeSelector | indent 8 }}
 {{- end }}
       serviceAccountName: {{ template "kube-arangodb.operatorName" . }}
+      automountServiceAccountToken: true
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -90,6 +99,10 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: {{ .Values.operator.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.operator.securityContext.runAsGroup | default .Values.operator.securityContext.runAsUser }}
+        fsGroup: {{ .Values.operator.securityContext.fsGroup | default .Values.operator.securityContext.runAsUser }}
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: operator
           imagePullPolicy: {{ .Values.operator.imagePullPolicy }}

@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,9 @@ func TestServerGroupSpecSecurityContext_NewPodSecurityContext(t *testing.T) {
 			secured: true,
 			want: &core.PodSecurityContext{
 				FSGroup: util.NewType[int64](shared.DefaultFSGroup),
+				SeccompProfile: &core.SeccompProfile{
+					Type: core.SeccompProfileTypeRuntimeDefault,
+				},
 			},
 		},
 		"user secured pod security takes precedence": {
@@ -57,6 +60,9 @@ func TestServerGroupSpecSecurityContext_NewPodSecurityContext(t *testing.T) {
 			secured: true,
 			want: &core.PodSecurityContext{
 				FSGroup: util.NewType[int64](3001),
+				SeccompProfile: &core.SeccompProfile{
+					Type: core.SeccompProfileTypeRuntimeDefault,
+				},
 			},
 		},
 		"user secured pod security with FSGroup==nil": {
@@ -67,6 +73,9 @@ func TestServerGroupSpecSecurityContext_NewPodSecurityContext(t *testing.T) {
 			want: &core.PodSecurityContext{
 				FSGroup:            util.NewType[int64](shared.DefaultFSGroup),
 				SupplementalGroups: []int64{1},
+				SeccompProfile: &core.SeccompProfile{
+					Type: core.SeccompProfileTypeRuntimeDefault,
+				},
 			},
 		},
 		"user unsecured pod security": {
