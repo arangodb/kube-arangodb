@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Maintenance) Bump Kubernetes to v0.33.13, Go toolchain to 1.25.12, Envoy to v1.37.5 and other dependencies (regclient, containerd, golang.org/x/net) to fix known vulnerabilities
 - (Feature) Mount lifecycle volume read-only in runtime containers when the secured-containers feature is enabled
 - (Feature) Set RuntimeDefault seccomp profile on managed pods when the secured-containers feature is enabled
 - (Feature) (Chart) Harden operator chart: seccompProfile RuntimeDefault, runAsGroup/fsGroup, automountServiceAccountToken, HA-gated RollingUpdate + PodDisruptionBudget
