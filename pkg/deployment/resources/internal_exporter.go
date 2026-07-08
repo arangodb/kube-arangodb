@@ -129,7 +129,7 @@ func ArangodbInternalExporterContainer(image string, args []string, livenessProb
 		Resources:       kresources.ExtractPodAcceptedResourceRequirement(res),
 		SecurityContext: k8sutil.CreateSecurityContext(groupSpec.SecurityContext),
 		ImagePullPolicy: core.PullIfNotPresent,
-		VolumeMounts:    []core.VolumeMount{k8sutil.LifecycleVolumeMount()},
+		VolumeMounts:    []core.VolumeMount{k8sutil.LifecycleVolumeMountReadOnly()},
 	}
 
 	if livenessProbe != nil {

@@ -43,7 +43,7 @@ func createGatewayVolumes(input pod.Input) pod.Volumes {
 	volumes := pod.NewVolumes()
 
 	volumes.AddVolume(k8sutil.LifecycleVolume())
-	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMount())
+	volumes.AddVolumeMount(k8sutil.LifecycleVolumeMountReadOnly())
 	volumes.Append(pod.JWT(), input)
 
 	volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(utilConstants.GatewayVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName())))
