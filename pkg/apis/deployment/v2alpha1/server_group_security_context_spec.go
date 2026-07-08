@@ -153,6 +153,12 @@ func (s *ServerGroupSpecSecurityContext) NewPodSecurityContext(secured bool) *co
 		if psc.FSGroup == nil {
 			psc.FSGroup = util.NewType[int64](shared.DefaultFSGroup)
 		}
+
+		if psc.SeccompProfile == nil {
+			psc.SeccompProfile = &core.SeccompProfile{
+				Type: core.SeccompProfileTypeRuntimeDefault,
+			}
+		}
 	}
 
 	return psc

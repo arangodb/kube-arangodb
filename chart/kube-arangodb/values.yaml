@@ -20,9 +20,10 @@ operator:
       memory: 256Mi
   securityContext:
     runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
   replicaCount: 1
-  updateStrategy:
-    type: Recreate
+  updateStrategy: {}
   allowChaos: false
   nodeSelector: {}
   enableCRDManagement: true

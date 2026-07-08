@@ -2,6 +2,8 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Mount lifecycle volume read-only in runtime containers when the secured-containers feature is enabled
+- (Feature) Set RuntimeDefault seccomp profile on managed pods when the secured-containers feature is enabled
+- (Feature) (Chart) Harden operator chart: seccompProfile RuntimeDefault, runAsGroup/fsGroup, automountServiceAccountToken, HA-gated RollingUpdate + PodDisruptionBudget
 - (Bugfix) Detect context deadline/cancellation through standard Unwrap() error chains (e.g. net/http *url.Error, go-driver v1)
 - (Bugfix) Disable member maintenance when a not-Ready DBServer leads failover-capable shards
 - (Bugfix) Do not fail on removed operator flags; deprecate, hide and ignore --operator.deployment-replication, --operator.apps, --operator.ml and --operator.analytics
