@@ -18,6 +18,23 @@ ServiceAccount with access to the storage needs to be saved in the secret.
 kubectl create secret generic credentials --from-file 'serviceAccount=<ServiceAccount JSON File>'
 ```
 
+## Permissions
+
+The ServiceAccount needs the following IAM permissions on the configured bucket:
+
+| Permission | Purpose |
+|---|---|
+| `storage.buckets.get` | Check bucket existence |
+| `storage.buckets.create` | Create the bucket if it does not exist |
+| `storage.objects.get` | Read objects and object metadata |
+| `storage.objects.create` | Write objects |
+| `storage.objects.list` | List objects |
+| `storage.objects.delete` | Delete objects |
+
+The predefined role `roles/storage.admin` grants all of the above. If the bucket already exists and is
+managed externally, `roles/storage.objectAdmin` together with `storage.buckets.get` is sufficient (and
+`storage.buckets.create` can be omitted).
+
 ## Object
 
 Once the Secret is created, we are able to create ArangoPlatformStorage.
