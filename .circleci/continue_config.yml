@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   slack: circleci/slack@4.1
+  trivy-scan: arangodb/trivy-scan@0.1.1
 
 parameters:
   manifests-verify:
@@ -78,9 +79,21 @@ jobs:
             fi
             make ci-check
 
+  dependency-cve-scan:
+    executor: golang-executor
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          severity: "CRITICAL,HIGH"
+          fail-on-findings: false
+          store-junit-results: true
+
 workflows:
   version: 2
 
   run_tests:
     jobs:
       - check-code
+      - dependency-cve-scan
