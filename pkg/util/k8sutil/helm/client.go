@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,6 +84,7 @@ type Client interface {
 	Install(ctx context.Context, chart Chart, values Values, mods ...util.Mod[action.Install]) (*Release, error)
 	Upgrade(ctx context.Context, name string, chart Chart, values Values, mods ...util.Mod[action.Upgrade]) (*UpgradeResponse, error)
 	Uninstall(ctx context.Context, name string, mods ...util.Mod[action.Uninstall]) (*UninstallRelease, error)
+	Rollback(ctx context.Context, name string, mods ...util.Mod[action.Rollback]) error
 	Test(ctx context.Context, name string, mods ...util.Mod[action.ReleaseTesting]) (*Release, error)
 }
 
@@ -149,6 +150,14 @@ func (c *client) Uninstall(ctx context.Context, name string, mods ...util.Mod[ac
 	}
 
 	return &res, nil
+}
+
+func (c *client) Rollback(ctx context.Context, name string, mods ...util.Mod[action.Rollback]) error {
+	act := action.NewRollback(c.helm)
+
+	util.ApplyMods(act, mods...)
+
+	return act.Run(name)
 }
 
 func (c *client) Test(ctx context.Context, name string, mods ...util.Mod[action.ReleaseTesting]) (*Release, error) {

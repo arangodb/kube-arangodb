@@ -377,6 +377,37 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 		return false, operator.Stop("Release already installed")
 	}
 
+	// Recover from a release left in a pending state by an interrupted install/upgrade/rollback
+	// (e.g. an operator restart mid-operation). Helm refuses any further operation on it
+	// ("another operation (install/upgrade/rollback) is in progress") until the pending state is
+	// cleared, so the reconcile would otherwise retry the upgrade forever.
+	switch release.Info.Status {
+	case helmRelease.StatusPendingInstall:
+		// The initial install never completed and has no previous revision to roll back to - remove it
+		// so it can be re-installed on the next reconcile.
+		logger.WrapObj(item).Warn("Release stuck in %s, uninstalling to recover", release.Info.Status)
+		if _, err := h.helm.Uninstall(ctx, extension.GetName(), func(in *action.Uninstall) {
+			in.IgnoreNotFound = true
+		}); err != nil {
+			h.eventRecorder.Warning(extension, "Release Recovery Failed", "Failed to recover release stuck in %s: %s", release.Info.Status, err.Error())
+			return false, err
+		}
+
+		h.eventRecorder.Normal(extension, "Release Recovered", "Uninstalled release stuck in %s", release.Info.Status)
+		return true, operator.Reconcile("Recovered pending release")
+	case helmRelease.StatusPendingUpgrade, helmRelease.StatusPendingRollback:
+		// Roll back to the last deployed revision to clear the pending state; the next reconcile will
+		// re-run the upgrade if it is still needed.
+		logger.WrapObj(item).Warn("Release stuck in %s, rolling back to recover", release.Info.Status)
+		if err := h.helm.Rollback(ctx, extension.GetName()); err != nil {
+			h.eventRecorder.Warning(extension, "Release Recovery Failed", "Failed to recover release stuck in %s: %s", release.Info.Status, err.Error())
+			return false, err
+		}
+
+		h.eventRecorder.Normal(extension, "Release Recovered", "Rolled back release stuck in %s", release.Info.Status)
+		return true, operator.Reconcile("Recovered pending release")
+	}
+
 	if status.Release == nil || status.Release.Version != release.Version {
 		logger.WrapObj(item).Info("Fetch Helm Release Info")
 
