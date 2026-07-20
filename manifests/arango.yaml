@@ -970,7 +970,7 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb-enterprise:1.4.4
+          image: arangodb/kube-arangodb:1.4.4
           args:
             - --threads=8
             - --api.secondary-name=arango-default-operator
