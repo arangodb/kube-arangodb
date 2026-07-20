@@ -244,9 +244,12 @@ func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint s
 		}
 	}
 
+	// A chart that ships a values.schema.json we cannot parse is a chart bug: silently
+	// degrading would drop override validation without any signal, so fail the packaging.
+	// A chart shipping no schema at all is fine and stays permissive.
 	schema, err := extractChartSchema(chart)
 	if err != nil {
-		logger.Err(err).Str("chart", name).Warn("Unable to extract chart values schema")
+		return nil, errors.Wrapf(err, "invalid values.schema.json in chart %s", name)
 	}
 
 	return &packageChartRenderInputChart{

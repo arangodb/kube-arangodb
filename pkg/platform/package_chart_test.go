@@ -102,6 +102,20 @@ func Test_extractChart_Missing(t *testing.T) {
 	require.Nil(t, schema, "charts without a schema must fall back to nil")
 }
 
+// Test_extractChartSchema_Malformed ensures an unparsable schema is surfaced as an error
+// rather than silently degrading to no validation. packageChartChart propagates it and
+// fails the packaging.
+func Test_extractChartSchema_Malformed(t *testing.T) {
+	chart := newTestChart(t,
+		map[string]string{"mychart/values.schema.json": "{not json"},
+		[]string{"mychart/values.schema.json"},
+	)
+
+	schema, err := extractChartSchema(chart)
+	require.Error(t, err, "a chart shipping an unparsable schema must not be accepted")
+	require.Nil(t, schema, "must not return a partially decoded schema")
+}
+
 // Test_sanitizeOverrideSchema verifies the override-schema relaxation.
 func Test_sanitizeOverrideSchema(t *testing.T) {
 	in := map[string]interface{}{
