@@ -29,7 +29,8 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"path/filepath"
+	"path"
+	"strings"
 
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/config"
@@ -57,6 +58,9 @@ var (
 	//go:embed templates/notes.txt
 	packageChartTemplateNotes util.Template[packageChartRenderInput]
 
+	//go:embed templates/readme.md
+	packageChartTemplateReadme util.Template[packageChartRenderInput]
+
 	//go:embed templates/resource.chart.yaml
 	packageChartTemplateResourceChart util.Template[packageChartRenderInputChart]
 
@@ -76,6 +80,7 @@ type packageChartRenderInputChart struct {
 	Version   string
 	ChartData []byte
 	Values    map[string]interface{}
+	Schema    map[string]interface{}
 }
 
 type packageChartRenderInputService struct {
@@ -178,6 +183,8 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 
 	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateValues, input), "%s/values.yaml", input.Name)
 
+	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateReadme, input), "%s/README.md", input.Name)
+
 	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateCheck, input), "%s/templates/check.yaml", input.Name)
 
 	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateNotes, input), "%s/templates/NOTES.txt", input.Name)
@@ -237,16 +244,24 @@ func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint s
 		}
 	}
 
+	schema, err := extractChartSchema(chart)
+	if err != nil {
+		logger.Err(err).Str("chart", name).Warn("Unable to extract chart values schema")
+	}
+
 	return &packageChartRenderInputChart{
 		Name:      name,
 		Version:   packageSpec.Version,
 		ChartData: chart,
 		Values:    defaults,
+		Schema:    schema,
 	}, nil
 }
 
-// extractChartValues reads values.yaml from a gzipped tar chart archive.
-func extractChartValues(chartData []byte) (map[string]interface{}, error) {
+// extractChartFile reads a chart's own top-level file (`<chart>/<name>`) from a gzipped
+// tar chart archive. Files belonging to bundled subcharts (`<chart>/charts/<sub>/<name>`)
+// are ignored. Returns nil data when the file is not present.
+func extractChartFile(chartData []byte, name string) ([]byte, error) {
 	gz, err := gzip.NewReader(bytes.NewReader(chartData))
 	if err != nil {
 		return nil, err
@@ -263,35 +278,148 @@ func extractChartValues(chartData []byte) (map[string]interface{}, error) {
 			return nil, err
 		}
 
-		if filepath.Base(hdr.Name) == "values.yaml" {
-			// Only match top-level values.yaml (e.g. chartname/values.yaml)
-			parts := filepath.SplitList(hdr.Name)
-			if len(parts) <= 2 || filepath.Dir(hdr.Name) == filepath.Dir(filepath.Dir(hdr.Name)) {
-				data, err := io.ReadAll(tr)
-				if err != nil {
-					return nil, err
-				}
-				var values map[string]interface{}
-				if err := yaml.Unmarshal(data, &values); err != nil {
-					return nil, err
-				}
-				return values, nil
+		// Tar entries always use forward slashes, so split on "/" explicitly. Note that
+		// filepath.SplitList must not be used here: it splits on the OS path-list
+		// separator (":" on Linux), so it never matches and would let nested subchart
+		// files through.
+		parts := strings.Split(path.Clean(hdr.Name), "/")
+		if len(parts) == 2 && parts[1] == name {
+			data, err := io.ReadAll(tr)
+			if err != nil {
+				return nil, err
 			}
+			return data, nil
 		}
 	}
 
-	return map[string]interface{}{}, nil
+	return nil, nil
+}
+
+// extractChartValues reads values.yaml from a gzipped tar chart archive.
+func extractChartValues(chartData []byte) (map[string]interface{}, error) {
+	data, err := extractChartFile(chartData, "values.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	if data == nil {
+		return map[string]interface{}{}, nil
+	}
+
+	var values map[string]interface{}
+	if err := yaml.Unmarshal(data, &values); err != nil {
+		return nil, err
+	}
+
+	if values == nil {
+		return map[string]interface{}{}, nil
+	}
+
+	return values, nil
+}
+
+// extractChartSchema reads values.schema.json from a gzipped tar chart archive.
+// Returns nil when the chart does not ship a schema.
+func extractChartSchema(chartData []byte) (map[string]interface{}, error) {
+	data, err := extractChartFile(chartData, "values.schema.json")
+	if err != nil {
+		return nil, err
+	}
+
+	if data == nil {
+		return nil, nil
+	}
+
+	var schema map[string]interface{}
+	if err := json.Unmarshal(data, &schema); err != nil {
+		return nil, err
+	}
+
+	return schema, nil
+}
+
+// sanitizeOverrideSchema adapts a chart's own values.schema.json so it can be inlined as
+// the schema of an override block. Two adjustments are needed:
+//   - `required` is dropped: an override block is a partial document merged on top of the
+//     chart defaults, so a value being mandatory for the chart does not mean the user must
+//     restate it here.
+//   - `$schema`/`$id` are dropped: the schema becomes a subschema rather than a document
+//     root, and keeping them would re-declare the dialect / shift the base URI.
+//
+// Recursion only descends into positions that actually hold schemas, so a chart value
+// legitimately named "required" (a key under `properties`) is preserved.
+func sanitizeOverrideSchema(in map[string]interface{}) map[string]interface{} {
+	out := make(map[string]interface{}, len(in))
+
+	for k, v := range in {
+		switch k {
+		case "required", "$schema", "$id":
+			continue
+		case "properties", "patternProperties", "$defs", "definitions":
+			// Maps keyed by property name - keys are data, values are schemas.
+			if m, ok := v.(map[string]interface{}); ok {
+				sub := make(map[string]interface{}, len(m))
+				for name, s := range m {
+					if sm, ok := s.(map[string]interface{}); ok {
+						sub[name] = sanitizeOverrideSchema(sm)
+					} else {
+						sub[name] = s
+					}
+				}
+				out[k] = sub
+				continue
+			}
+			out[k] = v
+		case "allOf", "anyOf", "oneOf", "prefixItems":
+			// Lists of schemas.
+			if l, ok := v.([]interface{}); ok {
+				sub := make([]interface{}, len(l))
+				for i, s := range l {
+					if sm, ok := s.(map[string]interface{}); ok {
+						sub[i] = sanitizeOverrideSchema(sm)
+					} else {
+						sub[i] = s
+					}
+				}
+				out[k] = sub
+				continue
+			}
+			out[k] = v
+		case "additionalProperties", "items", "not", "if", "then", "else", "contains", "propertyNames":
+			// Single nested schema.
+			if sm, ok := v.(map[string]interface{}); ok {
+				out[k] = sanitizeOverrideSchema(sm)
+				continue
+			}
+			out[k] = v
+		default:
+			out[k] = v
+		}
+	}
+
+	return out
 }
 
 // generateValuesSchema builds a JSON Schema for values.yaml.
-// Charts and services entries use permissive schemas (additionalProperties: true)
-// so users can override any value. The deployment field is required.
+// A chart entry is validated against the chart's own values.schema.json when it ships one
+// (relaxed for partial overrides, see sanitizeOverrideSchema); charts without a schema fall
+// back to a permissive entry (additionalProperties: true). Service entries stay permissive.
+// The deployment field is required.
 func generateValuesSchema(input packageChartRenderInput) []byte {
 	chartProps := map[string]interface{}{}
 	for _, c := range input.Charts {
+		description := "Overrides for chart " + c.Name + " (version " + c.Version + ")"
+
+		if len(c.Schema) > 0 {
+			s := sanitizeOverrideSchema(c.Schema)
+			s["description"] = description
+			chartProps[c.Name] = s
+			continue
+		}
+
 		chartProps[c.Name] = map[string]interface{}{
 			"type":                 "object",
-			"description":          "Overrides for chart " + c.Name + " (version " + c.Version + ")",
+			"description":          description,
 			"additionalProperties": true,
 		}
 	}
