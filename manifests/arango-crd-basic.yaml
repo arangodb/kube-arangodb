@@ -212,48 +212,6 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: 77fc55a856fa799bd32f45868b2d0b4c
-    arangodb.com/x-preserve-unknown-fields: "true"
-  name: arangodeploymentreplications.replication.database.arangodb.com
-spec:
-  group: replication.database.arangodb.com
-  names:
-    kind: ArangoDeploymentReplication
-    listKind: ArangoDeploymentReplicationList
-    plural: arangodeploymentreplications
-    shortNames:
-      - arangorepl
-    singular: arangodeploymentreplication
-  scope: Namespaced
-  versions:
-    - name: v1
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: true
-    - name: v1alpha
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: false
-      storage: false
-    - name: v2alpha1
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: false
-      subresources:
-        status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  labels:
     arangodb.com/version: 7950bbd7730348b51f684a5eab8997bc
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangodeployments.database.arangodb.com
@@ -407,7 +365,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 411e0c26e8aeaeb9f8809f8921ec9461
+    arangodb.com/schema: 0241245258adc951fc2f330abe329a50
     arangodb.com/version: 389a7f8c66c9426fd0d6ee08590b7eaa
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangopermissionpolicies.permission.arangodb.com
@@ -442,9 +400,15 @@ spec:
                   required:
                     - name
                   type: object
+                description:
+                  description: Description is an optional human-readable description of this policy resource
+                  type: string
                 policy:
                   description: Policy defined the Authorization Policy
                   properties:
+                    description:
+                      description: Description is an optional human-readable description of this policy
+                      type: string
                     statements:
                       description: Statements list of the policy Statements
                       items:
@@ -456,6 +420,9 @@ spec:
                             items:
                               type: string
                             type: array
+                          description:
+                            description: Description is an optional human-readable description of what this statement does
+                            type: string
                           effect:
                             description: Effect defines the statement effect.
                             enum:
@@ -494,7 +461,75 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: cf8117c2fdb494822501ee6a968e04f4
+    arangodb.com/schema: 74b58bf36d55bd74f0f14127f173a7ab
+    arangodb.com/version: 28f985554c6f6d883e518906ea107d14
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangopermissionpolicyrolebindings.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionPolicyRoleBinding
+    listKind: ArangoPermissionPolicyRoleBindingList
+    plural: arangopermissionpolicyrolebindings
+    shortNames:
+      - arangopolicyrolebinding
+    singular: arangopermissionpolicyrolebinding
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if PolicyRoleBinding is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                deployment:
+                  description: Deployment keeps the Deployment Reference
+                  properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                policy:
+                  description: Policy defines the policy to bind, either by CRD name or direct sidecar name
+                  properties:
+                    name:
+                      description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
+                      type: string
+                  type: object
+                role:
+                  description: Role defines the role to bind to, either by CRD name or direct sidecar name
+                  properties:
+                    name:
+                      description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
+                      type: string
+                  type: object
+              required:
+                - deployment
+                - policy
+                - role
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/schema: 949fbcf3ef543afc5aeaaf5efc785606
     arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangopermissionroles.permission.arangodb.com
@@ -529,9 +564,74 @@ spec:
                   required:
                     - name
                   type: object
-                policy:
-                  description: Policy defined the Authorization Policy
+                description:
+                  description: Description is an optional human-readable description of this role
+                  type: string
+              required:
+                - deployment
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/schema: ebd52f3240c3c66adc0e54509fe52395
+    arangodb.com/version: e0fded031e4c71b5823be9b5cedd24ce
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangopermissionroleuserbindings.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionRoleUserBinding
+    listKind: ArangoPermissionRoleUserBindingList
+    plural: arangopermissionroleuserbindings
+    shortNames:
+      - arangoroleuserbinding
+    singular: arangopermissionroleuserbinding
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if RoleUserBinding is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                deployment:
+                  description: Deployment keeps the Deployment Reference
                   properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                role:
+                  description: Role defines the role to bind, either by CRD name or direct sidecar name
+                  properties:
+                    name:
+                      description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
+                      type: string
+                  type: object
+                scope:
+                  description: Scope defines the inline scope policy for this binding
+                  properties:
+                    description:
+                      description: Description is an optional human-readable description of this policy
+                      type: string
                     statements:
                       description: Statements list of the policy Statements
                       items:
@@ -543,6 +643,9 @@ spec:
                             items:
                               type: string
                             type: array
+                          description:
+                            description: Description is an optional human-readable description of what this statement does
+                            type: string
                           effect:
                             description: Effect defines the statement effect.
                             enum:
@@ -563,8 +666,14 @@ spec:
                   required:
                     - statements
                   type: object
+                userName:
+                  description: UserName is the name of the user to bind the role to
+                  type: string
               required:
                 - deployment
+                - role
+                - scope
+                - userName
               type: object
             status:
               description: Object with preserved fields for backward compatibility
@@ -580,7 +689,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 1c21f9107dc799e846d052afc2b24b80
+    arangodb.com/schema: 33e5f940c2c6ec7c82e4e7de3cb22b07
     arangodb.com/version: 82c86e31586062462e30751bf7a113e2
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangopermissiontokens.permission.arangodb.com
@@ -616,8 +725,11 @@ spec:
                     - name
                   type: object
                 policy:
-                  description: Policy defined the Authorization Policy
+                  description: Policy defines an inline authorization policy to create for this token
                   properties:
+                    description:
+                      description: Description is an optional human-readable description of this policy
+                      type: string
                     statements:
                       description: Statements list of the policy Statements
                       items:
@@ -629,6 +741,9 @@ spec:
                             items:
                               type: string
                             type: array
+                          description:
+                            description: Description is an optional human-readable description of what this statement does
+                            type: string
                           effect:
                             description: Effect defines the statement effect.
                             enum:
@@ -650,10 +765,114 @@ spec:
                     - statements
                   type: object
                 roles:
-                  description: Roles keeps the roles assigned to the token
+                  description: |-
+                    Roles keeps the scoped role references assigned to the token.
+                    Each entry binds a role with a required scope boundary.
                   items:
-                    type: string
+                    properties:
+                      role:
+                        description: Role references an ArangoPermissionRole CRD by name
+                        properties:
+                          name:
+                            description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
+                            type: string
+                        type: object
+                      scope:
+                        description: Scope defines the boundary for this role binding
+                        properties:
+                          policy:
+                            description: Policy defines the boundary policy inline
+                            properties:
+                              description:
+                                description: Description is an optional human-readable description of this policy
+                                type: string
+                              statements:
+                                description: Statements list of the policy Statements
+                                items:
+                                  properties:
+                                    actions:
+                                      description: |-
+                                        Actions defines the list of actions.
+                                        Action needs to be defined in format `<namespace>:<name>`
+                                      items:
+                                        type: string
+                                      type: array
+                                    description:
+                                      description: Description is an optional human-readable description of what this statement does
+                                      type: string
+                                    effect:
+                                      description: Effect defines the statement effect.
+                                      enum:
+                                        - Allow
+                                        - Deny
+                                      type: string
+                                    resources:
+                                      description: Resources defines the list of resources
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                    - actions
+                                    - effect
+                                    - resources
+                                  type: object
+                                type: array
+                            required:
+                              - statements
+                            type: object
+                          ref:
+                            description: Ref references an ArangoPermissionPolicy CRD to use as boundary
+                            properties:
+                              name:
+                                description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
+                                type: string
+                            type: object
+                        type: object
+                    required:
+                      - role
+                      - scope
+                    type: object
                   type: array
+                scope:
+                  description: Scope defines the boundary policy that constrains what the referenced policy can grant on this token's managed role
+                  properties:
+                    description:
+                      description: Description is an optional human-readable description of this policy
+                      type: string
+                    statements:
+                      description: Statements list of the policy Statements
+                      items:
+                        properties:
+                          actions:
+                            description: |-
+                              Actions defines the list of actions.
+                              Action needs to be defined in format `<namespace>:<name>`
+                            items:
+                              type: string
+                            type: array
+                          description:
+                            description: Description is an optional human-readable description of what this statement does
+                            type: string
+                          effect:
+                            description: Effect defines the statement effect.
+                            enum:
+                              - Allow
+                              - Deny
+                            type: string
+                          resources:
+                            description: Resources defines the list of resources
+                            items:
+                              type: string
+                            type: array
+                        required:
+                          - actions
+                          - effect
+                          - resources
+                        type: object
+                      type: array
+                  required:
+                    - statements
+                  type: object
                 ttl:
                   description: TTL Defines the TTL of the token.
                   type: string
@@ -1149,7 +1368,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 3d17b129967c8f6b713b72b7b1484889
+    arangodb.com/schema: 4f39d3c472aa8eac913abd346575d84e
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoprofiles.scheduler.arangodb.com
@@ -1168,6 +1387,9 @@ spec:
           properties:
             spec:
               properties:
+                description:
+                  description: Description of the ArangoProfile
+                  type: string
                 selectors:
                   description: Selectors keeps information about ProfileSelectors
                   properties:
@@ -1193,6 +1415,11 @@ spec:
                           type: object
                       type: object
                   type: object
+                tags:
+                  description: Tags assigned to the ArangoProfile
+                  items:
+                    type: string
+                  type: array
                 template:
                   description: Template keeps the Profile Template
                   properties:
@@ -1298,10 +1525,10 @@ spec:
                                 description: |-
                                   Arguments to the entrypoint.
                                   The container image's CMD is used if this is not provided.
-                                  Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-                                  cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-                                  to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-                                  produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                  Variable references `$(VAR_NAME)` are expanded using the container's environment. If a variable
+                                  cannot be resolved, the reference in the input string will be unchanged. Double `$$` are reduced
+                                  to a single `$`, which allows for escaping the `$(VAR_NAME)` syntax: i.e. `$$(VAR_NAME)` will
+                                  produce the string literal `$(VAR_NAME)`. Escaped references will never be expanded, regardless
                                   of whether the variable exists or not. Cannot be updated.
                                 items:
                                   type: string
@@ -1310,10 +1537,10 @@ spec:
                                 description: |-
                                   Entrypoint array. Not executed within a shell.
                                   The container image's ENTRYPOINT is used if this is not provided.
-                                  Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-                                  cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-                                  to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-                                  produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                  Variable references `$(VAR_NAME)` are expanded using the container's environment. If a variable
+                                  cannot be resolved, the reference in the input string will be unchanged. Double `$$` are reduced
+                                  to a single `$`, which allows for escaping the `$(VAR_NAME)` syntax: i.e. `$$(VAR_NAME)` will
+                                  produce the string literal `$(VAR_NAME)`. Escaped references will never be expanded, regardless
                                   of whether the variable exists or not. Cannot be updated.
                                 items:
                                   type: string
@@ -3051,6 +3278,9 @@ spec:
           properties:
             spec:
               properties:
+                description:
+                  description: Description of the ArangoProfile
+                  type: string
                 selectors:
                   description: Selectors keeps information about ProfileSelectors
                   properties:
@@ -3076,6 +3306,11 @@ spec:
                           type: object
                       type: object
                   type: object
+                tags:
+                  description: Tags assigned to the ArangoProfile
+                  items:
+                    type: string
+                  type: array
                 template:
                   description: Template keeps the Profile Template
                   properties:
@@ -3155,6 +3390,73 @@ spec:
                                     type: object
                                 type: object
                               type: array
+                            securityContext:
+                              description: SecurityContext holds container-level security attributes and common container settings.
+                              properties:
+                                allowPrivilegeEscalation:
+                                  type: boolean
+                                appArmorProfile:
+                                  properties:
+                                    localhostProfile:
+                                      type: string
+                                    type:
+                                      type: string
+                                  type: object
+                                capabilities:
+                                  properties:
+                                    add:
+                                      items:
+                                        type: string
+                                      type: array
+                                    drop:
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                privileged:
+                                  type: boolean
+                                procMount:
+                                  type: string
+                                readOnlyRootFilesystem:
+                                  type: boolean
+                                runAsGroup:
+                                  format: int64
+                                  type: integer
+                                runAsNonRoot:
+                                  type: boolean
+                                runAsUser:
+                                  format: int64
+                                  type: integer
+                                seLinuxOptions:
+                                  properties:
+                                    level:
+                                      type: string
+                                    role:
+                                      type: string
+                                    type:
+                                      type: string
+                                    user:
+                                      type: string
+                                  type: object
+                                seccompProfile:
+                                  properties:
+                                    localhostProfile:
+                                      type: string
+                                    type:
+                                      type: string
+                                  type: object
+                                windowsOptions:
+                                  properties:
+                                    gmsaCredentialSpec:
+                                      type: string
+                                    gmsaCredentialSpecName:
+                                      type: string
+                                    hostProcess:
+                                      type: boolean
+                                    runAsUserName:
+                                      type: string
+                                  type: object
+                              type: object
                             volumeMounts:
                               description: VolumeMounts keeps list of pod volumes to mount into the container's filesystem.
                               items:
@@ -3183,10 +3485,10 @@ spec:
                                 description: |-
                                   Arguments to the entrypoint.
                                   The container image's CMD is used if this is not provided.
-                                  Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-                                  cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-                                  to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-                                  produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                  Variable references `$(VAR_NAME)` are expanded using the container's environment. If a variable
+                                  cannot be resolved, the reference in the input string will be unchanged. Double `$$` are reduced
+                                  to a single `$`, which allows for escaping the `$(VAR_NAME)` syntax: i.e. `$$(VAR_NAME)` will
+                                  produce the string literal `$(VAR_NAME)`. Escaped references will never be expanded, regardless
                                   of whether the variable exists or not. Cannot be updated.
                                 items:
                                   type: string
@@ -3195,10 +3497,10 @@ spec:
                                 description: |-
                                   Entrypoint array. Not executed within a shell.
                                   The container image's ENTRYPOINT is used if this is not provided.
-                                  Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-                                  cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-                                  to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-                                  produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                  Variable references `$(VAR_NAME)` are expanded using the container's environment. If a variable
+                                  cannot be resolved, the reference in the input string will be unchanged. Double `$$` are reduced
+                                  to a single `$`, which allows for escaping the `$(VAR_NAME)` syntax: i.e. `$$(VAR_NAME)` will
+                                  produce the string literal `$(VAR_NAME)`. Escaped references will never be expanded, regardless
                                   of whether the variable exists or not. Cannot be updated.
                                 items:
                                   type: string
@@ -3736,10 +4038,10 @@ spec:
                               description: |-
                                 Arguments to the entrypoint.
                                 The container image's CMD is used if this is not provided.
-                                Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-                                cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-                                to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-                                produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                Variable references `$(VAR_NAME)` are expanded using the container's environment. If a variable
+                                cannot be resolved, the reference in the input string will be unchanged. Double `$$` are reduced
+                                to a single `$`, which allows for escaping the `$(VAR_NAME)` syntax: i.e. `$$(VAR_NAME)` will
+                                produce the string literal `$(VAR_NAME)`. Escaped references will never be expanded, regardless
                                 of whether the variable exists or not. Cannot be updated.
                               items:
                                 type: string
@@ -3748,10 +4050,10 @@ spec:
                               description: |-
                                 Entrypoint array. Not executed within a shell.
                                 The container image's ENTRYPOINT is used if this is not provided.
-                                Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-                                cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-                                to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-                                produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+                                Variable references `$(VAR_NAME)` are expanded using the container's environment. If a variable
+                                cannot be resolved, the reference in the input string will be unchanged. Double `$$` are reduced
+                                to a single `$`, which allows for escaping the `$(VAR_NAME)` syntax: i.e. `$$(VAR_NAME)` will
+                                produce the string literal `$(VAR_NAME)`. Escaped references will never be expanded, regardless
                                 of whether the variable exists or not. Cannot be updated.
                               items:
                                 type: string

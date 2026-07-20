@@ -10,7 +10,7 @@ title: ArangoPermissionRole V1Alpha1
 
 ### .spec.deployment.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L53)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/shared/v1/object.go#L53)</sup>
 
 This field is **required**
 
@@ -20,7 +20,7 @@ Name of the object
 
 ### .spec.description
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/role_spec.go#L32)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/role_spec.go#L32)</sup>
 
 Description is an optional human-readable description of this role
 

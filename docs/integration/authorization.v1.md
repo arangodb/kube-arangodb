@@ -13,8 +13,8 @@ is authorized to perform an action on a resource.
 
 ## Service Definition
 
-- [Proto](https://github.com/arangodb/kube-arangodb/blob/1.4.3/integrations/authorization/v1/definition/definition.proto)
-- [Request Messages](https://github.com/arangodb/kube-arangodb/blob/1.4.3/integrations/authorization/v1/definition/request.proto)
+- [Proto](https://github.com/arangodb/kube-arangodb/blob/1.4.4/integrations/authorization/v1/definition/definition.proto)
+- [Request Messages](https://github.com/arangodb/kube-arangodb/blob/1.4.4/integrations/authorization/v1/definition/request.proto)
 
 ## Endpoints
 

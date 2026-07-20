@@ -212,48 +212,6 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: 77fc55a856fa799bd32f45868b2d0b4c
-    arangodb.com/x-preserve-unknown-fields: "true"
-  name: arangodeploymentreplications.replication.database.arangodb.com
-spec:
-  group: replication.database.arangodb.com
-  names:
-    kind: ArangoDeploymentReplication
-    listKind: ArangoDeploymentReplicationList
-    plural: arangodeploymentreplications
-    shortNames:
-      - arangorepl
-    singular: arangodeploymentreplication
-  scope: Namespaced
-  versions:
-    - name: v1
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: true
-    - name: v1alpha
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: false
-      storage: false
-    - name: v2alpha1
-      schema:
-        openAPIV3Schema:
-          type: object
-          x-kubernetes-preserve-unknown-fields: true
-      served: true
-      storage: false
-      subresources:
-        status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  labels:
     arangodb.com/version: 7950bbd7730348b51f684a5eab8997bc
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangodeployments.database.arangodb.com
@@ -414,6 +372,39 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/version: 28f985554c6f6d883e518906ea107d14
+    arangodb.com/x-preserve-unknown-fields: "true"
+  name: arangopermissionpolicyrolebindings.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionPolicyRoleBinding
+    listKind: ArangoPermissionPolicyRoleBindingList
+    plural: arangopermissionpolicyrolebindings
+    shortNames:
+      - arangopolicyrolebinding
+    singular: arangopermissionpolicyrolebinding
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if PolicyRoleBinding is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
     arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangopermissionroles.permission.arangodb.com
@@ -430,6 +421,39 @@ spec:
   versions:
     - additionalPrinterColumns:
         - description: Defines if Role is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/version: e0fded031e4c71b5823be9b5cedd24ce
+    arangodb.com/x-preserve-unknown-fields: "true"
+  name: arangopermissionroleuserbindings.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionRoleUserBinding
+    listKind: ArangoPermissionRoleUserBindingList
+    plural: arangopermissionroleuserbindings
+    shortNames:
+      - arangoroleuserbinding
+    singular: arangopermissionroleuserbinding
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if RoleUserBinding is valid
           jsonPath: .status.conditions[?(@.type=="Ready")].status
           name: Ready
           type: string

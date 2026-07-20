@@ -10,7 +10,7 @@ title: ArangoPermissionPolicyRoleBinding V1Alpha1
 
 ### .spec.deployment.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/shared/v1/object.go#L53)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/shared/v1/object.go#L53)</sup>
 
 This field is **required**
 
@@ -20,7 +20,7 @@ Name of the object
 
 ### .spec.policy.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/binding_ref.go#L33)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L33)</sup>
 
 Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
 
@@ -28,7 +28,7 @@ Name references an ArangoPermission CRD by name. The operator resolves it to the
 
 ### .spec.role.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.3/pkg/apis/permission/v1alpha1/binding_ref.go#L33)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L33)</sup>
 
 Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
 
