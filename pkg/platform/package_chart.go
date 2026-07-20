@@ -30,7 +30,7 @@ import (
 	"io"
 	"os"
 	"path"
-	"strings"
+	goStrings "strings"
 
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/config"
@@ -282,7 +282,7 @@ func extractChartFile(chartData []byte, name string) ([]byte, error) {
 		// filepath.SplitList must not be used here: it splits on the OS path-list
 		// separator (":" on Linux), so it never matches and would let nested subchart
 		// files through.
-		parts := strings.Split(path.Clean(hdr.Name), "/")
+		parts := goStrings.Split(path.Clean(hdr.Name), "/")
 		if len(parts) == 2 && parts[1] == name {
 			data, err := io.ReadAll(tr)
 			if err != nil {
