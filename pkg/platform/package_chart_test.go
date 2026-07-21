@@ -138,7 +138,7 @@ func Test_sanitizeOverrideSchema(t *testing.T) {
 		},
 	}
 
-	out := sanitizeOverrideSchema(in)
+	out := sanitizeOverrideSchema(in, "#/properties/charts/properties/demo")
 
 	require.NotContains(t, out, "$schema", "dialect must not be re-declared in a subschema")
 	require.NotContains(t, out, "$id", "base URI must not shift")
@@ -160,6 +160,56 @@ func Test_sanitizeOverrideSchema(t *testing.T) {
 	// Input must not be mutated.
 	require.Contains(t, in, "$schema")
 	require.Contains(t, in, "required")
+}
+
+// Test_sanitizeOverrideSchema_RewritesLocalRefs ensures a chart schema that uses internal
+// `$ref`s stays resolvable once inlined. Without rewriting, `#/definitions/...` would point
+// at the generated release schema - which has no `definitions` - and helm would reject the
+// release chart even against its own packaged defaults.
+func Test_sanitizeOverrideSchema_RewritesLocalRefs(t *testing.T) {
+	in := map[string]interface{}{
+		"type": "object",
+		"definitions": map[string]interface{}{
+			"image": map[string]interface{}{"type": "object"},
+		},
+		"properties": map[string]interface{}{
+			"images": map[string]interface{}{
+				"additionalProperties": map[string]interface{}{"$ref": "#/definitions/image"},
+			},
+			"list": map[string]interface{}{
+				"items": map[string]interface{}{"$ref": "#/definitions/image"},
+			},
+			"self":     map[string]interface{}{"$ref": "#"},
+			"external": map[string]interface{}{"$ref": "https://example.com/other.json#/definitions/x"},
+		},
+	}
+
+	base := "#/properties/charts/properties/" + escapeJSONPointer("my-chart")
+	out := sanitizeOverrideSchema(in, base)
+
+	props := out["properties"].(map[string]interface{})
+
+	require.Equal(t, base+"/definitions/image",
+		props["images"].(map[string]interface{})["additionalProperties"].(map[string]interface{})["$ref"],
+		"refs under additionalProperties must be rebased")
+	require.Equal(t, base+"/definitions/image",
+		props["list"].(map[string]interface{})["items"].(map[string]interface{})["$ref"],
+		"refs under items must be rebased")
+	require.Equal(t, base, props["self"].(map[string]interface{})["$ref"], "a bare # must become the base")
+	require.Equal(t, "https://example.com/other.json#/definitions/x",
+		props["external"].(map[string]interface{})["$ref"], "non-local refs must be left alone")
+
+	// The definitions the refs point at must survive the inlining.
+	require.Contains(t, out, "definitions")
+	require.Contains(t, out["definitions"].(map[string]interface{}), "image")
+}
+
+// Test_escapeJSONPointer covers RFC 6901 escaping of chart names used in ref bases.
+func Test_escapeJSONPointer(t *testing.T) {
+	require.Equal(t, "plain-chart", escapeJSONPointer("plain-chart"))
+	require.Equal(t, "a~1b", escapeJSONPointer("a/b"))
+	require.Equal(t, "a~0b", escapeJSONPointer("a~b"))
+	require.Equal(t, "a~01b", escapeJSONPointer("a~1b"), "~ must be escaped before /")
 }
 
 // Test_generateValuesSchema_UsesChartSchema ensures a chart's own schema is inlined when

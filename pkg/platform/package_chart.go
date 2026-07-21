@@ -460,6 +460,13 @@ func formatValueDefault(v interface{}) string {
 	return escapeTableCell(s)
 }
 
+// escapeJSONPointer escapes a single JSON Pointer reference token (RFC 6901).
+func escapeJSONPointer(in string) string {
+	in = goStrings.ReplaceAll(in, "~", "~0")
+
+	return goStrings.ReplaceAll(in, "/", "~1")
+}
+
 // escapeTableCell keeps a value from breaking out of a Markdown table row.
 func escapeTableCell(s string) string {
 	s = goStrings.ReplaceAll(s, "|", "\\|")
@@ -476,20 +483,31 @@ func escapeTableCell(s string) string {
 //
 // Recursion only descends into positions that actually hold schemas, so a chart value
 // legitimately named "required" (a key under `properties`) is preserved.
-func sanitizeOverrideSchema(in map[string]interface{}) map[string]interface{} {
+//
+// refBase is the JSON Pointer at which the schema is being inlined. Local `$ref`s are
+// rewritten onto it, because once inlined `#/` no longer means the chart's own schema but
+// the generated release schema - a chart referencing `#/definitions/image` would otherwise
+// produce a release chart that fails validation against its own defaults.
+func sanitizeOverrideSchema(in map[string]interface{}, refBase string) map[string]interface{} {
 	out := make(map[string]interface{}, len(in))
 
 	for k, v := range in {
 		switch k {
 		case "required", "$schema", "$id":
 			continue
+		case "$ref":
+			if ref, ok := v.(string); ok && goStrings.HasPrefix(ref, "#") {
+				out[k] = refBase + goStrings.TrimPrefix(ref, "#")
+				continue
+			}
+			out[k] = v
 		case "properties", "patternProperties", "$defs", "definitions":
 			// Maps keyed by property name - keys are data, values are schemas.
 			if m, ok := v.(map[string]interface{}); ok {
 				sub := make(map[string]interface{}, len(m))
 				for name, s := range m {
 					if sm, ok := s.(map[string]interface{}); ok {
-						sub[name] = sanitizeOverrideSchema(sm)
+						sub[name] = sanitizeOverrideSchema(sm, refBase)
 					} else {
 						sub[name] = s
 					}
@@ -504,7 +522,7 @@ func sanitizeOverrideSchema(in map[string]interface{}) map[string]interface{} {
 				sub := make([]interface{}, len(l))
 				for i, s := range l {
 					if sm, ok := s.(map[string]interface{}); ok {
-						sub[i] = sanitizeOverrideSchema(sm)
+						sub[i] = sanitizeOverrideSchema(sm, refBase)
 					} else {
 						sub[i] = s
 					}
@@ -516,7 +534,7 @@ func sanitizeOverrideSchema(in map[string]interface{}) map[string]interface{} {
 		case "additionalProperties", "items", "not", "if", "then", "else", "contains", "propertyNames":
 			// Single nested schema.
 			if sm, ok := v.(map[string]interface{}); ok {
-				out[k] = sanitizeOverrideSchema(sm)
+				out[k] = sanitizeOverrideSchema(sm, refBase)
 				continue
 			}
 			out[k] = v
@@ -539,7 +557,7 @@ func generateValuesSchema(input packageChartRenderInput) []byte {
 		description := "Overrides for chart " + c.Name + " (version " + c.Version + ")"
 
 		if len(c.Schema) > 0 {
-			s := sanitizeOverrideSchema(c.Schema)
+			s := sanitizeOverrideSchema(c.Schema, "#/properties/charts/properties/"+escapeJSONPointer(c.Name))
 			s["description"] = description
 			chartProps[c.Name] = s
 			continue
