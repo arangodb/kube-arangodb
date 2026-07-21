@@ -24,7 +24,7 @@ package v2alpha1
 type MetricsSpecExtensions struct {
 	// UsageMetrics enables ArangoDB Usage metrics scrape. Affects only DBServers in the Cluster mode.
 	// +doc/default: false
-	// +doc/link: Documentation|https://docs.arangodb.com/devel/develop/http-api/monitoring/metrics/#get-usage-metrics
+	// +doc/link: Documentation|https://docs.arango.ai/arangodb/devel/develop/http-api/monitoring/metrics/#get-the-usage-metrics
 	// +doc/important: UsageMetrics needs to be also enabled via DBServer Arguments
 	UsageMetrics *bool `json:"usageMetrics,omitempty"`
 }

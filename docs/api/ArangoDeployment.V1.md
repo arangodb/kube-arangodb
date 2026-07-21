@@ -260,7 +260,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -337,7 +337,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -354,7 +354,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -1371,7 +1371,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -1448,7 +1448,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -1465,7 +1465,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -2351,7 +2351,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -2428,7 +2428,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -2445,7 +2445,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -3554,7 +3554,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -3631,7 +3631,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -3648,7 +3648,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -4913,7 +4913,7 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 UsageMetrics enables ArangoDB Usage metrics scrape. Affects only DBServers in the Cluster mode.
 
 Links:
-* [Documentation](https://docs.arangodb.com/devel/develop/http-api/monitoring/metrics/#get-usage-metrics)
+* [Documentation](https://docs.arango.ai/arangodb/devel/develop/http-api/monitoring/metrics/#get-the-usage-metrics)
 
 Default Value: `false`
 
@@ -5377,7 +5377,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -5454,7 +5454,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -5471,7 +5471,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -6291,7 +6291,7 @@ Type: `map[string][]string` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 The mapping of the Server Name Indication options.
 
 Links:
-* [Server Name Indication](https://docs.arangodb.com/stable/components/arangodb-server/options/#--sslserver-name-indication)
+* [Server Name Indication](https://docs.arango.ai/arangodb/stable/components/arangodb-server/options/#--sslserver-name-indication)
 
 Example:
 ```yaml
@@ -6568,7 +6568,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -6645,7 +6645,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -6662,7 +6662,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -7540,7 +7540,7 @@ If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a 
 Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `0`
 
@@ -7617,7 +7617,7 @@ OverrideDetectedNumberOfCores determines if number of cores should be overridden
 If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -7634,7 +7634,7 @@ OverrideDetectedTotalMemory determines if memory should be overridden based on v
 If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 
 Links:
-* [Documentation of the ArangoDB Envs](https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/)
+* [Documentation of the ArangoDB Envs](https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/)
 
 Default Value: `true`
 
@@ -8335,7 +8335,7 @@ Type: `map[string][]string` <sup>[\[ref\]](https://github.com/arangodb/kube-aran
 The mapping of the Server Name Indication options.
 
 Links:
-* [Server Name Indication](https://docs.arangodb.com/stable/components/arangodb-server/options/#--sslserver-name-indication)
+* [Server Name Indication](https://docs.arango.ai/arangodb/stable/components/arangodb-server/options/#--sslserver-name-indication)
 
 Example:
 ```yaml
