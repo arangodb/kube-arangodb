@@ -82,15 +82,15 @@ type packageChartRenderInputChart struct {
 	ChartData []byte
 	Values    map[string]interface{}
 	Schema    map[string]interface{}
+
+	// DocumentedValues flattens Values into individual override paths, described using
+	// Schema where it provides descriptions.
+	DocumentedValues []packageChartRenderInputValue
 }
 
 type packageChartRenderInputService struct {
 	Name     string
 	ChartRef string
-
-	// Values documents the top-level values of the referenced chart, as effective for
-	// this service (chart defaults with the release overrides applied).
-	Values []packageChartRenderInputValue
 }
 
 // packageChartRenderInputValue is a single documented top-level value of a service.
@@ -181,10 +181,6 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 		o := packageChartRelease(k, v)
 
 		if o != nil {
-			// Charts are resolved above, so the referenced chart's defaults and schema are
-			// available to document what this service exposes.
-			o.Values = serviceValues(input.Charts[o.ChartRef], v.Overrides)
-
 			input.Services[k] = *o
 		}
 	}
@@ -213,10 +209,7 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 
 	// Generate per-service templates
 	for _, s := range input.Services {
-		builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateResourceService, packageChartRenderInputServiceTemplate{
-			Name:     s.Name,
-			ChartRef: s.ChartRef,
-		}), "%s/templates/services/%s.yaml", input.Name, s.Name)
+		builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateResourceService, packageChartRenderInputServiceTemplate(s)), "%s/templates/services/%s.yaml", input.Name, s.Name)
 	}
 
 	builder = builder.File(util.GZipBuilderProcessBytes(licenseData.Full()), "%s/LICENSE", input.Name)
@@ -272,11 +265,12 @@ func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint s
 	}
 
 	return &packageChartRenderInputChart{
-		Name:      name,
-		Version:   packageSpec.Version,
-		ChartData: chart,
-		Values:    defaults,
-		Schema:    schema,
+		Name:             name,
+		Version:          packageSpec.Version,
+		ChartData:        chart,
+		Values:           defaults,
+		Schema:           schema,
+		DocumentedValues: documentedValues(defaults, schema),
 	}, nil
 }
 
@@ -360,40 +354,25 @@ func extractChartSchema(chartData []byte) (map[string]interface{}, error) {
 	return schema, nil
 }
 
-// serviceValues documents the top-level values a service exposes: the referenced chart's
-// defaults with the release overrides applied, described using the chart's own
-// values.schema.json when it provides descriptions. Returns nil when the referenced chart
-// could not be resolved or exposes no values.
-func serviceValues(chart packageChartRenderInputChart, overrides helm.Values) []packageChartRenderInputValue {
-	effective := make(map[string]interface{}, len(chart.Values))
-	for k, v := range chart.Values {
-		effective[k] = v
-	}
-
-	// Release overrides win over the chart defaults for this service.
-	if len(overrides) > 0 {
-		var o map[string]interface{}
-		if err := json.Unmarshal(overrides, &o); err == nil {
-			for k, v := range o {
-				effective[k] = v
-			}
-		}
-	}
-
-	if len(effective) == 0 {
+// documentedValues flattens a chart's effective values (its packaged defaults with the
+// platform.yaml overrides already applied) into individual override paths, described using
+// the chart's own values.schema.json where it provides descriptions. Values belong to the
+// chart rather than to a service, since a chart may back several services - or none.
+func documentedValues(values, schema map[string]interface{}) []packageChartRenderInputValue {
+	if len(values) == 0 {
 		return nil
 	}
 
 	var out []packageChartRenderInputValue
 
-	flattenValues("", effective, chart.Schema, &out, 0)
+	flattenValues("", values, schema, &out, 0)
 
 	return out
 }
 
-// serviceValuesMaxDepth bounds how deep nested values are expanded, so a pathological
+// documentedValuesMaxDepth bounds how deep nested values are expanded, so a pathological
 // chart cannot produce an unreadable table.
-const serviceValuesMaxDepth = 6
+const documentedValuesMaxDepth = 6
 
 // flattenValues expands nested values into dotted key paths so every leaf is documented
 // with its own default, rather than collapsing a subtree into an opaque JSON blob. An
@@ -417,7 +396,7 @@ func flattenValues(prefix string, values map[string]interface{}, schema map[stri
 
 		// Only descend into non-empty objects; everything else (scalar, list, empty
 		// object) is a leaf and gets its own row.
-		if nested, ok := values[k].(map[string]interface{}); ok && len(nested) > 0 && depth < serviceValuesMaxDepth {
+		if nested, ok := values[k].(map[string]interface{}); ok && len(nested) > 0 && depth < documentedValuesMaxDepth {
 			if description != "" {
 				*out = append(*out, packageChartRenderInputValue{
 					Key:         path,

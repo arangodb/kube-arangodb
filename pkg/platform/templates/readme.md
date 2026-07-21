@@ -79,7 +79,39 @@ services:
 Charts that ship a `values.schema.json` have their override block validated against it, with
 `required` constraints relaxed because overrides are a partial document. Charts without a schema
 accept any values.
+
+### Chart values
+
+Every value each chart exposes, with the default it is packaged with. Values are listed by their
+full path, so `charts.<chart>.images.application.tag` is set as:
+
+```yaml
+charts:
+  <chart>:
+    images:
+      application:
+        tag: <value>
+```
+
+or on the command line:
+
+```bash
+--set charts.<chart>.images.application.tag=<value>
+```
+
+The same values can be set per service under `services.<service>.values` - see [Services](#services).
+Descriptions are taken from the chart's `values.schema.json` where it provides them.
+{{ range $key, $value := .Charts }}
+#### `{{ $value.Name }}`
+{{ if $value.DocumentedValues }}
+| Value | Default | Description |
+|-------|---------|-------------|
+{{- range $v := $value.DocumentedValues }}
+| `charts.{{ $value.Name }}.{{ $v.Key }}` | {{ if $v.Default }}`{{ $v.Default }}`{{ else }}-{{ end }} | {{ if $v.Description }}{{ $v.Description }}{{ else }}-{{ end }} |
+{{- end }}
 {{ else }}
+This chart exposes no configurable values.
+{{ end }}{{ end }}{{ else }}
 This release bundles no charts.
 {{ end }}
 ## Services
@@ -90,34 +122,18 @@ This release bundles no charts.
 | `{{ $value.Name }}` | `{{ $value.ChartRef }}` |
 {{- end }}
 
-### Service values
-
-Every value each service exposes, with the default it is packaged with. Nested values are listed
-by their full path, so `images.application.tag` is set as:
+Each service accepts the same values as the chart it is created from, set under
+`services.<service>.values` instead of `charts.<chart>`. See [Chart values](#chart-values) for the
+full list, for example:
 
 ```yaml
 services:
-  <service>:
-    values:
-      images:
-        application:
-          tag: <value>
-```
-
-Descriptions are taken from the chart's `values.schema.json` where it provides them.
-{{ range $key, $value := .Services }}
-#### `{{ $value.Name }}`
-
-Chart `{{ $value.ChartRef }}`.
-{{ if $value.Values }}
-| Value | Default | Description |
-|-------|---------|-------------|
-{{- range $v := $value.Values }}
-| `{{ $v.Key }}` | {{ if $v.Default }}`{{ $v.Default }}`{{ else }}-{{ end }} | {{ if $v.Description }}{{ $v.Description }}{{ else }}-{{ end }} |
+{{- range $key, $value := .Services }}
+  {{ $value.Name }}:
+    values: {}
 {{- end }}
+```
 {{ else }}
-This service exposes no values.
-{{ end }}{{ end }}{{ else }}
 This release bundles no services.
 {{ end }}
 ## Verifying the installation

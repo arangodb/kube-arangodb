@@ -202,34 +202,31 @@ func Test_generateValuesSchema_UsesChartSchema(t *testing.T) {
 	require.Equal(t, true, noSchema["additionalProperties"], "charts without a schema stay permissive")
 }
 
-// Test_serviceValues covers the per-service value documentation: chart defaults, release
-// overrides winning over them, descriptions pulled from the chart schema, and stable order.
-func Test_serviceValues(t *testing.T) {
-	chart := packageChartRenderInputChart{
-		Name:    "demo",
-		Version: "1.0.0",
-		Values: map[string]interface{}{
-			"replicas": 1,
-			"image":    "registry.example.com/demo:1.0.0",
-			"empty":    "",
-			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{"cpu": "100m", "memory": "128Mi"},
-			},
+// Test_documentedValues covers the per-chart value documentation: flattening to full
+// override paths, descriptions pulled from the chart schema, and stable order.
+func Test_documentedValues(t *testing.T) {
+	chartValues := map[string]interface{}{
+		"replicas": 1,
+		"image":    "registry.example.com/demo:1.0.0",
+		"empty":    "",
+		"resources": map[string]interface{}{
+			"requests": map[string]interface{}{"cpu": "100m", "memory": "128Mi"},
 		},
-		Schema: map[string]interface{}{
-			"properties": map[string]interface{}{
-				"replicas": map[string]interface{}{"description": "Number of replicas"},
-				"image":    map[string]interface{}{"description": "Container image | with a pipe"},
-				// "empty" intentionally has no description
-				"resources": map[string]interface{}{
-					"description": "Compute resources",
-					"properties": map[string]interface{}{
-						"requests": map[string]interface{}{
-							// no description on this level - it must not be listed
-							"properties": map[string]interface{}{
-								"cpu": map[string]interface{}{"description": "CPU request"},
-								// "memory" intentionally has no description
-							},
+	}
+
+	chartSchema := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"replicas": map[string]interface{}{"description": "Number of replicas"},
+			"image":    map[string]interface{}{"description": "Container image | with a pipe"},
+			// "empty" intentionally has no description
+			"resources": map[string]interface{}{
+				"description": "Compute resources",
+				"properties": map[string]interface{}{
+					"requests": map[string]interface{}{
+						// no description on this level - it must not be listed
+						"properties": map[string]interface{}{
+							"cpu": map[string]interface{}{"description": "CPU request"},
+							// "memory" intentionally has no description
 						},
 					},
 				},
@@ -237,7 +234,7 @@ func Test_serviceValues(t *testing.T) {
 		},
 	}
 
-	values := serviceValues(chart, []byte(`{"replicas": 5}`))
+	values := documentedValues(chartValues, chartSchema)
 	require.NotEmpty(t, values)
 
 	byKey := map[string]packageChartRenderInputValue{}
@@ -257,8 +254,7 @@ func Test_serviceValues(t *testing.T) {
 		"resources.requests.memory",
 	}, keys, "values must be flattened and sorted for stable output")
 
-	// Release override wins over the chart default.
-	require.Equal(t, "5", byKey["replicas"].Default)
+	require.Equal(t, "1", byKey["replicas"].Default)
 	require.Equal(t, "Number of replicas", byKey["replicas"].Description)
 
 	// Pipes are escaped so they cannot break the Markdown table.
@@ -282,12 +278,12 @@ func Test_serviceValues(t *testing.T) {
 		require.NotContains(t, v.Default, "{", "nested values must be flattened, not JSON: %s", v.Key)
 	}
 
-	t.Run("unresolved chart yields no values", func(t *testing.T) {
-		require.Nil(t, serviceValues(packageChartRenderInputChart{}, nil))
+	t.Run("chart with no values yields nothing", func(t *testing.T) {
+		require.Nil(t, documentedValues(nil, nil))
 	})
 
 	t.Run("chart without schema still documents defaults", func(t *testing.T) {
-		v := serviceValues(packageChartRenderInputChart{Values: map[string]interface{}{"a": 1}}, nil)
+		v := documentedValues(map[string]interface{}{"a": 1}, nil)
 		require.Len(t, v, 1)
 		require.Equal(t, "1", v[0].Default)
 		require.Empty(t, v[0].Description)
@@ -301,7 +297,11 @@ func Test_packageChartTemplateReadme(t *testing.T) {
 			Name:    "arango-platform-release",
 			Version: "1.0.0",
 			Charts: map[string]packageChartRenderInputChart{
-				"gral":     {Name: "gral", Version: "1.2.3", Schema: map[string]interface{}{"type": "object"}},
+				"gral": {
+					Name: "gral", Version: "1.2.3",
+					Schema:           map[string]interface{}{"type": "object"},
+					DocumentedValues: []packageChartRenderInputValue{{Key: "replicas", Default: "2", Description: "Replica count"}},
+				},
 				"no-schem": {Name: "no-schem", Version: "4.5.6"},
 			},
 			Services: map[string]packageChartRenderInputService{
@@ -325,6 +325,10 @@ func Test_packageChartTemplateReadme(t *testing.T) {
 		require.Contains(t, readme, "not validated - chart ships no schema")
 		// Services table
 		require.Contains(t, readme, "| `gral` | `arangodb-gral` |")
+		// Values are documented per chart, using the full override path
+		require.Contains(t, readme, "| `charts.gral.replicas` | `2` | Replica count |")
+		require.Contains(t, readme, "This chart exposes no configurable values.")
+		require.NotContains(t, readme, "### Service values")
 		// No unrendered template directives leak through
 		require.NotContains(t, readme, "{{")
 		require.NotContains(t, readme, "<no value>")
