@@ -92,9 +92,19 @@ This release bundles no charts.
 
 ### Service values
 
-Top-level values each service exposes, with the defaults it is packaged with. Set them under
-`services.<service>.values`. Descriptions are taken from the chart's `values.schema.json`
-where it provides them.
+Every value each service exposes, with the default it is packaged with. Nested values are listed
+by their full path, so `images.application.tag` is set as:
+
+```yaml
+services:
+  <service>:
+    values:
+      images:
+        application:
+          tag: <value>
+```
+
+Descriptions are taken from the chart's `values.schema.json` where it provides them.
 {{ range $key, $value := .Services }}
 #### `{{ $value.Name }}`
 
@@ -103,7 +113,7 @@ Chart `{{ $value.ChartRef }}`.
 | Value | Default | Description |
 |-------|---------|-------------|
 {{- range $v := $value.Values }}
-| `{{ $v.Key }}` | `{{ $v.Default }}` | {{ if $v.Description }}{{ $v.Description }}{{ else }}-{{ end }} |
+| `{{ $v.Key }}` | {{ if $v.Default }}`{{ $v.Default }}`{{ else }}-{{ end }} | {{ if $v.Description }}{{ $v.Description }}{{ else }}-{{ end }} |
 {{- end }}
 {{ else }}
 This service exposes no values.

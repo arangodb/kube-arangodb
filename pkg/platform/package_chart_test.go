@@ -220,7 +220,19 @@ func Test_serviceValues(t *testing.T) {
 			"properties": map[string]interface{}{
 				"replicas": map[string]interface{}{"description": "Number of replicas"},
 				"image":    map[string]interface{}{"description": "Container image | with a pipe"},
-				// "resources" and "empty" intentionally have no description
+				// "empty" intentionally has no description
+				"resources": map[string]interface{}{
+					"description": "Compute resources",
+					"properties": map[string]interface{}{
+						"requests": map[string]interface{}{
+							// no description on this level - it must not be listed
+							"properties": map[string]interface{}{
+								"cpu": map[string]interface{}{"description": "CPU request"},
+								// "memory" intentionally has no description
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -235,7 +247,15 @@ func Test_serviceValues(t *testing.T) {
 		keys = append(keys, v.Key)
 	}
 
-	require.Equal(t, []string{"empty", "image", "replicas", "resources"}, keys, "values must be sorted for stable output")
+	// Nested values are expanded to full dotted paths, never collapsed into a JSON blob.
+	require.Equal(t, []string{
+		"empty",
+		"image",
+		"replicas",
+		"resources",
+		"resources.requests.cpu",
+		"resources.requests.memory",
+	}, keys, "values must be flattened and sorted for stable output")
 
 	// Release override wins over the chart default.
 	require.Equal(t, "5", byKey["replicas"].Default)
@@ -247,11 +267,20 @@ func Test_serviceValues(t *testing.T) {
 	// Empty string is rendered visibly rather than as a blank cell.
 	require.Equal(t, `""`, byKey["empty"].Default)
 
-	// Nested objects are shown as compact JSON.
-	require.Contains(t, byKey["resources"].Default, "requests")
+	// Leaves carry their own value and description from the nested schema.
+	require.Equal(t, "100m", byKey["resources.requests.cpu"].Default)
+	require.Equal(t, "CPU request", byKey["resources.requests.cpu"].Description)
+	require.Equal(t, "128Mi", byKey["resources.requests.memory"].Default)
 
-	// Missing descriptions come back empty (template renders "-").
-	require.Empty(t, byKey["resources"].Description)
+	// A documented intermediate object is listed so its description survives, but it has
+	// no default of its own - its children carry the values.
+	require.Empty(t, byKey["resources"].Default)
+	require.Equal(t, "Compute resources", byKey["resources"].Description)
+
+	// No value may render as JSON.
+	for _, v := range values {
+		require.NotContains(t, v.Default, "{", "nested values must be flattened, not JSON: %s", v.Key)
+	}
 
 	t.Run("unresolved chart yields no values", func(t *testing.T) {
 		require.Nil(t, serviceValues(packageChartRenderInputChart{}, nil))

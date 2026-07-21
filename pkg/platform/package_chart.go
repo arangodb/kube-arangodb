@@ -384,22 +384,77 @@ func serviceValues(chart packageChartRenderInputChart, overrides helm.Values) []
 		return nil
 	}
 
-	keys := make([]string, 0, len(effective))
-	for k := range effective {
+	var out []packageChartRenderInputValue
+
+	flattenValues("", effective, chart.Schema, &out, 0)
+
+	return out
+}
+
+// serviceValuesMaxDepth bounds how deep nested values are expanded, so a pathological
+// chart cannot produce an unreadable table.
+const serviceValuesMaxDepth = 6
+
+// flattenValues expands nested values into dotted key paths so every leaf is documented
+// with its own default, rather than collapsing a subtree into an opaque JSON blob. An
+// intermediate object is listed only when the schema documents it, so its description is
+// not lost; its leaves follow underneath.
+func flattenValues(prefix string, values map[string]interface{}, schema map[string]interface{}, out *[]packageChartRenderInputValue, depth int) {
+	keys := make([]string, 0, len(values))
+	for k := range values {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	out := make([]packageChartRenderInputValue, 0, len(keys))
 	for _, k := range keys {
-		out = append(out, packageChartRenderInputValue{
-			Key:         k,
-			Default:     formatValueDefault(effective[k]),
-			Description: schemaPropertyDescription(chart.Schema, k),
+		path := k
+		if prefix != "" {
+			path = prefix + "." + k
+		}
+
+		child := schemaProperty(schema, k)
+		description := schemaDescription(child)
+
+		// Only descend into non-empty objects; everything else (scalar, list, empty
+		// object) is a leaf and gets its own row.
+		if nested, ok := values[k].(map[string]interface{}); ok && len(nested) > 0 && depth < serviceValuesMaxDepth {
+			if description != "" {
+				*out = append(*out, packageChartRenderInputValue{
+					Key:         path,
+					Description: description,
+				})
+			}
+
+			flattenValues(path, nested, child, out, depth+1)
+
+			continue
+		}
+
+		*out = append(*out, packageChartRenderInputValue{
+			Key:         path,
+			Default:     formatValueDefault(values[k]),
+			Description: description,
 		})
 	}
+}
 
-	return out
+// schemaProperty returns the subschema documenting a property of the given schema node.
+func schemaProperty(schema map[string]interface{}, key string) map[string]interface{} {
+	props, ok := schema["properties"].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	prop, _ := props[key].(map[string]interface{})
+
+	return prop
+}
+
+// schemaDescription returns the description a schema node documents, if any.
+func schemaDescription(schema map[string]interface{}) string {
+	description, _ := schema["description"].(string)
+
+	return escapeTableCell(description)
 }
 
 // formatValueDefault renders a value compactly for a Markdown table cell. Nested objects
@@ -430,24 +485,6 @@ func formatValueDefault(v interface{}) string {
 func escapeTableCell(s string) string {
 	s = goStrings.ReplaceAll(s, "|", "\\|")
 	return goStrings.ReplaceAll(s, "\n", " ")
-}
-
-// schemaPropertyDescription returns the description a chart's values.schema.json documents
-// for a top-level property, or "" when the chart ships no schema or no description.
-func schemaPropertyDescription(schema map[string]interface{}, key string) string {
-	props, ok := schema["properties"].(map[string]interface{})
-	if !ok {
-		return ""
-	}
-
-	prop, ok := props[key].(map[string]interface{})
-	if !ok {
-		return ""
-	}
-
-	description, _ := prop["description"].(string)
-
-	return escapeTableCell(description)
 }
 
 // sanitizeOverrideSchema adapts a chart's own values.schema.json so it can be inlined as
