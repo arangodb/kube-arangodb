@@ -49,6 +49,25 @@ helm install <release-name> <chart> \
 Overrides are merged on top of the values each chart was packaged with, so only the keys you want
 to change need to be listed. Unknown chart or service names are rejected by `values.schema.json`.
 
+A complete `values.yaml` for this release, with every override block left empty:
+
+```yaml
+deployment: my-deployment
+{{- if .Charts }}
+charts:
+{{- range $key, $value := .Charts }}
+  {{ $value.Name }}: {}
+{{- end }}
+{{- end }}
+{{- if .Services }}
+services:
+{{- range $key, $value := .Services }}
+  {{ $value.Name }}:
+    values: {}
+{{- end }}
+{{- end }}
+```
+
 ## Bundled charts
 {{ if .Charts }}
 | Chart | Version | Override validation |
@@ -60,16 +79,6 @@ to change need to be listed. Unknown chart or service names are rejected by `val
 Charts that ship a `values.schema.json` have their override block validated against it, with
 `required` constraints relaxed because overrides are a partial document. Charts without a schema
 accept any values.
-
-Example:
-
-```yaml
-deployment: my-deployment
-charts:
-{{- range $key, $value := .Charts }}
-  {{ $value.Name }}: {}
-{{- end }}
-```
 {{ else }}
 This release bundles no charts.
 {{ end }}
@@ -80,16 +89,6 @@ This release bundles no charts.
 {{- range $key, $value := .Services }}
 | `{{ $value.Name }}` | `{{ $value.ChartRef }}` |
 {{- end }}
-
-Example:
-
-```yaml
-services:
-{{- range $key, $value := .Services }}
-  {{ $value.Name }}:
-    values: {}
-{{- end }}
-```
 
 ### Service values
 

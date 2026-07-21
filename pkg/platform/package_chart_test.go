@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	goStrings "strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -298,6 +299,18 @@ func Test_packageChartTemplateReadme(t *testing.T) {
 		// No unrendered template directives leak through
 		require.NotContains(t, readme, "{{")
 		require.NotContains(t, readme, "<no value>")
+
+		// A single, complete values.yaml example - deployment plus every chart and service.
+		// A services-only or charts-only snippet would not be a valid values file, since
+		// `deployment` is required.
+		example := readmeExample(t, readme)
+		require.Contains(t, example, "deployment: my-deployment")
+		require.Contains(t, example, "charts:")
+		require.Contains(t, example, "gral: {}")
+		require.Contains(t, example, "no-schem: {}")
+		require.Contains(t, example, "services:")
+		require.Contains(t, example, "values: {}")
+		require.Equal(t, 1, goStrings.Count(readme, "A complete `values.yaml`"), "exactly one example block")
 	})
 
 	t.Run("empty release", func(t *testing.T) {
@@ -311,5 +324,27 @@ func Test_packageChartTemplateReadme(t *testing.T) {
 		require.Contains(t, readme, "This release bundles no charts.")
 		require.Contains(t, readme, "This release bundles no services.")
 		require.NotContains(t, readme, "{{")
+
+		// With nothing bundled the example must not emit empty `charts:`/`services:` keys.
+		example := readmeExample(t, readme)
+		require.Contains(t, example, "deployment: my-deployment")
+		require.NotContains(t, example, "charts:")
+		require.NotContains(t, example, "services:")
 	})
+}
+
+// readmeExample extracts the fenced YAML of the README's complete values.yaml example.
+func readmeExample(t *testing.T, readme string) string {
+	t.Helper()
+
+	_, after, found := goStrings.Cut(readme, "A complete `values.yaml`")
+	require.True(t, found, "README must contain the complete values.yaml example")
+
+	_, after, found = goStrings.Cut(after, "```yaml\n")
+	require.True(t, found, "example must be a fenced yaml block")
+
+	example, _, found := goStrings.Cut(after, "```")
+	require.True(t, found, "example block must be closed")
+
+	return example
 }
