@@ -201,6 +201,69 @@ func Test_generateValuesSchema_UsesChartSchema(t *testing.T) {
 	require.Equal(t, true, noSchema["additionalProperties"], "charts without a schema stay permissive")
 }
 
+// Test_serviceValues covers the per-service value documentation: chart defaults, release
+// overrides winning over them, descriptions pulled from the chart schema, and stable order.
+func Test_serviceValues(t *testing.T) {
+	chart := packageChartRenderInputChart{
+		Name:    "demo",
+		Version: "1.0.0",
+		Values: map[string]interface{}{
+			"replicas": 1,
+			"image":    "registry.example.com/demo:1.0.0",
+			"empty":    "",
+			"resources": map[string]interface{}{
+				"requests": map[string]interface{}{"cpu": "100m", "memory": "128Mi"},
+			},
+		},
+		Schema: map[string]interface{}{
+			"properties": map[string]interface{}{
+				"replicas": map[string]interface{}{"description": "Number of replicas"},
+				"image":    map[string]interface{}{"description": "Container image | with a pipe"},
+				// "resources" and "empty" intentionally have no description
+			},
+		},
+	}
+
+	values := serviceValues(chart, []byte(`{"replicas": 5}`))
+	require.NotEmpty(t, values)
+
+	byKey := map[string]packageChartRenderInputValue{}
+	keys := make([]string, 0, len(values))
+	for _, v := range values {
+		byKey[v.Key] = v
+		keys = append(keys, v.Key)
+	}
+
+	require.Equal(t, []string{"empty", "image", "replicas", "resources"}, keys, "values must be sorted for stable output")
+
+	// Release override wins over the chart default.
+	require.Equal(t, "5", byKey["replicas"].Default)
+	require.Equal(t, "Number of replicas", byKey["replicas"].Description)
+
+	// Pipes are escaped so they cannot break the Markdown table.
+	require.Equal(t, `Container image \| with a pipe`, byKey["image"].Description)
+
+	// Empty string is rendered visibly rather than as a blank cell.
+	require.Equal(t, `""`, byKey["empty"].Default)
+
+	// Nested objects are shown as compact JSON.
+	require.Contains(t, byKey["resources"].Default, "requests")
+
+	// Missing descriptions come back empty (template renders "-").
+	require.Empty(t, byKey["resources"].Description)
+
+	t.Run("unresolved chart yields no values", func(t *testing.T) {
+		require.Nil(t, serviceValues(packageChartRenderInputChart{}, nil))
+	})
+
+	t.Run("chart without schema still documents defaults", func(t *testing.T) {
+		v := serviceValues(packageChartRenderInputChart{Values: map[string]interface{}{"a": 1}}, nil)
+		require.Len(t, v, 1)
+		require.Equal(t, "1", v[0].Default)
+		require.Empty(t, v[0].Description)
+	})
+}
+
 // Test_packageChartTemplateReadme renders the generated chart README.
 func Test_packageChartTemplateReadme(t *testing.T) {
 	t.Run("with charts and services", func(t *testing.T) {

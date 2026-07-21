@@ -30,6 +30,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sort"
 	goStrings "strings"
 
 	"github.com/regclient/regclient"
@@ -86,6 +87,17 @@ type packageChartRenderInputChart struct {
 type packageChartRenderInputService struct {
 	Name     string
 	ChartRef string
+
+	// Values documents the top-level values of the referenced chart, as effective for
+	// this service (chart defaults with the release overrides applied).
+	Values []packageChartRenderInputValue
+}
+
+// packageChartRenderInputValue is a single documented top-level value of a service.
+type packageChartRenderInputValue struct {
+	Key         string
+	Default     string
+	Description string
 }
 
 type packageChartRenderInputServiceTemplate struct {
@@ -169,6 +181,10 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 		o := packageChartRelease(k, v)
 
 		if o != nil {
+			// Charts are resolved above, so the referenced chart's defaults and schema are
+			// available to document what this service exposes.
+			o.Values = serviceValues(input.Charts[o.ChartRef], v.Overrides)
+
 			input.Services[k] = *o
 		}
 	}
@@ -197,7 +213,10 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 
 	// Generate per-service templates
 	for _, s := range input.Services {
-		builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateResourceService, packageChartRenderInputServiceTemplate(s)), "%s/templates/services/%s.yaml", input.Name, s.Name)
+		builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateResourceService, packageChartRenderInputServiceTemplate{
+			Name:     s.Name,
+			ChartRef: s.ChartRef,
+		}), "%s/templates/services/%s.yaml", input.Name, s.Name)
 	}
 
 	builder = builder.File(util.GZipBuilderProcessBytes(licenseData.Full()), "%s/LICENSE", input.Name)
@@ -339,6 +358,96 @@ func extractChartSchema(chartData []byte) (map[string]interface{}, error) {
 	}
 
 	return schema, nil
+}
+
+// serviceValues documents the top-level values a service exposes: the referenced chart's
+// defaults with the release overrides applied, described using the chart's own
+// values.schema.json when it provides descriptions. Returns nil when the referenced chart
+// could not be resolved or exposes no values.
+func serviceValues(chart packageChartRenderInputChart, overrides helm.Values) []packageChartRenderInputValue {
+	effective := make(map[string]interface{}, len(chart.Values))
+	for k, v := range chart.Values {
+		effective[k] = v
+	}
+
+	// Release overrides win over the chart defaults for this service.
+	if len(overrides) > 0 {
+		var o map[string]interface{}
+		if err := json.Unmarshal(overrides, &o); err == nil {
+			for k, v := range o {
+				effective[k] = v
+			}
+		}
+	}
+
+	if len(effective) == 0 {
+		return nil
+	}
+
+	keys := make([]string, 0, len(effective))
+	for k := range effective {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	out := make([]packageChartRenderInputValue, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, packageChartRenderInputValue{
+			Key:         k,
+			Default:     formatValueDefault(effective[k]),
+			Description: schemaPropertyDescription(chart.Schema, k),
+		})
+	}
+
+	return out
+}
+
+// formatValueDefault renders a value compactly for a Markdown table cell. Nested objects
+// and lists are shown as truncated JSON, since the full tree belongs in values.yaml.
+func formatValueDefault(v interface{}) string {
+	if s, ok := v.(string); ok {
+		if s == "" {
+			return `""`
+		}
+		return escapeTableCell(s)
+	}
+
+	data, err := json.Marshal(v)
+	if err != nil {
+		return ""
+	}
+
+	s := string(data)
+	const max = 48
+	if len(s) > max {
+		s = s[:max] + "..."
+	}
+
+	return escapeTableCell(s)
+}
+
+// escapeTableCell keeps a value from breaking out of a Markdown table row.
+func escapeTableCell(s string) string {
+	s = goStrings.ReplaceAll(s, "|", "\\|")
+	return goStrings.ReplaceAll(s, "\n", " ")
+}
+
+// schemaPropertyDescription returns the description a chart's values.schema.json documents
+// for a top-level property, or "" when the chart ships no schema or no description.
+func schemaPropertyDescription(schema map[string]interface{}, key string) string {
+	props, ok := schema["properties"].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+
+	prop, ok := props[key].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+
+	description, _ := prop["description"].(string)
+
+	return escapeTableCell(description)
 }
 
 // sanitizeOverrideSchema adapts a chart's own values.schema.json so it can be inlined as

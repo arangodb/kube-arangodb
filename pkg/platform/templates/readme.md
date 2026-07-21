@@ -90,7 +90,25 @@ services:
     values: {}
 {{- end }}
 ```
+
+### Service values
+
+Top-level values each service exposes, with the defaults it is packaged with. Set them under
+`services.<service>.values`. Descriptions are taken from the chart's `values.schema.json`
+where it provides them.
+{{ range $key, $value := .Services }}
+#### `{{ $value.Name }}`
+
+Chart `{{ $value.ChartRef }}`.
+{{ if $value.Values }}
+| Value | Default | Description |
+|-------|---------|-------------|
+{{- range $v := $value.Values }}
+| `{{ $v.Key }}` | `{{ $v.Default }}` | {{ if $v.Description }}{{ $v.Description }}{{ else }}-{{ end }} |
+{{- end }}
 {{ else }}
+This service exposes no values.
+{{ end }}{{ end }}{{ else }}
 This release bundles no services.
 {{ end }}
 ## Verifying the installation
