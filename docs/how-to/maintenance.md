@@ -23,7 +23,7 @@ To disable maintenance mode for ArangoDeployment kubectl command can be used:
 
 ## Cluster maintenance
 
-It is possible to put ArangoDB cluster into [agecy supervision mode](https://docs.arangodb.com/3.11/develop/http/cluster/#maintenance).
+It is possible to put ArangoDB cluster into [Agency supervision mode](https://docs.arango.ai/arangodb/stable/develop/http-api/cluster/#maintenance).
 
 Use `spec.database.maintenance` field of ArangoDeployment CR to configure that:
 ```
