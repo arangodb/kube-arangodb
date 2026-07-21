@@ -29,6 +29,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/yaml"
 )
 
 // newTestChart builds a gzipped tar chart archive from the given entries.
@@ -430,4 +431,32 @@ func readmeExample(t *testing.T, readme string) string {
 	require.True(t, found, "example block must be closed")
 
 	return example
+}
+
+// Test_packageChartTemplateValues_EmptySections ensures a release with no charts or no
+// services still emits valid values.yaml. A bare `services:` key parses as null, which the
+// generated schema rejects as "Expected: object, given: null" - making the release chart
+// uninstallable against its own defaults.
+func Test_packageChartTemplateValues_EmptySections(t *testing.T) {
+	for name, input := range map[string]packageChartRenderInput{
+		"no services": {
+			Name: "r", Version: "1",
+			Charts: map[string]packageChartRenderInputChart{"c": {Name: "c", Version: "1"}},
+		},
+		"no charts": {Name: "r", Version: "1", Services: map[string]packageChartRenderInputService{"s": {Name: "s"}}},
+		"empty":     {Name: "r", Version: "1"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			out, err := packageChartTemplateValues.RenderBytes(input)
+			require.NoError(t, err)
+
+			var doc map[string]interface{}
+			require.NoError(t, yaml.Unmarshal(out, &doc), "values.yaml must parse")
+
+			for _, key := range []string{"charts", "services"} {
+				require.Contains(t, doc, key)
+				require.NotNil(t, doc[key], "%s must be an object, never null: %s", key, string(out))
+			}
+		})
+	}
 }
