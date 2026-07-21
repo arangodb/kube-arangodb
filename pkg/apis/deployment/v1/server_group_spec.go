@@ -68,19 +68,19 @@ type ServerGroupSpec struct {
 	// If is set to true and Container Memory Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` to the value from the Container Memory Limits.
 	// +doc/important: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` Container Environment Variable
 	// +doc/default: true
-	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
+	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/
 	OverrideDetectedTotalMemory *bool `json:"overrideDetectedTotalMemory,omitempty"`
 	// MemoryReservation determines the system reservation of memory while calculating `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` value.
 	// If this field is set, `ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY` is reduced by a specified value in percent.
 	// Accepted Range <0, 50>. If the value is outside the accepted range, it is adjusted to the closest value.
 	// +doc/default: 0
-	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
+	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/
 	MemoryReservation *int64 `json:"memoryReservation,omitempty"`
 	// OverrideDetectedNumberOfCores determines if number of cores should be overridden based on values in resources.
 	// If is set to true and Container CPU Limits are set, it sets Container Environment Variable `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` to the value from the Container CPU Limits.
 	// +doc/important: Values set by this feature override user-provided `ARANGODB_OVERRIDE_DETECTED_NUMBER_OF_CORES` Container Environment Variable
 	// +doc/default: true
-	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arangodb.com/devel/components/arangodb-server/environment-variables/
+	// +doc/link: Documentation of the ArangoDB Envs|https://docs.arango.ai/arangodb/stable/components/arangodb-server/environment-variables/
 	OverrideDetectedNumberOfCores *bool `json:"overrideDetectedNumberOfCores,omitempty"`
 	// Tolerations specifies the tolerations added to Pods in this group.
 	// By default, suitable tolerations are set for the following keys with the `NoExecute` effect:
