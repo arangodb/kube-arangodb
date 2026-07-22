@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) Generate README.md in the platform release chart and validate chart overrides against each subchart values.schema.json
 
 ## [1.4.4](https://github.com/arangodb/kube-arangodb/tree/1.4.4) (2026-07-20)
 - (Bugfix) (Platform) Recover Helm releases stuck in a pending state (roll back pending upgrades/rollbacks, uninstall pending installs) instead of retrying the upgrade forever

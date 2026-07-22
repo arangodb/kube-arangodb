@@ -22,12 +22,14 @@
 
 deployment: ""
 
-charts:
+{{ if .Charts }}charts:
 {{ range $key, $value := .Charts }}  {{ $value.Name }}:
 {{ if $value.Values }}{{ $value.Values | toYaml | indent 4 }}
 {{ else }}    {}
-{{ end }}{{ end }}
-services:
+{{ end }}{{ end }}{{ else }}charts: {}
+{{ end }}
+{{ if .Services }}services:
 {{ range $key, $value := .Services }}  {{ $value.Name }}:
     values: {}
+{{ end }}{{ else }}services: {}
 {{ end }}
