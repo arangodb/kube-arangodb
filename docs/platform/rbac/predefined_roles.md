@@ -37,8 +37,9 @@ bound to a user with a scope.
 
 Bind a user to a predefined role with an `ArangoPermissionRoleUserBinding`. The
 binding carries the **scope** that restricts where the role applies (resource-type
-level, with one/many/pattern matching). Reference the predefined role by its
-`managed:predefined:…` name:
+level, with one/many/pattern matching). Predefined roles have no `ArangoPermissionRole`
+CRD, so reference them with the `direct` field (their exact sidecar name) rather than
+`name` (which resolves an `ArangoPermissionRole` CRD):
 
 ```yaml
 apiVersion: permission.arangodb.com/v1alpha1
@@ -50,7 +51,7 @@ spec:
     name: my-deployment
   userName: alice
   role:
-    name: managed:predefined:coredb-reader
+    direct: managed:predefined:coredb-reader   # direct sidecar name (no CRD)
   scope:
     statements:
       - effect: Allow
@@ -78,10 +79,10 @@ curl -X PUT https://<gateway>/_management/permissions/user/alice/role/managed:pr
 
 Predefined roles cannot be renamed or deleted, but you **can attach additional
 policies** to them. Define an `ArangoPermissionPolicy` and bind it to a predefined
-role by referencing the role's `managed:predefined:*` name in an
+role by referencing the role's exact sidecar name through the `direct` field of an
 `ArangoPermissionPolicyRoleBinding` (predefined roles have no `ArangoPermissionRole`
-CRD - they are referenced by their sidecar name directly). The operator merges the
-bound policy into the predefined role, alongside its bundled policy.
+CRD, so `direct` is used instead of the CRD-resolving `name` field). The operator
+merges the bound policy into the predefined role, alongside its bundled policy.
 
 For example, to grant everyone with `coredb-reader` write access on `reports`:
 
@@ -109,7 +110,7 @@ spec:
   deployment:
     name: my-deployment
   role:
-    name: managed:predefined:coredb-reader   # a predefined role - referenced by sidecar name
+    direct: managed:predefined:coredb-reader   # a predefined role - referenced directly by name
   policy:
     name: reports-writer
 ```

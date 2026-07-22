@@ -95,9 +95,11 @@ See `pkg/deployment/reconcile/plan_builder_rbac.go` for the catalog and
 Predefined roles cannot be renamed or deleted, but they are **extensible**:
 
 - **Attach policies to a predefined role.** An `ArangoPermissionPolicyRoleBinding`
-  may reference a predefined role by its `managed:predefined:*` name (there is no
-  `ArangoPermissionRole` CRD - the `role_user_binding`/`policy_role_binding`
-  handlers accept the direct sidecar name). The reconciler discovers such bindings
+  may reference a predefined role through the reference's `direct` field, which
+  holds the exact sidecar name (e.g. `managed:predefined:coredb-reader`). There is
+  no `ArangoPermissionRole` CRD, so `direct` is used instead of `name`; the
+  `role_user_binding`/`policy_role_binding` handlers resolve it as-is
+  (`ArangoPermissionBindingRef.IsDirect`). The reconciler discovers such bindings
   (`collectBoundPolicies`), resolves their policies to sidecar names, and merges
   them into the predefined role. Drift-repair targets the merged set, so bound
   policies are preserved; unbinding removes them again.

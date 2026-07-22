@@ -15,6 +15,13 @@ v1alpha1:
           policy:
             description: Policy defines the policy to bind, either by CRD name or direct sidecar name
             properties:
+              direct:
+                description: |-
+                  Direct references an existing authorization object (role or policy) by its exact name, without
+                  a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+                  "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+                  must be set.
+                type: string
               name:
                 description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
                 type: string
@@ -22,6 +29,13 @@ v1alpha1:
           role:
             description: Role defines the role to bind to, either by CRD name or direct sidecar name
             properties:
+              direct:
+                description: |-
+                  Direct references an existing authorization object (role or policy) by its exact name, without
+                  a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+                  "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+                  must be set.
+                type: string
               name:
                 description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
                 type: string

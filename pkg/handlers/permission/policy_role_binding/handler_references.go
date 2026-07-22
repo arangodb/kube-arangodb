@@ -22,7 +22,6 @@ package policy_role_binding
 
 import (
 	"context"
-	goStrings "strings"
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,12 +79,12 @@ func (h *handler) handlePolicyReference(ctx context.Context, extension *permissi
 func (h *handler) handleRoleReference(ctx context.Context, extension *permissionApi.ArangoPermissionPolicyRoleBinding, status *permissionApi.ArangoPermissionPolicyRoleBindingStatus) (bool, error) {
 	roleName := extension.Spec.Role.GetReference()
 
-	// Predefined (operator-managed) roles are created directly in the authorization sidecar and
-	// have no ArangoPermissionRole CRD. Accept them as direct sidecar references so a policy can
-	// be attached to a predefined role. The deployment reconciler (SyncRBACPermissions) picks up
-	// the binding and merges the policy into the sidecar role. No CRD lookup and no role label -
-	// the reconciler discovers these bindings by the referenced role name.
-	if goStrings.HasPrefix(roleName, permission.ManagedPredefinedPrefix) {
+	// A direct reference targets a role that lives only in the authorization sidecar and has no
+	// ArangoPermissionRole CRD (e.g. an operator-managed predefined role). The `direct` reference
+	// field addresses it directly by name so a policy can be attached to it. The deployment
+	// reconciler (SyncRBACPermissions) picks up the binding and merges the policy into the sidecar
+	// role. No CRD lookup and no role label - the reconciler discovers these bindings by role name.
+	if extension.Spec.Role.IsDirect() {
 		if status.Role == nil || status.Role.GetName() != roleName {
 			status.Role = &sharedApi.Object{Name: roleName}
 			return true, operator.Reconcile("Predefined role reference set")

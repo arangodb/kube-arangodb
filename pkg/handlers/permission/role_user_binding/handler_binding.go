@@ -22,7 +22,6 @@ package role_user_binding
 
 import (
 	"context"
-	goStrings "strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -31,7 +30,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
-	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
@@ -79,9 +77,9 @@ func (h *handler) HandleArangoDBBinding(ctx context.Context, item operation.Item
 
 	var sidecarRole string
 
-	if goStrings.HasPrefix(roleName, permission.ManagedPredefinedPrefix) {
-		// Predefined (operator-managed) roles are created directly in the authorization sidecar
-		// and have no ArangoPermissionRole CRD; the reference is the sidecar role name itself.
+	if extension.Spec.Role.IsDirect() {
+		// A direct sidecar reference targets a role that lives only in the authorization sidecar
+		// and has no ArangoPermissionRole CRD; the reference resolves to the sidecar role name.
 		if st.Role == nil || st.Role.GetName() != roleName {
 			st.Role = &sharedApi.Object{Name: roleName}
 			return true, operator.Reconcile("Predefined role reference set")
