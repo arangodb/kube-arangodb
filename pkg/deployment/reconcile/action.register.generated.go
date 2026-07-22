@@ -19,8 +19,9 @@
 package reconcile
 
 import (
-	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"time"
+
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 )
 
 var (
