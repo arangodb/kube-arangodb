@@ -3,7 +3,7 @@ layout: page
 title: Policies and Roles
 parent: RBAC
 grand_parent: ArangoDBPlatform
-nav_order: 2
+nav_order: 3
 ---
 
 # Policies and Roles

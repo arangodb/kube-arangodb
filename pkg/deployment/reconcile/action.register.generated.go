@@ -19,9 +19,8 @@
 package reconcile
 
 import (
-	"time"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"time"
 )
 
 var (
@@ -236,6 +235,9 @@ var (
 
 	_ Action        = &actionShutdownMember{}
 	_ actionFactory = newShutdownMemberAction
+
+	_ Action        = &actionSyncRBACPermissions{}
+	_ actionFactory = newSyncRBACPermissionsAction
 
 	_ Action        = &actionTLSKeyStatusUpdate{}
 	_ actionFactory = newTLSKeyStatusUpdateAction
@@ -1329,6 +1331,20 @@ func init() {
 
 		// With StartupFailureGracePeriod
 		function = withActionStartFailureGracePeriod(function, 60*time.Second)
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// SyncRBACPermissions
+	{
+		// Get Action type
+		action := api.ActionTypeSyncRBACPermissions
+
+		// Get Action defition
+		function := newSyncRBACPermissionsAction
+
+		// Wrap action main function
 
 		// Register action
 		registerAction(action, function)

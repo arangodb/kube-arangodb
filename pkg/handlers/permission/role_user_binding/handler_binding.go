@@ -22,6 +22,7 @@ package role_user_binding
 
 import (
 	"context"
+	goStrings "strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -30,6 +31,7 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
@@ -75,31 +77,44 @@ func (h *handler) HandleArangoDBBinding(ctx context.Context, item operation.Item
 	// Resolve the referenced ArangoPermissionRole and ensure it is reconciled into the sidecar.
 	roleName := extension.Spec.Role.GetReference()
 
-	roleObj, err := h.client.PermissionV1alpha1().ArangoPermissionRoles(extension.GetNamespace()).Get(ctx, roleName, meta.GetOptions{})
-	if err != nil {
-		if apiErrors.IsNotFound(err) {
-			if st.Conditions.Update(permissionApi.ReadyRoleCondition, false, "Role not found", "ArangoPermissionRole not found") {
-				return true, operator.Reconcile("Role not found")
+	var sidecarRole string
+
+	if goStrings.HasPrefix(roleName, permission.ManagedPredefinedPrefix) {
+		// Predefined (operator-managed) roles are created directly in the authorization sidecar
+		// and have no ArangoPermissionRole CRD; the reference is the sidecar role name itself.
+		if st.Role == nil || st.Role.GetName() != roleName {
+			st.Role = &sharedApi.Object{Name: roleName}
+			return true, operator.Reconcile("Predefined role reference set")
+		}
+
+		sidecarRole = roleName
+	} else {
+		roleObj, err := h.client.PermissionV1alpha1().ArangoPermissionRoles(extension.GetNamespace()).Get(ctx, roleName, meta.GetOptions{})
+		if err != nil {
+			if apiErrors.IsNotFound(err) {
+				if st.Conditions.Update(permissionApi.ReadyRoleCondition, false, "Role not found", "ArangoPermissionRole not found") {
+					return true, operator.Reconcile("Role not found")
+				}
+				return false, operator.Stop("Role not found")
 			}
-			return false, operator.Stop("Role not found")
+			return false, err
 		}
-		return false, err
-	}
 
-	if !roleObj.Ready() || roleObj.Status.Role == nil {
-		if st.Conditions.Update(permissionApi.ReadyRoleCondition, false, "Role not ready", "ArangoPermissionRole is not ready") {
-			return true, operator.Reconcile("Role not ready")
+		if !roleObj.Ready() || roleObj.Status.Role == nil {
+			if st.Conditions.Update(permissionApi.ReadyRoleCondition, false, "Role not ready", "ArangoPermissionRole is not ready") {
+				return true, operator.Reconcile("Role not ready")
+			}
+			return false, operator.Stop("Role not ready")
 		}
-		return false, operator.Stop("Role not ready")
-	}
 
-	if st.Role == nil || !st.Role.Equals(roleObj) {
-		st.Role = util.NewType(sharedApi.NewObject(roleObj))
-		return true, operator.Reconcile("Role reference updated")
-	}
+		if st.Role == nil || !st.Role.Equals(roleObj) {
+			st.Role = util.NewType(sharedApi.NewObject(roleObj))
+			return true, operator.Reconcile("Role reference updated")
+		}
 
-	// The sidecar role name matches the ArangoPermissionRole status reference.
-	sidecarRole := roleObj.Status.Role.GetName()
+		// The sidecar role name matches the ArangoPermissionRole status reference.
+		sidecarRole = roleObj.Status.Role.GetName()
+	}
 
 	scope, err := renderScope(extension.Spec.Scope)
 	if err != nil {

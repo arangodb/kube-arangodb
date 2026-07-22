@@ -32,9 +32,10 @@ const (
 )
 
 const (
-	BackOffCheck  api.BackOffKey = "check"
-	LicenseCheck  api.BackOffKey = "license"
-	TimezoneCheck api.BackOffKey = "timezone"
+	BackOffCheck             api.BackOffKey = "check"
+	LicenseCheck             api.BackOffKey = "license"
+	TimezoneCheck            api.BackOffKey = "timezone"
+	SyncRBACPermissionsCheck api.BackOffKey = "syncRBACPermissions"
 )
 
 // CreatePlan considers the current specification & status of the deployment creates a plan to

@@ -3,7 +3,7 @@ layout: page
 title: Identity and Permissions
 parent: RBAC
 grand_parent: ArangoDBPlatform
-nav_order: 5
+nav_order: 6
 ---
 
 # Identity and Permission Checks

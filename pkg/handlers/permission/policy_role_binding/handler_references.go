@@ -22,6 +22,7 @@ package policy_role_binding
 
 import (
 	"context"
+	goStrings "strings"
 
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -78,6 +79,24 @@ func (h *handler) handlePolicyReference(ctx context.Context, extension *permissi
 
 func (h *handler) handleRoleReference(ctx context.Context, extension *permissionApi.ArangoPermissionPolicyRoleBinding, status *permissionApi.ArangoPermissionPolicyRoleBindingStatus) (bool, error) {
 	roleName := extension.Spec.Role.GetReference()
+
+	// Predefined (operator-managed) roles are created directly in the authorization sidecar and
+	// have no ArangoPermissionRole CRD. Accept them as direct sidecar references so a policy can
+	// be attached to a predefined role. The deployment reconciler (SyncRBACPermissions) picks up
+	// the binding and merges the policy into the sidecar role. No CRD lookup and no role label -
+	// the reconciler discovers these bindings by the referenced role name.
+	if goStrings.HasPrefix(roleName, permission.ManagedPredefinedPrefix) {
+		if status.Role == nil || status.Role.GetName() != roleName {
+			status.Role = &sharedApi.Object{Name: roleName}
+			return true, operator.Reconcile("Predefined role reference set")
+		}
+
+		if status.Conditions.Update(permissionApi.ReadyRoleCondition, true, "Role Ready", "Predefined role") {
+			return true, operator.Reconcile("Role ready")
+		}
+
+		return false, nil
+	}
 
 	// CRD reference — resolve the ArangoPermissionRole
 	roleObj, err := h.client.PermissionV1alpha1().ArangoPermissionRoles(extension.GetNamespace()).Get(ctx, roleName, meta.GetOptions{})

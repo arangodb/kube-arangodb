@@ -26,6 +26,7 @@ before reaching the database.
 ## Sections
 
 - [Enabling RBAC](platform/rbac/enabling.md) - Feature flags, Helm configuration, authorization modes
+- [Predefined Roles](platform/rbac/predefined_roles.md) - The operator-managed role catalog: assigning, scoping, and extending
 - [Policies and Roles](platform/rbac/policies.md) - Defining permissions with policies, roles, bindings, and scopes
 - [Permission Tokens](platform/rbac/tokens.md) - Creating JWT tokens via ArangoPermissionToken CRD
 - [User Role Bindings](platform/rbac/user_bindings.md) - Assigning roles to users with per-user scopes
