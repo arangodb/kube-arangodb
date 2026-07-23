@@ -38,6 +38,35 @@ helm install <release-name> <chart> \
   --set deployment=<arango-deployment-name>
 ```
 
+## Container Images
+{{ if .Images }}
+This release uses the container images below, aggregated from the bundled charts. For an air-gapped
+installation, pull each image, re-tag it to your private registry, push it, and override it at the
+listed values path.
+
+| Image | Override path |
+|-------|---------------|
+{{- range $i := .Images }}
+| `{{ $i.Image }}` | `{{ $i.OverridePath }}` |
+{{- end }}
+
+The same list is available as a machine-readable `images.yaml` at the root of this chart. To mirror
+every image to `my.registry.example.com`:
+
+```bash
+for img in \
+{{- range $i := .Images }}
+  {{ $i.Image }} \
+{{- end }}
+  ; do
+  docker pull "$img"
+  docker tag "$img" "my.registry.example.com/${img#*/}"
+  docker push "my.registry.example.com/${img#*/}"
+done
+```
+{{ else }}
+This release declares no container images.
+{{ end }}
 ## Values
 
 | Key | Type | Required | Description |
