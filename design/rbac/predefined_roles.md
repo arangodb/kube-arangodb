@@ -46,7 +46,7 @@ operator-managed, which is why it is visible but not editable.
 
 | Role (`managed:predefined:…`) | Description | Access |
 |---|---|---|
-| `super-admin` | Reserved role providing full access to all functionality. **Cannot be assigned by the customer.** | Allow `*` on `*`. Bound automatically to the deployment `root` user with an Allow-all scope. |
+| `super-admin` | Reserved role providing full access to all functionality. **Cannot be assigned by the customer** - the operator rejects (`SpecValid: false`) any `ArangoPermissionRoleUserBinding`/`ArangoPermissionPolicyRoleBinding` that references it (`permission.IsReservedRoleName`). | Allow `*` on `*`. Bound automatically to the deployment `root` user with an Allow-all scope. |
 | `tenant-admin` | Manages users and role bindings. | Assign and scope roles; read users, roles, and resources. |
 | `coredb-reader` | Reads scoped resources and executes read-only database operations. | Read-only on scoped `Database`/`Collection`. |
 | `coredb-developer` | Reads and writes scoped resources and executes read and write database operations. | Read and write on scoped `Database`/`Collection`. |
@@ -87,8 +87,11 @@ Predefined roles are synced by the deployment reconciler:
 4. A throttled high plan builder re-runs the action periodically, so a deleted or
    drifted predefined role is recreated and repaired.
 
-See `pkg/deployment/reconcile/plan_builder_rbac.go` for the catalog and
-`plan_builder_high.go` (`createSyncRBACPermissionsPlan`) for the builder.
+The role identifiers are the exported single source of truth in
+`pkg/apis/permission` (`PredefinedRoleNames`, the `PredefinedRole*` constants, and
+`ManagedPredefinedRoleName`); the reconcile catalog, the reserved-role guard, and the
+e2e tests all reference them. See `pkg/deployment/reconcile/plan_builder_rbac.go` for
+the catalog and `plan_builder_high.go` (`createSyncRBACPermissionsPlan`) for the builder.
 
 ## Extending
 

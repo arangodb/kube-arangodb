@@ -72,8 +72,11 @@ curl -X PUT https://<gateway>/_management/permissions/user/alice/role/managed:pr
   -d '{"scope": {"statements": [{"effect": "Allow", "actions": ["*"], "resources": ["reports/*"]}]}}'
 ```
 
-> `super-admin` is reserved and cannot be assigned - the operator binds it to the
-> deployment `root` user automatically.
+> `super-admin` is reserved: the operator binds it to the deployment `root` user
+> automatically and **rejects** any `ArangoPermissionRoleUserBinding` or
+> `ArangoPermissionPolicyRoleBinding` that references it (the binding is marked
+> `SpecValid: false` and never applied), so customers cannot assign it or attach
+> policies to it.
 
 ## Extending predefined roles
 

@@ -30,6 +30,7 @@ import (
 	grpcStatus "google.golang.org/grpc/status"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
@@ -39,7 +40,7 @@ import (
 // managed:predefined:, hyphenated and described, and names are unique.
 func Test_predefinedRoles_catalog(t *testing.T) {
 	require.Equal(t, "managed:predefined:", managedObjectPrefix)
-	require.Equal(t, "managed:predefined:super-admin", managedRoleName("super-admin"))
+	require.Equal(t, permission.ManagedPredefinedRoleName(permission.PredefinedRoleSuperAdmin), managedRoleName(permission.PredefinedRoleSuperAdmin))
 
 	names := map[string]bool{}
 	var bound []string
@@ -55,7 +56,7 @@ func Test_predefinedRoles_catalog(t *testing.T) {
 		}
 
 		// Only super-admin carries a policy; the rest are empty containers.
-		if r.Name == "super-admin" {
+		if r.Name == permission.PredefinedRoleSuperAdmin {
 			require.NotEmpty(t, r.Statements, "super-admin must ship a policy")
 			require.True(t, r.BindRootUser, "super-admin must be bound to root")
 		} else {
@@ -64,17 +65,19 @@ func Test_predefinedRoles_catalog(t *testing.T) {
 		}
 	}
 
-	require.Equal(t, []string{"super-admin"}, bound, "only super-admin is bound to the root user")
+	require.Equal(t, []string{permission.PredefinedRoleSuperAdmin}, bound, "only super-admin is bound to the root user")
 
-	// The PRD predefined roles must all be present.
-	for _, expected := range []string{
-		"super-admin", "tenant-admin",
-		"coredb-reader", "coredb-developer", "coredb-admin",
-		"ai-user", "ai-developer",
-		"platform-operator", "secret-admin",
-	} {
-		require.True(t, names[expected], "missing predefined role %s", expected)
+	// The catalog must cover exactly the exported PredefinedRoleNames (the single source of truth
+	// shared with the handlers and the e2e tests) - no missing and no extra roles.
+	catalog := make([]string, 0, len(predefinedRoles))
+	for _, r := range predefinedRoles {
+		catalog = append(catalog, r.Name)
 	}
+	require.ElementsMatch(t, permission.PredefinedRoleNames, catalog, "predefinedRoles must match permission.PredefinedRoleNames")
+
+	// super-admin is the reserved role and must be reported as such.
+	require.True(t, permission.IsReservedRoleName(permission.ManagedPredefinedRoleName(permission.PredefinedRoleSuperAdmin)))
+	require.False(t, permission.IsReservedRoleName(permission.ManagedPredefinedRoleName(permission.PredefinedRoleCoreDBReader)))
 }
 
 // fakeAuthzClient is an in-memory authorization sidecar client. The embedded nil interface

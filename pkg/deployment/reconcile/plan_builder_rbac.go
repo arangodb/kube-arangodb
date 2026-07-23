@@ -88,41 +88,41 @@ type predefinedRole struct {
 // authorization sidecar. Descriptions are taken from the RBAC product definition.
 var predefinedRoles = []predefinedRole{
 	{
-		Name:         "super-admin",
+		Name:         permission.PredefinedRoleSuperAdmin,
 		Description:  "Reserved role providing full access to all functionality. Cannot be assigned by the customer.",
 		Statements:   allowAllStatements(),
 		BindRootUser: true,
 	},
 	{
-		Name:        "tenant-admin",
+		Name:        permission.PredefinedRoleTenantAdmin,
 		Description: "Manages users and role bindings.",
 	},
 	{
-		Name:        "coredb-reader",
+		Name:        permission.PredefinedRoleCoreDBReader,
 		Description: "Reads scoped resources and executes read-only database operations.",
 	},
 	{
-		Name:        "coredb-developer",
+		Name:        permission.PredefinedRoleCoreDBDeveloper,
 		Description: "Reads and writes scoped resources and executes read and write database operations.",
 	},
 	{
-		Name:        "coredb-admin",
+		Name:        permission.PredefinedRoleCoreDBAdmin,
 		Description: "Manages scoped resources' structures and lifecycle.",
 	},
 	{
-		Name:        "ai-user",
+		Name:        permission.PredefinedRoleAIUser,
 		Description: "Executes AI workflows and reads resulting outputs within scoped resources.",
 	},
 	{
-		Name:        "ai-developer",
+		Name:        permission.PredefinedRoleAIDeveloper,
 		Description: "Builds, configures, manages, and executes AI workflows and artifacts within scoped resources.",
 	},
 	{
-		Name:        "platform-operator",
+		Name:        permission.PredefinedRolePlatformOperator,
 		Description: "Operates platform services, manages bundled services, views observability, and starts containers within scoped resources.",
 	},
 	{
-		Name:        "secret-admin",
+		Name:        permission.PredefinedRoleSecretAdmin,
 		Description: "Manages secrets within scoped resources.",
 	},
 }
