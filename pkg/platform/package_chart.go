@@ -411,7 +411,7 @@ func imagesFromValues(values map[string]interface{}) []packageChartRenderInputIm
 func collectImagesFromValues(node interface{}, path string, out *[]packageChartRenderInputImage, seen map[string]struct{}) {
 	switch v := node.(type) {
 	case map[string]interface{}:
-		if ref := imageRefFromMap(v); ref != "" {
+		if ref := imageRefFromMap(v); ref != "" && !imageIsTest(path, ref) {
 			if _, ok := seen[ref]; !ok {
 				seen[ref] = struct{}{}
 				// path is the dotted values path of this image-spec map, e.g. "images.application".
@@ -440,6 +440,30 @@ func joinPath(path, key string) string {
 		return key
 	}
 	return path + "." + key
+}
+
+// imageIsTest reports whether a derived image is a test image that should be excluded from the
+// air-gapped list: the ArangoDB charts expose it under an `images.test` key, and its repository
+// name ends with "-test" (e.g. gral/engine-test, ml-api/service-test, featurization/job-test).
+func imageIsTest(overridePath, ref string) bool {
+	// The image-spec map sits under a literal "test" key (…images.test).
+	seg := overridePath
+	if i := goStrings.LastIndex(seg, "."); i >= 0 {
+		seg = seg[i+1:]
+	}
+	if seg == "test" {
+		return true
+	}
+
+	// The repository name (last path segment, tag/digest stripped) ends with "-test".
+	repo := ref
+	if i := goStrings.LastIndex(repo, "/"); i >= 0 {
+		repo = repo[i+1:]
+	}
+	if i := goStrings.IndexAny(repo, ":@"); i >= 0 {
+		repo = repo[:i]
+	}
+	return goStrings.HasSuffix(repo, "-test")
 }
 
 // imageRefFromMap builds a full image reference from an image-spec map, or "" if it is not one.

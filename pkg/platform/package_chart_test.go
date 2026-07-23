@@ -502,11 +502,18 @@ func Test_imagesFromValues(t *testing.T) {
 				"registry": "registry.license.arango.ai",
 				"tag":      "v1.1.12",
 			},
+			// Excluded: sits under the "test" key.
 			"test": map[string]interface{}{
 				"image":    "gral/engine-test",
 				"registry": "registry.license.arango.ai",
 				"tag":      "v1.1.12",
 			},
+		},
+		// Excluded: repository ends with -test even though the key is not "test".
+		"extra": map[string]interface{}{
+			"image":    "foo/bar-test",
+			"registry": "docker.io",
+			"tag":      "1.0",
 		},
 		// Upstream convention: .image.{registry,repository,tag}
 		"imageRenderer": map[string]interface{}{
@@ -530,9 +537,9 @@ func Test_imagesFromValues(t *testing.T) {
 
 	got := imagesFromValues(values)
 
+	// Test images (the "test" key and the -test repository) are excluded.
 	require.ElementsMatch(t, []packageChartRenderInputImage{
 		{OverridePath: "images.application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
-		{OverridePath: "images.test", Image: "registry.license.arango.ai/gral/engine-test:v1.1.12"},
 		{OverridePath: "imageRenderer.image", Image: "docker.io/grafana/grafana-image-renderer:latest"},
 		{OverridePath: "other", Image: "docker.io/library/busybox:1.31"},
 	}, got)
