@@ -27,6 +27,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -292,6 +293,11 @@ func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint s
 		return nil, errors.Wrapf(err, "invalid images.yaml in chart %s", name)
 	}
 
+	// When a chart does not ship an explicit images.yaml, derive its images from values.yaml.
+	if images == nil {
+		images = imagesFromValues(defaults)
+	}
+
 	return &packageChartRenderInputChart{
 		Name:             name,
 		Version:          packageSpec.Version,
@@ -383,6 +389,100 @@ func extractChartImages(chartData []byte) ([]packageChartRenderInputImage, error
 	}
 
 	return doc.Images, nil
+}
+
+// imagesFromValues derives container image references from a chart's values by walking them and
+// recognising image-spec maps: a map carrying an "image" or "repository" string, optionally combined
+// with a sibling "registry" and "tag". It is the fallback source when a chart ships no explicit
+// images.yaml, so the air-gapped list reflects what the chart actually references.
+func imagesFromValues(values map[string]interface{}) []packageChartRenderInputImage {
+	seen := map[string]struct{}{}
+	var out []packageChartRenderInputImage
+
+	collectImagesFromValues(values, "", "", &out, seen)
+
+	return out
+}
+
+func collectImagesFromValues(node interface{}, key, parentKey string, out *[]packageChartRenderInputImage, seen map[string]struct{}) {
+	switch v := node.(type) {
+	case map[string]interface{}:
+		if ref := imageRefFromMap(v); ref != "" {
+			if _, ok := seen[ref]; !ok {
+				seen[ref] = struct{}{}
+
+				// The image-spec map usually sits under a descriptive key (e.g. "engine"); when it
+				// sits under a literal "image"/"images" key, the parent key is the better name.
+				name := key
+				if name == "" || name == "image" || name == "images" {
+					name = parentKey
+				}
+
+				*out = append(*out, packageChartRenderInputImage{Name: name, Image: ref})
+			}
+		}
+
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			collectImagesFromValues(v[k], k, key, out, seen)
+		}
+	case []interface{}:
+		for _, e := range v {
+			collectImagesFromValues(e, key, parentKey, out, seen)
+		}
+	}
+}
+
+// imageRefFromMap builds a full image reference from an image-spec map, or "" if it is not one.
+// It composes "[registry/]repo[:tag]" from the "image"/"repository", "registry" and "tag" fields.
+func imageRefFromMap(m map[string]interface{}) string {
+	repo := firstScalarString(m, "image", "repository")
+	if repo == "" {
+		return ""
+	}
+
+	ref := repo
+	if reg := scalarString(m["registry"]); reg != "" && !goStrings.HasPrefix(ref, reg+"/") {
+		ref = reg + "/" + ref
+	}
+
+	if tag := scalarString(m["tag"]); tag != "" {
+		last := ref
+		if i := goStrings.LastIndex(ref, "/"); i >= 0 {
+			last = ref[i+1:]
+		}
+		// Only append a tag when the repo does not already carry one (":") or a digest ("@").
+		if !goStrings.ContainsAny(last, ":@") {
+			ref = ref + ":" + tag
+		}
+	}
+
+	return ref
+}
+
+func firstScalarString(m map[string]interface{}, keys ...string) string {
+	for _, k := range keys {
+		if s := scalarString(m[k]); s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+// scalarString renders a scalar value (string, number, bool) as a string; other kinds yield "".
+func scalarString(v interface{}) string {
+	switch t := v.(type) {
+	case string:
+		return t
+	case bool, float64, float32, int, int64, int32, json.Number:
+		return fmt.Sprintf("%v", t)
+	default:
+		return ""
+	}
 }
 
 // aggregateImages flattens the images declared by every bundled chart into a single list,

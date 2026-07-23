@@ -491,6 +491,53 @@ func Test_extractChartImages(t *testing.T) {
 	})
 }
 
+// Test_imagesFromValues ensures container images are derived from a chart's values by composing
+// registry/repository/tag, covering both the ArangoDB `images:` blocks and upstream image specs.
+func Test_imagesFromValues(t *testing.T) {
+	values := map[string]interface{}{
+		// ArangoDB convention: images.<name>.{image,registry,tag}
+		"images": map[string]interface{}{
+			"application": map[string]interface{}{
+				"image":    "gral/engine",
+				"registry": "registry.license.arango.ai",
+				"tag":      "v1.1.12",
+			},
+			"test": map[string]interface{}{
+				"image":    "gral/engine-test",
+				"registry": "registry.license.arango.ai",
+				"tag":      "v1.1.12",
+			},
+		},
+		// Upstream convention: .image.{registry,repository,tag}
+		"imageRenderer": map[string]interface{}{
+			"image": map[string]interface{}{
+				"registry":   "docker.io",
+				"repository": "grafana/grafana-image-renderer",
+				"tag":        "latest",
+			},
+		},
+		// A repo that already carries its registry must not be double-prefixed, and a numeric tag
+		// still composes.
+		"other": map[string]interface{}{
+			"image":    "docker.io/library/busybox",
+			"registry": "docker.io",
+			"tag":      1.31,
+		},
+		// Not an image spec - must be ignored.
+		"imagePullPolicy": "IfNotPresent",
+		"replicas":        3,
+	}
+
+	got := imagesFromValues(values)
+
+	require.ElementsMatch(t, []packageChartRenderInputImage{
+		{Name: "application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
+		{Name: "test", Image: "registry.license.arango.ai/gral/engine-test:v1.1.12"},
+		{Name: "imageRenderer", Image: "docker.io/grafana/grafana-image-renderer:latest"},
+		{Name: "other", Image: "docker.io/library/busybox:1.31"},
+	}, got)
+}
+
 // Test_aggregateImages ensures images from every chart are merged, de-duplicated by image
 // reference, and ordered deterministically regardless of chart map iteration order.
 func Test_aggregateImages(t *testing.T) {
