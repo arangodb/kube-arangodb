@@ -466,16 +466,16 @@ func Test_packageChartTemplateValues_EmptySections(t *testing.T) {
 func Test_extractChartImages(t *testing.T) {
 	t.Run("reads own images.yaml, ignores subcharts", func(t *testing.T) {
 		files := map[string]string{
-			"mychart/charts/sub/images.yaml": "images:\n  - name: sub\n    image: sub/img:1\n",
-			"mychart/images.yaml":            "images:\n  - name: operator\n    image: arangodb/kube-arangodb:1.4.4\n  - name: db\n    image: arangodb/arangodb-enterprise:3.12.5\n",
+			"mychart/charts/sub/images.yaml": "images:\n  - overridePath: sub\n    image: sub/img:1\n",
+			"mychart/images.yaml":            "images:\n  - overridePath: images.operator\n    image: arangodb/kube-arangodb:1.4.4\n  - overridePath: images.db\n    image: arangodb/arangodb-enterprise:3.12.5\n",
 		}
 		order := []string{"mychart/charts/sub/images.yaml", "mychart/images.yaml"}
 
 		imgs, err := extractChartImages(newTestChart(t, files, order))
 		require.NoError(t, err)
 		require.Equal(t, []packageChartRenderInputImage{
-			{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"},
-			{Name: "db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+			{OverridePath: "images.operator", Image: "arangodb/kube-arangodb:1.4.4"},
+			{OverridePath: "images.db", Image: "arangodb/arangodb-enterprise:3.12.5"},
 		}, imgs)
 	})
 
@@ -531,10 +531,10 @@ func Test_imagesFromValues(t *testing.T) {
 	got := imagesFromValues(values)
 
 	require.ElementsMatch(t, []packageChartRenderInputImage{
-		{Name: "application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
-		{Name: "test", Image: "registry.license.arango.ai/gral/engine-test:v1.1.12"},
-		{Name: "imageRenderer", Image: "docker.io/grafana/grafana-image-renderer:latest"},
-		{Name: "other", Image: "docker.io/library/busybox:1.31"},
+		{OverridePath: "images.application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
+		{OverridePath: "images.test", Image: "registry.license.arango.ai/gral/engine-test:v1.1.12"},
+		{OverridePath: "imageRenderer.image", Image: "docker.io/grafana/grafana-image-renderer:latest"},
+		{OverridePath: "other", Image: "docker.io/library/busybox:1.31"},
 	}, got)
 }
 
@@ -543,21 +543,21 @@ func Test_imagesFromValues(t *testing.T) {
 func Test_aggregateImages(t *testing.T) {
 	charts := map[string]packageChartRenderInputChart{
 		"a": {Name: "a", Images: []packageChartRenderInputImage{
-			{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"},
-			{Name: "db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+			{OverridePath: "images.operator", Image: "arangodb/kube-arangodb:1.4.4"},
+			{OverridePath: "images.db", Image: "arangodb/arangodb-enterprise:3.12.5"},
 		}},
 		"b": {Name: "b", Images: []packageChartRenderInputImage{
-			{Name: "operator-dup", Image: "arangodb/kube-arangodb:1.4.4"}, // duplicate image, dropped
-			{Name: "webui", Image: "arangodb/webui:2.0.0"},
-			{Name: "empty", Image: ""}, // empty image, skipped
+			{OverridePath: "images.dup", Image: "arangodb/kube-arangodb:1.4.4"}, // duplicate image, dropped
+			{OverridePath: "images.webui", Image: "arangodb/webui:2.0.0"},
+			{OverridePath: "images.empty", Image: ""}, // empty image, skipped
 		}},
 	}
 
-	// Sorted by image reference; the entry kept for the duplicate comes from chart "a" (name order).
+	// Sorted by image; paths chart-prefixed; the duplicate keeps chart "a" (name order).
 	require.Equal(t, []packageChartRenderInputImage{
-		{Name: "db", Image: "arangodb/arangodb-enterprise:3.12.5"},
-		{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"},
-		{Name: "webui", Image: "arangodb/webui:2.0.0"},
+		{OverridePath: "charts.a.images.db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+		{OverridePath: "charts.a.images.operator", Image: "arangodb/kube-arangodb:1.4.4"},
+		{OverridePath: "charts.b.images.webui", Image: "arangodb/webui:2.0.0"},
 	}, aggregateImages(charts))
 }
 
@@ -566,12 +566,12 @@ func Test_aggregateImages(t *testing.T) {
 func Test_renderImagesFile(t *testing.T) {
 	out := string(renderImagesFile(packageChartRenderInput{
 		Name: "arango-platform-release", Version: "1.0.0",
-		Images: []packageChartRenderInputImage{{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"}},
+		Images: []packageChartRenderInputImage{{OverridePath: "charts.op.images.application", Image: "arangodb/kube-arangodb:1.4.4"}},
 	}))
 
 	require.Contains(t, out, "# Container images bundled by arango-platform-release 1.0.0.")
 	require.Contains(t, out, "Helm does not consume this file")
-	require.Contains(t, out, "name: operator")
+	require.Contains(t, out, "overridePath: charts.op.images.application")
 	require.Contains(t, out, "image: arangodb/kube-arangodb:1.4.4")
 
 	// It must be a valid images.yaml document.
@@ -579,7 +579,7 @@ func Test_renderImagesFile(t *testing.T) {
 		Images []packageChartRenderInputImage `json:"images"`
 	}
 	require.NoError(t, yaml.Unmarshal([]byte(out), &doc))
-	require.Equal(t, []packageChartRenderInputImage{{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"}}, doc.Images)
+	require.Equal(t, []packageChartRenderInputImage{{OverridePath: "charts.op.images.application", Image: "arangodb/kube-arangodb:1.4.4"}}, doc.Images)
 
 	// With no images the document renders an empty list, never null.
 	empty := string(renderImagesFile(packageChartRenderInput{Name: "r", Version: "1"}))
@@ -594,16 +594,16 @@ func Test_packageChartTemplateReadme_Images(t *testing.T) {
 		out, err := packageChartTemplateReadme.RenderBytes(packageChartRenderInput{
 			Name: "arango-platform-release", Version: "1.0.0",
 			Images: []packageChartRenderInputImage{
-				{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"},
-				{Name: "db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+				{OverridePath: "charts.op.images.application", Image: "arangodb/kube-arangodb:1.4.4"},
+				{OverridePath: "charts.db.images.application", Image: "arangodb/arangodb-enterprise:3.12.5"},
 			},
 		})
 		require.NoError(t, err)
 
 		readme := string(out)
 		require.Contains(t, readme, "## Container Images")
-		require.Contains(t, readme, "| `operator` | `arangodb/kube-arangodb:1.4.4` |")
-		require.Contains(t, readme, "| `db` | `arangodb/arangodb-enterprise:3.12.5` |")
+		require.Contains(t, readme, "| `arangodb/kube-arangodb:1.4.4` | `charts.op.images.application` |")
+		require.Contains(t, readme, "| `arangodb/arangodb-enterprise:3.12.5` | `charts.db.images.application` |")
 		require.Contains(t, readme, "images.yaml")
 		require.NotContains(t, readme, "{{")
 		require.NotContains(t, readme, "<no value>")

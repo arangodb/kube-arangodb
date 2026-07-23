@@ -41,13 +41,13 @@ helm install <release-name> <chart> \
 ## Container Images
 {{ if .Images }}
 This release uses the container images below, aggregated from the bundled charts. For an air-gapped
-installation, pull each image, re-tag it to your private registry, push it, and override the
-corresponding image values.
+installation, pull each image, re-tag it to your private registry, push it, and override it at the
+listed values path.
 
-| Name | Image |
-|------|-------|
+| Image | Override path |
+|-------|---------------|
 {{- range $i := .Images }}
-| `{{ $i.Name }}` | `{{ $i.Image }}` |
+| `{{ $i.Image }}` | `{{ $i.OverridePath }}` |
 {{- end }}
 
 The same list is available as a machine-readable `images.yaml` at the root of this chart. To mirror

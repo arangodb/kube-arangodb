@@ -97,11 +97,15 @@ type packageChartRenderInputChart struct {
 	Images []packageChartRenderInputImage
 }
 
-// packageChartRenderInputImage is a single container image a chart declares in its images.yaml.
+// packageChartRenderInputImage is a single container image referenced by a bundled chart, together
+// with the values path at which it can be overridden (e.g. to repoint it at a private registry).
 // Fields are exported for template rendering; the json tags match the images.yaml document.
 type packageChartRenderInputImage struct {
-	Name  string `json:"name"`
-	Image string `json:"image"`
+	// OverridePath is the dotted values path of the image spec. In the aggregated list it is
+	// chart-prefixed (e.g. "charts.arangodb-gral.images.application"), so it is the exact key to
+	// override in the release values.yaml.
+	OverridePath string `json:"overridePath"`
+	Image        string `json:"image"`
 }
 
 type packageChartRenderInputService struct {
@@ -399,26 +403,19 @@ func imagesFromValues(values map[string]interface{}) []packageChartRenderInputIm
 	seen := map[string]struct{}{}
 	var out []packageChartRenderInputImage
 
-	collectImagesFromValues(values, "", "", &out, seen)
+	collectImagesFromValues(values, "", &out, seen)
 
 	return out
 }
 
-func collectImagesFromValues(node interface{}, key, parentKey string, out *[]packageChartRenderInputImage, seen map[string]struct{}) {
+func collectImagesFromValues(node interface{}, path string, out *[]packageChartRenderInputImage, seen map[string]struct{}) {
 	switch v := node.(type) {
 	case map[string]interface{}:
 		if ref := imageRefFromMap(v); ref != "" {
 			if _, ok := seen[ref]; !ok {
 				seen[ref] = struct{}{}
-
-				// The image-spec map usually sits under a descriptive key (e.g. "engine"); when it
-				// sits under a literal "image"/"images" key, the parent key is the better name.
-				name := key
-				if name == "" || name == "image" || name == "images" {
-					name = parentKey
-				}
-
-				*out = append(*out, packageChartRenderInputImage{Name: name, Image: ref})
+				// path is the dotted values path of this image-spec map, e.g. "images.application".
+				*out = append(*out, packageChartRenderInputImage{OverridePath: path, Image: ref})
 			}
 		}
 
@@ -428,13 +425,21 @@ func collectImagesFromValues(node interface{}, key, parentKey string, out *[]pac
 		}
 		sort.Strings(keys)
 		for _, k := range keys {
-			collectImagesFromValues(v[k], k, key, out, seen)
+			collectImagesFromValues(v[k], joinPath(path, k), out, seen)
 		}
 	case []interface{}:
-		for _, e := range v {
-			collectImagesFromValues(e, key, parentKey, out, seen)
+		for i, e := range v {
+			collectImagesFromValues(e, fmt.Sprintf("%s[%d]", path, i), out, seen)
 		}
 	}
+}
+
+// joinPath appends a key to a dotted values path.
+func joinPath(path, key string) string {
+	if path == "" {
+		return key
+	}
+	return path + "." + key
 }
 
 // imageRefFromMap builds a full image reference from an image-spec map, or "" if it is not one.
@@ -508,7 +513,11 @@ func aggregateImages(charts map[string]packageChartRenderInputChart) []packageCh
 				continue
 			}
 			seen[img.Image] = struct{}{}
-			out = append(out, img)
+			out = append(out, packageChartRenderInputImage{
+				// Chart-prefix the path so it is the exact override key in the release values.yaml.
+				OverridePath: joinPath("charts."+name, img.OverridePath),
+				Image:        img.Image,
+			})
 		}
 	}
 
@@ -516,7 +525,7 @@ func aggregateImages(charts map[string]packageChartRenderInputChart) []packageCh
 		if out[i].Image != out[j].Image {
 			return out[i].Image < out[j].Image
 		}
-		return out[i].Name < out[j].Name
+		return out[i].OverridePath < out[j].OverridePath
 	})
 
 	return out
