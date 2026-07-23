@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) Aggregate the container images declared by each bundled chart's images.yaml into a Container Images section of the generated platform release chart README and an aggregated images.yaml for air-gapped mirroring
 - (Feature) (Platform) Generate README.md in the platform release chart and validate chart overrides against each subchart values.schema.json
 
 ## [1.4.4](https://github.com/arangodb/kube-arangodb/tree/1.4.4) (2026-07-20)

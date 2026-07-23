@@ -75,6 +75,11 @@ type packageChartRenderInput struct {
 
 	Charts   map[string]packageChartRenderInputChart
 	Services map[string]packageChartRenderInputService
+
+	// Images is the aggregated, de-duplicated list of container images declared by the bundled
+	// charts (via their images.yaml), sorted by image reference. It backs both the README section
+	// and the generated top-level images.yaml.
+	Images []packageChartRenderInputImage
 }
 type packageChartRenderInputChart struct {
 	Name      string
@@ -86,6 +91,16 @@ type packageChartRenderInputChart struct {
 	// DocumentedValues flattens Values into individual override paths, described using
 	// Schema where it provides descriptions.
 	DocumentedValues []packageChartRenderInputValue
+
+	// Images are the container images the chart declares in its images.yaml, if any.
+	Images []packageChartRenderInputImage
+}
+
+// packageChartRenderInputImage is a single container image a chart declares in its images.yaml.
+// Fields are exported for template rendering; the json tags match the images.yaml document.
+type packageChartRenderInputImage struct {
+	Name  string `json:"name"`
+	Image string `json:"image"`
 }
 
 type packageChartRenderInputService struct {
@@ -185,6 +200,9 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Aggregate the images every bundled chart declares into the release-wide list.
+	input.Images = aggregateImages(input.Charts)
+
 	schema := generateValuesSchema(input)
 
 	builder := util.NewGZipBuilder(out)
@@ -196,6 +214,9 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateValues, input), "%s/values.yaml", input.Name)
 
 	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateReadme, input), "%s/README.md", input.Name)
+
+	// Aggregated, machine-readable image list for air-gapped mirroring. Helm ignores it.
+	builder = builder.File(util.GZipBuilderProcessBytes(renderImagesFile(input)), "%s/images.yaml", input.Name)
 
 	builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateCheck, input), "%s/templates/check.yaml", input.Name)
 
@@ -264,6 +285,13 @@ func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint s
 		return nil, errors.Wrapf(err, "invalid values.schema.json in chart %s", name)
 	}
 
+	// A chart that ships an unparsable images.yaml is a chart bug; fail packaging rather than
+	// silently dropping images from the air-gapped list (same policy as values.schema.json).
+	images, err := extractChartImages(chart)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid images.yaml in chart %s", name)
+	}
+
 	return &packageChartRenderInputChart{
 		Name:             name,
 		Version:          packageSpec.Version,
@@ -271,6 +299,7 @@ func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint s
 		Values:           defaults,
 		Schema:           schema,
 		DocumentedValues: documentedValues(defaults, schema),
+		Images:           images,
 	}, nil
 }
 
@@ -332,6 +361,81 @@ func extractChartValues(chartData []byte) (map[string]interface{}, error) {
 	}
 
 	return values, nil
+}
+
+// extractChartImages reads images.yaml from a gzipped tar chart archive and returns the container
+// images the chart declares. Returns nil when the chart ships no images.yaml.
+func extractChartImages(chartData []byte) ([]packageChartRenderInputImage, error) {
+	data, err := extractChartFile(chartData, "images.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	if data == nil {
+		return nil, nil
+	}
+
+	var doc struct {
+		Images []packageChartRenderInputImage `json:"images"`
+	}
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil, err
+	}
+
+	return doc.Images, nil
+}
+
+// aggregateImages flattens the images declared by every bundled chart into a single list,
+// de-duplicated by image reference and sorted deterministically (by image, then name) so the
+// generated README and images.yaml are reproducible regardless of chart map iteration order.
+func aggregateImages(charts map[string]packageChartRenderInputChart) []packageChartRenderInputImage {
+	names := make([]string, 0, len(charts))
+	for name := range charts {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	seen := map[string]struct{}{}
+	var out []packageChartRenderInputImage
+
+	// Iterate charts in name order so the entry kept for a duplicated image is deterministic.
+	for _, name := range names {
+		for _, img := range charts[name].Images {
+			if img.Image == "" {
+				continue
+			}
+			if _, ok := seen[img.Image]; ok {
+				continue
+			}
+			seen[img.Image] = struct{}{}
+			out = append(out, img)
+		}
+	}
+
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Image != out[j].Image {
+			return out[i].Image < out[j].Image
+		}
+		return out[i].Name < out[j].Name
+	})
+
+	return out
+}
+
+// renderImagesFile marshals the aggregated image list into the images.yaml document shipped at the
+// root of the release chart - informational only, Helm does not consume it.
+func renderImagesFile(input packageChartRenderInput) []byte {
+	doc := struct {
+		Images []packageChartRenderInputImage `json:"images"`
+	}{Images: input.Images}
+
+	data, _ := yaml.Marshal(doc)
+
+	header := "# Container images bundled by " + input.Name + " " + input.Version + ".\n" +
+		"# For an air-gapped installation, pull each image, re-tag it to your private registry and push it.\n" +
+		"# Generated when the release chart is packaged - do not edit by hand. Helm does not consume this file.\n"
+
+	return append([]byte(header), data...)
 }
 
 // extractChartSchema reads values.schema.json from a gzipped tar chart archive.

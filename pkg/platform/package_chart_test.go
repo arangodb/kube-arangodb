@@ -460,3 +460,107 @@ func Test_packageChartTemplateValues_EmptySections(t *testing.T) {
 		})
 	}
 }
+
+// Test_extractChartImages ensures images.yaml is read from the chart's own root (not a subchart's)
+// and that a missing file is not an error while a malformed one is surfaced.
+func Test_extractChartImages(t *testing.T) {
+	t.Run("reads own images.yaml, ignores subcharts", func(t *testing.T) {
+		files := map[string]string{
+			"mychart/charts/sub/images.yaml": "images:\n  - name: sub\n    image: sub/img:1\n",
+			"mychart/images.yaml":            "images:\n  - name: operator\n    image: arangodb/kube-arangodb:1.4.4\n  - name: db\n    image: arangodb/arangodb-enterprise:3.12.5\n",
+		}
+		order := []string{"mychart/charts/sub/images.yaml", "mychart/images.yaml"}
+
+		imgs, err := extractChartImages(newTestChart(t, files, order))
+		require.NoError(t, err)
+		require.Equal(t, []packageChartRenderInputImage{
+			{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"},
+			{Name: "db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+		}, imgs)
+	})
+
+	t.Run("missing images.yaml returns nil", func(t *testing.T) {
+		imgs, err := extractChartImages(newTestChart(t, map[string]string{"mychart/Chart.yaml": "name: mychart\n"}, []string{"mychart/Chart.yaml"}))
+		require.NoError(t, err)
+		require.Nil(t, imgs)
+	})
+
+	t.Run("malformed images.yaml is an error", func(t *testing.T) {
+		_, err := extractChartImages(newTestChart(t, map[string]string{"mychart/images.yaml": "images: [not: valid"}, []string{"mychart/images.yaml"}))
+		require.Error(t, err)
+	})
+}
+
+// Test_aggregateImages ensures images from every chart are merged, de-duplicated by image
+// reference, and ordered deterministically regardless of chart map iteration order.
+func Test_aggregateImages(t *testing.T) {
+	charts := map[string]packageChartRenderInputChart{
+		"a": {Name: "a", Images: []packageChartRenderInputImage{
+			{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"},
+			{Name: "db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+		}},
+		"b": {Name: "b", Images: []packageChartRenderInputImage{
+			{Name: "operator-dup", Image: "arangodb/kube-arangodb:1.4.4"}, // duplicate image, dropped
+			{Name: "webui", Image: "arangodb/webui:2.0.0"},
+			{Name: "empty", Image: ""}, // empty image, skipped
+		}},
+	}
+
+	// Sorted by image reference; the entry kept for the duplicate comes from chart "a" (name order).
+	require.Equal(t, []packageChartRenderInputImage{
+		{Name: "db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+		{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"},
+		{Name: "webui", Image: "arangodb/webui:2.0.0"},
+	}, aggregateImages(charts))
+}
+
+// Test_renderImagesFile ensures the aggregated images.yaml carries the informational header and the
+// image entries.
+func Test_renderImagesFile(t *testing.T) {
+	out := string(renderImagesFile(packageChartRenderInput{
+		Name: "arango-platform-release", Version: "1.0.0",
+		Images: []packageChartRenderInputImage{{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"}},
+	}))
+
+	require.Contains(t, out, "# Container images bundled by arango-platform-release 1.0.0.")
+	require.Contains(t, out, "Helm does not consume this file")
+	require.Contains(t, out, "name: operator")
+	require.Contains(t, out, "image: arangodb/kube-arangodb:1.4.4")
+
+	// It must be a valid images.yaml document.
+	var doc struct {
+		Images []packageChartRenderInputImage `json:"images"`
+	}
+	require.NoError(t, yaml.Unmarshal([]byte(out), &doc))
+	require.Equal(t, []packageChartRenderInputImage{{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"}}, doc.Images)
+}
+
+// Test_packageChartTemplateReadme_Images ensures the README renders the aggregated container-image
+// section, and degrades cleanly when a release declares none.
+func Test_packageChartTemplateReadme_Images(t *testing.T) {
+	t.Run("with images", func(t *testing.T) {
+		out, err := packageChartTemplateReadme.RenderBytes(packageChartRenderInput{
+			Name: "arango-platform-release", Version: "1.0.0",
+			Images: []packageChartRenderInputImage{
+				{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"},
+				{Name: "db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+			},
+		})
+		require.NoError(t, err)
+
+		readme := string(out)
+		require.Contains(t, readme, "## Container Images")
+		require.Contains(t, readme, "| `operator` | `arangodb/kube-arangodb:1.4.4` |")
+		require.Contains(t, readme, "| `db` | `arangodb/arangodb-enterprise:3.12.5` |")
+		require.Contains(t, readme, "images.yaml")
+		require.NotContains(t, readme, "{{")
+		require.NotContains(t, readme, "<no value>")
+	})
+
+	t.Run("no images", func(t *testing.T) {
+		out, err := packageChartTemplateReadme.RenderBytes(packageChartRenderInput{Name: "r", Version: "1"})
+		require.NoError(t, err)
+		require.Contains(t, string(out), "This release declares no container images.")
+		require.NotContains(t, string(out), "{{")
+	})
+}
