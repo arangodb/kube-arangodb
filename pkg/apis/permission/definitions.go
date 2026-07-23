@@ -46,4 +46,10 @@ const (
 	// LabelPolicyRoleBindingRole is a label set on ArangoPermissionPolicyRoleBinding
 	// with the name of the referenced ArangoPermissionRole CRD.
 	LabelPolicyRoleBindingRole = ArangoPermissionGroupName + "/role"
+
+	// ManagedPredefinedPrefix is the reserved name prefix of operator-managed predefined roles
+	// (and their policies) created directly in the authorization sidecar. An
+	// ArangoPermissionPolicyRoleBinding may reference such a role by this direct sidecar name -
+	// predefined roles have no ArangoPermissionRole CRD - to attach a policy to it.
+	ManagedPredefinedPrefix = "managed:predefined:"
 )

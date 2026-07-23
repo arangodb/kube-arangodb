@@ -27,17 +27,29 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
-// ArangoPermissionBindingRef defines a reference to a permission resource by ArangoPermission CRD name.
+// ArangoPermissionBindingRef defines a reference to a permission resource, either an
+// ArangoPermission CRD by name or an existing authorization sidecar object by its direct name.
 type ArangoPermissionBindingRef struct {
 	// Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
 	Name string `json:"name,omitempty"`
+
+	// Direct references an existing authorization object (role or policy) by its exact name, without
+	// a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+	// "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+	// must be set.
+	Direct string `json:"direct,omitempty"`
 }
 
 func (r *ArangoPermissionBindingRef) Hash() string {
 	if r == nil {
 		return ""
 	}
-	return util.SHA256FromStringArray(r.Name)
+	return util.SHA256FromStringArray(r.Name, r.Direct)
+}
+
+// IsDirect reports whether this reference targets an authorization object directly by name (no CRD lookup).
+func (r *ArangoPermissionBindingRef) IsDirect() bool {
+	return r != nil && r.Direct != ""
 }
 
 func (r *ArangoPermissionBindingRef) Validate() error {
@@ -45,8 +57,12 @@ func (r *ArangoPermissionBindingRef) Validate() error {
 		return errors.Errorf("is required")
 	}
 
-	if r.Name == "" {
-		return errors.Errorf("name is required")
+	if r.Name != "" && r.Direct != "" {
+		return errors.Errorf("name and direct are mutually exclusive")
+	}
+
+	if r.Name == "" && r.Direct == "" {
+		return errors.Errorf("one of name or direct is required")
 	}
 
 	return nil
@@ -63,12 +79,16 @@ func (l ArangoPermissionBindingRefList) Hash() string {
 	return util.SHA256FromStringArray(hashes...)
 }
 
-// GetReference returns the CRD name if set, empty string otherwise
+// GetReference returns the effective reference: the direct name when Direct is set (used as-is),
+// otherwise the CRD name.
 func (r *ArangoPermissionBindingRef) GetReference() string {
-	if r != nil {
-		return r.Name
+	if r == nil {
+		return ""
 	}
-	return ""
+	if r.Direct != "" {
+		return r.Direct
+	}
+	return r.Name
 }
 
 // ArangoPermissionScope defines a scope boundary as either an inline policy

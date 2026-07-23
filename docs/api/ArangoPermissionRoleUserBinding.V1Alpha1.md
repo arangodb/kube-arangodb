@@ -18,9 +18,20 @@ Name of the object
 
 ***
 
+### .spec.role.direct
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L40)</sup>
+
+Direct references an existing authorization object (role or policy) by its exact name, without
+a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+"managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+must be set.
+
+***
+
 ### .spec.role.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L33)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L34)</sup>
 
 Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
 
@@ -79,7 +90,7 @@ Resources defines the list of resources
 
 ### .spec.userName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/role_user_binding_spec.go#L45)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/role_user_binding_spec.go#L46)</sup>
 
 This field is **required**
 

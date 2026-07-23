@@ -65,6 +65,10 @@ const (
 	ConditionTypeTerminating ConditionType = "Terminating"
 	// ConditionTypeUpToDate indicates that the deployment is up to date.
 	ConditionTypeUpToDate ConditionType = "UpToDate"
+	// ConditionTypeRBACBootstrapped indicates that the operator-managed RBAC roles have been
+	// synced to the authorization sidecar. It is present only while RBAC (the gateway
+	// authorization sidecar) is enabled.
+	ConditionTypeRBACBootstrapped ConditionType = "RBACBootstrapped"
 	// ConditionTypeSpecAccepted indicates that the deployment spec has been accepted.
 	ConditionTypeSpecAccepted ConditionType = "SpecAccepted"
 	// ConditionTypeSpecPropagated indicates that the deployment has been at least once UpToDate after spec acceptance.

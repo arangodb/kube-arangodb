@@ -21,6 +21,7 @@
 package v1alpha1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
@@ -69,6 +70,14 @@ func (c *ArangoPermissionRoleUserBindingSpec) Validate() error {
 	return shared.WithErrors(
 		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
 		shared.ValidateRequiredInterfacePath("role", c.Role),
+		func() error {
+			// The super-admin role is reserved: it grants full access and is bound to the root user
+			// automatically, so it must not be assignable to a user by a customer binding.
+			if permission.IsReservedRoleName(c.Role.GetReference()) {
+				return errors.Errorf("role %q is reserved and cannot be assigned", c.Role.GetReference())
+			}
+			return nil
+		}(),
 		func() error {
 			if c.UserName == "" {
 				return errors.Errorf("userName is required")

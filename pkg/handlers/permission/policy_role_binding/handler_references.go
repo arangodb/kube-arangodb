@@ -79,6 +79,24 @@ func (h *handler) handlePolicyReference(ctx context.Context, extension *permissi
 func (h *handler) handleRoleReference(ctx context.Context, extension *permissionApi.ArangoPermissionPolicyRoleBinding, status *permissionApi.ArangoPermissionPolicyRoleBindingStatus) (bool, error) {
 	roleName := extension.Spec.Role.GetReference()
 
+	// A direct reference targets a role that lives only in the authorization sidecar and has no
+	// ArangoPermissionRole CRD (e.g. an operator-managed predefined role). The `direct` reference
+	// field addresses it directly by name so a policy can be attached to it. The deployment
+	// reconciler (SyncRBACPermissions) picks up the binding and merges the policy into the sidecar
+	// role. No CRD lookup and no role label - the reconciler discovers these bindings by role name.
+	if extension.Spec.Role.IsDirect() {
+		if status.Role == nil || status.Role.GetName() != roleName {
+			status.Role = &sharedApi.Object{Name: roleName}
+			return true, operator.Reconcile("Predefined role reference set")
+		}
+
+		if status.Conditions.Update(permissionApi.ReadyRoleCondition, true, "Role Ready", "Predefined role") {
+			return true, operator.Reconcile("Role ready")
+		}
+
+		return false, nil
+	}
+
 	// CRD reference — resolve the ArangoPermissionRole
 	roleObj, err := h.client.PermissionV1alpha1().ArangoPermissionRoles(extension.GetNamespace()).Get(ctx, roleName, meta.GetOptions{})
 	if err != nil {
