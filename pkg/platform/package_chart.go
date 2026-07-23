@@ -425,9 +425,16 @@ func aggregateImages(charts map[string]packageChartRenderInputChart) []packageCh
 // renderImagesFile marshals the aggregated image list into the images.yaml document shipped at the
 // root of the release chart - informational only, Helm does not consume it.
 func renderImagesFile(input packageChartRenderInput) []byte {
+	// Marshal an empty list as `[]` rather than `null` so the file is always a valid, uniform
+	// document for consumers - e.g. when no bundled chart declares any images.
+	images := input.Images
+	if images == nil {
+		images = []packageChartRenderInputImage{}
+	}
+
 	doc := struct {
 		Images []packageChartRenderInputImage `json:"images"`
-	}{Images: input.Images}
+	}{Images: images}
 
 	data, _ := yaml.Marshal(doc)
 

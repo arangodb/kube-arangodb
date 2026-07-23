@@ -533,6 +533,11 @@ func Test_renderImagesFile(t *testing.T) {
 	}
 	require.NoError(t, yaml.Unmarshal([]byte(out), &doc))
 	require.Equal(t, []packageChartRenderInputImage{{Name: "operator", Image: "arangodb/kube-arangodb:1.4.4"}}, doc.Images)
+
+	// With no images the document renders an empty list, never null.
+	empty := string(renderImagesFile(packageChartRenderInput{Name: "r", Version: "1"}))
+	require.Contains(t, empty, "images: []")
+	require.NotContains(t, empty, "images: null")
 }
 
 // Test_packageChartTemplateReadme_Images ensures the README renders the aggregated container-image
