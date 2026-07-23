@@ -90,7 +90,7 @@ Resources defines the list of resources
 
 ### .spec.userName
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/role_user_binding_spec.go#L45)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/role_user_binding_spec.go#L46)</sup>
 
 This field is **required**
 
