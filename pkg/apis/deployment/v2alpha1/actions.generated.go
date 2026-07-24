@@ -251,6 +251,9 @@ const (
 	// ActionShutdownMemberDefaultTimeout define default timeout for action ActionShutdownMember
 	ActionShutdownMemberDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 
+	// ActionSyncRBACPermissionsDefaultTimeout define default timeout for action ActionSyncRBACPermissions
+	ActionSyncRBACPermissionsDefaultTimeout time.Duration = ActionsDefaultTimeout
+
 	// ActionTLSKeyStatusUpdateDefaultTimeout define default timeout for action ActionTLSKeyStatusUpdate
 	ActionTLSKeyStatusUpdateDefaultTimeout time.Duration = ActionsDefaultTimeout
 
@@ -527,6 +530,9 @@ const (
 	// ActionTypeShutdownMember in scopes Normal. Sends Shutdown requests and waits for container to be stopped
 	ActionTypeShutdownMember ActionType = "ShutdownMember"
 
+	// ActionTypeSyncRBACPermissions in scopes High. Sync the operator managed predefined RBAC roles into the authorization sidecar (super-admin ships an Allow-all policy bound to the root user; other roles are created empty)
+	ActionTypeSyncRBACPermissions ActionType = "SyncRBACPermissions"
+
 	// ActionTypeTLSKeyStatusUpdate in scopes Normal. Update Status of TLS propagation process
 	ActionTypeTLSKeyStatusUpdate ActionType = "TLSKeyStatusUpdate"
 
@@ -719,6 +725,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionSetMemberCurrentImageDefaultTimeout
 	case ActionTypeShutdownMember:
 		return ActionShutdownMemberDefaultTimeout
+	case ActionTypeSyncRBACPermissions:
+		return ActionSyncRBACPermissionsDefaultTimeout
 	case ActionTypeTLSKeyStatusUpdate:
 		return ActionTLSKeyStatusUpdateDefaultTimeout
 	case ActionTypeTLSPropagated:
@@ -903,6 +911,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeShutdownMember:
 		return ActionPriorityNormal
+	case ActionTypeSyncRBACPermissions:
+		return ActionPriorityHigh
 	case ActionTypeTLSKeyStatusUpdate:
 		return ActionPriorityNormal
 	case ActionTypeTLSPropagated:
@@ -1112,6 +1122,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeSetMemberCurrentImage:
 		return false
 	case ActionTypeShutdownMember:
+		return false
+	case ActionTypeSyncRBACPermissions:
 		return false
 	case ActionTypeTLSKeyStatusUpdate:
 		return false

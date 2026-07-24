@@ -3,7 +3,7 @@ layout: page
 title: User Role Bindings
 parent: RBAC
 grand_parent: ArangoDBPlatform
-nav_order: 4
+nav_order: 5
 ---
 
 # User Role Bindings

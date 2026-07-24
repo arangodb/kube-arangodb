@@ -87,6 +87,7 @@ nav_order: 11
 | SetMemberConditionV2 | yes | 10m0s | no | Community & Enterprise | Set member condition |
 | SetMemberCurrentImage | no | 10m0s | no | Community & Enterprise | Update Member current image |
 | ShutdownMember | no | 30m0s | no | Community & Enterprise | Sends Shutdown requests and waits for container to be stopped |
+| SyncRBACPermissions | no | 10m0s | no | Community & Enterprise | Sync the operator managed predefined RBAC roles into the authorization sidecar (super-admin ships an Allow-all policy bound to the root user; other roles are created empty) |
 | TLSKeyStatusUpdate | no | 10m0s | no | Enterprise Only | Update Status of TLS propagation process |
 | TLSPropagated | yes | 10m0s | no | Enterprise Only | Update TLS propagation condition |
 | TimezoneSecretSet | no | 30m0s | no | Community & Enterprise | Set timezone details in cluster |
@@ -186,6 +187,7 @@ spec:
       SetMemberConditionV2: 10m0s
       SetMemberCurrentImage: 10m0s
       ShutdownMember: 30m0s
+      SyncRBACPermissions: 10m0s
       TLSKeyStatusUpdate: 10m0s
       TLSPropagated: 10m0s
       TimezoneSecretSet: 30m0s

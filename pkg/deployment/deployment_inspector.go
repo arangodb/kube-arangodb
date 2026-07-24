@@ -372,6 +372,26 @@ func (d *Deployment) inspectDeploymentWithError(ctx context.Context, lastInterva
 		}
 	}
 
+	// RBAC bootstrap condition. While the authorization sidecar (RBAC) is enabled, ensure the
+	// condition is present (starting false) so UpToDate waits until the SyncRBACPermissions
+	// action reports the sync as successful (which sets it true). When RBAC is disabled, remove
+	// the condition. This is managed here - not behind the sync back-off - so the condition
+	// appears without delay.
+	_, rbacConditionExists := status.Conditions.Get(api.ConditionTypeRBACBootstrapped)
+	if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		if !rbacConditionExists {
+			if err = d.updateConditionWithHash(ctx, api.ConditionTypeRBACBootstrapped, false, "RBAC Bootstrap Pending", "Waiting for RBAC permissions to be synced", ""); err != nil {
+				return minInspectionInterval, errors.Wrapf(err, "Unable to update RBACBootstrapped condition")
+			}
+		}
+	} else if rbacConditionExists {
+		if err = d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
+			return s.Conditions.Remove(api.ConditionTypeRBACBootstrapped)
+		}); err != nil {
+			return minInspectionInterval, errors.Wrapf(err, "Unable to remove RBACBootstrapped condition")
+		}
+	}
+
 	if v := status.AcceptedSpecVersion; v != nil && d.currentObject.Status.IsPlanEmpty() && status.AppliedVersion != *v {
 		if err := d.WithStatusUpdate(ctx, func(s *api.DeploymentStatus) bool {
 			s.AppliedVersion = *v
@@ -480,6 +500,13 @@ func (d *Deployment) isUpToDateStatus(spec api.DeploymentSpec, status api.Deploy
 
 	if !status.Conditions.Check(api.ConditionTypeReachable).Exists().IsTrue().Evaluate() {
 		reason = "ArangoDB is not reachable"
+		upToDate = false
+		return
+	}
+
+	if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) &&
+		!status.Conditions.Check(api.ConditionTypeRBACBootstrapped).Exists().IsTrue().Evaluate() {
+		reason = "RBAC is not bootstrapped"
 		upToDate = false
 		return
 	}
