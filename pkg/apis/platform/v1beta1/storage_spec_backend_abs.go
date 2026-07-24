@@ -49,12 +49,21 @@ type ArangoPlatformStorageSpecBackendAzureBlobStorage struct {
 	// +doc/default:
 	BucketPrefix *string `json:"bucketPath,omitempty"`
 
-	// CredentialsSecret specifies the Kubernetes Secret containing ClientID and ClientSecret for Azure API authorization
-	// +doc/required
+	// CredentialsSecret specifies the Kubernetes Secret containing `clientId` and `clientSecret` for
+	// Azure service-principal (client secret) authorization. Exactly one of CredentialsSecret or
+	// ClientCertificateSecret must be defined.
 	// +doc/skip: namespace
 	// +doc/skip: uid
 	// +doc/skip: checksum
-	CredentialsSecret *sharedApi.Object `json:"credentialsSecret"`
+	CredentialsSecret *sharedApi.Object `json:"credentialsSecret,omitempty"`
+
+	// ClientCertificateSecret specifies a Kubernetes TLS Secret (`kubernetes.io/tls`, providing
+	// `tls.crt` and `tls.key`) plus a `clientId` key, used for Azure client-certificate
+	// authorization. Exactly one of CredentialsSecret or ClientCertificateSecret must be defined.
+	// +doc/skip: namespace
+	// +doc/skip: uid
+	// +doc/skip: checksum
+	ClientCertificateSecret *sharedApi.Object `json:"clientCertificateSecret,omitempty"`
 }
 
 func (s *ArangoPlatformStorageSpecBackendAzureBlobStorage) Validate() error {
@@ -77,8 +86,19 @@ func (s *ArangoPlatformStorageSpecBackendAzureBlobStorage) Validate() error {
 		errs = append(errs, shared.PrefixResourceErrors("accountName", errors.Errorf("AccountName needs to be defined")))
 	}
 
+	// Exactly one credential source must be defined: service-principal secret or client certificate.
+	switch {
+	case s.CredentialsSecret != nil && s.ClientCertificateSecret != nil:
+		errs = append(errs, shared.PrefixResourceErrors("credentialsSecret", errors.Errorf("credentialsSecret and clientCertificateSecret are mutually exclusive")))
+	case s.CredentialsSecret != nil:
+		errs = append(errs, shared.PrefixResourceErrors("credentialsSecret", s.GetCredentialsSecret().Validate()))
+	case s.ClientCertificateSecret != nil:
+		errs = append(errs, shared.PrefixResourceErrors("clientCertificateSecret", s.GetClientCertificateSecret().Validate()))
+	default:
+		errs = append(errs, shared.PrefixResourceErrors("credentialsSecret", errors.Errorf("one of credentialsSecret or clientCertificateSecret needs to be defined")))
+	}
+
 	errs = append(errs,
-		shared.PrefixResourceErrors("credentialsSecret", s.GetCredentialsSecret().Validate()),
 		shared.PrefixResourceError("bucketName", shared.ValidateRequired(s.BucketName, shared.ValidateResourceName)),
 	)
 
@@ -125,4 +145,11 @@ func (s *ArangoPlatformStorageSpecBackendAzureBlobStorage) GetCredentialsSecret(
 		return &sharedApi.Object{}
 	}
 	return s.CredentialsSecret
+}
+
+func (s *ArangoPlatformStorageSpecBackendAzureBlobStorage) GetClientCertificateSecret() *sharedApi.Object {
+	if s == nil || s.ClientCertificateSecret == nil {
+		return &sharedApi.Object{}
+	}
+	return s.ClientCertificateSecret
 }

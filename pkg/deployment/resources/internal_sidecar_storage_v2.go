@@ -30,6 +30,7 @@ import (
 	pbImplStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/aws"
+	azureHelper "github.com/arangodb/kube-arangodb/pkg/util/azure"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -76,8 +77,21 @@ func internalSidecarStorageV2Args(storage *platformApi.ArangoPlatformStorage) k8
 		options.Add("--storage.v2.azure-blob-storage.endpoint", abs.GetEndpoint())
 		options.Add("--storage.v2.azure-blob-storage.bucket.name", abs.GetBucketName())
 		options.Add("--storage.v2.azure-blob-storage.bucket.prefix", abs.GetBucketPrefix())
-		options.Add("--storage.v2.azure-blob-storage.client.secret.client-id-file", filepath.Join(internalSidecarStorageCredentialsPath, utilConstants.SecretCredentialsAzureBlobStorageClientID))
-		options.Add("--storage.v2.azure-blob-storage.client.secret.client-secret-file", filepath.Join(internalSidecarStorageCredentialsPath, utilConstants.SecretCredentialsAzureBlobStorageClientSecret))
+		// The credentials Secret is mounted at internalSidecarStorageCredentialsPath (see the volume
+		// builder below). The spec guarantees exactly one of the two credential sources.
+		clientIDFile := filepath.Join(internalSidecarStorageCredentialsPath, utilConstants.SecretCredentialsAzureBlobStorageClientID)
+		if abs.ClientCertificateSecret != nil {
+			// Client-certificate auth from a native kubernetes.io/tls Secret (tls.crt/tls.key) plus clientId.
+			options.Add("--storage.v2.azure-blob-storage.client.type", string(azureHelper.ProviderTypeCertificate))
+			options.Add("--storage.v2.azure-blob-storage.client.certificate.client-id-file", clientIDFile)
+			options.Add("--storage.v2.azure-blob-storage.client.certificate.certificate-file", filepath.Join(internalSidecarStorageCredentialsPath, core.TLSCertKey))
+			options.Add("--storage.v2.azure-blob-storage.client.certificate.key-file", filepath.Join(internalSidecarStorageCredentialsPath, core.TLSPrivateKeyKey))
+		} else {
+			// Service-principal (client secret) auth.
+			options.Add("--storage.v2.azure-blob-storage.client.type", string(azureHelper.ProviderTypeSecret))
+			options.Add("--storage.v2.azure-blob-storage.client.secret.client-id-file", clientIDFile)
+			options.Add("--storage.v2.azure-blob-storage.client.secret.client-secret-file", filepath.Join(internalSidecarStorageCredentialsPath, utilConstants.SecretCredentialsAzureBlobStorageClientSecret))
+		}
 	}
 
 	return options
@@ -111,6 +125,9 @@ func internalSidecarStorageV2Volumes(storage *platformApi.ArangoPlatformStorage)
 		})
 	} else if abs := storage.Spec.GetBackend().GetAzureBlobStorage(); abs != nil {
 		secretObj := abs.GetCredentialsSecret()
+		if abs.ClientCertificateSecret != nil {
+			secretObj = abs.GetClientCertificateSecret()
+		}
 		volumes = append(volumes, k8sutil.CreateVolumeWithSecret(internalSidecarStorageCredentialsMount, secretObj.GetName()))
 		volumeMounts = append(volumeMounts, core.VolumeMount{
 			Name:      internalSidecarStorageCredentialsMount,

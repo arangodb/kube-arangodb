@@ -84,6 +84,15 @@ func (b *storageV2) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientIDFile, "azure-blob-storage.client.secret.client-id-file", "", "Azure ClientID File"),
 		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientSecret, "azure-blob-storage.client.secret.client-secret", "", "Azure ClientSecret"),
 		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Secret.ClientSecretFile, "azure-blob-storage.client.secret.client-secret-file", "", "Azure ClientSecret File"),
+
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Certificate.ClientID, "azure-blob-storage.client.certificate.client-id", "", "Azure Certificate ClientID"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Certificate.ClientIDFile, "azure-blob-storage.client.certificate.client-id-file", "", "Azure Certificate ClientID File"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Certificate.Certificate, "azure-blob-storage.client.certificate.certificate", "", "Azure Client Certificate (PEM or PKCS#12 bundle)"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Certificate.CertificateFile, "azure-blob-storage.client.certificate.certificate-file", "", "Azure Client Certificate File"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Certificate.Key, "azure-blob-storage.client.certificate.key", "", "Azure Client Certificate private key (PEM), when supplied separately"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Certificate.KeyFile, "azure-blob-storage.client.certificate.key-file", "", "Azure Client Certificate private key File (PEM), when supplied separately"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Certificate.Password, "azure-blob-storage.client.certificate.password", "", "Azure Client Certificate Password"),
+		fs.StringVar(&b.Configuration.AzureBlobStorage.Client.Provider.Certificate.PasswordFile, "azure-blob-storage.client.certificate.password-file", "", "Azure Client Certificate Password File"),
 	)
 }
 

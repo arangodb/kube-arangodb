@@ -84,6 +84,46 @@ func newAzureCLI(prefix string) azureCLI {
 			Description: "Azure ClientSecret File",
 			Default:     "",
 		},
+		certClientID: cli.Flag[string]{
+			Name:        fmt.Sprintf("%s.client.certificate.client-id", prefix),
+			Description: "Azure Certificate ClientID",
+			Default:     "",
+		},
+		certClientIDFile: cli.Flag[string]{
+			Name:        fmt.Sprintf("%s.client.certificate.client-id-file", prefix),
+			Description: "Azure Certificate ClientID File",
+			Default:     "",
+		},
+		certificate: cli.Flag[string]{
+			Name:        fmt.Sprintf("%s.client.certificate.certificate", prefix),
+			Description: "Azure Client Certificate (PEM or PKCS#12 bundle)",
+			Default:     "",
+		},
+		certificateFile: cli.Flag[string]{
+			Name:        fmt.Sprintf("%s.client.certificate.certificate-file", prefix),
+			Description: "Azure Client Certificate File (PEM or PKCS#12 bundle)",
+			Default:     "",
+		},
+		certificateKey: cli.Flag[string]{
+			Name:        fmt.Sprintf("%s.client.certificate.key", prefix),
+			Description: "Azure Client Certificate private key (PEM), when supplied separately from the certificate",
+			Default:     "",
+		},
+		certificateKeyFile: cli.Flag[string]{
+			Name:        fmt.Sprintf("%s.client.certificate.key-file", prefix),
+			Description: "Azure Client Certificate private key File (PEM), when supplied separately from the certificate",
+			Default:     "",
+		},
+		certificatePassword: cli.Flag[string]{
+			Name:        fmt.Sprintf("%s.client.certificate.password", prefix),
+			Description: "Azure Client Certificate Password",
+			Default:     "",
+		},
+		certificatePasswordFile: cli.Flag[string]{
+			Name:        fmt.Sprintf("%s.client.certificate.password-file", prefix),
+			Description: "Azure Client Certificate Password File",
+			Default:     "",
+		},
 	}
 }
 
@@ -100,6 +140,15 @@ type azureCLI struct {
 	clientIDFile     cli.Flag[string]
 	clientSecret     cli.Flag[string]
 	clientSecretFile cli.Flag[string]
+
+	certClientID            cli.Flag[string]
+	certClientIDFile        cli.Flag[string]
+	certificate             cli.Flag[string]
+	certificateFile         cli.Flag[string]
+	certificateKey          cli.Flag[string]
+	certificateKeyFile      cli.Flag[string]
+	certificatePassword     cli.Flag[string]
+	certificatePasswordFile cli.Flag[string]
 }
 
 func (a azureCLI) GetName() string {
@@ -119,6 +168,14 @@ func (a azureCLI) Register(cmd *cobra.Command) error {
 		a.clientIDFile,
 		a.clientSecret,
 		a.clientSecretFile,
+		a.certClientID,
+		a.certClientIDFile,
+		a.certificate,
+		a.certificateFile,
+		a.certificateKey,
+		a.certificateKeyFile,
+		a.certificatePassword,
+		a.certificatePasswordFile,
 	)
 }
 
@@ -167,6 +224,38 @@ func (a azureCLI) Configuration(cmd *cobra.Command) (pbImplStorageV2SharedAzureB
 	if err != nil {
 		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
 	}
+	certClientID, err := a.certClientID.Get(cmd)
+	if err != nil {
+		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
+	}
+	certClientIDFile, err := a.certClientIDFile.Get(cmd)
+	if err != nil {
+		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
+	}
+	certificate, err := a.certificate.Get(cmd)
+	if err != nil {
+		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
+	}
+	certificateFile, err := a.certificateFile.Get(cmd)
+	if err != nil {
+		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
+	}
+	certificateKey, err := a.certificateKey.Get(cmd)
+	if err != nil {
+		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
+	}
+	certificateKeyFile, err := a.certificateKeyFile.Get(cmd)
+	if err != nil {
+		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
+	}
+	certificatePassword, err := a.certificatePassword.Get(cmd)
+	if err != nil {
+		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
+	}
+	certificatePasswordFile, err := a.certificatePasswordFile.Get(cmd)
+	if err != nil {
+		return pbImplStorageV2SharedAzureBlobStorage.Configuration{}, err
+	}
 
 	return pbImplStorageV2SharedAzureBlobStorage.Configuration{
 		BucketName:   bucketName,
@@ -182,6 +271,16 @@ func (a azureCLI) Configuration(cmd *cobra.Command) (pbImplStorageV2SharedAzureB
 					ClientIDFile:     clientIDFile,
 					ClientSecret:     clientSecret,
 					ClientSecretFile: clientSecretFile,
+				},
+				Certificate: azureHelper.ProviderCertificate{
+					ClientID:        certClientID,
+					ClientIDFile:    certClientIDFile,
+					Certificate:     certificate,
+					CertificateFile: certificateFile,
+					Key:             certificateKey,
+					KeyFile:         certificateKeyFile,
+					Password:        certificatePassword,
+					PasswordFile:    certificatePasswordFile,
 				},
 			},
 		},
