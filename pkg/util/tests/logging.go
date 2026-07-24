@@ -23,6 +23,7 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"sync"
 	"testing"
 	"time"
 
@@ -31,6 +32,33 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 )
+
+// syncBuffer is a bytes.Buffer safe for concurrent use. The log factory is shared by handlers that
+// run in parallel goroutines, so several zerolog writers append concurrently while the scanner
+// goroutine reads; an unguarded bytes.Buffer is a data race that corrupts log lines (partial JSON,
+// dropped/merged entries) and made Test_Apply flaky.
+type syncBuffer struct {
+	mu sync.Mutex
+	b  bytes.Buffer
+}
+
+func (s *syncBuffer) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Write(p)
+}
+
+func (s *syncBuffer) ReadRune() (rune, int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.ReadRune()
+}
+
+func (s *syncBuffer) Len() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Len()
+}
 
 type LogScanner interface {
 	Factory() logging.Factory
@@ -74,7 +102,7 @@ func (l *logScanner) Get(timeout time.Duration) (string, bool) {
 
 func WithLogScanner(t *testing.T, name string, in func(t *testing.T, s LogScanner)) {
 	t.Run(name, func(t *testing.T) {
-		b := bytes.NewBuffer(nil)
+		b := &syncBuffer{}
 		l := zerolog.New(b)
 		f := logging.NewFactory(l)
 

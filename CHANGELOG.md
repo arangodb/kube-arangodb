@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Maintenance) Fix a data race in the test log scanner that made Test_Apply flaky by guarding its shared buffer
 - (Feature) (Platform) Generate README.md in the platform release chart and validate chart overrides against each subchart values.schema.json
 
 ## [1.4.4](https://github.com/arangodb/kube-arangodb/tree/1.4.4) (2026-07-20)
