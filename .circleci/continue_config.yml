@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   slack: circleci/slack@4.1
-  trivy-scan: arangodb/trivy-scan@0.1.1
+  trivy-scan: arangodb/trivy-scan@1.0.0
 
 parameters:
   manifests-verify:
@@ -90,6 +90,57 @@ jobs:
           fail-on-findings: false
           store-junit-results: true
 
+  # Image-layer CVE gate (warn-only): the published operator image bundles
+  # the base OS packages and the compiled arangodb_operator/envoy binaries,
+  # none of which are visible to the fs scan above (pre-build analyzers,
+  # lockfiles only). Scans the already-published Docker Hub tag directly via
+  # the registry (image-src: remote), so no image build/docker daemon is
+  # needed in CI. The tag is read from VERSION rather than hardcoded so the
+  # scan tracks whatever this checkout's release line actually ships -
+  # the repo's own "latest" Docker Hub tag was found stale (unrelated to any
+  # recent release) when this job was added.
+  image-cve-scan:
+    executor: golang-executor
+    steps:
+      - checkout
+      - run:
+          name: Resolve released image tag from VERSION
+          command: |
+            echo "export OPERATOR_IMAGE_TAG=$(cut -f1 -d'+' VERSION)" >> "$BASH_ENV"
+      - trivy-scan/scan:
+          scan-type: image
+          image-ref: "arangodb/kube-arangodb-enterprise:${OPERATOR_IMAGE_TAG}"
+          image-src: remote
+          severity: "CRITICAL,HIGH"
+          fail-on-findings: false
+          store-junit-results: true
+          sbom-output: /tmp/sbom-image.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-image.cdx.json
+          destination: sbom-image.cdx.json
+
+  # Same gate against the UBI9 variant published alongside the Debian-based
+  # image - different base OS package set, same operator/envoy binaries.
+  image-cve-scan-ubi:
+    executor: golang-executor
+    steps:
+      - checkout
+      - run:
+          name: Resolve released image tag from VERSION
+          command: |
+            echo "export OPERATOR_IMAGE_TAG=$(cut -f1 -d'+' VERSION)" >> "$BASH_ENV"
+      - trivy-scan/scan:
+          scan-type: image
+          image-ref: "arangodb/kube-arangodb-enterprise:${OPERATOR_IMAGE_TAG}-ubi"
+          image-src: remote
+          severity: "CRITICAL,HIGH"
+          fail-on-findings: false
+          store-junit-results: true
+          sbom-output: /tmp/sbom-image.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-image.cdx.json
+          destination: sbom-image.cdx.json
+
 workflows:
   version: 2
 
@@ -97,3 +148,5 @@ workflows:
     jobs:
       - check-code
       - dependency-cve-scan
+      - image-cve-scan
+      - image-cve-scan-ubi
