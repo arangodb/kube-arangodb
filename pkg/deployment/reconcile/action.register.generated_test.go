@@ -798,6 +798,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("SyncRBACPermissions", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeSyncRBACPermissions)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeSyncRBACPermissions.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeSyncRBACPermissions.Optional())
+		})
+	})
+
 	t.Run("TLSKeyStatusUpdate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeTLSKeyStatusUpdate)
 		t.Run("Internal", func(t *testing.T) {

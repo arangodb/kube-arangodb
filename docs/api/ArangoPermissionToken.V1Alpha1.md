@@ -69,9 +69,20 @@ Resources defines the list of resources
 
 ***
 
+### .spec.roles\[int\].role.direct
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L40)</sup>
+
+Direct references an existing authorization object (role or policy) by its exact name, without
+a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+"managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+must be set.
+
+***
+
 ### .spec.roles\[int\].role.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L33)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L34)</sup>
 
 Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
 
@@ -128,9 +139,20 @@ Resources defines the list of resources
 
 ***
 
+### .spec.roles\[int\].scope.ref.direct
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L40)</sup>
+
+Direct references an existing authorization object (role or policy) by its exact name, without
+a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+"managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+must be set.
+
+***
+
 ### .spec.roles\[int\].scope.ref.name
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L33)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/permission/v1alpha1/binding_ref.go#L34)</sup>
 
 Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
 

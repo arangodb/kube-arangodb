@@ -3,7 +3,7 @@ layout: page
 title: FAQ
 parent: RBAC
 grand_parent: ArangoDBPlatform
-nav_order: 6
+nav_order: 7
 ---
 
 # RBAC FAQ

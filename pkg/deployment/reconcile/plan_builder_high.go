@@ -76,6 +76,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyIfEmpty(r.volumeMemberReplacement).
 		ApplyWithBackOff(BackOffCheck, time.Minute, r.emptyPlanBuilder)).
 		ApplyIfEmptyWithBackOff(TimezoneCheck, time.Minute, r.createTimezoneUpdatePlan).
+		ApplyIfEmptyWithBackOff(SyncRBACPermissionsCheck, 30*time.Second, r.createSyncRBACPermissionsPlan).
 		Apply(r.createBackupInProgressConditionPlan).
 		Apply(r.createMaintenanceConditionPlan).
 		Apply(r.cleanupConditions).
@@ -332,5 +333,27 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 		default:
 			return nil, nil
 		}
+	}
+}
+
+// createSyncRBACPermissionsPlan proposes the SyncRBACPermissions action once the deployment
+// bootstrap has completed (the root user has been created) and the authorization sidecar is
+// enabled. The action ensures the operator-managed root RBAC objects (Allow-all policy, role
+// and root user binding) exist in the sidecar so the root user retains full access. It is
+// registered under a back-off, so it re-runs periodically to recreate or repair those objects
+// should they be deleted or drift.
+func (r *Reconciler) createSyncRBACPermissionsPlan(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	context PlanBuilderContext) api.Plan {
+	if !status.Conditions.IsTrue(api.ConditionTypeBootstrapCompleted) {
+		return nil
+	}
+
+	if !status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		return nil
+	}
+
+	return api.Plan{
+		actions.NewClusterAction(api.ActionTypeSyncRBACPermissions, "Sync operator managed root RBAC objects"),
 	}
 }

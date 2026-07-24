@@ -291,3 +291,7 @@ actions:
     timeout: 24h
     scopes:
       - High
+  SyncRBACPermissions:
+    description: Sync the operator managed predefined RBAC roles into the authorization sidecar (super-admin ships an Allow-all policy bound to the root user; other roles are created empty)
+    scopes:
+      - High
