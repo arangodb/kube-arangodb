@@ -2,6 +2,8 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) (Platform) Aggregate the container images declared by each bundled chart's images.yaml into a Container Images section of the generated platform release chart README and an aggregated images.yaml for air-gapped mirroring
+- (Maintenance) Fix a data race in the test log scanner that made Test_Apply flaky by guarding its shared buffer
+- (Feature) (RBAC) Create the operator managed predefined RBAC roles in the authorization sidecar after root user creation (super-admin bound to the root user with `*` scope; other roles created empty), recreating and repairing them via a throttled high plan builder, and allow extending a predefined role by attaching policies through the binding reference `direct` field; the reserved super-admin role cannot be assigned or modified by customer bindings
 - (Feature) (Platform) Generate README.md in the platform release chart and validate chart overrides against each subchart values.schema.json
 
 ## [1.4.4](https://github.com/arangodb/kube-arangodb/tree/1.4.4) (2026-07-20)

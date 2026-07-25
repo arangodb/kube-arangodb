@@ -11,6 +11,7 @@ the gateway sidecar through Envoy's ext_authz filter and gRPC interceptors.
 
 - [Architecture](architecture.md) - Request flow, Envoy ext_authz, gRPC interceptor, plugin chain
 - [Data Model](data_model.md) - Policies, Roles, Scopes, UserRoleBindings, and CRD bindings
+- [Predefined Roles](predefined_roles.md) - The operator-managed role catalog, accesses, and lifecycle
 - [Evaluation](evaluation.md) - Policy evaluation logic and configuration modes
 - [API](api.md) - Management API, Integration API (identity, canI, evaluate), proto definitions
 - [Token Integration](token_integration.md) - ArangoPermissionToken reconciliation flow

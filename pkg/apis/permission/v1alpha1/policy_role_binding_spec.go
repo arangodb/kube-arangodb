@@ -21,6 +21,7 @@
 package v1alpha1
 
 import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -64,5 +65,13 @@ func (c *ArangoPermissionPolicyRoleBindingSpec) Validate() error {
 		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
 		shared.ValidateRequiredInterfacePath("policy", c.Policy),
 		shared.ValidateRequiredInterfacePath("role", c.Role),
+		func() error {
+			// The super-admin role is reserved and already grants full access; customers must not
+			// attach policies to it.
+			if permission.IsReservedRoleName(c.Role.GetReference()) {
+				return errors.Errorf("role %q is reserved and cannot be modified", c.Role.GetReference())
+			}
+			return nil
+		}(),
 	)
 }
