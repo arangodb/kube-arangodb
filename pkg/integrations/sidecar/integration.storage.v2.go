@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import (
 	pbImplStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util/aws"
+	"github.com/arangodb/kube-arangodb/pkg/util/azure"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -161,14 +162,43 @@ func (i IntegrationStorageV2) Envs() ([]core.EnvVar, error) {
 				Name:  "INTEGRATION_STORAGE_V2_TYPE",
 				Value: string(pbImplStorageV2.ConfigurationTypeAzure),
 			},
-			core.EnvVar{
-				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_ID_FILE",
-				Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAzureBlobStorageClientID),
-			},
-			core.EnvVar{
-				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_SECRET_FILE",
-				Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAzureBlobStorageClientSecret),
-			},
+		)
+
+		if azureBlobStorage.ClientCertificateSecret != nil {
+			// Client certificate authorization backed by a native kubernetes.io/tls Secret
+			// (tls.crt / tls.key) plus the clientId.
+			envs = append(envs,
+				core.EnvVar{
+					Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_TYPE",
+					Value: string(azure.ProviderTypeCertificate),
+				},
+				core.EnvVar{
+					Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_CERTIFICATE_CLIENT_ID_FILE",
+					Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAzureBlobStorageClientID),
+				},
+				core.EnvVar{
+					Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_CERTIFICATE_CERTIFICATE_FILE",
+					Value: filepath.Join(mountPathStorageCredentials, core.TLSCertKey),
+				},
+				core.EnvVar{
+					Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_CERTIFICATE_KEY_FILE",
+					Value: filepath.Join(mountPathStorageCredentials, core.TLSPrivateKeyKey),
+				},
+			)
+		} else {
+			envs = append(envs,
+				core.EnvVar{
+					Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_ID_FILE",
+					Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAzureBlobStorageClientID),
+				},
+				core.EnvVar{
+					Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_SECRET_CLIENT_SECRET_FILE",
+					Value: filepath.Join(mountPathStorageCredentials, utilConstants.SecretCredentialsAzureBlobStorageClientSecret),
+				},
+			)
+		}
+
+		envs = append(envs,
 			core.EnvVar{
 				Name:  "INTEGRATION_STORAGE_V2_AZURE_BLOB_STORAGE_CLIENT_TENANT_ID",
 				Value: azureBlobStorage.GetTenantID(),
@@ -236,6 +266,9 @@ func (i IntegrationStorageV2) Volumes() ([]core.Volume, []core.VolumeMount, erro
 		})
 	} else if azureBlobStorage := i.Storage.Spec.GetBackend().GetAzureBlobStorage(); azureBlobStorage != nil {
 		secretObj := azureBlobStorage.GetCredentialsSecret()
+		if azureBlobStorage.ClientCertificateSecret != nil {
+			secretObj = azureBlobStorage.GetClientCertificateSecret()
+		}
 		if secretObj.GetNamespace(i.Storage) != i.Storage.GetNamespace() {
 			return nil, nil, errors.New("secrets from different namespace are not supported yet")
 		}
