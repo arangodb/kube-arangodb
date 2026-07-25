@@ -111,3 +111,82 @@ func Test_Azure_Handler(t *testing.T) {
 func Test_Azure_Object(t *testing.T) {
 	testObject(t, azureKubernetesObject)
 }
+
+// azureCertificateConfiguration is like azureConfiguration but authenticates with a client
+// certificate (TEST_AZURE_CLIENT_CERTIFICATE / _KEY).
+func azureCertificateConfiguration(t *testing.T, mods ...util.ModR[Configuration]) Configuration {
+	var scfg pbImplStorageV2SharedAzureBlobStorage.Configuration
+	scfg.BucketName = tests.GetAzureBlobStorageContainer(t)
+	scfg.BucketPrefix = fmt.Sprintf("tmp/unit-test-cert/%s/", uuid.NewUUID())
+	scfg.MaxListKeys = nil
+	scfg.Client = tests.GetAzureConfigCertificate(t)
+
+	var cfg Configuration
+
+	cfg.Type = ConfigurationTypeAzure
+	cfg.AzureBlobStorage = scfg
+
+	return cfg.With(mods...)
+}
+
+// azureCertificateKubernetesObject is like azureKubernetesObject but stores credentials in a native
+// kubernetes.io/tls Secret (tls.crt/tls.key plus clientId) referenced via ClientCertificateSecret.
+func azureCertificateKubernetesObject(t *testing.T, mods ...util.Mod[platformApi.ArangoPlatformStorage]) (string, string, kclient.Client) {
+	client := kclient.NewFakeClient()
+
+	config := tests.GetAzureConfigCertificate(t)
+	bucketName := tests.GetAzureBlobStorageContainer(t)
+	bucketPrefix := fmt.Sprintf("tmp/unit-test-object-cert/%s/", uuid.NewUUID())
+
+	creds, err := client.Kubernetes().CoreV1().Secrets(tests.FakeNamespace).Create(shutdown.Context(), &core.Secret{
+		ObjectMeta: meta.ObjectMeta{
+			Name:      "credentials-cert",
+			Namespace: tests.FakeNamespace,
+		},
+		Type: core.SecretTypeTLS,
+		Data: map[string][]byte{
+			core.TLSCertKey:       []byte(config.Provider.Certificate.Certificate),
+			core.TLSPrivateKeyKey: []byte(config.Provider.Certificate.Key),
+			utilConstants.SecretCredentialsAzureBlobStorageClientID: []byte(config.Provider.Certificate.ClientID),
+		},
+	}, meta.CreateOptions{})
+	require.NoError(t, err)
+
+	obj := &platformApi.ArangoPlatformStorage{
+		ObjectMeta: meta.ObjectMeta{
+			Name:      "storage-cert",
+			Namespace: tests.FakeNamespace,
+		},
+		Spec: platformApi.ArangoPlatformStorageSpec{
+			Backend: &platformApi.ArangoPlatformStorageSpecBackend{
+				AzureBlobStorage: &platformApi.ArangoPlatformStorageSpecBackendAzureBlobStorage{
+					TenantID:     util.NewType(config.Provider.TenantID),
+					AccountName:  util.NewType(config.AccountName),
+					BucketName:   util.NewType(bucketName),
+					BucketPrefix: util.NewType(bucketPrefix),
+					ClientCertificateSecret: &sharedApi.Object{
+						Name: creds.GetName(),
+					},
+				},
+			},
+		},
+	}
+
+	util.ApplyMods(obj, mods...)
+
+	obj, err = client.Arango().PlatformV1beta1().ArangoPlatformStorages(tests.FakeNamespace).Create(shutdown.Context(), obj, meta.CreateOptions{})
+	require.NoError(t, err)
+
+	return obj.GetName(), obj.GetNamespace(), client
+}
+
+func Test_Azure_Certificate_Handler(t *testing.T) {
+	testConfiguration(t, azureCertificateConfiguration, func(in Configuration) Configuration {
+		in.AzureBlobStorage.MaxListKeys = util.NewType[int32](32)
+		return in
+	})
+}
+
+func Test_Azure_Certificate_Object(t *testing.T) {
+	testObject(t, azureCertificateKubernetesObject)
+}

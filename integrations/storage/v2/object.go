@@ -24,6 +24,7 @@ import (
 	"context"
 	"net/url"
 
+	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
@@ -163,6 +164,31 @@ func NewIOFromObject(ctx context.Context, client kclient.Client, in *platformApi
 				config.Provider.Secret.ClientID = string(cid)
 				config.Provider.Secret.ClientSecret = string(cs)
 				config.Provider.Type = azure.ProviderTypeSecret
+			} else if v := azureBlobStorage.ClientCertificateSecret; v != nil {
+				secret, err := client.Kubernetes().CoreV1().Secrets(v.GetNamespace(in)).Get(ctx, v.GetName(), meta.GetOptions{})
+				if err != nil {
+					return nil, errors.WithMessage(err, "Failed to get AzureBlobStorage certificate secret")
+				}
+
+				cid, ok := secret.Data[utilConstants.SecretCredentialsAzureBlobStorageClientID]
+				if !ok {
+					return nil, errors.Errorf("Failed to get AzureBlobStorage secret %s data: Key %s not found", secret.GetName(), utilConstants.SecretCredentialsAzureBlobStorageClientID)
+				}
+
+				crt, ok := secret.Data[core.TLSCertKey]
+				if !ok {
+					return nil, errors.Errorf("Failed to get AzureBlobStorage secret %s data: Key %s not found", secret.GetName(), core.TLSCertKey)
+				}
+
+				key, ok := secret.Data[core.TLSPrivateKeyKey]
+				if !ok {
+					return nil, errors.Errorf("Failed to get AzureBlobStorage secret %s data: Key %s not found", secret.GetName(), core.TLSPrivateKeyKey)
+				}
+
+				config.Provider.Certificate.ClientID = string(cid)
+				config.Provider.Certificate.Certificate = string(crt)
+				config.Provider.Certificate.Key = string(key)
+				config.Provider.Type = azure.ProviderTypeCertificate
 			}
 
 			config.AccountName = azureBlobStorage.GetAccountName()
