@@ -55,8 +55,8 @@ func listAll(t *testing.T, in util.NextIterator[[]pbImplStorageV2Shared.File]) [
 	return r
 }
 
-func testObject(t *testing.T, gen testObjectFunc, mods ...util.Mod[platformApi.ArangoPlatformStorage]) {
-	name, namespace, client := gen(t, mods...)
+func testObject(t *testing.T, gen testObjectFunc) {
+	name, namespace, client := gen(t)
 
 	storage, err := client.Arango().PlatformV1beta1().ArangoPlatformStorages(namespace).Get(shutdown.Context(), name, meta.GetOptions{})
 	require.NoError(t, err)
