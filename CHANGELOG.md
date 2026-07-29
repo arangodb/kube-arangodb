@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Maintenance) Bump google.golang.org/grpc to v1.82.1, go.opentelemetry.io/otel/sdk to v1.43.0 and oras.land/oras-go/v2 to v2.6.1 to fix known vulnerabilities
 - (Feature) (Platform) Aggregate the container images declared by each bundled chart's images.yaml into a Container Images section of the generated platform release chart README and an aggregated images.yaml for air-gapped mirroring
 - (Maintenance) Fix a data race in the test log scanner that made Test_Apply flaky by guarding its shared buffer
 - (Feature) (Platform) Support Azure client-certificate authentication for Azure Blob Storage via a native `kubernetes.io/tls` `clientCertificateSecret`, mutually exclusive with the client-secret `credentialsSecret`
