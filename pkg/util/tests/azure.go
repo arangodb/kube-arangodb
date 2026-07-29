@@ -30,12 +30,14 @@ import (
 )
 
 const (
-	TestAzureClientTenant util.EnvironmentVariable = "TEST_AZURE_CLIENT_TENANT"
-	TestAzureClientID     util.EnvironmentVariable = "TEST_AZURE_CLIENT_ID"
-	TestAzureClientSecret util.EnvironmentVariable = "TEST_AZURE_CLIENT_SECRET"
-	TestAzureAccountName  util.EnvironmentVariable = "TEST_AZURE_ACCOUNT_NAME"
-	TestAzureEndpoint     util.EnvironmentVariable = "TEST_AZURE_ENDPOINT"
-	TestAzureContainer    util.EnvironmentVariable = "TEST_AZURE_CONTAINER"
+	TestAzureClientTenant         util.EnvironmentVariable = "TEST_AZURE_CLIENT_TENANT"
+	TestAzureClientID             util.EnvironmentVariable = "TEST_AZURE_CLIENT_ID"
+	TestAzureClientSecret         util.EnvironmentVariable = "TEST_AZURE_CLIENT_SECRET"
+	TestAzureClientCertificate    util.EnvironmentVariable = "TEST_AZURE_CLIENT_CERTIFICATE"
+	TestAzureClientCertificateKey util.EnvironmentVariable = "TEST_AZURE_CLIENT_CERTIFICATE_KEY"
+	TestAzureAccountName          util.EnvironmentVariable = "TEST_AZURE_ACCOUNT_NAME"
+	TestAzureEndpoint             util.EnvironmentVariable = "TEST_AZURE_ENDPOINT"
+	TestAzureContainer            util.EnvironmentVariable = "TEST_AZURE_CONTAINER"
 )
 
 func GetAzureBlobStorageContainer(t *testing.T) string {
@@ -48,8 +50,16 @@ func GetAzureBlobStorageContainer(t *testing.T) string {
 }
 
 func GetAzureConfig(t *testing.T) azure.Config {
-	p := GetAzureProvider(t)
+	return azureConfig(GetAzureProvider(t))
+}
 
+// GetAzureConfigCertificate is like GetAzureConfig but authenticates with a client certificate
+// (TEST_AZURE_CLIENT_CERTIFICATE / TEST_AZURE_CLIENT_CERTIFICATE_KEY) instead of a client secret.
+func GetAzureConfigCertificate(t *testing.T) azure.Config {
+	return azureConfig(GetAzureProviderCertificate(t))
+}
+
+func azureConfig(p azure.Provider) azure.Config {
 	var z azure.Config
 
 	z.AccountName = TestAzureAccountName.GetOrDefault("")
@@ -73,6 +83,25 @@ func GetAzureProvider(t *testing.T) azure.Provider {
 
 	p.Secret.ClientID = TestAzureClientID.Require(t)
 	p.Secret.ClientSecret = TestAzureClientSecret.Require(t)
+
+	return p
+}
+
+func GetAzureProviderCertificate(t *testing.T) azure.Provider {
+	v, ok := TestAzureClientTenant.Lookup()
+	if !ok {
+		t.Skipf("Tenant Not Provided")
+	}
+
+	var p azure.Provider
+
+	p.TenantID = v
+
+	p.Type = azure.ProviderTypeCertificate
+
+	p.Certificate.ClientID = TestAzureClientID.Require(t)
+	p.Certificate.Certificate = TestAzureClientCertificate.Require(t)
+	p.Certificate.Key = TestAzureClientCertificateKey.Require(t)
 
 	return p
 }

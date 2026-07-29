@@ -530,6 +530,11 @@ func (in *ArangoPlatformStorageSpecBackendAzureBlobStorage) DeepCopyInto(out *Ar
 		*out = new(v1.Object)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ClientCertificateSecret != nil {
+		in, out := &in.ClientCertificateSecret, &out.ClientCertificateSecret
+		*out = new(v1.Object)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

@@ -37,6 +37,16 @@ BucketPath specifies the Prefix within the bucket
 
 ***
 
+### .spec.backend.azureBlobStorage.clientCertificateSecret.name
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/shared/v1/object.go#L53)</sup>
+
+This field is **required**
+
+Name of the object
+
+***
+
 ### .spec.backend.azureBlobStorage.credentialsSecret.name
 
 Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/shared/v1/object.go#L53)</sup>
