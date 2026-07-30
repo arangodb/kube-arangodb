@@ -294,7 +294,23 @@ func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
 	}
 
 	if features.Collector().Enabled() {
-		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler()
+		// The collector writes its startup event directly into the local arangod _events collection.
+		scheme := "http"
+		if a.Deployment.IsSecure() {
+			scheme = "https"
+		}
+
+		port := shared.ArangoPort
+		if p := a.GroupSpec.Port; p != nil {
+			port = int(*p)
+		}
+
+		var jwtPath string
+		if a.Deployment.IsAuthenticated() {
+			jwtPath = shared.ClusterJWTSecretVolumeMountDir
+		}
+
+		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler(fmt.Sprintf("%s://127.0.0.1:%d", scheme, port), jwtPath)
 	}
 
 	return lifecycle, nil

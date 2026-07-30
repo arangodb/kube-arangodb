@@ -1,7 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
-- (Feature) Inventory Collector
+- (Feature) Inventory Collector writing a startup event to the ArangoDB `_events` collection (created if missing) on each member boot when the (hidden) collector feature is enabled
 - (Bugfix) (Platform) Propagate service overrides into the generated release values.yaml and deep-merge chart overrides onto chart defaults instead of dropping them
 - (Maintenance) Bump golang.org/x/text to v0.39.0 and golang.org/x/net to v0.56.0 to fix known vulnerabilities
 - (Maintenance) Bump google.golang.org/grpc to v1.82.1, go.opentelemetry.io/otel/sdk to v1.43.0 and oras.land/oras-go/v2 to v2.6.1 to fix known vulnerabilities

@@ -61,8 +61,10 @@ const (
 	// DefaultInterval is the default retry interval between collector cycles.
 	DefaultInterval = 30 * time.Second
 
-	// DefaultTimeout is the default upper bound for the collector, after which it gives up.
-	DefaultTimeout = 30 * time.Minute
+	// DefaultTimeout is the default upper bound for the collector, after which it gives up. It is
+	// generous so the collector keeps retrying while the local arangod endpoint comes up on a slow
+	// or first boot.
+	DefaultTimeout = time.Hour
 )
 
 // Options configures a collector run.
@@ -73,6 +75,15 @@ type Options struct {
 	// Timeout bounds the whole run. When the timeout elapses before a cycle succeeds the collector
 	// gives up and returns. A non-positive value falls back to DefaultTimeout.
 	Timeout time.Duration
+
+	// Endpoint is the ArangoDB endpoint (e.g. https://127.0.0.1:8529) the collected startup event is
+	// written to, in the _events collection. When empty the event is printed to stdout instead (used
+	// by tests and contexts without a reachable database).
+	Endpoint string
+
+	// JWTPath is the folder holding the cluster JWT secret used to authenticate to ArangoDB. When
+	// empty the connection is unauthenticated (unauthenticated deployments). Only used with Endpoint.
+	JWTPath string
 }
 
 // interval returns the configured retry interval, falling back to DefaultInterval.
@@ -121,7 +132,7 @@ func run(ctx context.Context, opts Options) error {
 	defer t.Stop()
 
 	for {
-		if err := collect(bootID, created); err != nil {
+		if err := collect(ctx, opts, bootID, created); err != nil {
 			logger.Err(err).Str("bootID", bootID).Warn("Collector cycle failed, will retry")
 		} else {
 			logger.Str("bootID", bootID).Info("Collector finished")
@@ -138,10 +149,11 @@ func run(ctx context.Context, opts Options) error {
 }
 
 // collect performs a single collection cycle for the given boot: it runs every registered collector,
-// each pushing its metrics into a shared collector, waits until all of them have completed, builds a
-// single startup event whose body is the collected metrics and prints it to stdout. The event is
-// tagged with the boot id and the start timestamp so it can be correlated to a single pod boot.
-func collect(bootID string, created time.Time) error {
+// each pushing its metrics into a shared collector, waits until all of them have completed and builds
+// a single startup event whose body is the collected metrics. The event is tagged with the boot id
+// and the start timestamp so it can be correlated to a single pod boot. It is emitted to the events
+// integration when an endpoint is configured, otherwise printed to stdout.
+func collect(ctx context.Context, opts Options, bootID string, created time.Time) error {
 	metrics, err := GetCollector().Collect()
 	if err != nil {
 		return err
@@ -149,7 +161,11 @@ func collect(bootID string, created time.Time) error {
 
 	event := buildEvent(metrics, bootID, created)
 
-	if err := print(event); err != nil {
+	if opts.Endpoint != "" {
+		if err := emit(ctx, opts, event); err != nil {
+			return err
+		}
+	} else if err := print(event); err != nil {
 		return err
 	}
 

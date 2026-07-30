@@ -51,12 +51,16 @@ func init() {
 	f := cmdLifecyclePostStartCollector.Flags()
 	f.DurationVar(&lifecyclePostStartCollectorOptions.Interval, "interval", collect.DefaultInterval, "Collector retry interval")
 	f.DurationVar(&lifecyclePostStartCollectorOptions.Timeout, "timeout", collect.DefaultTimeout, "Collector run timeout")
+	f.StringVar(&lifecyclePostStartCollectorOptions.Endpoint, "endpoint", "", "ArangoDB endpoint the startup event is written to; empty prints to stdout")
+	f.StringVar(&lifecyclePostStartCollectorOptions.JWTPath, "jwt-path", "", "Folder holding the cluster JWT secret used to authenticate to ArangoDB")
 
 	cmdLifecyclePostStart.AddCommand(cmdLifecyclePostStartCollector)
 	cmdLifecycle.AddCommand(cmdLifecyclePostStart)
 }
 
-// cmdLifecyclePostStartCollectorRunE delegates to the collector implementation in pkg/collect.
+// cmdLifecyclePostStartCollectorRunE delegates to the collector implementation in pkg/collect. The
+// ArangoDB endpoint and JWT folder are provided by the operator through the postStart hook flags;
+// when no endpoint is given the collector falls back to printing the event to stdout.
 func cmdLifecyclePostStartCollectorRunE(cmd *cobra.Command, _ []string) error {
 	return collect.PostStart(cmd.Context(), lifecyclePostStartCollectorOptions)
 }

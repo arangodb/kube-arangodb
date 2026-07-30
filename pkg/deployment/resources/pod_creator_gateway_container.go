@@ -117,7 +117,8 @@ func (a *MemberGatewayContainer) GetLifecycle() (*core.Lifecycle, error) {
 	}
 
 	if features.Collector().Enabled() {
-		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler()
+		// Gateways have no local arangod to write to, so the collector prints to stdout (no endpoint).
+		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler("", "")
 	}
 
 	return lifecycle, nil
