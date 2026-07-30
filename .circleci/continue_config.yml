@@ -120,6 +120,11 @@ commands:
             fi
             # RepoDigests, not ImageID: ImageID is the config blob digest, which
             # is not what a registry reference or a cosign signature is keyed on.
+            # MEASURED LIMITATION: with image-src: remote trivy does not populate
+            # RepoDigests, so this resolves nothing today and says so. It is not
+            # fatal because nothing downstream is armed, but the chain is not
+            # digest-bound until the digest comes from a registry manifest lookup
+            # or from the push side. See Artifact signing in SECURITY.md.
             DIGEST="$(grep -o '"RepoDigests":[[:space:]]*\[[^]]*\]' "${REPORT}" | grep -oE 'sha256:[0-9a-f]{64}' | head -1 || true)"
             if [ -z "${DIGEST}" ]; then
               echo "WARNING: the report carries no RepoDigests entry, so the scanned tag could not be resolved to a digest. Nothing downstream is bound to a digest on this run." >&2

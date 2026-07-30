@@ -209,11 +209,20 @@ required is the last step of the sequence.
 Nothing published from this repository is signed today, and no SLSA level is
 claimed.
 
-The chain is wired: both image jobs read the digest of the image they scanned out
-of the trivy report and, behind the `sign-artifacts` pipeline parameter, sign
-that digest and attach the CycloneDX SBOM and an in-toto provenance predicate.
-Signing is bound to the digest and never to the tag, because a tag can be
-re-pushed and a signature over a tag proves nothing about the artifact that runs.
+The chain is wired: both image jobs try to read the digest of the image they
+scanned out of the trivy report and, behind the `sign-artifacts` pipeline
+parameter, sign that digest and attach the CycloneDX SBOM and an in-toto
+provenance predicate. Signing is bound to the digest and never to the tag,
+because a tag can be re-pushed and a signature over a tag proves nothing about
+the artifact that runs.
+
+One measured gap in that chain: with `image-src: remote` trivy does not populate
+`Metadata.RepoDigests`, so the digest step currently reports
+`the report carries no RepoDigests entry` and resolves nothing (observed on this
+branch). It says so and continues rather than failing, since nothing downstream is
+armed. Making the chain genuinely digest-bound needs the digest from somewhere
+else: a registry manifest lookup here, or the `docker push` output if signing
+moves to the Jenkins release job, which is the more likely home for it anyway.
 
 What blocks the flip is not the config. This CircleCI project neither builds nor
 pushes the operator image, the Jenkins release job does, and the project holds no
