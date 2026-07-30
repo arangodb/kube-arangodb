@@ -114,9 +114,9 @@ controls:
     requirement: "Reachability or exploitability is considered before a finding blocks a release."
     target-level: 3
     state: met-unproven
-    evidence: "govulncheck at symbol level with the repository's own build tags reports 5 reachable findings out of the 12 its database matches at module level; kev-epss-check correlates the CISA KEV catalogue against the full-severity nightly reports"
+    evidence: "govulncheck at symbol level with the repository's own build tags reports 5 reachable module findings out of the 12 its database matches at module level; kev-epss-check correlates the CISA KEV catalogue against the full-severity nightly reports"
     proven: true
-    note: "kev-epss-check is fail-on-match:false for its first cycle."
+    note: "kev-epss-check is fail-on-match:false for its first cycle. The CI run reports 13 reachable findings rather than 5, because the CircleCI executor image is cicd/golang:1.25.9 while the module declares toolchain go1.25.12 and several reachable stdlib issues are fixed in 1.25.10. Moving that image forward is an owner item; see the govulncheck entry in SECURITY.md."
 
   - id: OSPS-VM-03
     requirement: "Committed credentials are detected."
