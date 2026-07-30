@@ -228,6 +228,16 @@ Each of these is a deliberate, named gap rather than an oversight.
      -d '{"name":"nightly-security-rescan","description":"Nightly CVE, SAST and disposition rescan","attribution-actor":"system","parameters":{"branch":"master","nightly":true},"timetable":{"per-hour":1,"hours-of-day":[3],"days-of-week":["MON","TUE","WED","THU","FRI","SAT","SUN"]}}'
    ```
 
+   `nightly` is declared in both `.circleci/config.yml` and
+   `.circleci/continue_config.yml`, set by the schedule, and passed on by nobody.
+   CircleCI forwards a trigger-time pipeline parameter into the continued config,
+   so the continued config must declare it (otherwise the continuation fails to
+   compile with `Unexpected argument(s): nightly`) and the setup job must not pass
+   it again (otherwise the continuation API answers `Conflicting pipeline
+   parameters`). Both configs validate under either mistake, which is why the
+   nightly path was exercised on the branch by triggering a pipeline with
+   `nightly: true` rather than reasoned about.
+
    A legacy in-config `triggers: schedule` is deliberately not used. It is read
    only from the top-level config, so a block in the continuation config
    validates and never runs, and it sets no pipeline parameters, so it cannot

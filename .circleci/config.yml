@@ -35,17 +35,25 @@ parameters:
     default: false
 
 jobs:
-  # Continue into continue_config.yml with nightly=true. path-filtering cannot do
-  # this: it derives the continuation parameters from the files a revision range
-  # changed and forwards nothing else, so a scheduled run would arrive with
-  # nightly unset and take the pull-request path.
+  # Continue into continue_config.yml with the nightly tier selected.
+  # path-filtering cannot do this: it derives the continuation parameters from the
+  # files a revision range changed and forwards nothing else, so a scheduled run
+  # would arrive with nothing set and take the pull-request path.
   nightly-continue:
     executor: continuation/default
     steps:
       - checkout
       - continuation/continue:
           configuration_path: .circleci/continue_config.yml
-          parameters: '{"nightly": true}'
+          # NO parameters, deliberately, and this is the part that is easy to get
+          # wrong in both directions. A pipeline parameter provided at trigger time
+          # is passed on to the continued config by CircleCI itself, so the
+          # continuation must not pass `nightly` again: doing so answers
+          # `Conflicting pipeline parameters` and fails this job (observed, job
+          # 6898). The continued config must still DECLARE `nightly`, or the
+          # continuation fails to compile with `Unexpected argument(s): nightly`
+          # (observed, pipeline 3564). Both configs validate under either mistake,
+          # so the only way to catch this is to run the nightly path.
 
 workflows:
   # Exactly one of these two workflows runs in any pipeline, because the two

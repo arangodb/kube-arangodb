@@ -20,8 +20,20 @@ parameters:
   manifests-verify:
     type: boolean
     default: false
-  # Set by the nightly-setup workflow in .circleci/config.yml. false on every
-  # push and pull-request pipeline, which is what selects the run_tests workflow.
+  # The pipeline parameter a Scheduled Pipeline sets, declared HERE as well as in
+  # .circleci/config.yml. Both halves are required and neither is optional:
+  #
+  # - A pipeline parameter provided at trigger time is passed on to the continued
+  #   config, which then MUST declare it or the continuation fails to compile with
+  #   `Unexpected argument(s): nightly` (observed, pipeline 3564).
+  # - Because it already arrives, the setup job must NOT pass it again. The
+  #   continuation API answers `Conflicting pipeline parameters` to a parameter the
+  #   pipeline already carries a value for, and fails the setup job (observed,
+  #   job 6898).
+  #
+  # So: declared in both files, set by the schedule, passed by nobody. Note that
+  # both configs validate under either mistake, so this only shows up by running
+  # the nightly path.
   nightly:
     type: boolean
     default: false
