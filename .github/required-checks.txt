@@ -1,0 +1,67 @@
+# Required status-check contexts for master, one per line.
+#
+# This is the authoritative committed list. The required-checks-drift job in
+# .circleci/continue_config.yml compares it against the LIVE configuration on
+# every push and reports both directions of drift: a context that is committed
+# here but not required on master is a gate that does not block a merge, and a
+# context required on master that no job emits is fail-closed and blocks every
+# merge forever.
+#
+# WHERE THE LIVE CONFIGURATION LIVES: classic branch protection on master
+# (/repos/arangodb/kube-arangodb/branches/master/protection), not a repository
+# ruleset. The only rules that reach this branch through the ruleset API are the
+# two enterprise-sourced ones, deletion and non_fast_forward, and neither can
+# carry status checks. Classic protection on master also requires signed commits
+# and one approving code-owner review.
+#
+# HOW THESE STRINGS ARE OBTAINED: read off a real pipeline with
+# `gh pr checks <n> --repo arangodb/kube-arangodb`, never hand-derived. CircleCI
+# appends an instance suffix (`-1`, `-2`) to the context of a job it considers
+# duplicated across the config, and the numbering is not predictable from the
+# config text. Every workflow entry in continue_config.yml therefore carries an
+# explicit unique name, and check-code deliberately appears in one workflow only,
+# which is what keeps the one string already required below stable.
+
+# --- Required on master today (verified against the live protection) ----------
+ci/circleci: check-code
+
+# --- Blocking gates added by the security suite ------------------------------
+# disposition-check is the integrity control over the exception path: an undated
+# or expired suppression, or a SAST scope reduction, must not be mergeable.
+ci/circleci: disposition-check
+# Diff-aware SAST at WARNING over new code only. The full-repo tier is
+# report-only while its 9 pre-existing ERROR findings are open, so this is the
+# tier that holds new code to a band.
+ci/circleci: sast-scan-diff
+# The job carries the deterministic Dockerfile credential guard, which fails the
+# build on a build-time credential surviving into a final stage. The
+# misconfiguration scan inside the same job is report-only.
+ci/circleci: misconfig-scan
+
+# --- Deliberately NOT required yet, each with its flip criterion -------------
+# ci/circleci: dependency-cve-scan   warn-only by team decision (#2118). One
+#     fixable HIGH is open at this commit (CVE-2026-56852, golang.org/x/text)
+#     and the companion dependency-bump PR clears it. Add this line in the same
+#     change that sets fail-on-findings: true.
+# ci/circleci: image-cve-scan        warn-only by team decision (#2132). The
+#     released 1.4.4 image carries five fixable HIGH findings in the compiled
+#     operator binary, four of them already fixed on master, so this can only go
+#     blocking after a release ships the fixes.
+# ci/circleci: image-cve-scan-ubi    same, and the UBI9 base adds seven more
+#     fixable HIGH findings in its own package set.
+# ci/circleci: secret-scan           report-only until the nine private-key
+#     findings in the two agency-state fixtures under
+#     pkg/deployment/agency/state/testdata/ are redacted or given a dated,
+#     owner-approved acceptance. See .circleci/trivy-secret.yaml.
+# ci/circleci: sast-scan             report-only until the nine ERROR findings
+#     listed in SECURITY.md are cleared or dispositioned by their owners.
+# ci/circleci: govulncheck           warn-only: four of the five
+#     symbol-reachable findings have no in-range fix (three containerd CRI
+#     issues fixed only on the /v2 module path, one unmaintained
+#     x/crypto/openpgp).
+# ci/circleci: required-checks-drift the drift job itself is warn-only while
+#     this list is incomplete; making it required is the last step, after the
+#     lines above are all in place on both sides.
+#
+# ADDING A LINE HERE DOES NOT CONFIGURE ANYTHING. Branch protection is edited by
+# a repository admin; this file is the record the drift job checks it against.
