@@ -230,15 +230,6 @@ jobs:
             fi
              make bin
       - run:
-          name: vulncheck
-          no_output_timeout: 1.5h
-          command: |
-            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-              echo "This is not a pull request. Skipping..."
-              exit 0
-            fi
-             make vulncheck-optional
-      - run:
           name: Check that everything what should be generated is commited
           command: |
             if [ -z "$CIRCLE_PULL_REQUEST" ]; then
@@ -645,27 +636,44 @@ jobs:
       # otherwise be an empty document shipped to customers.
 
   # ---- Reachability gate -----------------------------------------------------
-  # The complement to trivy's gomod analyzer, which is manifest-level matching
-  # with no reachability at all. This is the same analysis check-code already
-  # runs through `make vulncheck-optional`, promoted to its own job so that it
-  # has a stable status-check context, keeps its report as an artifact, and runs
-  # on the nightly and on tag pipelines, where check-code skips it entirely (its
-  # step is guarded on CIRCLE_PULL_REQUEST). Consolidating the two is an owner
-  # item: it edits the body of the one job branch protection currently requires.
-  govulncheck:
+  # govulncheck is NOT new here. This repository has run it since before this
+  # change, through the Makefile's own `vulncheck`/`vulncheck-optional` targets,
+  # with the repository's build tags and a pinned tool. What was missing is
+  # enforcement and visibility, not capability:
+  #
+  #  - the only invocation was a step inside check-code, guarded on
+  #    CIRCLE_PULL_REQUEST, so nothing ran it on master, on a tag or on a
+  #    schedule;
+  #  - it used the `-optional` variant, whose leading `-` makes make ignore the
+  #    exit status, so a reachable finding was a line in a seven-minute job's log
+  #    and nothing else;
+  #  - `make vulncheck`, the variant that actually fails, was invoked by nothing
+  #    in this repository. A required-looking target no pipeline calls is a
+  #    latent gap, and this job is where it stops being one.
+  #
+  # This job is that single invocation, moved out of check-code so it has its own
+  # status context, its own log, an artifact, and a run on the nightly. The number
+  # of times govulncheck runs per pipeline is unchanged at one, and check-code
+  # gets its 44 seconds back.
+  #
+  # STILL `-optional`, measured rather than assumed. `make vulncheck` was run
+  # against this checkout on the newly pinned v1.6.0 and exits 3: five reachable
+  # findings from three modules, and only one of them is fixable in range.
+  #   GO-2026-5970  golang.org/x/text v0.37.0    -> fixed in 0.39.0
+  #   GO-2026-5932  golang.org/x/crypto v0.52.0  -> no fix, openpgp is unmaintained
+  #   GO-2026-5622  containerd v1.7.33           -> fix only on containerd/v2
+  #   GO-2026-5338  containerd v1.7.33           -> fix only on containerd/v2
+  #   GO-2026-5064  containerd v1.7.33           -> fix only on containerd/v2
+  # In CI the count is higher again, because the executor image is
+  # cicd/golang:1.25.9 while go.mod declares toolchain go1.25.12 and several
+  # reachable stdlib issues are fixed in 1.25.10.
+  #
+  # THE FLIP is one word, `vulncheck` instead of `vulncheck-optional`, plus the
+  # context in .github/required-checks.txt. Its criterion is Adam's call, not a
+  # date: bump the executor image to at least 1.25.12, and either move off
+  # containerd v1 and x/crypto/openpgp or record them as dated acceptances.
+  vulncheck:
     executor: golang-executor
-    environment:
-      # The build tags `make vulncheck-optional` analyses under. TEST_BUILD
-      # defaults to 0, so GOBUILDTAGS is empty in CI and the Makefile's effective
-      # tag set is just `testing`.
-      #
-      # Passed through GOFLAGS rather than the orb's extra-args on purpose: the
-      # orb appends extra-args AFTER the package pattern, so `-tags testing` lands
-      # where govulncheck expects package patterns and it exits 1 on "malformed
-      # import path" (observed, build 6864). govulncheck loads packages through
-      # `go list`, which reads GOFLAGS, so this reaches the analysis rather than
-      # the argument list.
-      GOFLAGS: "-tags=testing"
     steps:
       - checkout
       # go.sum hash verification, which is the half of "hash-pinned installs"
@@ -673,25 +681,22 @@ jobs:
       - run:
           name: Verify the module graph against go.sum
           command: go mod verify
-      - trivy-scan/govulncheck:
-          working-directory: .
-          packages: "./..."
-          # symbol level = report only when a vulnerable symbol is reachable from
-          # this module's call graph.
-          scan-level: symbol
-          # WARN-ONLY, matching the `-` prefixed `make vulncheck-optional` this
-          # replaces, and for the same reason it is warn-only there: five
-          # findings are symbol-reachable at this commit and only one of them
-          # (GO-2026-5970, x/text) is fixable in range. Three are containerd CRI
-          # checkpoint issues whose fix exists only on the
-          # github.com/containerd/containerd/v2 module path, a major-version
-          # move on an indirect dependency, and GO-2026-5932 is the unmaintained
-          # x/crypto/openpgp package, which has no fix at all.
-          #
-          # FLIP CRITERION: those four are resolved upstream or recorded as dated
-          # owner-approved acceptances. Not before, or this is a permanently red
-          # gate on findings nobody here can close.
-          fail-on-findings: false
+      # The Makefile's own target, so the pinned version is read from
+      # GOVULNCHECK_VERSION rather than copied into this file. Split out of
+      # `make tools` so this job installs one binary instead of the whole
+      # toolchain.
+      - run:
+          name: Install the pinned govulncheck
+          command: make tool-govulncheck
+      - run:
+          name: govulncheck (repository Makefile target, warn-only)
+          no_output_timeout: 30m
+          command: |
+            set -o pipefail
+            make vulncheck-optional 2>&1 | tee /tmp/govulncheck.txt
+      - store_artifacts:
+          path: /tmp/govulncheck.txt
+          destination: govulncheck.txt
 
   # ---- Required-check drift --------------------------------------------------
   required-checks-drift:
@@ -939,8 +944,8 @@ workflows:
           name: sast-scan-diff
       - disposition-check:
           name: disposition-check
-      - govulncheck:
-          name: govulncheck
+      - vulncheck:
+          name: vulncheck
       - required-checks-drift:
           name: required-checks-drift
 
@@ -971,6 +976,11 @@ workflows:
       - sast-scan:
           name: sast-report-nightly
           prefix: semgrep-report
+      # Reachability between pull requests. Nothing ran govulncheck on a schedule
+      # before this change, so a newly published advisory against an unchanged
+      # module graph went unnoticed until somebody opened a PR.
+      - vulncheck:
+          name: vulncheck-nightly
       # The MEDIUM band the commit-time misconfig report leaves out, which is
       # where trivy's k8s least-privilege checks and the trusted-registry check
       # live.

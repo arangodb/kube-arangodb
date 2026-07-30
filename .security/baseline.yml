@@ -114,9 +114,9 @@ controls:
     requirement: "Reachability or exploitability is considered before a finding blocks a release."
     target-level: 3
     state: met-unproven
-    evidence: "govulncheck at symbol level with the repository's own build tags reports 5 reachable module findings out of the 12 its database matches at module level; kev-epss-check correlates the CISA KEV catalogue against the full-severity nightly reports"
+    evidence: "the repository's own govulncheck invocation (Makefile vulncheck targets, its build tags, tool pinned by GOVULNCHECK_VERSION, bumped v1.1.4 to v1.6.0) reports 5 reachable module findings out of the 12 its database matches at module level; it now runs as its own job on every push and once nightly instead of as a guarded step inside check-code; kev-epss-check correlates the CISA KEV catalogue against the full-severity nightly reports"
     proven: true
-    note: "kev-epss-check is fail-on-match:false for its first cycle. The CI run reports 13 reachable findings rather than 5, because the CircleCI executor image is cicd/golang:1.25.9 while the module declares toolchain go1.25.12 and several reachable stdlib issues are fixed in 1.25.10. Moving that image forward is an owner item; see the govulncheck entry in SECURITY.md."
+    note: "PARTIAL on enforcement, not on capability: govulncheck predates this rollout and was correctly invoked with the repo's build tags, but only through the -optional target (leading - ignores the exit status) inside a step guarded on CIRCLE_PULL_REQUEST, and `make vulncheck`, the failing variant, was invoked by nothing. `make vulncheck` exits 3 today: 5 reachable findings, 1 fixable in range (GO-2026-5970, x/text) and 4 with no in-range fix (GO-2026-5932 x/crypto/openpgp, GO-2026-5622/5338/5064 containerd v1). In CI the count is higher because the executor image is cicd/golang:1.25.9 against a declared toolchain go1.25.12. kev-epss-check is fail-on-match:false for its first cycle."
 
   - id: OSPS-VM-03
     requirement: "Committed credentials are detected."

@@ -24,7 +24,7 @@ Patches are released for the versions listed in the
 
 | Surface | Exists here | Covered by |
 | --- | --- | --- |
-| Dependency graph (`go.mod`, `go.sum`) | yes | `dependency-cve-scan`, `govulncheck`, `nightly-dependency-report` |
+| Dependency graph (`go.mod`, `go.sum`) | yes | `dependency-cve-scan`, `vulncheck`, `nightly-dependency-report` |
 | Published operator image, Debian base | yes | `image-cve-scan`, `image-cve-scan-nightly` |
 | Published operator image, UBI9 base | yes | `image-cve-scan-ubi`, `image-cve-scan-ubi-nightly` |
 | First-party Go code (`pkg/`, `cmd/`, `integrations/`, `internal/`) | yes | `sast-scan`, `sast-scan-diff` |
@@ -44,7 +44,7 @@ change what runs here with no diff and no review.
 | `dependency-cve-scan` | `trivy fs`, dependency CVEs | gate band fixable CRITICAL,HIGH; report band all severities | warn-only by team decision, see below |
 | `image-cve-scan` | `trivy image` over the published Debian image, comprehensive | same bands | warn-only by team decision |
 | `image-cve-scan-ubi` | `trivy image` over the published UBI9 image, comprehensive | same bands | warn-only by team decision |
-| `govulncheck` | reachability over the real toolchain, symbol level | any reachable symbol | warn-only by team decision |
+| `vulncheck` | reachability, the repository's own `make vulncheck-optional` | any reachable symbol | warn-only, pre-existing posture, see below |
 | `secret-scan` | `trivy fs`, secret scanner, `testdata/` back in scope | CRITICAL,HIGH,MEDIUM,LOW | report-only, see below |
 | `misconfig-scan` | `trivy fs`, misconfiguration scanner over charts, manifests, Dockerfiles | CRITICAL,HIGH gate band | report-only; the Dockerfile credential guard in the same job is blocking |
 | `sast-scan` | Semgrep CE, full repo, `p/default` plus the org rules | reports every level | report-only, see below |
@@ -55,6 +55,7 @@ change what runs here with no diff and no review.
 | `nightly-dependency-report` | all severities, unfixed included, licences, full SBOM, KEV correlation | none | report-only |
 | `misconfig-report-nightly` | the same misconfiguration scan widened to MEDIUM and LOW | none | report-only |
 | `sast-report-nightly` | Semgrep at INFO | none | report-only |
+| `vulncheck-nightly` | the same reachability analysis between pull requests | none | report-only |
 
 The gate band and the report band are separate on purpose. `--severity` is
 applied at scan time, so without `report-severity` the MEDIUM, LOW and UNKNOWN
@@ -96,27 +97,37 @@ to it".
   findings from its own package set. These tiers can only go blocking after a
   release ships the fixes, which is also exactly what makes them worth having:
   they measure the artifact customers pull, not the branch.
-- **`govulncheck`** reports reachable findings from two sources, and the count
-  depends on the toolchain it runs under, so both numbers are recorded here.
+- **`vulncheck`** is the repository's own reachability analysis, and it is not new
+  in this change. `kube-arangodb` has run `govulncheck` through the Makefile's
+  `vulncheck` and `vulncheck-optional` targets, with the repository's build tags
+  and a pinned tool, since before this pull request. What this change adds is
+  enforcement and freshness, not capability: the single invocation moves out of
+  `check-code` into its own job, so it has a status context, a log of its own, an
+  artifact and a nightly run, and the pinned tool moves from v1.1.4 to v1.6.0.
 
-  Module findings, five of them, identical under any toolchain: one is fixable in
-  range (`GO-2026-5970`, `x/text`), three are containerd CRI checkpoint issues
-  whose fix exists only on the `github.com/containerd/containerd/v2` module path
-  (a major-version move on an indirect dependency), and `GO-2026-5932` is the
-  unmaintained `golang.org/x/crypto/openpgp` package, which has no fix at all.
+  It stays on the `-optional` target, whose leading `-` makes `make` ignore the
+  exit status, because `make vulncheck` was measured against this checkout on
+  v1.6.0 and exits 3 with five reachable findings from three modules:
 
-  Go standard-library findings, which appear only in CI: the run on this branch
-  reported 13 reachable findings in total, because the CircleCI executor image is
-  `cicd/golang:1.25.9` while this module declares `toolchain go1.25.12`, and
-  several stdlib issues reachable at 1.25.9 are fixed in 1.25.10 (for example
-  `GO-2026-4918` in `net/http`). Locally, on go1.26.5, the same scan reports only
-  the five module findings. Moving that executor image forward is an owner item
-  and would remove the stdlib class outright; it is also the one class of finding
-  here that a rebuild fixes with no dependency change.
+  | Finding | Module | Fix |
+  | --- | --- | --- |
+  | `GO-2026-5970` | `golang.org/x/text` v0.37.0 | 0.39.0, in range |
+  | `GO-2026-5932` | `golang.org/x/crypto` v0.52.0 | none, `openpgp` is unmaintained |
+  | `GO-2026-5622` | `containerd` v1.7.33 | only on the `containerd/v2` module path |
+  | `GO-2026-5338` | `containerd` v1.7.33 | only on the `containerd/v2` module path |
+  | `GO-2026-5064` | `containerd` v1.7.33 | only on the `containerd/v2` module path |
 
-  It flips when the four unfixable module findings are resolved upstream or
-  recorded as dated owner-approved acceptances, and when the executor image is
-  current.
+  In CI the count is higher again: the executor image is `cicd/golang:1.25.9`
+  while `go.mod` declares `toolchain go1.25.12`, so reachable Go standard-library
+  findings fixed in 1.25.10 are counted as well (for example `GO-2026-4918` in
+  `net/http`). Those disappear with a rebuild on a current image and need no
+  dependency change.
+
+  The flip is one word in `.circleci/continue_config.yml`, `vulncheck` instead of
+  `vulncheck-optional`, plus the context in `.github/required-checks.txt`. Its
+  criterion is a decision rather than a date: bump the executor image to at least
+  1.25.12, and either move off `containerd` v1 and `x/crypto/openpgp` or record
+  them as dated acceptances.
 - **`secret-scan`** is report-only because disabling trivy's built-in `tests`
   allow-rule surfaced nine HIGH `private-key` findings in two committed
   agency-state fixtures,
@@ -315,15 +326,10 @@ Each of these is a deliberate, named gap rather than an oversight.
    not exist under a current toolchain, and it means the binaries `make bin`
    produces in CI carry stdlib issues fixed in 1.25.10. Bumping the image is an
    owner action outside this repository.
-9. **`govulncheck` runs twice.** `check-code` runs `make vulncheck-optional` on
-   pull requests only, and the `govulncheck` job runs the same analysis with a
-   stable status-check context, an artifact, and coverage on nightly and tag
-   pipelines. Consolidating them edits the body of the one job branch protection
-   currently requires, so it is an owner item rather than part of this change.
-10. **No lockfile-currency check.** `go mod verify` proves the module graph
+9. **No lockfile-currency check.** `go mod verify` proves the module graph
    matches `go.sum`. `make ci-check` runs `tidy` and fails on a dirty tree, which
    covers the `go.mod` side on pull requests but not on tag pipelines.
-11. **No OpenVEX document is published.** It is generated from the waiver set, and
+10. **No OpenVEX document is published.** It is generated from the waiver set, and
    there is no owner-approved waiver to make a statement about. Publishing an
    empty document would look like coverage while asserting nothing. FedRAMP Rev-5
    makes risk-based VDR/VER mandatory on 2026-12-07, so this lands with the first
@@ -351,6 +357,7 @@ Bumping any of these is a reviewed one-line change.
 | `arangodb/semgrep-scan` | 1.0.0 | carries the Semgrep pin (1.168.0) and the org rule pack |
 | `arangodb/supply-chain` | 1.0.0 | SBOM validation, cosign signing, evidence export, Dependency-Track ingest |
 | `circleci/slack` | 4.1.4 | the version the previous `@4.1` float already resolved to |
+| `golang.org/x/vuln` (`govulncheck`) | v1.6.0, in the Makefile as `GOVULNCHECK_VERSION` | pinned by TAG. golang/vuln stopped publishing GitHub Releases at v1.1.4 while it kept tagging, so anything resolving "latest" from the releases API reports v1.1.4 as current. Do not correct it back. |
 | `circleci/path-filtering` | 1.2.0 | unchanged, previously already exact |
 | `circleci/continuation` | 2.0.1 | drives the nightly continuation |
 | Positive-control fixture | `python:3.9-slim@sha256:2d97f6910b16bd338d3060f261f53f144965f755599aab1acda1e13cf1731b1b` | digest-pinned so the control cannot drift |

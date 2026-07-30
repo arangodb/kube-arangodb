@@ -55,10 +55,13 @@ ci/circleci: misconfig-scan
 #     owner-approved acceptance. See .circleci/trivy-secret.yaml.
 # ci/circleci: sast-scan             report-only until the nine ERROR findings
 #     listed in SECURITY.md are cleared or dispositioned by their owners.
-# ci/circleci: govulncheck           warn-only: four of the five
-#     symbol-reachable findings have no in-range fix (three containerd CRI
-#     issues fixed only on the /v2 module path, one unmaintained
-#     x/crypto/openpgp).
+# ci/circleci: vulncheck             the repository's own govulncheck, which
+#     predates this rollout and now has its own job, context and nightly run.
+#     Still on the Makefile's -optional target: `make vulncheck` exits 3 with
+#     five reachable findings and only GO-2026-5970 (x/text) is fixable in
+#     range. Flipping to `make vulncheck` and adding this line is Adam's call,
+#     and needs the executor image on 1.25.12+ plus a decision on containerd v1
+#     and x/crypto/openpgp.
 # ci/circleci: required-checks-drift the drift job itself is warn-only while
 #     this list is incomplete; making it required is the last step, after the
 #     lines above are all in place on both sides.
