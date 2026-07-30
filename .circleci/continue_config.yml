@@ -1,10 +1,28 @@
 version: 2.1
+
+# EXACT ORB VERSIONS ONLY, no @1 / @4.1 floats. CircleCI resolves a float at
+# config-compile time, so a future orb publish silently changes what runs here
+# with zero repo diff and zero review. Bumps are a reviewed one-line change.
+#
+# slack is pinned at 4.1.4, the version the previous `@4.1` float already
+# resolved to (4.1.5 does not exist), so de-floating it changes nothing that runs
+# today. The orb is declared but not yet used by any job in this file; the pin is
+# what stops a later `slack/notify` picking up a different orb than the one this
+# config was reviewed against. Moving to the 5.x or 6.x line is a separate,
+# reviewed change.
 orbs:
-  slack: circleci/slack@4.1
-  trivy-scan: arangodb/trivy-scan@1.0.0
+  slack: circleci/slack@4.1.4
+  trivy-scan: arangodb/trivy-scan@1.1.2
+  semgrep-scan: arangodb/semgrep-scan@1.0.0
+  supply-chain: arangodb/supply-chain@1.0.0
 
 parameters:
   manifests-verify:
+    type: boolean
+    default: false
+  # Set by the nightly-setup workflow in .circleci/config.yml. false on every
+  # push and pull-request pipeline, which is what selects the run_tests workflow.
+  nightly:
     type: boolean
     default: false
   minikube-version:
@@ -13,12 +31,145 @@ parameters:
   helm-version:
     type: string
     default: v3.13.0
+  # ---- Security-gate configuration, single source of truth ------------------
+  poam-windows:
+    type: string
+    description: "Per-severity remediation windows in days for dated dispositions. Identical to the SLA table in SECURITY.md, so this repository has ONE window policy. It is also the orb's own poam-windows default; the orb's waiver-windows default is looser for HIGH and MEDIUM, so a waivers file added here must pass this table explicitly rather than take that default."
+    default: "critical=30,high=30,medium=90,low=180"
+  secret-config-path:
+    type: string
+    description: "Trivy secret-scanner config. Its disable-allow-rules: [tests] is what puts test code back in secret scope, which is where every baked-credential incident in this fleet has lived, and where this repository's two committed agency-state fixtures are."
+    default: ".circleci/trivy-secret.yaml"
+  semgrepignore-allowed:
+    type: string
+    description: "Entries a committed .semgrepignore would be ALLOWED to contain, checked LITERALLY by disposition-check. This repository deliberately commits NO .semgrepignore, so SAST scope is the whole checkout and the orb writes the dependency/VCS exclusions itself at scan time; the value below is that auto-written set. The guard is configured anyway, so committing one later cannot quietly drop a directory from the SAST scan. NOTE the OPPOSITE polarity to sast-required-paths: trivy-scan/disposition-check takes an allowlist of ignore-file lines, semgrep-scan/scan takes the paths that must NOT be excluded. Copying one value into the other inverts the control."
+    default: ".git/ .venv/ venv/ node_modules/ __pycache__/ build/ dist/ vendor/"
+  sast-required-paths:
+    type: string
+    description: "Trees that must NOT be excluded from the SAST scan by the effective .semgrepignore. These are the four first-party Go trees; pkg/ carries the token and TLS handling the operator authenticates with."
+    default: "pkg/ cmd/ integrations/ internal/"
+  # ---- Supply-chain wiring: opt-in, inert until the prerequisites exist ------
+  sign-artifacts:
+    type: boolean
+    description: "Sign the released operator image digest and attach the SBOM and SLSA provenance attestations. FALSE, and not flippable from this pipeline alone: CircleCI here does not build or push the operator image (the Jenkins release job does) and this project holds no Docker Hub push credential, so there is nothing for cosign to write the signature and attestation layers next to. The chain below is wired against the digest the image gate already resolves, so the flip is a credential and a review, not a rewrite. See Artifact signing in SECURITY.md."
+    default: false
+  evidence-bucket:
+    type: string
+    description: "S3 bucket for durable scan evidence (AU-11, CA-7). Empty = publish-evidence logs why it did nothing and exits 0. Provisioning a bucket with a COMPLIANCE-mode default retention period is an org-owner action, tracked in SECURITY.md."
+    default: ""
+  dtrack-url:
+    type: string
+    description: "Dependency-Track 5 base URL for SBOM ingestion (RV.1.2). Empty = dtrack-upload logs why it did nothing and exits 0."
+    default: ""
 
 executors:
   golang-executor:
     docker:
       - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.25.9
     resource_class: arangodb/amd-2xlarge-amd64
+
+commands:
+  # Resolve the released image tag the same way in every job that needs it, from
+  # VERSION rather than a hardcoded tag, so the scan tracks whatever this
+  # checkout's release line actually ships. The repository's own Docker Hub
+  # "latest" tag was found stale (unrelated to any recent release) when the image
+  # gate was added, and "latest-ubi" does not exist at all.
+  resolve-image-tag:
+    steps:
+      - run:
+          name: Resolve released image tag from VERSION
+          command: echo "export OPERATOR_IMAGE_TAG=$(cut -f1 -d'+' VERSION)" >> "$BASH_ENV"
+
+  # Post-scan supply-chain chain for the released image, bound to the DIGEST the
+  # scan just resolved and never to the tag: a tag can be re-pushed, so a
+  # signature or an SBOM attached to a tag proves nothing about the artifact that
+  # runs. INERT while sign-artifacts is false, and the unless-branch says exactly
+  # why rather than leaving a commented-out block nobody updates.
+  sign-and-attest:
+    parameters:
+      report-prefix:
+        type: string
+        default: ""
+      image:
+        type: string
+      project:
+        type: string
+      sbom-cyclonedx:
+        type: string
+    steps:
+      - run:
+          name: Read the scanned image digest out of the Trivy report
+          command: |
+            set -eu
+            REPORT="/tmp/<< parameters.report-prefix >>trivy-results.json"
+            if [ ! -s "${REPORT}" ]; then
+              echo "ERROR: ${REPORT} is missing or empty, so the digest of the scanned image cannot be read. The scan step must have run before this one." >&2
+              exit 1
+            fi
+            # RepoDigests, not ImageID: ImageID is the config blob digest, which
+            # is not what a registry reference or a cosign signature is keyed on.
+            DIGEST="$(grep -o '"RepoDigests":[[:space:]]*\[[^]]*\]' "${REPORT}" | grep -oE 'sha256:[0-9a-f]{64}' | head -1 || true)"
+            if [ -z "${DIGEST}" ]; then
+              echo "WARNING: the report carries no RepoDigests entry, so the scanned tag could not be resolved to a digest. Nothing downstream is bound to a digest on this run." >&2
+              DIGEST=""
+            fi
+            echo "Scanned digest: ${DIGEST:-none}"
+            echo "export IMAGE_DIGEST=${DIGEST}" >> "$BASH_ENV"
+      - when:
+          condition: << pipeline.parameters.sign-artifacts >>
+          steps:
+            - supply-chain/install-cosign
+            # tlog-upload is false pending the Rekor-publicity decision for this
+            # org. The operator image and its digests are already public, so
+            # keyless with a transparency-log entry is the recommendation; it is
+            # still a decision rather than a default, and flipping it belongs in
+            # the same change as the signing credential.
+            - supply-chain/sign-artifact:
+                image: << parameters.image >>
+                digest: "${IMAGE_DIGEST}"
+                tlog-upload: false
+            - supply-chain/attest-sbom:
+                image: << parameters.image >>
+                digest: "${IMAGE_DIGEST}"
+                predicate: << parameters.sbom-cyclonedx >>
+                predicate-type: cyclonedx
+                tlog-upload: false
+            # SLSA Build L1 only: the provenance is composed in a build step from
+            # the CIRCLE_* environment. Not L2, because CircleCI does not
+            # generate provenance in its control plane, and not L3, because the
+            # OIDC token is reachable from build steps. It also describes the
+            # SCANNING pipeline, not the Jenkins pipeline that built the image,
+            # which is the honest statement until the build moves or signs.
+            - supply-chain/attest-provenance:
+                image: << parameters.image >>
+                digest: "${IMAGE_DIGEST}"
+                tlog-upload: false
+      - unless:
+          condition: << pipeline.parameters.sign-artifacts >>
+          steps:
+            - run:
+                name: Artifact signing is OFF
+                command: |
+                  echo "sign-artifacts is false, so digest ${IMAGE_DIGEST:-(unresolved)} is NOT signed and carries no SBOM or provenance attestation."
+                  echo "Reason: this CircleCI project neither builds nor pushes the operator image (the Jenkins release job does) and holds no Docker Hub push credential, so cosign has nowhere to write the signature and attestation layers."
+                  echo "The chain is wired against the digest resolved above and needs a push credential plus the Rekor decision, not a config rewrite. See Artifact signing, attestation and SLSA level in SECURITY.md."
+      # Durable evidence keyed by digest (AU-11, CA-7), and continuous
+      # re-analysis of the component inventory (RV.1.2). Both INERT while the
+      # parameters are empty: each step logs why it did nothing and exits 0, so
+      # the wiring lands before the platform infrastructure exists.
+      - supply-chain/publish-evidence:
+          s3-bucket: << pipeline.parameters.evidence-bucket >>
+          subject: "${IMAGE_DIGEST:-$CIRCLE_SHA1}"
+          project: << parameters.project >>
+          report-json: "/tmp/<< parameters.report-prefix >>trivy-results.json"
+          report-table: "/tmp/<< parameters.report-prefix >>trivy-results.txt"
+          sbom-cyclonedx: << parameters.sbom-cyclonedx >>
+          scanner-provenance: "/tmp/<< parameters.report-prefix >>trivy-scanner-provenance.json"
+      - supply-chain/dtrack-upload:
+          dtrack-url: << pipeline.parameters.dtrack-url >>
+          sbom-path: << parameters.sbom-cyclonedx >>
+          project-name: << parameters.project >>
+          project-version: "${OPERATOR_IMAGE_TAG}"
 
 jobs:
   check-code:
@@ -79,6 +230,7 @@ jobs:
             fi
             make ci-check
 
+  # ---- Dependency CVE tier ---------------------------------------------------
   dependency-cve-scan:
     executor: golang-executor
     steps:
@@ -86,67 +238,705 @@ jobs:
       - trivy-scan/scan:
           scan-type: fs
           scan-path: "."
-          severity: "CRITICAL,HIGH"
+          # Dependency CVEs only. Committed-secret detection is the separate
+          # secret-scan job below, so a test fixture can never be the reason this
+          # job reports.
+          scanners: "vuln"
+          # WARN-ONLY, and that is the team's decision rather than an oversight:
+          # it is the posture #2118 was reviewed and merged with, and no decision
+          # to make it enforcing has been taken. Do not flip it here.
+          #
+          # FLIP CRITERION, and it is close: the fixable CRITICAL,HIGH band at
+          # this commit holds exactly one finding (CVE-2026-56852 in
+          # golang.org/x/text v0.37.0, fixed in 0.39.0), and the companion
+          # dependency-bump PR clears it. With that merged the band is empty, so
+          # setting fail-on-findings: true stops being a gate that is red on
+          # arrival. Do it in the same change that adds
+          # `ci/circleci: dependency-cve-scan` to .github/required-checks.txt
+          # and to branch protection, because a blocking job that no ruleset
+          # requires still does not block a merge.
           fail-on-findings: false
+          # GATE BAND: fixable CRITICAL,HIGH. UNKNOWN is deliberately out of it:
+          # in the Go advisory data UNKNOWN means the source assigned no CVSS at
+          # all, so gating on it would fail the build on a missing score rather
+          # than on a risk. ignore-unfixed stays at the orb default of true, so
+          # this tier is the FIXABLE band at every severity: a finding with no
+          # published fix is not actionable in a pull request. Unfixed findings
+          # are the nightly report's job, which is where the two open ones
+          # (CVE-2026-50163 in oras-go/v2, GO-2026-5932 in x/crypto) are visible.
+          severity: "CRITICAL,HIGH"
+          # Wide REPORT, narrow gate band, ONE scan. --severity is applied at
+          # scan time, so without this MEDIUM/LOW/UNKNOWN findings are physically
+          # absent from the JSON, the table, the JUnit report and the SBOM, and
+          # there is no evidence artifact of what the gate did not count.
+          report-severity: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
+          # DELIBERATELY NOT detection-priority: comprehensive. On an fs scan
+          # comprehensive derives Go stdlib CVEs from the `go` directive rather
+          # than from a real toolchain, and a directive that drifts from the
+          # build then invents phantom stdlib findings. Measured at this commit
+          # it adds nothing (go 1.25.0 / toolchain go1.25.12, zero extra
+          # findings), so precise costs no coverage here. Binary-accurate stdlib
+          # detection is the image tier's job, where trivy reads the real
+          # toolchain out of the compiled operator, and reachability is
+          # govulncheck's.
+          # Coverage assertion. require-targets is a floor of ONE, which this
+          # single-manifest repository satisfies by accident; naming the manifest
+          # is what makes a renamed or deleted go.mod fail BY NAME rather than
+          # pass vacuously. Read off a real scan (trivy v0.72.0 reports exactly
+          # one target, "go.mod"), not guessed.
+          expect-targets: "go.mod"
+          min-targets: 1
           store-junit-results: true
+          # CycloneDX for the internal pipeline and Dependency-Track ingest, SPDX
+          # as the interchange render for agency consumers. Measured 217
+          # components and 218 dependency relationships on trivy v0.72.0 at this
+          # commit. --include-dev-deps is deliberately absent and would change
+          # nothing: a Go module graph has no dev-only group, and the flag was
+          # measured to add zero findings and zero components here.
+          sbom-format: both
+          sbom-output: /tmp/sbom.cdx.json
+          sbom-spdx-output: /tmp/sbom.spdx.json
+      # A structurally valid SBOM can still be worthless: this fleet has already
+      # shipped one whose subject named the wrong tag and one that read as clean
+      # because the analyzer reported a single aggregate target. CISA's 2025
+      # Minimum Elements make tool, generation context and component identity
+      # required fields.
+      - supply-chain/validate-sbom:
+          sbom-path: /tmp/sbom.cdx.json
+          # Floor, not the exact count: measured 217 components. 180 catches an
+          # empty or aggregate SBOM without going red on legitimate dependency
+          # removal. Per-component hash, licence and supplier stay at the orb's
+          # `warn` default, because trivy emits none of them for
+          # lockfile-resolved Go modules and failing on them would red the gate
+          # on a scanner limitation rather than on a defect.
+          min-components: "180"
+      - store_artifacts:
+          path: /tmp/sbom.cdx.json
+          destination: sbom.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom.spdx.json
+          destination: sbom.spdx.json
+      - supply-chain/publish-evidence:
+          s3-bucket: << pipeline.parameters.evidence-bucket >>
+          subject: "${CIRCLE_SHA1}"
+          project: "kube-arangodb-dependency-gate"
+          report-json: /tmp/trivy-results.json
+          report-table: /tmp/trivy-results.txt
+          sbom-cyclonedx: /tmp/sbom.cdx.json
+          sbom-spdx: /tmp/sbom.spdx.json
+          scanner-provenance: /tmp/trivy-scanner-provenance.json
+      - supply-chain/dtrack-upload:
+          dtrack-url: << pipeline.parameters.dtrack-url >>
+          sbom-path: /tmp/sbom.cdx.json
+          project-name: "kube-arangodb"
+          project-version: "${CIRCLE_BRANCH:-${CIRCLE_TAG}}"
 
-  # Image-layer CVE gate (warn-only): the published operator image bundles
-  # the base OS packages and the compiled arangodb_operator/envoy binaries,
-  # none of which are visible to the fs scan above (pre-build analyzers,
-  # lockfiles only). Scans the already-published Docker Hub tag directly via
-  # the registry (image-src: remote), so no image build/docker daemon is
-  # needed in CI. The tag is read from VERSION rather than hardcoded so the
-  # scan tracks whatever this checkout's release line actually ships -
-  # the repo's own "latest" Docker Hub tag was found stale (unrelated to any
-  # recent release) when this job was added.
+  # ---- Image tier ------------------------------------------------------------
+  # The published operator image bundles the base OS packages and the compiled
+  # arangodb_operator/envoy binaries, none of which the fs scan above can see
+  # (pre-build analyzers, lockfiles only). This repository's CircleCI does not
+  # build the image (the Jenkins release job does), so the scan reads the
+  # already-published Docker Hub tag straight from the registry
+  # (image-src: remote), which needs no docker daemon and inspects exactly what
+  # customers pull.
+  #
+  # One parameterised job replaces the two near-identical copies this file
+  # carried; `variant` selects the Debian-based image or the UBI9 one, which have
+  # different base OS package sets and the same operator/envoy binaries.
   image-cve-scan:
     executor: golang-executor
+    parameters:
+      variant:
+        type: string
+        default: ""
+      # Exploitation signal over the report, on the nightly instances only: a
+      # KEV-listed MEDIUM sits below every severity gate in this fleet and is
+      # otherwise never seen. Costs a feed download, so it does not run per push.
+      exploit-signal:
+        type: boolean
+        default: false
     steps:
       - checkout
-      - run:
-          name: Resolve released image tag from VERSION
-          command: |
-            echo "export OPERATOR_IMAGE_TAG=$(cut -f1 -d'+' VERSION)" >> "$BASH_ENV"
+      - resolve-image-tag
       - trivy-scan/scan:
           scan-type: image
-          image-ref: "arangodb/kube-arangodb-enterprise:${OPERATOR_IMAGE_TAG}"
+          image-ref: "arangodb/kube-arangodb-enterprise:${OPERATOR_IMAGE_TAG}<< parameters.variant >>"
           image-src: remote
-          severity: "CRITICAL,HIGH"
+          # Explicit rather than inherited: an empty scanners value keeps trivy's
+          # defaults, which include secret detection, so a layer secret would
+          # report through this job while the repository's secret baseline is
+          # still being enumerated by its own job.
+          scanners: "vuln"
+          # WARN-ONLY, the posture #2132 was reviewed and merged with. Flipping
+          # it is not this change's call: the released 1.4.4 image carries five
+          # fixable HIGH findings in the compiled operator binary today, four of
+          # which are already fixed on master, so a blocking gate would be red
+          # until the next release ships rather than on anything a pull request
+          # can fix.
           fail-on-findings: false
+          severity: "CRITICAL,HIGH"
+          report-severity: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
+          # ignore-unfixed left at the orb default (true) on the gate band, same
+          # argument as the dependency tier; the nightly instances of this job
+          # are what widen it.
+          #
+          # detection-priority comprehensive is right HERE, unlike on the fs
+          # scan: an image scan reads the stdlib version out of the compiled
+          # binary rather than out of a hand-maintained directive. It is what
+          # surfaced CVE-2026-39822 (stdlib 1.26.4 in the released binary).
+          detection-priority: "comprehensive"
+          # DELIBERATELY NOT exit-on-eol. It fires independently of
+          # fail-on-findings, so arming it would make this warn-only job
+          # blocking on the EOL dimension alone. Both bases are supported today
+          # (ubuntu 24.04, ubi9), and trivy still logs an unsupported OS in this
+          # job's output, so the signal is not lost. Arm it in the same reviewed
+          # change that sets fail-on-findings: true.
+          # Coverage assertion: the compiled operator binary is the reason this
+          # tier exists, so assert it by name. Without it a base-image-only
+          # result (2 targets down to 1) would still pass.
+          expect-targets: "usr/bin/arangodb_operator"
+          min-targets: 2
           store-junit-results: true
+          secret-config-path: << pipeline.parameters.secret-config-path >>
+          sbom-format: both
           sbom-output: /tmp/sbom-image.cdx.json
+          sbom-spdx-output: /tmp/sbom-image.spdx.json
+      - supply-chain/validate-sbom:
+          sbom-path: /tmp/sbom-image.cdx.json
+          # Measured 100+ components on the released image (base OS packages plus
+          # the Go module graph read out of the binary). 60 is a floor that
+          # catches an empty or aggregate SBOM.
+          min-components: "60"
       - store_artifacts:
           path: /tmp/sbom-image.cdx.json
           destination: sbom-image.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-image.spdx.json
+          destination: sbom-image.spdx.json
+      - when:
+          condition: << parameters.exploit-signal >>
+          steps:
+            - trivy-scan/kev-epss-check:
+                report-path: /tmp/trivy-results.json
+                # 1.0 so EPSS alone never escalates: the CISA KEV catalogue match
+                # is the signal this control exists for. REPORT-ONLY for the
+                # first cycle (fleet convention) because the released image
+                # carries findings only a release can clear.
+                epss-threshold: "1.0"
+                fail-on-match: false
+      - sign-and-attest:
+          image: "arangodb/kube-arangodb-enterprise"
+          project: "kube-arangodb-image<< parameters.variant >>"
+          sbom-cyclonedx: /tmp/sbom-image.cdx.json
 
-  # Same gate against the UBI9 variant published alongside the Debian-based
-  # image - different base OS package set, same operator/envoy binaries.
-  image-cve-scan-ubi:
+  # ---- Committed-secret tier -------------------------------------------------
+  # REPORT-ONLY, and it has already earned its keep: with trivy's built-in
+  # `tests` allow-rule disabled it reports nine HIGH private-key hits in two
+  # committed agency-state fixtures under pkg/deployment/agency/state/testdata/.
+  # Those are EC private keys captured from an arangosync test deployment, and
+  # what happens to them is the owning team's call (redact the fixture, or rotate
+  # and record a dated acceptance), not something a CI change can decide. Gating
+  # on them now would make this job permanently red on a finding the security
+  # owner cannot fix, which is how a gate gets switched off for good.
+  #
+  # FLIP CRITERION: once those two fixtures are dispositioned, set
+  # fail-on-findings: true together with adding the context to
+  # .github/required-checks.txt.
+  secret-scan:
+    executor: golang-executor
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          scanners: "secret"
+          secret-config-path: << pipeline.parameters.secret-config-path >>
+          # Report-only, so widening the band costs the gate nothing while
+          # surfacing the MEDIUM/LOW secret rules the CRITICAL,HIGH default
+          # hides entirely.
+          severity: "CRITICAL,HIGH,MEDIUM,LOW"
+          fail-on-findings: false
+          store-junit-results: true
+
+  # ---- Misconfiguration tier -------------------------------------------------
+  # REPORT-ONLY, and this is the one place where "industry standard, never
+  # stricter" is doing real work. At this commit the CRITICAL,HIGH band holds 85
+  # findings over 258 config files, and the bulk of them are KSV-0056 (wildcard
+  # resource RBAC) and KSV-0114 (secret management) on the operator's own Role
+  # and ClusterRole templates. A Kubernetes operator legitimately holds broad
+  # RBAC over the resources it reconciles; failing the build on that is a gate
+  # nobody can satisfy without breaking the product.
+  #
+  # NOTE what is deliberately NOT here: trivy-scan/helm-lint. `helm lint` fails
+  # on two pre-existing chart defects (chart/kube-arangodb-crd/Chart.yaml is a
+  # Helm 2 era chart with no apiVersion and a tillerVersion key, and
+  # chart/platform-storage/templates/passwords.yaml does not parse as YAML for
+  # the linter), and fixing charts is product work rather than a CI change. The
+  # coverage the lint step exists to protect is separately proven here: trivy
+  # loaded all six charts and reported 114 helm targets, so the misconfig scan is
+  # not silently reading zero Helm files. Adding helm-lint is the same change
+  # that fixes those two charts.
+  misconfig-scan:
+    executor: golang-executor
+    parameters:
+      report-severity:
+        type: string
+        default: "CRITICAL,HIGH,MEDIUM,LOW"
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          scanners: "misconfig"
+          severity: "CRITICAL,HIGH"
+          report-severity: << parameters.report-severity >>
+          fail-on-findings: false
+          store-junit-results: true
+      # The deterministic final-stage credential check, for the class trivy's
+      # pattern-matching secret scanner cannot see: a build-time credential that
+      # survives into the shipped filesystem or image history. BLOCKING, because
+      # it is not a severity judgement: all five Dockerfiles pass at this commit,
+      # so this fails only on a new defect. Both glob forms are listed for the
+      # same reason .dockerignore patterns need a root-anchored and a
+      # **-anchored one.
+      - trivy-scan/dockerfile-credential-guard:
+          dockerfiles: "Dockerfile Dockerfile.debug Dockerfile.test Dockerfile.ubi tools/codegen/Dockerfile"
+
+  # ---- SAST tiers ------------------------------------------------------------
+  # Semgrep Community Edition, pinned in the orb. The dependency, secret and
+  # misconfig tiers cover everything EXCEPT the code written here; this is the
+  # layer that does.
+  #
+  # strict: false, and the reason is measured rather than convenient. Semgrep
+  # records 288 analysis errors on this checkout, 214 of them because
+  # chart/*/templates/*.yaml are Go templates and not YAML documents, and 61 in
+  # pkg/generated where its Go parser partially parses generated clientset code.
+  # With strict: true the orb correctly fails on an incomplete analysis (exit 8),
+  # so every SAST job in this repository would be red for a scanner limitation on
+  # Helm sources rather than for a finding. The blind spot is not hidden: the orb
+  # prints the error count and its type breakdown on every run, and the chart
+  # templates are covered by the misconfig tier, which renders them properly.
+  sast-scan:
+    parameters:
+      gate:
+        type: string
+        default: "NONE"
+      prefix:
+        type: string
+        default: "semgrep"
+    executor:
+      name: semgrep-scan/default
+      resource-class: large
+    steps:
+      - checkout
+      - semgrep-scan/scan:
+          # REPORT-ONLY at fail-on-severity NONE. The full-repo band holds 9
+          # ERROR and 91 WARNING findings at this commit, all pre-existing, all
+          # in product code, docs or Dockerfiles. Gating on them would mean
+          # either red-on-arrival or nine inline suppressions in files this
+          # change has no business editing.
+          #
+          # FLIP CRITERION: the nine ERROR findings are cleared or given dated
+          # inline dispositions by their owners (three jwt-go none-algorithm in
+          # pkg/util/token, three missing-unlock-before-return in
+          # integrations/storage/v1/shared/s3, one dangerous-exec-command in
+          # pkg/debug_package, one generic secret in docs/, one missing-user in
+          # Dockerfile). Then set fail-on-severity: ERROR here and add the
+          # context to .github/required-checks.txt.
+          fail-on-severity: << parameters.gate >>
+          # severity is the report FLOOR, not the gate: INFO keeps the whole band
+          # in the JSON, SARIF and JUnit so there is an evidence artifact of what
+          # the gate did not count.
+          severity: INFO
+          # Semgrep's built-in ignore list drops test/, tests/, build/, dist/ and
+          # vendor/ wholesale. This repository's *_test.go files sit next to the
+          # code they test, so that list would not remove much, but the token and
+          # TLS helpers under pkg/util/token are exactly the class of code that
+          # must stay in scope.
+          scan-tests: true
+          semgrepignore-baseline: << pipeline.parameters.sast-required-paths >>
+          strict: false
+          # Local artifact only. Uploading SARIF to GitHub code scanning needs
+          # the paid Code Security SKU, which this org does not buy.
+          sarif-output: "/tmp/<< parameters.prefix >>.sarif"
+          output-prefix: << parameters.prefix >>
+  # BLOCKING tier, and the one the fleet standard calls mandatory wherever a
+  # backlog exists: gate the code this change adds, not the code it inherited.
+  # WARNING rather than ERROR because the backlog is what makes the full-repo
+  # tier report-only, so new code is held to the stricter of the two bands.
+  sast-scan-diff:
+    executor:
+      name: semgrep-scan/default
+      resource-class: large
+    steps:
+      - checkout
+      - semgrep-scan/scan:
+          baseline-commit: master
+          fail-on-severity: WARNING
+          severity: INFO
+          scan-tests: true
+          semgrepignore-baseline: << pipeline.parameters.sast-required-paths >>
+          strict: false
+          # Distinct prefix so this scan's report does not collide with
+          # sast-scan's in the Artifacts and Tests tabs.
+          output-prefix: semgrep-diff
+
+  # ---- Disposition integrity -------------------------------------------------
+  # BLOCKING, and deliberately so: this is not gate strictness, it is whether the
+  # exception path can be trusted at all. An undated or expired suppression is an
+  # invisible permanent hole, and the failure mode this also catches (a
+  # .semgrepignore that grew) is the standard way a SAST gate dies without ever
+  # going red.
+  disposition-check:
+    executor: golang-executor
+    steps:
+      - checkout
+      - trivy-scan/disposition-check:
+          # None of these exist in this repository and none should: an accepted
+          # risk belongs in a scoped, dated, attributed record, not in a bare
+          # rule id that waives a control for every target forever. The paths are
+          # named anyway so that reintroducing one unreviewed fails here. On
+          # trivy-scan 1.1.2 a missing file is skipped with a diagnostic
+          # regardless of its position in this list.
+          ignorefiles: ".trivyignore,.trivyignore.yaml,.trivyignore.yml"
+          secret-config-path: << pipeline.parameters.secret-config-path >>
+          semgrepignore-baseline: << pipeline.parameters.semgrepignore-allowed >>
+          poam-windows: << pipeline.parameters.poam-windows >>
+          # The default globs are git pathspecs matched from the repository root,
+          # so `Dockerfile*` does not match tools/codegen/Dockerfile. Both forms
+          # are listed for the same reason .dockerignore patterns need a
+          # root-anchored and a **-anchored one.
+          nosem-globs: "*.py *.go *.sh *.js *.ts *.yaml *.yml Dockerfile* *Dockerfile* *.dockerfile *.tf *.jsx *.tsx"
+      # NO validate-waivers step and no waivers file. On trivy-scan 1.1.2 a
+      # waivers file with zero entries is a hard failure, correctly, so that
+      # deleting the entries cannot silently widen every gate, and this
+      # repository has no owner-approved risk acceptance to record yet. The step
+      # and the file land together with the first accepted risk, and so does
+      # OpenVEX publication, which is generated FROM the waiver set and would
+      # otherwise be an empty document shipped to customers.
+
+  # ---- Reachability gate -----------------------------------------------------
+  # The complement to trivy's gomod analyzer, which is manifest-level matching
+  # with no reachability at all. This is the same analysis check-code already
+  # runs through `make vulncheck-optional`, promoted to its own job so that it
+  # has a stable status-check context, keeps its report as an artifact, and runs
+  # on the nightly and on tag pipelines, where check-code skips it entirely (its
+  # step is guarded on CIRCLE_PULL_REQUEST). Consolidating the two is an owner
+  # item: it edits the body of the one job branch protection currently requires.
+  govulncheck:
+    executor: golang-executor
+    steps:
+      - checkout
+      # go.sum hash verification, which is the half of "hash-pinned installs"
+      # that Go gives for free and that nothing in this pipeline asserted.
+      - run:
+          name: Verify the module graph against go.sum
+          command: go mod verify
+      - trivy-scan/govulncheck:
+          working-directory: .
+          packages: "./..."
+          # symbol level = report only when a vulnerable symbol is reachable from
+          # this module's call graph.
+          scan-level: symbol
+          # The build tags the Makefile's own vulncheck target uses. Without them
+          # the analysis runs over a different package set than the one CI
+          # builds and tests.
+          extra-args: "-tags testing,test_build"
+          # WARN-ONLY, matching the `-` prefixed `make vulncheck-optional` this
+          # replaces, and for the same reason it is warn-only there: five
+          # findings are symbol-reachable at this commit and only one of them
+          # (GO-2026-5970, x/text) is fixable in range. Three are containerd CRI
+          # checkpoint issues whose fix exists only on the
+          # github.com/containerd/containerd/v2 module path, a major-version
+          # move on an indirect dependency, and GO-2026-5932 is the unmaintained
+          # x/crypto/openpgp package, which has no fix at all.
+          #
+          # FLIP CRITERION: those four are resolved upstream or recorded as dated
+          # owner-approved acceptances. Not before, or this is a permanently red
+          # gate on findings nobody here can close.
+          fail-on-findings: false
+
+  # ---- Required-check drift --------------------------------------------------
+  required-checks-drift:
     executor: golang-executor
     steps:
       - checkout
       - run:
-          name: Resolve released image tag from VERSION
+          name: Compare live branch protection against .github/required-checks.txt
           command: |
-            echo "export OPERATOR_IMAGE_TAG=$(cut -f1 -d'+' VERSION)" >> "$BASH_ENV"
+            set -eu
+            LIST=".github/required-checks.txt"
+            BRANCH="master"
+            if [ ! -s "${LIST}" ]; then
+              echo "WARNING: ${LIST} is missing or empty, so there is no committed list to compare the live protection against. Commit it." >&2
+              exit 0
+            fi
+            { grep -vE '^[[:space:]]*(#|$)' "${LIST}" || true; } | sed -e 's/[[:space:]]*$//' | sort -u > /tmp/required-expected.txt
+            echo "Committed required contexts (${LIST}):"
+            sed -e 's/^/  /' /tmp/required-expected.txt
+            if [ -z "${GITHUB_TOKEN:-}" ]; then
+              echo "WARNING: GITHUB_TOKEN is not in the environment, so the live protection could not be read and drift is UNVERIFIED on this run. Attach a context carrying a read-only token with repository administration:read." >&2
+              exit 0
+            fi
+            API="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+            gh_get() {
+              curl -sS -o "$2" -w '%{http_code}' --retry 3 --retry-delay 2 --max-time 60 \
+                -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "$1"
+            }
+            READ_OK=0
+            : > /tmp/required-live.txt
+            # The EFFECTIVE rules for the branch, not one ruleset selected by id.
+            # Selecting a single ruleset is wrong in two ways: the id changes when
+            # a ruleset is recreated, and the ruleset list on this repository
+            # returns the two enterprise deletion and non-fast-forward rules,
+            # neither of which can structurally carry required_status_checks. A
+            # job reading those would report every committed context as drift the
+            # moment an owner puts the gate contexts somewhere real, which is
+            # exactly the flip this job exists to support.
+            #
+            # grep and sed rather than a heredoc-fed interpreter: CircleCI
+            # reserves a literal double-less-than for parameter interpolation, so
+            # a heredoc operator in a command body is a standing edit hazard.
+            # "context" appears only inside required_status_checks entries in
+            # either payload. Zero matches is a real state, not an error, and
+            # grep's exit 1 on no matches would otherwise kill the script under
+            # the default -eo pipefail shell before the comparison runs, hence
+            # the `|| true` inside the brace groups.
+            CODE="$(gh_get "${API}/rules/branches/${BRANCH}" /tmp/rules.json)" || CODE="000"
+            if [ "${CODE}" = "200" ]; then
+              READ_OK=1
+              { grep -oE '"context":[[:space:]]*"[^"]*"' /tmp/rules.json || true; } | sed -e 's/.*"\([^"]*\)"$/\1/' >> /tmp/required-live.txt
+            else
+              echo "WARNING: reading the rules that apply to ${BRANCH} returned ${CODE}." >&2
+            fi
+            # Classic branch protection, which the call above does not cover, and
+            # which is where this repository's one required context actually
+            # lives. Neither answer is an error: 404 means there is no protection
+            # object, and 403 means the token carries no repository
+            # administration:read.
+            CODE="$(gh_get "${API}/branches/${BRANCH}/protection/required_status_checks" /tmp/protection.json)" || CODE="000"
+            case "${CODE}" in
+              200)
+                READ_OK=1
+                { grep -oE '"context":[[:space:]]*"[^"]*"' /tmp/protection.json || true; } | sed -e 's/.*"\([^"]*\)"$/\1/' >> /tmp/required-live.txt
+                ;;
+              404)
+                READ_OK=1
+                echo "No classic branch protection on ${BRANCH}."
+                ;;
+              *)
+                echo "NOTE: reading classic branch protection returned ${CODE}. A 403 means the token has no repository administration:read." >&2
+                ;;
+            esac
+            if [ "${READ_OK}" = "0" ]; then
+              echo "WARNING: neither protection source could be read, so drift is UNVERIFIED on this run." >&2
+              exit 0
+            fi
+            sort -u /tmp/required-live.txt > /tmp/required-live.sorted
+            mv /tmp/required-live.sorted /tmp/required-live.txt
+            echo "Live required contexts on ${BRANCH}:"
+            if [ -s /tmp/required-live.txt ]; then
+              sed -e 's/^/  /' /tmp/required-live.txt
+            else
+              echo "  (none)"
+            fi
+            MISSING="$(comm -23 /tmp/required-expected.txt /tmp/required-live.txt)"
+            EXTRA="$(comm -13 /tmp/required-expected.txt /tmp/required-live.txt)"
+            if [ -z "${MISSING}" ] && [ -z "${EXTRA}" ]; then
+              echo "The live protection matches the committed list."
+              exit 0
+            fi
+            if [ -n "${MISSING}" ]; then
+              echo "DRIFT: committed but NOT required by the live protection, so these gates do not block a merge:" >&2
+              printf '%s\n' "${MISSING}" | sed -e 's/^/  /' >&2
+            fi
+            if [ -n "${EXTRA}" ]; then
+              echo "DRIFT: required by the live protection but NOT committed. A required context no job emits is fail-closed and blocks every merge; one that matches the wrong job silently drops the intended gate:" >&2
+              printf '%s\n' "${EXTRA}" | sed -e 's/^/  /' >&2
+            fi
+            # THE FLIP: this exit 0 becomes exit 1 in the change that puts the
+            # gate contexts on the live protection and makes this job a required
+            # check. See the flip note in .github/required-checks.txt.
+            echo "WARN-ONLY until ${BRANCH} requires these contexts." >&2
+            exit 0
+
+  # ---- Nightly tiers ---------------------------------------------------------
+  # PERMANENT POSITIVE CONTROL. A gate that has never failed is
+  # indistinguishable from no gate: if this job goes green against a known-bad
+  # fixture, every other scan in this pipeline passed vacuously.
+  nightly-self-test:
+    executor: golang-executor
+    steps:
       - trivy-scan/scan:
-          scan-type: image
-          image-ref: "arangodb/kube-arangodb-enterprise:${OPERATOR_IMAGE_TAG}-ubi"
+          # python:3.9-slim, pinned by DIGEST so the fixture cannot drift.
+          # Deliberately not an EOL distro tag: an EOL distro stops publishing
+          # fix data, so ignore-unfixed leaves it with almost nothing, which is
+          # the weakest possible signal for a control whose whole job is to prove
+          # that detection works.
+          image-ref: "python:3.9-slim@sha256:2d97f6910b16bd338d3060f261f53f144965f755599aab1acda1e13cf1731b1b"
           image-src: remote
+          scanners: "vuln"
+          # The same band and the same ignore-unfixed as the real gates, so this
+          # proves the configuration the gates actually run.
           severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
+          # false, so the assertion below owns the verdict: the orb has no
+          # expect-failure mode, and a red scan here would read as a PASS.
           fail-on-findings: false
-          store-junit-results: true
-          sbom-output: /tmp/sbom-image.cdx.json
+          output-prefix: "selftest-"
+          store-junit-results: false
+      - run:
+          name: Assert the positive control detected findings
+          command: |
+            set -eu
+            REPORT="/tmp/selftest-trivy-results.json"
+            FLOOR=5
+            if [ ! -s "${REPORT}" ]; then
+              echo "ERROR: the positive control produced no report at ${REPORT}, so the scan machinery did not run. This is a broken gate, not a clean image." >&2
+              exit 1
+            fi
+            COUNT="$(grep -oE '"VulnerabilityID":[[:space:]]*"[^"]+"' "${REPORT}" | sort -u | wc -l | tr -d ' ')"
+            echo "Positive control: ${COUNT} unique fixable CRITICAL/HIGH id(s) in the pinned fixture image (floor ${FLOOR})."
+            if [ "${COUNT}" -lt "${FLOOR}" ]; then
+              echo "ERROR: the pinned known-vulnerable fixture came back with ${COUNT} findings, below the floor of ${FLOOR}. The vulnerability database, the scanner install or the severity filter is broken, so every OTHER gate in this pipeline is currently passing vacuously. Do not disposition this; fix the scanner." >&2
+              exit 1
+            fi
+            echo "Detection is proven for this configuration on this run."
       - store_artifacts:
-          path: /tmp/sbom-image.cdx.json
-          destination: sbom-image.cdx.json
+          path: /tmp/selftest-trivy-results.json
+          destination: selftest-trivy-results.json
+  # The visibility tier the blocking band cannot show: every severity, unfixed
+  # findings included, licences detected, and the full SBOM. REPORT ONLY.
+  nightly-dependency-report:
+    executor: golang-executor
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          scanners: "vuln,license"
+          severity: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
+          # THE point of this tier, and what makes it different from the pull
+          # request gate: the findings with no published fix. Two are open at
+          # this commit and neither is visible anywhere else in this pipeline.
+          ignore-unfixed: false
+          fail-on-findings: false
+          license-full: true
+          # Empty on purpose: the point of this tier is to produce the baseline
+          # that decides what, if anything, belongs here.
+          ignored-licenses: ""
+          expect-targets: "go.mod"
+          min-targets: 1
+          store-junit-results: true
+          sbom-format: both
+          sbom-output: /tmp/sbom-full.cdx.json
+          sbom-spdx-output: /tmp/sbom-full.spdx.json
+          output-prefix: "depreport-"
+      - supply-chain/validate-sbom:
+          sbom-path: /tmp/sbom-full.cdx.json
+          min-components: "180"
+      - store_artifacts:
+          path: /tmp/sbom-full.cdx.json
+          destination: sbom-full.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-full.spdx.json
+          destination: sbom-full.spdx.json
+      # Exploitation signal, which no CVSS band carries. Read against the
+      # FULL-severity report, or the point is lost. REPORT-ONLY for the first
+      # cycle (fleet convention); epss-threshold 1.0 so EPSS alone never
+      # escalates and a KEV catalogue match is the signal.
+      - trivy-scan/kev-epss-check:
+          report-path: /tmp/depreport-trivy-results.json
+          epss-threshold: "1.0"
+          fail-on-match: false
+      - supply-chain/publish-evidence:
+          s3-bucket: << pipeline.parameters.evidence-bucket >>
+          subject: "${CIRCLE_SHA1}"
+          project: "kube-arangodb-nightly-dependency-report"
+          report-json: /tmp/depreport-trivy-results.json
+          report-table: /tmp/depreport-trivy-results.txt
+          sbom-cyclonedx: /tmp/sbom-full.cdx.json
+          sbom-spdx: /tmp/sbom-full.spdx.json
+          scanner-provenance: /tmp/depreport-trivy-scanner-provenance.json
+      - supply-chain/dtrack-upload:
+          dtrack-url: << pipeline.parameters.dtrack-url >>
+          sbom-path: /tmp/sbom-full.cdx.json
+          project-name: "kube-arangodb-full-graph"
+          project-version: "master"
 
 workflows:
   version: 2
 
   run_tests:
+    when:
+      not: << pipeline.parameters.nightly >>
     jobs:
+      # check-code carries no explicit name and appears in exactly one workflow,
+      # which is what keeps its status context at `ci/circleci: check-code`, the
+      # one string branch protection requires today. CircleCI appends an instance
+      # suffix to the context of a job it considers duplicated across the config,
+      # and the numbering is not predictable, so this job is deliberately not
+      # reused anywhere else in this file.
       - check-code
-      - dependency-cve-scan
-      - image-cve-scan
-      - image-cve-scan-ubi
+      # Every gate instance below carries an explicit unique name for the same
+      # reason: a future topology change must not renumber the contexts branch
+      # protection is meant to require.
+      - dependency-cve-scan:
+          name: dependency-cve-scan
+      - image-cve-scan:
+          name: image-cve-scan
+          variant: ""
+      - image-cve-scan:
+          name: image-cve-scan-ubi
+          variant: "-ubi"
+      - secret-scan:
+          name: secret-scan
+      - misconfig-scan:
+          name: misconfig-scan
+      - sast-scan:
+          name: sast-scan
+      - sast-scan-diff:
+          name: sast-scan-diff
+      - disposition-check:
+          name: disposition-check
+      - govulncheck:
+          name: govulncheck
+      - required-checks-drift:
+          name: required-checks-drift
+
+  nightly:
+    when: << pipeline.parameters.nightly >>
+    jobs:
+      # First, because it is the precondition for reading anything else here.
+      - nightly-self-test:
+          name: nightly-self-test
+      - nightly-dependency-report:
+          name: nightly-dependency-report
+      # Re-scan what is actually published, against a fresh vulnerability
+      # database. A released image does not change, but the advisory data does,
+      # and this is the tier that notices.
+      - image-cve-scan:
+          name: image-cve-scan-nightly
+          variant: ""
+          exploit-signal: true
+      - image-cve-scan:
+          name: image-cve-scan-ubi-nightly
+          variant: "-ubi"
+          exploit-signal: true
+      # Dispositions expire on a calendar, not on a push: an entry that goes
+      # stale between pull requests has to be caught somewhere other than a pull
+      # request gate.
+      - disposition-check:
+          name: disposition-check-nightly
+      - sast-scan:
+          name: sast-report-nightly
+          prefix: semgrep-report
+      # The MEDIUM band the commit-time misconfig report leaves out, which is
+      # where trivy's k8s least-privilege checks and the trusted-registry check
+      # live.
+      - misconfig-scan:
+          name: misconfig-report-nightly
+          report-severity: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
