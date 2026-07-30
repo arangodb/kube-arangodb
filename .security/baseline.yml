@@ -59,7 +59,7 @@ controls:
     state: blocked
     evidence: ".github/required-checks.txt is the committed list; required-checks-drift compares it against the live protection on every push"
     proven: false
-    blocked-on: "protection requires exactly one context today, ci/circleci: check-code. Adding disposition-check, sast-scan-diff and misconfig-scan is a repository-admin action; the drift job is warn-only until then."
+    blocked-on: "protection requires exactly one context today, ci/circleci: check-code. Adding disposition-check, sast-scan-diff and misconfig-scan is a repository-admin action; the drift job is warn-only until then. The drift job also has no GITHUB_TOKEN in any context, so observed on build 6874 it printed the committed list and reported the comparison UNVERIFIED rather than claiming a match. See Known gaps 2 in SECURITY.md."
 
   - id: OSPS-AC-04
     requirement: "CI credentials are least-privilege and not exposed to untrusted code."

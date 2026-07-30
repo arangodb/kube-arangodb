@@ -50,7 +50,7 @@ change what runs here with no diff and no review.
 | `sast-scan` | Semgrep CE, full repo, `p/default` plus the org rules | reports every level | report-only, see below |
 | `sast-scan-diff` | Semgrep CE, diff against `master` | fails at WARNING on new findings only | blocking |
 | `disposition-check` | expiry and integrity of every suppression | any undated, expired or out-of-window disposition, any SAST scope reduction | blocking |
-| `required-checks-drift` | committed required-check list versus live protection | drift in either direction | warn-only until protection lists the gate contexts |
+| `required-checks-drift` | committed required-check list versus live protection | drift in either direction | warn-only, and currently UNVERIFIED, see Known gaps 2 |
 | `nightly-self-test` | positive control against a digest-pinned known-vulnerable image | fails if the scanner comes back clean | blocking in the nightly |
 | `nightly-dependency-report` | all severities, unfixed included, licences, full SBOM, KEV correlation | none | report-only |
 | `misconfig-report-nightly` | the same misconfiguration scan widened to MEDIUM and LOW | none | report-only |
@@ -173,8 +173,11 @@ through the ruleset API are the enterprise-sourced deletion and
 non-fast-forward rules; neither can carry status checks.
 
 The authoritative list of contexts this repository expects lives in
-`.github/required-checks.txt`, and `required-checks-drift` compares it against
-the live protection on every push.
+`.github/required-checks.txt`. `required-checks-drift` reads it on every push and
+compares it against the effective branch rules and the classic protection object,
+but only when a `GITHUB_TOKEN` is in the job environment. No context supplies one
+today, so the job prints the committed list and says the comparison is
+UNVERIFIED rather than reporting a false match. See Known gaps 2.
 
 READ THE SUFFIX WARNING in that file before editing it. CircleCI appends an
 instance suffix (`-1`, `-2`) to the status context of a job it considers
@@ -231,13 +234,20 @@ Each of these is a deliberate, named gap rather than an oversight.
    select between the two continuation paths and a pipeline that continues twice
    fails. Elsewhere in this fleet a legacy schedule was also observed to stop
    firing for eight months without anyone noticing.
-2. **Evidence is CircleCI artifacts, not an archive of record.** The
+2. **Drift detection is wired but unverified.** `required-checks-drift` needs a
+   read-only `GITHUB_TOKEN` with `administration:read` to read the live branch
+   rules, and no CircleCI context supplies one to this project. Observed on this
+   branch (build 6874): the job prints the four committed contexts and reports
+   `drift is UNVERIFIED on this run`. It fails open by design, because a drift job
+   that cannot read the live state must not claim a match. Creating the context is
+   an owner action; attaching it to this job is then one line.
+3. **Evidence is CircleCI artifacts, not an archive of record.** The
    `publish-evidence` and `dtrack-upload` steps are wired and inert: they log why
    they did nothing and exit 0 while `evidence-bucket` and `dtrack-url` are
    empty. An S3 bucket with a COMPLIANCE-mode retention period and a
    Dependency-Track 5 host are org-owner actions. Until they exist, scan evidence
    expires with the CircleCI artifact retention.
-3. **`helm lint` is not in the pipeline, because two charts do not lint.**
+4. **`helm lint` is not in the pipeline, because two charts do not lint.**
    `chart/kube-arangodb-crd/Chart.yaml` is a Helm 2 era chart: it carries a
    `tillerVersion` key and no `apiVersion`, which `helm lint` rejects outright.
    `chart/platform-storage/templates/passwords.yaml` fails the linter's YAML
@@ -247,7 +257,7 @@ Each of these is a deliberate, named gap rather than an oversight.
    proven: trivy loaded all six charts and reported 114 Helm targets, so the
    misconfiguration scan is not silently reading zero Helm files. Adding
    `helm-lint` is the same change that fixes those two charts.
-4. **SAST runs with `strict: false`.** Semgrep records 288 analysis errors on
+5. **SAST runs with `strict: false`.** Semgrep records 288 analysis errors on
    this checkout: 214 because `chart/*/templates/*.yaml` are Go templates rather
    than YAML documents, 61 partial parses in the generated clientset under
    `pkg/generated`, and 13 elsewhere. With `strict: true` the orb correctly fails
@@ -256,25 +266,25 @@ Each of these is a deliberate, named gap rather than an oversight.
    hidden: the orb prints the error count and type breakdown on every run, and
    the chart templates are covered by the misconfiguration tier, which renders
    them properly.
-5. **The release pipeline is not observed by these gates.** The published image
+6. **The release pipeline is not observed by these gates.** The published image
    is built by Jenkins (`Jenkinsfile.groovy`). Everything here inspects either the
    source tree or the image after it is published, which is why the image tiers
    can see fixable HIGH findings that `master` has already fixed. Closing this
    means gating inside the release job, which is work in that pipeline.
-6. **The image tag is derived from `VERSION`.** Between a `VERSION` bump and the
+7. **The image tag is derived from `VERSION`.** Between a `VERSION` bump and the
    corresponding Docker Hub publish, the tag does not exist and the image jobs
    fail on a missing image rather than on a finding. This is pre-existing
    behaviour from `#2132`; the alternative considered there, `latest`, was found
    several releases stale and `latest-ubi` does not exist at all.
-7. **`govulncheck` runs twice.** `check-code` runs `make vulncheck-optional` on
+8. **`govulncheck` runs twice.** `check-code` runs `make vulncheck-optional` on
    pull requests only, and the `govulncheck` job runs the same analysis with a
    stable status-check context, an artifact, and coverage on nightly and tag
    pipelines. Consolidating them edits the body of the one job branch protection
    currently requires, so it is an owner item rather than part of this change.
-8. **No lockfile-currency check.** `go mod verify` proves the module graph
+9. **No lockfile-currency check.** `go mod verify` proves the module graph
    matches `go.sum`. `make ci-check` runs `tidy` and fails on a dirty tree, which
    covers the `go.mod` side on pull requests but not on tag pipelines.
-9. **No OpenVEX document is published.** It is generated from the waiver set, and
+10. **No OpenVEX document is published.** It is generated from the waiver set, and
    there is no owner-approved waiver to make a statement about. Publishing an
    empty document would look like coverage while asserting nothing. FedRAMP Rev-5
    makes risk-based VDR/VER mandatory on 2026-12-07, so this lands with the first
