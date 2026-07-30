@@ -12,7 +12,7 @@ version: 2.1
 # reviewed change.
 orbs:
   slack: circleci/slack@4.1.4
-  trivy-scan: arangodb/trivy-scan@1.1.2
+  trivy-scan: arangodb/trivy-scan@1.2.0
   semgrep-scan: arangodb/semgrep-scan@1.0.0
   supply-chain: arangodb/supply-chain@1.0.0
 
