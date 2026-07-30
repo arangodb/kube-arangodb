@@ -231,8 +231,16 @@ jobs:
             make ci-check
 
   # ---- Dependency CVE tier ---------------------------------------------------
+  # On the ORB's executor, not golang-executor, and for one concrete reason:
+  # supply-chain/validate-sbom parses the SBOM with jq, and the ECR Go image this
+  # repository's other jobs run on does not ship jq (observed, build 6863). The
+  # orb executor is a digest-pinned cimg/python that provides bash, curl, git,
+  # awk, sed, python3 and jq, which is exactly the set the scan and validation
+  # steps need. Trivy itself is downloaded and sha256-verified by the orb, so the
+  # executor's own toolchain is incidental here; the three jobs that build an SBOM
+  # are the only ones moved.
   dependency-cve-scan:
-    executor: golang-executor
+    executor: trivy-scan/default
     steps:
       - checkout
       - trivy-scan/scan:
@@ -343,8 +351,12 @@ jobs:
   # One parameterised job replaces the two near-identical copies this file
   # carried; `variant` selects the Debian-based image or the UBI9 one, which have
   # different base OS package sets and the same operator/envoy binaries.
+  # Orb executor for the jq reason above, at `large` because an image scan's cost
+  # is disk and network throughput while it extracts layers.
   image-cve-scan:
-    executor: golang-executor
+    executor:
+      name: trivy-scan/default
+      resource-class: large
     parameters:
       variant:
         type: string
@@ -625,6 +637,18 @@ jobs:
   # item: it edits the body of the one job branch protection currently requires.
   govulncheck:
     executor: golang-executor
+    environment:
+      # The build tags `make vulncheck-optional` analyses under. TEST_BUILD
+      # defaults to 0, so GOBUILDTAGS is empty in CI and the Makefile's effective
+      # tag set is just `testing`.
+      #
+      # Passed through GOFLAGS rather than the orb's extra-args on purpose: the
+      # orb appends extra-args AFTER the package pattern, so `-tags testing` lands
+      # where govulncheck expects package patterns and it exits 1 on "malformed
+      # import path" (observed, build 6864). govulncheck loads packages through
+      # `go list`, which reads GOFLAGS, so this reaches the analysis rather than
+      # the argument list.
+      GOFLAGS: "-tags=testing"
     steps:
       - checkout
       # go.sum hash verification, which is the half of "hash-pinned installs"
@@ -638,10 +662,6 @@ jobs:
           # symbol level = report only when a vulnerable symbol is reachable from
           # this module's call graph.
           scan-level: symbol
-          # The build tags the Makefile's own vulncheck target uses. Without them
-          # the analysis runs over a different package set than the one CI
-          # builds and tests.
-          extra-args: "-tags testing,test_build"
           # WARN-ONLY, matching the `-` prefixed `make vulncheck-optional` this
           # replaces, and for the same reason it is warn-only there: five
           # findings are symbol-reachable at this commit and only one of them
@@ -811,7 +831,7 @@ jobs:
   # The visibility tier the blocking band cannot show: every severity, unfixed
   # findings included, licences detected, and the full SBOM. REPORT ONLY.
   nightly-dependency-report:
-    executor: golang-executor
+    executor: trivy-scan/default
     steps:
       - checkout
       - trivy-scan/scan:
