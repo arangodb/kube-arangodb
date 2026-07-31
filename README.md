@@ -14,6 +14,7 @@ Each of these uses involves a different custom resource:
 - Use an [ArangoMember](docs/api/ArangoMember.V1.md) resource to observe and adjust individual deployment members.
 - Use an [ArangoBackup](docs/backup-resource.md) and [ArangoBackupPolicy](docs/backuppolicy-resource.md) resources to create ArangoDB backups.
 - Use an [ArangoLocalStorage](docs/storage-resource.md) resource to provide local `PersistentVolumes` for optimal I/O performance.
+- Use an [ArangoDeploymentReplication](docs/deployment-replication-resource-reference.md) resource to configure ArangoDB Datacenter-to-Datacenter Replication.
 - Use an [ArangoPlatformChart](docs/arango-platform-chart-resource.md) and [ArangoProfile](docs/arango-profile-resource.md) resources to customize [ArangoDB Platform](docs/platform.md) deployments.
 
 Continue with [Using the ArangoDB Kubernetes Operator](docs/using-the-operator.md)
@@ -202,7 +203,7 @@ Flags:
       --kubernetes.qps float32                                 Number of queries per second for k8s API. If set to 0 or less, API calls won't be throttled (default 32)
       --leader.label.skip                                      Skips Leader Label for the Pod
       --log.format string                                      Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
-      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, arangod-request, assertion, authz-pool-client, backup-operator, backup-policy-operator, chaos-monkey, cli-utils, crd, deployment, deployment-ci, deployment-reconcile, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, grpc-service, helm, http, inspector, integration-authn-v1, integration-authorization-v1, integration-config-v1, integration-envoy-auth-v3, integration-envoy-auth-v3-impl-auth-bearer, integration-envoy-auth-v3-impl-auth-cookie, integration-envoy-auth-v3-impl-custom-openid, integration-envoy-auth-v3-impl-pass-mode, integration-events-v1, integration-meta-v1, integration-pong-v1, integration-scheduler-v2, integration-shutdown-v1, integration-storage-v1-s3, integration-storage-v2, integrations, k8s-client, kubernetes, kubernetes-access, kubernetes-admission, kubernetes-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-v2, operator-v2-event, operator-v2-worker, panics, permission-role-user-binding-operator, permission-token-operator, permission-token-webhook, platform-chart-operator, platform-pod-shutdown, platform-service-operator, platform-storage-operator, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, sidecar, sidecar-authz, sidecar-authz-pool, sidecar-service-client-authentication, webhook (default [info])
+      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, arangod-request, assertion, authz-pool-client, backup-operator, backup-policy-operator, chaos-monkey, cli-utils, connector-v1, crd, deployment, deployment-ci, deployment-reconcile, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, grpc-service, helm, http, inspector, integration-authn-v1, integration-authorization-v1, integration-config-v1, integration-envoy-auth-v3, integration-envoy-auth-v3-impl-auth-bearer, integration-envoy-auth-v3-impl-auth-cookie, integration-envoy-auth-v3-impl-custom-openid, integration-envoy-auth-v3-impl-pass-mode, integration-events-v1, integration-meta-v1, integration-pong-v1, integration-scheduler-v2, integration-shutdown-v1, integration-storage-v1-s3, integration-storage-v2, integrations, k8s-client, kubernetes, kubernetes-access, kubernetes-admission, kubernetes-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-v2, operator-v2-event, operator-v2-worker, panics, permission-role-user-binding-operator, permission-token-operator, permission-token-webhook, platform-chart-operator, platform-link-operator, platform-pod-shutdown, platform-service-operator, platform-storage-operator, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, sidecar, sidecar-authz, sidecar-authz-pool, sidecar-service-client-authentication, webhook (default [info])
       --log.sampling                                           If true, operator will try to minimize duplication of logging events (default true)
       --log.stdout                                             If true, operator will log to the stdout (default true)
       --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
@@ -242,8 +243,8 @@ Flags:
 ### Installation and Usage
 
 Docker images:
-- Community Edition: `arangodb/kube-arangodb:1.4.4`
-- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.4.4`
+- Community Edition: `arangodb/kube-arangodb:1.4.3`
+- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.4.3`
 
 ### Installation of latest release using Kubectl
 
@@ -252,18 +253,22 @@ running ArangoDB deployments.
 
 ##### Community Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.4/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.4/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.4/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/arango-storage.yaml
+# To use `ArangoDeploymentReplication`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/arango-deployment-replication.yaml
 ```
 
 ##### Enterprise Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.4/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.4/manifests/enterprise-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.4/manifests/enterprise-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/enterprise-storage.yaml
+# To use `ArangoDeploymentReplication`, also run
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.3/manifests/enterprise-deployment-replication.yaml
 ```
 
 ### Installation of latest release using kustomize
@@ -282,8 +287,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.4.4
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.4.4
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.4.3
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.4.3
 ```
 
 ##### Enterprise Edition example
@@ -292,8 +297,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.4.4
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.4.4
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.4.3
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.4.3
 ```
 
 ### Installation of latest release using Helm
@@ -329,17 +334,17 @@ helm install --generate-name kube-arangodb/kube-arangodb-enterprise --set "opera
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-1.4.4.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-1.4.3.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-1.4.4.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-1.4.3.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-enterprise-1.4.4.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-enterprise-1.4.3.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-enterprise-1.4.4.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-enterprise-1.4.3.tgz --set "operator.features.storage=true"
 ```
 
 ### Upgrading the operator using Helm
@@ -353,23 +358,23 @@ kube-arangodb-1-1696919877	default  	1       	2023-10-10 08:37:57.884783199 +020
 
 So here, you would have to do
 ```bash
-helm upgrade --install kube-arangodb-1-1696919877 https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-1.4.4.tgz
+helm upgrade --install kube-arangodb-1-1696919877 https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-1.4.3.tgz
 ```
 
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-1.4.4.tgz
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-1.4.3.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-1.4.4.tgz --set "operator.features.storage=true"
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-1.4.3.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-enterprise-1.4.4.tgz
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-enterprise-1.4.3.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-enterprise-1.4.4.tgz --set "operator.features.storage=true"
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.3/kube-arangodb-enterprise-1.4.3.tgz --set "operator.features.storage=true"
 ```
 
 ## Building
@@ -379,4 +384,6 @@ DOCKERNAMESPACE=<your dockerhub account> make
 kubectl apply -f manifests/arango-deployment-dev.yaml
 # To use `ArangoLocalStorage`, also run
 kubectl apply -f manifests/arango-storage-dev.yaml
+# To use `ArangoDeploymentReplication`, also run
+kubectl apply -f manifests/arango-deployment-replication-dev.yaml
 ```
