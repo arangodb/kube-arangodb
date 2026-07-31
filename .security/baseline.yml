@@ -1,32 +1,15 @@
-# OSPS Baseline posture scorecard for arangodb/kube-arangodb
-#
-# WHY THIS FILE EXISTS
-# Security posture is otherwise prose in SECURITY.md, and prose does not
-# aggregate across a fleet or show a trend. This is the machine-readable per-repo
-# scorecard: one row per control, with its state, the evidence that state rests
-# on, and whether the control has been PROVEN to fire rather than merely
-# configured. A gate that has never failed is indistinguishable from no gate.
-#
-# WHY OSPS BASELINE AND NOT OPENSSF SCORECARD
-# OpenSSF Scorecard detects eleven of its checks only through GitHub Actions
-# workflows, so a well-secured CircleCI repository scores badly and any
-# improvement is invisible. OSPS Baseline is CI-agnostic, tiered, and already
-# mapped to the EU CRA and NIST SSDF.
-#
-# HONESTY ABOUT THE IDS. The control ids follow the OSPS Baseline
-# OSPS-<CATEGORY>-<NN> scheme and were transcribed by hand, NOT reconciled
-# against a pinned machine-readable catalogue export. Read `requirement` as the
-# authoritative statement of what is claimed and the id as a pointer.
-#
-# STATE VOCABULARY
-#   met            implemented AND the evidence has been observed
-#   met-unproven   implemented and reviewed, never observed firing
-#   partial        implemented for part of the scope, remainder named
-#   blocked        implementable only by a repo or platform owner
-#   accepted-gap   deliberately not implemented, see SECURITY.md Known gaps
-#   not-applicable the surface the control governs does not exist here
-#
-# Consumers must tolerate LOCAL-* ids that carry no target-level.
+# OSPS Baseline posture scorecard for arangodb/kube-arangodb.
+# Machine-readable counterpart to the SECURITY.md prose: one row per control with
+# its evidence, and whether it has been PROVEN to fire. A gate that has never
+# failed is indistinguishable from no gate.
+# OSPS rather than OpenSSF Scorecard: Scorecard detects eleven of its checks only
+# through GitHub Actions, so a CircleCI repo scores badly whatever it does.
+# Ids were transcribed by hand, not reconciled against a pinned catalogue export,
+# so `requirement` is authoritative and the id is only a pointer.
+# States: met (evidence observed), met-unproven (never observed firing), partial
+# (scope limited, remainder named), blocked (needs a repo or platform owner),
+# accepted-gap (see SECURITY.md), not-applicable. LOCAL-* ids carry no
+# target-level.
 
 catalogue: OSPS Baseline v2026.02.19
 repo: arangodb/kube-arangodb
@@ -59,7 +42,7 @@ controls:
     state: blocked
     evidence: ".github/required-checks.txt is the committed list; required-checks-drift compares it against the live protection on every push"
     proven: false
-    blocked-on: "protection requires exactly one context today, ci/circleci: check-code. Adding disposition-check, sast-scan-diff and misconfig-scan is a repository-admin action; the drift job is warn-only until then. The drift job also has no GITHUB_TOKEN in any context, so observed on build 6874 it printed the committed list and reported the comparison UNVERIFIED rather than claiming a match. See Known gaps 2 in SECURITY.md."
+    blocked-on: "protection requires exactly one context today, ci/circleci: check-code. Adding disposition-check, sast-scan-diff, misconfig-scan and dependency-cve-scan is a repository-admin action; the drift job is warn-only until then. The drift job also has no GITHUB_TOKEN in any context, so observed on build 6874 it printed the committed list and reported the comparison UNVERIFIED rather than claiming a match. See Known gaps 2 in SECURITY.md."
 
   - id: OSPS-AC-04
     requirement: "CI credentials are least-privilege and not exposed to untrusted code."
@@ -89,7 +72,7 @@ controls:
     requirement: "Released artifacts are signed and carry provenance."
     target-level: 2
     state: blocked
-    evidence: "the sign-artifact, attest-sbom and attest-provenance chain is wired in the image jobs against the digest the scan resolves, behind sign-artifacts: false"
+    evidence: "nothing is wired in this pipeline; signing belongs with the push credential holder (the Jenkins release job), see Artifact signing in SECURITY.md"
     proven: false
     blocked-on: "this CircleCI project neither builds nor pushes the operator image and holds no Docker Hub push credential, so cosign has nowhere to write the signature and attestation layers. Needs a push credential (or the signing step to move to the Jenkins release job) plus the Rekor-publicity decision. No SLSA level is claimed today."
 
@@ -108,12 +91,12 @@ controls:
     state: partial
     evidence: "dependency-cve-scan (trivy fs, gate band fixable CRITICAL,HIGH, report band all severities, expect-targets go.mod) and the two image tiers over the published Debian and UBI9 images with detection-priority comprehensive, which is what reads the stdlib version out of the compiled operator"
     proven: true
-    note: "PARTIAL because all three are fail-on-findings:false, the posture #2118 and #2132 were merged with. The written flip criteria are in SECURITY.md; the dependency tier's is one merge away."
+    note: "PARTIAL because the image tiers are fail-on-findings:false, the posture #2132 was merged with; their flip criterion is a release shipping the fixes. The dependency tier blocks on fixable CRITICAL,HIGH since the x/text bump landed."
 
   - id: OSPS-VM-02
     requirement: "Reachability or exploitability is considered before a finding blocks a release."
     target-level: 3
-    state: met-unproven
+    state: partial
     evidence: "the repository's own govulncheck invocation (Makefile vulncheck targets, its build tags, tool pinned by GOVULNCHECK_VERSION, bumped v1.1.4 to v1.6.0) reports 5 reachable module findings out of the 12 its database matches at module level; it now runs as its own job on every push and once nightly instead of as a guarded step inside check-code; kev-epss-check correlates the CISA KEV catalogue against the full-severity nightly reports"
     proven: true
     note: "PARTIAL on enforcement, not on capability: govulncheck predates this rollout and was correctly invoked with the repo's build tags, but only through the -optional target (leading - ignores the exit status) inside a step guarded on CIRCLE_PULL_REQUEST, and `make vulncheck`, the failing variant, was invoked by nothing. `make vulncheck` exits 3 today: 5 reachable findings, 1 fixable in range (GO-2026-5970, x/text) and 4 with no in-range fix (GO-2026-5932 x/crypto/openpgp, GO-2026-5622/5338/5064 containerd v1). In CI the count is higher because the executor image is cicd/golang:1.25.9 against a declared toolchain go1.25.12. kev-epss-check is fail-on-match:false for its first cycle."
@@ -144,7 +127,7 @@ controls:
     requirement: "Exploitation signal (KEV, EPSS) is correlated, not just CVSS."
     target-level: 3
     state: partial
-    evidence: "kev-epss-check runs against the full-severity nightly dependency report and against both nightly image reports"
+    evidence: "kev-epss-check runs against the full-severity nightly dependency report and against both nightly image reports, all three produced with unfixed findings included"
     proven: false
     note: "fail-on-match:false for the first cycle. epss-threshold is 1.0 so EPSS alone never escalates; a KEV catalogue match is the signal."
 
@@ -152,7 +135,7 @@ controls:
     requirement: "Deployment and infrastructure definitions are scanned for misconfiguration."
     target-level: 2
     state: partial
-    evidence: "misconfig-scan over 258 config files: 5 Dockerfiles, 138 Kubernetes manifests and 114 Helm files across all six charts"
+    evidence: "misconfig-scan over 257 config files: 5 Dockerfiles, 138 Kubernetes manifests and 114 Helm files across all six charts"
     proven: true
     note: "REPORT-ONLY. 85 findings sit in the CRITICAL,HIGH band and the bulk are KSV-0056 (wildcard resource RBAC) and KSV-0114 (secret management) on the operator's own Role and ClusterRole templates, which is what a Kubernetes operator legitimately holds. trivy-scan/helm-lint is deliberately absent: `helm lint` fails on two pre-existing chart defects, see Known gaps in SECURITY.md."
 
@@ -169,7 +152,7 @@ controls:
     requirement: "Scan evidence is retained durably and independently of the CI provider."
     target-level: 2
     state: blocked
-    evidence: "publish-evidence and dtrack-upload are wired and inert while evidence-bucket and dtrack-url are empty"
+    evidence: "not wired; the export lands together with the bucket and the Dependency-Track host, see Known gaps 3 in SECURITY.md"
     proven: false
     blocked-on: "an S3 bucket with COMPLIANCE-mode retention and a Dependency-Track 5 host are org-owner actions."
 
@@ -193,7 +176,7 @@ controls:
   - id: LOCAL-01
     requirement: "Every gate has been proven to fail on a real finding, and is re-proven continuously."
     state: met
-    evidence: "nightly-self-test scans a digest-pinned known-vulnerable image every night and fails the nightly if the scanner comes back clean or produces no report. Locally proven for this commit on the same trivy v0.72.0 the orb pins: the dependency scan reports 2 HIGH, 1 MEDIUM and 2 UNKNOWN against go.mod, the secret scan reports 9 HIGH with the tests allow-rule disabled and 0 with it enabled, the misconfig scan reports 85 CRITICAL/HIGH over 258 files, semgrep reports 9 ERROR and 91 WARNING, and govulncheck exits non-zero on 5 reachable findings."
+    evidence: "nightly-self-test scans a digest-pinned known-vulnerable image every night and fails the nightly if the scanner comes back clean or produces no report. Locally proven for this commit on the same trivy v0.72.0 the orb pins: the dependency scan reports 1 HIGH, 1 MEDIUM and 1 UNKNOWN against go.mod, the secret scan reports 9 HIGH with the tests allow-rule disabled and 0 with it enabled, the misconfig scan reports 85 CRITICAL/HIGH over 257 files, semgrep reports 9 ERROR and 91 WARNING, and govulncheck exits non-zero on 4 reachable findings."
     proven: true
 
   - id: LOCAL-02

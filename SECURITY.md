@@ -25,8 +25,9 @@ Patches are released for the versions listed in the
 | Surface | Exists here | Covered by |
 | --- | --- | --- |
 | Dependency graph (`go.mod`, `go.sum`) | yes | `dependency-cve-scan`, `vulncheck`, `nightly-dependency-report` |
-| Published operator image, Debian base | yes | `image-cve-scan`, `image-cve-scan-nightly` |
-| Published operator image, UBI9 base | yes | `image-cve-scan-ubi`, `image-cve-scan-ubi-nightly` |
+| Enterprise operator image, Debian base | yes | `image-cve-scan`, `image-cve-scan-nightly` |
+| Enterprise operator image, UBI9 base | yes | `image-cve-scan-ubi`, `image-cve-scan-ubi-nightly` |
+| Community image and the `-arm64` variants | yes | nothing here, see Known gaps |
 | First-party Go code (`pkg/`, `cmd/`, `integrations/`, `internal/`) | yes | `sast-scan`, `sast-scan-diff` |
 | Helm charts and Kubernetes manifests | yes | `misconfig-scan` |
 | Dockerfiles | yes | `misconfig-scan`, including the deterministic credential guard |
@@ -41,7 +42,7 @@ change what runs here with no diff and no review.
 
 | Job | Tier | Band | Verdict |
 | --- | --- | --- | --- |
-| `dependency-cve-scan` | `trivy fs`, dependency CVEs | gate band fixable CRITICAL,HIGH; report band all severities | warn-only by team decision, see below |
+| `dependency-cve-scan` | `trivy fs`, dependency CVEs | gate band fixable CRITICAL,HIGH; report band all severities | blocking, see below |
 | `image-cve-scan` | `trivy image` over the published Debian image, comprehensive | same bands | warn-only by team decision |
 | `image-cve-scan-ubi` | `trivy image` over the published UBI9 image, comprehensive | same bands | warn-only by team decision |
 | `vulncheck` | reachability, the repository's own `make vulncheck-optional` | any reachable symbol | warn-only, pre-existing posture, see below |
@@ -76,18 +77,16 @@ and the SBOM, and there would be no evidence of what the gate did not count.
 5. `disposition-check` is blocking. That is not gate strictness, it is whether
    the exception path can be trusted at all.
 
-## Why the scanning tiers are not enforcing yet
+## Enforcement status of the scanning tiers
 
-Each one has a written flip criterion. None of them is "when someone gets round
-to it".
+Every non-blocking tier has a written flip criterion. None of them is "when
+someone gets round to it".
 
-- **`dependency-cve-scan`** is `fail-on-findings: false` because that is the
-  posture `#2118` was reviewed and merged with. The fixable CRITICAL,HIGH band
-  holds exactly one finding at this commit, `CVE-2026-56852` in
-  `golang.org/x/text` v0.37.0 (fixed in 0.39.0). Once that bump lands the band is
-  empty, so the flip is one line here plus one line in
-  `.github/required-checks.txt`, and it does not create a gate that is red on
-  arrival.
+- **`dependency-cve-scan`** now blocks, per the criterion it was introduced
+  with: the `x/text` bump (`CVE-2026-56852`) landed, and the fixable
+  CRITICAL,HIGH band is measurably empty at this commit, so the gate is not
+  red on arrival. Making it a required context on `master` is the remaining
+  admin step.
 - **`image-cve-scan` and `image-cve-scan-ubi`** are warn-only for a reason a
   pull request cannot fix: the released 1.4.4 Debian image carries five fixable
   HIGH findings in the compiled `arangodb_operator` binary, four of which are
@@ -106,13 +105,13 @@ to it".
   artifact and a nightly run, and the pinned tool moves from v1.1.4 to v1.6.0.
 
   It stays on the `-optional` target, whose leading `-` makes `make` ignore the
-  exit status, because `make vulncheck` was measured against this checkout on
-  v1.6.0 and exits 3 with five reachable findings from three modules:
+  exit status, because `make vulncheck` exits non-zero on four reachable
+  findings from two modules, none fixable in range (the `x/text` finding
+  `GO-2026-5970` was cleared by the 0.39.0 bump):
 
   | Finding | Module | Fix |
   | --- | --- | --- |
-  | `GO-2026-5970` | `golang.org/x/text` v0.37.0 | 0.39.0, in range |
-  | `GO-2026-5932` | `golang.org/x/crypto` v0.52.0 | none, `openpgp` is unmaintained |
+  | `GO-2026-5932` | `golang.org/x/crypto` v0.53.0 | none, `openpgp` is unmaintained |
   | `GO-2026-5622` | `containerd` v1.7.33 | only on the `containerd/v2` module path |
   | `GO-2026-5338` | `containerd` v1.7.33 | only on the `containerd/v2` module path |
   | `GO-2026-5064` | `containerd` v1.7.33 | only on the `containerd/v2` module path |
@@ -153,21 +152,21 @@ off, which is worse than a warn-only gate that is read.
 There is no `.trivyignore`, no `.trivyignore.yaml`, no waivers file and no inline
 `nosemgrep` comment in this repository, and that is the honest state: the open
 findings above are reported, not waived. `disposition-check` still lists all
-three ignorefile paths and audits every source extension for inline
-suppressions, so reintroducing one unreviewed fails the build.
+three ignorefile paths and audits the tracked source and doc extensions for
+inline suppressions, so reintroducing one unreviewed fails the build.
 
 Rules for any new disposition:
 
-- Inline SAST suppressions are
-  `# nosemgrep: <rule-id> -- reason -- review by: YYYY-MM-DD`. The date is
-  mandatory and enforced.
+- Inline SAST suppressions take the form
+  `nosemgrep: <rule-id> -- reason -- review by: YYYY-MM-DD` after the
+  comment marker. The date is mandatory and enforced.
 - A CVE or GHSA disposition additionally needs `severity:` and `detected:`, and
   its review date must fall inside that severity's remediation window.
 - The first accepted risk that needs gate-time subtraction lands
   `.circleci/security-waivers.yaml` together with a `validate-waivers` step and
   the `emit-vex` step that publishes the waiver set as OpenVEX. The file is
   deliberately absent until then: a waivers file with zero entries is a hard
-  failure on trivy-scan 1.1.2, which is correct, because deleting the entries
+  failure on the pinned orb, which is correct, because deleting the entries
   must not silently widen every gate.
 - `trivy-secret.yaml` allow-rules carry a review date as well, checked as part of
   the same job.
@@ -184,7 +183,7 @@ build agree by construction.
 | HIGH | 30 days |
 | MEDIUM | 90 days |
 | LOW | 180 days |
-| On the CISA KEV catalogue | the CISA due date, and no more than 90 days regardless of severity |
+| On the CISA KEV catalogue | the CISA due date, and no more than 14 days from detection |
 
 A disposition may not be renewed indefinitely: 366 days from the day it is
 written is the ceiling on any review-by date, enforced by `disposition-check`.
@@ -201,7 +200,7 @@ The authoritative list of contexts this repository expects lives in
 `.github/required-checks.txt`. `required-checks-drift` reads it on every push and
 compares it against the effective branch rules and the classic protection object,
 but only when a `GITHUB_TOKEN` is in the job environment. No context supplies one
-today, so the job prints the committed list and says the comparison is
+today, so the job prints the committed contexts and says the comparison is
 UNVERIFIED rather than reporting a false match. See Known gaps 2.
 
 READ THE SUFFIX WARNING in that file before editing it. CircleCI appends an
@@ -217,32 +216,14 @@ required is the last step of the sequence.
 
 ## Artifact signing, attestation and SLSA level
 
-Nothing published from this repository is signed today, and no SLSA level is
-claimed.
-
-The chain is wired: both image jobs try to read the digest of the image they
-scanned out of the trivy report and, behind the `sign-artifacts` pipeline
-parameter, sign that digest and attach the CycloneDX SBOM and an in-toto
-provenance predicate. Signing is bound to the digest and never to the tag,
-because a tag can be re-pushed and a signature over a tag proves nothing about
-the artifact that runs.
-
-One measured gap in that chain: with `image-src: remote` trivy does not populate
-`Metadata.RepoDigests`, so the digest step currently reports
-`the report carries no RepoDigests entry` and resolves nothing (observed on this
-branch). It says so and continues rather than failing, since nothing downstream is
-armed. Making the chain genuinely digest-bound needs the digest from somewhere
-else: a registry manifest lookup here, or the `docker push` output if signing
-moves to the Jenkins release job, which is the more likely home for it anyway.
-
-What blocks the flip is not the config. This CircleCI project neither builds nor
-pushes the operator image, the Jenkins release job does, and the project holds no
-Docker Hub push credential, so cosign has nowhere to write the signature and
-attestation layers. Resolving it means either giving this project a scoped push
-credential or moving the signing step into the Jenkins release job. The
-Rekor-publicity decision (`tlog-upload`) is a separate org-level call; for a
-public image and public digests the recommendation is keyless with a transparency
-log entry.
+Nothing published from this repository is signed today, no SLSA level is
+claimed, and nothing here pretends otherwise: no signing is wired in this
+pipeline. This CircleCI project neither builds nor pushes the operator image
+(the Jenkins release job does) and holds no Docker Hub push credential, so
+cosign would have nowhere to write signature or attestation layers. Signing
+belongs where the image is pushed; landing it in the Jenkins release job,
+bound to the pushed digest (never the tag, which can be re-pushed), is the
+plan of record, together with the org-level Rekor-publicity decision.
 
 Provenance for consumers today is therefore: the release tag, the published
 digest, and the scan evidence attached to the pipeline that inspected it.
@@ -281,16 +262,17 @@ Each of these is a deliberate, named gap rather than an oversight.
 2. **Drift detection is wired but unverified.** `required-checks-drift` needs a
    read-only `GITHUB_TOKEN` with `administration:read` to read the live branch
    rules, and no CircleCI context supplies one to this project. Observed on this
-   branch (build 6874): the job prints the four committed contexts and reports
+   branch (build 6874): the job prints the committed contexts and reports
    `drift is UNVERIFIED on this run`. It fails open by design, because a drift job
    that cannot read the live state must not claim a match. Creating the context is
    an owner action; attaching it to this job is then one line.
-3. **Evidence is CircleCI artifacts, not an archive of record.** The
-   `publish-evidence` and `dtrack-upload` steps are wired and inert: they log why
-   they did nothing and exit 0 while `evidence-bucket` and `dtrack-url` are
-   empty. An S3 bucket with a COMPLIANCE-mode retention period and a
-   Dependency-Track 5 host are org-owner actions. Until they exist, scan evidence
-   expires with the CircleCI artifact retention.
+3. **Evidence is CircleCI artifacts, not an archive of record.** Durable
+   evidence export and Dependency-Track ingestion are not wired: the S3 bucket
+   (COMPLIANCE-mode retention) and the Dependency-Track 5 host are org-owner
+   actions that do not exist yet, and wiring dry against them was reviewed out
+   (the inert steps hard-failed once armed, on non-sha256 subjects and a
+   missing AWS CLI). The wiring lands together with the resources. Until then,
+   scan evidence expires with the CircleCI artifact retention.
 4. **`helm lint` is not in the pipeline, because two charts do not lint.**
    `chart/kube-arangodb-crd/Chart.yaml` is a Helm 2 era chart: it carries a
    `tillerVersion` key and no `apiVersion`, which `helm lint` rejects outright.
@@ -334,6 +316,13 @@ Each of these is a deliberate, named gap rather than an oversight.
    empty document would look like coverage while asserting nothing. FedRAMP Rev-5
    makes risk-based VDR/VER mandatory on 2026-12-07, so this lands with the first
    accepted risk at the latest.
+11. **The community image and the `-arm64` variants are not scanned.** Only
+   `arangodb/kube-arangodb-enterprise` (Debian and UBI9) has image tiers. The
+   community `arangodb/kube-arangodb` image and both `-arm64` variants ship the
+   same operator binaries from the same tree, so the dependency and SAST tiers
+   cover their contents indirectly, but their base layers are unobserved.
+   Adding instances is one workflow entry per image once an owner sizes the
+   scan cost.
 
 ### Tooling choices and cost
 
@@ -353,9 +342,9 @@ Bumping any of these is a reviewed one-line change.
 
 | Component | Pin | Notes |
 | --- | --- | --- |
-| `arangodb/trivy-scan` | 1.1.2 | carries the Trivy pin (v0.72.0), `disposition-check`, `govulncheck`, `kev-epss-check` |
+| `arangodb/trivy-scan` | 1.2.0 | carries the Trivy pin (v0.72.0), `disposition-check`, `govulncheck`, `kev-epss-check`; 1.2.0 also sets the FedRAMP waiver-window defaults |
 | `arangodb/semgrep-scan` | 1.0.0 | carries the Semgrep pin (1.168.0) and the org rule pack |
-| `arangodb/supply-chain` | 1.0.0 | SBOM validation, cosign signing, evidence export, Dependency-Track ingest |
+| `arangodb/supply-chain` | 1.0.0 | SBOM validation (`validate-sbom`); its signing and evidence commands are not used here, see Artifact signing |
 | `circleci/slack` | 4.1.4 | the version the previous `@4.1` float already resolved to |
 | `golang.org/x/vuln` (`govulncheck`) | v1.6.0, in the Makefile as `GOVULNCHECK_VERSION` | pinned by TAG. golang/vuln stopped publishing GitHub Releases at v1.1.4 while it kept tagging, so anything resolving "latest" from the releases API reports v1.1.4 as current. Do not correct it back. |
 | `circleci/path-filtering` | 1.2.0 | unchanged, previously already exact |

@@ -1,8 +1,7 @@
 version: 2.1
 
-# EXACT ORB VERSIONS ONLY, no @1 / @1.2 floats. CircleCI resolves a float at
-# config-compile time, so a future orb publish silently changes what runs here
-# with zero repo diff and zero review.
+# Pin exact orb versions. A float resolves at compile time, so a later orb publish
+# would change what runs here with no repo diff.
 orbs:
   path-filtering: circleci/path-filtering@1.2.0
   continuation: circleci/continuation@2.0.1
@@ -13,53 +12,36 @@ parameters:
   manifests-verify:
     type: boolean
     default: false
-  # Selects the nightly security tier in .circleci/continue_config.yml. Set ONLY
-  # by a CircleCI Scheduled Pipeline; false on every push and pull request, which
-  # is what selects the always-run path below.
-  #
-  # WHY A PARAMETER AND NOT A `triggers: schedule`. Two reasons, both measured
-  # rather than stylistic. A legacy scheduled workflow is read only from the
-  # top-level config, which under `setup: true` is this file, so a `triggers:`
-  # block in continue_config.yml validates and then never runs: the nightly would
-  # look configured and produce nothing. And a legacy schedule sets no pipeline
-  # parameters, so it cannot tell the two continuation paths below apart, and a
-  # pipeline that reaches the continuation API twice fails. A Scheduled Pipeline
-  # does set parameters, which is what makes exactly one of these two workflows
-  # run in any pipeline.
-  #
-  # CREATING THE SCHEDULE IS AN OWNER ACTION, and until it is done the nightly
-  # tier does not run. It is one API call, recorded in SECURITY.md under Known
-  # gaps so it cannot be mistaken for coverage that already exists.
+  # Set only by a CircleCI Scheduled Pipeline; false on push and PR, which selects
+  # the always-run path below.
+  # A legacy `triggers: schedule` cannot replace it: under setup:true it is read only
+  # from this file, and it sets no pipeline parameters, so it could not select
+  # between the two continuation paths (and a pipeline reaching the continuation API
+  # twice fails).
+  # Creating the schedule is an owner action; until then the nightly tier does not
+  # run. Recorded under Known gaps in SECURITY.md.
   nightly:
     type: boolean
     default: false
 
 jobs:
-  # Continue into continue_config.yml with the nightly tier selected.
-  # path-filtering cannot do this: it derives the continuation parameters from the
-  # files a revision range changed and forwards nothing else, so a scheduled run
-  # would arrive with nothing set and take the pull-request path.
+  # Scheduled runs need their own continuation: path-filtering derives its
+  # parameters from changed files and forwards nothing else, so a nightly would
+  # arrive with nothing set and take the pull-request path.
   nightly-continue:
     executor: continuation/default
     steps:
       - checkout
       - continuation/continue:
           configuration_path: .circleci/continue_config.yml
-          # NO parameters, deliberately, and this is the part that is easy to get
-          # wrong in both directions. A pipeline parameter provided at trigger time
-          # is passed on to the continued config by CircleCI itself, so the
-          # continuation must not pass `nightly` again: doing so answers
-          # `Conflicting pipeline parameters` and fails this job (observed, job
-          # 6898). The continued config must still DECLARE `nightly`, or the
-          # continuation fails to compile with `Unexpected argument(s): nightly`
-          # (observed, pipeline 3564). Both configs validate under either mistake,
-          # so the only way to catch this is to run the nightly path.
+          # No parameters here, deliberately. A parameter provided at trigger time is
+          # forwarded to the continued config already, so passing it again answers
+          # Conflicting pipeline parameters (job 6898); the continued config must still
+          # declare it or compilation fails (pipeline 3564).
 
 workflows:
-  # Exactly one of these two workflows runs in any pipeline, because the two
-  # conditions are complements and each ends in a continuation. A pipeline that
-  # calls the continuation API twice fails, so this is a correctness constraint
-  # rather than a tidiness one.
+  # The two conditions are complements: a pipeline that calls the continuation API
+  # twice fails, so this is a correctness constraint.
   always-run:
     when:
       not: << pipeline.parameters.nightly >>

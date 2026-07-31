@@ -1,70 +1,42 @@
 # Required status-check contexts for master, one per line.
-#
-# This is the authoritative committed list. The required-checks-drift job in
-# .circleci/continue_config.yml compares it against the LIVE configuration on
-# every push and reports both directions of drift: a context that is committed
-# here but not required on master is a gate that does not block a merge, and a
-# context required on master that no job emits is fail-closed and blocks every
-# merge forever.
-#
-# WHERE THE LIVE CONFIGURATION LIVES: classic branch protection on master
-# (/repos/arangodb/kube-arangodb/branches/master/protection), not a repository
-# ruleset. The only rules that reach this branch through the ruleset API are the
-# two enterprise-sourced ones, deletion and non_fast_forward, and neither can
-# carry status checks. Classic protection on master also requires signed commits
-# and one approving code-owner review.
-#
-# HOW THESE STRINGS ARE OBTAINED: read off a real pipeline with
-# `gh pr checks <n> --repo arangodb/kube-arangodb`, never hand-derived. CircleCI
-# appends an instance suffix (`-1`, `-2`) to the context of a job it considers
-# duplicated across the config, and the numbering is not predictable from the
-# config text. Every workflow entry in continue_config.yml therefore carries an
-# explicit unique name, and check-code deliberately appears in one workflow only,
-# which is what keeps the one string already required below stable.
+# Authoritative committed list. required-checks-drift compares it against the live
+# protection: a context here but not required on master is a gate that does not
+# block merges; a required context no job emits blocks every merge forever.
+# The live config is classic branch protection on master, not a ruleset: the only
+# ruleset rules reaching this branch are enterprise deletion and non_fast_forward,
+# which cannot carry status checks.
+# Strings are read off a real pipeline (`gh pr checks`), never hand-derived:
+# CircleCI appends an unpredictable instance suffix to duplicated jobs, so every
+# workflow entry carries a unique name.
 
-# --- Required on master today (verified against the live protection) ----------
+# --- Required on master today -------------------------------------------------
 ci/circleci: check-code
 
 # --- Blocking gates added by the security suite ------------------------------
-# disposition-check is the integrity control over the exception path: an undated
-# or expired suppression, or a SAST scope reduction, must not be mergeable.
+# Integrity control over the exception path: an undated or expired suppression, or
+# a SAST scope reduction, must not be mergeable.
 ci/circleci: disposition-check
-# Diff-aware SAST at WARNING over new code only. The full-repo tier is
-# report-only while its 9 pre-existing ERROR findings are open, so this is the
-# tier that holds new code to a band.
+# Diff-aware SAST at WARNING over new code; the full-repo tier is report-only
+# while its 9 pre-existing ERROR findings are open.
 ci/circleci: sast-scan-diff
-# The job carries the deterministic Dockerfile credential guard, which fails the
-# build on a build-time credential surviving into a final stage. The
-# misconfiguration scan inside the same job is report-only.
+# Carries the blocking Dockerfile credential guard; the misconfig scan in the same
+# job is report-only.
 ci/circleci: misconfig-scan
+# Blocking since the x/text bump emptied the fixable CRITICAL,HIGH band.
+ci/circleci: dependency-cve-scan
 
-# --- Deliberately NOT required yet, each with its flip criterion -------------
-# ci/circleci: dependency-cve-scan   warn-only by team decision (#2118). One
-#     fixable HIGH is open at this commit (CVE-2026-56852, golang.org/x/text)
-#     and the companion dependency-bump PR clears it. Add this line in the same
-#     change that sets fail-on-findings: true.
-# ci/circleci: image-cve-scan        warn-only by team decision (#2132). The
-#     released 1.4.4 image carries five fixable HIGH findings in the compiled
-#     operator binary, four of them already fixed on master, so this can only go
-#     blocking after a release ships the fixes.
-# ci/circleci: image-cve-scan-ubi    same, and the UBI9 base adds seven more
-#     fixable HIGH findings in its own package set.
+# --- Deliberately NOT required yet, with flip criteria ------------------------
+# ci/circleci: image-cve-scan        warn-only per #2132: five fixable HIGH in the
+#     released 1.4.4 image, so blocking only after a release ships the fixes.
+# ci/circleci: image-cve-scan-ubi    same, plus seven more from the UBI9 base.
 # ci/circleci: secret-scan           report-only until the nine private-key
-#     findings in the two agency-state fixtures under
-#     pkg/deployment/agency/state/testdata/ are redacted or given a dated,
-#     owner-approved acceptance. See .circleci/trivy-secret.yaml.
-# ci/circleci: sast-scan             report-only until the nine ERROR findings
-#     listed in SECURITY.md are cleared or dispositioned by their owners.
-# ci/circleci: vulncheck             the repository's own govulncheck, which
-#     predates this rollout and now has its own job, context and nightly run.
-#     Still on the Makefile's -optional target: `make vulncheck` exits 3 with
-#     five reachable findings and only GO-2026-5970 (x/text) is fixable in
-#     range. Flipping to `make vulncheck` and adding this line is Adam's call,
-#     and needs the executor image on 1.25.12+ plus a decision on containerd v1
-#     and x/crypto/openpgp.
-# ci/circleci: required-checks-drift the drift job itself is warn-only while
-#     this list is incomplete; making it required is the last step, after the
-#     lines above are all in place on both sides.
+#     findings under pkg/deployment/agency/state/testdata/ are dispositioned.
+# ci/circleci: sast-scan             report-only until the nine ERROR findings in
+#     SECURITY.md are cleared or dispositioned.
+# ci/circleci: vulncheck             Adam's call: needs the executor on go
+#     1.25.12+ and a decision on containerd v1 and x/crypto/openpgp.
+# ci/circleci: required-checks-drift last, after the lines above are live on both
+#     sides.
 #
-# ADDING A LINE HERE DOES NOT CONFIGURE ANYTHING. Branch protection is edited by
-# a repository admin; this file is the record the drift job checks it against.
+# Adding a line here configures nothing: an admin edits branch protection, this
+# file is the record the drift job checks it against.
