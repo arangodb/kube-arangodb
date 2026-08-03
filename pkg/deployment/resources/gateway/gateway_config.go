@@ -343,7 +343,7 @@ func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 		CodecType:                  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
 		ServerHeaderTransformation: httpConnectionManagerAPI.HttpConnectionManager_PASS_THROUGH,
 		MergeSlashes:               c.Options.GetMergeSlashes(),
-		Http2ProtocolOptions:         listenerHttp2ProtocolOptions(),
+		Http2ProtocolOptions:       listenerHttp2ProtocolOptions(),
 
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
 			RouteConfig: &pbEnvoyRouteV3.RouteConfiguration{
