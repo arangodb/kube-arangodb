@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Strip the pre-release/build suffix (e.g. `-devel`) from the detected ArangoDB version so version and feature gates compare numerically instead of mis-ordering nightly builds below release versions
 - (Feature) Inventory Collector writing a startup event to the ArangoDB `_events` collection (created if missing) on each member boot when the (hidden) collector feature is enabled
 - (Bugfix) (Platform) Propagate service overrides into the generated release values.yaml and deep-merge chart overrides onto chart defaults instead of dropping them
 - (Maintenance) Bump golang.org/x/text to v0.39.0 and golang.org/x/net to v0.56.0 to fix known vulnerabilities

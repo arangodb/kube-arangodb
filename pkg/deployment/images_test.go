@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import (
 	"github.com/stretchr/testify/require"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -540,4 +542,35 @@ func getTestTolerations() []core.Toleration {
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeUnreachable, shortDur),
 		tolerations.NewNoExecuteToleration(tolerations.TolerationKeyNodeAlphaUnreachable, shortDur),
 	}
+}
+
+// Test_stripArangoDBVersionSuffix ensures a pre-release/build suffix is trimmed so that a detected
+// nightly version (e.g. "3.12.10-devel") compares numerically like its base version, instead of
+// falling into driver.Version's lexicographic sub-part fallback which mis-orders it below "3.12.9".
+func Test_stripArangoDBVersionSuffix(t *testing.T) {
+	for in, expected := range map[adbDriverV2.Version]adbDriverV2.Version{
+		"3.12.10-devel":   "3.12.10",
+		"3.12.10-nightly": "3.12.10",
+		"3.12.10-rc1":     "3.12.10",
+		"3.12.10":         "3.12.10",  // release: unchanged
+		"3.12.9.1":        "3.12.9.1", // 4-part release (no '-'): unchanged
+		"":                "",
+	} {
+		t.Run(string(in), func(t *testing.T) {
+			require.Equal(t, expected, stripArangoDBVersionSuffix(in))
+		})
+	}
+
+	// The whole point: after stripping, the version orders correctly against release gates where the
+	// raw "-devel" string would not.
+	t.Run("comparison is fixed", func(t *testing.T) {
+		raw := adbDriverV2.Version("3.12.10-devel")
+		// Raw form is mis-ordered by the driver (lexicographic "10-devel" < "9").
+		require.Less(t, raw.CompareTo("3.12.9"), 0, "precondition: raw devel version mis-compares below 3.12.9")
+
+		norm := stripArangoDBVersionSuffix(raw)
+		require.Greater(t, norm.CompareTo("3.12.9"), 0, "normalized 3.12.10 must be >= 3.12.9")
+		require.GreaterOrEqual(t, norm.CompareTo("3.12.8"), 0)
+		require.Equal(t, 0, norm.CompareTo("3.12.10"))
+	})
 }
