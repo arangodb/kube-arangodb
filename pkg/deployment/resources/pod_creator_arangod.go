@@ -281,10 +281,39 @@ func (a *ArangoDContainer) GetResourceRequirementsDefaultScale() float64 {
 }
 
 func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
+	var lifecycle *core.Lifecycle
+	var err error
+
 	if features.GracefulShutdown().Enabled() {
-		return k8sutil.NewLifecyclePort()
+		lifecycle, err = k8sutil.NewLifecyclePort()
+	} else {
+		lifecycle, err = k8sutil.NewLifecycleFinalizers()
 	}
-	return k8sutil.NewLifecycleFinalizers()
+	if err != nil {
+		return nil, err
+	}
+
+	if features.Collector().Enabled() {
+		// The collector writes its startup event directly into the local arangod _events collection.
+		scheme := "http"
+		if a.Deployment.IsSecure() {
+			scheme = "https"
+		}
+
+		port := shared.ArangoPort
+		if p := a.GroupSpec.Port; p != nil {
+			port = int(*p)
+		}
+
+		var jwtPath string
+		if a.Deployment.IsAuthenticated() {
+			jwtPath = shared.ClusterJWTSecretVolumeMountDir
+		}
+
+		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler(fmt.Sprintf("%s://127.0.0.1:%d", scheme, port), jwtPath)
+	}
+
+	return lifecycle, nil
 }
 
 func (a *ArangoDContainer) GetImagePullPolicy() core.PullPolicy {
