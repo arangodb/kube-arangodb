@@ -310,11 +310,29 @@ func (c Config) RenderIntegrationSidecarFilter() (*httpConnectionManagerAPI.Http
 }
 
 // listenerHttp2ProtocolOptions configures the gateway downstream listener for RFC 8441
-// Extended CONNECT so deployment-ea can tunnel WebSocket upgrades over HTTP/2.
+// Extended CONNECT so clients can tunnel WebSocket upgrades over HTTP/2.
 func listenerHttp2ProtocolOptions() *pbEnvoyCoreV3.Http2ProtocolOptions {
 	return &pbEnvoyCoreV3.Http2ProtocolOptions{
 		AllowConnect: true,
 	}
+}
+
+// hasWebSocketUpgrade reports whether any destination (the default or a named one) allows a
+// websocket upgrade. It gates RFC 8441 Extended CONNECT on the downstream listener so it is only
+// enabled when a route can actually forward a websocket upgrade, matching the per-destination
+// opt-in gating of websockets.
+func (c Config) hasWebSocketUpgrade() bool {
+	if c.DefaultDestination.hasWebSocketUpgrade() {
+		return true
+	}
+
+	for _, d := range c.Destinations {
+		if d.hasWebSocketUpgrade() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
@@ -338,12 +356,11 @@ func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 		httpFilters = append(httpFilters, q)
 	}
 
-	filterConfigType, err := anypb.New(&httpConnectionManagerAPI.HttpConnectionManager{
+	httpConnectionManager := &httpConnectionManagerAPI.HttpConnectionManager{
 		StatPrefix:                 "ingress_http",
 		CodecType:                  httpConnectionManagerAPI.HttpConnectionManager_AUTO,
 		ServerHeaderTransformation: httpConnectionManagerAPI.HttpConnectionManager_PASS_THROUGH,
 		MergeSlashes:               c.Options.GetMergeSlashes(),
-		Http2ProtocolOptions:       listenerHttp2ProtocolOptions(),
 
 		RouteSpecifier: &httpConnectionManagerAPI.HttpConnectionManager_RouteConfig{
 			RouteConfig: &pbEnvoyRouteV3.RouteConfiguration{
@@ -368,7 +385,15 @@ func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 			},
 		},
 		),
-	})
+	}
+
+	// Enable RFC 8441 Extended CONNECT on the downstream listener only when a destination actually
+	// allows a websocket upgrade, matching the per-destination opt-in gating of websockets.
+	if c.hasWebSocketUpgrade() {
+		httpConnectionManager.Http2ProtocolOptions = listenerHttp2ProtocolOptions()
+	}
+
+	filterConfigType, err := anypb.New(httpConnectionManager)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Unable to render http connection manager")
 	}

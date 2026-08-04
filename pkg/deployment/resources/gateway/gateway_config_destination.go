@@ -315,6 +315,17 @@ func (c *ConfigDestination) getUpgradeConfigs() ConfigDestinationsUpgrade {
 	return c.UpgradeConfigs
 }
 
+// hasWebSocketUpgrade reports whether the destination enables a websocket upgrade.
+func (c ConfigDestination) hasWebSocketUpgrade() bool {
+	for _, u := range c.UpgradeConfigs {
+		if u.Type == "websocket" && util.OptionalType(u.Enabled, true) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (c *ConfigDestination) RenderCluster(name string) (*pbEnvoyClusterV3.Cluster, error) {
 	if c.Type.Get() == ConfigDestinationTypeStatic {
 		return nil, nil
