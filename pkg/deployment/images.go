@@ -30,6 +30,8 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
+
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
@@ -52,6 +54,22 @@ import (
 
 var _ interfaces.PodCreator = &ImageUpdatePod{}
 var _ interfaces.ContainerCreator = &ContainerIdentity{}
+
+// stripArangoDBVersionSuffix removes a pre-release/build suffix - everything from the first '-'
+// (e.g. "-devel", "-nightly", "-rc1") - from a detected ArangoDB version.
+//
+// driver.Version.CompareTo compares the sub-part numerically only when it is a pure integer, and
+// otherwise falls back to a lexicographic string comparison. That makes e.g. "3.12.10-devel" (sub
+// "10-devel") compare as LOWER than "3.12.9" ("10-devel" < "9" as strings), so every version/feature
+// gate keyed on a minimum ArangoDB version is silently treated as unmet - which disables features
+// and integration provisioning (e.g. meta.v1 / storage.v2) on nightly images. Trimming the suffix
+// restores the intended numeric comparison; a "-devel" build of 3.12.10 is treated as 3.12.10.
+func stripArangoDBVersionSuffix(v adbDriverV2.Version) adbDriverV2.Version {
+	if base, _, ok := goStrings.Cut(string(v), "-"); ok {
+		return adbDriverV2.Version(base)
+	}
+	return v
+}
 
 // ImageUpdatePod describes how to launch the ID ArangoD POD.
 type ImageUpdatePod struct {
@@ -186,7 +204,7 @@ func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cac
 			log.Err(err).Debug("Failed to fetch version from Image ID  ArangoSchedulerPod")
 			return true, nil
 		}
-		version := v.Version
+		version := stripArangoDBVersionSuffix(v.Version)
 		enterprise := goStrings.ToLower(v.License) == "enterprise"
 
 		// We have all the info we need now, kill the pod and store the image info.
