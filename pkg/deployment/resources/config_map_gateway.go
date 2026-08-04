@@ -349,7 +349,8 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 	var cfg gateway.Config
 
 	cfg.Options = &gateway.ConfigOptions{
-		MergeSlashes: util.NewType(true),
+		MergeSlashes:    util.NewType(true),
+		WebSocketsHTTP2: util.NewType(features.GatewayWebSockets().Enabled()),
 	}
 
 	cfg.IntegrationSidecar = gateway.ConfigDestinationTargetUnix{

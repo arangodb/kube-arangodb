@@ -22,6 +22,11 @@ package gateway
 
 type ConfigOptions struct {
 	MergeSlashes *bool `json:"mergeSlashes,omitempty"`
+
+	// WebSocketsHTTP2 enables RFC 8441 Extended CONNECT on the downstream listener so WebSocket
+	// upgrades can be tunneled over HTTP/2. It is still gated on a destination declaring a websocket
+	// upgrade. Defaults to false.
+	WebSocketsHTTP2 *bool `json:"webSocketsHTTP2,omitempty"`
 }
 
 func (c *ConfigOptions) Validate() error {
@@ -34,4 +39,12 @@ func (c *ConfigOptions) GetMergeSlashes() bool {
 	}
 
 	return *c.MergeSlashes
+}
+
+func (c *ConfigOptions) GetWebSocketsHTTP2() bool {
+	if c == nil || c.WebSocketsHTTP2 == nil {
+		return false
+	}
+
+	return *c.WebSocketsHTTP2
 }

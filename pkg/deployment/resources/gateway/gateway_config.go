@@ -387,9 +387,10 @@ func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 		),
 	}
 
-	// Enable RFC 8441 Extended CONNECT on the downstream listener only when a destination actually
-	// allows a websocket upgrade, matching the per-destination opt-in gating of websockets.
-	if c.hasWebSocketUpgrade() {
+	// Enable RFC 8441 Extended CONNECT on the downstream listener only when the WebSockets-over-HTTP/2
+	// option is on (gated by the hidden gateway-websockets feature) and a destination actually allows
+	// a websocket upgrade.
+	if c.Options.GetWebSocketsHTTP2() && c.hasWebSocketUpgrade() {
 		httpConnectionManager.Http2ProtocolOptions = listenerHttp2ProtocolOptions()
 	}
 
