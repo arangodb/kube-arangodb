@@ -28,7 +28,7 @@ var gatewayWebSockets = &feature{
 	name:               "gateway-websockets",
 	description:        "Defines if the gateway enables WebSocket upgrades over HTTP/2 (RFC 8441 Extended CONNECT) on its downstream listener",
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
 	hidden:             true,
 }
 
