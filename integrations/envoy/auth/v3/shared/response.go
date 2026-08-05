@@ -49,9 +49,13 @@ func (a *ResponseAuth) Hash() string {
 		return ""
 	}
 
-	sort.Strings(a.Groups)
+	// Sort a copy so hashing stays a read-only operation - the Groups slice may be shared with the
+	// authentication cache entry, so sorting it in place would mutate cached data across requests.
+	groups := make([]string, len(a.Groups))
+	copy(groups, a.Groups)
+	sort.Strings(groups)
 
-	return util.SHA256FromString(fmt.Sprintf("%s:%s", a.User, util.SHA256FromString(strings.Join(a.Groups, ":"))))
+	return util.SHA256FromString(fmt.Sprintf("%s:%s", a.User, util.SHA256FromString(strings.Join(groups, ":"))))
 }
 
 func (a Response) GetHeaders() []*pbEnvoyCoreV3.HeaderValueOption {

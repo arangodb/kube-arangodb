@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (Gateway) Fix Envoy auth: keep hashing the auth response side-effect free (do not sort the shared groups slice in place) and preserve headers added by earlier handlers when stripping the cookie on cookie authentication
 - (Feature) (Gateway) Allow WebSocket upgrades over HTTP/2 by enabling RFC 8441 Extended CONNECT (allowConnect) on the gateway downstream listener, gated behind the hidden `gateway-websockets` feature (enabled by default) and a destination declaring a websocket upgrade
 - (Bugfix) Strip the pre-release/build suffix (e.g. `-devel`) from the detected ArangoDB version so version and feature gates compare numerically instead of mis-ordering nightly builds below release versions
 - (Feature) Inventory Collector writing a startup event to the ArangoDB `_events` collection (created if missing) on each member boot when the (hidden) collector feature is enabled
