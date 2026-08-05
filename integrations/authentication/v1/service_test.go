@@ -22,19 +22,27 @@ package v1
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
+	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 )
 
 func Handler(t *testing.T, ctx context.Context, mods ...util.ModR[Configuration]) svc.Handler {
@@ -130,14 +138,11 @@ func Test_Service_DifferentDefaultUser(t *testing.T) {
 	require.EqualValues(t, token.User, valid.Details.User)
 }
 
-func Test_Service_AskForDefaultIfAllowed(t *testing.T) {
+func Test_Service_TokenForDefaultUser(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	client, directory := Client(t, ctx, func(c Configuration) Configuration {
-		c.Create.AllowedUsers = []string{"root"}
-		return c
-	})
+	client, directory := Client(t, ctx)
 
 	directory.Set(t, tests.GenerateJWTToken())
 
@@ -158,14 +163,11 @@ func Test_Service_AskForDefaultIfAllowed(t *testing.T) {
 	require.EqualValues(t, token.User, valid.Details.User)
 }
 
-func Test_Service_AskForNonDefaultIfAllowed(t *testing.T) {
+func Test_Service_TokenForNamedUser(t *testing.T) {
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	client, directory := Client(t, ctx, func(c Configuration) Configuration {
-		c.Create.AllowedUsers = []string{"root", "other"}
-		return c
-	})
+	client, directory := Client(t, ctx)
 
 	directory.Set(t, tests.GenerateJWTToken())
 
@@ -188,21 +190,67 @@ func Test_Service_AskForNonDefaultIfAllowed(t *testing.T) {
 	require.EqualValues(t, token.User, valid.Details.User)
 }
 
-func Test_Service_AskForDefaultIfBlocked(t *testing.T) {
+func symmetricSecret(t *testing.T) utilToken.Secret {
+	s := utilToken.NewJWTSecret([]byte("0123456789abcdef0123456789abcdef"))
+	require.Empty(t, s.PublicKey())
+	return s
+}
+
+func asymmetricSecret(t *testing.T) utilToken.Secret {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+	s, err := utilToken.NewECDSASignSecret(key)
+	require.NoError(t, err)
+	require.NotEmpty(t, s.PublicKey())
+	return s
+}
+
+// Without central services the IAM check is skipped entirely, even with a denying evaluator.
+func Test_authorizeCreateToken_SkippedWithoutCentral(t *testing.T) {
+	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
+	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), "root"))
+}
+
+// With central services but a symmetric signing key there is no remote-validation path, so the IAM
+// check is skipped even with a denying evaluator.
+func Test_authorizeCreateToken_SkippedWithSymmetricKey(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
+	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
+	require.NoError(t, i.authorizeCreateToken(context.Background(), symmetricSecret(t), "root"))
+}
+
+// With central services and an asymmetric key the IAM check is enforced: an unauthenticated caller (no
+// identity in context) is rejected before any token is minted. The allow/deny-by-policy behaviour is
+// covered by the e2e suite, which runs against a real central authorization service.
+func Test_authorizeCreateToken_EnforcedWithCentralAndAsymmetric(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
+	i := &implementation{authz: pbImplAuthorizationV1Shared.NewAlwaysPlugin()}
+
+	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), "root")
+	require.Error(t, err)
+
+	s, ok := status.FromError(err)
+	require.True(t, ok)
+	require.Equal(t, codes.Unauthenticated, s.Code())
+}
+
+// New builds a central-delegating evaluator when central services are enabled, without dialing eagerly.
+func Test_New_BuildsCentralEvaluator(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
 	ctx, c := context.WithCancel(context.Background())
 	defer c()
 
-	client, directory := Client(t, ctx, func(c Configuration) Configuration {
-		c.Create.AllowedUsers = []string{"root"}
+	ctx = utilConstantsContext.ArangoDBClientCache.Set(ctx, cache.NewObject(tests.TestArangoClientCacheFunc(t)))
+
+	i, err := newInternal(ctx, NewConfiguration().With(func(c Configuration) Configuration {
+		c.Path = tests.NewTokenManager(t).Path()
 		return c
-	})
-
-	directory.Set(t, tests.GenerateJWTToken())
-
-	_, err := client.CreateToken(ctx, &pbAuthenticationV1.CreateTokenRequest{
-		User: util.NewType("blocked"),
-	})
-	require.EqualError(t, err, "rpc error: code = Unknown desc = User blocked is not allowed")
+	}))
+	require.NoError(t, err)
+	require.NotNil(t, i.authz)
 }
 
 func Test_Service_WithTTL(t *testing.T) {
