@@ -6,7 +6,7 @@ version: 2.1
 # it changes nothing; no job uses it yet.
 orbs:
   slack: circleci/slack@4.1.4
-  trivy-scan: arangodb/trivy-scan@1.2.0
+  trivy-scan: arangodb/trivy-scan@1.6.0
   semgrep-scan: arangodb/semgrep-scan@1.0.0
   supply-chain: arangodb/supply-chain@1.0.0
 
