@@ -30,6 +30,8 @@ deployment: ""
 {{ end }}
 {{ if .Services }}services:
 {{ range $key, $value := .Services }}  {{ $value.Name }}:
-    values: {}
-{{ end }}{{ else }}services: {}
+{{ if $value.Values }}    values:
+{{ $value.Values | toYaml | indent 6 }}
+{{ else }}    values: {}
+{{ end }}{{ end }}{{ else }}services: {}
 {{ end }}

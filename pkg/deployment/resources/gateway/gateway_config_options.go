@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,11 @@ package gateway
 
 type ConfigOptions struct {
 	MergeSlashes *bool `json:"mergeSlashes,omitempty"`
+
+	// WebSocketsHTTP2 enables RFC 8441 Extended CONNECT on the downstream listener so WebSocket
+	// upgrades can be tunneled over HTTP/2. It is still gated on a destination declaring a websocket
+	// upgrade. Defaults to false.
+	WebSocketsHTTP2 *bool `json:"webSocketsHTTP2,omitempty"`
 }
 
 func (c *ConfigOptions) Validate() error {
@@ -34,4 +39,12 @@ func (c *ConfigOptions) GetMergeSlashes() bool {
 	}
 
 	return *c.MergeSlashes
+}
+
+func (c *ConfigOptions) GetWebSocketsHTTP2() bool {
+	if c == nil || c.WebSocketsHTTP2 == nil {
+		return false
+	}
+
+	return *c.WebSocketsHTTP2
 }

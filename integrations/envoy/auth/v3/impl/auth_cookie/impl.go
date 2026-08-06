@@ -126,15 +126,15 @@ func (p impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, c
 		case networkingApi.ArangoRouteSpecAuthenticationPassModePass:
 			// Keep headers
 		default:
-			current.Headers = []*pbEnvoyCoreV3.HeaderValueOption{
-				{
-					Header: &pbEnvoyCoreV3.HeaderValue{
-						Key: pbImplEnvoyAuthV3Shared.CookieHeader,
-					},
-					AppendAction:   pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS,
-					KeepEmptyValue: false,
+			// Append rather than overwrite so headers added by earlier handlers (e.g. the request id)
+			// are preserved.
+			current.Headers = append(current.Headers, &pbEnvoyCoreV3.HeaderValueOption{
+				Header: &pbEnvoyCoreV3.HeaderValue{
+					Key: pbImplEnvoyAuthV3Shared.CookieHeader,
 				},
-			}
+				AppendAction:   pbEnvoyCoreV3.HeaderValueOption_OVERWRITE_IF_EXISTS,
+				KeepEmptyValue: false,
+			})
 		}
 		return nil
 	}

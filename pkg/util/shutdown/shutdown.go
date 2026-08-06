@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
 func init() {
@@ -43,7 +46,25 @@ func init() {
 var (
 	ctx  context.Context
 	stop context.CancelFunc
+
+	// bootID is a unique identifier generated once per process boot.
+	bootID = string(uuid.NewUUID())
+
+	// bootTime is the timestamp captured once when the process boots.
+	bootTime = time.Now()
 )
+
+// BootID returns a unique identifier which is stable for the lifetime of the current process and
+// changes on every (re)start. It can be used to correlate events emitted by a single boot.
+func BootID() string {
+	return bootID
+}
+
+// BootTime returns the timestamp captured once when the process booted. It is stable for the
+// lifetime of the current process and pairs with BootID to identify a single boot.
+func BootTime() time.Time {
+	return bootTime
+}
 
 func Context() context.Context {
 	return ctx

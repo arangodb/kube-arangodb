@@ -33,6 +33,19 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
 
+func requireListenerHTTP2AllowConnect(t *testing.T, hcm *httpConnectionManagerAPI.HttpConnectionManager) {
+	t.Helper()
+	require.NotNil(t, hcm)
+	require.NotNil(t, hcm.Http2ProtocolOptions)
+	require.True(t, hcm.Http2ProtocolOptions.AllowConnect)
+}
+
+func requireListenerHTTP2NoAllowConnect(t *testing.T, hcm *httpConnectionManagerAPI.HttpConnectionManager) {
+	t.Helper()
+	require.NotNil(t, hcm)
+	require.Nil(t, hcm.Http2ProtocolOptions, "Extended CONNECT (allowConnect) must not be enabled without a websocket destination")
+}
+
 func renderAndPrintGatewayConfig(t *testing.T, cfg Config, validates ...func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap)) string {
 	require.NoError(t, cfg.Validate())
 
@@ -104,6 +117,7 @@ func Test_GatewayConfig(t *testing.T) {
 			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0])
 			var o httpConnectionManagerAPI.HttpConnectionManager
 			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			requireListenerHTTP2NoAllowConnect(t, &o)
 			rc := o.GetRouteConfig()
 			require.NotNil(t, rc)
 			require.NotNil(t, rc.VirtualHosts)
@@ -114,6 +128,35 @@ func Test_GatewayConfig(t *testing.T) {
 			r := rc.VirtualHosts[0].Routes[0].GetRoute()
 			require.NotNil(t, r)
 			require.Len(t, r.UpgradeConfigs, 0)
+		})
+	})
+
+	t.Run("With WebSocket but feature disabled", func(t *testing.T) {
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Targets: []ConfigDestinationTarget{
+					ConfigDestinationTargetEndpoint{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				UpgradeConfigs: ConfigDestinationsUpgrade{
+					{
+						Type: "websocket",
+					},
+				},
+			},
+			// Options.WebSocketsHTTP2 left unset (feature off): the route keeps its websocket upgrade
+			// (HTTP/1) but Extended CONNECT must not be enabled on the listener.
+		}, func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap) {
+			require.NotNil(t, b)
+			require.Len(t, b.StaticResources.Listeners, 1)
+			var o httpConnectionManagerAPI.HttpConnectionManager
+			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			requireListenerHTTP2NoAllowConnect(t, &o)
+			r := o.GetRouteConfig().VirtualHosts[0].Routes[0].GetRoute()
+			require.Len(t, r.UpgradeConfigs, 1, "the route websocket upgrade must still be configured even with the HTTP/2 feature off")
+			require.EqualValues(t, "websocket", r.UpgradeConfigs[0].UpgradeType)
 		})
 	})
 
@@ -132,6 +175,9 @@ func Test_GatewayConfig(t *testing.T) {
 					},
 				},
 			},
+			Options: &ConfigOptions{
+				WebSocketsHTTP2: util.NewType(true),
+			},
 		}, func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap) {
 			require.NotNil(t, b)
 			require.NotNil(t, b.StaticResources)
@@ -144,6 +190,7 @@ func Test_GatewayConfig(t *testing.T) {
 			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0])
 			var o httpConnectionManagerAPI.HttpConnectionManager
 			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			requireListenerHTTP2AllowConnect(t, &o)
 			rc := o.GetRouteConfig()
 			require.NotNil(t, rc)
 			require.NotNil(t, rc.VirtualHosts)

@@ -30,6 +30,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
 // newTestChart builds a gzipped tar chart archive from the given entries.
@@ -622,4 +624,74 @@ func Test_packageChartTemplateReadme_Images(t *testing.T) {
 		require.Contains(t, string(out), "This release declares no container images.")
 		require.NotContains(t, string(out), "{{")
 	})
+}
+
+// Test_mergeChartValues_DeepMerge ensures chart overrides are deep-merged on top of the chart
+// defaults (nested maps preserved, overrides win), empty overrides are a no-op, and a malformed
+// override document is surfaced rather than silently dropped.
+func Test_mergeChartValues_DeepMerge(t *testing.T) {
+	defaults := map[string]interface{}{
+		"image": map[string]interface{}{
+			"repository": "default-repo",
+			"tag":        "1.0",
+		},
+		"replicas": float64(1),
+	}
+
+	t.Run("deep merge keeps sibling keys", func(t *testing.T) {
+		out, err := mergeChartValues(defaults, helm.Values(`{"image":{"repository":"custom-repo"},"replicas":3}`))
+		require.NoError(t, err)
+
+		img := out["image"].(map[string]interface{})
+		require.EqualValues(t, "custom-repo", img["repository"], "override applied")
+		require.EqualValues(t, "1.0", img["tag"], "sibling key preserved by deep merge")
+		require.EqualValues(t, float64(3), out["replicas"])
+	})
+
+	t.Run("empty overrides is a no-op", func(t *testing.T) {
+		out, err := mergeChartValues(defaults, nil)
+		require.NoError(t, err)
+		require.Equal(t, defaults, out)
+	})
+
+	t.Run("malformed overrides surface an error", func(t *testing.T) {
+		_, err := mergeChartValues(defaults, helm.Values(`{not valid json`))
+		require.Error(t, err)
+	})
+}
+
+// Test_packageChartTemplateValues_Overrides ensures release (service) overrides and chart overrides
+// are rendered into the generated values.yaml, rather than being dropped as an empty object.
+func Test_packageChartTemplateValues_Overrides(t *testing.T) {
+	input := packageChartRenderInput{
+		Name: "r", Version: "1",
+		Charts: map[string]packageChartRenderInputChart{
+			"c": {Name: "c", Version: "1", Values: map[string]interface{}{"image": map[string]interface{}{"repository": "custom-repo"}}},
+		},
+		Services: map[string]packageChartRenderInputService{
+			"withValues": {Name: "withValues", ChartRef: "c", Values: map[string]interface{}{"foo": "bar", "nested": map[string]interface{}{"x": float64(1)}}},
+			"empty":      {Name: "empty", ChartRef: "c"},
+		},
+	}
+
+	out, err := packageChartTemplateValues.RenderBytes(input)
+	require.NoError(t, err)
+
+	var doc map[string]interface{}
+	require.NoError(t, yaml.Unmarshal(out, &doc), "values.yaml must parse: %s", string(out))
+
+	charts := doc["charts"].(map[string]interface{})
+	cVals := charts["c"].(map[string]interface{})
+	require.EqualValues(t, "custom-repo", cVals["image"].(map[string]interface{})["repository"], "chart override must be rendered")
+
+	services := doc["services"].(map[string]interface{})
+
+	withValues := services["withValues"].(map[string]interface{})
+	vals := withValues["values"].(map[string]interface{})
+	require.EqualValues(t, "bar", vals["foo"], "service override must be rendered, not dropped")
+	require.EqualValues(t, float64(1), vals["nested"].(map[string]interface{})["x"])
+
+	empty := services["empty"].(map[string]interface{})
+	require.NotNil(t, empty["values"], "service without overrides keeps an empty-object values")
+	require.Empty(t, empty["values"], "service without overrides renders {}")
 }

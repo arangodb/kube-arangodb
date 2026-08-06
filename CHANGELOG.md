@@ -1,6 +1,11 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (Gateway) Fix Envoy auth: keep hashing the auth response side-effect free (do not sort the shared groups slice in place) and preserve headers added by earlier handlers when stripping the cookie on cookie authentication
+- (Feature) (Gateway) Allow WebSocket upgrades over HTTP/2 by enabling RFC 8441 Extended CONNECT (allowConnect) on the gateway downstream listener, gated behind the hidden `gateway-websockets` feature (enabled by default) and a destination declaring a websocket upgrade
+- (Bugfix) Strip the pre-release/build suffix (e.g. `-devel`) from the detected ArangoDB version so version and feature gates compare numerically instead of mis-ordering nightly builds below release versions
+- (Feature) Inventory Collector writing a startup event to the ArangoDB `_events` collection (created if missing) on each member boot when the (hidden) collector feature is enabled
+- (Bugfix) (Platform) Propagate service overrides into the generated release values.yaml and deep-merge chart overrides onto chart defaults instead of dropping them
 - (Maintenance) Bump golang.org/x/text to v0.39.0 and golang.org/x/net to v0.56.0 to fix known vulnerabilities
 - (Maintenance) Bump google.golang.org/grpc to v1.82.1, go.opentelemetry.io/otel/sdk to v1.43.0 and oras.land/oras-go/v2 to v2.6.1 to fix known vulnerabilities
 - (Feature) (Platform) Aggregate the container images declared by each bundled chart's images.yaml into a Container Images section of the generated platform release chart README and an aggregated images.yaml for air-gapped mirroring
@@ -23,6 +28,7 @@
 - (Bugfix) (RBAC) Fix scope evaluation, pool propagation, missing indexes, and add APIRefresh endpoint
 - (Feature) Remove Replication operator, ArangoDeploymentReplication CRD, go-helper and go-driver v1 dependencies
 - (Maintenance) Merge enterprise module into community, remove build tags and private dependencies
+- (Feature) (Platform) Add ArangoPlatformLink CRD and Connector V1 integration
 - (Bugfix) Add missing CRDs
 - (Improvement) Refactor operator to use context.Context instead of stopCh, add CRD sync timeout (30s) and waitForCRD timeout (15s)
 - (Feature) (RBAC) Design adjustments

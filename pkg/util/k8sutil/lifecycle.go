@@ -113,6 +113,32 @@ func NewLifecycleWithBinary(exePath string, t string) (*core.Lifecycle, error) {
 	return lifecycle, nil
 }
 
+// NewCollectorPostStartHandler creates a postStart collector handler. When endpoint is set the
+// collected startup event is written to that ArangoDB endpoint (authenticated with the JWT secret
+// under jwtPath), otherwise it is printed to stdout.
+func NewCollectorPostStartHandler(endpoint, jwtPath string) *core.LifecycleHandler {
+	return NewCollectorPostStartHandlerWithBinary(LifecycleBinary(), endpoint, jwtPath)
+}
+
+// NewCollectorPostStartHandlerWithBinary creates a postStart collector handler using a specific binary path.
+func NewCollectorPostStartHandlerWithBinary(exePath, endpoint, jwtPath string) *core.LifecycleHandler {
+	command := append([]string{exePath}, "lifecycle", "postStart", "collector")
+
+	if endpoint != "" {
+		command = append(command, "--endpoint", endpoint)
+	}
+
+	if jwtPath != "" {
+		command = append(command, "--jwt-path", jwtPath)
+	}
+
+	return &core.LifecycleHandler{
+		Exec: &core.ExecAction{
+			Command: command,
+		},
+	}
+}
+
 func AppendLifecycleEnv(in []core.EnvVar) []core.EnvVar {
 	for _, e := range GetLifecycleEnv() {
 		if !EnvExists(in, e.Name) {

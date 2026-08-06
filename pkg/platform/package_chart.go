@@ -111,6 +111,10 @@ type packageChartRenderInputImage struct {
 type packageChartRenderInputService struct {
 	Name     string
 	ChartRef string
+
+	// Values are the default value overrides for the service, sourced from the release overrides in
+	// the package definition. They are rendered as services.<name>.values in the release values.yaml.
+	Values map[string]interface{}
 }
 
 // packageChartRenderInputValue is a single documented top-level value of a service.
@@ -198,7 +202,10 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 	}
 
 	for k, v := range r.Releases {
-		o := packageChartRelease(k, v)
+		o, err := packageChartRelease(k, v)
+		if err != nil {
+			return err
+		}
 
 		if o != nil {
 			input.Services[k] = *o
@@ -235,7 +242,7 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 
 	// Generate per-service templates
 	for _, s := range input.Services {
-		builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateResourceService, packageChartRenderInputServiceTemplate(s)), "%s/templates/services/%s.yaml", input.Name, s.Name)
+		builder = builder.File(util.GZipBuilderProcessTemplate(packageChartTemplateResourceService, packageChartRenderInputServiceTemplate{Name: s.Name, ChartRef: s.ChartRef}), "%s/templates/services/%s.yaml", input.Name, s.Name)
 	}
 
 	builder = builder.File(util.GZipBuilderProcessBytes(licenseData.Full()), "%s/LICENSE", input.Name)
@@ -251,11 +258,43 @@ func packageChartRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func packageChartRelease(name string, packageSpec helm.PackageRelease) *packageChartRenderInputService {
-	return &packageChartRenderInputService{
+func packageChartRelease(name string, packageSpec helm.PackageRelease) (*packageChartRenderInputService, error) {
+	svc := &packageChartRenderInputService{
 		Name:     name,
 		ChartRef: packageSpec.Package,
 	}
+
+	// Carry the release overrides into the generated values.yaml as the service default values.
+	if len(packageSpec.Overrides) > 0 {
+		values, err := packageSpec.Overrides.Marshal()
+		if err != nil {
+			return nil, errors.Wrapf(err, "invalid overrides for service %s", name)
+		}
+		svc.Values = values
+	}
+
+	return svc, nil
+}
+
+// mergeChartValues deep-merges the given overrides on top of the chart defaults. Overrides win and
+// nested maps are merged rather than replaced. Empty overrides return the defaults unchanged; a
+// malformed overrides document is returned as an error rather than being silently dropped.
+func mergeChartValues(defaults map[string]interface{}, overrides helm.Values) (map[string]interface{}, error) {
+	if len(overrides) == 0 {
+		return defaults, nil
+	}
+
+	defaultValues, err := helm.NewValues(defaults)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to encode default values")
+	}
+
+	merged, err := helm.NewMergeRawValues(helm.MergeMaps, defaultValues, overrides)
+	if err != nil {
+		return nil, err
+	}
+
+	return merged.Marshal()
 }
 
 func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint string, name string, packageSpec helm.PackageSpec) (*packageChartRenderInputChart, error) {
@@ -272,14 +311,10 @@ func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint s
 	// Remove internal platform keys not meant for user configuration
 	delete(defaults, "arangodb_platform")
 
-	// Merge platform.yaml overrides on top of chart defaults
-	if len(packageSpec.Overrides) > 0 {
-		var overrides map[string]interface{}
-		if err := json.Unmarshal(packageSpec.Overrides, &overrides); err == nil {
-			for k, v := range overrides {
-				defaults[k] = v
-			}
-		}
+	// Deep-merge the platform.yaml overrides on top of the chart defaults.
+	defaults, err = mergeChartValues(defaults, packageSpec.Overrides)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to merge overrides for chart %s", name)
 	}
 
 	// A chart that ships a values.schema.json we cannot parse is a chart bug: silently

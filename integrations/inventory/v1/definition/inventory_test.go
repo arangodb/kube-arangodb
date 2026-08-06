@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
@@ -55,6 +56,7 @@ func Test_State_Marshal(t *testing.T) {
 
 	// After unmarshal, protobuf initializes map fields to empty map instead of nil
 	s.Profiles = map[string]*InventoryProfile{}
+	s.Connectors = map[string]*InventoryConnector{}
 
 	res, err := ugrpc.Unmarshal[*Inventory](data)
 	require.NoError(t, err)
@@ -95,6 +97,9 @@ func Test_State_Marshal_WithProfiles(t *testing.T) {
 
 	t.Log(string(data))
 
+	// After unmarshal, protobuf initializes map fields to empty map instead of nil
+	s.Connectors = map[string]*InventoryConnector{}
+
 	res, err := ugrpc.Unmarshal[*Inventory](data)
 	require.NoError(t, err)
 
@@ -129,6 +134,15 @@ func Test_NewInventoryProfile(t *testing.T) {
 		result := NewInventoryProfile(profile)
 		require.Equal(t, "", result.Description)
 		require.Nil(t, result.Tags)
+	})
+}
+
+func Test_NewInventoryConnector(t *testing.T) {
+	t.Run("empty link", func(t *testing.T) {
+		link := &platformApi.ArangoPlatformLink{}
+
+		result := NewInventoryConnector(link)
+		require.NotNil(t, result)
 	})
 }
 

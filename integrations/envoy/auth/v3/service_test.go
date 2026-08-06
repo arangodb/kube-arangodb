@@ -25,10 +25,12 @@ import (
 	goHttp "net/http"
 	"testing"
 
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/stretchr/testify/require"
 
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
@@ -82,4 +84,34 @@ func Test_AllowAll(t *testing.T) {
 	require.Nil(t, resp.Status)
 	require.NotNil(t, resp.HttpResponse)
 	require.NotNil(t, tests.CastAs[*pbEnvoyAuthV3.CheckResponse_OkResponse](t, resp.GetHttpResponse()).OkResponse)
+}
+
+func Test_AllowAll_AddsRequestID(t *testing.T) {
+	ctx, c := context.WithCancel(context.Background())
+	defer c()
+
+	client := Client(t, ctx)
+
+	resp, err := client.Check(ctx, &pbEnvoyAuthV3.CheckRequest{
+		Attributes: &pbEnvoyAuthV3.AttributeContext{
+			ContextExtensions: map[string]string{
+				pbImplEnvoyAuthV3Shared.AuthConfigTypeKey: pbImplEnvoyAuthV3Shared.AuthConfigTypeValue,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	ok := tests.CastAs[*pbEnvoyAuthV3.CheckResponse_OkResponse](t, resp.GetHttpResponse()).OkResponse
+
+	require.True(t, hasRequestID(ok.GetHeaders()), "request headers must carry the request id")
+	require.True(t, hasRequestID(ok.GetResponseHeadersToAdd()), "response headers must carry the request id")
+}
+
+func hasRequestID(headers []*pbEnvoyCoreV3.HeaderValueOption) bool {
+	for _, h := range headers {
+		if h.GetHeader().GetKey() == utilConstants.EnvoyRequestIDHeader && h.GetHeader().GetValue() != "" {
+			return true
+		}
+	}
+	return false
 }
