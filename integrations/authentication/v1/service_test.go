@@ -205,14 +205,16 @@ func asymmetricSecret(t *testing.T) utilToken.Secret {
 	return s
 }
 
-func tokenRequestFor(user string) *pbAuthenticationV1.CreateTokenRequest {
-	return &pbAuthenticationV1.CreateTokenRequest{User: util.NewType(user), Groups: []string{"g"}}
+const authzTestUser = "user"
+
+func tokenRequestFor() *pbAuthenticationV1.CreateTokenRequest {
+	return &pbAuthenticationV1.CreateTokenRequest{User: util.NewType(authzTestUser), Groups: []string{"g"}}
 }
 
 // Without central services the IAM check is skipped entirely, even with a denying evaluator.
 func Test_authorizeCreateToken_SkippedWithoutCentral(t *testing.T) {
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
-	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor("user"), "user"))
+	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor(), authzTestUser))
 }
 
 // With central services but a symmetric signing key there is no remote-validation path, so the IAM
@@ -221,7 +223,7 @@ func Test_authorizeCreateToken_SkippedWithSymmetricKey(t *testing.T) {
 	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
 
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
-	require.NoError(t, i.authorizeCreateToken(context.Background(), symmetricSecret(t), tokenRequestFor("user"), "user"))
+	require.NoError(t, i.authorizeCreateToken(context.Background(), symmetricSecret(t), tokenRequestFor(), authzTestUser))
 }
 
 // With central services + asymmetric key, a request for a user the authorization service denies is
@@ -231,7 +233,7 @@ func Test_authorizeCreateToken_DeniesUnauthorizedUser(t *testing.T) {
 
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
 
-	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor("user"), "user")
+	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor(), authzTestUser)
 	require.Error(t, err)
 
 	s, ok := status.FromError(err)
@@ -244,7 +246,7 @@ func Test_authorizeCreateToken_AllowsAuthorizedUser(t *testing.T) {
 	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
 
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewAlwaysPlugin()}
-	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor("user"), "user"))
+	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor(), authzTestUser))
 }
 
 // A request without an explicit user is a privileged/default mint: the SuperUser wrapper allows it even
