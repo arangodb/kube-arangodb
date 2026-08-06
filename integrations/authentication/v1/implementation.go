@@ -36,12 +36,14 @@ import (
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_cookie"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
 	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -111,12 +113,17 @@ type implementation struct {
 	authz pbImplAuthorizationV1Shared.Evaluator
 }
 
-// authorizeCreateToken enforces the IAM permission for minting a token. It applies only when central
-// services are enabled AND the signing key is asymmetric: remote nodes can validate a minted token
-// only with the public half of an asymmetric key, so the central-authorization/remote-validation flow
-// is meaningful only there. With symmetric keys (or without central services) token creation keeps its
-// legacy, unrestricted behaviour.
-func (i *implementation) authorizeCreateToken(ctx context.Context, secret utilToken.Secret, user string) error {
+// authorizeCreateToken enforces the IAM permission for minting a token. The authorization subject is
+// the user the token is being minted for (request.User/Groups) - which is the identity carried by the
+// request (e.g. the gateway forwards the authenticated end-user here) - evaluated against the central
+// authorization service. A request without an explicit user (nil) is a privileged/default mint and is
+// allowed by the SuperUser wrapper.
+//
+// The gate applies only when central services are enabled AND the signing key is asymmetric: remote
+// nodes can validate a minted token only with the public half of an asymmetric key, so the central
+// authorization / remote-validation flow is meaningful only there. With symmetric keys (or without
+// central services) token creation keeps its legacy, unrestricted behaviour.
+func (i *implementation) authorizeCreateToken(ctx context.Context, secret utilToken.Secret, request *pbAuthenticationV1.CreateTokenRequest, user string) error {
 	if !utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Exists() {
 		return nil
 	}
@@ -126,7 +133,21 @@ func (i *implementation) authorizeCreateToken(ctx context.Context, secret utilTo
 		return nil
 	}
 
-	return authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.authz, ActionCreateToken, user)
+	resp, err := i.authz.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
+		User:     request.User,
+		Roles:    request.GetGroups(),
+		Action:   ActionCreateToken,
+		Resource: user,
+	})
+	if err != nil {
+		return status.Errorf(codes.Internal, "Unable to evaluate token creation permission: %v", err)
+	}
+
+	if resp.GetEffect() == sidecarSvcAuthzTypes.Effect_Allow {
+		return nil
+	}
+
+	return status.Errorf(codes.PermissionDenied, "Not allowed to create token for user %q: %s", user, resp.GetMessage())
 }
 
 func (i *implementation) Name() string {
@@ -207,8 +228,8 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 		duration = v.AsDuration()
 	}
 
-	// Ensure the caller is authorized to mint a token for the requested user.
-	if err := i.authorizeCreateToken(ctx, cache, user); err != nil {
+	// Ensure token minting is authorized for the requested user.
+	if err := i.authorizeCreateToken(ctx, cache, request, user); err != nil {
 		return nil, err
 	}
 

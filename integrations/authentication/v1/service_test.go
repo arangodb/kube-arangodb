@@ -205,10 +205,14 @@ func asymmetricSecret(t *testing.T) utilToken.Secret {
 	return s
 }
 
+func tokenRequestFor(user string) *pbAuthenticationV1.CreateTokenRequest {
+	return &pbAuthenticationV1.CreateTokenRequest{User: util.NewType(user), Groups: []string{"g"}}
+}
+
 // Without central services the IAM check is skipped entirely, even with a denying evaluator.
 func Test_authorizeCreateToken_SkippedWithoutCentral(t *testing.T) {
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
-	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), "root"))
+	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor("user"), "user"))
 }
 
 // With central services but a symmetric signing key there is no remote-validation path, so the IAM
@@ -217,23 +221,39 @@ func Test_authorizeCreateToken_SkippedWithSymmetricKey(t *testing.T) {
 	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
 
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
-	require.NoError(t, i.authorizeCreateToken(context.Background(), symmetricSecret(t), "root"))
+	require.NoError(t, i.authorizeCreateToken(context.Background(), symmetricSecret(t), tokenRequestFor("user"), "user"))
 }
 
-// With central services and an asymmetric key the IAM check is enforced: an unauthenticated caller (no
-// identity in context) is rejected before any token is minted. The allow/deny-by-policy behaviour is
-// covered by the e2e suite, which runs against a real central authorization service.
-func Test_authorizeCreateToken_EnforcedWithCentralAndAsymmetric(t *testing.T) {
+// With central services + asymmetric key, a request for a user the authorization service denies is
+// rejected with PermissionDenied.
+func Test_authorizeCreateToken_DeniesUnauthorizedUser(t *testing.T) {
 	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
 
-	i := &implementation{authz: pbImplAuthorizationV1Shared.NewAlwaysPlugin()}
+	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
 
-	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), "root")
+	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor("user"), "user")
 	require.Error(t, err)
 
 	s, ok := status.FromError(err)
 	require.True(t, ok)
-	require.Equal(t, codes.Unauthenticated, s.Code())
+	require.Equal(t, codes.PermissionDenied, s.Code())
+}
+
+// With central services + asymmetric key, a request for a user the authorization service allows passes.
+func Test_authorizeCreateToken_AllowsAuthorizedUser(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
+	i := &implementation{authz: pbImplAuthorizationV1Shared.NewAlwaysPlugin()}
+	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor("user"), "user"))
+}
+
+// A request without an explicit user is a privileged/default mint: the SuperUser wrapper allows it even
+// when the underlying evaluator denies everything.
+func Test_authorizeCreateToken_SuperuserForDefaultUser(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
+	i := &implementation{authz: pbImplAuthorizationV1Shared.SuperUser(pbImplAuthorizationV1Shared.NewNeverPlugin())}
+	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), &pbAuthenticationV1.CreateTokenRequest{}, "root"))
 }
 
 // New builds a central-delegating evaluator when central services are enabled, without dialing eagerly.
