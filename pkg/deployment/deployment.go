@@ -35,6 +35,7 @@ import (
 
 	adbDriverV2Connection "github.com/arangodb/go-driver/v2/connection"
 
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/acs/sutil"
@@ -60,6 +61,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/access"
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
+	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/generic"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/kerrors"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
@@ -115,6 +117,10 @@ type Deployment struct {
 	currentObject       *api.ArangoDeployment
 	currentObjectStatus *api.DeploymentStatus
 	currentObjectLock   sync.RWMutex
+
+	// statusSubresource reports (via cached discovery) whether the ArangoDeployment status subresource is
+	// served, so status writes can use UpdateStatus when it is and fall back to a patch otherwise.
+	statusSubresource generic.SubresourceInspector
 
 	config Config
 	deps   Dependencies
@@ -261,6 +267,8 @@ func New(config Config, deps Dependencies, apiObject *api.ArangoDeployment) (*De
 	}
 
 	d.log = logger.WrapObj(d)
+
+	d.statusSubresource = generic.NewCachedSubresourceInspector(d.fetchStatusSubresources)
 
 	d.memberState = memberState.NewStateInspector(d)
 
@@ -520,8 +528,93 @@ func (d *Deployment) CreateEvent(evt *k8sutil.Event) {
 	d.deps.EventRecorder.Event(evt.InvolvedObject, evt.Type, evt.Reason, evt.Message)
 }
 
+// updateCRStatus is the single entry point for persisting the ArangoDeployment status. When the status
+// subresource is served (detected via cached discovery) it writes through UpdateStatus, otherwise - or if
+// the subresource turns out not to be served - it falls back to patching the status on the main endpoint.
 func (d *Deployment) updateCRStatus(ctx context.Context, status api.DeploymentStatus) error {
+	if d.statusSubresource != nil && d.statusSubresource.SubresourceEnabled(generic.SubresourceStatus) {
+		if err := d.updateCRStatusSubresource(ctx, status); err != nil {
+			if !kerrors.IsNotFound(err) {
+				return err
+			}
+			// The status subresource is advertised via discovery but not actually served - fall back to a
+			// patch on the main resource endpoint.
+		} else {
+			return nil
+		}
+	}
+
 	return d.ApplyPatch(ctx, patch.ItemReplace(patch.NewPath("status"), status))
+}
+
+// updateCRStatusSubresource writes the status through the status subresource using UpdateStatus. A
+// NotFound error is returned unwrapped so the caller can fall back to a patch (the object may be gone, or
+// the subresource may not actually be served).
+func (d *Deployment) updateCRStatusSubresource(ctx context.Context, status api.DeploymentStatus) error {
+	d.currentObjectLock.Lock()
+	defer d.currentObjectLock.Unlock()
+
+	depls := d.deps.Client.Arango().DatabaseV1().ArangoDeployments(d.GetNamespace())
+
+	attempt := 0
+	for {
+		attempt++
+
+		obj := d.currentObject.DeepCopy()
+		obj.Status = status
+
+		var newAPIObject *api.ArangoDeployment
+		err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			var err error
+			newAPIObject, err = depls.UpdateStatus(ctxChild, obj, meta.UpdateOptions{})
+			return err
+		})
+		if err == nil {
+			d.currentObject = newAPIObject.DeepCopy()
+			d.currentObjectStatus = newAPIObject.Status.DeepCopy()
+			return nil
+		}
+		if kerrors.IsNotFound(err) {
+			// The object is gone, or the status subresource is not served - let the caller fall back.
+			return err
+		}
+		if attempt >= 10 {
+			d.log.Err(err).Debug("failed to update ArangoDeployment status")
+			return errors.WithStack(errors.Errorf("failed to update ArangoDeployment status: %v", err))
+		}
+		if kerrors.IsConflict(err) {
+			// Refresh the cached object so the next attempt carries the latest resourceVersion.
+			if gErr := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+				fresh, err := depls.Get(ctxChild, d.GetName(), meta.GetOptions{})
+				if err != nil {
+					return err
+				}
+				d.currentObject = fresh.DeepCopy()
+				d.currentObjectStatus = fresh.Status.DeepCopy()
+				return nil
+			}); gErr != nil {
+				d.log.Err(gErr).Debug("failed to refresh ArangoDeployment before status retry")
+			}
+		}
+	}
+}
+
+// fetchStatusSubresources reports, via Kubernetes discovery, which subresources the ArangoDeployment
+// resource exposes in its served v1 version. It backs the cached statusSubresource inspector.
+func (d *Deployment) fetchStatusSubresources(_ context.Context) ([]generic.Subresource, error) {
+	list, err := d.deps.Client.Kubernetes().Discovery().ServerResourcesForGroupVersion(api.SchemeGroupVersion.String())
+	if err != nil {
+		return nil, err
+	}
+
+	var subresources []generic.Subresource
+	for _, r := range list.APIResources {
+		if r.Name == deploymentApi.ArangoDeploymentResourcePlural+"/"+generic.SubresourceStatus.String() {
+			subresources = append(subresources, generic.SubresourceStatus)
+		}
+	}
+
+	return subresources, nil
 }
 
 func (d *Deployment) updateCRSpec(ctx context.Context, spec api.DeploymentSpec) error {

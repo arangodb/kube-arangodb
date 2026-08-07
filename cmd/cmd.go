@@ -46,6 +46,7 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/kube-arangodb/pkg/api/impl"
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	agencyConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/config"
@@ -442,6 +443,11 @@ func executeMain(cmd *cobra.Command, args []string) {
 			crdOpts, err := prepareCRDOptions(crdOptions.validationSchema, crdOptions.preserveUnknownFields)
 			if err != nil {
 				logger.Fatal("Invalid --crd.validation-schema args: %s", err)
+			}
+
+			if o, ok := crdOpts[deploymentApi.ArangoDeploymentCRDName]; ok {
+				o.WithStatusSubresource = features.EnableArangoDeploymentStatus().Enabled()
+				crdOpts[deploymentApi.ArangoDeploymentCRDName] = o
 			}
 
 			_ = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: true, CRDOptions: crdOpts})

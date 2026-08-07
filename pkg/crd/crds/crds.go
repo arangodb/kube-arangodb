@@ -111,6 +111,9 @@ func DefaultCRDOptions() *CRDOptions {
 type CRDOptions struct {
 	WithSchema   bool
 	WithPreserve bool
+	// WithStatusSubresource enables the status subresource on all served versions of the CRD. It is
+	// disabled by default (e.g. the ArangoDeployment v1 status stays a plain field).
+	WithStatusSubresource bool
 }
 
 func (o *CRDOptions) GetWithSchema() bool {
@@ -129,6 +132,14 @@ func (o *CRDOptions) GetWithPreserve() bool {
 	return o.WithPreserve
 }
 
+func (o *CRDOptions) GetWithStatusSubresource() bool {
+	if o == nil {
+		return false
+	}
+
+	return o.WithStatusSubresource
+}
+
 func (o *CRDOptions) AsFunc() func(*CRDOptions) {
 	return func(opts *CRDOptions) {
 		if opts == nil {
@@ -141,6 +152,10 @@ func (o *CRDOptions) AsFunc() func(*CRDOptions) {
 
 		if o != nil {
 			opts.WithPreserve = o.GetWithPreserve()
+		}
+
+		if o != nil {
+			opts.WithStatusSubresource = o.GetWithStatusSubresource()
 		}
 	}
 }
@@ -169,6 +184,18 @@ func WithoutPreserve() func(*CRDOptions) {
 	}
 }
 
+func WithStatusSubresource() func(*CRDOptions) {
+	return func(o *CRDOptions) {
+		o.WithStatusSubresource = true
+	}
+}
+
+func WithoutStatusSubresource() func(*CRDOptions) {
+	return func(o *CRDOptions) {
+		o.WithStatusSubresource = false
+	}
+}
+
 func getCRD(data DefinitionData, opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition {
 	o := DefaultCRDOptions()
 	for _, fn := range opts {
@@ -177,12 +204,12 @@ func getCRD(data DefinitionData, opts ...func(*CRDOptions)) *apiextensions.Custo
 
 	crd := data.definitionLoader().MustGet()
 
-	if o.WithSchema {
-		crdWithSchema := crd.DeepCopy()
+	result := crd.DeepCopy()
 
+	if o.WithSchema {
 		schemas := data.schemaDefinitionLoader().MustGet()
 
-		for i, v := range crdWithSchema.Spec.Versions {
+		for i, v := range result.Spec.Versions {
 			if !v.Served {
 				continue
 			}
@@ -191,15 +218,35 @@ func getCRD(data DefinitionData, opts ...func(*CRDOptions)) *apiextensions.Custo
 			if !ok {
 				panic(fmt.Sprintf("Validation schema is not defined for version %s of %s", v.Name, crd.Name))
 			}
-			crdWithSchema.Spec.Versions[i].Schema = schema.DeepCopy()
-			if s := crdWithSchema.Spec.Versions[i].Schema.OpenAPIV3Schema; s != nil {
+			result.Spec.Versions[i].Schema = schema.DeepCopy()
+			if s := result.Spec.Versions[i].Schema.OpenAPIV3Schema; s != nil {
 				if o.GetWithPreserve() {
 					s.XPreserveUnknownFields = util.NewType(true)
 				}
 			}
 		}
-
-		return crdWithSchema
 	}
-	return crd.DeepCopy()
+
+	if o.GetWithStatusSubresource() {
+		// Feature enabled: ensure the status subresource is present on every served version. The chart
+		// ships it on the v1 (storage) version already, so this is normally a no-op, but it keeps the
+		// CRD correct if a served version is ever added without it.
+		for i, v := range result.Spec.Versions {
+			if !v.Served {
+				continue
+			}
+
+			if result.Spec.Versions[i].Subresources == nil {
+				result.Spec.Versions[i].Subresources = &apiextensions.CustomResourceSubresources{}
+			}
+			if result.Spec.Versions[i].Subresources.Status == nil {
+				result.Spec.Versions[i].Subresources.Status = &apiextensions.CustomResourceSubresourceStatus{}
+			}
+		}
+	}
+	// Feature disabled: leave the spec as the chart ships it. The status subresource is neither added
+	// nor removed here; whether the live CRD ends up carrying it is reconciled at apply time (see
+	// mirrorStorageStatusSubresource), which leaves it exactly as the live CRD already has it.
+
+	return result
 }

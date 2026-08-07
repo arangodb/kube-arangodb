@@ -376,3 +376,10 @@ features:
     releases:
       - operatorVersion: 1.2.16
         state: Production
+  - name: ArangoDeployment Status Subresource
+    enabled: false
+    flag: --deployment.feature.enable-arango-deployment-status
+    remarks: Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it)
+    releases:
+      - operatorVersion: 1.5.0
+        state: Production

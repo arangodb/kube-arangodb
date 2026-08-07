@@ -8,6 +8,7 @@ title: List of all features
 
 | Feature | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State | Enabled | Flag | Remarks |
 |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |
+| ArangoDeployment Status Subresource | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Production | False | --deployment.feature.enable-arango-deployment-status | Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) |
 | Backup Policy Until Propagation | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | True | --deployment.feature.backup-policy-until-propagation | Sets Until field in the Backup based on next schedule time |
 | Central Services | 1.4.4 | 1.4.4 | >= 3.8.0 | Enterprise | Alpha | False | --deployment.feature.central-services | Enables Central Services |
 | Harden ArangoDB Server Containers | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.harden | Adds hardening arguments to the ArangoDB server containers |

@@ -50,6 +50,7 @@ Flags:
       --deployment.feature.backup-policy-until-propagation     Sets Until field in the Backup based on next schedule time - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.central-services                    Enables Central Services - Required ArangoDB EE >= 3.8.0
       --deployment.feature.deployment-spec-defaults-restore    Restore defaults from last accepted state of deployment - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.enable-arango-deployment-status     Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) - Required ArangoDB >= 3.8.0
       --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB >= 3.8.0
       --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB >= 3.8.0, < 3.12
