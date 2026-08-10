@@ -55,6 +55,7 @@ Flags:
       --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB >= 3.8.0, < 3.12
       --deployment.feature.gateway                             Defines if gateway extension is enabled - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.gateway-sidecar                     Enables Gateway Integration - Required ArangoDB EE >= 3.8.0
+      --deployment.feature.harden                              Adds hardening arguments to the ArangoDB server containers - Required ArangoDB >= 3.8.0
       --deployment.feature.init-containers-copy-resources      Copy resources spec to built-in init containers if they are not specified - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.init-containers-upscale-resources   Copy resources spec to built-in init containers if they are not specified or lower - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.jwt-asymmetric-key                  Uses Asymmetric Key as a default in ArangoDB - Required ArangoDB >= 3.12.8

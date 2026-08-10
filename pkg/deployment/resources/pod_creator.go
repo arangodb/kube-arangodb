@@ -178,6 +178,11 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 
 	args := options.Copy().Sort().AsArgs()
 
+	// Harden: append hardening arguments to the arangod containers of all server groups.
+	if features.Harden().Enabled() {
+		args = append(args, hardenArangodArgs(input)...)
+	}
+
 	if a := input.GroupSpec.Args; len(a) > 0 {
 		args = append(args, a...)
 	}
