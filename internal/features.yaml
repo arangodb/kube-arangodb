@@ -92,8 +92,9 @@ features:
       - operatorVersion: 1.2.23
         state: Production
   - name: Version Check V2
-    flag: --deployment.feature.upgrade-version-check-V2
+    flag: --deployment.feature.upgrade-version-check-v2
     enabled: false
+    remarks: Enable initContainer with pre version check based by Operator
     releases:
       - operatorVersion: 1.2.31
         state: Alpha
@@ -275,3 +276,103 @@ features:
     releases:
       - operatorVersion: 1.2.49
         state: Alpha
+  - name: Harden ArangoDB Server Containers
+    flag: --deployment.feature.harden
+    enabled: false
+    remarks: Adds hardening arguments to the ArangoDB server containers
+    releases:
+      - operatorVersion: 1.4.4
+        state: Alpha
+  - name: Agency Poll
+    flag: --deployment.feature.agency-poll
+    enabled: true
+    remarks: Enable Agency Poll for Enterprise deployments
+    releases:
+      - operatorVersion: 1.2.30
+        state: Production
+  - name: Backup Policy Until Propagation
+    flag: --deployment.feature.backup-policy-until-propagation
+    enabled: true
+    remarks: Sets Until field in the Backup based on next schedule time
+    releases:
+      - operatorVersion: 1.4.4
+        state: Alpha
+  - name: Central Services
+    arangoDBEditions: Enterprise
+    flag: --deployment.feature.central-services
+    enabled: false
+    remarks: Enables Central Services
+    releases:
+      - operatorVersion: 1.4.4
+        state: Alpha
+  - name: Gateway
+    flag: --deployment.feature.gateway
+    enabled: true
+    remarks: Defines if gateway extension is enabled
+    releases:
+      - operatorVersion: 1.2.43
+        state: Production
+  - name: Gateway Sidecar
+    arangoDBEditions: Enterprise
+    flag: --deployment.feature.gateway-sidecar
+    enabled: false
+    remarks: Enables Gateway Integration
+    releases:
+      - operatorVersion: 1.4.2
+        state: Production
+  - name: JWT Asymmetric Key
+    flag: --deployment.feature.jwt-asymmetric-key
+    enabled: false
+    remarks: Uses Asymmetric Key as a default in ArangoDB
+    releases:
+      - operatorVersion: 1.4.4
+        state: Alpha
+  - name: Local Volume Replacement Check
+    flag: --deployment.feature.local-volume-replacement-check
+    enabled: false
+    remarks: Replace volume for local-storage if volume is unschedulable (ex. node is gone)
+    releases:
+      - operatorVersion: 1.2.28
+        state: Production
+  - name: Random Pod Names
+    flag: --deployment.feature.random-pod-names
+    enabled: false
+    remarks: Enables generating random pod names
+    releases:
+      - operatorVersion: 1.4.4
+        state: Alpha
+  - name: Replace Migration
+    flag: --deployment.feature.replace-migration
+    enabled: true
+    remarks: During member replacement shards are migrated directly to the new server
+    releases:
+      - operatorVersion: 1.4.4
+        state: Alpha
+  - name: Restart Policy Always
+    flag: --deployment.feature.restart-policy-always
+    enabled: false
+    remarks: Allow to restart containers with always restart policy
+    releases:
+      - operatorVersion: 1.2.14
+        state: Production
+  - name: Sensitive Information Protection
+    flag: --deployment.feature.sensitive-information-protection
+    enabled: false
+    remarks: Hide sensitive information from metrics and logs
+    releases:
+      - operatorVersion: 1.4.4
+        state: Alpha
+  - name: Short Pod Names
+    flag: --deployment.feature.short-pod-names
+    enabled: false
+    remarks: Enable Short Pod Names
+    releases:
+      - operatorVersion: 1.2.4
+        state: Production
+  - name: Timezone Management
+    flag: --deployment.feature.timezone-management
+    enabled: false
+    remarks: Enable timezone management for pods
+    releases:
+      - operatorVersion: 1.2.16
+        state: Production

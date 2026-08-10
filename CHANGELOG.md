@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add the `harden` feature (requires `secured-containers`, disabled by default) that appends hardening arguments to the arangod server containers, and in cluster mode constrains replication for >=2 DBServers (default replication factor min(DBServers, 3), minimum replication factor 2, and write concern 2 when the default replication factor is 3)
 - (Feature) (Security) Gate authentication token creation behind the authorization integration (IAM) when central services are enabled and asymmetric signing keys are in use (the remote-validation prerequisite), and remove the static `token.allowed` allow-list
 - (Bugfix) (Gateway) Fix Envoy auth: keep hashing the auth response side-effect free (do not sort the shared groups slice in place) and preserve headers added by earlier handlers when stripping the cookie on cookie authentication
 - (Feature) (Gateway) Allow WebSocket upgrades over HTTP/2 by enabling RFC 8441 Extended CONNECT (allowConnect) on the gateway downstream listener, gated behind the hidden `gateway-websockets` feature (enabled by default) and a destination declaring a websocket upgrade
