@@ -1,0 +1,365 @@
+# Values for rendering a database.arangodb.com/v1 ArangoDeployment.
+# The `deployment` block below is rendered into the ArangoDeployment spec.
+deployment:
+  # mode: Single or Cluster.
+  mode: Cluster
+  # environment: Development or Production.
+  environment: Production
+  # image configures the ArangoDB server container image.
+  image:
+    name: arangodb/arangodb:latest
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  # auth configures ArangoDB JWT authentication. mode:
+  #   None      - authentication disabled
+  #   Auto      - the operator generates the JWT secret (default)
+  #   Generated - Helm creates the JWT secret `<release>-jwt` with a random token
+  #   Existing  - use the pre-existing secret `secretName`
+  auth:
+    mode: Auto
+    # secretName is used only for the Existing mode.
+    secretName: ""
+  # tls configures ArangoDB TLS. mode:
+  #   None      - TLS disabled
+  #   Auto      - the operator generates the CA (default)
+  #   Generated - Helm creates the CA secret `<release>-ca` (ca.crt / ca.key)
+  #   Existing  - use the pre-existing CA secret `secretName`
+  tls:
+    mode: Auto
+    # secretName is used only for the Existing mode.
+    secretName: ""
+  # metrics configures the ArangoDB metrics exporter.
+  metrics:
+    enabled: false
+    tls: false
+    # mode: exporter, sidecar or internal ("" keeps the operator default).
+    mode: ""
+  # license configures the ArangoDB Enterprise license.
+  #   Existing secret: set secretName, leave the inputs empty.
+  #   As input:        set value (v1/v2) or clientID+clientSecret (manager); Helm creates `secretName`.
+  # version: v1 | v2 | manager (License Manager API credentials). Selects the secret key(s) only when
+  # Helm creates the secret.
+  license:
+    version: v2
+    secretName: ""
+    # value: license key (used for v1/v2).
+    value: ""
+    # clientID / clientSecret: License Manager credentials (used for version manager).
+    clientID: ""
+    clientSecret: ""
+  # encryption configures RocksDB encryption-at-rest (Enterprise). mode:
+  #   None      - encryption disabled (default)
+  #   Generated - Helm creates a 32-byte key secret `<release>-encryption` (never rotated)
+  #   Existing  - use the pre-existing secret `secretName` (data key `key`, exactly 32 bytes)
+  # NOTE: the encryption key cannot be changed after the deployment is created.
+  encryption:
+    mode: None
+    # secretName is used only for the Existing mode.
+    secretName: ""
+  # topology enables zone-aware member placement (Enterprise).
+  topology:
+    enabled: false
+    zones: 0
+    # label: node label used to derive zones ("" keeps the operator default).
+    label: ""
+  # externalAccess configures how the deployment is exposed. Rendered only when type is set.
+  externalAccess:
+    # type: Auto | None | LoadBalancer | NodePort | Managed ("" keeps the operator default).
+    type: ""
+    nodePort: 0
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    advertisedEndpoint: ""
+  # communicationMethod: "" | Service | ServiceClusterIP | Headless | DNS | Short | IP
+  communicationMethod: ""
+  # clusterDomain overrides the Kubernetes cluster DNS domain (default cluster.local).
+  clusterDomain: ""
+  # bootstrap configures initial user passwords.
+  bootstrap:
+    # passwordSecretNames maps a user to the secret holding its initial password.
+    # Each value is "Auto" (operator generates), "None", or an existing secret name. E.g. { root: Auto }.
+    passwordSecretNames: {}
+    # generatedPasswords: users for whom Helm creates a password secret `<release>-<user>-password`
+    # with a random password (reused on upgrade). E.g. [ root ].
+    generatedPasswords: []
+  # id configures the ID group pods (ServerIDGroupSpec). Rendered only when a field is set.
+  id:
+    resources:
+      cpu: ""
+      memory: ""
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    nodeAffinity: {}
+    priorityClassName: ""
+    serviceAccountName: ""
+    entrypoint: ""
+    args: []
+    securityContext: {}
+  # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
+  platform:
+    enabled: false
+    dynamic: true
+  # Server groups (ServerGroupSpec). resources requests are rendered equal to limits.
+  agents:
+    count: 3
+    resources:
+      cpu: "1"
+      memory: 4Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 0
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+    volumeClaimTemplate:
+      size: 8Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
+  dbservers:
+    count: 3
+    resources:
+      cpu: "3"
+      memory: 12Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 0
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+    volumeClaimTemplate:
+      size: 32Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
+  coordinators:
+    count: 3
+    resources:
+      cpu: "1"
+      memory: 4Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 0
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+  single:
+    resources:
+      cpu: "1"
+      memory: 4Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 0
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+    volumeClaimTemplate:
+      size: 32Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
+  gateways:
+    count: 1
+    resources:
+      cpu: "1"
+      memory: 4Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 0
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}

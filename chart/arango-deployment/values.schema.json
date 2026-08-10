@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "arango-deployment chart values",
+  "description": "Values for rendering a database.arangodb.com/v1 ArangoDeployment.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "nameOverride": {
+      "type": "string",
+      "description": "Overrides the ArangoDeployment metadata.name (defaults to the Helm release name)."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["Single", "Cluster", "ActiveFailover"],
+      "description": "Deployment topology."
+    },
+    "image": { "type": "string", "description": "ArangoDB server container image." },
+    "agents": { "$ref": "#/definitions/serverGroup" },
+    "dbservers": { "$ref": "#/definitions/serverGroup" },
+    "coordinators": { "$ref": "#/definitions/serverGroup" },
+    "single": { "$ref": "#/definitions/serverGroup" },
+    "spec": {
+      "type": "object",
+      "description": "Raw ArangoDeployment spec, deep-merged over the generated spec. Any spec field can be set here."
+    }
+  },
+  "definitions": {
+    "serverGroup": {
+      "type": "object",
+      "description": "Maps 1:1 to the ArangoDeployment ServerGroupSpec. Any ServerGroupSpec field is accepted.",
+      "properties": {
+        "count": { "type": "integer", "minimum": 0, "description": "Number of members in the group." }
+      }
+    }
+  }
+}
