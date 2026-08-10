@@ -35,7 +35,6 @@ Flags:
       --integration.authentication.v1.external                                                 Defines if External access to service authentication.v1 is enabled (Env: INTEGRATION_AUTHENTICATION_V1_EXTERNAL)
       --integration.authentication.v1.internal                                                 Defines if Internal access to service authentication.v1 is enabled (Env: INTEGRATION_AUTHENTICATION_V1_INTERNAL) (default true)
       --integration.authentication.v1.path string                                              Path to the JWT Folder (Env: INTEGRATION_AUTHENTICATION_V1_PATH)
-      --integration.authentication.v1.token.allowed strings                                    Allowed users for the Token (Env: INTEGRATION_AUTHENTICATION_V1_TOKEN_ALLOWED)
       --integration.authentication.v1.token.max-size uint16                                    Max Token max size in bytes (Env: INTEGRATION_AUTHENTICATION_V1_TOKEN_MAX_SIZE) (default 64)
       --integration.authentication.v1.token.ttl.default duration                               Default Token TTL (Env: INTEGRATION_AUTHENTICATION_V1_TOKEN_TTL_DEFAULT) (default 1h0m0s)
       --integration.authentication.v1.token.ttl.max duration                                   Max Token TTL (Env: INTEGRATION_AUTHENTICATION_V1_TOKEN_TTL_MAX) (default 1h0m0s)
