@@ -840,6 +840,10 @@ set-deployment-api-version-v2alpha1: set-api-version/deployment
 set-deployment-api-version-v1: export API_VERSION=1
 set-deployment-api-version-v1: set-api-version/deployment
 
+# Files excluded from the deployment API-version replace (they intentionally reference multiple
+# deployment API versions, e.g. v1 and v2alpha1 side by side).
+SET_API_VERSION_IGNORE := -e mod_optional_status_test.go
+
 set-typed-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+" \
 	      "$(ROOT)/pkg/deployment/" \
@@ -853,7 +857,7 @@ set-typed-api-version/%:
 	      "$(ROOT)/pkg/apis/scheduler/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	      "$(ROOT)/integrations/" \
-	  | cut -d ':' -f 1 | sort | uniq \
+	  | cut -d ':' -f 1 | sort | uniq | grep -vF $(SET_API_VERSION_IGNORE) \
 	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v$(API_VERSION)#g"
 
 
@@ -871,7 +875,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/platform/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	      "$(ROOT)/integrations/" \
-	  | cut -d ':' -f 1 | sort | uniq \
+	  | cut -d ':' -f 1 | sort | uniq | grep -vF $(SET_API_VERSION_IGNORE) \
 	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
 	@grep -rHn "DatabaseV[A-Za-z0-9]\+()" \
 		  "$(ROOT)/pkg/deployment/" \
@@ -886,7 +890,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/platform/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	      "$(ROOT)/integrations/" \
-	  | cut -d ':' -f 1 | sort | uniq \
+	  | cut -d ':' -f 1 | sort | uniq | grep -vF $(SET_API_VERSION_IGNORE) \
 	  | xargs -n 1 $(SED) -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
 
 synchronize: synchronize-v2alpha1-with-v1

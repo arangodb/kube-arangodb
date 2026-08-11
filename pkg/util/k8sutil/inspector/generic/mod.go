@@ -95,3 +95,17 @@ type ModStatusClient[S meta.Object] interface {
 	ModClient[S]
 	UpdateStatusInterface[S]
 }
+
+// PatchStatusInterface patches the status of the resource. Unlike PatchInterface it takes no explicit
+// subresource - the implementation targets the status subresource when it is exposed, otherwise the
+// main resource endpoint.
+type PatchStatusInterface[S meta.Object] interface {
+	PatchStatus(ctx context.Context, name string, pt types.PatchType, data []byte, opts meta.PatchOptions) (result S, err error)
+}
+
+// ModOptionalStatusClient is a ModStatusClient whose UpdateStatus/PatchStatus transparently use the
+// status subresource when the resource exposes it, and fall back to the normal Update/Patch otherwise.
+type ModOptionalStatusClient[S meta.Object] interface {
+	ModStatusClient[S]
+	PatchStatusInterface[S]
+}

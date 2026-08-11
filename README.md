@@ -87,6 +87,7 @@ covers individual newer features separately.
 
 | Feature | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State | Enabled | Flag | Remarks |
 |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |
+| ArangoDeployment Status Subresource | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Production | False | --deployment.feature.enable-arango-deployment-status | Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) |
 | Backup Policy Until Propagation | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | True | --deployment.feature.backup-policy-until-propagation | Sets Until field in the Backup based on next schedule time |
 | Central Services | 1.4.4 | 1.4.4 | >= 3.8.0 | Enterprise | Alpha | False | --deployment.feature.central-services | Enables Central Services |
 | Harden ArangoDB Server Containers | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.harden | Adds hardening arguments to the ArangoDB server containers |
@@ -180,6 +181,7 @@ Flags:
       --deployment.feature.backup-policy-until-propagation     Sets Until field in the Backup based on next schedule time - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.central-services                    Enables Central Services - Required ArangoDB EE >= 3.8.0
       --deployment.feature.deployment-spec-defaults-restore    Restore defaults from last accepted state of deployment - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.enable-arango-deployment-status     Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) - Required ArangoDB >= 3.8.0
       --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB >= 3.8.0
       --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB >= 3.8.0, < 3.12
