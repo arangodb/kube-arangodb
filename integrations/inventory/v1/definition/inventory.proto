@@ -125,6 +125,8 @@ message ArangoDBConfiguration {
   string version = 3;
   // ArangoDB Sharding Mode
   ArangoDBSharding sharding = 4;
+  // Core Security Configuration
+  optional InventorySecurity security = 5;
 }
 
 // ArangoDB Profile details
@@ -174,3 +176,4 @@ message InventorySecurity {
   // Authorization Type
   SecurityAuthorizationType authorization = 2;
 }
+
