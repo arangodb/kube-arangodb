@@ -115,3 +115,20 @@ curl -sk "https://<coordinator>:8529/_api/version" \
 
 When central services are enabled the caller of `createToken` must itself be
 authorized (by the authorization service) to mint a token for `root`.
+
+## Pod environment variables
+
+When the authentication integration sidecar is present, the deployment's
+authentication and authorization modes are exposed as environment variables to
+**every container in the pod** (not just the integration sidecar), so the
+ArangoDB server containers can discover how the deployment is secured:
+
+| Env var | Values | Description |
+|---|---|---|
+| `INTEGRATION_AUTHENTICATION_MODE` | `None` / `Native` / `SSO` | Authentication mode: `SSO` (Gateway OpenID), `Native` (ArangoDB JWT) or `None` (disabled) |
+| `INTEGRATION_AUTHORIZATION_MODE` | `None` / `Native` / `RBAC` | Effective authorization mode (`RBAC` when enforced by the platform gateway) |
+| `INTEGRATION_AUTHORIZATION_MODE_COREDB` | `None` / `Native` | Authorization enforced by the ArangoDB core itself — always `Native` when authenticated, since RBAC is enforced upstream at the gateway, not by the DB core |
+
+The sidecar's own configuration variables (`INTEGRATION_AUTHENTICATION_V1`,
+`INTEGRATION_AUTHENTICATION_V1_ENABLED`, `INTEGRATION_AUTHENTICATION_V1_PATH`)
+stay on the integration sidecar container only.
