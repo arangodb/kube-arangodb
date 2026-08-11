@@ -197,6 +197,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 			integration, err := integrationsSidecar.NewIntegration(
 				r.context.GetName(),
 				r.context.GetSpec(),
+				status,
 				&schedulerContainerResourcesApi.Image{
 					Image: util.NewType(r.context.GetOperatorImage()),
 				}, spec.Integration.GetSidecar(),

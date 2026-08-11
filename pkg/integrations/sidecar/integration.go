@@ -136,7 +136,7 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	}, nil
 }
 
-func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
+func NewIntegration(name string, spec api.DeploymentSpec, status api.DeploymentStatus, image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
 	// Arguments
 
 	exePath := k8sutil.BinaryPath()
@@ -188,6 +188,10 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 			Value: fmt.Sprintf("http://127.0.0.1:%d", integration.GetHTTPListenPort()),
 		},
 	}
+
+	// Expose the deployment authentication/authorization modes to every container covered by the
+	// integration sidecar profile.
+	envs = append(envs, securityModeEnvs(spec, status)...)
 
 	c := schedulerContainerApi.Container{
 		Core: &schedulerContainerResourcesApi.Core{
@@ -290,4 +294,34 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 	}
 
 	return res, nil
+}
+
+// securityModeEnvs returns env vars describing the deployment's authentication and authorization
+// modes. INTEGRATION_AUTHORIZATION_MODE_COREDB always reports None or Native - RBAC is enforced by the
+// platform gateway, not by the ArangoDB core.
+func securityModeEnvs(spec api.DeploymentSpec, status api.DeploymentStatus) []core.EnvVar {
+	authentication := "None"
+	if spec.Gateway != nil && spec.Gateway.Authentication != nil {
+		authentication = "SSO"
+	} else if spec.Authentication.IsAuthenticated() {
+		authentication = "Native"
+	}
+
+	authorization := "None"
+	if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		authorization = "RBAC"
+	} else if spec.Authentication.IsAuthenticated() {
+		authorization = "Native"
+	}
+
+	authorizationCoreDB := authorization
+	if authorizationCoreDB == "RBAC" {
+		authorizationCoreDB = "Native"
+	}
+
+	return []core.EnvVar{
+		{Name: "INTEGRATION_AUTHENTICATION_MODE", Value: authentication},
+		{Name: "INTEGRATION_AUTHORIZATION_MODE", Value: authorization},
+		{Name: "INTEGRATION_AUTHORIZATION_MODE_COREDB", Value: authorizationCoreDB},
+	}
 }
