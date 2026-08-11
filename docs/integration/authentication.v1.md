@@ -55,6 +55,32 @@ When central services are not enabled, `CreateToken` is served locally.
 > has been removed; who may create a token is now governed by the authorization
 > service instead of a fixed list.
 
+### Required RBAC permission
+
+When the gate applies (central services enabled **and** an asymmetric signing key
+in use), the caller of `createToken` must be granted the following permission via
+an [`ArangoPermissionPolicy`](../platform/rbac/policies.md) bound to their role:
+
+| Action | Resource |
+|---|---|
+| `authentication:CreateToken` | the user the token is minted for (e.g. `root`, or `*` for any user) |
+
+Example policy statement allowing a subject to mint tokens for `root`:
+
+```yaml
+statements:
+  - effect: Allow
+    actions:
+      - "authentication:CreateToken"
+    resources:
+      - "root"
+```
+
+A mint request without an explicit `user` is a privileged default mint and is
+allowed by the SuperUser wrapper (no policy required). With symmetric keys, or
+when central services are not enabled, no permission is required and
+`createToken` behaves as before.
+
 ## Example: obtain a `root` token
 
 This is the typical way for a service (or a legacy, JWT-based client) to get a
