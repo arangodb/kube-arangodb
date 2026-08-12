@@ -126,7 +126,7 @@ message ArangoDBConfiguration {
   // ArangoDB Sharding Mode
   ArangoDBSharding sharding = 4;
   // Core Security Configuration
-  optional InventorySecurity security = 5;
+  InventorySecurity security = 5;
 }
 
 // ArangoDB Profile details
