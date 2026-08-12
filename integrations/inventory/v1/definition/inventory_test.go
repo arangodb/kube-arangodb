@@ -27,11 +27,43 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
+
+func Test_NewArangoDBConfiguration_Security(t *testing.T) {
+	t.Run("Authentication disabled", func(t *testing.T) {
+		spec := api.DeploymentSpec{Authentication: api.AuthenticationSpec{JWTSecretName: util.NewType("None")}}
+
+		cfg := NewArangoDBConfiguration(spec, api.DeploymentStatus{})
+		require.NotNil(t, cfg.Security)
+		require.Equal(t, SecurityAuthenticationType_AuthenticationNone, cfg.Security.Authentication)
+		require.Equal(t, SecurityAuthorizationType_AuthorizationNone, cfg.Security.Authorization)
+	})
+
+	t.Run("Native authentication and authorization", func(t *testing.T) {
+		cfg := NewArangoDBConfiguration(api.DeploymentSpec{}, api.DeploymentStatus{})
+		require.NotNil(t, cfg.Security)
+		require.Equal(t, SecurityAuthenticationType_AuthenticationNative, cfg.Security.Authentication)
+		require.Equal(t, SecurityAuthorizationType_AuthorizationNative, cfg.Security.Authorization)
+	})
+
+	t.Run("CoreDB authorization stays Native when platform RBAC is enabled", func(t *testing.T) {
+		var status api.DeploymentStatus
+		status.Conditions.Update(api.ConditionTypeGatewaySidecarEnabled, true, "", "")
+
+		// Platform view reports RBAC ...
+		require.Equal(t, SecurityAuthorizationType_AuthorizationRBAC, NewInventorySecurity(api.DeploymentSpec{}, status).Authorization)
+
+		// ... but the core config downgrades it to Native.
+		cfg := NewArangoDBConfiguration(api.DeploymentSpec{}, status)
+		require.NotNil(t, cfg.Security)
+		require.Equal(t, SecurityAuthorizationType_AuthorizationNative, cfg.Security.Authorization)
+	})
+}
 
 func Test_State_Marshal(t *testing.T) {
 	s := Inventory{
