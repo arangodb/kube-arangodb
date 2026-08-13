@@ -115,6 +115,9 @@ deployment:
   # the deployment default; specify two items only to migrate from one architecture to the other. Empty
   # keeps the operator default (amd64).
   architecture: []
+  # timezone sets the deployment timezone (spec.timezone). Must be a tzdata name, e.g. America/New_York
+  # or Europe/London. "" keeps the operator/container default.
+  timezone: ""
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false

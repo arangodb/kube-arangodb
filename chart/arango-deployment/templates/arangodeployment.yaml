@@ -113,6 +113,9 @@ spec:
     - {{ . }}
     {{- end }}
   {{- end }}
+  {{- with .Values.deployment.timezone }}
+  timezone: {{ . }}
+  {{- end }}
   {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
   bootstrap:
     passwordSecretNames:
