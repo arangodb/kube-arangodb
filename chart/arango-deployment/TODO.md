@@ -9,7 +9,6 @@
 
 - top-level `annotations` / `labels` (+ `annotationsMode` / `labelsMode` / `*IgnoreList`)
 - `features` (per-deployment feature flags)
-- `rebalancer`
 - `timezone`
 - `memberPropagationMode`
 - `imageDiscoveryMode`
