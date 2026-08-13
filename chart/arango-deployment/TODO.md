@@ -13,7 +13,6 @@ All deployment-level spec fields are now exposed (except the ones under "Intenti
 
 ## Chart infrastructure
 
-- **`Chart.yaml`**: set `appVersion`, review `version`.
 - Add a `CHANGELOG.md` entry when this is merged.
 - Regenerate the CRD schema after marking `syncmasters`/`syncworkers` deprecated in the API
   (doc comment flows into the generated schema descriptions).
