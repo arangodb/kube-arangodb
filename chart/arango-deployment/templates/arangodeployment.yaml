@@ -116,6 +116,12 @@ spec:
   {{- with .Values.deployment.timezone }}
   timezone: {{ . }}
   {{- end }}
+  {{- with .Values.deployment.restore.from }}
+  restoreFrom: {{ . }}
+  {{- end }}
+  {{- with .Values.deployment.restore.encryptionSecret }}
+  restoreEncryptionSecret: {{ . }}
+  {{- end }}
   {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
   bootstrap:
     passwordSecretNames:
