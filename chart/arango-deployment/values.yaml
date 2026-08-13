@@ -200,7 +200,7 @@ deployment:
     upgradeMode: ""
     manualUpgradeMode: ""
     indexMethod: ""
-    memoryReservation: 0
+    memoryReservation: 15  # reserve 15% of memory for the system on data-bearing groups
     overrideDetectedTotalMemory: false
     overrideDetectedNumberOfCores: false
     pvcResizeMode: ""
@@ -303,7 +303,7 @@ deployment:
     upgradeMode: ""
     manualUpgradeMode: ""
     indexMethod: ""
-    memoryReservation: 0
+    memoryReservation: 15  # reserve 15% of memory for the system on data-bearing groups
     overrideDetectedTotalMemory: false
     overrideDetectedNumberOfCores: false
     pvcResizeMode: ""
