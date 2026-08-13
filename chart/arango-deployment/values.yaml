@@ -127,6 +127,11 @@ deployment:
     # encryptionSecret: optional secret name holding the encryption key for an encrypted backup
     # (spec.restoreEncryptionSecret). Only relevant when `from` is set.
     encryptionSecret: ""
+  # features configures per-deployment feature flags (spec.features).
+  features:
+    # foxxQueues toggles Foxx queues, rendered as spec.features."foxx.queues". Leave null to keep the
+    # operator default (enabled); set true or false to override explicitly.
+    foxxQueues: null
   # memberPropagationMode controls when pod spec changes are applied (spec.memberPropagationMode):
   #   always     - restart the member as soon as a configuration change is discovered (operator default)
   #   on-restart - defer the configuration change until the next restart (fewer restarts on upgrades)

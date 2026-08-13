@@ -122,6 +122,10 @@ spec:
   {{- with .Values.deployment.restore.encryptionSecret }}
   restoreEncryptionSecret: {{ . }}
   {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.features.foxxQueues) }}
+  features:
+    "foxx.queues": {{ .Values.deployment.features.foxxQueues }}
+  {{- end }}
   {{- with .Values.deployment.memberPropagationMode }}
   memberPropagationMode: {{ . }}
   {{- end }}
