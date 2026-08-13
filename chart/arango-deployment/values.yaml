@@ -118,6 +118,15 @@ deployment:
   # timezone sets the deployment timezone (spec.timezone). Must be a tzdata name, e.g. America/New_York
   # or Europe/London. "" keeps the operator/container default.
   timezone: ""
+  # restore: FOR RESTORE ONLY - leave empty for normal operation. Setting `from` makes the operator
+  # restore this deployment's data from the named ArangoBackup (spec.restoreFrom), OVERWRITING the
+  # current data. A new restore runs whenever `from` changes; clearing it removes the restore status.
+  restore:
+    # from: name of the ArangoBackup resource to restore from (spec.restoreFrom). "" = no restore.
+    from: ""
+    # encryptionSecret: optional secret name holding the encryption key for an encrypted backup
+    # (spec.restoreEncryptionSecret). Only relevant when `from` is set.
+    encryptionSecret: ""
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false

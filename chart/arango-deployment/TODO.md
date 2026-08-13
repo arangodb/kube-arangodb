@@ -11,7 +11,6 @@
 - `features` (per-deployment feature flags)
 - `memberPropagationMode`
 - `allowUnsafeUpgrade`, `downtimeAllowed`, `disableIPv6`, `networkAttachedVolumes`
-- `restoreFrom` / `restoreEncryptionSecret`
 - `upgrade`, `rotate`, `recovery`, `chaos`, `timeouts`, `lifecycle`, `id`, `database`, `integration`
 
 ## Chart infrastructure
