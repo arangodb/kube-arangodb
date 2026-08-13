@@ -149,6 +149,20 @@ deployment:
   # networkAttachedVolumes: true when PersistentVolumes can move between nodes; false when volumes are
   # tied to a specific pod (spec.networkAttachedVolumes). Set null to omit and use the operator default.
   networkAttachedVolumes: true
+  # labels added to all ArangoDeployment-owned resources: pods, services, PVCs, PDBs (spec.labels).
+  labels: {}
+  # labelsMode controls how labels are applied (spec.labelsMode): disabled | append | replace.
+  # "" keeps the operator default (disabled when no labels are set).
+  labelsMode: ""
+  # labelsIgnoreList: regexp or plain label keys the operator should ignore (spec.labelsIgnoreList).
+  labelsIgnoreList: []
+  # annotations added to all ArangoDeployment-owned resources: pods, services, PVCs, PDBs (spec.annotations).
+  annotations: {}
+  # annotationsMode controls how annotations are applied (spec.annotationsMode): disabled | append | replace.
+  # "" keeps the operator default (disabled when no annotations are set).
+  annotationsMode: ""
+  # annotationsIgnoreList: regexp or plain annotation keys the operator should ignore (spec.annotationsIgnoreList).
+  annotationsIgnoreList: []
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false

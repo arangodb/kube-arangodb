@@ -141,6 +141,36 @@ spec:
   {{- if not (kindIs "invalid" .Values.deployment.networkAttachedVolumes) }}
   networkAttachedVolumes: {{ .Values.deployment.networkAttachedVolumes }}
   {{- end }}
+  {{- if .Values.deployment.labels }}
+  labels:
+  {{- range $k, $v := .Values.deployment.labels }}
+    {{ $k }}: {{ $v }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.labelsMode }}
+  labelsMode: {{ . }}
+  {{- end }}
+  {{- if .Values.deployment.labelsIgnoreList }}
+  labelsIgnoreList:
+  {{- range .Values.deployment.labelsIgnoreList }}
+    - {{ . }}
+  {{- end }}
+  {{- end }}
+  {{- if .Values.deployment.annotations }}
+  annotations:
+  {{- range $k, $v := .Values.deployment.annotations }}
+    {{ $k }}: {{ $v }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.annotationsMode }}
+  annotationsMode: {{ . }}
+  {{- end }}
+  {{- if .Values.deployment.annotationsIgnoreList }}
+  annotationsIgnoreList:
+  {{- range .Values.deployment.annotationsIgnoreList }}
+    - {{ . }}
+  {{- end }}
+  {{- end }}
   {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
   bootstrap:
     passwordSecretNames:
