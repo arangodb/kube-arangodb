@@ -137,6 +137,18 @@ deployment:
   #   on-restart - defer the configuration change until the next restart (fewer restarts on upgrades)
   # "" keeps the operator default (always).
   memberPropagationMode: ""
+  # allowUnsafeUpgrade permits an upgrade even when a member is missing or shards are not in sync
+  # (spec.allowUnsafeUpgrade). Set null to omit and use the operator default.
+  allowUnsafeUpgrade: false
+  # downtimeAllowed permits operations that may cause downtime, e.g. certain upgrades
+  # (spec.downtimeAllowed). Set null to omit and use the operator default.
+  downtimeAllowed: false
+  # disableIPv6 disables IPv6 for the deployment (spec.disableIPv6). Cannot be changed after creation.
+  # Set null to omit and use the operator default.
+  disableIPv6: false
+  # networkAttachedVolumes: true when PersistentVolumes can move between nodes; false when volumes are
+  # tied to a specific pod (spec.networkAttachedVolumes). Set null to omit and use the operator default.
+  networkAttachedVolumes: true
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false
