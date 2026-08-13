@@ -163,6 +163,32 @@ deployment:
   annotationsMode: ""
   # annotationsIgnoreList: regexp or plain annotation keys the operator should ignore (spec.annotationsIgnoreList).
   annotationsIgnoreList: []
+  # upgrade configures upgrade behavior (spec.upgrade). Rendered only when a field is set.
+  upgrade:
+    # autoUpgrade forces an upgrade even when not required, e.g. to recover a stuck upgrade (default false).
+    autoUpgrade: null
+    # debugLog enables verbose logging in the upgrade init containers (default false).
+    debugLog: null
+    # order: restart order during an upgrade - standard | coordinatorFirst. "" keeps the operator default.
+    order: ""
+  # rotate configures pod rotation behavior (spec.rotate). Rendered only when order is set.
+  rotate:
+    # order: rotation restart order - standard | coordinatorFirst. "" keeps the operator default.
+    order: ""
+  # recovery configures cluster recovery (spec.recovery). Rendered only when autoRecover is set.
+  recovery:
+    # autoRecover lets the operator auto-recover the cluster (default false).
+    autoRecover: null
+  # database configures database-side state (spec.database). Rendered only when maintenance is set.
+  database:
+    # maintenance toggles cluster maintenance mode (requires the maintenance feature; default false).
+    maintenance: null
+  # timeouts configures operation timeouts (spec.timeouts). Rendered only when a field is set.
+  timeouts:
+    # maintenanceGracePeriod: grace period for maintenance actions, e.g. "30m". "" keeps the operator default.
+    maintenanceGracePeriod: ""
+    # actions: per-action timeouts as a map, e.g. { AddMember: 30m }. Keys are operator action names.
+    actions: {}
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false
