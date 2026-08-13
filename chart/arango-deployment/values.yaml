@@ -97,6 +97,15 @@ deployment:
     entrypoint: ""
     args: []
     securityContext: {}
+  # rebalancer configures the shard rebalancer (spec.rebalancer). Rendered only when enabled.
+  rebalancer:
+    enabled: false
+    # parallelMoves: number of concurrent shard moves (0 keeps the operator default of 32).
+    parallelMoves: 0
+    # optimizers configures the rebalancer optimizers.
+    optimizers:
+      # leader: enable the leader optimizer (operator default true).
+      leader: true
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false
