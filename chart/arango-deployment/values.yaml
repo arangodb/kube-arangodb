@@ -10,6 +10,11 @@ deployment:
     name: arangodb/arangodb:latest
     pullPolicy: IfNotPresent
     pullSecrets: []
+    # discoveryMode selects how the image is resolved for the pods (spec.imageDiscoveryMode):
+    #   kubelet - use the sha256 of the discovered image in the pods (operator default)
+    #   direct  - use the image from image.name directly in the pods
+    # "" keeps the operator default (kubelet).
+    discoveryMode: ""
   # auth configures ArangoDB JWT authentication. mode:
   #   None      - authentication disabled
   #   Auto      - the operator generates the JWT secret (default)

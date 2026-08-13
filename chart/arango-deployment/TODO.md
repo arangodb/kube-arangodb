@@ -11,7 +11,6 @@
 - `features` (per-deployment feature flags)
 - `timezone`
 - `memberPropagationMode`
-- `imageDiscoveryMode`
 - `allowUnsafeUpgrade`, `downtimeAllowed`, `disableIPv6`, `networkAttachedVolumes`
 - `restoreFrom` / `restoreEncryptionSecret`
 - `upgrade`, `rotate`, `recovery`, `chaos`, `timeouts`, `lifecycle`, `id`, `database`, `integration`

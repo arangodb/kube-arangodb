@@ -19,6 +19,9 @@ spec:
   - {{ . }}
   {{- end }}
   {{- end }}
+  {{- with .Values.deployment.image.discoveryMode }}
+  imageDiscoveryMode: {{ . }}
+  {{- end }}
   authentication:
     {{- if eq .Values.deployment.auth.mode "None" }}
     jwtSecretName: None
