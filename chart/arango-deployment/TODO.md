@@ -12,7 +12,6 @@
 - `timezone`
 - `memberPropagationMode`
 - `imageDiscoveryMode`
-- `architecture`
 - `allowUnsafeUpgrade`, `downtimeAllowed`, `disableIPv6`, `networkAttachedVolumes`
 - `restoreFrom` / `restoreEncryptionSecret`
 - `upgrade`, `rotate`, `recovery`, `chaos`, `timeouts`, `lifecycle`, `id`, `database`, `integration`

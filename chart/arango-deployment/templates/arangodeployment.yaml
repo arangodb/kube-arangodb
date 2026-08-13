@@ -104,6 +104,12 @@ spec:
     optimizers:
       leader: {{ .Values.deployment.rebalancer.optimizers.leader }}
   {{- end }}
+  {{- with .Values.deployment.architecture }}
+  architecture:
+    {{- range . }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
   {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
   bootstrap:
     passwordSecretNames:
