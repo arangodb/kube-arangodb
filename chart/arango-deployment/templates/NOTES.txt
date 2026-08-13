@@ -1,0 +1,47 @@
+{{- $name := .Release.Name -}}
+{{- $ns := .Release.Namespace -}}
+{{- $scheme := "https" -}}
+{{- if eq .Values.deployment.tls.mode "None" }}{{ $scheme = "http" }}{{- end -}}
+ArangoDeployment "{{ $name }}" ({{ .Values.deployment.mode }}) has been created in namespace "{{ $ns }}".
+
+1. Watch the deployment become ready:
+
+   kubectl get arangodeployment {{ $name }} -n {{ $ns }} -w
+
+   The operator provisions the pods and services; this can take a few minutes.
+
+2. Connect to the database:
+
+   The client-facing service is "{{ $name }}" on port 8529 ({{ $scheme }}).
+
+   kubectl port-forward -n {{ $ns }} svc/{{ $name }} 8529:8529
+   # then open {{ $scheme }}://localhost:8529
+{{ if eq .Values.deployment.tls.mode "None" }}
+   TLS is disabled (tls.mode=None), so use http://.
+{{- else }}
+   TLS is enabled, so use {{ $scheme }}:// (the server certificate is signed by the deployment CA).
+{{- end }}
+
+{{- $secrets := list -}}
+{{- if eq .Values.deployment.auth.mode "Generated" }}{{ $secrets = append $secrets (printf "%s-jwt (JWT auth token)" $name) }}{{- end -}}
+{{- if eq .Values.deployment.tls.mode "Generated" }}{{ $secrets = append $secrets (printf "%s-ca (TLS CA: ca.crt / ca.key)" $name) }}{{- end -}}
+{{- if eq .Values.deployment.encryption.mode "Generated" }}{{ $secrets = append $secrets (printf "%s-encryption (RocksDB encryption key)" $name) }}{{- end -}}
+{{- range $user := .Values.deployment.bootstrap.generatedPasswords }}{{ $secrets = append $secrets (printf "%s-%s-password (password for user %q)" $name $user $user) }}{{- end -}}
+{{- if $secrets }}
+
+3. Secrets created by this chart (reused on upgrade, never rotated):
+{{ range $s := $secrets }}
+   - {{ $s }}
+{{- end }}
+{{- if .Values.deployment.bootstrap.generatedPasswords }}
+
+   Read a generated user password, e.g. for "{{ index .Values.deployment.bootstrap.generatedPasswords 0 }}":
+
+   kubectl get secret {{ $name }}-{{ index .Values.deployment.bootstrap.generatedPasswords 0 }}-password -n {{ $ns }} -o jsonpath='{.data.password}' | base64 -d ; echo
+{{- end }}
+{{- end }}
+
+{{- if eq .Values.deployment.auth.mode "None" }}
+
+Note: authentication is disabled (auth.mode=None).
+{{- end }}
