@@ -127,6 +127,11 @@ deployment:
     # encryptionSecret: optional secret name holding the encryption key for an encrypted backup
     # (spec.restoreEncryptionSecret). Only relevant when `from` is set.
     encryptionSecret: ""
+  # memberPropagationMode controls when pod spec changes are applied (spec.memberPropagationMode):
+  #   always     - restart the member as soon as a configuration change is discovered (operator default)
+  #   on-restart - defer the configuration change until the next restart (fewer restarts on upgrades)
+  # "" keeps the operator default (always).
+  memberPropagationMode: ""
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false

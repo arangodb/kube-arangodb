@@ -9,7 +9,6 @@
 
 - top-level `annotations` / `labels` (+ `annotationsMode` / `labelsMode` / `*IgnoreList`)
 - `features` (per-deployment feature flags)
-- `memberPropagationMode`
 - `allowUnsafeUpgrade`, `downtimeAllowed`, `disableIPv6`, `networkAttachedVolumes`
 - `upgrade`, `rotate`, `recovery`, `chaos`, `timeouts`, `lifecycle`, `id`, `database`, `integration`
 

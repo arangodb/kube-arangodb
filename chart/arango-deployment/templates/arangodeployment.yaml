@@ -122,6 +122,9 @@ spec:
   {{- with .Values.deployment.restore.encryptionSecret }}
   restoreEncryptionSecret: {{ . }}
   {{- end }}
+  {{- with .Values.deployment.memberPropagationMode }}
+  memberPropagationMode: {{ . }}
+  {{- end }}
   {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
   bootstrap:
     passwordSecretNames:
