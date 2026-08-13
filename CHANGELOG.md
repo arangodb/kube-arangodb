@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Documentation) Document the `harden` feature (docs/features/harden.md) and the arangod arguments it appends
 - (Feature) Add the `harden` feature (requires `secured-containers`, disabled by default) that appends hardening arguments to the arangod server containers, and in cluster mode constrains replication for >=2 DBServers (default replication factor min(DBServers, 3), minimum replication factor 2, and write concern 2 when the default replication factor is 3)
 - (Feature) (Security) Gate authentication token creation behind the authorization integration (IAM) when central services are enabled and asymmetric signing keys are in use (the remote-validation prerequisite), and remove the static `token.allowed` allow-list
 - (Feature) Add the `enable-arango-deployment-status` feature (disabled by default); the chart ships the status subresource on the ArangoDeployment v1 CRD, the operator ensures it when the feature is enabled and, when disabled, leaves it as the chart ships it (neither adds nor removes it)
