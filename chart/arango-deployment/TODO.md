@@ -8,7 +8,6 @@
 ## Deployment-level fields still missing
 
 - top-level `annotations` / `labels` (+ `annotationsMode` / `labelsMode` / `*IgnoreList`)
-- `features` (per-deployment feature flags)
 - `allowUnsafeUpgrade`, `downtimeAllowed`, `disableIPv6`, `networkAttachedVolumes`
 - `upgrade`, `rotate`, `recovery`, `chaos`, `timeouts`, `lifecycle`, `id`, `database`, `integration`
 
@@ -25,6 +24,8 @@
   (doc comment flows into the generated schema descriptions).
 
 ## Polish / open questions
+
+- `features` currently exposes only `foxxQueues` (the sole `spec.features` field today); switch to a passthrough map once the API gains an arbitrary feature set.
 
 - Group `int`/`bool` fields render via `with`, so an explicit `0`/`false` is omitted (treated as
   unset). Switch specific fields to a presence check if explicit `0`/`false` is ever needed.
