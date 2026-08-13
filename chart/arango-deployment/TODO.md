@@ -7,9 +7,9 @@
 - `chaos` — chaos-monkey testing (kills pods on an interval); not a production setting.
 - `id` — already exposed as the `deployment.id` block.
 
-## Deployment-level fields still missing
+## Deployment-level fields
 
-- `lifecycle`, `integration` (advanced; large nested specs)
+All deployment-level spec fields are now exposed (except the ones under "Intentionally not exposed").
 
 ## Chart infrastructure
 

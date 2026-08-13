@@ -189,6 +189,26 @@ deployment:
     maintenanceGracePeriod: ""
     # actions: per-action timeouts as a map, e.g. { AddMember: 30m }. Keys are operator action names.
     actions: {}
+  # lifecycle configures the operator lifecycle init container injected into every pod (spec.lifecycle).
+  lifecycle:
+    # resources sets the lifecycle init container requests/limits (rendered equal). Empty keeps the
+    # operator default.
+    resources:
+      cpu: ""
+      memory: ""
+  # integration configures the integration sidecar (spec.integration.sidecar). Rendered only when a
+  # field below is set.
+  integration:
+    sidecar:
+      # listenPort / controllerListenPort / httpListenPort: sidecar listen ports. null keeps the
+      # operator defaults (9201 / 9202 / 9203).
+      listenPort: null
+      controllerListenPort: null
+      httpListenPort: null
+      # container: advanced - the sidecar's container configuration (scheduler Container: image,
+      # resources, env, securityContext, probes, ...). Passed through verbatim and inlined at the
+      # sidecar level (the Go type embeds Container inline). Empty = not set.
+      container: {}
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false
