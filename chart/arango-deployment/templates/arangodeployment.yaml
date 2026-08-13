@@ -209,6 +209,42 @@ spec:
     {{- end }}
     {{- end }}
   {{- end }}
+  {{- $lcres := .Values.deployment.lifecycle.resources }}
+  {{- if or $lcres.cpu $lcres.memory }}
+  lifecycle:
+    resources:
+      requests:
+        {{- with $lcres.cpu }}
+        cpu: {{ . }}
+        {{- end }}
+        {{- with $lcres.memory }}
+        memory: {{ . }}
+        {{- end }}
+      limits:
+        {{- with $lcres.cpu }}
+        cpu: {{ . }}
+        {{- end }}
+        {{- with $lcres.memory }}
+        memory: {{ . }}
+        {{- end }}
+  {{- end }}
+  {{- $sidecar := .Values.deployment.integration.sidecar }}
+  {{- if or (not (kindIs "invalid" $sidecar.listenPort)) (not (kindIs "invalid" $sidecar.controllerListenPort)) (not (kindIs "invalid" $sidecar.httpListenPort)) $sidecar.container }}
+  integration:
+    sidecar:
+      {{- if not (kindIs "invalid" $sidecar.listenPort) }}
+      listenPort: {{ $sidecar.listenPort }}
+      {{- end }}
+      {{- if not (kindIs "invalid" $sidecar.controllerListenPort) }}
+      controllerListenPort: {{ $sidecar.controllerListenPort }}
+      {{- end }}
+      {{- if not (kindIs "invalid" $sidecar.httpListenPort) }}
+      httpListenPort: {{ $sidecar.httpListenPort }}
+      {{- end }}
+      {{- with $sidecar.container }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  {{- end }}
   {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
   bootstrap:
     passwordSecretNames:
