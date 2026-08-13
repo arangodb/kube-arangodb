@@ -4,10 +4,12 @@
 
 - `storageEngine` — not passed; leave the operator default (RocksDB).
 - `sync` + `syncmasters` + `syncworkers` — dead (ArangoSync removed); deprecated in the API.
+- `chaos` — chaos-monkey testing (kills pods on an interval); not a production setting.
+- `id` — already exposed as the `deployment.id` block.
 
 ## Deployment-level fields still missing
 
-- `upgrade`, `rotate`, `recovery`, `chaos`, `timeouts`, `lifecycle`, `id`, `database`, `integration`
+- `lifecycle`, `integration` (advanced; large nested specs)
 
 ## Chart infrastructure
 

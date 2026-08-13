@@ -171,6 +171,44 @@ spec:
     - {{ . }}
   {{- end }}
   {{- end }}
+  {{- $upgrade := .Values.deployment.upgrade }}
+  {{- if or (not (kindIs "invalid" $upgrade.autoUpgrade)) (not (kindIs "invalid" $upgrade.debugLog)) $upgrade.order }}
+  upgrade:
+    {{- if not (kindIs "invalid" $upgrade.autoUpgrade) }}
+    autoUpgrade: {{ $upgrade.autoUpgrade }}
+    {{- end }}
+    {{- if not (kindIs "invalid" $upgrade.debugLog) }}
+    debugLog: {{ $upgrade.debugLog }}
+    {{- end }}
+    {{- with $upgrade.order }}
+    order: {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.rotate.order }}
+  rotate:
+    order: {{ . }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.recovery.autoRecover) }}
+  recovery:
+    autoRecover: {{ .Values.deployment.recovery.autoRecover }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.database.maintenance) }}
+  database:
+    maintenance: {{ .Values.deployment.database.maintenance }}
+  {{- end }}
+  {{- $timeouts := .Values.deployment.timeouts }}
+  {{- if or $timeouts.maintenanceGracePeriod $timeouts.actions }}
+  timeouts:
+    {{- with $timeouts.maintenanceGracePeriod }}
+    maintenanceGracePeriod: {{ . }}
+    {{- end }}
+    {{- if $timeouts.actions }}
+    actions:
+    {{- range $k, $v := $timeouts.actions }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
   {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
   bootstrap:
     passwordSecretNames:
