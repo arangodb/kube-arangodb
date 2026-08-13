@@ -106,6 +106,10 @@ deployment:
     optimizers:
       # leader: enable the leader optimizer (operator default true).
       leader: true
+  # architecture: list of supported CPU architectures. Allowed items: amd64, arm64. The first item is
+  # the deployment default; specify two items only to migrate from one architecture to the other. Empty
+  # keeps the operator default (amd64).
+  architecture: []
   # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
   platform:
     enabled: false
