@@ -277,6 +277,7 @@ features:
       - operatorVersion: 1.2.49
         state: Alpha
   - name: Harden ArangoDB Server Containers
+    doc: docs/features/harden.md
     flag: --deployment.feature.harden
     enabled: false
     remarks: Adds hardening arguments to the ArangoDB server containers
