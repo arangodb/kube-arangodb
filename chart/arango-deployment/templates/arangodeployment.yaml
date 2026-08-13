@@ -129,6 +129,18 @@ spec:
   {{- with .Values.deployment.memberPropagationMode }}
   memberPropagationMode: {{ . }}
   {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.allowUnsafeUpgrade) }}
+  allowUnsafeUpgrade: {{ .Values.deployment.allowUnsafeUpgrade }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.downtimeAllowed) }}
+  downtimeAllowed: {{ .Values.deployment.downtimeAllowed }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.disableIPv6) }}
+  disableIPv6: {{ .Values.deployment.disableIPv6 }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.networkAttachedVolumes) }}
+  networkAttachedVolumes: {{ .Values.deployment.networkAttachedVolumes }}
+  {{- end }}
   {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
   bootstrap:
     passwordSecretNames:
