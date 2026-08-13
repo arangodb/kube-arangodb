@@ -13,7 +13,6 @@ All deployment-level spec fields are now exposed (except the ones under "Intenti
 
 ## Chart infrastructure
 
-- **`README.md`**: document values, modes and usage examples.
 - **`NOTES.txt`**: post-install hints (connection info, generated secret names).
 - **`Chart.yaml`**: set `appVersion`, review `version`.
 - Add a `CHANGELOG.md` entry when this is merged.
