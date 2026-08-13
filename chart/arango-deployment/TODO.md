@@ -13,9 +13,6 @@ All deployment-level spec fields are now exposed (except the ones under "Intenti
 
 ## Chart infrastructure
 
-- **`values.schema.json`**: rewrite to match the current `deployment` structure. It is stale
-  (old top-level keys, `additionalProperties: false`) and currently **rejects** the values, so it
-  was left untouched — `helm template`/`helm lint` only pass when it is moved aside.
 - **`README.md`**: document values, modes and usage examples.
 - **`NOTES.txt`**: post-install hints (connection info, generated secret names).
 - **`Chart.yaml`**: set `appVersion`, review `version`.
