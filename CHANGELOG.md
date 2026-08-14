@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (Gateway) Sign the integration sidecar's ArangoDB client token locally from the mounted cluster JWT secret (`database.auth`) instead of minting it via the central authorization CreateToken RPC, so gateway `/_login` works under central services with `rbac-enforced`
 - (Bugfix) Default the integration sidecar `database.source` collection to `_graphs` instead of `_statistics`, so integration backing collections (meta/events) are created on ArangoDB versions that no longer ship the `_statistics` system collection
 - (Documentation) Document the `harden` feature (docs/features/harden.md) and the arangod arguments it appends
 - (Feature) Add the `harden` feature (requires `secured-containers`, disabled by default) that appends hardening arguments to the arangod server containers, and in cluster mode constrains replication for >=2 DBServers (default replication factor min(DBServers, 3), minimum replication factor 2, and write concern 2 when the default replication factor is 3)

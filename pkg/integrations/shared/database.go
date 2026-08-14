@@ -32,6 +32,7 @@ import (
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	arangodClient "github.com/arangodb/kube-arangodb/pkg/util/arangod/client"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -43,6 +44,11 @@ type Database struct {
 	Endpoint string
 	Port     int
 	Database string
+
+	// Auth, when set, points to a JWT secret folder used to sign a local superuser (WithServerID) token
+	// for the ArangoDB client. This keeps the sidecar authentication local (the pre-central "old mode"),
+	// avoiding the CreateToken RPC which is routed to the central authorization service.
+	Auth string
 
 	Source DatabaseSource
 }
@@ -108,12 +114,17 @@ func (d *Database) New(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	dbAuth, err := f.GetString("database.auth")
+	if err != nil {
+		return err
+	}
 
 	*d = Database{
 		Proto:    dbP,
 		Endpoint: dbE,
 		Port:     dbPort,
 		Database: dbName,
+		Auth:     dbAuth,
 		Source: DatabaseSource{
 			Collection: dbSource,
 		},
@@ -124,19 +135,35 @@ func (d *Database) New(cmd *cobra.Command) error {
 
 func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[adbDriverV2.Client] {
 	auth := endpoint.AuthClient()
+	localAuth := arangodClient.FolderArangoDBAuthentication(d.Auth)
 
 	return cache.NewObject(func(ctx context.Context) (adbDriverV2.Client, time.Duration, error) {
 		if d == nil {
 			return nil, 0, errors.Errorf("Database Ref is empty")
 		}
 
-		ac, err := auth.Get(ctx)
+		// Prefer a locally-signed superuser (WithServerID) token from the mounted JWT secret. This keeps
+		// the sidecar authentication local (the pre-central "old mode") and avoids the CreateToken RPC,
+		// which is routed to the central authorization service and denied under rbac-enforced.
+		authentication, local, err := localAuth.Authentication(ctx)
 		if err != nil {
 			return nil, 0, err
 		}
 
+		// The local token is signed with a one hour validity; refresh the client ahead of expiry.
+		ttl := 45 * time.Minute
+		if !local {
+			// No local JWT secret configured: fall back to the CreateToken-based root request modifier.
+			ac, err := auth.Get(ctx)
+			if err != nil {
+				return nil, 0, err
+			}
+			authentication = pbAuthenticationV1.NewRootRequestModifier(ac)
+			ttl = time.Hour
+		}
+
 		client := adbDriverV2.NewClient(adbDriverV2Connection.NewHttpConnection(adbDriverV2Connection.HttpConfiguration{
-			Authentication: pbAuthenticationV1.NewRootRequestModifier(ac),
+			Authentication: authentication,
 			Endpoint: adbDriverV2Connection.NewRoundRobinEndpoints([]string{
 				fmt.Sprintf("%s://%s:%d", d.Proto, d.Endpoint, d.Port),
 			}),
@@ -145,7 +172,7 @@ func (d *Database) DatabaseClient(endpoint Endpoint) cache.Object[adbDriverV2.Cl
 			Transport:      operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure)),
 		}))
 
-		return client, time.Hour, nil
+		return client, ttl, nil
 	})
 }
 

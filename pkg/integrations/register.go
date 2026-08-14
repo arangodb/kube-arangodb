@@ -143,6 +143,7 @@ func (c *configuration) Register(cmd *cobra.Command) error {
 		f.Int("database.port", 8529, "Port of ArangoDB"),
 		f.String("database.name", "_system", "Database Name"),
 		f.String("database.source", "_graphs", "Database Source Collection"),
+		f.String("database.auth", "", "Path to the JWT secret folder used to sign a local superuser (server) token for the ArangoDB client. When set, the client authenticates locally instead of minting a token via the CreateToken RPC (which is routed to the central authorization service)"),
 		f.StringVar(&c.health.address, "health.address", "0.0.0.0:9091", "Address to expose health service"),
 		f.BoolVar(&c.health.shutdownEnabled, "health.shutdown.enabled", true, "Determines if shutdown service should be enabled and exposed"),
 		f.StringVar(&c.health.auth.t, "health.auth.type", "None", "Auth type for health service"),
