@@ -158,6 +158,11 @@ func NewIntegration(name string, spec api.DeploymentSpec, status api.DeploymentS
 	options.Add("--database.endpoint", k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", name, spec.GetMode().ServingGroup().AsRole()), spec.ClusterDomain))
 	options.Addf("--database.port", "%d", shared.ArangoPort)
 	options.Add("--database.proto", util.BoolSwitch(spec.IsSecure(), "https", "http"))
+	if spec.IsAuthenticated() {
+		// Sign the ArangoDB client token locally from the mounted cluster JWT secret (the pre-central
+		// "old mode") instead of minting it via the central authorization CreateToken RPC.
+		options.Add("--database.auth", shared.ClusterJWTSecretVolumeMountDir)
+	}
 	options.Add("--services.gateway.enabled", true)
 
 	// Envs

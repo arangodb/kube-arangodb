@@ -19,6 +19,7 @@ Available Commands:
   version     Show the version
 
 Flags:
+      --database.auth string                                                                   Path to the JWT secret folder used to sign a local superuser (server) token for the ArangoDB client. When set, the client authenticates locally instead of minting a token via the CreateToken RPC (which is routed to the central authorization service) (Env: DATABASE_AUTH)
       --database.endpoint string                                                               Endpoint of ArangoDB (Env: DATABASE_ENDPOINT) (default "localhost")
       --database.name string                                                                   Database Name (Env: DATABASE_NAME) (default "_system")
       --database.port int                                                                      Port of ArangoDB (Env: DATABASE_PORT) (default 8529)
