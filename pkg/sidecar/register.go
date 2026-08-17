@@ -93,7 +93,9 @@ func configuration(cmd *cobra.Command) (svc.Configuration, error) {
 	if addr, err := flagGatewayAddress.Get(cmd); err != nil {
 		return svc.Configuration{}, err
 	} else {
-		cfg.Gateway = &svc.ConfigurationGateway{Address: addr}
+		// The sidecar's HTTP gateway is an in-Pod endpoint (default loopback address), so it opts into
+		// plain HTTP. If it is bound to a routable address instead, the svc still serves it over TLS.
+		cfg.Gateway = &svc.ConfigurationGateway{Address: addr, Insecure: true}
 	}
 
 	if keyfile, err := flagKeyfile.Get(cmd); err != nil {
