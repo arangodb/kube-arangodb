@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Mark the JWT/TLS/Encryption `*StatusUpdate` actions and `ArangoMemberUpdatePodStatus` as internal so a pure status/propagation write does not hold the deployment out of the `UpToDate` condition
 - (Bugfix) (Gateway) Sign the integration sidecar's ArangoDB client token locally from the mounted cluster JWT secret (`database.auth`) instead of minting it via the central authorization CreateToken RPC, so gateway `/_login` works under central services with `rbac-enforced`
 - (Bugfix) Default the integration sidecar `database.source` collection to `_graphs` instead of `_statistics`, so integration backing collections (meta/events) are created on ArangoDB versions that no longer ship the `_statistics` system collection
 - (Documentation) Document the `harden` feature (docs/features/harden.md) and the arangod arguments it appends

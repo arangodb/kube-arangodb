@@ -110,6 +110,7 @@ actions:
   TLSKeyStatusUpdate:
     enterprise: true
     description: Update Status of TLS propagation process
+    isInternal: true
   TLSPropagated:
     enterprise: true
     description: Update TLS propagation condition
@@ -162,6 +163,7 @@ actions:
   EncryptionKeyStatusUpdate:
     enterprise: true
     description: Update status of encryption propagation
+    isInternal: true
   EncryptionKeyPropagated:
     enterprise: true
     description: Update condition of encryption propagation
@@ -169,6 +171,7 @@ actions:
   JWTStatusUpdate:
     enterprise: true
     description: Update status of JWT propagation
+    isInternal: true
   JWTSetActive:
     enterprise: true
     description: Change active JWT key on the cluster
@@ -248,6 +251,7 @@ actions:
       - High
   ArangoMemberUpdatePodStatus:
     description: Propagate Member Pod status (current)
+    isInternal: true
     scopes:
       - High
   LicenseSet:
