@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add the hidden `rbac-coredb` feature (requires `rbac-enforced` and `central-services`) that points the serving member's arangod at the local authorization integration sidecar via `--server.external-rbac-service`
 - (Feature) Allow an svc HTTP gateway to opt into plain HTTP, honoured only on a loopback address (a routable/0.0.0.0 listener is always served with TLS); the serving-member sidecar's HTTP gateway binds loopback and opts in, while its gRPC endpoint keeps TLS
 - (Feature) Mark the JWT/TLS/Encryption `*StatusUpdate` actions and `ArangoMemberUpdatePodStatus` as internal so a pure status/propagation write does not hold the deployment out of the `UpToDate` condition
 - (Bugfix) (Gateway) Sign the integration sidecar's ArangoDB client token locally from the mounted cluster JWT secret (`database.auth`) instead of minting it via the central authorization CreateToken RPC, so gateway `/_login` works under central services with `rbac-enforced`
