@@ -158,12 +158,16 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 	opts = append(opts, nopts...)
 
-	opts = append(opts, authenticator.NewInterceptorOptions(cfg.Authenticator)...)
-
 	q.cfg = cfg
-	q.grpc.network = grpc.NewServer(opts...)
+
+	// The network server enforces the configured authenticator.
+	q.grpc.network = grpc.NewServer(append(append([]grpc.ServerOption{}, opts...), authenticator.NewInterceptorOptions(cfg.Authenticator)...)...)
 	if unix := cfg.Unix; unix != "" {
-		q.grpc.unix = grpc.NewServer(opts...)
+		// The unix socket is a trusted, local-only (filesystem-gated) transport for in-process
+		// service-to-service calls. It must not enforce the network authenticator, otherwise strict
+		// (rbac-enforced) mode rejects these internal calls (e.g. authorization.v1 -> authentication.v1
+		// Validate) with Unauthorized.
+		q.grpc.unix = grpc.NewServer(append(append([]grpc.ServerOption{}, opts...), authenticator.NewInterceptorOptions(authenticator.NewAlwaysAuthenticator())...)...)
 	}
 
 	q.handlers = handlers
