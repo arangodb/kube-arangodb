@@ -142,7 +142,9 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, grpcListener, 
 			s.service.http.network.Close()
 		}()
 
-		if s.service.tls {
+		// Serve the HTTP gateway over TLS only when the HTTP server has a TLS configuration. This is
+		// decoupled from the gRPC TLS flag so an Insecure gateway can stay plain while gRPC keeps TLS.
+		if s.service.http.network.TLSConfig != nil {
 			if err := s.service.http.network.ServeTLS(httpListener, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
 				return err
 			}

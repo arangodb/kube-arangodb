@@ -36,9 +36,11 @@ var (
 		Default:     fmt.Sprintf("0.0.0.0:%d", shared.InternalSidecarContainerPortGRPC),
 	}
 	flagGatewayAddress = cli.Flag[string]{
-		Name:        "sidecar.gateway.address",
-		Description: "Address of the http gateway server",
-		Default:     fmt.Sprintf("0.0.0.0:%d", shared.InternalSidecarContainerPortHTTP),
+		Name: "sidecar.gateway.address",
+		Description: "Address of the http gateway server. Defaults to a loopback address: the endpoint is " +
+			"consumed only in-Pod (e.g. by arangod), so it is served plain HTTP; bind a routable address to " +
+			"have it served over TLS.",
+		Default: fmt.Sprintf("127.0.0.1:%d", shared.InternalSidecarContainerPortHTTP),
 	}
 	flagHealthAddress = cli.Flag[string]{
 		Name:        "sidecar.health.address",

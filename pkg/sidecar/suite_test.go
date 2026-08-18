@@ -152,7 +152,10 @@ func Test_Protocol(t *testing.T) {
 				require.Error(t, err)
 			})
 	})
-	t.Run("HTTPS", func(t *testing.T) {
+	t.Run("HTTP with TLS keyfile on loopback", func(t *testing.T) {
+		// The default gateway address is loopback, so the HTTP gateway is served plain even when a keyfile
+		// is provided (only the gRPC endpoint, bound to a routable address, is secured) - it behaves
+		// exactly like the plain HTTP case.
 		runSidecar(t).
 			evaluateArgs(renderTLSKeyfileCertificate).
 			run("HTTP Client", func(t *testing.T) {
@@ -164,7 +167,7 @@ func Test_Protocol(t *testing.T) {
 				resp, err := executeHttpRequest(t, c, req)
 				// Expect Response
 				require.NoError(t, err)
-				require.Equal(t, goHttp.StatusBadRequest, resp.StatusCode)
+				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
 			}).
 			run("HTTPS Client", func(t *testing.T) {
 				req, err := goHttp.NewRequest(goHttp.MethodGet, "https://127.0.0.1:8108/unknown", nil)
@@ -172,10 +175,38 @@ func Test_Protocol(t *testing.T) {
 
 				c := http.NewHTTPClient(http.WithTransport(http.WithTransportTLS(http.Insecure)))
 
+				_, err = executeHttpRequest(t, c, req)
+				// The HTTP gateway is plain, so a TLS handshake fails.
+				require.Error(t, err)
+			})
+	})
+	t.Run("HTTP with TLS keyfile on routable address", func(t *testing.T) {
+		// A gateway bound to a routable (non-loopback) address IS served over TLS when a keyfile is
+		// provided, so it is reachable over HTTPS and rejects plain HTTP.
+		runSidecar(t).
+			addArgs("--sidecar.gateway.address", "0.0.0.0:8108").
+			evaluateArgs(renderTLSKeyfileCertificate).
+			run("HTTPS Client", func(t *testing.T) {
+				req, err := goHttp.NewRequest(goHttp.MethodGet, "https://127.0.0.1:8108/unknown", nil)
+				require.NoError(t, err)
+
+				c := http.NewHTTPClient(http.WithTransport(http.WithTransportTLS(http.Insecure)))
+
 				resp, err := executeHttpRequest(t, c, req)
-				// Expect Response
+				// Expect Response over TLS
 				require.NoError(t, err)
 				require.Equal(t, goHttp.StatusNotFound, resp.StatusCode)
+			}).
+			run("HTTP Client", func(t *testing.T) {
+				req, err := goHttp.NewRequest(goHttp.MethodGet, "http://127.0.0.1:8108/unknown", nil)
+				require.NoError(t, err)
+
+				c := http.NewHTTPClient()
+
+				resp, err := executeHttpRequest(t, c, req)
+				// Plain HTTP against a TLS listener is answered with Bad Request.
+				require.NoError(t, err)
+				require.Equal(t, goHttp.StatusBadRequest, resp.StatusCode)
 			})
 	})
 

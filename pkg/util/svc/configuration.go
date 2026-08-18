@@ -78,6 +78,11 @@ type ConfigurationGateway struct {
 	Address string
 	Unix    string
 
+	// Insecure requests that the HTTP gateway be served without TLS. It is honoured only when Address is a
+	// loopback address (127.0.0.1/localhost/::1); a gateway bound to a routable address (e.g. 0.0.0.0) is
+	// always served with TLS when the service has TLS options. The gRPC endpoint keeps its TLS regardless.
+	Insecure bool
+
 	MuxExtensions []runtime.ServeMuxOption
 }
 
