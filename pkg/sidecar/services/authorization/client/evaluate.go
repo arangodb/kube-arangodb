@@ -25,7 +25,23 @@ import (
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 )
 
-func EvaluatePolicies(req *pbAuthorizationV1.AuthorizationV1PermissionRequest, policies ...*Policy) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
+func EvaluatePolicies(req *pbAuthorizationV1.AuthorizationV1PermissionRequest, policies ...*Policy) (resp *pbAuthorizationV1.AuthorizationV1PermissionResponse, err error) {
+	// Debug tracing: the exact action/resource evaluated (e.g. arangod's external-RBAC UseApiVersion
+	// check) and the resulting effect. Emitted at Debug so default (Info) operation is unaffected;
+	// enable with --log.level=debug (or authz-pool-client=debug).
+	defer func() {
+		if resp != nil {
+			logger.
+				Str("user", req.GetUser()).
+				Str("action", req.GetAction()).
+				Str("resource", req.GetResource()).
+				Int("policies", len(policies)).
+				Str("effect", resp.GetEffect().String()).
+				Str("message", resp.GetMessage()).
+				Debug("AUTHZ-EVAL-DIAG EvaluatePolicies")
+		}
+	}()
+
 	context := req.GetContext().GetContext()
 
 	var allowed bool
