@@ -33,6 +33,15 @@ deployment:
     mode: Auto
     # secretName is used only for the Existing mode.
     secretName: ""
+    # altNames adds subject alternative names (DNS names / emails) to generated certificates.
+    altNames: []
+    # ttl sets the time-to-live of generated server certificates (e.g. "2160h").
+    ttl: ""
+    # sni maps a TLS keyfile secret to the server names it serves (Enterprise; spec.tls.sni.mapping):
+    #   sni:
+    #     my-cert-secret:
+    #       - domain.example.com
+    sni: {}
   # metrics configures the ArangoDB metrics exporter.
   metrics:
     enabled: false
