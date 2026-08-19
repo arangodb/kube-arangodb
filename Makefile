@@ -371,6 +371,16 @@ yamlfmt-verify:
 	@echo ">> Verifying style of yaml files"
 	@$(GOPATH)/bin/yamlfmt -lint -quiet $(YAMLS)
 
+.PHONY: helm-lint
+helm-lint:
+	@echo ">> Linting Helm charts"
+	@for chart in $(ROOTDIR)/chart/*/; do \
+		if [ -f "$${chart}Chart.yaml" ]; then \
+			echo ">> Linting $${chart}"; \
+			$(GOPATH)/bin/helm lint "$${chart}" || exit 1; \
+		fi; \
+	done
+
 .PHONY: license
 license:
 	@echo ">> Ensuring license of files"
@@ -808,6 +818,8 @@ tools-min: update-vendor
 	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.20.0
 	@echo ">> Fetching protolinter"
 	@GOBIN=$(GOPATH)/bin go install github.com/yoheimuta/protolint/cmd/protolint@v0.56.4
+	@echo ">> Fetching helm"
+	@GOBIN=$(GOPATH)/bin go install helm.sh/helm/v3/cmd/helm@v3.13.0
 
 .PHONY: tools
 tools: tools-min
@@ -957,7 +969,7 @@ sync-charts:
 sync: sync-charts
 
 ci-check:
-	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint
+	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint helm-lint
 	@git checkout -- go.sum # ignore changes in go.sum
 	@if [ ! -z "$$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; git diff; exit 1; fi
 
