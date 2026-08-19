@@ -1,0 +1,22 @@
+{{- if eq .Values.storage.mode "minio" }}
+apiVersion: platform.arangodb.com/v1beta1
+kind: ArangoPlatformStorage
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  backend:
+    s3:
+      # Points at the in-cluster MinIO Service deployed by this chart.
+      endpoint: {{ printf "http://%s-minio.%s.svc:9000" .Release.Name .Release.Namespace | quote }}
+      bucketName: {{ .Values.storage.bucketName | default .Release.Name | quote }}
+      {{- with .Values.storage.bucketPath }}
+      bucketPath: {{ . | quote }}
+      {{- end }}
+      allowInsecure: true
+      credentialsSecret:
+        name: {{ printf "%s-minio-credentials" .Release.Name | quote }}
+{{- end }}

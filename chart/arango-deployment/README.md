@@ -104,6 +104,22 @@ defaults): `topology`, `externalAccess`, `communicationMethod`, `clusterDomain`,
 Tri-state flags (e.g. `allowUnsafeUpgrade`, `features.foxxQueues`) accept `true`, `false`, or `null`
 (omit the field and use the operator default).
 
+## Storage — `storage.mode`
+
+Optionally renders a `platform.arangodb.com/v1beta1` **ArangoPlatformStorage** alongside the
+deployment. Leave `storage.mode` empty to skip it. Templates live under
+`templates/storage/<backend>/<mode>/`.
+
+| `storage.mode` | Backend | Credentials |
+|---|---|---|
+| `s3` | External S3-compatible endpoint (`storage.s3.endpoint`) | reference `s3.credentialsSecret`, or provide `s3.accessKey`/`s3.secretKey` inline (chart creates `<release>-s3-credentials`) |
+| `gcs` | Google Cloud Storage (`storage.gcs.projectID`) | `gcs.credentials: secret` → reference `gcs.credentialsSecret`; `gcs.credentials: json` → inline `gcs.serviceAccount` (chart creates `<release>-gcs-credentials`) |
+| `azureBlobStorage` | Azure Blob Storage (`tenantID`/`accountName`) | reference `credentialsSecret`, or provide `clientId`/`clientSecret` inline (chart creates `<release>-azure-credentials`) |
+| `minio` | In-cluster MinIO deployed by the chart | chart-managed; an `s3` backend points at `http://<release>-minio.<ns>.svc:9000` |
+
+`storage.bucketName` / `storage.bucketPath` are shared by all backends. The `minio` mode also creates
+a Deployment, Service and PVC (`storage.minio.storage.{class,size}`) plus its credentials.
+
 ## Generated resources
 
 Depending on the selected modes, Helm may create these secrets alongside the ArangoDeployment. They
@@ -116,3 +132,5 @@ use predefined names and are reused on upgrade (never rotated):
 | Encryption key secret | `<release>-encryption` | `encryption.mode: Generated` |
 | User password secret | `<release>-<user>-password` | user listed in `bootstrap.generatedPasswords` |
 | License secret | `license.secretName` | `license.secretName` set **and** `license.value` (or `clientID`+`clientSecret`) provided |
+| Storage credentials | `<release>-s3-credentials` / `<release>-gcs-credentials` / `<release>-azure-credentials` | inline credentials provided for the matching `storage.mode` |
+| MinIO | `<release>-minio` (Deployment/Service/PVC) + `<release>-minio-root` / `<release>-minio-credentials` | `storage.mode: minio` |

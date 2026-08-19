@@ -1,0 +1,20 @@
+{{- if eq .Values.storage.mode "minio" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ printf "%s-minio" .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.storage.minio.storage.class }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.minio.storage.size | quote }}
+{{- end }}
