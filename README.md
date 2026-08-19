@@ -359,6 +359,12 @@ helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/
 helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.4/kube-arangodb-enterprise-1.4.4.tgz --set "operator.features.storage=true"
 ```
 
+#### Supporting charts
+
+Besides the operator chart, the repository ships the [`platform-storage`](chart/platform-storage/README.md)
+chart, which deploys an in-cluster S3-compatible object store (MinIO) and, optionally, an
+`ArangoPlatformStorage` backed by it. See [docs/helm.md](docs/helm.md#charts) for the full list.
+
 ### Upgrading the operator using Helm
 
 To upgrade the operator to the latest version with Helm, you have to run `helm upgrade` with the `--install` flag to enable CRD installation.
