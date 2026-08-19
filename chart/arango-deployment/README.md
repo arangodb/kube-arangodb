@@ -120,6 +120,25 @@ deployment. Leave `storage.mode` empty to skip it. Templates live under
 `storage.bucketName` / `storage.bucketPath` are shared by all backends. The `minio` mode also creates
 a Deployment, Service and PVC (`storage.minio.storage.{class,size}`) plus its credentials.
 
+### Providing credentials
+
+Every backend can either reference a pre-existing secret **or** take the credentials at install time
+(the chart then creates the secret) — pass them on the command line if needed:
+
+```sh
+# S3 (accessKey/secretKey inline instead of s3.credentialsSecret)
+helm install my-db . --set storage.mode=s3 --set storage.s3.endpoint=https://s3.example.com \
+  --set storage.s3.accessKey=AKIA... --set storage.s3.secretKey=...
+# GCS ServiceAccount JSON (use --set-file; the JSON contains commas)
+helm install my-db . --set storage.mode=gcs --set storage.gcs.projectID=p \
+  --set storage.gcs.credentials=json --set-file storage.gcs.serviceAccount=./sa.json
+# Azure (clientId/clientSecret inline instead of azureBlobStorage.credentialsSecret)
+helm install my-db . --set storage.mode=azureBlobStorage --set storage.azureBlobStorage.tenantID=t \
+  --set storage.azureBlobStorage.accountName=a --set storage.azureBlobStorage.clientId=... --set storage.azureBlobStorage.clientSecret=...
+# MinIO (optional; defaults to minioadmin + a generated password reused on upgrade)
+helm install my-db . --set storage.mode=minio --set storage.minio.rootUser=admin --set storage.minio.rootPassword=...
+```
+
 ## Generated resources
 
 Depending on the selected modes, Helm may create these secrets alongside the ArangoDeployment. They

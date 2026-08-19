@@ -904,6 +904,12 @@
             },
             "tolerations": {
               "type": "array"
+            },
+            "rootUser": {
+              "type": "string"
+            },
+            "rootPassword": {
+              "type": "string"
             }
           }
         }

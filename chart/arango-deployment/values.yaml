@@ -519,6 +519,10 @@ storage:
     image: minio/minio:latest
     imagePullPolicy: IfNotPresent
     imagePullSecrets: []
+    # rootUser / rootPassword optionally set the MinIO credentials (e.g. via `helm install --set`).
+    # Empty rootPassword generates one on first install and reuses it on upgrade.
+    rootUser: minioadmin
+    rootPassword: ""
     storage:
       class: ""
       size: 5Gi
