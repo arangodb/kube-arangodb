@@ -42,6 +42,18 @@ spec:
     {{- else }}
     caSecretName: {{ .Values.deployment.tls.secretName }}
     {{- end }}
+    {{- with .Values.deployment.tls.altNames }}
+    altNames:
+{{ toYaml . | indent 6 }}
+    {{- end }}
+    {{- with .Values.deployment.tls.ttl }}
+    ttl: {{ . | quote }}
+    {{- end }}
+    {{- with .Values.deployment.tls.sni }}
+    sni:
+      mapping:
+{{ toYaml . | indent 8 }}
+    {{- end }}
   {{- if .Values.deployment.metrics.enabled }}
   metrics:
     enabled: true

@@ -95,6 +95,25 @@
             },
             "secretName": {
               "type": "string"
+            },
+            "altNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "ttl": {
+              "type": "string"
+            },
+            "sni": {
+              "type": "object",
+              "description": "spec.tls.sni.mapping: secret name -> list of server names.",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           },
           "additionalProperties": false

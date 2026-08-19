@@ -61,6 +61,18 @@ resolved image sha256 in pods, `direct` uses `image.name` as-is; `""` keeps the 
 `None` (disabled), `Auto` (operator generates the CA, default), `Generated` (Helm creates the CA
 secret `<release>-ca` with `ca.crt`/`ca.key`), or `Existing` (use `tls.secretName`).
 
+`tls.altNames` (extra SANs on generated certs), `tls.ttl` (server-cert TTL, e.g. `2160h`) and
+`tls.sni` are rendered only when set. `tls.sni` is `spec.tls.sni.mapping` — a map of a TLS keyfile
+secret to the server names it serves (Enterprise Server Name Indication):
+
+```yaml
+deployment:
+  tls:
+    sni:
+      my-cert-secret:
+        - domain.example.com
+```
+
 ### Encryption at rest — `deployment.encryption.mode` (Enterprise)
 
 `None` (default), `Generated` (Helm creates a 32-byte key secret `<release>-encryption`, never
