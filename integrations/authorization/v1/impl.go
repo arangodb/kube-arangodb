@@ -22,6 +22,7 @@ package v1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -134,6 +135,17 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 		}
 
 		r[id] = resp
+
+		// Debug tracing: the exact evaluation input (user/roles + action/resource as sent by the caller,
+		// e.g. arangod external RBAC) and the resulting effect, to pin down authorization mismatches.
+		logger.
+			Str("user", request.GetUser()).
+			Strs("roles", request.GetRoles()...).
+			Str("action", v.GetAction()).
+			Str("resource", v.GetResource()).
+			Str("effect", resp.GetEffect().String()).
+			Str("message", resp.GetMessage()).
+			Debug("AUTHZ-EVAL-DIAG evaluate item")
 	}
 
 	for _, v := range r {
@@ -186,23 +198,60 @@ func (i *implementation) EvaluateTokenMany(ctx context.Context, request *pbAutho
 		return nil, err
 	}
 
+	// Debug tracing: the token-validation path of EvaluateTokenMany. arangod's external RBAC fail-closes
+	// any error here into "API version forbidden", so a validation failure looks identical to an
+	// authorization denial - these traces distinguish the two.
+	logger.Int("token_len", len(request.GetToken())).Int("items", len(request.GetItems())).Debug("AUTHZ-EVAL-DIAG EvaluateTokenMany entry")
+
 	auth, err := i.auth.Get(ctx)
 	if err != nil {
+		logger.Err(err).Debug("AUTHZ-EVAL-DIAG auth plugin not available")
 		return nil, status.Errorf(codes.FailedPrecondition, "Authentication V1 Plugin not enabled: %v", err)
 	}
 
 	resp, err := auth.Validate(ctx, &pbAuthenticationV1.ValidateRequest{Token: request.GetToken()})
 	if err != nil {
+		logger.Err(err).Debug("AUTHZ-EVAL-DIAG token Validate returned error")
 		return nil, status.Errorf(codes.FailedPrecondition, "Unable to validate the token: %v", err)
 	}
 
 	if !resp.GetIsValid() {
+		logger.Str("message", resp.GetMessage()).Debug("AUTHZ-EVAL-DIAG token reported invalid")
 		return nil, status.Errorf(codes.FailedPrecondition, "JWT Token is invalid")
 	}
 
-	return i.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
-		User:  util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User),
-		Roles: resp.GetDetails().GetGroups(),
+	user := util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User)
+	roles := resp.GetDetails().GetGroups()
+
+	// Debug tracing: the whole request (resolved identity + every action/resource item arangod asks
+	// about) so we can see exactly what is being evaluated.
+	for id, it := range request.GetItems() {
+		logger.
+			Str("user", util.TypeOrDefault(user)).
+			Strs("roles", roles...).
+			Int("item", id).
+			Str("action", it.GetAction()).
+			Str("resource", it.GetResource()).
+			Interface("context", it.GetContext()).
+			Debug("AUTHZ-EVAL-DIAG request item")
+	}
+
+	out, err := i.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
+		User:  user,
+		Roles: roles,
 		Items: request.GetItems(),
 	})
+	if err != nil {
+		logger.Err(err).Debug("AUTHZ-EVAL-DIAG EvaluateMany returned error")
+		return out, err
+	}
+
+	// Debug tracing: the whole response (overall effect + per-item effect/message).
+	l := logger.Str("user", util.TypeOrDefault(user)).Str("effect", out.GetEffect().String()).Str("message", out.GetMessage())
+	for id, it := range out.GetItems() {
+		l = l.Str(fmt.Sprintf("item_%d_effect", id), it.GetEffect().String()).Str(fmt.Sprintf("item_%d_message", id), it.GetMessage())
+	}
+	l.Debug("AUTHZ-EVAL-DIAG response")
+
+	return out, nil
 }

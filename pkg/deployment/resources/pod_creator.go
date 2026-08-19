@@ -176,6 +176,23 @@ func createArangodArgs(cachedStatus interfaces.Inspector, input pod.Input, addit
 		options.Add("--rocksdb.encryption-key-rotation", "true")
 	}
 
+	// External RBAC (CoreDB): point the serving member at the local authorization integration sidecar
+	// over plain HTTP on its internal (loopback) HTTP endpoint, which is always served without TLS.
+	// arangod validates this flag and requires a literal "http://" or "https://" URL prefix.
+	if features.RBACCoreDB().Enabled() &&
+		input.Deployment.GetMode().ServingGroup() == input.Group &&
+		input.Status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		options.Addf("--server.external-rbac-service", "http://127.0.0.1:%d", shared.InternalSidecarContainerPortHTTP)
+
+		// arangod requires a hardened REST API whenever RBAC is enabled: it asserts
+		// `!_authMode.isRbac() || _isRestApiHardened` and aborts the serving member on the first hardened
+		// action otherwise. --server.harden=true sets that flag. When the harden feature is enabled it is
+		// already appended (as part of the full hardening set), so only add it here otherwise.
+		if !features.Harden().Enabled() {
+			options.Add("--server.harden", "true")
+		}
+	}
+
 	args := options.Copy().Sort().AsArgs()
 
 	// Harden: append hardening arguments to the arangod containers of all server groups.

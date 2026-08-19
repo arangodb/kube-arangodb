@@ -48,6 +48,13 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 
 	options.Add("--central", util.BoolSwitch(features.CentralServices().Enabled(), "true", "false"))
 
+	// Run the serving member's authorization sidecar at debug level when the sidecar-debug feature is
+	// enabled, so the authorization evaluate decisions (action/resource/effect, logged at Debug) are
+	// emitted. Off by default - the sidecar runs at info.
+	if features.SidecarDebug().Enabled() {
+		options.Add("--log.level", "debug")
+	}
+
 	if port := groupSpec.InternalPort; port == nil {
 		scheme := "http"
 		if spec.IsSecure() {

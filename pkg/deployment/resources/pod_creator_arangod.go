@@ -633,6 +633,14 @@ func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, []co
 		c.VolumeMounts = append(c.VolumeMounts, mounts...)
 	}
 
+	// A writable emptyDir for the sidecar's internal unix socket (service-to-service calls bypass the
+	// network authenticator - see configuration() in pkg/sidecar).
+	volumes = append(volumes, k8sutil.CreateVolumeEmptyDir(utilConstants.SidecarUnixSocketMountName))
+	c.VolumeMounts = append(c.VolumeMounts, core.VolumeMount{
+		Name:      utilConstants.SidecarUnixSocketMountName,
+		MountPath: utilConstants.SidecarUnixSocketMountPath,
+	})
+
 	return &c, volumes, nil
 }
 
