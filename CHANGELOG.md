@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Lint all Helm charts in CI via `make helm-lint`; fix the `platform-storage` passwords template document separator and add the missing `apiVersion` to the `kube-arangodb-crd` chart
+- (Documentation) Add a README for the `platform-storage` chart and reference it from `docs/helm.md`, the MinIO storage-integration docs and the main README
 - (Feature) Add the hidden `rbac-coredb` feature (requires `rbac-enforced` and `central-services`) that points the serving member's arangod at the local authorization integration sidecar via `--server.external-rbac-service`
 - (Feature) Allow an svc HTTP gateway to opt into plain HTTP, honoured only on a loopback address (a routable/0.0.0.0 listener is always served with TLS); the serving-member sidecar's HTTP gateway binds loopback and opts in, while its gRPC endpoint keeps TLS
 - (Feature) Mark the JWT/TLS/Encryption `*StatusUpdate` actions and `ArangoMemberUpdatePodStatus` as internal so a pure status/propagation write does not hold the deployment out of the `UpToDate` condition
