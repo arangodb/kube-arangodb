@@ -475,3 +475,53 @@ deployment:
     nodeAffinity: {}
     podModes: {}
     numactl: {}
+# storage optionally renders a platform.arangodb.com/v1beta1 ArangoPlatformStorage
+# alongside the deployment. `mode` selects the backend (empty = no storage):
+#   s3               - external S3-compatible endpoint
+#   gcs              - Google Cloud Storage
+#   azureBlobStorage - Azure Blob Storage
+#   minio            - deploy an in-cluster MinIO and point an s3 backend at it
+storage:
+  mode: ""
+  # bucketName / bucketPath are shared by all backends (bucketName defaults to the
+  # release name for the minio mode).
+  bucketName: ""
+  bucketPath: ""
+  # s3: external S3-compatible endpoint. Reference an existing credentialsSecret
+  # (keys accessKey/secretKey) or provide accessKey/secretKey inline (the chart then
+  # creates `<release>-s3-credentials`).
+  s3:
+    endpoint: ""
+    region: ""
+    allowInsecure: false
+    credentialsSecret: ""
+    accessKey: ""
+    secretKey: ""
+  # gcs: Google Cloud Storage. credentials:
+  #   secret - reference an existing credentialsSecret (key serviceAccount)
+  #   json   - provide the ServiceAccount JSON inline; the chart creates `<release>-gcs-credentials`
+  gcs:
+    projectID: ""
+    credentials: secret
+    credentialsSecret: ""
+    serviceAccount: ""
+  # azureBlobStorage: reference an existing credentialsSecret (keys clientId/clientSecret)
+  # or provide clientId/clientSecret inline (the chart creates `<release>-azure-credentials`).
+  azureBlobStorage:
+    tenantID: ""
+    accountName: ""
+    endpoint: ""
+    credentialsSecret: ""
+    clientId: ""
+    clientSecret: ""
+  # minio: in-cluster MinIO deployed by this chart, backing an s3 ArangoPlatformStorage.
+  minio:
+    image: minio/minio:latest
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    storage:
+      class: ""
+      size: 5Gi
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
