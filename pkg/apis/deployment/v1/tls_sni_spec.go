@@ -32,7 +32,7 @@ type TLSSNISpec struct {
 	// +doc/example: mapping:
 	// +doc/example:   secret:
 	// +doc/example:     - domain.example.com
-	// +doc/link: Server Name Indication|https://docs.arangodb.com/stable/components/arangodb-server/options/#--sslserver-name-indication
+	// +doc/link: Server Name Indication|https://docs.arango.ai/arangodb/stable/components/arangodb-server/options/#--sslserver-name-indication
 	Mapping map[string][]string `json:"mapping,omitempty"`
 }
 
