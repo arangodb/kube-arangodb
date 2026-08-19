@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,12 @@ const (
 
 	GatewayCDSVolumeMountDir = "/etc/gateway/cds/"
 	GatewayCDSVolumeName     = "gateway-cds"
+
+	GatewaySDSVolumeMountDir = "/etc/gateway/sds/"
+	GatewaySDSVolumeName     = "gateway-sds"
+
+	// GatewaySDSInternalName is the SDS secret name of the gateway's own (internal) serving certificate.
+	GatewaySDSInternalName = "internal"
 
 	MemberConfigVolumeMountDir = "/etc/gateway/member/"
 	MemberConfigVolumeName     = "member-config"
