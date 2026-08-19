@@ -74,6 +74,7 @@ const (
 	FinalizerPodGracefulShutdown       = "database.arangodb.com/graceful-shutdown"       // Finalizer added to All members, indicating the need for graceful shutdown
 	FinalizerPVCMemberExists           = "pvc.database.arangodb.com/member-exists"       // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
 	FinalizerDelayPodTermination       = "pod.database.arangodb.com/delay"               // Finalizer added to Pod, delays termination
+	FinalizerPodGatewayTLSKeyfile      = "gateway.database.arangodb.com/tls-keyfile"     // Finalizer added to Gateway Pods, ensures the member TLS keyfile secret is removed when the member is removed
 
 	AnnotationShutdownManagedContainer      = "shutdown.arangodb.com/managed"
 	AnnotationShutdownContainer             = "container.shutdown.arangodb.com"

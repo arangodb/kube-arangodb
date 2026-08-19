@@ -36,6 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -157,6 +158,10 @@ func (m *MemberGatewayPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 }
 
 func (m *MemberGatewayPod) GetFinalizers() []string {
+	if pod.IsTLSEnabled(m.Input) {
+		// Ensure the member's TLS keyfile secret is cleaned up when the gateway member is removed.
+		return []string{utilConstants.FinalizerPodGatewayTLSKeyfile}
+	}
 	return nil
 }
 
