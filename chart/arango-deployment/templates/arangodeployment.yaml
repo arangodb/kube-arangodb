@@ -1,0 +1,1321 @@
+apiVersion: database.arangodb.com/v1
+kind: ArangoDeployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+spec:
+  mode: {{ .Values.deployment.mode }}
+  environment: {{ .Values.deployment.environment }}
+  image: {{ .Values.deployment.image.name }}
+  imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+  {{- if .Values.deployment.image.pullSecrets }}
+  imagePullSecrets:
+  {{- range .Values.deployment.image.pullSecrets }}
+  - {{ . }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.image.discoveryMode }}
+  imageDiscoveryMode: {{ . }}
+  {{- end }}
+  {{- if ne .Values.deployment.auth.mode "Auto" }}
+  auth:
+    {{- if eq .Values.deployment.auth.mode "None" }}
+    jwtSecretName: None
+    {{- else if eq .Values.deployment.auth.mode "Generated" }}
+    jwtSecretName: {{ .Release.Name }}-jwt
+    {{- else }}
+    jwtSecretName: {{ .Values.deployment.auth.secretName }}
+    {{- end }}
+  {{- end }}
+  {{- if or (ne .Values.deployment.tls.mode "Auto") .Values.deployment.tls.altNames .Values.deployment.tls.ttl .Values.deployment.tls.sni }}
+  tls:
+    {{- if eq .Values.deployment.tls.mode "None" }}
+    caSecretName: None
+    {{- else if eq .Values.deployment.tls.mode "Generated" }}
+    caSecretName: {{ .Release.Name }}-ca
+    {{- else if ne .Values.deployment.tls.mode "Auto" }}
+    caSecretName: {{ .Values.deployment.tls.secretName }}
+    {{- end }}
+    {{- with .Values.deployment.tls.altNames }}
+    altNames:
+{{ toYaml . | indent 6 }}
+    {{- end }}
+    {{- with .Values.deployment.tls.ttl }}
+    ttl: {{ . | quote }}
+    {{- end }}
+    {{- with .Values.deployment.tls.sni }}
+    sni:
+      mapping:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.deployment.metrics.enabled }}
+  metrics:
+    enabled: true
+    tls: {{ .Values.deployment.metrics.tls }}
+    {{- with .Values.deployment.metrics.mode }}
+    mode: {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.deployment.license.secretName }}
+  license:
+    secretName: {{ .Values.deployment.license.secretName }}
+  {{- end }}
+  {{- if ne .Values.deployment.encryption.mode "None" }}
+  rocksdb:
+    encryption:
+      {{- if eq .Values.deployment.encryption.mode "Generated" }}
+      keySecretName: {{ .Release.Name }}-encryption
+      {{- else }}
+      keySecretName: {{ .Values.deployment.encryption.secretName }}
+      {{- end }}
+  {{- end }}
+  {{- if .Values.deployment.topology.enabled }}
+  topology:
+    enabled: true
+    {{- with .Values.deployment.topology.zones }}
+    zones: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.topology.label }}
+    label: {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.externalAccess.type }}
+  externalAccess:
+    type: {{ . }}
+    {{- with $.Values.deployment.externalAccess.nodePort }}
+    nodePort: {{ . }}
+    {{- end }}
+    {{- with $.Values.deployment.externalAccess.loadBalancerIP }}
+    loadBalancerIP: {{ . }}
+    {{- end }}
+    {{- if $.Values.deployment.externalAccess.loadBalancerSourceRanges }}
+    loadBalancerSourceRanges:
+    {{- range $.Values.deployment.externalAccess.loadBalancerSourceRanges }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- with $.Values.deployment.externalAccess.advertisedEndpoint }}
+    advertisedEndpoint: {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.communicationMethod }}
+  communicationMethod: {{ . }}
+  {{- end }}
+  {{- with .Values.deployment.clusterDomain }}
+  ClusterDomain: {{ . }}
+  {{- end }}
+  {{- if .Values.deployment.rebalancer.enabled }}
+  rebalancer:
+    enabled: true
+    {{- with .Values.deployment.rebalancer.parallelMoves }}
+    parallelMoves: {{ . }}
+    {{- end }}
+    optimizers:
+      leader: {{ .Values.deployment.rebalancer.optimizers.leader }}
+  {{- end }}
+  {{- with .Values.deployment.architecture }}
+  architecture:
+    {{- range . }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.timezone }}
+  timezone: {{ . }}
+  {{- end }}
+  {{- with .Values.deployment.restore.from }}
+  restoreFrom: {{ . }}
+  {{- end }}
+  {{- with .Values.deployment.restore.encryptionSecret }}
+  restoreEncryptionSecret: {{ . }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.features.foxxQueues) }}
+  features:
+    "foxx.queues": {{ .Values.deployment.features.foxxQueues }}
+  {{- end }}
+  {{- with .Values.deployment.memberPropagationMode }}
+  memberPropagationMode: {{ . }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.allowUnsafeUpgrade) }}
+  allowUnsafeUpgrade: {{ .Values.deployment.allowUnsafeUpgrade }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.downtimeAllowed) }}
+  downtimeAllowed: {{ .Values.deployment.downtimeAllowed }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.disableIPv6) }}
+  disableIPv6: {{ .Values.deployment.disableIPv6 }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.networkAttachedVolumes) }}
+  networkAttachedVolumes: {{ .Values.deployment.networkAttachedVolumes }}
+  {{- end }}
+  {{- if .Values.deployment.labels }}
+  labels:
+  {{- range $k, $v := .Values.deployment.labels }}
+    {{ $k }}: {{ $v }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.labelsMode }}
+  labelsMode: {{ . }}
+  {{- end }}
+  {{- if .Values.deployment.labelsIgnoreList }}
+  labelsIgnoreList:
+  {{- range .Values.deployment.labelsIgnoreList }}
+    - {{ . }}
+  {{- end }}
+  {{- end }}
+  {{- if .Values.deployment.annotations }}
+  annotations:
+  {{- range $k, $v := .Values.deployment.annotations }}
+    {{ $k }}: {{ $v }}
+  {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.annotationsMode }}
+  annotationsMode: {{ . }}
+  {{- end }}
+  {{- if .Values.deployment.annotationsIgnoreList }}
+  annotationsIgnoreList:
+  {{- range .Values.deployment.annotationsIgnoreList }}
+    - {{ . }}
+  {{- end }}
+  {{- end }}
+  {{- $upgrade := .Values.deployment.upgrade }}
+  {{- if or (not (kindIs "invalid" $upgrade.autoUpgrade)) (not (kindIs "invalid" $upgrade.debugLog)) $upgrade.order }}
+  upgrade:
+    {{- if not (kindIs "invalid" $upgrade.autoUpgrade) }}
+    autoUpgrade: {{ $upgrade.autoUpgrade }}
+    {{- end }}
+    {{- if not (kindIs "invalid" $upgrade.debugLog) }}
+    debugLog: {{ $upgrade.debugLog }}
+    {{- end }}
+    {{- with $upgrade.order }}
+    order: {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.deployment.rotate.order }}
+  rotate:
+    order: {{ . }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.recovery.autoRecover) }}
+  recovery:
+    autoRecover: {{ .Values.deployment.recovery.autoRecover }}
+  {{- end }}
+  {{- if not (kindIs "invalid" .Values.deployment.database.maintenance) }}
+  database:
+    maintenance: {{ .Values.deployment.database.maintenance }}
+  {{- end }}
+  {{- $timeouts := .Values.deployment.timeouts }}
+  {{- if or $timeouts.maintenanceGracePeriod $timeouts.actions }}
+  timeouts:
+    {{- with $timeouts.maintenanceGracePeriod }}
+    maintenanceGracePeriod: {{ . }}
+    {{- end }}
+    {{- if $timeouts.actions }}
+    actions:
+    {{- range $k, $v := $timeouts.actions }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- $lcres := .Values.deployment.lifecycle.resources }}
+  {{- if or $lcres.cpu $lcres.memory }}
+  lifecycle:
+    resources:
+      requests:
+        {{- with $lcres.cpu }}
+        cpu: {{ . }}
+        {{- end }}
+        {{- with $lcres.memory }}
+        memory: {{ . }}
+        {{- end }}
+      limits:
+        {{- with $lcres.cpu }}
+        cpu: {{ . }}
+        {{- end }}
+        {{- with $lcres.memory }}
+        memory: {{ . }}
+        {{- end }}
+  {{- end }}
+  {{- $sidecar := .Values.deployment.integration.sidecar }}
+  {{- if or (not (kindIs "invalid" $sidecar.listenPort)) (not (kindIs "invalid" $sidecar.controllerListenPort)) (not (kindIs "invalid" $sidecar.httpListenPort)) $sidecar.container }}
+  integration:
+    sidecar:
+      {{- if not (kindIs "invalid" $sidecar.listenPort) }}
+      listenPort: {{ $sidecar.listenPort }}
+      {{- end }}
+      {{- if not (kindIs "invalid" $sidecar.controllerListenPort) }}
+      controllerListenPort: {{ $sidecar.controllerListenPort }}
+      {{- end }}
+      {{- if not (kindIs "invalid" $sidecar.httpListenPort) }}
+      httpListenPort: {{ $sidecar.httpListenPort }}
+      {{- end }}
+      {{- with $sidecar.container }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  {{- end }}
+  {{- if or .Values.deployment.bootstrap.passwordSecretNames .Values.deployment.bootstrap.generatedPasswords }}
+  bootstrap:
+    passwordSecretNames:
+    {{- range $user, $secret := .Values.deployment.bootstrap.passwordSecretNames }}
+      {{ $user }}: {{ $secret }}
+    {{- end }}
+    {{- range $user := .Values.deployment.bootstrap.generatedPasswords }}
+      {{ $user }}: {{ $.Release.Name }}-{{ $user }}-password
+    {{- end }}
+  {{- end }}
+  {{- $id := .Values.deployment.id }}
+  {{- if or $id.resources.cpu $id.resources.memory $id.nodeSelector $id.tolerations $id.affinity $id.antiAffinity $id.nodeAffinity $id.priorityClassName $id.serviceAccountName $id.entrypoint $id.args $id.securityContext }}
+  id:
+    {{- if or $id.resources.cpu $id.resources.memory }}
+    resources:
+      requests:
+        {{- with $id.resources.cpu }}
+        cpu: {{ . }}
+        {{- end }}
+        {{- with $id.resources.memory }}
+        memory: {{ . }}
+        {{- end }}
+      limits:
+        {{- with $id.resources.cpu }}
+        cpu: {{ . }}
+        {{- end }}
+        {{- with $id.resources.memory }}
+        memory: {{ . }}
+        {{- end }}
+    {{- end }}
+    {{- if $id.nodeSelector }}
+    nodeSelector:
+    {{- range $k, $v := $id.nodeSelector }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if $id.tolerations }}
+    tolerations:
+    {{- range $id.tolerations }}
+      - key: {{ .key }}
+        operator: {{ .operator }}
+        {{- with .value }}
+        value: {{ . }}
+        {{- end }}
+        {{- with .effect }}
+        effect: {{ . }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- with $id.priorityClassName }}
+    priorityClassName: {{ . }}
+    {{- end }}
+    {{- with $id.serviceAccountName }}
+    serviceAccountName: {{ . }}
+    {{- end }}
+    {{- with $id.entrypoint }}
+    entrypoint: {{ . }}
+    {{- end }}
+    {{- if $id.args }}
+    args:
+    {{- range $id.args }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if $id.affinity }}
+    affinity:
+      {{- toYaml $id.affinity | nindent 6 }}
+    {{- end }}
+    {{- if $id.antiAffinity }}
+    antiAffinity:
+      {{- toYaml $id.antiAffinity | nindent 6 }}
+    {{- end }}
+    {{- if $id.nodeAffinity }}
+    nodeAffinity:
+      {{- toYaml $id.nodeAffinity | nindent 6 }}
+    {{- end }}
+    {{- if $id.securityContext }}
+    securityContext:
+      {{- toYaml $id.securityContext | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.deployment.platform.enabled }}
+  gateway:
+    enabled: true
+    dynamic: {{ .Values.deployment.platform.dynamic }}
+  {{- end }}
+  {{- if eq .Values.deployment.mode "Cluster" }}
+  agents:
+    count: {{ .Values.deployment.agents.count }}
+    resources:
+      requests:
+        cpu: {{ .Values.deployment.agents.resources.cpu }}
+        memory: {{ .Values.deployment.agents.resources.memory }}
+      limits:
+        cpu: {{ .Values.deployment.agents.resources.cpu }}
+        memory: {{ .Values.deployment.agents.resources.memory }}
+    {{- if .Values.deployment.agents.nodeSelector }}
+    nodeSelector:
+    {{- range $k, $v := .Values.deployment.agents.nodeSelector }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.agents.tolerations }}
+    tolerations:
+    {{- range .Values.deployment.agents.tolerations }}
+      - key: {{ .key }}
+        operator: {{ .operator }}
+        {{- with .value }}
+        value: {{ . }}
+        {{- end }}
+        {{- with .effect }}
+        effect: {{ . }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.agents.affinity }}
+    affinity:
+      {{- toYaml .Values.deployment.agents.affinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.antiAffinity }}
+    antiAffinity:
+      {{- toYaml .Values.deployment.agents.antiAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.labels }}
+    labels:
+    {{- range $k, $v := .Values.deployment.agents.labels }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.agents.annotations }}
+    annotations:
+    {{- range $k, $v := .Values.deployment.agents.annotations }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.agents.labelsMode }}
+    labelsMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.annotationsMode }}
+    annotationsMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.agents.labelsIgnoreList }}
+    labelsIgnoreList:
+    {{- range .Values.deployment.agents.labelsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.agents.annotationsIgnoreList }}
+    annotationsIgnoreList:
+    {{- range .Values.deployment.agents.annotationsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.agents.args }}
+    args:
+    {{- range .Values.deployment.agents.args }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.agents.sidecarCoreNames }}
+    sidecarCoreNames:
+    {{- range .Values.deployment.agents.sidecarCoreNames }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.agents.entrypoint }}
+    entrypoint: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.schedulerName }}
+    schedulerName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.priorityClassName }}
+    priorityClassName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.serviceAccountName }}
+    serviceAccountName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.port }}
+    port: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.exporterPort }}
+    exporterPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.internalPort }}
+    internalPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.internalPortProtocol }}
+    internalPortProtocol: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.externalPortEnabled }}
+    externalPortEnabled: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.restartPolicy }}
+    restartPolicy: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.shutdownMethod }}
+    shutdownMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.shutdownDelay }}
+    shutdownDelay: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.terminationGracePeriodSeconds }}
+    terminationGracePeriodSeconds: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.allowMemberRecreation }}
+    allowMemberRecreation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.extendedRotationCheck }}
+    extendedRotationCheck: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.upgradeMode }}
+    upgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.manualUpgradeMode }}
+    manualUpgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.indexMethod }}
+    indexMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.memoryReservation }}
+    memoryReservation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.overrideDetectedTotalMemory }}
+    overrideDetectedTotalMemory: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.overrideDetectedNumberOfCores }}
+    overrideDetectedNumberOfCores: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.agents.pvcResizeMode }}
+    pvcResizeMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.agents.sidecars }}
+    sidecars:
+      {{- toYaml .Values.deployment.agents.sidecars | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.initContainers }}
+    initContainers:
+      {{- toYaml .Values.deployment.agents.initContainers | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.securityContext }}
+    securityContext:
+      {{- toYaml .Values.deployment.agents.securityContext | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.probes }}
+    probes:
+      {{- toYaml .Values.deployment.agents.probes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.envs }}
+    envs:
+      {{- toYaml .Values.deployment.agents.envs | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.volumes }}
+    volumes:
+      {{- toYaml .Values.deployment.agents.volumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.volumeMounts }}
+    volumeMounts:
+      {{- toYaml .Values.deployment.agents.volumeMounts | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.ephemeralVolumes }}
+    ephemeralVolumes:
+      {{- toYaml .Values.deployment.agents.ephemeralVolumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.nodeAffinity }}
+    nodeAffinity:
+      {{- toYaml .Values.deployment.agents.nodeAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.podModes }}
+    podModes:
+      {{- toYaml .Values.deployment.agents.podModes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.agents.numactl }}
+    numactl:
+      {{- toYaml .Values.deployment.agents.numactl | nindent 6 }}
+    {{- end }}
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - {{ .Values.deployment.agents.volumeClaimTemplate.accessMode }}
+        {{- with .Values.deployment.agents.volumeClaimTemplate.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.deployment.agents.volumeClaimTemplate.size }}
+  dbservers:
+    count: {{ .Values.deployment.dbservers.count }}
+    resources:
+      requests:
+        cpu: {{ .Values.deployment.dbservers.resources.cpu }}
+        memory: {{ .Values.deployment.dbservers.resources.memory }}
+      limits:
+        cpu: {{ .Values.deployment.dbservers.resources.cpu }}
+        memory: {{ .Values.deployment.dbservers.resources.memory }}
+    {{- if .Values.deployment.dbservers.nodeSelector }}
+    nodeSelector:
+    {{- range $k, $v := .Values.deployment.dbservers.nodeSelector }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.tolerations }}
+    tolerations:
+    {{- range .Values.deployment.dbservers.tolerations }}
+      - key: {{ .key }}
+        operator: {{ .operator }}
+        {{- with .value }}
+        value: {{ . }}
+        {{- end }}
+        {{- with .effect }}
+        effect: {{ . }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.affinity }}
+    affinity:
+      {{- toYaml .Values.deployment.dbservers.affinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.antiAffinity }}
+    antiAffinity:
+      {{- toYaml .Values.deployment.dbservers.antiAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.labels }}
+    labels:
+    {{- range $k, $v := .Values.deployment.dbservers.labels }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.annotations }}
+    annotations:
+    {{- range $k, $v := .Values.deployment.dbservers.annotations }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.labelsMode }}
+    labelsMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.annotationsMode }}
+    annotationsMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.labelsIgnoreList }}
+    labelsIgnoreList:
+    {{- range .Values.deployment.dbservers.labelsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.annotationsIgnoreList }}
+    annotationsIgnoreList:
+    {{- range .Values.deployment.dbservers.annotationsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.args }}
+    args:
+    {{- range .Values.deployment.dbservers.args }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.sidecarCoreNames }}
+    sidecarCoreNames:
+    {{- range .Values.deployment.dbservers.sidecarCoreNames }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.entrypoint }}
+    entrypoint: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.schedulerName }}
+    schedulerName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.priorityClassName }}
+    priorityClassName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.serviceAccountName }}
+    serviceAccountName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.port }}
+    port: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.exporterPort }}
+    exporterPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.internalPort }}
+    internalPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.internalPortProtocol }}
+    internalPortProtocol: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.externalPortEnabled }}
+    externalPortEnabled: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.restartPolicy }}
+    restartPolicy: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.shutdownMethod }}
+    shutdownMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.shutdownDelay }}
+    shutdownDelay: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.terminationGracePeriodSeconds }}
+    terminationGracePeriodSeconds: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.allowMemberRecreation }}
+    allowMemberRecreation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.extendedRotationCheck }}
+    extendedRotationCheck: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.upgradeMode }}
+    upgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.manualUpgradeMode }}
+    manualUpgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.indexMethod }}
+    indexMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.memoryReservation }}
+    memoryReservation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.overrideDetectedTotalMemory }}
+    overrideDetectedTotalMemory: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.overrideDetectedNumberOfCores }}
+    overrideDetectedNumberOfCores: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.dbservers.pvcResizeMode }}
+    pvcResizeMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.sidecars }}
+    sidecars:
+      {{- toYaml .Values.deployment.dbservers.sidecars | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.initContainers }}
+    initContainers:
+      {{- toYaml .Values.deployment.dbservers.initContainers | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.securityContext }}
+    securityContext:
+      {{- toYaml .Values.deployment.dbservers.securityContext | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.probes }}
+    probes:
+      {{- toYaml .Values.deployment.dbservers.probes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.envs }}
+    envs:
+      {{- toYaml .Values.deployment.dbservers.envs | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.volumes }}
+    volumes:
+      {{- toYaml .Values.deployment.dbservers.volumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.volumeMounts }}
+    volumeMounts:
+      {{- toYaml .Values.deployment.dbservers.volumeMounts | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.ephemeralVolumes }}
+    ephemeralVolumes:
+      {{- toYaml .Values.deployment.dbservers.ephemeralVolumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.nodeAffinity }}
+    nodeAffinity:
+      {{- toYaml .Values.deployment.dbservers.nodeAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.podModes }}
+    podModes:
+      {{- toYaml .Values.deployment.dbservers.podModes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.dbservers.numactl }}
+    numactl:
+      {{- toYaml .Values.deployment.dbservers.numactl | nindent 6 }}
+    {{- end }}
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - {{ .Values.deployment.dbservers.volumeClaimTemplate.accessMode }}
+        {{- with .Values.deployment.dbservers.volumeClaimTemplate.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.deployment.dbservers.volumeClaimTemplate.size }}
+  coordinators:
+    count: {{ .Values.deployment.coordinators.count }}
+    resources:
+      requests:
+        cpu: {{ .Values.deployment.coordinators.resources.cpu }}
+        memory: {{ .Values.deployment.coordinators.resources.memory }}
+      limits:
+        cpu: {{ .Values.deployment.coordinators.resources.cpu }}
+        memory: {{ .Values.deployment.coordinators.resources.memory }}
+    {{- if .Values.deployment.coordinators.nodeSelector }}
+    nodeSelector:
+    {{- range $k, $v := .Values.deployment.coordinators.nodeSelector }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.tolerations }}
+    tolerations:
+    {{- range .Values.deployment.coordinators.tolerations }}
+      - key: {{ .key }}
+        operator: {{ .operator }}
+        {{- with .value }}
+        value: {{ . }}
+        {{- end }}
+        {{- with .effect }}
+        effect: {{ . }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.affinity }}
+    affinity:
+      {{- toYaml .Values.deployment.coordinators.affinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.antiAffinity }}
+    antiAffinity:
+      {{- toYaml .Values.deployment.coordinators.antiAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.labels }}
+    labels:
+    {{- range $k, $v := .Values.deployment.coordinators.labels }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.annotations }}
+    annotations:
+    {{- range $k, $v := .Values.deployment.coordinators.annotations }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.labelsMode }}
+    labelsMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.annotationsMode }}
+    annotationsMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.labelsIgnoreList }}
+    labelsIgnoreList:
+    {{- range .Values.deployment.coordinators.labelsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.annotationsIgnoreList }}
+    annotationsIgnoreList:
+    {{- range .Values.deployment.coordinators.annotationsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.args }}
+    args:
+    {{- range .Values.deployment.coordinators.args }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.sidecarCoreNames }}
+    sidecarCoreNames:
+    {{- range .Values.deployment.coordinators.sidecarCoreNames }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.entrypoint }}
+    entrypoint: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.schedulerName }}
+    schedulerName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.priorityClassName }}
+    priorityClassName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.serviceAccountName }}
+    serviceAccountName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.port }}
+    port: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.exporterPort }}
+    exporterPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.internalPort }}
+    internalPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.internalPortProtocol }}
+    internalPortProtocol: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.externalPortEnabled }}
+    externalPortEnabled: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.restartPolicy }}
+    restartPolicy: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.shutdownMethod }}
+    shutdownMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.shutdownDelay }}
+    shutdownDelay: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.terminationGracePeriodSeconds }}
+    terminationGracePeriodSeconds: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.allowMemberRecreation }}
+    allowMemberRecreation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.extendedRotationCheck }}
+    extendedRotationCheck: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.upgradeMode }}
+    upgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.manualUpgradeMode }}
+    manualUpgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.indexMethod }}
+    indexMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.memoryReservation }}
+    memoryReservation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.overrideDetectedTotalMemory }}
+    overrideDetectedTotalMemory: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.overrideDetectedNumberOfCores }}
+    overrideDetectedNumberOfCores: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.coordinators.pvcResizeMode }}
+    pvcResizeMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.sidecars }}
+    sidecars:
+      {{- toYaml .Values.deployment.coordinators.sidecars | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.initContainers }}
+    initContainers:
+      {{- toYaml .Values.deployment.coordinators.initContainers | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.securityContext }}
+    securityContext:
+      {{- toYaml .Values.deployment.coordinators.securityContext | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.probes }}
+    probes:
+      {{- toYaml .Values.deployment.coordinators.probes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.envs }}
+    envs:
+      {{- toYaml .Values.deployment.coordinators.envs | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.volumes }}
+    volumes:
+      {{- toYaml .Values.deployment.coordinators.volumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.volumeMounts }}
+    volumeMounts:
+      {{- toYaml .Values.deployment.coordinators.volumeMounts | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.ephemeralVolumes }}
+    ephemeralVolumes:
+      {{- toYaml .Values.deployment.coordinators.ephemeralVolumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.nodeAffinity }}
+    nodeAffinity:
+      {{- toYaml .Values.deployment.coordinators.nodeAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.podModes }}
+    podModes:
+      {{- toYaml .Values.deployment.coordinators.podModes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.coordinators.numactl }}
+    numactl:
+      {{- toYaml .Values.deployment.coordinators.numactl | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- if eq .Values.deployment.mode "Single" }}
+  single:
+    count: 1
+    resources:
+      requests:
+        cpu: {{ .Values.deployment.single.resources.cpu }}
+        memory: {{ .Values.deployment.single.resources.memory }}
+      limits:
+        cpu: {{ .Values.deployment.single.resources.cpu }}
+        memory: {{ .Values.deployment.single.resources.memory }}
+    {{- if .Values.deployment.single.nodeSelector }}
+    nodeSelector:
+    {{- range $k, $v := .Values.deployment.single.nodeSelector }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.single.tolerations }}
+    tolerations:
+    {{- range .Values.deployment.single.tolerations }}
+      - key: {{ .key }}
+        operator: {{ .operator }}
+        {{- with .value }}
+        value: {{ . }}
+        {{- end }}
+        {{- with .effect }}
+        effect: {{ . }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.single.affinity }}
+    affinity:
+      {{- toYaml .Values.deployment.single.affinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.antiAffinity }}
+    antiAffinity:
+      {{- toYaml .Values.deployment.single.antiAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.labels }}
+    labels:
+    {{- range $k, $v := .Values.deployment.single.labels }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.single.annotations }}
+    annotations:
+    {{- range $k, $v := .Values.deployment.single.annotations }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.single.labelsMode }}
+    labelsMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.annotationsMode }}
+    annotationsMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.single.labelsIgnoreList }}
+    labelsIgnoreList:
+    {{- range .Values.deployment.single.labelsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.single.annotationsIgnoreList }}
+    annotationsIgnoreList:
+    {{- range .Values.deployment.single.annotationsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.single.args }}
+    args:
+    {{- range .Values.deployment.single.args }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.single.sidecarCoreNames }}
+    sidecarCoreNames:
+    {{- range .Values.deployment.single.sidecarCoreNames }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.single.entrypoint }}
+    entrypoint: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.schedulerName }}
+    schedulerName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.priorityClassName }}
+    priorityClassName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.serviceAccountName }}
+    serviceAccountName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.port }}
+    port: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.exporterPort }}
+    exporterPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.internalPort }}
+    internalPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.internalPortProtocol }}
+    internalPortProtocol: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.externalPortEnabled }}
+    externalPortEnabled: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.restartPolicy }}
+    restartPolicy: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.shutdownMethod }}
+    shutdownMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.shutdownDelay }}
+    shutdownDelay: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.terminationGracePeriodSeconds }}
+    terminationGracePeriodSeconds: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.allowMemberRecreation }}
+    allowMemberRecreation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.extendedRotationCheck }}
+    extendedRotationCheck: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.upgradeMode }}
+    upgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.manualUpgradeMode }}
+    manualUpgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.indexMethod }}
+    indexMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.memoryReservation }}
+    memoryReservation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.overrideDetectedTotalMemory }}
+    overrideDetectedTotalMemory: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.overrideDetectedNumberOfCores }}
+    overrideDetectedNumberOfCores: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.single.pvcResizeMode }}
+    pvcResizeMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.single.sidecars }}
+    sidecars:
+      {{- toYaml .Values.deployment.single.sidecars | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.initContainers }}
+    initContainers:
+      {{- toYaml .Values.deployment.single.initContainers | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.securityContext }}
+    securityContext:
+      {{- toYaml .Values.deployment.single.securityContext | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.probes }}
+    probes:
+      {{- toYaml .Values.deployment.single.probes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.envs }}
+    envs:
+      {{- toYaml .Values.deployment.single.envs | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.volumes }}
+    volumes:
+      {{- toYaml .Values.deployment.single.volumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.volumeMounts }}
+    volumeMounts:
+      {{- toYaml .Values.deployment.single.volumeMounts | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.ephemeralVolumes }}
+    ephemeralVolumes:
+      {{- toYaml .Values.deployment.single.ephemeralVolumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.nodeAffinity }}
+    nodeAffinity:
+      {{- toYaml .Values.deployment.single.nodeAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.podModes }}
+    podModes:
+      {{- toYaml .Values.deployment.single.podModes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.single.numactl }}
+    numactl:
+      {{- toYaml .Values.deployment.single.numactl | nindent 6 }}
+    {{- end }}
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - {{ .Values.deployment.single.volumeClaimTemplate.accessMode }}
+        {{- with .Values.deployment.single.volumeClaimTemplate.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.deployment.single.volumeClaimTemplate.size }}
+  {{- end }}
+  {{- if .Values.deployment.platform.enabled }}
+  gateways:
+    count: {{ .Values.deployment.gateways.count }}
+    resources:
+      requests:
+        cpu: {{ .Values.deployment.gateways.resources.cpu }}
+        memory: {{ .Values.deployment.gateways.resources.memory }}
+      limits:
+        cpu: {{ .Values.deployment.gateways.resources.cpu }}
+        memory: {{ .Values.deployment.gateways.resources.memory }}
+    {{- if .Values.deployment.gateways.nodeSelector }}
+    nodeSelector:
+    {{- range $k, $v := .Values.deployment.gateways.nodeSelector }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.tolerations }}
+    tolerations:
+    {{- range .Values.deployment.gateways.tolerations }}
+      - key: {{ .key }}
+        operator: {{ .operator }}
+        {{- with .value }}
+        value: {{ . }}
+        {{- end }}
+        {{- with .effect }}
+        effect: {{ . }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.affinity }}
+    affinity:
+      {{- toYaml .Values.deployment.gateways.affinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.antiAffinity }}
+    antiAffinity:
+      {{- toYaml .Values.deployment.gateways.antiAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.labels }}
+    labels:
+    {{- range $k, $v := .Values.deployment.gateways.labels }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.annotations }}
+    annotations:
+    {{- range $k, $v := .Values.deployment.gateways.annotations }}
+      {{ $k }}: {{ $v }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.labelsMode }}
+    labelsMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.annotationsMode }}
+    annotationsMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.labelsIgnoreList }}
+    labelsIgnoreList:
+    {{- range .Values.deployment.gateways.labelsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.annotationsIgnoreList }}
+    annotationsIgnoreList:
+    {{- range .Values.deployment.gateways.annotationsIgnoreList }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.args }}
+    args:
+    {{- range .Values.deployment.gateways.args }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.sidecarCoreNames }}
+    sidecarCoreNames:
+    {{- range .Values.deployment.gateways.sidecarCoreNames }}
+      - {{ . }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.entrypoint }}
+    entrypoint: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.schedulerName }}
+    schedulerName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.priorityClassName }}
+    priorityClassName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.serviceAccountName }}
+    serviceAccountName: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.port }}
+    port: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.exporterPort }}
+    exporterPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.internalPort }}
+    internalPort: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.internalPortProtocol }}
+    internalPortProtocol: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.externalPortEnabled }}
+    externalPortEnabled: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.restartPolicy }}
+    restartPolicy: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.shutdownMethod }}
+    shutdownMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.shutdownDelay }}
+    shutdownDelay: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.terminationGracePeriodSeconds }}
+    terminationGracePeriodSeconds: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.allowMemberRecreation }}
+    allowMemberRecreation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.extendedRotationCheck }}
+    extendedRotationCheck: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.upgradeMode }}
+    upgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.manualUpgradeMode }}
+    manualUpgradeMode: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.indexMethod }}
+    indexMethod: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.memoryReservation }}
+    memoryReservation: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.overrideDetectedTotalMemory }}
+    overrideDetectedTotalMemory: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.overrideDetectedNumberOfCores }}
+    overrideDetectedNumberOfCores: {{ . }}
+    {{- end }}
+    {{- with .Values.deployment.gateways.pvcResizeMode }}
+    pvcResizeMode: {{ . }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.sidecars }}
+    sidecars:
+      {{- toYaml .Values.deployment.gateways.sidecars | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.initContainers }}
+    initContainers:
+      {{- toYaml .Values.deployment.gateways.initContainers | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.securityContext }}
+    securityContext:
+      {{- toYaml .Values.deployment.gateways.securityContext | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.probes }}
+    probes:
+      {{- toYaml .Values.deployment.gateways.probes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.envs }}
+    envs:
+      {{- toYaml .Values.deployment.gateways.envs | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.volumes }}
+    volumes:
+      {{- toYaml .Values.deployment.gateways.volumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.volumeMounts }}
+    volumeMounts:
+      {{- toYaml .Values.deployment.gateways.volumeMounts | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.ephemeralVolumes }}
+    ephemeralVolumes:
+      {{- toYaml .Values.deployment.gateways.ephemeralVolumes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.nodeAffinity }}
+    nodeAffinity:
+      {{- toYaml .Values.deployment.gateways.nodeAffinity | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.podModes }}
+    podModes:
+      {{- toYaml .Values.deployment.gateways.podModes | nindent 6 }}
+    {{- end }}
+    {{- if .Values.deployment.gateways.numactl }}
+    numactl:
+      {{- toYaml .Values.deployment.gateways.numactl | nindent 6 }}
+    {{- end }}
+  {{- end }}
