@@ -673,6 +673,14 @@ chart-operator-enterprise-arm64: helm
 
 manifests: chart-operator-enterprise-arm64
 
+.PHONY: chart-arango-deployment
+chart-arango-deployment: export CHART_NAME := arango-deployment
+chart-arango-deployment: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+manifests: chart-arango-deployment
+
 .PHONY: manifests-verify
 manifests-verify:
 	$(MAKE) manifest-verify-plain-ce
