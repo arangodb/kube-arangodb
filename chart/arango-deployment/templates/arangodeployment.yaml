@@ -22,24 +22,23 @@ spec:
   {{- with .Values.deployment.image.discoveryMode }}
   imageDiscoveryMode: {{ . }}
   {{- end }}
-  authentication:
+  {{- if ne .Values.deployment.auth.mode "Auto" }}
+  auth:
     {{- if eq .Values.deployment.auth.mode "None" }}
     jwtSecretName: None
-    {{- else if eq .Values.deployment.auth.mode "Auto" }}
-    jwtSecretName: Auto
     {{- else if eq .Values.deployment.auth.mode "Generated" }}
     jwtSecretName: {{ .Release.Name }}-jwt
     {{- else }}
     jwtSecretName: {{ .Values.deployment.auth.secretName }}
     {{- end }}
+  {{- end }}
+  {{- if or (ne .Values.deployment.tls.mode "Auto") .Values.deployment.tls.altNames .Values.deployment.tls.ttl .Values.deployment.tls.sni }}
   tls:
     {{- if eq .Values.deployment.tls.mode "None" }}
     caSecretName: None
-    {{- else if eq .Values.deployment.tls.mode "Auto" }}
-    caSecretName: Auto
     {{- else if eq .Values.deployment.tls.mode "Generated" }}
     caSecretName: {{ .Release.Name }}-ca
-    {{- else }}
+    {{- else if ne .Values.deployment.tls.mode "Auto" }}
     caSecretName: {{ .Values.deployment.tls.secretName }}
     {{- end }}
     {{- with .Values.deployment.tls.altNames }}
@@ -54,6 +53,7 @@ spec:
       mapping:
 {{ toYaml . | indent 8 }}
     {{- end }}
+  {{- end }}
   {{- if .Values.deployment.metrics.enabled }}
   metrics:
     enabled: true
