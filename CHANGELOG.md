@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) Validate gateway serving certificates (endpoint verification, expiry margin and alt-name match) like arangod members and trigger keyfile renewal + restart when required
+- (Feature) Deliver the gateway's TLS certificates (internal and SNI) to Envoy via filesystem SDS with a watched directory, so a rotated certificate is reloaded in place without restarting the gateway
 - (Maintenance) Add a finalizer to gateway Pods that cleans up the member TLS keyfile secret when the gateway member is removed
 - (Maintenance) Lint all Helm charts in CI via `make helm-lint`; fix the `platform-storage` passwords template document separator and add the missing `apiVersion` to the `kube-arangodb-crd` chart
 - (Documentation) Add a README for the `platform-storage` chart and reference it from `docs/helm.md`, the MinIO storage-integration docs and the main README
