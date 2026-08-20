@@ -1019,7 +1019,7 @@ Possible Values:
 
 ### .spec.architecture
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L259)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L261)</sup>
 
 Architecture defines the list of supported architectures.
 First element on the list is marked as default architecture.
@@ -1096,7 +1096,7 @@ KillPodProbability is the chance of a pod being killed during an event
 
 ### .spec.ClusterDomain
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L231)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L233)</sup>
 
 ClusterDomain define domain used in the kubernetes cluster.
 
@@ -1106,7 +1106,7 @@ Default Value: `cluster.local`
 
 ### .spec.communicationMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L239)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L241)</sup>
 
 CommunicationMethod define communication method used in deployment
 
@@ -4867,7 +4867,7 @@ Links:
 
 ### .spec.memberPropagationMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L215)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L217)</sup>
 
 MemberPropagationMode defines how changes to pod spec should be propogated.
 Changes to a pod’s configuration require a restart of that pod in almost all cases.
@@ -8288,7 +8288,7 @@ MaintenanceGracePeriod action timeout
 
 ### .spec.timezone
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L263)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec.go#L265)</sup>
 
 Timezone if specified, will set a timezone for deployment.
 Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/London`
