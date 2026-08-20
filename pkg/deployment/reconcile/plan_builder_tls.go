@@ -400,6 +400,42 @@ func (r *Reconciler) createKeyfileRenewalPlanInPlace(ctx context.Context, apiObj
 	return plan
 }
 
+// createKeyfileRenewalPlanGateway validates the gateway members' serving certificates with the same
+// checks applied to arangod members (endpoint verification, expiry margin and alt-name match) and,
+// when renewal is required, triggers a keyfile removal + gateway restart. Gateways always use the
+// recreate path (the arangod in-place propagation check does not apply to Envoy).
+func (r *Reconciler) createKeyfileRenewalPlanGateway(ctx context.Context, apiObject k8sutil.APIObject,
+	spec api.DeploymentSpec, status api.DeploymentStatus,
+	planCtx PlanBuilderContext) api.Plan {
+	if !spec.TLS.IsSecure() || !spec.Gateway.IsEnabled() {
+		return nil
+	}
+
+	var plan api.Plan
+	group := api.ServerGroupGateways
+
+	for _, member := range status.Members.MembersOfGroup(group) {
+		if !plan.IsEmpty() {
+			continue
+		}
+
+		cache, ok := planCtx.ACS().ClusterCache(member.ClusterID)
+		if !ok {
+			continue
+		}
+
+		lCtx, c := context.WithTimeout(ctx, 500*time.Millisecond)
+		defer c()
+
+		if renew, _ := r.keyfileRenewalRequired(lCtx, apiObject, spec.TLS, spec, cache, planCtx, group, member, api.TLSRotateModeRecreate); renew {
+			r.planLogger.Info("Renewal of keyfile required - Recreate (gateway)")
+			plan = append(plan, tlsRotateConditionAction(group, member.ID, "Restart gateway after keyfile removal"))
+		}
+	}
+
+	return plan
+}
+
 func (r *Reconciler) createKeyfileRenewalPlan(ctx context.Context, apiObject k8sutil.APIObject,
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
@@ -418,6 +454,8 @@ func (r *Reconciler) createKeyfileRenewalPlan(ctx context.Context, apiObject k8s
 	default:
 		plan = append(plan, r.createKeyfileRenewalPlanDefault(gCtx, apiObject, spec, status, planCtx)...)
 	}
+
+	plan = append(plan, r.createKeyfileRenewalPlanGateway(gCtx, apiObject, spec, status, planCtx)...)
 
 	return plan
 }
@@ -538,7 +576,8 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 		var altNames ktls.KeyfileInput
 
 		switch group.Type() {
-		case api.ServerGroupTypeArangoD:
+		case api.ServerGroupTypeArangoD, api.ServerGroupTypeGateway:
+			// The gateway serves TLS (via Envoy) on the same alt names as an arangod member.
 			altNames, err = ktls.GetServerAltNames(apiObject, spec, tlsSpec, service, group, member)
 		case api.ServerGroupTypeArangoSync:
 			altNames, err = ktls.GetSyncAltNames(apiObject, spec, tlsSpec, group, member)
@@ -601,7 +640,9 @@ func (r *Reconciler) keyfileRenewalRequired(ctx context.Context, apiObject k8sut
 				r.planLogger.Str("current", tls.Result.KeyFile.GetSHA().Checksum()).Str("desired", keyfileSha).Debug("Unable to get tls details")
 				return true, false
 			}
-		case api.ServerGroupTypeArangoSync:
+		case api.ServerGroupTypeArangoSync, api.ServerGroupTypeGateway:
+			// The gateway reloads a rotated certificate in place via Envoy SDS, so there is no
+			// in-place keyfile propagation to verify here.
 			break
 		default:
 			assertion.InvalidGroupKey.Assert(true, "Unable to check TLS Key Renewal for an unknown group: %s", group.AsRole())
