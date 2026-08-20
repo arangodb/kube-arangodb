@@ -63,6 +63,11 @@ GOVERSION ?= $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION ?= alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 
+# Pinned by tag, not by GitHub release: golang/vuln stopped publishing releases at
+# v1.1.4 while continuing to tag, so anything resolving "latest" from the releases
+# API reports v1.1.4. Check the tag list or the module proxy when bumping.
+GOVULNCHECK_VERSION := v1.6.0
+
 GOBUILDTAGS :=
 
 ifeq ($(TEST_BUILD),1)
@@ -838,8 +843,14 @@ tools: tools-min
 	@GOBIN=$(GOPATH)/bin go install github.com/golang/protobuf/protoc-gen-go@v1.5.4
 	@GOBIN=$(GOPATH)/bin go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 	@GOBIN=$(GOPATH)/bin go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.27.3
-	@echo ">> Fetching govulncheck"
-	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+	@$(MAKE) tool-govulncheck
+
+# Own target so a job needing only the scanner skips the whole toolchain, and so
+# the version pin has one home.
+.PHONY: tool-govulncheck
+tool-govulncheck:
+	@echo ">> Fetching govulncheck $(GOVULNCHECK_VERSION)"
+	@GOBIN=$(GOPATH)/bin go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
 
 .PHONY: vendor
 vendor:
