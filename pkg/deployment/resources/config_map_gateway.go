@@ -209,6 +209,11 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway lds config"))
 	}
 
+	gatewaySDSFiles, err := cfg.RenderSDS()
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway sds config"))
+	}
+
 	inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
 		Hash: gatewayCfgYamlChecksum,
 	}
@@ -241,6 +246,15 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
+	}
+
+	// SDS secret definitions are only rendered when TLS is enabled. The gateway pod mounts the
+	// resulting ConfigMap only in that case (see createGatewayVolumes), so skip it otherwise to
+	// avoid managing (and repeatedly patching) an empty ConfigMap.
+	if len(gatewaySDSFiles) > 0 {
+		if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "sds"), gatewaySDSFiles); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -379,11 +393,15 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 	}
 
 	if spec.TLS.IsSecure() {
-		// Enabled TLS, add config
+		// Enabled TLS, add config. Certificates are delivered to Envoy via filesystem SDS so a
+		// rotated keyfile is reloaded in place; WatchDir points at the mounted secret directory.
 		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
 		cfg.DefaultTLS = &gateway.ConfigTLS{
+			Name:            utilConstants.GatewaySDSInternalName,
 			CertificatePath: keyPath,
 			PrivateKeyPath:  keyPath,
+			WatchDir:        shared.TLSKeyfileVolumeMountDir,
+			SDSPath:         path.Join(utilConstants.GatewaySDSVolumeMountDir, gateway.SDSFileName(utilConstants.GatewaySDSInternalName)),
 		}
 		cfg.DefaultDestination.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
 
@@ -395,11 +413,17 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					continue
 				}
 
+				name := fmt.Sprintf("sni-%s", volume)
+				watchDir := path.Join(shared.TLSSNIKeyfileVolumeMountDir, volume)
+				f := path.Join(watchDir, utilConstants.SecretTLSKeyfile)
+
 				var s gateway.ConfigSNI
-				f := path.Join(shared.TLSSNIKeyfileVolumeMountDir, volume, utilConstants.SecretTLSKeyfile)
 				s.ConfigTLS = gateway.ConfigTLS{
+					Name:            name,
 					CertificatePath: f,
 					PrivateKeyPath:  f,
+					WatchDir:        watchDir,
+					SDSPath:         path.Join(utilConstants.GatewaySDSVolumeMountDir, gateway.SDSFileName(name)),
 				}
 				s.ServerNames = servers
 				cfg.SNI = append(cfg.SNI, s)

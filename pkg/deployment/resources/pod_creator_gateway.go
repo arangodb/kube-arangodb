@@ -71,6 +71,17 @@ func createGatewayVolumes(input pod.Input) pod.Volumes {
 		ReadOnly:  true,
 	})
 
+	// SDS secret definitions, referenced by the listener's tls_certificate_sds_secret_configs.
+	// Only mounted when TLS is enabled (the ConfigMap is only rendered in that case).
+	if pod.IsTLSEnabled(input) {
+		volumes.AddVolume(k8sutil.CreateVolumeWithConfigMap(utilConstants.GatewaySDSVolumeName, GetGatewayConfigMapName(input.ApiObject.GetName(), "sds")))
+		volumes.AddVolumeMount(core.VolumeMount{
+			Name:      utilConstants.GatewaySDSVolumeName,
+			MountPath: utilConstants.GatewaySDSVolumeMountDir,
+			ReadOnly:  true,
+		})
+	}
+
 	// TLS
 	volumes.Append(pod.TLS(), input)
 
