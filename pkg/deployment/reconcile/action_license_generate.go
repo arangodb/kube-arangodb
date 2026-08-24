@@ -60,8 +60,6 @@ type actionLicenseGenerate struct {
 }
 
 func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
-	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
 	spec := a.actionCtx.GetSpec()
 	if !spec.License.HasSecretName() {
 		a.log.Error("License is not set")
@@ -119,7 +117,10 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 
 	lm := lmanager.NewClient(lmanager.ArangoLicenseManagerEndpoint, l.API.ClientID, l.API.ClientSecret)
 
-	generatedLicense, err := lm.License(ctx, req)
+	generatedLicense, err := globals.RunWithTimeoutE(ctx, globals.GetGlobals().Timeouts().LicenseManager(),
+		func(ctxChild context.Context) (lmanager.LicenseResponse, error) {
+			return lm.License(ctxChild, req)
+		})
 	if err != nil {
 		a.log.Err(err).Error("Unable to create license")
 		a.actionCtx.CreateEvent(&k8sutil.Event{
@@ -132,14 +133,18 @@ func (a *actionLicenseGenerate) Start(ctx context.Context) (bool, error) {
 	}
 	a.log.Str("id", generatedLicense.ID).Info("License Generated")
 
-	client := client.NewClient(c.Connection())
+	dbClient := client.NewClient(c.Connection())
 
-	if err := client.SetLicense(ctxChild, generatedLicense.License, true); err != nil {
+	if err := globals.GetGlobals().Timeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return dbClient.SetLicense(ctxChild, generatedLicense.License, true)
+	}); err != nil {
 		a.log.Err(err).Error("Unable to set license")
 		return true, nil
 	}
 
-	license, err := client.GetLicense(ctxChild)
+	license, err := globals.RunWithTimeoutE(ctx, globals.GetGlobals().Timeouts().ArangoD(), func(ctxChild context.Context) (client.License, error) {
+		return dbClient.GetLicense(ctxChild)
+	})
 	if err != nil {
 		a.log.Err(err).Error("Unable to get license")
 		return true, nil

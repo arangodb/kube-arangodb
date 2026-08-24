@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,15 @@ func (t *timeout) Run(run TimeoutRunFunc) error {
 }
 
 func (t *timeout) RunWithTimeout(ctx context.Context, run TimeoutRunFunc) error {
+	newCtx, c := t.WithTimeout(ctx)
+	defer c()
+	return run(newCtx)
+}
+
+// RunWithTimeoutE runs run within a child context bounded by the given Timeout and returns its
+// result. It is the generic, value-returning counterpart of Timeout.RunWithTimeout - it removes the
+// WithTimeout/cancel/defer boilerplate for calls that return a value and an error.
+func RunWithTimeoutE[T any](ctx context.Context, t Timeout, run func(ctxChild context.Context) (T, error)) (T, error) {
 	newCtx, c := t.WithTimeout(ctx)
 	defer c()
 	return run(newCtx)

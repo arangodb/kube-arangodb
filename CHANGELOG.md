@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add a dedicated `--timeout.license-manager` (default 30s) for the ArangoDB License Manager API call (license generation), so a slow License Manager does not fail licensing within the general 5s ArangoDB request timeout
+- (Maintenance) Raise the default reconciliation timeout (`--timeout.reconciliation`) from 1 to 2 minutes
 - (Feature) Validate gateway serving certificates (endpoint verification, expiry margin and alt-name match) like arangod members and trigger keyfile renewal + restart when required
 - (Feature) Deliver the gateway's TLS certificates (internal and SNI) to Envoy via filesystem SDS with a watched directory, so a rotated certificate is reloaded in place without restarting the gateway
 - (Maintenance) Add a finalizer to gateway Pods that cleans up the member TLS keyfile secret when the gateway member is removed
