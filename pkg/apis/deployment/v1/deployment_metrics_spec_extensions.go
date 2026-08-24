@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ package v1
 type MetricsSpecExtensions struct {
 	// UsageMetrics enables ArangoDB Usage metrics scrape. Affects only DBServers in the Cluster mode.
 	// +doc/default: false
-	// +doc/link: Documentation|https://docs.arangodb.com/devel/develop/http-api/monitoring/metrics/#get-usage-metrics
+	// +doc/link: Documentation|https://docs.arango.ai/arangodb/devel/develop/http-api/monitoring/metrics/#get-the-usage-metrics
 	// +doc/important: UsageMetrics needs to be also enabled via DBServer Arguments
 	UsageMetrics *bool `json:"usageMetrics,omitempty"`
 }
