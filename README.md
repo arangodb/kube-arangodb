@@ -245,8 +245,9 @@ Flags:
       --timeout.backup-upload duration                         The request timeout to the ArangoDB during uploading files (default 5m0s)
       --timeout.force-delete-pod-grace-period duration         Default period when ArangoDB Pod should be forcefully removed after all containers were stopped - set to 0 to disable forceful removals (default 15m0s)
       --timeout.k8s duration                                   The request timeout to the kubernetes (default 2s)
+      --timeout.license-manager duration                       The request timeout for the ArangoDB License Manager API calls (default 30s)
       --timeout.pod-scheduling-grace-period duration           Default period when ArangoDB Pod should be deleted in case of scheduling info change - set to 0 to disable (default 15s)
-      --timeout.reconciliation duration                        The reconciliation timeout to the ArangoDB CR (default 1m0s)
+      --timeout.reconciliation duration                        The reconciliation timeout to the ArangoDB CR (default 2m0s)
       --timeout.shard-rebuild duration                         Timeout after which particular out-synced shard is considered as failed and rebuild is triggered (default 1h0m0s)
       --timeout.shard-rebuild-retry duration                   Timeout after which rebuild shards retry flow is triggered (default 4h0m0s)
       --webhook.enabled                                        Enable integrated webhook server
