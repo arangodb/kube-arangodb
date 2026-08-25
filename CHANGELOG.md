@@ -10,6 +10,7 @@
 - (Maintenance) Add a finalizer to gateway Pods that cleans up the member TLS keyfile secret when the gateway member is removed
 - (Maintenance) Lint all Helm charts in CI via `make helm-lint`; fix the `platform-storage` passwords template document separator and add the missing `apiVersion` to the `kube-arangodb-crd` chart
 - (Documentation) Add a README for the `platform-storage` chart and reference it from `docs/helm.md`, the MinIO storage-integration docs and the main README
+- (Feature) (Chart) Add the arango-deployment Helm chart that renders an ArangoDeployment (Single, Cluster or ActiveFailover) with schema-validated values for the common use-cases and a deep-merged spec override; the chart can also render an ArangoPlatformStorage backend (s3, gcs, azureBlobStorage) or deploy an in-cluster MinIO
 - (Bugfix) Report `INTEGRATION_AUTHORIZATION_MODE_COREDB` as `RBAC` when the `rbac-coredb` feature enables core-level RBAC enforcement (`--server.external-rbac-service`); it was always downgraded to `Native`
 - (Feature) Add the hidden `rbac-coredb` feature (requires `rbac-enforced` and `central-services`) that points the serving member's arangod at the local authorization integration sidecar via `--server.external-rbac-service`
 - (Feature) Allow an svc HTTP gateway to opt into plain HTTP, honoured only on a loopback address (a routable/0.0.0.0 listener is always served with TLS); the serving-member sidecar's HTTP gateway binds loopback and opts in, while its gRPC endpoint keeps TLS

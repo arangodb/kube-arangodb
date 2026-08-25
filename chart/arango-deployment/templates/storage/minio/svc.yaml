@@ -1,0 +1,18 @@
+{{- if eq .Values.storage.mode "minio" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-minio" .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: minio
+spec:
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: minio
+  ports:
+    - port: 9000
+      targetPort: 9000
+{{- end }}

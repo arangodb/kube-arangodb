@@ -1,0 +1,540 @@
+# Values for rendering a database.arangodb.com/v1 ArangoDeployment.
+# The `deployment` block below is rendered into the ArangoDeployment spec.
+deployment:
+  # mode: Single or Cluster.
+  mode: Cluster
+  # environment: Development or Production.
+  environment: Production
+  # image configures the ArangoDB server container image.
+  image:
+    name: arangodb/arangodb:latest
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+    # discoveryMode selects how the image is resolved for the pods (spec.imageDiscoveryMode):
+    #   kubelet - use the sha256 of the discovered image in the pods (operator default)
+    #   direct  - use the image from image.name directly in the pods
+    # "" keeps the operator default (kubelet).
+    discoveryMode: ""
+  # auth configures ArangoDB JWT authentication. mode:
+  #   None      - authentication disabled
+  #   Auto      - the operator generates the JWT secret (default)
+  #   Generated - Helm creates the JWT secret `<release>-jwt` with a random token
+  #   Existing  - use the pre-existing secret `secretName`
+  auth:
+    mode: Auto
+    # secretName is used only for the Existing mode.
+    secretName: ""
+  # tls configures ArangoDB TLS. mode:
+  #   None      - TLS disabled
+  #   Auto      - the operator generates the CA (default)
+  #   Generated - Helm creates the CA secret `<release>-ca` (ca.crt / ca.key)
+  #   Existing  - use the pre-existing CA secret `secretName`
+  tls:
+    mode: Auto
+    # secretName is used only for the Existing mode.
+    secretName: ""
+    # altNames adds subject alternative names (DNS names / emails) to generated certificates.
+    altNames: []
+    # ttl sets the time-to-live of generated server certificates (e.g. "2160h").
+    ttl: ""
+    # sni maps a TLS keyfile secret to the server names it serves (Enterprise; spec.tls.sni.mapping):
+    #   sni:
+    #     my-cert-secret:
+    #       - domain.example.com
+    sni: {}
+  # metrics configures the ArangoDB metrics exporter.
+  metrics:
+    enabled: false
+    tls: false
+    # mode: exporter, sidecar or internal ("" keeps the operator default).
+    mode: ""
+  # license configures the ArangoDB Enterprise license.
+  #   Existing secret: set secretName, leave the inputs empty.
+  #   As input:        set value (v1/v2) or clientID+clientSecret (manager); Helm creates `secretName`.
+  # version: v1 | v2 | manager (License Manager API credentials). Selects the secret key(s) only when
+  # Helm creates the secret.
+  license:
+    version: v2
+    secretName: ""
+    # value: license key (used for v1/v2).
+    value: ""
+    # clientID / clientSecret: License Manager credentials (used for version manager).
+    clientID: ""
+    clientSecret: ""
+  # encryption configures RocksDB encryption-at-rest (Enterprise). mode:
+  #   None      - encryption disabled (default)
+  #   Generated - Helm creates a 32-byte key secret `<release>-encryption` (never rotated)
+  #   Existing  - use the pre-existing secret `secretName` (data key `key`, exactly 32 bytes)
+  # NOTE: the encryption key cannot be changed after the deployment is created.
+  encryption:
+    mode: None
+    # secretName is used only for the Existing mode.
+    secretName: ""
+  # topology enables zone-aware member placement (Enterprise).
+  topology:
+    enabled: false
+    zones: 0
+    # label: node label used to derive zones ("" keeps the operator default).
+    label: ""
+  # externalAccess configures how the deployment is exposed. Rendered only when type is set.
+  externalAccess:
+    # type: Auto | None | LoadBalancer | NodePort | Managed ("" keeps the operator default).
+    type: ""
+    nodePort: 0
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    advertisedEndpoint: ""
+  # communicationMethod: "" | Service | ServiceClusterIP | Headless | DNS | Short | IP
+  communicationMethod: ""
+  # clusterDomain overrides the Kubernetes cluster DNS domain (default cluster.local).
+  clusterDomain: ""
+  # bootstrap configures initial user passwords.
+  bootstrap:
+    # passwordSecretNames maps a user to the secret holding its initial password.
+    # Each value is "Auto" (operator generates), "None", or an existing secret name. E.g. { root: Auto }.
+    passwordSecretNames: {}
+    # generatedPasswords: users for whom Helm creates a password secret `<release>-<user>-password`
+    # with a random password (reused on upgrade). E.g. [ root ].
+    generatedPasswords: []
+  # id configures the ID group pods (ServerIDGroupSpec). Rendered only when a field is set.
+  id:
+    resources:
+      cpu: ""
+      memory: ""
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    nodeAffinity: {}
+    priorityClassName: ""
+    serviceAccountName: ""
+    entrypoint: ""
+    args: []
+    securityContext: {}
+  # rebalancer configures the shard rebalancer (spec.rebalancer). Rendered only when enabled.
+  rebalancer:
+    enabled: false
+    # parallelMoves: number of concurrent shard moves (0 keeps the operator default of 32).
+    parallelMoves: 0
+    # optimizers configures the rebalancer optimizers.
+    optimizers:
+      # leader: enable the leader optimizer (operator default true).
+      leader: true
+  # architecture: list of supported CPU architectures. Allowed items: amd64, arm64. The first item is
+  # the deployment default; specify two items only to migrate from one architecture to the other. Empty
+  # keeps the operator default (amd64).
+  architecture: []
+  # timezone sets the deployment timezone (spec.timezone). Must be a tzdata name, e.g. America/New_York
+  # or Europe/London. "" keeps the operator/container default.
+  timezone: ""
+  # restore: FOR RESTORE ONLY - leave empty for normal operation. Setting `from` makes the operator
+  # restore this deployment's data from the named ArangoBackup (spec.restoreFrom), OVERWRITING the
+  # current data. A new restore runs whenever `from` changes; clearing it removes the restore status.
+  restore:
+    # from: name of the ArangoBackup resource to restore from (spec.restoreFrom). "" = no restore.
+    from: ""
+    # encryptionSecret: optional secret name holding the encryption key for an encrypted backup
+    # (spec.restoreEncryptionSecret). Only relevant when `from` is set.
+    encryptionSecret: ""
+  # features configures per-deployment feature flags (spec.features).
+  features:
+    # foxxQueues toggles Foxx queues, rendered as spec.features."foxx.queues". Set null to omit and use
+    # the operator default.
+    foxxQueues: true
+  # memberPropagationMode controls when pod spec changes are applied (spec.memberPropagationMode):
+  #   always     - restart the member as soon as a configuration change is discovered (operator default)
+  #   on-restart - defer the configuration change until the next restart (fewer restarts on upgrades)
+  # "" keeps the operator default (always).
+  memberPropagationMode: ""
+  # allowUnsafeUpgrade permits an upgrade even when a member is missing or shards are not in sync
+  # (spec.allowUnsafeUpgrade). Set null to omit and use the operator default.
+  allowUnsafeUpgrade: false
+  # downtimeAllowed permits operations that may cause downtime, e.g. certain upgrades
+  # (spec.downtimeAllowed). Set null to omit and use the operator default.
+  downtimeAllowed: false
+  # disableIPv6 disables IPv6 for the deployment (spec.disableIPv6). Cannot be changed after creation.
+  # Set null to omit and use the operator default.
+  disableIPv6: false
+  # networkAttachedVolumes: true when PersistentVolumes can move between nodes; false when volumes are
+  # tied to a specific pod (spec.networkAttachedVolumes). Set null to omit and use the operator default.
+  networkAttachedVolumes: true
+  # labels added to all ArangoDeployment-owned resources: pods, services, PVCs, PDBs (spec.labels).
+  labels: {}
+  # labelsMode controls how labels are applied (spec.labelsMode): disabled | append | replace.
+  # "" keeps the operator default (disabled when no labels are set).
+  labelsMode: ""
+  # labelsIgnoreList: regexp or plain label keys the operator should ignore (spec.labelsIgnoreList).
+  labelsIgnoreList: []
+  # annotations added to all ArangoDeployment-owned resources: pods, services, PVCs, PDBs (spec.annotations).
+  annotations: {}
+  # annotationsMode controls how annotations are applied (spec.annotationsMode): disabled | append | replace.
+  # "" keeps the operator default (disabled when no annotations are set).
+  annotationsMode: ""
+  # annotationsIgnoreList: regexp or plain annotation keys the operator should ignore (spec.annotationsIgnoreList).
+  annotationsIgnoreList: []
+  # upgrade configures upgrade behavior (spec.upgrade). Rendered only when a field is set.
+  upgrade:
+    # autoUpgrade forces an upgrade even when not required, e.g. to recover a stuck upgrade (default false).
+    autoUpgrade: null
+    # debugLog enables verbose logging in the upgrade init containers (default false).
+    debugLog: null
+    # order: restart order during an upgrade - standard | coordinatorFirst. "" keeps the operator default.
+    order: ""
+  # rotate configures pod rotation behavior (spec.rotate). Rendered only when order is set.
+  rotate:
+    # order: rotation restart order - standard | coordinatorFirst. "" keeps the operator default.
+    order: ""
+  # recovery configures cluster recovery (spec.recovery). Rendered only when autoRecover is set.
+  recovery:
+    # autoRecover lets the operator auto-recover the cluster (default false).
+    autoRecover: null
+  # database configures database-side state (spec.database). Rendered only when maintenance is set.
+  database:
+    # maintenance toggles cluster maintenance mode (requires the maintenance feature; default false).
+    maintenance: null
+  # timeouts configures operation timeouts (spec.timeouts). Rendered only when a field is set.
+  timeouts:
+    # maintenanceGracePeriod: grace period for maintenance actions, e.g. "30m". "" keeps the operator default.
+    maintenanceGracePeriod: ""
+    # actions: per-action timeouts as a map, e.g. { AddMember: 30m }. Keys are operator action names.
+    actions: {}
+  # lifecycle configures the operator lifecycle init container injected into every pod (spec.lifecycle).
+  lifecycle:
+    # resources sets the lifecycle init container requests/limits (rendered equal). Empty keeps the
+    # operator default.
+    resources:
+      cpu: ""
+      memory: ""
+  # integration configures the integration sidecar (spec.integration.sidecar). Rendered only when a
+  # field below is set.
+  integration:
+    sidecar:
+      # listenPort / controllerListenPort / httpListenPort: sidecar listen ports. null keeps the
+      # operator defaults (9201 / 9202 / 9203).
+      listenPort: null
+      controllerListenPort: null
+      httpListenPort: null
+      # container: advanced - the sidecar's container configuration (scheduler Container: image,
+      # resources, env, securityContext, probes, ...). Passed through verbatim and inlined at the
+      # sidecar level (the Go type embeds Container inline). Empty = not set.
+      container: {}
+  # platform: when enabled, spec.gateway is enabled and the gateways group is rendered.
+  platform:
+    enabled: false
+    dynamic: true
+  # Server groups (ServerGroupSpec). resources requests are rendered equal to limits.
+  agents:
+    count: 3
+    resources:
+      cpu: "1"
+      memory: 4Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 0
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+    volumeClaimTemplate:
+      size: 8Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
+  dbservers:
+    count: 3
+    resources:
+      cpu: "3"
+      memory: 12Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 15 # reserve 15% of memory for the system on data-bearing groups
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+    volumeClaimTemplate:
+      size: 32Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
+  coordinators:
+    count: 3
+    resources:
+      cpu: "1"
+      memory: 4Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 0
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+  single:
+    resources:
+      cpu: "1"
+      memory: 4Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 15 # reserve 15% of memory for the system on data-bearing groups
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+    volumeClaimTemplate:
+      size: 32Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
+  gateways:
+    count: 1
+    resources:
+      cpu: "1"
+      memory: 4Gi
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    antiAffinity: {}
+    labels: {}
+    annotations: {}
+    labelsMode: ""
+    annotationsMode: ""
+    labelsIgnoreList: []
+    annotationsIgnoreList: []
+    args: []
+    sidecarCoreNames: []
+    entrypoint: ""
+    schedulerName: ""
+    priorityClassName: ""
+    serviceAccountName: ""
+    port: 0
+    exporterPort: 0
+    internalPort: 0
+    internalPortProtocol: ""
+    externalPortEnabled: false
+    restartPolicy: ""
+    shutdownMethod: ""
+    shutdownDelay: 0
+    terminationGracePeriodSeconds: 0
+    allowMemberRecreation: false
+    extendedRotationCheck: false
+    upgradeMode: ""
+    manualUpgradeMode: ""
+    indexMethod: ""
+    memoryReservation: 0
+    overrideDetectedTotalMemory: false
+    overrideDetectedNumberOfCores: false
+    pvcResizeMode: ""
+    sidecars: []
+    initContainers: []
+    securityContext: {}
+    probes: {}
+    envs: []
+    volumes: []
+    volumeMounts: []
+    ephemeralVolumes: {}
+    nodeAffinity: {}
+    podModes: {}
+    numactl: {}
+# storage optionally renders a platform.arangodb.com/v1beta1 ArangoPlatformStorage
+# alongside the deployment. `mode` selects the backend (empty = no storage):
+#   s3               - external S3-compatible endpoint
+#   gcs              - Google Cloud Storage
+#   azureBlobStorage - Azure Blob Storage
+#   minio            - deploy an in-cluster MinIO and point an s3 backend at it
+storage:
+  mode: ""
+  # bucketName / bucketPath are shared by all backends (bucketName defaults to the
+  # release name for the minio mode).
+  bucketName: ""
+  bucketPath: ""
+  # s3: external S3-compatible endpoint. Reference an existing credentialsSecret
+  # (keys accessKey/secretKey) or provide accessKey/secretKey inline (the chart then
+  # creates `<release>-s3-credentials`).
+  s3:
+    endpoint: ""
+    region: ""
+    allowInsecure: false
+    credentialsSecret: ""
+    accessKey: ""
+    secretKey: ""
+  # gcs: Google Cloud Storage. credentials:
+  #   secret - reference an existing credentialsSecret (key serviceAccount)
+  #   json   - provide the ServiceAccount JSON inline; the chart creates `<release>-gcs-credentials`
+  gcs:
+    projectID: ""
+    credentials: secret
+    credentialsSecret: ""
+    serviceAccount: ""
+  # azureBlobStorage: reference an existing credentialsSecret (keys clientId/clientSecret)
+  # or provide clientId/clientSecret inline (the chart creates `<release>-azure-credentials`).
+  azureBlobStorage:
+    tenantID: ""
+    accountName: ""
+    endpoint: ""
+    credentialsSecret: ""
+    clientId: ""
+    clientSecret: ""
+  # minio: in-cluster MinIO deployed by this chart, backing an s3 ArangoPlatformStorage.
+  minio:
+    image: minio/minio:latest
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    # rootUser / rootPassword optionally set the MinIO credentials (e.g. via `helm install --set`).
+    # Empty rootPassword generates one on first install and reuses it on upgrade.
+    rootUser: minioadmin
+    rootPassword: ""
+    storage:
+      class: ""
+      size: 5Gi
+    resources: {}
+    nodeSelector: {}
+    tolerations: []

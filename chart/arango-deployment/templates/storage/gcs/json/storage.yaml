@@ -1,0 +1,21 @@
+{{- if and (eq .Values.storage.mode "gcs") (eq .Values.storage.gcs.credentials "json") }}
+{{- $gcs := .Values.storage.gcs }}
+apiVersion: platform.arangodb.com/v1beta1
+kind: ArangoPlatformStorage
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  backend:
+    gcs:
+      projectID: {{ $gcs.projectID | quote }}
+      bucketName: {{ .Values.storage.bucketName | quote }}
+      {{- with .Values.storage.bucketPath }}
+      bucketPath: {{ . | quote }}
+      {{- end }}
+      credentialsSecret:
+        name: {{ printf "%s-gcs-credentials" .Release.Name | quote }}
+{{- end }}

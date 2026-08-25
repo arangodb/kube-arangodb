@@ -1,0 +1,938 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "arango-deployment chart values",
+  "description": "Values for rendering a database.arangodb.com/v1 ArangoDeployment.",
+  "type": "object",
+  "properties": {
+    "deployment": {
+      "$ref": "#/definitions/deployment"
+    },
+    "storage": {
+      "$ref": "#/definitions/storage"
+    }
+  },
+  "required": [
+    "deployment"
+  ],
+  "definitions": {
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "Single",
+            "Cluster"
+          ]
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "Development",
+            "Production"
+          ]
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "pullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "IfNotPresent",
+                "Never"
+              ]
+            },
+            "pullSecrets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "discoveryMode": {
+              "type": "string",
+              "enum": [
+                "",
+                "kubelet",
+                "direct"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "auth": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "None",
+                "Auto",
+                "Generated",
+                "Existing"
+              ]
+            },
+            "secretName": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "None",
+                "Auto",
+                "Generated",
+                "Existing"
+              ]
+            },
+            "secretName": {
+              "type": "string"
+            },
+            "altNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "ttl": {
+              "type": "string"
+            },
+            "sni": {
+              "type": "object",
+              "description": "spec.tls.sni.mapping: secret name -> list of server names.",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "tls": {
+              "type": "boolean"
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "",
+                "exporter",
+                "sidecar",
+                "internal"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "license": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "string",
+              "enum": [
+                "v1",
+                "v2",
+                "manager"
+              ]
+            },
+            "secretName": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "clientID": {
+              "type": "string"
+            },
+            "clientSecret": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "encryption": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "None",
+                "Generated",
+                "Existing"
+              ]
+            },
+            "secretName": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "topology": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "zones": {
+              "type": "integer"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "externalAccess": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "",
+                "Auto",
+                "None",
+                "LoadBalancer",
+                "NodePort",
+                "Managed"
+              ]
+            },
+            "nodePort": {
+              "type": "integer"
+            },
+            "loadBalancerIP": {
+              "type": "string"
+            },
+            "loadBalancerSourceRanges": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "advertisedEndpoint": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "communicationMethod": {
+          "type": "string",
+          "enum": [
+            "",
+            "Service",
+            "ServiceClusterIP",
+            "Headless",
+            "DNS",
+            "Short",
+            "IP"
+          ]
+        },
+        "clusterDomain": {
+          "type": "string"
+        },
+        "bootstrap": {
+          "type": "object",
+          "properties": {
+            "passwordSecretNames": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "generatedPasswords": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "id": {
+          "type": "object",
+          "properties": {
+            "resources": {
+              "$ref": "#/definitions/resources"
+            },
+            "nodeSelector": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "tolerations": {
+              "type": "array"
+            },
+            "affinity": {
+              "type": "object"
+            },
+            "antiAffinity": {
+              "type": "object"
+            },
+            "nodeAffinity": {
+              "type": "object"
+            },
+            "priorityClassName": {
+              "type": "string"
+            },
+            "serviceAccountName": {
+              "type": "string"
+            },
+            "entrypoint": {
+              "type": "string"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "securityContext": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "rebalancer": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "parallelMoves": {
+              "type": "integer"
+            },
+            "optimizers": {
+              "type": "object",
+              "properties": {
+                "leader": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "architecture": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "amd64",
+              "arm64"
+            ]
+          }
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "restore": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string"
+            },
+            "encryptionSecret": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "features": {
+          "type": "object",
+          "properties": {
+            "foxxQueues": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "memberPropagationMode": {
+          "type": "string",
+          "enum": [
+            "",
+            "always",
+            "on-restart"
+          ]
+        },
+        "allowUnsafeUpgrade": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "downtimeAllowed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "disableIPv6": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "networkAttachedVolumes": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "labelsMode": {
+          "type": "string",
+          "enum": [
+            "",
+            "disabled",
+            "append",
+            "replace"
+          ]
+        },
+        "labelsIgnoreList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "annotationsMode": {
+          "type": "string",
+          "enum": [
+            "",
+            "disabled",
+            "append",
+            "replace"
+          ]
+        },
+        "annotationsIgnoreList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "upgrade": {
+          "type": "object",
+          "properties": {
+            "autoUpgrade": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "debugLog": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "order": {
+              "type": "string",
+              "enum": [
+                "",
+                "standard",
+                "coordinatorFirst"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "rotate": {
+          "type": "object",
+          "properties": {
+            "order": {
+              "type": "string",
+              "enum": [
+                "",
+                "standard",
+                "coordinatorFirst"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "recovery": {
+          "type": "object",
+          "properties": {
+            "autoRecover": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "database": {
+          "type": "object",
+          "properties": {
+            "maintenance": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "timeouts": {
+          "type": "object",
+          "properties": {
+            "maintenanceGracePeriod": {
+              "type": "string"
+            },
+            "actions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "lifecycle": {
+          "type": "object",
+          "properties": {
+            "resources": {
+              "$ref": "#/definitions/resources"
+            }
+          },
+          "additionalProperties": false
+        },
+        "integration": {
+          "type": "object",
+          "properties": {
+            "sidecar": {
+              "type": "object",
+              "properties": {
+                "listenPort": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "controllerListenPort": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "httpListenPort": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "container": {
+                  "type": "object"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "platform": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "dynamic": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "agents": {
+          "$ref": "#/definitions/serverGroup"
+        },
+        "dbservers": {
+          "$ref": "#/definitions/serverGroup"
+        },
+        "coordinators": {
+          "$ref": "#/definitions/serverGroup"
+        },
+        "single": {
+          "$ref": "#/definitions/serverGroup"
+        },
+        "gateways": {
+          "$ref": "#/definitions/serverGroup"
+        }
+      },
+      "additionalProperties": false
+    },
+    "serverGroup": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "resources": {
+          "$ref": "#/definitions/resources"
+        },
+        "nodeSelector": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "tolerations": {
+          "type": "array"
+        },
+        "affinity": {
+          "type": "object"
+        },
+        "antiAffinity": {
+          "type": "object"
+        },
+        "nodeAffinity": {
+          "type": "object"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "labelsMode": {
+          "type": "string",
+          "enum": [
+            "",
+            "disabled",
+            "append",
+            "replace"
+          ]
+        },
+        "annotationsMode": {
+          "type": "string",
+          "enum": [
+            "",
+            "disabled",
+            "append",
+            "replace"
+          ]
+        },
+        "labelsIgnoreList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "annotationsIgnoreList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sidecarCoreNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "entrypoint": {
+          "type": "string"
+        },
+        "schedulerName": {
+          "type": "string"
+        },
+        "priorityClassName": {
+          "type": "string"
+        },
+        "serviceAccountName": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "exporterPort": {
+          "type": "integer"
+        },
+        "internalPort": {
+          "type": "integer"
+        },
+        "internalPortProtocol": {
+          "type": "string"
+        },
+        "externalPortEnabled": {
+          "type": "boolean"
+        },
+        "restartPolicy": {
+          "type": "string"
+        },
+        "shutdownMethod": {
+          "type": "string"
+        },
+        "shutdownDelay": {
+          "type": "integer"
+        },
+        "terminationGracePeriodSeconds": {
+          "type": "integer"
+        },
+        "allowMemberRecreation": {
+          "type": "boolean"
+        },
+        "extendedRotationCheck": {
+          "type": "boolean"
+        },
+        "upgradeMode": {
+          "type": "string"
+        },
+        "manualUpgradeMode": {
+          "type": "string"
+        },
+        "indexMethod": {
+          "type": "string"
+        },
+        "memoryReservation": {
+          "type": "integer"
+        },
+        "overrideDetectedTotalMemory": {
+          "type": "boolean"
+        },
+        "overrideDetectedNumberOfCores": {
+          "type": "boolean"
+        },
+        "pvcResizeMode": {
+          "type": "string"
+        },
+        "sidecars": {
+          "type": "array"
+        },
+        "initContainers": {
+          "type": "array"
+        },
+        "securityContext": {
+          "type": "object"
+        },
+        "probes": {
+          "type": "object"
+        },
+        "envs": {
+          "type": "array"
+        },
+        "volumes": {
+          "type": "array"
+        },
+        "volumeMounts": {
+          "type": "array"
+        },
+        "ephemeralVolumes": {
+          "type": "object"
+        },
+        "podModes": {
+          "type": "object"
+        },
+        "numactl": {
+          "type": "object"
+        },
+        "volumeClaimTemplate": {
+          "type": "object",
+          "properties": {
+            "size": {
+              "type": "string"
+            },
+            "storageClass": {
+              "type": "string"
+            },
+            "accessMode": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "memory": {
+          "type": [
+            "string",
+            "number"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "storage": {
+      "type": "object",
+      "description": "Optionally renders a platform.arangodb.com/v1beta1 ArangoPlatformStorage alongside the deployment.",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "Storage backend to render (empty = no storage).",
+          "enum": [
+            "",
+            "s3",
+            "gcs",
+            "azureBlobStorage",
+            "minio"
+          ]
+        },
+        "bucketName": {
+          "type": "string"
+        },
+        "bucketPath": {
+          "type": "string"
+        },
+        "s3": {
+          "type": "object",
+          "properties": {
+            "endpoint": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "allowInsecure": {
+              "type": "boolean"
+            },
+            "credentialsSecret": {
+              "type": "string"
+            },
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
+            }
+          }
+        },
+        "gcs": {
+          "type": "object",
+          "properties": {
+            "projectID": {
+              "type": "string"
+            },
+            "credentials": {
+              "type": "string",
+              "description": "How the ServiceAccount JSON is provided.",
+              "enum": [
+                "secret",
+                "json"
+              ]
+            },
+            "credentialsSecret": {
+              "type": "string"
+            },
+            "serviceAccount": {
+              "type": "string"
+            }
+          }
+        },
+        "azureBlobStorage": {
+          "type": "object",
+          "properties": {
+            "tenantID": {
+              "type": "string"
+            },
+            "accountName": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "credentialsSecret": {
+              "type": "string"
+            },
+            "clientId": {
+              "type": "string"
+            },
+            "clientSecret": {
+              "type": "string"
+            }
+          }
+        },
+        "minio": {
+          "type": "object",
+          "properties": {
+            "image": {
+              "type": "string"
+            },
+            "imagePullPolicy": {
+              "type": "string"
+            },
+            "imagePullSecrets": {
+              "type": "array"
+            },
+            "storage": {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "string"
+                }
+              }
+            },
+            "resources": {
+              "type": "object"
+            },
+            "nodeSelector": {
+              "type": "object"
+            },
+            "tolerations": {
+              "type": "array"
+            },
+            "rootUser": {
+              "type": "string"
+            },
+            "rootPassword": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
