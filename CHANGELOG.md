@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Documentation) Document the RBAC permissions (action/resource) enforced by the Meta V1, Storage V2 and Authorization V1 integration services
 - (Maintenance) Bump the Go toolchain to go1.25.13, clearing 7 known standard-library vulnerabilities (net/url, html/template, crypto/tls, net/http, encoding/xml, encoding/asn1)
 - (Bugfix) Set the Envoy node identity in the static gateway bootstrap so SDS-served TLS initializes (a static-config gateway otherwise crashed with `TlsCertificateSdsApi: node 'id' and 'cluster' are required`)
 - (Bugfix) Build the platform release chart's aggregated image list only from each chart's root `images` map (not its `images.yaml`), so unowned upstream dependency images (e.g. busybox, curl, grafana-image-renderer) stay out

@@ -68,6 +68,23 @@ Request:
 Same as Evaluate/EvaluateMany but takes a JWT token instead of explicit
 user and roles. The user and roles are extracted from the token claims.
 
+## RBAC Permissions
+
+Beyond evaluating permissions, the authorization service also exposes the RBAC management API (roles,
+policies and user-role bindings) and the streaming pool endpoints that sidecars use to sync RBAC
+state. Each management call is itself authorized: the caller's token must be granted the matching
+`rbac:*` action, via an [`ArangoPermissionPolicy`](../platform/rbac/policies.md) bound to their role.
+
+| Action | Resource |
+|---|---|
+| `rbac:ListRole`, `rbac:GetRole`, `rbac:CreateRole`, `rbac:UpdateRole`, `rbac:DeleteRole` | the role name (empty for List) |
+| `rbac:ListPolicy`, `rbac:GetPolicy`, `rbac:CreatePolicy`, `rbac:UpdatePolicy`, `rbac:DeletePolicy` | the policy name (empty for List) |
+| `rbac:ListUserRoleBinding`, `rbac:AssignUserRole`, `rbac:RemoveUserRole`, `rbac:ReplaceUserRoleScope` | the target user |
+| `rbac:PoolRole`, `rbac:PoolPolicy`, `rbac:PoolUserRoleBinding` | *(empty)* — the streaming pool sidecars use to sync RBAC state |
+
+The `Evaluate` / `EvaluateToken` endpoints above are **not** gated by an `rbac:*` action — they are the
+enforcement primitive other services call to authorize their own operations.
+
 ## Configuration
 
 The authorization mode is controlled by the `INTEGRATION_AUTHORIZATION_V1_TYPE`
