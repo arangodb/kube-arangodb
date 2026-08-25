@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Set the Envoy node identity in the static gateway bootstrap so SDS-served TLS initializes (a static-config gateway otherwise crashed with `TlsCertificateSdsApi: node 'id' and 'cluster' are required`)
 - (Feature) Add a dedicated `--timeout.license-manager` (default 30s) for the ArangoDB License Manager API call (license generation), so a slow License Manager does not fail licensing within the general 5s ArangoDB request timeout
 - (Maintenance) Raise the default reconciliation timeout (`--timeout.reconciliation`) from 1 to 2 minutes
 - (Feature) Validate gateway serving certificates (endpoint verification, expiry margin and alt-name match) like arangod members and trigger keyfile renewal + restart when required
