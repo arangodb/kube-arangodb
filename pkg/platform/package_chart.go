@@ -325,17 +325,12 @@ func packageChartChart(ctx context.Context, reg *regclient.RegClient, endpoint s
 		return nil, errors.Wrapf(err, "invalid values.schema.json in chart %s", name)
 	}
 
-	// A chart that ships an unparsable images.yaml is a chart bug; fail packaging rather than
-	// silently dropping images from the air-gapped list (same policy as values.schema.json).
-	images, err := extractChartImages(chart)
-	if err != nil {
-		return nil, errors.Wrapf(err, "invalid images.yaml in chart %s", name)
-	}
-
-	// When a chart does not ship an explicit images.yaml, derive its images from values.yaml.
-	if images == nil {
-		images = imagesFromValues(defaults)
-	}
+	// Derive the chart's owned images strictly from the root `images` map in values.yaml (path
+	// `images.<name>`) - the single source of truth for images this release pins, scans and mirrors.
+	// A chart's images.yaml is intentionally NOT scanned: forked upstream charts carry unowned image
+	// specs at arbitrary paths (sidecars, test hooks, init containers - e.g. busybox/curl/bats in a
+	// Grafana fork), and scanning the whole file would leak them into the published list.
+	images := imagesFromValues(defaults)
 
 	return &packageChartRenderInputChart{
 		Name:             name,
@@ -408,65 +403,58 @@ func extractChartValues(chartData []byte) (map[string]interface{}, error) {
 	return values, nil
 }
 
-// extractChartImages reads images.yaml from a gzipped tar chart archive and returns the container
-// images the chart declares. Returns nil when the chart ships no images.yaml.
-func extractChartImages(chartData []byte) ([]packageChartRenderInputImage, error) {
-	data, err := extractChartFile(chartData, "images.yaml")
-	if err != nil {
-		return nil, err
-	}
-
-	if data == nil {
-		return nil, nil
-	}
-
-	var doc struct {
-		Images []packageChartRenderInputImage `json:"images"`
-	}
-	if err := yaml.Unmarshal(data, &doc); err != nil {
-		return nil, err
-	}
-
-	return doc.Images, nil
-}
-
-// imagesFromValues derives container image references from a chart's values by walking them and
-// recognising image-spec maps: a map carrying an "image" or "repository" string, optionally combined
-// with a sibling "registry" and "tag". It is the fallback source when a chart ships no explicit
-// images.yaml, so the air-gapped list reflects what the chart actually references.
+// imagesFromValues derives container image references from a chart's values. It is the single source
+// for the aggregated image list.
+//
+// The rule is deliberately narrow: ONLY the image specs declared under the root `images` map are
+// recognised, one per key, following the ArangoDB chart convention `images.<name>`. That map is a
+// declaration of ownership - an image the chart is built or copied around, and therefore one the
+// owning repository pins, scans and mirrors.
+//
+// An image referenced from anywhere else in values.yaml is NOT derived. Upstream chart forks carry
+// image specs for optional components all over their values (sidecars, init containers, test hooks),
+// and those are inherited upstream defaults that no one has taken ownership of; publishing them here
+// would state that this release ships them. A chart that needs an image in the list therefore has to
+// declare it under this root `images` map - the chart's own images.yaml is not scanned.
 func imagesFromValues(values map[string]interface{}) []packageChartRenderInputImage {
+	root, ok := values["images"].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	// Iterate in key order so the generated list is reproducible regardless of map iteration order.
+	names := make([]string, 0, len(root))
+	for name := range root {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
 	seen := map[string]struct{}{}
 	var out []packageChartRenderInputImage
 
-	collectImagesFromValues(values, "", &out, seen)
+	for _, name := range names {
+		spec, ok := root[name].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// The dotted values path of this image spec, e.g. "images.application".
+		path := joinPath("images", name)
+
+		ref := imageRefFromMap(spec)
+		if ref == "" || imageIsTest(path, ref) {
+			continue
+		}
+
+		if _, ok := seen[ref]; ok {
+			continue
+		}
+		seen[ref] = struct{}{}
+
+		out = append(out, packageChartRenderInputImage{OverridePath: path, Image: ref})
+	}
 
 	return out
-}
-
-func collectImagesFromValues(node interface{}, path string, out *[]packageChartRenderInputImage, seen map[string]struct{}) {
-	switch v := node.(type) {
-	case map[string]interface{}:
-		if ref := imageRefFromMap(v); ref != "" && !imageIsTest(path, ref) {
-			if _, ok := seen[ref]; !ok {
-				seen[ref] = struct{}{}
-				// path is the dotted values path of this image-spec map, e.g. "images.application".
-				*out = append(*out, packageChartRenderInputImage{OverridePath: path, Image: ref})
-			}
-		}
-
-		keys := make([]string, 0, len(v))
-		for k := range v {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			collectImagesFromValues(v[k], joinPath(path, k), out, seen)
-		}
-	case []interface{}:
-		for i, e := range v {
-			collectImagesFromValues(e, fmt.Sprintf("%s[%d]", path, i), out, seen)
-		}
-	}
 }
 
 // joinPath appends a key to a dotted values path.

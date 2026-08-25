@@ -463,88 +463,156 @@ func Test_packageChartTemplateValues_EmptySections(t *testing.T) {
 	}
 }
 
-// Test_extractChartImages ensures images.yaml is read from the chart's own root (not a subchart's)
-// and that a missing file is not an error while a malformed one is surfaced.
-func Test_extractChartImages(t *testing.T) {
-	t.Run("reads own images.yaml, ignores subcharts", func(t *testing.T) {
-		files := map[string]string{
-			"mychart/charts/sub/images.yaml": "images:\n  - overridePath: sub\n    image: sub/img:1\n",
-			"mychart/images.yaml":            "images:\n  - overridePath: images.operator\n    image: arangodb/kube-arangodb:1.4.4\n  - overridePath: images.db\n    image: arangodb/arangodb-enterprise:3.12.5\n",
-		}
-		order := []string{"mychart/charts/sub/images.yaml", "mychart/images.yaml"}
-
-		imgs, err := extractChartImages(newTestChart(t, files, order))
-		require.NoError(t, err)
-		require.Equal(t, []packageChartRenderInputImage{
-			{OverridePath: "images.operator", Image: "arangodb/kube-arangodb:1.4.4"},
-			{OverridePath: "images.db", Image: "arangodb/arangodb-enterprise:3.12.5"},
-		}, imgs)
-	})
-
-	t.Run("missing images.yaml returns nil", func(t *testing.T) {
-		imgs, err := extractChartImages(newTestChart(t, map[string]string{"mychart/Chart.yaml": "name: mychart\n"}, []string{"mychart/Chart.yaml"}))
-		require.NoError(t, err)
-		require.Nil(t, imgs)
-	})
-
-	t.Run("malformed images.yaml is an error", func(t *testing.T) {
-		_, err := extractChartImages(newTestChart(t, map[string]string{"mychart/images.yaml": "images: [not: valid"}, []string{"mychart/images.yaml"}))
-		require.Error(t, err)
-	})
-}
-
-// Test_imagesFromValues ensures container images are derived from a chart's values by composing
-// registry/repository/tag, covering both the ArangoDB `images:` blocks and upstream image specs.
+// Test_imagesFromValues ensures container images are derived ONLY from the root `images` map,
+// following the ArangoDB chart convention `images.<name>`. Image specs anywhere else in values are
+// inherited upstream defaults rather than images the chart declares, and must stay out of the
+// air-gapped list; the chart's own images.yaml is not scanned.
 func Test_imagesFromValues(t *testing.T) {
-	values := map[string]interface{}{
-		// ArangoDB convention: images.<name>.{image,registry,tag}
-		"images": map[string]interface{}{
-			"application": map[string]interface{}{
-				"image":    "gral/engine",
-				"registry": "registry.license.arango.ai",
-				"tag":      "v1.1.12",
+	t.Run("derives the root images map", func(t *testing.T) {
+		got := imagesFromValues(map[string]interface{}{
+			// ArangoDB convention: images.<name>.{image,registry,tag}
+			"images": map[string]interface{}{
+				"application": map[string]interface{}{
+					"image":    "gral/engine",
+					"registry": "registry.license.arango.ai",
+					"tag":      "v1.1.12",
+				},
+				// "repository" is accepted as an alias for "image".
+				"reloader": map[string]interface{}{
+					"repository": "platform-monitoring/prometheus-config-reloader",
+					"registry":   "registry.license.arango.ai",
+					"tag":        "v0.0.6",
+				},
 			},
-			// Excluded: sits under the "test" key.
-			"test": map[string]interface{}{
-				"image":    "gral/engine-test",
-				"registry": "registry.license.arango.ai",
-				"tag":      "v1.1.12",
+			// Not an image spec - must be ignored.
+			"imagePullPolicy": "IfNotPresent",
+			"replicas":        3,
+		})
+
+		// Ordered by key so the generated list is reproducible.
+		require.Equal(t, []packageChartRenderInputImage{
+			{OverridePath: "images.application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
+			{OverridePath: "images.reloader", Image: "registry.license.arango.ai/platform-monitoring/prometheus-config-reloader:v0.0.6"},
+		}, got)
+	})
+
+	t.Run("ignores image specs outside the root images map", func(t *testing.T) {
+		// The shape of an upstream chart fork: the chart declares one image it owns, and carries
+		// upstream's own specs for optional components it merely inherits.
+		got := imagesFromValues(map[string]interface{}{
+			"images": map[string]interface{}{
+				"grafana": map[string]interface{}{
+					"image":    "platform-monitoring/grafana",
+					"registry": "registry.license.arango.ai",
+					"tag":      "v0.0.6",
+				},
 			},
-		},
-		// Excluded: repository ends with -test even though the key is not "test".
-		"extra": map[string]interface{}{
-			"image":    "foo/bar-test",
-			"registry": "docker.io",
-			"tag":      "1.0",
-		},
-		// Upstream convention: .image.{registry,repository,tag}
-		"imageRenderer": map[string]interface{}{
-			"image": map[string]interface{}{
+			"initChownData": map[string]interface{}{
+				"image": map[string]interface{}{
+					"registry":   "docker.io",
+					"repository": "library/busybox",
+					"tag":        "1.31.1",
+				},
+			},
+			"sidecar": map[string]interface{}{
+				"image": map[string]interface{}{
+					"registry":   "quay.io",
+					"repository": "kiwigrid/k8s-sidecar",
+					"tag":        "1.30.10",
+				},
+			},
+			"imageRenderer": map[string]interface{}{
+				"image": map[string]interface{}{
+					"registry":   "docker.io",
+					"repository": "grafana/grafana-image-renderer",
+					"tag":        "latest",
+				},
+			},
+			"testFramework": map[string]interface{}{
+				"image": map[string]interface{}{
+					"registry":   "docker.io",
+					"repository": "bats/bats",
+					"tag":        "v1.4.1",
+				},
+			},
+			"downloadDashboardsImage": map[string]interface{}{
 				"registry":   "docker.io",
-				"repository": "grafana/grafana-image-renderer",
-				"tag":        "latest",
+				"repository": "curlimages/curl",
+				"tag":        "8.9.1",
 			},
-		},
-		// A repo that already carries its registry must not be double-prefixed, and a numeric tag
-		// still composes.
-		"other": map[string]interface{}{
-			"image":    "docker.io/library/busybox",
-			"registry": "docker.io",
-			"tag":      1.31,
-		},
-		// Not an image spec - must be ignored.
-		"imagePullPolicy": "IfNotPresent",
-		"replicas":        3,
-	}
+		})
 
-	got := imagesFromValues(values)
+		require.Equal(t, []packageChartRenderInputImage{
+			{OverridePath: "images.grafana", Image: "registry.license.arango.ai/platform-monitoring/grafana:v0.0.6"},
+		}, got)
+	})
 
-	// Test images (the "test" key and the -test repository) are excluded.
-	require.ElementsMatch(t, []packageChartRenderInputImage{
-		{OverridePath: "images.application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
-		{OverridePath: "imageRenderer.image", Image: "docker.io/grafana/grafana-image-renderer:latest"},
-		{OverridePath: "other", Image: "docker.io/library/busybox:1.31"},
-	}, got)
+	t.Run("excludes test images", func(t *testing.T) {
+		got := imagesFromValues(map[string]interface{}{
+			"images": map[string]interface{}{
+				"application": map[string]interface{}{
+					"image":    "gral/engine",
+					"registry": "registry.license.arango.ai",
+					"tag":      "v1.1.12",
+				},
+				// Excluded: sits under the "test" key.
+				"test": map[string]interface{}{
+					"image":    "gral/engine-test",
+					"registry": "registry.license.arango.ai",
+					"tag":      "v1.1.12",
+				},
+				// Excluded: repository ends with -test even though the key is not "test".
+				"extra": map[string]interface{}{
+					"image":    "foo/bar-test",
+					"registry": "docker.io",
+					"tag":      "1.0",
+				},
+			},
+		})
+
+		require.Equal(t, []packageChartRenderInputImage{
+			{OverridePath: "images.application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
+		}, got)
+	})
+
+	t.Run("composes a repo that already carries its registry, and a numeric tag", func(t *testing.T) {
+		got := imagesFromValues(map[string]interface{}{
+			"images": map[string]interface{}{
+				"other": map[string]interface{}{
+					"image":    "docker.io/library/busybox",
+					"registry": "docker.io",
+					"tag":      1.31,
+				},
+			},
+		})
+
+		require.Equal(t, []packageChartRenderInputImage{
+			{OverridePath: "images.other", Image: "docker.io/library/busybox:1.31"},
+		}, got)
+	})
+
+	t.Run("deduplicates by image reference", func(t *testing.T) {
+		got := imagesFromValues(map[string]interface{}{
+			"images": map[string]interface{}{
+				"b": map[string]interface{}{"image": "arangodb/enterprise", "tag": "3.12.5"},
+				"a": map[string]interface{}{"image": "arangodb/enterprise", "tag": "3.12.5"},
+			},
+		})
+
+		// The first key in sorted order wins, so the kept entry is deterministic.
+		require.Equal(t, []packageChartRenderInputImage{
+			{OverridePath: "images.a", Image: "arangodb/enterprise:3.12.5"},
+		}, got)
+	})
+
+	t.Run("no usable root images map yields nothing", func(t *testing.T) {
+		require.Nil(t, imagesFromValues(map[string]interface{}{"replicas": 3}))
+		require.Nil(t, imagesFromValues(map[string]interface{}{"images": "not-a-map"}))
+		// A non-map entry under images is skipped rather than failing the packaging.
+		require.Empty(t, imagesFromValues(map[string]interface{}{
+			"images": map[string]interface{}{"application": "not-a-map"},
+		}))
+	})
 }
 
 // Test_aggregateImages ensures images from every chart are merged, de-duplicated by image
