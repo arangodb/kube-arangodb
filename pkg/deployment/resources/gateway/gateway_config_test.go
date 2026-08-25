@@ -559,3 +559,38 @@ func Test_GatewayConfig(t *testing.T) {
 		}
 	})
 }
+
+// Test_GatewayConfig_SDSRequiresNode is a regression guard: whenever the static bootstrap serves TLS
+// via SDS, Envoy requires a node identity, otherwise it aborts with
+// "TlsCertificateSdsApi: node 'id' and 'cluster' are required". The static bootstrap must therefore
+// always set Node.Id and Node.Cluster.
+func Test_GatewayConfig_SDSRequiresNode(t *testing.T) {
+	cfg := Config{
+		DefaultDestination: ConfigDestination{
+			Targets: []ConfigDestinationTarget{
+				ConfigDestinationTargetEndpoint{
+					Host: "127.0.0.1",
+					Port: 12345,
+				},
+			},
+		},
+		DefaultTLS: &ConfigTLS{
+			Name:            "internal",
+			CertificatePath: "/etc/gateway/tls/tls.crt",
+			PrivateKeyPath:  "/etc/gateway/tls/tls.key",
+			WatchDir:        "/etc/gateway/tls",
+			SDSPath:         "/etc/gateway/sds/internal.yaml",
+		},
+	}
+
+	// The listener must actually reference SDS for this test to be meaningful.
+	sds, err := cfg.RenderSDS()
+	require.NoError(t, err)
+	require.NotEmpty(t, sds, "expected the config to render SDS secret files")
+
+	b, err := cfg.Render()
+	require.NoError(t, err)
+	require.NotNil(t, b.Node, "static bootstrap must set Node when SDS is used")
+	require.NotEmpty(t, b.Node.Id, "Envoy requires node.id when SDS is used")
+	require.NotEmpty(t, b.Node.Cluster, "Envoy requires node.cluster when SDS is used")
+}

@@ -48,6 +48,13 @@ import (
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
 
+const (
+	// NodeCluster and NodeID identify the gateway's Envoy node. Envoy requires a node identity
+	// whenever the config uses SDS; the values only need to be non-empty.
+	NodeCluster = "arangodb"
+	NodeID      = "arangodb"
+)
+
 type Config struct {
 	DefaultDestination ConfigDestination `json:"defaultDestination,omitempty"`
 
@@ -152,6 +159,14 @@ func (c Config) Render() (*pbEnvoyBootstrapV3.Bootstrap, error) {
 	}
 
 	return &pbEnvoyBootstrapV3.Bootstrap{
+		// Node identity is required by Envoy whenever the config uses SDS (the listener's
+		// tls_certificate_sds_secret_configs); without it Envoy fails to initialize with
+		// "TlsCertificateSdsApi: node 'id' and 'cluster' are required". The static bootstrap serves a
+		// single gateway instance, so constant values suffice.
+		Node: &pbEnvoyCoreV3.Node{
+			Id:      NodeID,
+			Cluster: NodeCluster,
+		},
 		Admin: &pbEnvoyBootstrapV3.Admin{
 			Address: &pbEnvoyCoreV3.Address{
 				Address: &pbEnvoyCoreV3.Address_SocketAddress{
