@@ -55,6 +55,7 @@ func Register() (*cobra.Command, error) {
 		flagHealthAddress,
 		flagArangodb,
 		flagCentralServicesEnabled,
+		flagUnixEnabled,
 	}
 	for _, item := range global.Items() {
 		flags = append(flags, item.V.Flags...)
@@ -96,7 +97,12 @@ func configuration(cmd *cobra.Command) (svc.Configuration, error) {
 	// A unix socket for internal service-to-service calls (e.g. authorization.v1 -> authentication.v1
 	// Validate). The svc client dials the socket directly, bypassing the network authenticator - which in
 	// strict (rbac-enforced/central) mode would otherwise reject these in-process calls with Unauthorized.
-	cfg.Unix = fmt.Sprintf("%s/%s", utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountFile)
+	// Enabled by default; when disabled the svc leaves the socket (and its directory) uncreated.
+	if unixEnabled, err := flagUnixEnabled.Get(cmd); err != nil {
+		return svc.Configuration{}, err
+	} else if unixEnabled {
+		cfg.Unix = fmt.Sprintf("%s/%s", utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountFile)
+	}
 
 	if addr, err := flagGatewayAddress.Get(cmd); err != nil {
 		return svc.Configuration{}, err

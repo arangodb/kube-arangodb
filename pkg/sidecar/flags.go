@@ -72,6 +72,12 @@ var (
 		Description: "Defines if central services are enabled",
 		Default:     false,
 	}
+	flagUnixEnabled = cli.Flag[bool]{
+		Name: "sidecar.unix.enabled",
+		Description: "Defines if the internal UNIX socket (used for service-to-service calls that bypass " +
+			"the network authenticator) is served. Disabling it stops the sidecar creating the socket directory.",
+		Default: true,
+	}
 	flagAuthDeletedTTL = cli.Flag[time.Duration]{
 		Name:        "sidecar.auth.deleted-ttl",
 		Description: "TTL for soft-deleted RBAC documents before permanent removal from ArangoDB collections",
