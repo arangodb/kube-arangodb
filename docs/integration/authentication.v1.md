@@ -26,6 +26,20 @@ direct access to the deployment JWT secret.
 | `POST` | `/_integration/authn/v1/login` | Exchange credentials for a token |
 | `GET`  | `/_integration/authn/v1/logout` | Invalidate the current session |
 
+## RBAC Permissions
+
+Only `CreateToken` is RBAC-gated, and only when central services are enabled with an asymmetric
+signing key; the caller's token must be granted the matching action via an
+[`ArangoPermissionPolicy`](../platform/rbac/policies.md) bound to their role. `Validate`, `Identity`,
+`Login` and `Logout` are not gated by an RBAC action.
+
+| Action | Resource |
+|---|---|
+| `authentication:CreateToken` | the user the token is minted for (e.g. `root`, or `*` for any user) |
+
+See [Authorization gating](#authorization-gating) below for exactly when this applies and how a mint
+request without an explicit `user` is handled.
+
 ## Token creation
 
 `CreateToken` signs a new token with the deployment JWT secret. The request
