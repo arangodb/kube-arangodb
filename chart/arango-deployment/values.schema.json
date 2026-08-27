@@ -568,6 +568,19 @@
             },
             "dynamic": {
               "type": "boolean"
+            },
+            "authentication": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["", "OpenID", "ALB"]
+                },
+                "secretName": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

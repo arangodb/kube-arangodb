@@ -222,6 +222,13 @@ deployment:
   platform:
     enabled: false
     dynamic: true
+    # authentication configures gateway SSO (spec.gateway.authentication).
+    #   type:       "" (off), OpenID or ALB
+    #   secretName: an existing Secret whose `config` key holds the marshalled provider configuration
+    #               (see the OpenID / ALB integration docs). Required when type is set.
+    authentication:
+      type: ""
+      secretName: ""
   # Server groups (ServerGroupSpec). resources requests are rendered equal to limits.
   agents:
     count: 3
