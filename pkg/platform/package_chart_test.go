@@ -491,8 +491,8 @@ func Test_imagesFromValues(t *testing.T) {
 
 		// Ordered by key so the generated list is reproducible.
 		require.Equal(t, []packageChartRenderInputImage{
-			{OverridePath: "images.application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
-			{OverridePath: "images.reloader", Image: "registry.license.arango.ai/platform-monitoring/prometheus-config-reloader:v0.0.6"},
+			{OverridePaths: []string{"images.application"}, Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
+			{OverridePaths: []string{"images.reloader"}, Image: "registry.license.arango.ai/platform-monitoring/prometheus-config-reloader:v0.0.6"},
 		}, got)
 	})
 
@@ -543,7 +543,7 @@ func Test_imagesFromValues(t *testing.T) {
 		})
 
 		require.Equal(t, []packageChartRenderInputImage{
-			{OverridePath: "images.grafana", Image: "registry.license.arango.ai/platform-monitoring/grafana:v0.0.6"},
+			{OverridePaths: []string{"images.grafana"}, Image: "registry.license.arango.ai/platform-monitoring/grafana:v0.0.6"},
 		}, got)
 	})
 
@@ -571,7 +571,7 @@ func Test_imagesFromValues(t *testing.T) {
 		})
 
 		require.Equal(t, []packageChartRenderInputImage{
-			{OverridePath: "images.application", Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
+			{OverridePaths: []string{"images.application"}, Image: "registry.license.arango.ai/gral/engine:v1.1.12"},
 		}, got)
 	})
 
@@ -587,11 +587,11 @@ func Test_imagesFromValues(t *testing.T) {
 		})
 
 		require.Equal(t, []packageChartRenderInputImage{
-			{OverridePath: "images.other", Image: "docker.io/library/busybox:1.31"},
+			{OverridePaths: []string{"images.other"}, Image: "docker.io/library/busybox:1.31"},
 		}, got)
 	})
 
-	t.Run("deduplicates by image reference", func(t *testing.T) {
+	t.Run("collects every path pointing at the same image", func(t *testing.T) {
 		got := imagesFromValues(map[string]interface{}{
 			"images": map[string]interface{}{
 				"b": map[string]interface{}{"image": "arangodb/enterprise", "tag": "3.12.5"},
@@ -599,9 +599,9 @@ func Test_imagesFromValues(t *testing.T) {
 			},
 		})
 
-		// The first key in sorted order wins, so the kept entry is deterministic.
+		// One entry per image, carrying every path (in sorted-key order).
 		require.Equal(t, []packageChartRenderInputImage{
-			{OverridePath: "images.a", Image: "arangodb/enterprise:3.12.5"},
+			{OverridePaths: []string{"images.a", "images.b"}, Image: "arangodb/enterprise:3.12.5"},
 		}, got)
 	})
 
@@ -620,21 +620,21 @@ func Test_imagesFromValues(t *testing.T) {
 func Test_aggregateImages(t *testing.T) {
 	charts := map[string]packageChartRenderInputChart{
 		"a": {Name: "a", Images: []packageChartRenderInputImage{
-			{OverridePath: "images.operator", Image: "arangodb/kube-arangodb:1.4.4"},
-			{OverridePath: "images.db", Image: "arangodb/arangodb-enterprise:3.12.5"},
+			{OverridePaths: []string{"images.operator"}, Image: "arangodb/kube-arangodb:1.4.4"},
+			{OverridePaths: []string{"images.db"}, Image: "arangodb/arangodb-enterprise:3.12.5"},
 		}},
 		"b": {Name: "b", Images: []packageChartRenderInputImage{
-			{OverridePath: "images.dup", Image: "arangodb/kube-arangodb:1.4.4"}, // duplicate image, dropped
-			{OverridePath: "images.webui", Image: "arangodb/webui:2.0.0"},
-			{OverridePath: "images.empty", Image: ""}, // empty image, skipped
+			{OverridePaths: []string{"images.dup"}, Image: "arangodb/kube-arangodb:1.4.4"}, // same image, second path
+			{OverridePaths: []string{"images.webui"}, Image: "arangodb/webui:2.0.0"},
+			{OverridePaths: []string{"images.empty"}, Image: ""}, // empty image, skipped
 		}},
 	}
 
-	// Sorted by image; paths chart-prefixed; the duplicate keeps chart "a" (name order).
+	// Sorted by image; paths chart-prefixed; an image used by two charts carries both paths (sorted).
 	require.Equal(t, []packageChartRenderInputImage{
-		{OverridePath: "charts.a.images.db", Image: "arangodb/arangodb-enterprise:3.12.5"},
-		{OverridePath: "charts.a.images.operator", Image: "arangodb/kube-arangodb:1.4.4"},
-		{OverridePath: "charts.b.images.webui", Image: "arangodb/webui:2.0.0"},
+		{OverridePaths: []string{"charts.a.images.db"}, Image: "arangodb/arangodb-enterprise:3.12.5"},
+		{OverridePaths: []string{"charts.a.images.operator", "charts.b.images.dup"}, Image: "arangodb/kube-arangodb:1.4.4"},
+		{OverridePaths: []string{"charts.b.images.webui"}, Image: "arangodb/webui:2.0.0"},
 	}, aggregateImages(charts))
 }
 
@@ -643,12 +643,13 @@ func Test_aggregateImages(t *testing.T) {
 func Test_renderImagesFile(t *testing.T) {
 	out := string(renderImagesFile(packageChartRenderInput{
 		Name: "arango-platform-release", Version: "1.0.0",
-		Images: []packageChartRenderInputImage{{OverridePath: "charts.op.images.application", Image: "arangodb/kube-arangodb:1.4.4"}},
+		Images: []packageChartRenderInputImage{{OverridePaths: []string{"charts.op.images.application"}, Image: "arangodb/kube-arangodb:1.4.4"}},
 	}))
 
 	require.Contains(t, out, "# Container images bundled by arango-platform-release 1.0.0.")
 	require.Contains(t, out, "Helm does not consume this file")
-	require.Contains(t, out, "overridePath: charts.op.images.application")
+	require.Contains(t, out, "overridePaths:")
+	require.Contains(t, out, "- charts.op.images.application")
 	require.Contains(t, out, "image: arangodb/kube-arangodb:1.4.4")
 
 	// It must be a valid images.yaml document.
@@ -656,7 +657,7 @@ func Test_renderImagesFile(t *testing.T) {
 		Images []packageChartRenderInputImage `json:"images"`
 	}
 	require.NoError(t, yaml.Unmarshal([]byte(out), &doc))
-	require.Equal(t, []packageChartRenderInputImage{{OverridePath: "charts.op.images.application", Image: "arangodb/kube-arangodb:1.4.4"}}, doc.Images)
+	require.Equal(t, []packageChartRenderInputImage{{OverridePaths: []string{"charts.op.images.application"}, Image: "arangodb/kube-arangodb:1.4.4"}}, doc.Images)
 
 	// With no images the document renders an empty list, never null.
 	empty := string(renderImagesFile(packageChartRenderInput{Name: "r", Version: "1"}))
@@ -671,8 +672,8 @@ func Test_packageChartTemplateReadme_Images(t *testing.T) {
 		out, err := packageChartTemplateReadme.RenderBytes(packageChartRenderInput{
 			Name: "arango-platform-release", Version: "1.0.0",
 			Images: []packageChartRenderInputImage{
-				{OverridePath: "charts.op.images.application", Image: "arangodb/kube-arangodb:1.4.4"},
-				{OverridePath: "charts.db.images.application", Image: "arangodb/arangodb-enterprise:3.12.5"},
+				{OverridePaths: []string{"charts.op.images.application"}, Image: "arangodb/kube-arangodb:1.4.4"},
+				{OverridePaths: []string{"charts.db.images.application"}, Image: "arangodb/arangodb-enterprise:3.12.5"},
 			},
 		})
 		require.NoError(t, err)

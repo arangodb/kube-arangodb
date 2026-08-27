@@ -44,10 +44,10 @@ This release uses the container images below, aggregated from the bundled charts
 installation, pull each image, re-tag it to your private registry, push it, and override it at the
 listed values path.
 
-| Image | Override path |
-|-------|---------------|
+| Image | Override paths |
+|-------|----------------|
 {{- range $i := .Images }}
-| `{{ $i.Image }}` | `{{ $i.OverridePath }}` |
+| `{{ $i.Image }}` | {{ range $j, $p := $i.OverridePaths }}{{ if $j }}, {{ end }}`{{ $p }}`{{ end }} |
 {{- end }}
 
 The same list is available as a machine-readable `images.yaml` at the root of this chart. To mirror
