@@ -25,8 +25,8 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"testing"
 	goHttp "net/http"
+	"testing"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
