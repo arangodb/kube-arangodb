@@ -26,6 +26,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"testing"
+	goHttp "net/http"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -160,4 +161,28 @@ func Test_ALB_Claims_Defaults(t *testing.T) {
 	require.Equal(t, "", (*ALBClaims)(nil).GetGroupsClaim())
 	require.Equal(t, "email", (&ALBClaims{Username: util.NewType("email")}).GetUsernameClaim())
 	require.Equal(t, "groups", (&ALBClaims{Groups: util.NewType("groups")}).GetGroupsClaim())
+}
+
+func Test_OpenIDHTTPClient_Proxy(t *testing.T) {
+	req, _ := goHttp.NewRequest(goHttp.MethodGet, "https://public-keys.auth.elb.eu-central-1.amazonaws.com/kid", nil)
+
+	t.Run("no proxy by default", func(t *testing.T) {
+		c, err := (&OpenIDHTTPClient{}).Client()
+		require.NoError(t, err)
+		require.Nil(t, c.Transport.(*goHttp.Transport).Proxy)
+	})
+
+	t.Run("explicit proxy URL", func(t *testing.T) {
+		c, err := (&OpenIDHTTPClient{Proxy: util.NewType("http://proxy.local:3128")}).Client()
+		require.NoError(t, err)
+		u, err := c.Transport.(*goHttp.Transport).Proxy(req)
+		require.NoError(t, err)
+		require.NotNil(t, u)
+		require.Equal(t, "http://proxy.local:3128", u.String())
+	})
+
+	t.Run("invalid proxy URL errors", func(t *testing.T) {
+		_, err := (&OpenIDHTTPClient{Proxy: util.NewType("://not a url")}).Client()
+		require.Error(t, err)
+	})
 }

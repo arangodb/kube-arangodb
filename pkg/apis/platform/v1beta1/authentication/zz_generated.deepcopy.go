@@ -219,6 +219,11 @@ func (in *OpenIDHTTPClient) DeepCopyInto(out *OpenIDHTTPClient) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Proxy != nil {
+		in, out := &in.Proxy, &out.Proxy
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 

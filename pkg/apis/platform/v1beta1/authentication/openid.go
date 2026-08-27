@@ -25,6 +25,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	goHttp "net/http"
+	"net/url"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
@@ -184,6 +185,10 @@ type OpenIDHTTPClient struct {
 	// Insecure defines if insecure HTTP Client is used
 	// +doc/default: false
 	Insecure *bool `json:"insecure,omitempty"`
+
+	// Proxy defines an explicit proxy URL (e.g. `http://proxy:3128`) to route outbound requests
+	// through. When empty, no proxy is used.
+	Proxy *string `json:"proxy,omitempty"`
 }
 
 func (c *OpenIDHTTPClient) Client() (*goHttp.Client, error) {
@@ -194,6 +199,14 @@ func (c *OpenIDHTTPClient) Client() (*goHttp.Client, error) {
 	if c != nil {
 		if q := c.Insecure; q != nil {
 			tls.InsecureSkipVerify = *c.Insecure
+		}
+
+		if c.Proxy != nil && *c.Proxy != "" {
+			u, err := url.Parse(*c.Proxy)
+			if err != nil {
+				return nil, errors.Wrapf(err, "Invalid proxy URL")
+			}
+			transport.Proxy = goHttp.ProxyURL(u)
 		}
 	}
 
