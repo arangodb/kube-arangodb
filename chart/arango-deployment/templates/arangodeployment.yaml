@@ -342,6 +342,17 @@ spec:
   gateway:
     enabled: true
     dynamic: {{ .Values.deployment.platform.dynamic }}
+    {{- with .Values.deployment.platform.authentication }}
+    {{- if .type }}
+    {{- if not .secretName }}
+    {{- fail "deployment.platform.authentication.secretName is required when authentication.type is set" }}
+    {{- end }}
+    authentication:
+      type: {{ .type }}
+      secret:
+        name: {{ .secretName }}
+    {{- end }}
+    {{- end }}
   {{- end }}
   {{- if eq .Values.deployment.mode "Cluster" }}
   agents:
