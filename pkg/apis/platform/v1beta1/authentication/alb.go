@@ -153,7 +153,9 @@ func (c *ALB) VerifyToken(ctx context.Context, token string, resolver ALBKeyReso
 		}
 
 		return resolver(ctx, kid)
-	}, jwt.WithValidMethods([]string{ALBSigningMethod})); err != nil {
+		// AWS ALB base64url-encodes the x-amzn-oidc-data segments WITH padding, which the default
+		// RawURLEncoding rejects ("illegal base64 data"); WithPaddingAllowed accepts the padding.
+	}, jwt.WithValidMethods([]string{ALBSigningMethod}), jwt.WithPaddingAllowed()); err != nil {
 		return nil, err
 	}
 

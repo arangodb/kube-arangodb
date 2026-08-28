@@ -23,6 +23,7 @@ package alb
 import (
 	"context"
 	"crypto/ecdsa"
+	goHttp "net/http"
 	"time"
 
 	pbEnvoyAuthV3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -82,25 +83,28 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 
 	raw, ok := request.GetAttributes().GetRequest().GetHttp().GetHeaders()[platformAuthenticationApi.ALBDataHeader]
 	if !ok {
+		// No ALB token presented - not an ALB-authenticated request; let the rest of the chain decide.
 		return nil
 	}
 
+	// From here the caller presents an ALB token, so it must be valid: a present-but-unverifiable
+	// token is denied (fail closed) rather than passed through as unauthenticated.
 	cfg, _, err := i.fileConfig.Get(ctx)
 	if err != nil {
 		logger.Err(err).Warn("Unable to get ALB config")
-		return nil
+		return denied("ALB configuration unavailable")
 	}
 
 	claims, err := cfg.VerifyToken(ctx, raw, i.resolve)
 	if err != nil {
 		logger.Err(err).Warn("ALB token verification failure")
-		return nil
+		return denied("ALB token verification failed")
 	}
 
 	user, ok := claims[cfg.Claims.GetUsernameClaim()].(string)
 	if !ok || user == "" {
 		logger.Str("claim", cfg.Claims.GetUsernameClaim()).Warn("ALB token is missing the username claim")
-		return nil
+		return denied("ALB token is missing the username claim")
 	}
 
 	current.User = &pbImplEnvoyAuthV3Shared.ResponseAuth{
@@ -109,6 +113,15 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 	}
 
 	return nil
+}
+
+// denied blocks the request with 401 Unauthorized. Returned when an ALB token is present but cannot
+// be trusted, so a bad token fails closed instead of falling through to the unauthenticated path.
+func denied(message string) error {
+	return pbImplEnvoyAuthV3Shared.DeniedResponse{
+		Code:    goHttp.StatusUnauthorized,
+		Message: &pbImplEnvoyAuthV3Shared.DeniedMessage{Message: message},
+	}
 }
 
 // extractGroups reads the configured groups claim, accepting either a JSON array of strings or a

@@ -25,6 +25,9 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
 	goHttp "net/http"
 	"testing"
 	"time"
@@ -51,6 +54,31 @@ func albSign(t *testing.T, key *ecdsa.PrivateKey, header map[string]interface{},
 	return signed
 }
 
+// albSignPadded builds an ES256 token whose segments are base64url-encoded WITH padding, exactly like
+// the AWS ALB x-amzn-oidc-data token. golang-jwt's own SignedString always emits RawURLEncoding (no
+// padding), so the padded token is assembled by hand and signed over the padded signing string.
+func albSignPadded(t *testing.T, key *ecdsa.PrivateKey, header map[string]interface{}, claims jwt.MapClaims) string {
+	enc := base64.URLEncoding // with padding
+
+	hj, err := json.Marshal(header)
+	require.NoError(t, err)
+	cj, err := json.Marshal(claims)
+	require.NoError(t, err)
+
+	signing := enc.EncodeToString(hj) + "." + enc.EncodeToString(cj)
+
+	sum := sha256.Sum256([]byte(signing))
+	r, s, err := ecdsa.Sign(rand.Reader, key, sum[:])
+	require.NoError(t, err)
+
+	// ES256 signature is the fixed-width R||S concatenation (32 bytes each for P-256).
+	sig := make([]byte, 64)
+	r.FillBytes(sig[:32])
+	s.FillBytes(sig[32:])
+
+	return signing + "." + enc.EncodeToString(sig)
+}
+
 func albResolver(key *ecdsa.PrivateKey) ALBKeyResolver {
 	return func(ctx context.Context, kid string) (*ecdsa.PublicKey, error) {
 		return &key.PublicKey, nil
@@ -62,6 +90,22 @@ func Test_ALB_VerifyToken_Valid(t *testing.T) {
 	c := &ALB{Region: "eu-central-1"}
 
 	token := albSign(t, key, map[string]interface{}{"kid": "abc-123", "signer": "arn:aws:elb"}, jwt.MapClaims{
+		"sub": "user-1",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+
+	claims, err := c.VerifyToken(context.Background(), token, albResolver(key))
+	require.NoError(t, err)
+	require.Equal(t, "user-1", claims["sub"])
+}
+
+func Test_ALB_VerifyToken_PaddedBase64(t *testing.T) {
+	key := albTestKey(t)
+	c := &ALB{Region: "eu-central-1"}
+
+	// AWS ALB emits padded base64url segments; the default RawURLEncoding rejected them with
+	// "illegal base64 data". WithPaddingAllowed must accept the padded token and verify it.
+	token := albSignPadded(t, key, map[string]interface{}{"alg": "ES256", "typ": "JWT", "kid": "abc-123", "signer": "arn:aws:elb"}, jwt.MapClaims{
 		"sub": "user-1",
 		"exp": time.Now().Add(time.Hour).Unix(),
 	})
