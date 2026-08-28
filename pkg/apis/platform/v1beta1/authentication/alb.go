@@ -27,6 +27,7 @@ import (
 	"io"
 	goHttp "net/http"
 	"regexp"
+	"strings"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 
@@ -58,7 +59,8 @@ type ALB struct {
 	HTTP OpenIDHTTPClient `json:"http,omitempty"`
 
 	// Region defines the AWS Region of the Application Load Balancer. It is used to resolve the
-	// public key endpoint `public-keys.auth.elb.<region>.amazonaws.com`.
+	// public key endpoint `public-keys.auth.elb.<region>.amazonaws.com`, or, for AWS GovCloud (US)
+	// regions (`us-gov-*`), the S3-hosted endpoint `s3-<region>.amazonaws.com/aws-elb-public-keys-prod-<region>`.
 	Region string `json:"region,omitempty"`
 
 	// Signer optionally pins the expected ALB ARN carried in the token `signer` header. When set,
@@ -86,6 +88,12 @@ func (c *ALB) GetPublicKeyURL(kid string) (string, error) {
 
 	if !albKeyIDRegexp.MatchString(kid) {
 		return "", errors.Errorf("Invalid Key ID")
+	}
+
+	// AWS GovCloud (US) does not serve the ALB signing keys from the public-keys.auth.elb host; they
+	// are hosted in a per-region S3 bucket instead. GovCloud regions are prefixed `us-gov-`.
+	if strings.HasPrefix(c.Region, "us-gov-") {
+		return fmt.Sprintf("https://s3-%s.amazonaws.com/aws-elb-public-keys-prod-%s/%s", c.Region, c.Region, kid), nil
 	}
 
 	return fmt.Sprintf("https://public-keys.auth.elb.%s.amazonaws.com/%s", c.Region, kid), nil

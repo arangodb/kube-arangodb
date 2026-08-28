@@ -189,6 +189,16 @@ func Test_ALB_GetPublicKeyURL(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "https://public-keys.auth.elb.eu-central-1.amazonaws.com/abc-123", url)
 
+	// AWS GovCloud (US) serves the ALB signing keys from a per-region S3 bucket, not the
+	// public-keys.auth.elb host.
+	govWest, err := (&ALB{Region: "us-gov-west-1"}).GetPublicKeyURL("abc-123")
+	require.NoError(t, err)
+	require.Equal(t, "https://s3-us-gov-west-1.amazonaws.com/aws-elb-public-keys-prod-us-gov-west-1/abc-123", govWest)
+
+	govEast, err := (&ALB{Region: "us-gov-east-1"}).GetPublicKeyURL("abc-123")
+	require.NoError(t, err)
+	require.Equal(t, "https://s3-us-gov-east-1.amazonaws.com/aws-elb-public-keys-prod-us-gov-east-1/abc-123", govEast)
+
 	// Empty region / key id and injection attempts are rejected.
 	_, err = (&ALB{}).GetPublicKeyURL("abc-123")
 	require.Error(t, err)
