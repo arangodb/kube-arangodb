@@ -101,11 +101,12 @@ type packageChartRenderInputChart struct {
 // with the values path at which it can be overridden (e.g. to repoint it at a private registry).
 // Fields are exported for template rendering; the json tags match the images.yaml document.
 type packageChartRenderInputImage struct {
-	// OverridePath is the dotted values path of the image spec. In the aggregated list it is
-	// chart-prefixed (e.g. "charts.arangodb-gral.images.application"), so it is the exact key to
-	// override in the release values.yaml.
-	OverridePath string `json:"overridePath"`
-	Image        string `json:"image"`
+	// OverridePaths are the dotted values paths of the image spec. In the aggregated list they are
+	// chart-prefixed (e.g. "charts.arangodb-gral.images.application"), so each is an exact key to
+	// override in the release values.yaml. The same image is often referenced from several places, so
+	// every path pointing at it is listed here rather than keeping only the first.
+	OverridePaths []string `json:"overridePaths"`
+	Image         string   `json:"image"`
 }
 
 type packageChartRenderInputService struct {
@@ -429,7 +430,7 @@ func imagesFromValues(values map[string]interface{}) []packageChartRenderInputIm
 	}
 	sort.Strings(names)
 
-	seen := map[string]struct{}{}
+	idx := map[string]int{}
 	var out []packageChartRenderInputImage
 
 	for _, name := range names {
@@ -446,12 +447,13 @@ func imagesFromValues(values map[string]interface{}) []packageChartRenderInputIm
 			continue
 		}
 
-		if _, ok := seen[ref]; ok {
+		// The same image can be declared under several keys; collect every path pointing at it.
+		if i, ok := idx[ref]; ok {
+			out[i].OverridePaths = append(out[i].OverridePaths, path)
 			continue
 		}
-		seen[ref] = struct{}{}
-
-		out = append(out, packageChartRenderInputImage{OverridePath: path, Image: ref})
+		idx[ref] = len(out)
+		out = append(out, packageChartRenderInputImage{OverridePaths: []string{path}, Image: ref})
 	}
 
 	return out
@@ -547,32 +549,38 @@ func aggregateImages(charts map[string]packageChartRenderInputChart) []packageCh
 	}
 	sort.Strings(names)
 
-	seen := map[string]struct{}{}
+	idx := map[string]int{}
 	var out []packageChartRenderInputImage
 
-	// Iterate charts in name order so the entry kept for a duplicated image is deterministic.
+	// Iterate charts in name order for deterministic output. An image used by several charts (or at
+	// several paths within one chart) is emitted once, with every override path collected.
 	for _, name := range names {
 		for _, img := range charts[name].Images {
 			if img.Image == "" {
 				continue
 			}
-			if _, ok := seen[img.Image]; ok {
+
+			// Chart-prefix each path so it is the exact override key in the release values.yaml.
+			prefixed := make([]string, 0, len(img.OverridePaths))
+			for _, p := range img.OverridePaths {
+				prefixed = append(prefixed, joinPath("charts."+name, p))
+			}
+
+			if i, ok := idx[img.Image]; ok {
+				out[i].OverridePaths = append(out[i].OverridePaths, prefixed...)
 				continue
 			}
-			seen[img.Image] = struct{}{}
-			out = append(out, packageChartRenderInputImage{
-				// Chart-prefix the path so it is the exact override key in the release values.yaml.
-				OverridePath: joinPath("charts."+name, img.OverridePath),
-				Image:        img.Image,
-			})
+			idx[img.Image] = len(out)
+			out = append(out, packageChartRenderInputImage{OverridePaths: prefixed, Image: img.Image})
 		}
 	}
 
+	// Sort each image's paths and the list itself so the generated file is reproducible.
+	for i := range out {
+		sort.Strings(out[i].OverridePaths)
+	}
 	sort.Slice(out, func(i, j int) bool {
-		if out[i].Image != out[j].Image {
-			return out[i].Image < out[j].Image
-		}
-		return out[i].OverridePath < out[j].OverridePath
+		return out[i].Image < out[j].Image
 	})
 
 	return out
