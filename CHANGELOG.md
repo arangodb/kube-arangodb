@@ -4,6 +4,7 @@
 - (Bugfix) Serve the serving-member sidecar management API on a routable external HTTP endpoint (TLS per deployment settings) so the platform gateway can reach `/_management` cross-Pod, keeping the internal HTTP endpoint loopback-only for arangod
 - (Feature) Add gateway `ALB` authentication type that trusts identity from an AWS Application Load Balancer terminating OIDC by verifying the signed `x-amzn-oidc-data` token
 - (Feature) (Chart) Expose gateway SSO in the arango-deployment chart via `deployment.platform.authentication` (type `OpenID`/`ALB` + an existing config `secretName`)
+- (Feature) (Chart) Expose `deployment.platform.createUsers` in the arango-deployment chart to render `spec.gateway.createUsers` (create gateway-authenticated users in ArangoDB)
 - (Bugfix) (Chart) Emit the platform release image list with `overridePaths` as a list so an image used at several values paths keeps all of them (previously only the first was kept)
 - (Feature) Add the `--sidecar.unix.enabled` flag (default true) to the serving-member sidecar so the internal UNIX socket - and its directory creation - can be disabled
 - (Documentation) Document the RBAC permissions (action/resource) enforced by the Meta V1, Storage V2, Authorization V1 and Authentication V1 integration services
