@@ -27,7 +27,7 @@ import (
 	"io"
 	goHttp "net/http"
 	"regexp"
-	"strings"
+	goStrings "strings"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 
@@ -92,7 +92,7 @@ func (c *ALB) GetPublicKeyURL(kid string) (string, error) {
 
 	// AWS GovCloud (US) does not serve the ALB signing keys from the public-keys.auth.elb host; they
 	// are hosted in a per-region S3 bucket instead. GovCloud regions are prefixed `us-gov-`.
-	if strings.HasPrefix(c.Region, "us-gov-") {
+	if goStrings.HasPrefix(c.Region, "us-gov-") {
 		return fmt.Sprintf("https://s3-%s.amazonaws.com/aws-elb-public-keys-prod-%s/%s", c.Region, c.Region, kid), nil
 	}
 
