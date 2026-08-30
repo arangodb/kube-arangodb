@@ -75,10 +75,12 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 					pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
 				},
 			},
+			// Target the sidecar's external HTTP endpoint (routable, TLS-per-settings), not the internal
+			// loopback one which is reachable only in-Pod.
 			Targets: util.FormatList(services, func(a string) gateway.ConfigDestinationTarget {
 				return gateway.ConfigDestinationTargetEndpoint{
 					Host: a,
-					Port: shared.InternalSidecarContainerPortHTTP,
+					Port: shared.InternalSidecarContainerPortHTTPExternal,
 				}
 			}),
 		}

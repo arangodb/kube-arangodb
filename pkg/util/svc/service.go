@@ -68,8 +68,9 @@ type serviceGRPC struct {
 }
 
 type serviceHTTP struct {
-	network *goHttp.Server
-	unix    *goHttp.Server
+	network  *goHttp.Server
+	external *goHttp.Server
+	unix     *goHttp.Server
 }
 
 func (p *service) Dial(opts ...grpc.DialOption) (*grpc.ClientConn, error) {
@@ -193,6 +194,15 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 		http.network = &goHttp.Server{
 			TLSConfig: httpTLS,
+		}
+
+		// The external listener is network-exposed, so it always follows the service TLS options (TLS on a
+		// secure deployment, plain otherwise) regardless of gateway.Insecure - it is never served plain
+		// while the service has TLS.
+		if gateway.ExternalAddress != "" {
+			http.external = &goHttp.Server{
+				TLSConfig: tls,
+			}
 		}
 
 		if gateway.Unix != "" {

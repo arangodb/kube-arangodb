@@ -48,6 +48,10 @@ func (p serviceError) HTTPAddress() string {
 	return ""
 }
 
+func (p serviceError) HTTPExternalAddress() string {
+	return ""
+}
+
 func (p serviceError) Wait() error {
 	return p
 }
