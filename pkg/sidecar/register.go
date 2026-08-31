@@ -26,7 +26,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
@@ -166,38 +165,6 @@ func runWithContext(ctx context.Context, cmd *cobra.Command) error {
 
 	if enabled {
 		handlers = append(handlers, handler)
-	}
-
-	// Serve the authentication.v1 and authorization.v1 integration services so arangod's external RBAC
-	// (--server.external-rbac-service -> POST /_integration/authorization/v1/evaluate-token-many) is
-	// answered locally: authn.v1 validates the presented token, authz.v1 evaluates it via the pool
-	// plugin (which syncs from the local authorizer's pool). Without these the endpoint is unserved and
-	// arangod fail-closes every check.
-	if authPath, err := flagAuth.Get(cmd); err != nil {
-		return err
-	} else if authPath != "" {
-		authnHandler, err := pbImplAuthenticationV1.New(ctx, pbImplAuthenticationV1.NewConfiguration().With(func(c pbImplAuthenticationV1.Configuration) pbImplAuthenticationV1.Configuration {
-			c.Path = authPath
-			return c
-		}))
-		if err != nil {
-			return err
-		}
-		handlers = append(handlers, authnHandler)
-
-		authMode, err := flagAuthMode.Get(cmd)
-		if err != nil {
-			return err
-		}
-
-		authzHandler, err := pbImplAuthorizationV1.New(ctx, pbImplAuthorizationV1.NewConfiguration().With(func(c pbImplAuthorizationV1.Configuration) pbImplAuthorizationV1.Configuration {
-			c.Type = pbImplAuthorizationV1.ConfigurationType(authMode)
-			return c
-		}))
-		if err != nil {
-			return err
-		}
-		handlers = append(handlers, authzHandler)
 	}
 
 	for _, item := range global.Items() {
