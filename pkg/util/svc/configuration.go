@@ -78,9 +78,17 @@ type ConfigurationGateway struct {
 	Address string
 	Unix    string
 
+	// ExternalAddress, when set, serves the same gateway mux on a second, routable listener (e.g.
+	// 0.0.0.0). It is always served with the service TLS options when present (TLS on a secure
+	// deployment, plain otherwise) - matching the ArangoDB server's own TLS mode - so a network-exposed
+	// endpoint is never served plain while the service has TLS. Address stays the in-Pod (loopback)
+	// listener; ExternalAddress is what an out-of-Pod client (the platform gateway) connects to.
+	ExternalAddress string
+
 	// Insecure requests that the HTTP gateway be served without TLS. It is honoured only when Address is a
 	// loopback address (127.0.0.1/localhost/::1); a gateway bound to a routable address (e.g. 0.0.0.0) is
 	// always served with TLS when the service has TLS options. The gRPC endpoint keeps its TLS regardless.
+	// It applies to Address only; ExternalAddress always follows the service TLS options.
 	Insecure bool
 
 	MuxExtensions []runtime.ServeMuxOption

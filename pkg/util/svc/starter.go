@@ -45,13 +45,14 @@ type ServiceStarter interface {
 	Unix() string
 
 	HTTPAddress() string
+	HTTPExternalAddress() string
 	HTTPUnix() string
 }
 
 type serviceStarter struct {
 	service *service
 
-	address, httpAddress, unix, httpUnix string
+	address, httpAddress, httpExternalAddress, unix, httpUnix string
 
 	error error
 	done  chan struct{}
@@ -73,19 +74,23 @@ func (s *serviceStarter) HTTPAddress() string {
 	return s.httpAddress
 }
 
+func (s *serviceStarter) HTTPExternalAddress() string {
+	return s.httpExternalAddress
+}
+
 func (s *serviceStarter) Wait() error {
 	<-s.done
 
 	return s.error
 }
 
-func (s *serviceStarter) run(ctx context.Context, health Health, grpcListener, unixGRPCListener, httpListener, unixHTTPListener net.Listener, conn *grpc.ClientConn) {
+func (s *serviceStarter) run(ctx context.Context, health Health, grpcListener, unixGRPCListener, httpListener, externalHTTPListener, unixHTTPListener net.Listener, conn *grpc.ClientConn) {
 	defer close(s.done)
 
-	s.error = s.runE(ctx, health, grpcListener, unixGRPCListener, httpListener, unixHTTPListener, conn)
+	s.error = s.runE(ctx, health, grpcListener, unixGRPCListener, httpListener, externalHTTPListener, unixHTTPListener, conn)
 }
 
-func (s *serviceStarter) runE(ctx context.Context, health Health, grpcListener, unixGRPCListener, httpListener, unixHTTPListener net.Listener, conn *grpc.ClientConn) error {
+func (s *serviceStarter) runE(ctx context.Context, health Health, grpcListener, unixGRPCListener, httpListener, externalHTTPListener, unixHTTPListener net.Listener, conn *grpc.ClientConn) error {
 	ctx, c := context.WithCancel(ctx)
 	defer c()
 
@@ -150,6 +155,32 @@ func (s *serviceStarter) runE(ctx context.Context, health Health, grpcListener, 
 			}
 		} else {
 			if err := s.service.http.network.Serve(httpListener); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	wg.Go(func() error {
+		if s.service.cfg.Gateway == nil || s.service.cfg.Gateway.ExternalAddress == "" {
+			return nil
+		}
+
+		go func() {
+			<-nctx.Done()
+
+			s.service.http.external.Close()
+		}()
+
+		// The external listener follows the service TLS options: TLS on a secure deployment, plain
+		// otherwise. It is never served plain while the service has TLS.
+		if s.service.http.external.TLSConfig != nil {
+			if err := s.service.http.external.ServeTLS(externalHTTPListener, "", ""); !errors.AnyOf(err, goHttp.ErrServerClosed) {
+				return err
+			}
+		} else {
+			if err := s.service.http.external.Serve(externalHTTPListener); !errors.AnyOf(err, goHttp.ErrServerClosed) {
 				return err
 			}
 		}
@@ -225,7 +256,7 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 
 	logger.Str("address", st.address).Info("Started GRPC Listener")
 
-	var gsln, hln, hsln net.Listener
+	var gsln, hln, hxln, hsln net.Listener
 
 	if unix := service.cfg.Unix; unix != "" {
 		if err := os.MkdirAll(filepath.Dir(unix), 0755); err != nil {
@@ -293,6 +324,40 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		logger.Info("Starting HTTP Listener skipped")
 	}
 
+	if gateway := service.cfg.Gateway; gateway != nil && gateway.ExternalAddress != "" {
+		logger.Str("address", gateway.ExternalAddress).Info("Starting External HTTP Listener")
+
+		mux := runtime.NewServeMux(gateway.MuxExtensions...)
+
+		for _, handler := range service.handlers {
+			if h, ok := handler.(HandlerGateway); ok {
+				if err := h.Gateway(shutdown.Context(), mux, conn); err != nil {
+					return serviceError{err}
+				}
+			}
+		}
+
+		service.http.external.Handler = service.cfg.Wrap.Wrap(mux)
+
+		httpxln, err := net.Listen("tcp", gateway.ExternalAddress)
+		if err != nil {
+			return serviceError{err}
+		}
+
+		hxln = httpxln
+
+		pr := httpxln.Addr().(*net.TCPAddr)
+		if pr.IP.IsUnspecified() {
+			st.httpExternalAddress = fmt.Sprintf("127.0.0.1:%d", pr.Port)
+		} else {
+			st.httpExternalAddress = fmt.Sprintf("%s:%d", pr.IP.String(), pr.Port)
+		}
+
+		logger.Str("address", st.httpExternalAddress).Info("Started External HTTP Listener")
+	} else {
+		logger.Info("Starting External HTTP Listener skipped")
+	}
+
 	if gateway := service.cfg.Gateway; gateway != nil && gateway.Unix != "" {
 		if err := os.MkdirAll(filepath.Dir(gateway.Unix), 0755); err != nil {
 			return serviceError{err}
@@ -332,7 +397,7 @@ func newServiceStarter(ctx context.Context, service *service, health Health) Ser
 		logger.Info("Starting UNIX HTTP Listener skipped")
 	}
 
-	go st.run(ctx, health, ln, gsln, hln, hsln, conn)
+	go st.run(ctx, health, ln, gsln, hln, hxln, hsln, conn)
 
 	return st
 }

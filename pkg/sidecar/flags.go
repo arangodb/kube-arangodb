@@ -37,10 +37,18 @@ var (
 	}
 	flagGatewayAddress = cli.Flag[string]{
 		Name: "sidecar.gateway.address",
-		Description: "Address of the http gateway server. Defaults to a loopback address: the endpoint is " +
-			"consumed only in-Pod (e.g. by arangod), so it is served plain HTTP; bind a routable address to " +
-			"have it served over TLS.",
+		Description: "Address of the internal http gateway server. Defaults to a loopback address: the " +
+			"endpoint is consumed only in-Pod (e.g. by arangod), so it is served plain HTTP; bind a routable " +
+			"address to have it served over TLS.",
 		Default: fmt.Sprintf("127.0.0.1:%d", shared.InternalSidecarContainerPortHTTP),
+	}
+	flagGatewayExternalAddress = cli.Flag[string]{
+		Name: "sidecar.gateway.external.address",
+		Description: "Address of the external http gateway server, serving the same routes as the internal " +
+			"one on a routable address so an out-of-Pod client (the platform gateway) can reach the management " +
+			"API. It follows the deployment TLS setting - served over TLS when a keyfile is configured, plain " +
+			"otherwise. Empty disables it.",
+		Default: "",
 	}
 	flagHealthAddress = cli.Flag[string]{
 		Name:        "sidecar.health.address",

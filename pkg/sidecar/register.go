@@ -48,6 +48,7 @@ func Register() (*cobra.Command, error) {
 	flags := []cli.FlagRegisterer{
 		flagAddress,
 		flagGatewayAddress,
+		flagGatewayExternalAddress,
 		flagKeyfile,
 		flagAuth,
 		flagAuthMode,
@@ -110,6 +111,14 @@ func configuration(cmd *cobra.Command) (svc.Configuration, error) {
 		// The sidecar's HTTP gateway is an in-Pod endpoint (default loopback address), so it opts into
 		// plain HTTP. If it is bound to a routable address instead, the svc still serves it over TLS.
 		cfg.Gateway = &svc.ConfigurationGateway{Address: addr, Insecure: true}
+	}
+
+	// The external gateway address, when set, serves the same routes on a routable listener (the platform
+	// gateway reaches the management API here). It always follows the deployment TLS setting.
+	if addr, err := flagGatewayExternalAddress.Get(cmd); err != nil {
+		return svc.Configuration{}, err
+	} else if addr != "" {
+		cfg.Gateway.ExternalAddress = addr
 	}
 
 	if keyfile, err := flagKeyfile.Get(cmd); err != nil {

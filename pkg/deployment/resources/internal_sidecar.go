@@ -69,6 +69,11 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 		options.Add("--sidecar.keyfile", filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile))
 	}
 
+	// Expose the management API on a routable external endpoint so the platform gateway can reach it
+	// cross-Pod (the internal endpoint stays loopback-only for in-Pod arangod). It follows the deployment
+	// TLS setting via the keyfile above.
+	options.Addf("--sidecar.gateway.external.address", "0.0.0.0:%d", shared.InternalSidecarContainerPortHTTPExternal)
+
 	if storage != nil {
 		options.Merge(internalSidecarStorageV2Args(storage))
 	}
@@ -94,6 +99,11 @@ func ArangodbInternalSidecarContainer(image string, args []string,
 			{
 				Name:          shared.InternalSidecarContainerPortHTTPName,
 				ContainerPort: int32(shared.InternalSidecarContainerPortHTTP),
+				Protocol:      core.ProtocolTCP,
+			},
+			{
+				Name:          shared.InternalSidecarContainerPortHTTPExternalName,
+				ContainerPort: int32(shared.InternalSidecarContainerPortHTTPExternal),
 				Protocol:      core.ProtocolTCP,
 			},
 			{
