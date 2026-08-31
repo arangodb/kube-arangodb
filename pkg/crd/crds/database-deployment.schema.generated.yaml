@@ -6903,6 +6903,7 @@ v1:
                     description: Type defines the Authentication Type
                     enum:
                       - OpenID
+                      - ALB
                     type: string
                 type: object
               cookiesSupport:
@@ -24297,6 +24298,7 @@ v2alpha1:
                     description: Type defines the Authentication Type
                     enum:
                       - OpenID
+                      - ALB
                     type: string
                 type: object
               cookiesSupport:

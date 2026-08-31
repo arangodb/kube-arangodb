@@ -569,6 +569,9 @@
             "dynamic": {
               "type": "boolean"
             },
+            "createUsers": {
+              "type": "boolean"
+            },
             "authentication": {
               "type": "object",
               "properties": {

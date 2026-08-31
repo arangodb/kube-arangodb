@@ -23,6 +23,7 @@ package auth_custom
 import (
 	"context"
 
+	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_custom/alb"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_custom/openid"
 	pbImplEnvoyAuthV3Shared "github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared"
 )
@@ -39,6 +40,8 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 	switch configuration.Auth.Type {
 	case "OpenID":
 		return openid.New(ctx, configuration)
+	case "ALB":
+		return alb.New(ctx, configuration)
 	}
 
 	return nil, false, nil

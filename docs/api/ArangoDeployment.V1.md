@@ -3217,7 +3217,7 @@ UID keeps the information about object UID
 
 ### .spec.gateway.authentication.type
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec_gateway_authentication.go#L53)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.4/pkg/apis/deployment/v1/deployment_spec_gateway_authentication.go#L55)</sup>
 
 > [!WARNING]
 > ***ALPHA***
@@ -3228,6 +3228,7 @@ Type defines the Authentication Type
 
 Possible Values: 
 * `"OpenID"` (default) - Configure OpenID Authentication Type
+* `"ALB"` - Trust identity forwarded by an AWS Application Load Balancer that terminates OIDC
 
 ***
 

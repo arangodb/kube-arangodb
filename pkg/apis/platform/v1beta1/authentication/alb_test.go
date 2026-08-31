@@ -1,0 +1,242 @@
+//
+// DISCLAIMER
+//
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Copyright holder is ArangoDB GmbH, Cologne, Germany
+//
+
+package authentication
+
+import (
+	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	goHttp "net/http"
+	"testing"
+	"time"
+
+	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/stretchr/testify/require"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
+)
+
+func albTestKey(t *testing.T) *ecdsa.PrivateKey {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+	return key
+}
+
+func albSign(t *testing.T, key *ecdsa.PrivateKey, header map[string]interface{}, claims jwt.MapClaims) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	for k, v := range header {
+		token.Header[k] = v
+	}
+	signed, err := token.SignedString(key)
+	require.NoError(t, err)
+	return signed
+}
+
+// albSignPadded builds an ES256 token whose segments are base64url-encoded WITH padding, exactly like
+// the AWS ALB x-amzn-oidc-data token. golang-jwt's own SignedString always emits RawURLEncoding (no
+// padding), so the padded token is assembled by hand and signed over the padded signing string.
+func albSignPadded(t *testing.T, key *ecdsa.PrivateKey, header map[string]interface{}, claims jwt.MapClaims) string {
+	enc := base64.URLEncoding // with padding
+
+	hj, err := json.Marshal(header)
+	require.NoError(t, err)
+	cj, err := json.Marshal(claims)
+	require.NoError(t, err)
+
+	signing := enc.EncodeToString(hj) + "." + enc.EncodeToString(cj)
+
+	sum := sha256.Sum256([]byte(signing))
+	r, s, err := ecdsa.Sign(rand.Reader, key, sum[:])
+	require.NoError(t, err)
+
+	// ES256 signature is the fixed-width R||S concatenation (32 bytes each for P-256).
+	sig := make([]byte, 64)
+	r.FillBytes(sig[:32])
+	s.FillBytes(sig[32:])
+
+	return signing + "." + enc.EncodeToString(sig)
+}
+
+func albResolver(key *ecdsa.PrivateKey) ALBKeyResolver {
+	return func(ctx context.Context, kid string) (*ecdsa.PublicKey, error) {
+		return &key.PublicKey, nil
+	}
+}
+
+func Test_ALB_VerifyToken_Valid(t *testing.T) {
+	key := albTestKey(t)
+	c := &ALB{Region: "eu-central-1"}
+
+	token := albSign(t, key, map[string]interface{}{"kid": "abc-123", "signer": "arn:aws:elb"}, jwt.MapClaims{
+		"sub": "user-1",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+
+	claims, err := c.VerifyToken(context.Background(), token, albResolver(key))
+	require.NoError(t, err)
+	require.Equal(t, "user-1", claims["sub"])
+}
+
+func Test_ALB_VerifyToken_PaddedBase64(t *testing.T) {
+	key := albTestKey(t)
+	c := &ALB{Region: "eu-central-1"}
+
+	// AWS ALB emits padded base64url segments; the default RawURLEncoding rejected them with
+	// "illegal base64 data". WithPaddingAllowed must accept the padded token and verify it.
+	token := albSignPadded(t, key, map[string]interface{}{"alg": "ES256", "typ": "JWT", "kid": "abc-123", "signer": "arn:aws:elb"}, jwt.MapClaims{
+		"sub": "user-1",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+
+	claims, err := c.VerifyToken(context.Background(), token, albResolver(key))
+	require.NoError(t, err)
+	require.Equal(t, "user-1", claims["sub"])
+}
+
+func Test_ALB_VerifyToken_Expired(t *testing.T) {
+	key := albTestKey(t)
+	c := &ALB{Region: "eu-central-1"}
+
+	token := albSign(t, key, map[string]interface{}{"kid": "abc-123"}, jwt.MapClaims{
+		"sub": "user-1",
+		"exp": time.Now().Add(-time.Hour).Unix(),
+	})
+
+	_, err := c.VerifyToken(context.Background(), token, albResolver(key))
+	require.Error(t, err)
+}
+
+func Test_ALB_VerifyToken_WrongKey(t *testing.T) {
+	key := albTestKey(t)
+	other := albTestKey(t)
+	c := &ALB{Region: "eu-central-1"}
+
+	token := albSign(t, key, map[string]interface{}{"kid": "abc-123"}, jwt.MapClaims{
+		"sub": "user-1",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+
+	// Resolver returns a public key that does not match the signing key -> signature check fails.
+	_, err := c.VerifyToken(context.Background(), token, albResolver(other))
+	require.Error(t, err)
+}
+
+func Test_ALB_VerifyToken_RejectsNonES256(t *testing.T) {
+	key := albTestKey(t)
+	c := &ALB{Region: "eu-central-1"}
+
+	// A token signed with HS256 (alg confusion) must be rejected by the ValidMethods restriction; the
+	// resolver would never even be consulted for a matching key type.
+	hs := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": "user-1",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+	hs.Header["kid"] = "abc-123"
+	signed, err := hs.SignedString([]byte("secret"))
+	require.NoError(t, err)
+
+	_, err = c.VerifyToken(context.Background(), signed, albResolver(key))
+	require.Error(t, err)
+}
+
+func Test_ALB_VerifyToken_SignerPin(t *testing.T) {
+	key := albTestKey(t)
+	c := &ALB{Region: "eu-central-1", Signer: util.NewType("arn:aws:elb:expected")}
+
+	token := albSign(t, key, map[string]interface{}{"kid": "abc-123", "signer": "arn:aws:elb:attacker"}, jwt.MapClaims{
+		"sub": "user-1",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+
+	_, err := c.VerifyToken(context.Background(), token, albResolver(key))
+	require.Error(t, err)
+
+	// The same token with the expected signer verifies.
+	ok := albSign(t, key, map[string]interface{}{"kid": "abc-123", "signer": "arn:aws:elb:expected"}, jwt.MapClaims{
+		"sub": "user-1",
+		"exp": time.Now().Add(time.Hour).Unix(),
+	})
+	_, err = c.VerifyToken(context.Background(), ok, albResolver(key))
+	require.NoError(t, err)
+}
+
+func Test_ALB_GetPublicKeyURL(t *testing.T) {
+	c := &ALB{Region: "eu-central-1"}
+
+	url, err := c.GetPublicKeyURL("abc-123")
+	require.NoError(t, err)
+	require.Equal(t, "https://public-keys.auth.elb.eu-central-1.amazonaws.com/abc-123", url)
+
+	// AWS GovCloud (US) serves the ALB signing keys from a per-region S3 bucket, not the
+	// public-keys.auth.elb host.
+	govWest, err := (&ALB{Region: "us-gov-west-1"}).GetPublicKeyURL("abc-123")
+	require.NoError(t, err)
+	require.Equal(t, "https://s3-us-gov-west-1.amazonaws.com/aws-elb-public-keys-prod-us-gov-west-1/abc-123", govWest)
+
+	govEast, err := (&ALB{Region: "us-gov-east-1"}).GetPublicKeyURL("abc-123")
+	require.NoError(t, err)
+	require.Equal(t, "https://s3-us-gov-east-1.amazonaws.com/aws-elb-public-keys-prod-us-gov-east-1/abc-123", govEast)
+
+	// Empty region / key id and injection attempts are rejected.
+	_, err = (&ALB{}).GetPublicKeyURL("abc-123")
+	require.Error(t, err)
+	_, err = c.GetPublicKeyURL("")
+	require.Error(t, err)
+	_, err = c.GetPublicKeyURL("../../evil")
+	require.Error(t, err)
+	_, err = (&ALB{Region: "bad/region"}).GetPublicKeyURL("abc-123")
+	require.Error(t, err)
+}
+
+func Test_ALB_Claims_Defaults(t *testing.T) {
+	require.Equal(t, "sub", (*ALBClaims)(nil).GetUsernameClaim())
+	require.Equal(t, "", (*ALBClaims)(nil).GetGroupsClaim())
+	require.Equal(t, "email", (&ALBClaims{Username: util.NewType("email")}).GetUsernameClaim())
+	require.Equal(t, "groups", (&ALBClaims{Groups: util.NewType("groups")}).GetGroupsClaim())
+}
+
+func Test_OpenIDHTTPClient_Proxy(t *testing.T) {
+	req, _ := goHttp.NewRequest(goHttp.MethodGet, "https://public-keys.auth.elb.eu-central-1.amazonaws.com/kid", nil)
+
+	t.Run("no proxy by default", func(t *testing.T) {
+		c, err := (&OpenIDHTTPClient{}).Client()
+		require.NoError(t, err)
+		require.Nil(t, c.Transport.(*goHttp.Transport).Proxy)
+	})
+
+	t.Run("explicit proxy URL", func(t *testing.T) {
+		c, err := (&OpenIDHTTPClient{Proxy: util.NewType("http://proxy.local:3128")}).Client()
+		require.NoError(t, err)
+		u, err := c.Transport.(*goHttp.Transport).Proxy(req)
+		require.NoError(t, err)
+		require.NotNil(t, u)
+		require.Equal(t, "http://proxy.local:3128", u.String())
+	})
+
+	t.Run("invalid proxy URL errors", func(t *testing.T) {
+		_, err := (&OpenIDHTTPClient{Proxy: util.NewType("://not a url")}).Client()
+		require.Error(t, err)
+	})
+}

@@ -222,6 +222,8 @@ deployment:
   platform:
     enabled: false
     dynamic: true
+    # createUsers: when true, users authenticated through the gateway are created in ArangoDB (spec.gateway.createUsers).
+    createUsers: false
     # authentication configures gateway SSO (spec.gateway.authentication).
     #   type:       "" (off), OpenID or ALB
     #   secretName: an existing Secret whose `config` key holds the marshalled provider configuration
