@@ -681,6 +681,14 @@ chart-arango-deployment: helm
 
 manifests: chart-arango-deployment
 
+.PHONY: chart-platform-storage
+chart-platform-storage: export CHART_NAME := platform-storage
+chart-platform-storage: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+manifests: chart-platform-storage
+
 .PHONY: manifests-verify
 manifests-verify:
 	$(MAKE) manifest-verify-plain-ce
