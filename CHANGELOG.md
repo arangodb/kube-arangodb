@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.4.5](https://github.com/arangodb/kube-arangodb/tree/1.4.5) (2026-09-02)
 - (Bugfix) Serve the serving-member sidecar management API on a routable external HTTP endpoint (TLS per deployment settings) so the platform gateway can reach `/_management` cross-Pod, keeping the internal HTTP endpoint loopback-only for arangod
 - (Feature) Add gateway `ALB` authentication type that trusts identity from an AWS Application Load Balancer terminating OIDC by verifying the signed `x-amzn-oidc-data` token
 - (Maintenance) Register the sidecar authentication.v1 and authorization.v1 integrations through the default integration registry instead of wiring them by hand (no behaviour change; both self-enable only when authentication is configured)
