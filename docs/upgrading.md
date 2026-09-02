@@ -12,7 +12,8 @@ one version to the next.
 
 **Warning!**
 It is highly recommended to take a backup of your data before upgrading ArangoDB
-using [arangodump](https://docs.arangodb.com/stable/components/tools/arangodump/) or [ArangoBackup CR](backup-resource.md).
+using [arangodump](https://docs.arango.ai/arangodb/stable/components/tools/arangodump/)
+or [ArangoBackup CR](backup-resource.md).
 
 ## Upgrade an ArangoDB deployment version
 

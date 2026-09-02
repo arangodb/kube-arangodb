@@ -44,8 +44,6 @@ has_toc: false
 | [arangodb_operator_resources_arangodeployment_status_restores](./arangodb_operator_resources_arangodeployment_status_restores.md) | arangodb_operator | resources | Counter | Counter for deployment status restored |
 | [arangodb_operator_resources_arangodeployment_uptodate](./arangodb_operator_resources_arangodeployment_uptodate.md) | arangodb_operator | resources | Gauge | Defines if ArangoDeployment is uptodate |
 | [arangodb_operator_resources_arangodeployment_validation_errors](./arangodb_operator_resources_arangodeployment_validation_errors.md) | arangodb_operator | resources | Counter | Counter for deployment validation errors |
-| [arangodb_operator_resources_arangodeploymentreplication_active](./arangodb_operator_resources_arangodeploymentreplication_active.md) | arangodb_operator | resources | Gauge | Defines if ArangoDeploymentReplication is configured and running |
-| [arangodb_operator_resources_arangodeploymentreplication_failed](./arangodb_operator_resources_arangodeploymentreplication_failed.md) | arangodb_operator | resources | Gauge | Defines if ArangoDeploymentReplication is in Failed phase |
 | [arangodb_resources_deployment_config_map_duration](./arangodb_resources_deployment_config_map_duration.md) | arangodb_resources | deployment_config_map | Gauge | Duration of inspected ConfigMaps by Deployment in seconds |
 | [arangodb_resources_deployment_config_map_inspected](./arangodb_resources_deployment_config_map_inspected.md) | arangodb_resources | deployment_config_map | Counter | Number of inspected ConfigMaps by Deployment |
 

@@ -15,7 +15,7 @@ nav_order: 11
 | AddMember | no | 10m0s | no | Community & Enterprise | Adds new member to the Member list |
 | AppendTLSCACertificate | no | 30m0s | no | Enterprise Only | Append Certificate into CA TrustStore |
 | ArangoMemberUpdatePodSpec | no | 10m0s | no | Community & Enterprise | Propagate Member Pod spec (requested) |
-| ArangoMemberUpdatePodStatus | no | 10m0s | no | Community & Enterprise | Propagate Member Pod status (current) |
+| ArangoMemberUpdatePodStatus | yes | 10m0s | no | Community & Enterprise | Propagate Member Pod status (current) |
 | BackupRestore | no | 15m0s | no | Enterprise Only | Restore selected Backup |
 | BackupRestoreClean | no | 15m0s | no | Enterprise Only | Clean restore status in case of restore spec change |
 | BootstrapSetPassword | no | 10m0s | no | Community & Enterprise | Change password during bootstrap procedure |
@@ -37,7 +37,7 @@ nav_order: 11
 | EncryptionKeyPropagated | yes | 10m0s | no | Enterprise Only | Update condition of encryption propagation |
 | EncryptionKeyRefresh | no | 10m0s | no | Enterprise Only | Refresh the encryption keys on member |
 | EncryptionKeyRemove | no | 10m0s | no | Enterprise Only | Remove the encryption key to the pool |
-| EncryptionKeyStatusUpdate | no | 10m0s | no | Enterprise Only | Update status of encryption propagation |
+| EncryptionKeyStatusUpdate | yes | 10m0s | no | Enterprise Only | Update status of encryption propagation |
 | EnforceResignLeadership | no | 45m0s | yes | Community & Enterprise | Run the ResignLeadership job on DBServer and checks data compatibility after |
 | Idle | no | 10m0s | no | Community & Enterprise | Define idle operation in case if preconditions are not meet |
 | JWTAdd | no | 10m0s | no | Enterprise Only | Adds new JWT to the pool |
@@ -45,7 +45,7 @@ nav_order: 11
 | JWTPropagated | yes | 10m0s | no | Enterprise Only | Update condition of JWT propagation |
 | JWTRefresh | no | 10m0s | no | Enterprise Only | Refresh current JWT secrets on the member |
 | JWTSetActive | no | 10m0s | no | Enterprise Only | Change active JWT key on the cluster |
-| JWTStatusUpdate | no | 10m0s | no | Enterprise Only | Update status of JWT propagation |
+| JWTStatusUpdate | yes | 10m0s | no | Enterprise Only | Update status of JWT propagation |
 | KillMemberPod | no | 10m0s | no | Community & Enterprise | Execute Delete on Pod (put pod in Terminating state) |
 | LicenseClean | no | 10m0s | no | Community & Enterprise | Removes the License reference from the status |
 | LicenseGenerate | no | 10m0s | no | Community & Enterprise | Generates License using ArangoDB LicenseManager Endpoint |
@@ -87,7 +87,8 @@ nav_order: 11
 | SetMemberConditionV2 | yes | 10m0s | no | Community & Enterprise | Set member condition |
 | SetMemberCurrentImage | no | 10m0s | no | Community & Enterprise | Update Member current image |
 | ShutdownMember | no | 30m0s | no | Community & Enterprise | Sends Shutdown requests and waits for container to be stopped |
-| TLSKeyStatusUpdate | no | 10m0s | no | Enterprise Only | Update Status of TLS propagation process |
+| SyncRBACPermissions | no | 10m0s | no | Community & Enterprise | Sync the operator managed predefined RBAC roles into the authorization sidecar (super-admin ships an Allow-all policy bound to the root user; other roles are created empty) |
+| TLSKeyStatusUpdate | yes | 10m0s | no | Enterprise Only | Update Status of TLS propagation process |
 | TLSPropagated | yes | 10m0s | no | Enterprise Only | Update TLS propagation condition |
 | TimezoneSecretSet | no | 30m0s | no | Community & Enterprise | Set timezone details in cluster |
 | TopologyDisable | no | 10m0s | no | Enterprise Only | Disable TopologyAwareness |
@@ -186,6 +187,7 @@ spec:
       SetMemberConditionV2: 10m0s
       SetMemberCurrentImage: 10m0s
       ShutdownMember: 30m0s
+      SyncRBACPermissions: 10m0s
       TLSKeyStatusUpdate: 10m0s
       TLSPropagated: 10m0s
       TimezoneSecretSet: 30m0s

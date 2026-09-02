@@ -1,6 +1,25 @@
 apiVersion: v1
 entries:
+  arango-deployment:
+  - apiVersion: v1
+    appVersion: 1.4.5
+    created: "2026-09-02T09:34:15.188683506Z"
+    description: Deploys an ArangoDeployment (Single or Cluster) managed by the ArangoDB
+      Kubernetes Operator
+    digest: 022242ee721002bd198922d4cc642bdb492765f5545238a4297cf39211d51744
+    name: arango-deployment
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.4.5/arango-deployment-1.4.5.tgz
+    version: 1.4.5
   kube-arangodb:
+  - apiVersion: v1
+    created: "2026-09-02T09:34:15.232487557Z"
+    description: ArangoDB Kubernetes Operator
+    digest: db2d3a42e4f5970fecf9d8e0500a8ac3eb8369f0cab63617c1310f5892d70a85
+    name: kube-arangodb
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.4.5/kube-arangodb-1.4.5.tgz
+    version: 1.4.5
   - apiVersion: v1
     created: "2026-06-05T13:08:07.212267184Z"
     description: ArangoDB Kubernetes Operator
@@ -483,6 +502,14 @@ entries:
     version: 1.2.1
   kube-arangodb-arm64:
   - apiVersion: v1
+    created: "2026-09-02T09:34:15.272680176Z"
+    description: ArangoDB Kubernetes Operator with ARM64 defaults
+    digest: 2e1ef6a438f04cb7d6f34f4a255ef5947267684e2beec8b2e07f45e0f17e4aa0
+    name: kube-arangodb-arm64
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.4.5/kube-arangodb-arm64-1.4.5.tgz
+    version: 1.4.5
+  - apiVersion: v1
     created: "2026-06-05T13:08:07.248020172Z"
     description: ArangoDB Kubernetes Operator with ARM64 defaults
     digest: 9abd94f7e2057b67152036b46e897986b6d2ef48c8e206e688f5572c5274dfc5
@@ -603,6 +630,15 @@ entries:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-arm64-1.2.43.tgz
     version: 1.2.43
   kube-arangodb-crd:
+  - apiVersion: v1
+    appVersion: 3.5.0
+    created: "2026-09-02T09:34:15.311808203Z"
+    description: ArangoDB Kubernetes Custom Resource Definitions (Deprecated)
+    digest: 14811b3acb7aa1c539494c445f98a6d8753c19746fb1f776184e4d4706ef58ed
+    name: kube-arangodb-crd
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.4.5/kube-arangodb-crd-1.4.5.tgz
+    version: 1.4.5
   - apiVersion: v1
     appVersion: 3.5.0
     created: "2026-06-05T13:08:07.348031915Z"
@@ -1109,6 +1145,14 @@ entries:
     version: 1.2.1
   kube-arangodb-enterprise:
   - apiVersion: v1
+    created: "2026-09-02T09:34:15.351928389Z"
+    description: ArangoDB Kubernetes Enterprise Operator
+    digest: 1a930daf97650cc9420df720037e0fdcbbec0de8353e0399dd52555fe8c37bcc
+    name: kube-arangodb-enterprise
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.4.5/kube-arangodb-enterprise-1.4.5.tgz
+    version: 1.4.5
+  - apiVersion: v1
     created: "2026-06-05T13:08:07.388428289Z"
     description: ArangoDB Kubernetes Enterprise Operator
     digest: d3405c9f366a7504ee43934b1bd38668788b1939bc323d1e17e24d37bf4ed57e
@@ -1238,6 +1282,14 @@ entries:
     version: 1.2.42
   kube-arangodb-enterprise-arm64:
   - apiVersion: v1
+    created: "2026-09-02T09:34:15.393198513Z"
+    description: ArangoDB Kubernetes Enterprise Operator with ARM64 defaults
+    digest: 922e05bab23dda9005cd71c8d5db6c410e8a71351c938a58df5c94e233092967
+    name: kube-arangodb-enterprise-arm64
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.4.5/kube-arangodb-enterprise-arm64-1.4.5.tgz
+    version: 1.4.5
+  - apiVersion: v1
     created: "2026-06-05T13:08:07.493686623Z"
     description: ArangoDB Kubernetes Enterprise Operator with ARM64 defaults
     digest: 4808e450e1c3cf58c443fdababf0386d094a20737b1555a38c0722bf4f3d1666
@@ -1357,4 +1409,13 @@ entries:
     urls:
     - https://github.com/arangodb/kube-arangodb/releases/download/1.2.43/kube-arangodb-enterprise-arm64-1.2.43.tgz
     version: 1.2.43
-generated: "2026-06-05T13:08:07.49420748Z"
+  platform-storage:
+  - apiVersion: v1
+    created: "2026-09-02T09:34:15.431471018Z"
+    description: Platform SelfHosted Storage Extension
+    digest: ae048c97ef3c969a1827decdea998c3602ea5ada0e1fb2e6c19f9f0aa5ab78f7
+    name: platform-storage
+    urls:
+    - https://github.com/arangodb/kube-arangodb/releases/download/1.4.5/platform-storage-1.4.5.tgz
+    version: 1.4.5
+generated: "2026-09-02T09:34:15.431971476Z"
