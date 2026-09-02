@@ -2,6 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: f154c94d9bc8c3b4d27b6f7c04a571a8
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangobackuppolicies.backup.arangodb.com
@@ -68,6 +69,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: a92e153a08607e58eedd9ba6befae7de
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangobackups.backup.arangodb.com
@@ -175,6 +177,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 5de0cceda99c91fe708370e9996f8c98
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoclustersynchronizations.database.arangodb.com
@@ -212,7 +215,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: 7950bbd7730348b51f684a5eab8997bc
+    arangodb.com/status-subresource: "false"
+    arangodb.com/version: 084c021a778edddf717e8651355078da
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangodeployments.database.arangodb.com
 spec:
@@ -243,6 +247,8 @@ spec:
           x-kubernetes-preserve-unknown-fields: true
       served: true
       storage: true
+      subresources:
+        status: {}
     - additionalPrinterColumns:
         - description: Defines if ArangoDeployment is UpToDate
           jsonPath: .status.conditions[?(@.type=="UpToDate")].status
@@ -282,6 +288,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 938e50c44e5265b35534687773ca5c80
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangomembers.database.arangodb.com
@@ -339,6 +346,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 389a7f8c66c9426fd0d6ee08590b7eaa
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangopermissionpolicies.permission.arangodb.com
@@ -372,6 +380,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 28f985554c6f6d883e518906ea107d14
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangopermissionpolicyrolebindings.permission.arangodb.com
@@ -405,6 +414,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangopermissionroles.permission.arangodb.com
@@ -438,6 +448,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: e0fded031e4c71b5823be9b5cedd24ce
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangopermissionroleuserbindings.permission.arangodb.com
@@ -471,6 +482,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 82c86e31586062462e30751bf7a113e2
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangopermissiontokens.permission.arangodb.com
@@ -504,6 +516,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: f9390d93cf372a2517385099bb1c97b5
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoplatformcharts.platform.arangodb.com
@@ -575,6 +588,39 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
+    arangodb.com/version: 7fb8ee76af1e71079ea3c64f6f1fc1d0
+    arangodb.com/x-preserve-unknown-fields: "true"
+  name: arangoplatformlinks.platform.arangodb.com
+spec:
+  group: platform.arangodb.com
+  names:
+    kind: ArangoPlatformLink
+    listKind: ArangoPlatformLinkList
+    plural: arangoplatformlinks
+    singular: arangoplatformlink
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Connector is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: b6ce8014e77e8d26d6feb526d103e08b
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoplatformservices.platform.arangodb.com
@@ -620,6 +666,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: aff966efc3d295c26e2e1207c5b1a2a5
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoplatformstorages.platform.arangodb.com
@@ -665,6 +712,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoprofiles.scheduler.arangodb.com
@@ -700,6 +748,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: ed2f810b803d33ebf147bc1c5d4ff3aa
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoroutes.networking.arangodb.com
@@ -761,6 +810,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a84787f93098eaa4c16cdf2a22a8e75
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoschedulerbatchjobs.scheduler.arangodb.com
@@ -787,6 +837,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 843d96cd15169630a12f575b515d93bc
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoschedulercronjobs.scheduler.arangodb.com
@@ -813,6 +864,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: c810d7d13258ab790de55a136c8baffc
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoschedulerdeployments.scheduler.arangodb.com
@@ -842,6 +894,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 338fb8407ae44a030186b06db2f80722
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoschedulerpods.scheduler.arangodb.com
@@ -868,6 +921,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 0ece8e10b341d26dc231bb68b9345895
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangotasks.database.arangodb.com

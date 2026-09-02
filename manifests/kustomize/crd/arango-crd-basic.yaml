@@ -2,6 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: f154c94d9bc8c3b4d27b6f7c04a571a8
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangobackuppolicies.backup.arangodb.com
@@ -68,6 +69,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: a92e153a08607e58eedd9ba6befae7de
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangobackups.backup.arangodb.com
@@ -175,6 +177,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 5de0cceda99c91fe708370e9996f8c98
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoclustersynchronizations.database.arangodb.com
@@ -212,7 +215,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/version: 7950bbd7730348b51f684a5eab8997bc
+    arangodb.com/status-subresource: "false"
+    arangodb.com/version: 084c021a778edddf717e8651355078da
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangodeployments.database.arangodb.com
 spec:
@@ -243,6 +247,8 @@ spec:
           x-kubernetes-preserve-unknown-fields: true
       served: true
       storage: true
+      subresources:
+        status: {}
     - additionalPrinterColumns:
         - description: Defines if ArangoDeployment is UpToDate
           jsonPath: .status.conditions[?(@.type=="UpToDate")].status
@@ -282,6 +288,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: ba7d9af888270bab37493079eff61855
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangolocalstorages.storage.arangodb.com
@@ -308,6 +315,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 938e50c44e5265b35534687773ca5c80
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangomembers.database.arangodb.com
@@ -366,6 +374,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 0241245258adc951fc2f330abe329a50
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 389a7f8c66c9426fd0d6ee08590b7eaa
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangopermissionpolicies.permission.arangodb.com
@@ -461,7 +470,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 74b58bf36d55bd74f0f14127f173a7ab
+    arangodb.com/schema: 0d02aa33032d4fef0012fbe38097f08d
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 28f985554c6f6d883e518906ea107d14
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangopermissionpolicyrolebindings.permission.arangodb.com
@@ -499,6 +509,13 @@ spec:
                 policy:
                   description: Policy defines the policy to bind, either by CRD name or direct sidecar name
                   properties:
+                    direct:
+                      description: |-
+                        Direct references an existing authorization object (role or policy) by its exact name, without
+                        a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+                        "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+                        must be set.
+                      type: string
                     name:
                       description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
                       type: string
@@ -506,6 +523,13 @@ spec:
                 role:
                   description: Role defines the role to bind to, either by CRD name or direct sidecar name
                   properties:
+                    direct:
+                      description: |-
+                        Direct references an existing authorization object (role or policy) by its exact name, without
+                        a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+                        "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+                        must be set.
+                      type: string
                     name:
                       description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
                       type: string
@@ -530,6 +554,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 949fbcf3ef543afc5aeaaf5efc785606
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangopermissionroles.permission.arangodb.com
@@ -584,7 +609,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: ebd52f3240c3c66adc0e54509fe52395
+    arangodb.com/schema: 8fa50ebc0c83f960b739b52e0580bcf6
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: e0fded031e4c71b5823be9b5cedd24ce
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangopermissionroleuserbindings.permission.arangodb.com
@@ -622,6 +648,13 @@ spec:
                 role:
                   description: Role defines the role to bind, either by CRD name or direct sidecar name
                   properties:
+                    direct:
+                      description: |-
+                        Direct references an existing authorization object (role or policy) by its exact name, without
+                        a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+                        "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+                        must be set.
+                      type: string
                     name:
                       description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
                       type: string
@@ -689,7 +722,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 33e5f940c2c6ec7c82e4e7de3cb22b07
+    arangodb.com/schema: b82e7a5d28915d9cf1bef70f12b8fa74
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 82c86e31586062462e30751bf7a113e2
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangopermissiontokens.permission.arangodb.com
@@ -773,6 +807,13 @@ spec:
                       role:
                         description: Role references an ArangoPermissionRole CRD by name
                         properties:
+                          direct:
+                            description: |-
+                              Direct references an existing authorization object (role or policy) by its exact name, without
+                              a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+                              "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+                              must be set.
+                            type: string
                           name:
                             description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
                             type: string
@@ -823,6 +864,13 @@ spec:
                           ref:
                             description: Ref references an ArangoPermissionPolicy CRD to use as boundary
                             properties:
+                              direct:
+                                description: |-
+                                  Direct references an existing authorization object (role or policy) by its exact name, without
+                                  a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+                                  "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+                                  must be set.
+                                type: string
                               name:
                                 description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
                                 type: string
@@ -894,6 +942,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 362170e15c0d9ed4ca00e4368288885d
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: f9390d93cf372a2517385099bb1c97b5
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoplatformcharts.platform.arangodb.com
@@ -995,7 +1044,85 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/schema: 47d2687621cecad31dbb029247a9d3ef
+    arangodb.com/status-subresource: "false"
+    arangodb.com/version: 7fb8ee76af1e71079ea3c64f6f1fc1d0
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangoplatformlinks.platform.arangodb.com
+spec:
+  group: platform.arangodb.com
+  names:
+    kind: ArangoPlatformLink
+    listKind: ArangoPlatformLinkList
+    plural: arangoplatformlinks
+    singular: arangoplatformlink
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Connector is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                deployment:
+                  description: |-
+                    Deployment is a reference to the ArangoDeployment that this link belongs to.
+                    Set by the user. Must point to an existing ArangoDeployment in the same namespace.
+                    The operator verifies the deployment exists and sets the DeploymentFound condition.
+                  properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                description:
+                  description: Description is an optional human-readable description of this link
+                  type: string
+                route:
+                  description: |-
+                    Route is a reference to the ArangoRoute that exposes this link's external API
+                    at a user-friendly path (e.g. /link/<name>/). The route should redirect to
+                    /_integration/link/v1/ so that AI tools can use a clean per-link URL.
+                    Set by the user. The operator verifies the route exists and sets the RouteFound condition.
+                  properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                type:
+                  description: |-
+                    Type defines the link execution pattern.
+                    Currently only "Active" is supported — the link runs as a long-lived process
+                    that polls for pending jobs and processes them sequentially.
+                    Set by the user when creating the link. Defaults to "Active" if omitted.
+                  enum:
+                    - Active
+                  type: string
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
     arangodb.com/schema: f7b9b580c1888159b15e89e6dd8e0bd3
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: b6ce8014e77e8d26d6feb526d103e08b
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoplatformservices.platform.arangodb.com
@@ -1123,7 +1250,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 85df51b46b63b4307553db7c18b2e300
+    arangodb.com/schema: ea4f27f1623d4fc79f1cb5ea212e5895
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: aff966efc3d295c26e2e1207c5b1a2a5
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoplatformstorages.platform.arangodb.com
@@ -1260,8 +1388,23 @@ spec:
                         bucketPath:
                           description: BucketPath specifies the Prefix within the bucket
                           type: string
+                        clientCertificateSecret:
+                          description: |-
+                            ClientCertificateSecret specifies a Kubernetes TLS Secret (`kubernetes.io/tls`, providing
+                            `tls.crt` and `tls.key`) plus a `clientId` key, used for Azure client-certificate
+                            authorization. Exactly one of CredentialsSecret or ClientCertificateSecret must be defined.
+                          properties:
+                            name:
+                              description: Name of the object
+                              type: string
+                          required:
+                            - name
+                          type: object
                         credentialsSecret:
-                          description: CredentialsSecret specifies the Kubernetes Secret containing ClientID and ClientSecret for Azure API authorization
+                          description: |-
+                            CredentialsSecret specifies the Kubernetes Secret containing `clientId` and `clientSecret` for
+                            Azure service-principal (client secret) authorization. Exactly one of CredentialsSecret or
+                            ClientCertificateSecret must be defined.
                           properties:
                             name:
                               description: Name of the object
@@ -1278,7 +1421,6 @@ spec:
                       required:
                         - accountName
                         - bucketName
-                        - credentialsSecret
                         - tenantID
                       type: object
                     gcs:
@@ -1369,6 +1511,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 4f39d3c472aa8eac913abd346575d84e
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoprofiles.scheduler.arangodb.com
@@ -5800,6 +5943,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 75dccf5c3dbb263b88ada3e3b49b3b72
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: ed2f810b803d33ebf147bc1c5d4ff3aa
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoroutes.networking.arangodb.com
@@ -6112,6 +6256,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 3974830c2089afe26eb3dd79fe738b9b
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a84787f93098eaa4c16cdf2a22a8e75
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerbatchjobs.scheduler.arangodb.com
@@ -9227,6 +9372,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 992e43865b951d553d7e360e22a759bf
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 843d96cd15169630a12f575b515d93bc
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulercronjobs.scheduler.arangodb.com
@@ -12441,6 +12587,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 51e6e65a5bc94e518ea3db5cce69a0ea
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: c810d7d13258ab790de55a136c8baffc
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerdeployments.scheduler.arangodb.com
@@ -15512,6 +15659,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: 21219a68b6988da8789d5dca9e970d4b
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 338fb8407ae44a030186b06db2f80722
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangoschedulerpods.scheduler.arangodb.com
@@ -18450,6 +18598,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/schema: d18f6a9844a04f41714021168236c43c
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 0ece8e10b341d26dc231bb68b9345895
     arangodb.com/x-preserve-unknown-fields: "false"
   name: arangotasks.database.arangodb.com

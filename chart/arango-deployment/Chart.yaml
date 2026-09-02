@@ -1,6 +1,6 @@
 # do not switch to V2 yet - we still need to support Helm 2
 apiVersion: v1
 name: arango-deployment
-version: 1.4.4
-appVersion: 1.4.4
+version: 1.4.5
+appVersion: 1.4.5
 description: "Deploys an ArangoDeployment (Single or Cluster) managed by the ArangoDB Kubernetes Operator"

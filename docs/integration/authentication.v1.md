@@ -14,7 +14,7 @@ direct access to the deployment JWT secret.
 
 ## Service Definition
 
-- [Proto](https://github.com/arangodb/kube-arangodb/blob/1.4.4/integrations/authentication/v1/definition/definition.proto)
+- [Proto](https://github.com/arangodb/kube-arangodb/blob/1.4.5/integrations/authentication/v1/definition/definition.proto)
 
 ## Endpoints
 
