@@ -7,8 +7,8 @@ title: Index Sorting Order Issues
 # Index Sorting Order Issues
 
 ArangoDB References:
-- [Resolving known issues with versions prior to 3.12.4](https://docs.arangodb.com/stable/release-notes/version-3.12/incompatible-changes-in-3-12/#resolving-known-issues-with-versions-prior-to-3124)
-- [Corrected sorting order for numbers in VelocyPack indexes](https://docs.arangodb.com/stable/release-notes/version-3.12/incompatible-changes-in-3-12/#corrected-sorting-order-for-numbers-in-velocypack-indexes)
+- [Resolving known issues with versions prior to 3.12.4](https://docs.arango.ai/arangodb/stable/release-notes/version-3.12/incompatible-changes-in-3-12/#resolving-known-issues-with-versions-prior-to-3124)
+- [Corrected sorting order for numbers in VelocyPack indexes](https://docs.arango.ai/arangodb/stable/release-notes/version-3.12/incompatible-changes-in-3-12/#corrected-sorting-order-for-numbers-in-velocypack-indexes)
 
 Feature: `--deployment.feature.upgrade-index-order-issue`
 

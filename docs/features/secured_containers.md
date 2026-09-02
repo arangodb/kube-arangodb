@@ -12,12 +12,17 @@ Change Default settings of:
 
 * PodSecurityContext
   * `FSGroup` is set to `3000`
+  * `SeccompProfile` type is set to `RuntimeDefault`
 * SecurityContext (Container)
   * `RunAsUser` is set to `1000`
   * `RunAsGroup` is set to `2000`
   * `RunAsNonRoot` is set to `true`
   * `ReadOnlyRootFilesystem` is set to `true`
   * `Capabilities.Drop` is set to `["ALL"]`
+
+Additionally, the shared lifecycle volume (mounted at `/lifecycle/tools`) is mounted read-only in all
+runtime containers; only the `init-lifecycle` init container, which copies the operator binary into
+it, mounts it read-write.
 
 ## Dependencies
 
