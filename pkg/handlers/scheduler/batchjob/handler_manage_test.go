@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ func Test_Handler_Create(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "c12919994bb3b13dfc1cd7903bd2020a4da93064d93b068171d1567a203c62c4", extension.Status.Object.GetChecksum())
+	require.Equal(t, "5d02b29d4173a12691f045b0b8966954b03ae398f10927d9ecb092c1ed059fe1", extension.Status.Object.GetChecksum())
 }
 
 func Test_Handler_Update(t *testing.T) {
@@ -75,7 +75,7 @@ func Test_Handler_Update(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "c12919994bb3b13dfc1cd7903bd2020a4da93064d93b068171d1567a203c62c4", extension.Status.Object.GetChecksum())
+	require.Equal(t, "5d02b29d4173a12691f045b0b8966954b03ae398f10927d9ecb092c1ed059fe1", extension.Status.Object.GetChecksum())
 
 	// Update
 	tests.Apply(t, extension, func(t *testing.T, obj *schedulerApi.ArangoSchedulerBatchJob) {
@@ -113,7 +113,7 @@ func Test_Handler_Recreate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "c12919994bb3b13dfc1cd7903bd2020a4da93064d93b068171d1567a203c62c4", extension.Status.Object.GetChecksum())
+	require.Equal(t, "5d02b29d4173a12691f045b0b8966954b03ae398f10927d9ecb092c1ed059fe1", extension.Status.Object.GetChecksum())
 
 	// Update
 	tests.Apply(t, extension, func(t *testing.T, obj *schedulerApi.ArangoSchedulerBatchJob) {
@@ -130,7 +130,7 @@ func Test_Handler_Recreate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "c12919994bb3b13dfc1cd7903bd2020a4da93064d93b068171d1567a203c62c4", extension.Status.Object.GetChecksum())
+	require.Equal(t, "5d02b29d4173a12691f045b0b8966954b03ae398f10927d9ecb092c1ed059fe1", extension.Status.Object.GetChecksum())
 }
 
 func Test_Handler_Parent(t *testing.T) {
@@ -175,7 +175,7 @@ func Test_Handler_Propagate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "c12919994bb3b13dfc1cd7903bd2020a4da93064d93b068171d1567a203c62c4", extension.Status.Object.GetChecksum())
+	require.Equal(t, "5d02b29d4173a12691f045b0b8966954b03ae398f10927d9ecb092c1ed059fe1", extension.Status.Object.GetChecksum())
 	require.Nil(t, batchJob.Spec.Completions)
 	require.EqualValues(t, 0, extension.Status.Active)
 
