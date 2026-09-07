@@ -61,7 +61,7 @@ func NewArangoProfileInformer(client versioned.Interface, namespace string, resy
 // one. This reduces memory footprint and number of connections to the server.
 func NewFilteredArangoProfileInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
@@ -86,7 +86,7 @@ func NewFilteredArangoProfileInformer(client versioned.Interface, namespace stri
 				}
 				return client.SchedulerV1beta1().ArangoProfiles(namespace).Watch(ctx, options)
 			},
-		},
+		}, client),
 		&apisschedulerv1beta1.ArangoProfile{},
 		resyncPeriod,
 		indexers,

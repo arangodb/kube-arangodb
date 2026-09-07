@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 202256f6a7dc6168823843b017007321
+    arangodb.com/schema: 17cb23ba488404452096cf395557d62a
     arangodb.com/status-subresource: "false"
     arangodb.com/version: f154c94d9bc8c3b4d27b6f7c04a571a8
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -169,7 +169,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 1479dc127c6dab28f9f0aba1fdca67aa
+    arangodb.com/schema: 69b7d5d96ee6cff4475009b8d3371d80
     arangodb.com/status-subresource: "false"
     arangodb.com/version: a92e153a08607e58eedd9ba6befae7de
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -447,7 +447,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: a77848273231e2d3a5bdbff67de36a10
+    arangodb.com/schema: b6df67c4eabb0d34230e0779f205a2e9
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 084c021a778edddf717e8651355078da
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -867,6 +867,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -1191,6 +1202,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -1833,6 +1861,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -2157,6 +2196,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -3190,6 +3246,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -3514,6 +3581,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -4156,6 +4240,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -4480,6 +4575,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -5431,6 +5543,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -5755,6 +5878,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -6397,6 +6537,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -6721,6 +6872,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -7795,6 +7963,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -8119,6 +8298,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -8761,6 +8957,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -9085,6 +9292,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -10178,6 +10402,17 @@ spec:
                                       apiVersion:
                                         type: string
                                       fieldPath:
+                                        type: string
+                                    type: object
+                                  fileKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                      path:
+                                        type: string
+                                      volumeName:
                                         type: string
                                     type: object
                                   resourceFieldRef:
@@ -11304,6 +11539,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -11628,6 +11874,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -12270,6 +12533,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -12594,6 +12868,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -13689,6 +13980,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -14013,6 +14315,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -14655,6 +14974,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -14979,6 +15309,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -15923,6 +16270,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -16247,6 +16605,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -16889,6 +17264,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -17213,6 +17599,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -18292,6 +18695,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -18616,6 +19030,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -19258,6 +19689,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -19582,6 +20024,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -20615,6 +21074,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -20939,6 +21409,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -21581,6 +22068,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -21905,6 +22403,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -22856,6 +23371,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -23180,6 +23706,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -23822,6 +24365,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -24146,6 +24700,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -25220,6 +25791,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -25544,6 +26126,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -26186,6 +26785,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -26510,6 +27120,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -27603,6 +28230,17 @@ spec:
                                       apiVersion:
                                         type: string
                                       fieldPath:
+                                        type: string
+                                    type: object
+                                  fileKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                      path:
+                                        type: string
+                                      volumeName:
                                         type: string
                                     type: object
                                   resourceFieldRef:
@@ -28729,6 +29367,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -29053,6 +29702,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -29695,6 +30361,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -30019,6 +30696,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -31114,6 +31808,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -31438,6 +32143,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -32080,6 +32802,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -32404,6 +33137,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -33348,6 +34098,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -33672,6 +34433,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -34314,6 +35092,17 @@ spec:
                                         fieldPath:
                                           type: string
                                       type: object
+                                    fileKeyRef:
+                                      properties:
+                                        key:
+                                          type: string
+                                        optional:
+                                          type: boolean
+                                        path:
+                                          type: string
+                                        volumeName:
+                                          type: string
+                                      type: object
                                     resourceFieldRef:
                                       properties:
                                         containerName:
@@ -34638,6 +35427,23 @@ spec:
                             type: object
                           restartPolicy:
                             type: string
+                          restartPolicyRules:
+                            items:
+                              properties:
+                                action:
+                                  type: string
+                                exitCodes:
+                                  properties:
+                                    operator:
+                                      type: string
+                                    values:
+                                      items:
+                                        format: int32
+                                        type: integer
+                                      type: array
+                                  type: object
+                              type: object
+                            type: array
                           securityContext:
                             properties:
                               allowPrivilegeEscalation:
@@ -35303,7 +36109,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: a5700ea45f98c417b85e06797f5da3d5
+    arangodb.com/schema: 64ac24ec8a3341d04946e57a018528d6
     arangodb.com/status-subresource: "false"
     arangodb.com/version: ba7d9af888270bab37493079eff61855
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -35393,7 +36199,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 386f7717c3dce658876d7104d06996c8
+    arangodb.com/schema: 3e3733953e6c26cc3b2b512ee94e70c2
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 938e50c44e5265b35534687773ca5c80
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -36136,6 +36942,17 @@ spec:
                                                 fieldPath:
                                                   type: string
                                               type: object
+                                            fileKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                                path:
+                                                  type: string
+                                                volumeName:
+                                                  type: string
+                                              type: object
                                             resourceFieldRef:
                                               properties:
                                                 containerName:
@@ -36460,6 +37277,23 @@ spec:
                                     type: object
                                   restartPolicy:
                                     type: string
+                                  restartPolicyRules:
+                                    items:
+                                      properties:
+                                        action:
+                                          type: string
+                                        exitCodes:
+                                          properties:
+                                            operator:
+                                              type: string
+                                            values:
+                                              items:
+                                                format: int32
+                                                type: integer
+                                              type: array
+                                          type: object
+                                      type: object
+                                    type: array
                                   securityContext:
                                     properties:
                                       allowPrivilegeEscalation:
@@ -36693,6 +37527,17 @@ spec:
                                                 fieldPath:
                                                   type: string
                                               type: object
+                                            fileKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                                path:
+                                                  type: string
+                                                volumeName:
+                                                  type: string
+                                              type: object
                                             resourceFieldRef:
                                               properties:
                                                 containerName:
@@ -37017,6 +37862,23 @@ spec:
                                     type: object
                                   restartPolicy:
                                     type: string
+                                  restartPolicyRules:
+                                    items:
+                                      properties:
+                                        action:
+                                          type: string
+                                        exitCodes:
+                                          properties:
+                                            operator:
+                                              type: string
+                                            values:
+                                              items:
+                                                format: int32
+                                                type: integer
+                                              type: array
+                                          type: object
+                                      type: object
+                                    type: array
                                   securityContext:
                                     properties:
                                       allowPrivilegeEscalation:
@@ -37213,6 +38075,8 @@ spec:
                               type: boolean
                             hostname:
                               type: string
+                            hostnameOverride:
+                              type: string
                             imagePullSecrets:
                               items:
                                 properties:
@@ -37254,6 +38118,17 @@ spec:
                                                 apiVersion:
                                                   type: string
                                                 fieldPath:
+                                                  type: string
+                                              type: object
+                                            fileKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                                path:
+                                                  type: string
+                                                volumeName:
                                                   type: string
                                               type: object
                                             resourceFieldRef:
@@ -37580,6 +38455,23 @@ spec:
                                     type: object
                                   restartPolicy:
                                     type: string
+                                  restartPolicyRules:
+                                    items:
+                                      properties:
+                                        action:
+                                          type: string
+                                        exitCodes:
+                                          properties:
+                                            operator:
+                                              type: string
+                                            values:
+                                              items:
+                                                format: int32
+                                                type: integer
+                                              type: array
+                                          type: object
+                                      type: object
+                                    type: array
                                   securityContext:
                                     properties:
                                       allowPrivilegeEscalation:
@@ -38515,6 +39407,26 @@ spec:
                                                     type: object
                                                   type: array
                                               type: object
+                                            podCertificate:
+                                              properties:
+                                                certificateChainPath:
+                                                  type: string
+                                                credentialBundlePath:
+                                                  type: string
+                                                keyPath:
+                                                  type: string
+                                                keyType:
+                                                  type: string
+                                                maxExpirationSeconds:
+                                                  format: int32
+                                                  type: integer
+                                                signerName:
+                                                  type: string
+                                                userAnnotations:
+                                                  additionalProperties:
+                                                    type: string
+                                                  type: object
+                                              type: object
                                             secret:
                                               properties:
                                                 items:
@@ -38663,6 +39575,15 @@ spec:
                                     type: object
                                 type: object
                               type: array
+                            workloadRef:
+                              properties:
+                                name:
+                                  type: string
+                                podGroup:
+                                  type: string
+                                podGroupReplicaKey:
+                                  type: string
+                              type: object
                           type: object
                       type: object
                     podSpecChecksum:
@@ -39406,6 +40327,17 @@ spec:
                                                 fieldPath:
                                                   type: string
                                               type: object
+                                            fileKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                                path:
+                                                  type: string
+                                                volumeName:
+                                                  type: string
+                                              type: object
                                             resourceFieldRef:
                                               properties:
                                                 containerName:
@@ -39730,6 +40662,23 @@ spec:
                                     type: object
                                   restartPolicy:
                                     type: string
+                                  restartPolicyRules:
+                                    items:
+                                      properties:
+                                        action:
+                                          type: string
+                                        exitCodes:
+                                          properties:
+                                            operator:
+                                              type: string
+                                            values:
+                                              items:
+                                                format: int32
+                                                type: integer
+                                              type: array
+                                          type: object
+                                      type: object
+                                    type: array
                                   securityContext:
                                     properties:
                                       allowPrivilegeEscalation:
@@ -39963,6 +40912,17 @@ spec:
                                                 fieldPath:
                                                   type: string
                                               type: object
+                                            fileKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                                path:
+                                                  type: string
+                                                volumeName:
+                                                  type: string
+                                              type: object
                                             resourceFieldRef:
                                               properties:
                                                 containerName:
@@ -40287,6 +41247,23 @@ spec:
                                     type: object
                                   restartPolicy:
                                     type: string
+                                  restartPolicyRules:
+                                    items:
+                                      properties:
+                                        action:
+                                          type: string
+                                        exitCodes:
+                                          properties:
+                                            operator:
+                                              type: string
+                                            values:
+                                              items:
+                                                format: int32
+                                                type: integer
+                                              type: array
+                                          type: object
+                                      type: object
+                                    type: array
                                   securityContext:
                                     properties:
                                       allowPrivilegeEscalation:
@@ -40483,6 +41460,8 @@ spec:
                               type: boolean
                             hostname:
                               type: string
+                            hostnameOverride:
+                              type: string
                             imagePullSecrets:
                               items:
                                 properties:
@@ -40524,6 +41503,17 @@ spec:
                                                 apiVersion:
                                                   type: string
                                                 fieldPath:
+                                                  type: string
+                                              type: object
+                                            fileKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                                path:
+                                                  type: string
+                                                volumeName:
                                                   type: string
                                               type: object
                                             resourceFieldRef:
@@ -40850,6 +41840,23 @@ spec:
                                     type: object
                                   restartPolicy:
                                     type: string
+                                  restartPolicyRules:
+                                    items:
+                                      properties:
+                                        action:
+                                          type: string
+                                        exitCodes:
+                                          properties:
+                                            operator:
+                                              type: string
+                                            values:
+                                              items:
+                                                format: int32
+                                                type: integer
+                                              type: array
+                                          type: object
+                                      type: object
+                                    type: array
                                   securityContext:
                                     properties:
                                       allowPrivilegeEscalation:
@@ -41785,6 +42792,26 @@ spec:
                                                     type: object
                                                   type: array
                                               type: object
+                                            podCertificate:
+                                              properties:
+                                                certificateChainPath:
+                                                  type: string
+                                                credentialBundlePath:
+                                                  type: string
+                                                keyPath:
+                                                  type: string
+                                                keyType:
+                                                  type: string
+                                                maxExpirationSeconds:
+                                                  format: int32
+                                                  type: integer
+                                                signerName:
+                                                  type: string
+                                                userAnnotations:
+                                                  additionalProperties:
+                                                    type: string
+                                                  type: object
+                                              type: object
                                             secret:
                                               properties:
                                                 items:
@@ -41933,6 +42960,15 @@ spec:
                                     type: object
                                 type: object
                               type: array
+                            workloadRef:
+                              properties:
+                                name:
+                                  type: string
+                                podGroup:
+                                  type: string
+                                podGroupReplicaKey:
+                                  type: string
+                              type: object
                           type: object
                       type: object
                     podSpecChecksum:
@@ -41954,7 +42990,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 0241245258adc951fc2f330abe329a50
+    arangodb.com/schema: 691774a523405597fe0c29a84f482175
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 389a7f8c66c9426fd0d6ee08590b7eaa
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -42051,7 +43087,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 0d02aa33032d4fef0012fbe38097f08d
+    arangodb.com/schema: 9a39e1c404f2c7da580591d6652b4089
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 28f985554c6f6d883e518906ea107d14
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -42134,7 +43170,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 949fbcf3ef543afc5aeaaf5efc785606
+    arangodb.com/schema: 6fbd96a3933d64ab6501da91ca83390a
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -42190,7 +43226,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 8fa50ebc0c83f960b739b52e0580bcf6
+    arangodb.com/schema: 8aea18391465bb00f5ecf125a0b1c900
     arangodb.com/status-subresource: "false"
     arangodb.com/version: e0fded031e4c71b5823be9b5cedd24ce
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -42303,7 +43339,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: b82e7a5d28915d9cf1bef70f12b8fa74
+    arangodb.com/schema: 7d56a746b7608407aad037c12753a3fd
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 82c86e31586062462e30751bf7a113e2
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -42625,7 +43661,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 47d2687621cecad31dbb029247a9d3ef
+    arangodb.com/schema: fa7356b61656c2f99af557a03316d75d
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 7fb8ee76af1e71079ea3c64f6f1fc1d0
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -42702,7 +43738,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: f7b9b580c1888159b15e89e6dd8e0bd3
+    arangodb.com/schema: d84a4b23394c30c378f5d6904f15a712
     arangodb.com/status-subresource: "false"
     arangodb.com/version: b6ce8014e77e8d26d6feb526d103e08b
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -42831,7 +43867,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: ea4f27f1623d4fc79f1cb5ea212e5895
+    arangodb.com/schema: 43c0dc78fd206963386fba7e861a4b8c
     arangodb.com/status-subresource: "false"
     arangodb.com/version: aff966efc3d295c26e2e1207c5b1a2a5
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43091,7 +44127,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 4f39d3c472aa8eac913abd346575d84e
+    arangodb.com/schema: 4136aee0e90e6e75ae58eec625f79ca9
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43175,6 +44211,17 @@ spec:
                                           apiVersion:
                                             type: string
                                           fieldPath:
+                                            type: string
+                                        type: object
+                                      fileKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                          path:
+                                            type: string
+                                          volumeName:
                                             type: string
                                         type: object
                                       resourceFieldRef:
@@ -43293,6 +44340,17 @@ spec:
                                             apiVersion:
                                               type: string
                                             fieldPath:
+                                              type: string
+                                          type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
                                               type: string
                                           type: object
                                         resourceFieldRef:
@@ -44833,6 +45891,26 @@ spec:
                                                 type: object
                                               type: array
                                           type: object
+                                        podCertificate:
+                                          properties:
+                                            certificateChainPath:
+                                              type: string
+                                            credentialBundlePath:
+                                              type: string
+                                            keyPath:
+                                              type: string
+                                            keyType:
+                                              type: string
+                                            maxExpirationSeconds:
+                                              format: int32
+                                              type: integer
+                                            signerName:
+                                              type: string
+                                            userAnnotations:
+                                              additionalProperties:
+                                                type: string
+                                              type: object
+                                          type: object
                                         secret:
                                           properties:
                                             items:
@@ -45070,6 +46148,17 @@ spec:
                                           fieldPath:
                                             type: string
                                         type: object
+                                      fileKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                          path:
+                                            type: string
+                                          volumeName:
+                                            type: string
+                                        type: object
                                       resourceFieldRef:
                                         properties:
                                           containerName:
@@ -45253,6 +46342,17 @@ spec:
                                             apiVersion:
                                               type: string
                                             fieldPath:
+                                              type: string
+                                          type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
                                               type: string
                                           type: object
                                         resourceFieldRef:
@@ -45806,6 +46906,17 @@ spec:
                                           apiVersion:
                                             type: string
                                           fieldPath:
+                                            type: string
+                                        type: object
+                                      fileKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                          path:
+                                            type: string
+                                          volumeName:
                                             type: string
                                         type: object
                                       resourceFieldRef:
@@ -47352,6 +48463,26 @@ spec:
                                                 type: object
                                               type: array
                                           type: object
+                                        podCertificate:
+                                          properties:
+                                            certificateChainPath:
+                                              type: string
+                                            credentialBundlePath:
+                                              type: string
+                                            keyPath:
+                                              type: string
+                                            keyType:
+                                              type: string
+                                            maxExpirationSeconds:
+                                              format: int32
+                                              type: integer
+                                            signerName:
+                                              type: string
+                                            userAnnotations:
+                                              additionalProperties:
+                                                type: string
+                                              type: object
+                                          type: object
                                         secret:
                                           properties:
                                             items:
@@ -47523,7 +48654,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 75dccf5c3dbb263b88ada3e3b49b3b72
+    arangodb.com/schema: 59da1d764a8628de58132c30238769d5
     arangodb.com/status-subresource: "false"
     arangodb.com/version: ed2f810b803d33ebf147bc1c5d4ff3aa
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -47836,7 +48967,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 3974830c2089afe26eb3dd79fe738b9b
+    arangodb.com/schema: a7867fd6d1958b4aaaa4307c7181ce40
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a84787f93098eaa4c16cdf2a22a8e75
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -48405,6 +49536,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -48729,6 +49871,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -48962,6 +50121,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -49286,6 +50456,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -49482,6 +50669,8 @@ spec:
                           type: boolean
                         hostname:
                           type: string
+                        hostnameOverride:
+                          type: string
                         imagePullSecrets:
                           items:
                             properties:
@@ -49523,6 +50712,17 @@ spec:
                                             apiVersion:
                                               type: string
                                             fieldPath:
+                                              type: string
+                                          type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
                                               type: string
                                           type: object
                                         resourceFieldRef:
@@ -49849,6 +51049,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -50784,6 +52001,26 @@ spec:
                                                 type: object
                                               type: array
                                           type: object
+                                        podCertificate:
+                                          properties:
+                                            certificateChainPath:
+                                              type: string
+                                            credentialBundlePath:
+                                              type: string
+                                            keyPath:
+                                              type: string
+                                            keyType:
+                                              type: string
+                                            maxExpirationSeconds:
+                                              format: int32
+                                              type: integer
+                                            signerName:
+                                              type: string
+                                            userAnnotations:
+                                              additionalProperties:
+                                                type: string
+                                              type: object
+                                          type: object
                                         secret:
                                           properties:
                                             items:
@@ -50932,6 +52169,15 @@ spec:
                                 type: object
                             type: object
                           type: array
+                        workloadRef:
+                          properties:
+                            name:
+                              type: string
+                            podGroup:
+                              type: string
+                            podGroupReplicaKey:
+                              type: string
+                          type: object
                       type: object
                   type: object
                 ttlSecondsAfterFinished:
@@ -50952,7 +52198,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 992e43865b951d553d7e360e22a759bf
+    arangodb.com/schema: 21e8792c358d0d92161c923cc026588d
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 843d96cd15169630a12f575b515d93bc
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -51601,6 +52847,17 @@ spec:
                                                     fieldPath:
                                                       type: string
                                                   type: object
+                                                fileKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                    path:
+                                                      type: string
+                                                    volumeName:
+                                                      type: string
+                                                  type: object
                                                 resourceFieldRef:
                                                   properties:
                                                     containerName:
@@ -51925,6 +53182,23 @@ spec:
                                         type: object
                                       restartPolicy:
                                         type: string
+                                      restartPolicyRules:
+                                        items:
+                                          properties:
+                                            action:
+                                              type: string
+                                            exitCodes:
+                                              properties:
+                                                operator:
+                                                  type: string
+                                                values:
+                                                  items:
+                                                    format: int32
+                                                    type: integer
+                                                  type: array
+                                              type: object
+                                          type: object
+                                        type: array
                                       securityContext:
                                         properties:
                                           allowPrivilegeEscalation:
@@ -52158,6 +53432,17 @@ spec:
                                                     fieldPath:
                                                       type: string
                                                   type: object
+                                                fileKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                    path:
+                                                      type: string
+                                                    volumeName:
+                                                      type: string
+                                                  type: object
                                                 resourceFieldRef:
                                                   properties:
                                                     containerName:
@@ -52482,6 +53767,23 @@ spec:
                                         type: object
                                       restartPolicy:
                                         type: string
+                                      restartPolicyRules:
+                                        items:
+                                          properties:
+                                            action:
+                                              type: string
+                                            exitCodes:
+                                              properties:
+                                                operator:
+                                                  type: string
+                                                values:
+                                                  items:
+                                                    format: int32
+                                                    type: integer
+                                                  type: array
+                                              type: object
+                                          type: object
+                                        type: array
                                       securityContext:
                                         properties:
                                           allowPrivilegeEscalation:
@@ -52678,6 +53980,8 @@ spec:
                                   type: boolean
                                 hostname:
                                   type: string
+                                hostnameOverride:
+                                  type: string
                                 imagePullSecrets:
                                   items:
                                     properties:
@@ -52719,6 +54023,17 @@ spec:
                                                     apiVersion:
                                                       type: string
                                                     fieldPath:
+                                                      type: string
+                                                  type: object
+                                                fileKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                    path:
+                                                      type: string
+                                                    volumeName:
                                                       type: string
                                                   type: object
                                                 resourceFieldRef:
@@ -53045,6 +54360,23 @@ spec:
                                         type: object
                                       restartPolicy:
                                         type: string
+                                      restartPolicyRules:
+                                        items:
+                                          properties:
+                                            action:
+                                              type: string
+                                            exitCodes:
+                                              properties:
+                                                operator:
+                                                  type: string
+                                                values:
+                                                  items:
+                                                    format: int32
+                                                    type: integer
+                                                  type: array
+                                              type: object
+                                          type: object
+                                        type: array
                                       securityContext:
                                         properties:
                                           allowPrivilegeEscalation:
@@ -53980,6 +55312,26 @@ spec:
                                                         type: object
                                                       type: array
                                                   type: object
+                                                podCertificate:
+                                                  properties:
+                                                    certificateChainPath:
+                                                      type: string
+                                                    credentialBundlePath:
+                                                      type: string
+                                                    keyPath:
+                                                      type: string
+                                                    keyType:
+                                                      type: string
+                                                    maxExpirationSeconds:
+                                                      format: int32
+                                                      type: integer
+                                                    signerName:
+                                                      type: string
+                                                    userAnnotations:
+                                                      additionalProperties:
+                                                        type: string
+                                                      type: object
+                                                  type: object
                                                 secret:
                                                   properties:
                                                     items:
@@ -54128,6 +55480,15 @@ spec:
                                         type: object
                                     type: object
                                   type: array
+                                workloadRef:
+                                  properties:
+                                    name:
+                                      type: string
+                                    podGroup:
+                                      type: string
+                                    podGroupReplicaKey:
+                                      type: string
+                                  type: object
                               type: object
                           type: object
                         ttlSecondsAfterFinished:
@@ -54167,7 +55528,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 51e6e65a5bc94e518ea3db5cce69a0ea
+    arangodb.com/schema: b0de455ee5a6c4a2c0f9a7122c863a41
     arangodb.com/status-subresource: "false"
     arangodb.com/version: c810d7d13258ab790de55a136c8baffc
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -54692,6 +56053,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -55016,6 +56388,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -55249,6 +56638,17 @@ spec:
                                             fieldPath:
                                               type: string
                                           type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
+                                              type: string
+                                          type: object
                                         resourceFieldRef:
                                           properties:
                                             containerName:
@@ -55573,6 +56973,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -55769,6 +57186,8 @@ spec:
                           type: boolean
                         hostname:
                           type: string
+                        hostnameOverride:
+                          type: string
                         imagePullSecrets:
                           items:
                             properties:
@@ -55810,6 +57229,17 @@ spec:
                                             apiVersion:
                                               type: string
                                             fieldPath:
+                                              type: string
+                                          type: object
+                                        fileKeyRef:
+                                          properties:
+                                            key:
+                                              type: string
+                                            optional:
+                                              type: boolean
+                                            path:
+                                              type: string
+                                            volumeName:
                                               type: string
                                           type: object
                                         resourceFieldRef:
@@ -56136,6 +57566,23 @@ spec:
                                 type: object
                               restartPolicy:
                                 type: string
+                              restartPolicyRules:
+                                items:
+                                  properties:
+                                    action:
+                                      type: string
+                                    exitCodes:
+                                      properties:
+                                        operator:
+                                          type: string
+                                        values:
+                                          items:
+                                            format: int32
+                                            type: integer
+                                          type: array
+                                      type: object
+                                  type: object
+                                type: array
                               securityContext:
                                 properties:
                                   allowPrivilegeEscalation:
@@ -57071,6 +58518,26 @@ spec:
                                                 type: object
                                               type: array
                                           type: object
+                                        podCertificate:
+                                          properties:
+                                            certificateChainPath:
+                                              type: string
+                                            credentialBundlePath:
+                                              type: string
+                                            keyPath:
+                                              type: string
+                                            keyType:
+                                              type: string
+                                            maxExpirationSeconds:
+                                              format: int32
+                                              type: integer
+                                            signerName:
+                                              type: string
+                                            userAnnotations:
+                                              additionalProperties:
+                                                type: string
+                                              type: object
+                                          type: object
                                         secret:
                                           properties:
                                             items:
@@ -57219,6 +58686,15 @@ spec:
                                 type: object
                             type: object
                           type: array
+                        workloadRef:
+                          properties:
+                            name:
+                              type: string
+                            podGroup:
+                              type: string
+                            podGroupReplicaKey:
+                              type: string
+                          type: object
                       type: object
                   type: object
               type: object
@@ -57239,7 +58715,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 21219a68b6988da8789d5dca9e970d4b
+    arangodb.com/schema: 7b29c24d11b235a6fed9b0dc45aa46df
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 338fb8407ae44a030186b06db2f80722
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -57631,6 +59107,17 @@ spec:
                                     fieldPath:
                                       type: string
                                   type: object
+                                fileKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    optional:
+                                      type: boolean
+                                    path:
+                                      type: string
+                                    volumeName:
+                                      type: string
+                                  type: object
                                 resourceFieldRef:
                                   properties:
                                     containerName:
@@ -57955,6 +59442,23 @@ spec:
                         type: object
                       restartPolicy:
                         type: string
+                      restartPolicyRules:
+                        items:
+                          properties:
+                            action:
+                              type: string
+                            exitCodes:
+                              properties:
+                                operator:
+                                  type: string
+                                values:
+                                  items:
+                                    format: int32
+                                    type: integer
+                                  type: array
+                              type: object
+                          type: object
+                        type: array
                       securityContext:
                         properties:
                           allowPrivilegeEscalation:
@@ -58188,6 +59692,17 @@ spec:
                                     fieldPath:
                                       type: string
                                   type: object
+                                fileKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    optional:
+                                      type: boolean
+                                    path:
+                                      type: string
+                                    volumeName:
+                                      type: string
+                                  type: object
                                 resourceFieldRef:
                                   properties:
                                     containerName:
@@ -58512,6 +60027,23 @@ spec:
                         type: object
                       restartPolicy:
                         type: string
+                      restartPolicyRules:
+                        items:
+                          properties:
+                            action:
+                              type: string
+                            exitCodes:
+                              properties:
+                                operator:
+                                  type: string
+                                values:
+                                  items:
+                                    format: int32
+                                    type: integer
+                                  type: array
+                              type: object
+                          type: object
+                        type: array
                       securityContext:
                         properties:
                           allowPrivilegeEscalation:
@@ -58708,6 +60240,8 @@ spec:
                   type: boolean
                 hostname:
                   type: string
+                hostnameOverride:
+                  type: string
                 imagePullSecrets:
                   items:
                     properties:
@@ -58749,6 +60283,17 @@ spec:
                                     apiVersion:
                                       type: string
                                     fieldPath:
+                                      type: string
+                                  type: object
+                                fileKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    optional:
+                                      type: boolean
+                                    path:
+                                      type: string
+                                    volumeName:
                                       type: string
                                   type: object
                                 resourceFieldRef:
@@ -59075,6 +60620,23 @@ spec:
                         type: object
                       restartPolicy:
                         type: string
+                      restartPolicyRules:
+                        items:
+                          properties:
+                            action:
+                              type: string
+                            exitCodes:
+                              properties:
+                                operator:
+                                  type: string
+                                values:
+                                  items:
+                                    format: int32
+                                    type: integer
+                                  type: array
+                              type: object
+                          type: object
+                        type: array
                       securityContext:
                         properties:
                           allowPrivilegeEscalation:
@@ -60015,6 +61577,26 @@ spec:
                                         type: object
                                       type: array
                                   type: object
+                                podCertificate:
+                                  properties:
+                                    certificateChainPath:
+                                      type: string
+                                    credentialBundlePath:
+                                      type: string
+                                    keyPath:
+                                      type: string
+                                    keyType:
+                                      type: string
+                                    maxExpirationSeconds:
+                                      format: int32
+                                      type: integer
+                                    signerName:
+                                      type: string
+                                    userAnnotations:
+                                      additionalProperties:
+                                        type: string
+                                      type: object
+                                  type: object
                                 secret:
                                   properties:
                                     items:
@@ -60163,6 +61745,15 @@ spec:
                         type: object
                     type: object
                   type: array
+                workloadRef:
+                  properties:
+                    name:
+                      type: string
+                    podGroup:
+                      type: string
+                    podGroupReplicaKey:
+                      type: string
+                  type: object
               type: object
             status:
               description: Object with preserved fields for backward compatibility
