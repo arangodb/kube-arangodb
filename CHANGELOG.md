@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Maintenance) Bump Kubernetes libraries to 1.34.11
+- (Documentation) Populate CRD schema field descriptions for embedded upstream Kubernetes types from their generated SwaggerDoc
 
 ## [1.4.5](https://github.com/arangodb/kube-arangodb/tree/1.4.5) (2026-09-02)
 - (Bugfix) Serve the serving-member sidecar management API on a routable external HTTP endpoint (TLS per deployment settings) so the platform gateway can reach `/_management` cross-Pod, keeping the internal HTTP endpoint loopback-only for arangod

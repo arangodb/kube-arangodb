@@ -200,6 +200,22 @@ func (b *schemaBuilder) TypeToSchema(t *testing.T, obj reflect.Type, parent *Doc
 	return schema
 }
 
+// swaggerDocer is implemented by the generated types_swagger_doc_generated.go of upstream Kubernetes
+// packages: SwaggerDoc returns a field-name -> description map for the type.
+type swaggerDocer interface {
+	SwaggerDoc() map[string]string
+}
+
+// swaggerFieldDoc returns the generated SwaggerDoc description for the json field jsonName of the given
+// struct type, or "" when the type has no SwaggerDoc (e.g. our own API types, which are documented via
+// Go doc-comments instead).
+func swaggerFieldDoc(structObj reflect.Type, jsonName string) string {
+	if d, ok := reflect.New(structObj).Interface().(swaggerDocer); ok {
+		return d.SwaggerDoc()[jsonName]
+	}
+	return ""
+}
+
 func (b *schemaBuilder) lookupDefinition(t *testing.T, fullName, path string) *DocDefinition {
 	f := b.fields[fullName]
 	if f == nil {
@@ -295,6 +311,16 @@ func (b *schemaBuilder) StructToSchema(t *testing.T, structObj reflect.Type, par
 			}
 
 			def.ApplyToSchema(s)
+		}
+
+		// Embedded upstream Kubernetes types carry no Go doc-comment in our parsed sources, so their
+		// fields get no description from the AST. Fall back to the type's generated SwaggerDoc() map
+		// (types_swagger_doc_generated.go) so k8s fields are documented too. AST comments (our own types)
+		// take precedence and are never overridden.
+		if !inline && n != "" && s.Description == "" {
+			if doc := swaggerFieldDoc(structObj, n); doc != "" {
+				s.Description = doc
+			}
 		}
 
 		if inline {
