@@ -92,7 +92,7 @@ func Test_Handler_Update(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "65257e9b53283da2bfc00caeca08eee9cfbc465a3032119cb95c113efdf62b25", extension.Status.Object.GetChecksum())
+	require.Equal(t, "5f2fe4c9be5f3fe6fb02eb465c0e2f9ce6c2f3268c4ea45da61c2adf9bb3cd52", extension.Status.Object.GetChecksum())
 }
 
 func Test_Handler_Recreate(t *testing.T) {
@@ -198,7 +198,7 @@ func Test_Handler_Propagate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "65257e9b53283da2bfc00caeca08eee9cfbc465a3032119cb95c113efdf62b25", extension.Status.Object.GetChecksum())
+	require.Equal(t, "5f2fe4c9be5f3fe6fb02eb465c0e2f9ce6c2f3268c4ea45da61c2adf9bb3cd52", extension.Status.Object.GetChecksum())
 	require.NotNil(t, batchJob.Spec.Completions)
 	require.EqualValues(t, 2, *batchJob.Spec.Completions)
 	require.EqualValues(t, 1, extension.Status.Active)

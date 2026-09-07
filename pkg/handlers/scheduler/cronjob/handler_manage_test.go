@@ -92,7 +92,7 @@ func Test_Handler_Update(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "5411ac008bce56d38b0d0e36d8bbbbb904c02c01dc3e8052f4467d6f24f9c7b5", extension.Status.Object.GetChecksum())
+	require.Equal(t, "1bbf993561c7eb2317b72f622ee702ab9c2869e028333e84aebe44f71b0630f2", extension.Status.Object.GetChecksum())
 }
 
 func Test_Handler_Recreate(t *testing.T) {
@@ -198,7 +198,7 @@ func Test_Handler_Propagate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "5411ac008bce56d38b0d0e36d8bbbbb904c02c01dc3e8052f4467d6f24f9c7b5", extension.Status.Object.GetChecksum())
+	require.Equal(t, "1bbf993561c7eb2317b72f622ee702ab9c2869e028333e84aebe44f71b0630f2", extension.Status.Object.GetChecksum())
 	require.NotNil(t, cronJob.Spec.StartingDeadlineSeconds)
 	require.EqualValues(t, 2, *cronJob.Spec.StartingDeadlineSeconds)
 	require.Len(t, extension.Status.Active, 1)
