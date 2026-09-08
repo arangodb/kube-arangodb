@@ -3194,6 +3194,10 @@ v1:
                                             type: integer
                                           signerName:
                                             type: string
+                                          userAnnotations:
+                                            additionalProperties:
+                                              type: string
+                                            type: object
                                         type: object
                                       secret:
                                         properties:
@@ -3343,6 +3347,15 @@ v1:
                               type: object
                           type: object
                         type: array
+                      workloadRef:
+                        properties:
+                          name:
+                            type: string
+                          podGroup:
+                            type: string
+                          podGroupReplicaKey:
+                            type: string
+                        type: object
                     type: object
                 type: object
               podSpecChecksum:
@@ -6551,6 +6564,10 @@ v2alpha1:
                                             type: integer
                                           signerName:
                                             type: string
+                                          userAnnotations:
+                                            additionalProperties:
+                                              type: string
+                                            type: object
                                         type: object
                                       secret:
                                         properties:
@@ -6700,6 +6717,15 @@ v2alpha1:
                               type: object
                           type: object
                         type: array
+                      workloadRef:
+                        properties:
+                          name:
+                            type: string
+                          podGroup:
+                            type: string
+                          podGroupReplicaKey:
+                            type: string
+                        type: object
                     type: object
                 type: object
               podSpecChecksum:
