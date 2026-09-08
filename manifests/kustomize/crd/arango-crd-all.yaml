@@ -36199,7 +36199,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 3e3733953e6c26cc3b2b512ee94e70c2
+    arangodb.com/schema: 014436dc928405783ef38b2ccf31e8a5
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 938e50c44e5265b35534687773ca5c80
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -38721,6 +38721,11 @@ spec:
                                     type: string
                                 type: object
                               type: array
+                            schedulingGroup:
+                              properties:
+                                podGroupName:
+                                  type: string
+                              type: object
                             securityContext:
                               properties:
                                 appArmorProfile:
@@ -39575,15 +39580,6 @@ spec:
                                     type: object
                                 type: object
                               type: array
-                            workloadRef:
-                              properties:
-                                name:
-                                  type: string
-                                podGroup:
-                                  type: string
-                                podGroupReplicaKey:
-                                  type: string
-                              type: object
                           type: object
                       type: object
                     podSpecChecksum:
@@ -42106,6 +42102,11 @@ spec:
                                     type: string
                                 type: object
                               type: array
+                            schedulingGroup:
+                              properties:
+                                podGroupName:
+                                  type: string
+                              type: object
                             securityContext:
                               properties:
                                 appArmorProfile:
@@ -42960,15 +42961,6 @@ spec:
                                     type: object
                                 type: object
                               type: array
-                            workloadRef:
-                              properties:
-                                name:
-                                  type: string
-                                podGroup:
-                                  type: string
-                                podGroupReplicaKey:
-                                  type: string
-                              type: object
                           type: object
                       type: object
                     podSpecChecksum:
@@ -48967,7 +48959,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: a7867fd6d1958b4aaaa4307c7181ce40
+    arangodb.com/schema: d5385b12bf5bb21ac46cad8e7fc833f7
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a84787f93098eaa4c16cdf2a22a8e75
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -51315,6 +51307,11 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        schedulingGroup:
+                          properties:
+                            podGroupName:
+                              type: string
+                          type: object
                         securityContext:
                           properties:
                             appArmorProfile:
@@ -52169,15 +52166,6 @@ spec:
                                 type: object
                             type: object
                           type: array
-                        workloadRef:
-                          properties:
-                            name:
-                              type: string
-                            podGroup:
-                              type: string
-                            podGroupReplicaKey:
-                              type: string
-                          type: object
                       type: object
                   type: object
                 ttlSecondsAfterFinished:
@@ -52198,7 +52186,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 21e8792c358d0d92161c923cc026588d
+    arangodb.com/schema: b936bbeab9bd7ae3d5d3bf58767ebfca
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 843d96cd15169630a12f575b515d93bc
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -54626,6 +54614,11 @@ spec:
                                         type: string
                                     type: object
                                   type: array
+                                schedulingGroup:
+                                  properties:
+                                    podGroupName:
+                                      type: string
+                                  type: object
                                 securityContext:
                                   properties:
                                     appArmorProfile:
@@ -55480,15 +55473,6 @@ spec:
                                         type: object
                                     type: object
                                   type: array
-                                workloadRef:
-                                  properties:
-                                    name:
-                                      type: string
-                                    podGroup:
-                                      type: string
-                                    podGroupReplicaKey:
-                                      type: string
-                                  type: object
                               type: object
                           type: object
                         ttlSecondsAfterFinished:
@@ -55528,7 +55512,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: b0de455ee5a6c4a2c0f9a7122c863a41
+    arangodb.com/schema: eaad3d693e6bd2e554908b3cf03de30a
     arangodb.com/status-subresource: "false"
     arangodb.com/version: c810d7d13258ab790de55a136c8baffc
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -57832,6 +57816,11 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        schedulingGroup:
+                          properties:
+                            podGroupName:
+                              type: string
+                          type: object
                         securityContext:
                           properties:
                             appArmorProfile:
@@ -58686,15 +58675,6 @@ spec:
                                 type: object
                             type: object
                           type: array
-                        workloadRef:
-                          properties:
-                            name:
-                              type: string
-                            podGroup:
-                              type: string
-                            podGroupReplicaKey:
-                              type: string
-                          type: object
                       type: object
                   type: object
               type: object
@@ -58715,7 +58695,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 7b29c24d11b235a6fed9b0dc45aa46df
+    arangodb.com/schema: 4bdc58886716fcc2afe07e6dda288999
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 338fb8407ae44a030186b06db2f80722
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -60891,6 +60871,11 @@ spec:
                         type: string
                     type: object
                   type: array
+                schedulingGroup:
+                  properties:
+                    podGroupName:
+                      type: string
+                  type: object
                 securityContext:
                   properties:
                     appArmorProfile:
@@ -61745,15 +61730,6 @@ spec:
                         type: object
                     type: object
                   type: array
-                workloadRef:
-                  properties:
-                    name:
-                      type: string
-                    podGroup:
-                      type: string
-                    podGroupReplicaKey:
-                      type: string
-                  type: object
               type: object
             status:
               description: Object with preserved fields for backward compatibility
