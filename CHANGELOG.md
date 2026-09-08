@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Maintenance) Bump Go toolchain to 1.26.8 and fix go vet printf findings in logging calls surfaced by it
 - (Maintenance) Bump Kubernetes libraries to 1.34.11
 - (Maintenance) Bump Kubernetes libraries to 1.35.8
 
