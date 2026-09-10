@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 							context.CreateEvent(k8sutil.NewCannotSetArchitectureEvent(pod, string(archToApply), member.ID))
 
 							if err := context.UpdateMember(ctx, member); err != nil {
-								r.log.Error("Can not save member condition", member.ID, api.ConditionTypeArchitectureChangeCannotBeApplied, err)
+								r.log.Error("Can not save member condition member=%v condition=%v error=%v", member.ID, api.ConditionTypeArchitectureChangeCannotBeApplied, err)
 							}
 						}
 					} else {

@@ -1,8 +1,8 @@
 module github.com/arangodb/kube-arangodb
 
-go 1.25.0
+go 1.26.0
 
-toolchain go1.25.13
+toolchain go1.26.8
 
 replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.2

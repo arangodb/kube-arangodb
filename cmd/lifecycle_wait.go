@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -73,16 +72,16 @@ func cmdLifecycleWaitCheck(cmd *cobra.Command, _ []string) {
 	for {
 		d, err := getDeployment(ctx, os.Getenv(utilConstants.EnvOperatorPodNamespace), deploymentName)
 		if err != nil {
-			logger.Err(err).Fatal(fmt.Sprintf("error getting ArangoDeployment: %s", d.Name))
+			logger.Err(err).Fatal("error getting ArangoDeployment: %s", d.Name)
 		}
 
 		isUpToDate, err := d.IsUpToDate()
 		if err != nil {
-			logger.Err(err).Error(fmt.Sprintf("error checking Status for ArangoDeployment: %s", d.Name))
+			logger.Err(err).Error("error checking Status for ArangoDeployment: %s", d.Name)
 		}
 
 		if isUpToDate {
-			logger.Info(fmt.Sprintf("ArangoDeployment: %s is %s", d.Name, api.ConditionTypeUpToDate))
+			logger.Info("ArangoDeployment: %s is %s", d.Name, api.ConditionTypeUpToDate)
 			return
 		}
 

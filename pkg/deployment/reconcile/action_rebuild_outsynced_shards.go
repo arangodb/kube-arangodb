@@ -93,11 +93,11 @@ func (a *actionRebuildOutSyncedShards) Start(ctx context.Context) (bool, error) 
 	// trigger async rebuild job
 	err = a.rebuildShard(ctx, clientSync, clientAsync, shardID, database)
 	if err != nil {
-		a.log.Err(err).Error("Rebuild Shard Tree action failed on start", shardID, database, a.action.MemberID)
+		a.log.Err(err).Error("Rebuild Shard Tree action failed on start shard=%v database=%v member=%v", shardID, database, a.action.MemberID)
 		return true, err
 	}
 
-	a.log.Info("Triggering async job Shard Tree rebuild", shardID, database, a.action.MemberID)
+	a.log.Info("Triggering async job Shard Tree rebuild shard=%v database=%v member=%v", shardID, database, a.action.MemberID)
 	return false, nil
 }
 
@@ -142,21 +142,21 @@ func (a *actionRebuildOutSyncedShards) CheckProgress(ctx context.Context) (bool,
 	rebuildInProgress, err := a.checkRebuildShardProgress(ctx, clientAsync, clientSync, shardID, database, jobID, batchID)
 	if err != nil {
 		if rebuildInProgress {
-			a.log.Err(err).Error("Rebuild job failed but we will retry", shardID, database, a.action.MemberID)
+			a.log.Err(err).Error("Rebuild job failed but we will retry shard=%v database=%v member=%v", shardID, database, a.action.MemberID)
 			return false, false, err
 		} else {
-			a.log.Err(err).Error("Rebuild job failed", shardID, database, a.action.MemberID)
+			a.log.Err(err).Error("Rebuild job failed shard=%v database=%v member=%v", shardID, database, a.action.MemberID)
 			return false, true, err
 		}
 
 	}
 	if rebuildInProgress {
-		a.log.Debug("Rebuild job is still in progress", shardID, database, a.action.MemberID)
+		a.log.Debug("Rebuild job is still in progress shard=%v database=%v member=%v", shardID, database, a.action.MemberID)
 		return false, false, nil
 	}
 
 	// rebuild job is done
-	a.log.Info("Rebuild Shard Tree is done", shardID, database, a.action.MemberID)
+	a.log.Info("Rebuild Shard Tree is done shard=%v database=%v member=%v", shardID, database, a.action.MemberID)
 	return true, false, nil
 }
 

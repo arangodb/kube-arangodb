@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,16 +74,16 @@ func (r *Reconciler) createRebuildOutSyncedPlan(ctx context.Context, apiObject k
 		for _, shardID := range outSyncedShardsIDs {
 			shard, exist := agencyState.GetShardDetailsByID(shardID)
 			if !exist {
-				r.log.Error("Shard servers not found", shardID, shard.Database)
+				r.log.Error("Shard servers not found shard=%v database=%v", shardID, shard.Database)
 				continue
 			}
 
 			for _, server := range shard.Servers {
 				member, ok := members[string(server)]
 				if !ok {
-					r.log.Error("Member not found - we can not fix out-synced shard!", server)
+					r.log.Error("Member not found - we can not fix out-synced shard! server=%v", server)
 				} else {
-					r.log.Info("Shard is out-synced and its Tree will be rebuild", shardID, shard.Database, shard.Collection, member.ID)
+					r.log.Info("Shard is out-synced and its Tree will be rebuild shard=%v database=%v collection=%v member=%v", shardID, shard.Database, shard.Collection, member.ID)
 
 					action := actions.NewAction(api.ActionTypeRebuildOutSyncedShards, api.ServerGroupDBServers, member).
 						AddParam("shardID", shardID).
