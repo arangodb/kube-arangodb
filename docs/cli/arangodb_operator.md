@@ -18,7 +18,7 @@ Available Commands:
   crd           CRD operations
   debug-package Generate debug package for debugging
   exporter        
-  features        Describe all operator features
+  features    Describe all operator features
   help            Help about any command
   integration     
   sidecar         Runs the sidecar as a daemon with serving group
@@ -65,6 +65,7 @@ Flags:
       --deployment.feature.random-pod-names                    Enables generating random pod names - Required ArangoDB >= 3.8.0
       --deployment.feature.replace-migration                   During member replacement shards are migrated directly to the new server - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.restart-policy-always               Allow to restart containers with always restart policy - Required ArangoDB >= 3.8.0
+      --deployment.feature.scheduler-v2-workflow               Defines if SchedulerV2 Integration manages ArangoPlatformWorkflow resources instead of calling Helm directly - Required ArangoDB >= 3.8.0
       --deployment.feature.secured-containers                  Create server's containers with non root privileges. It enables 'ephemeral-volumes' feature implicitly - Required ArangoDB >= 3.8.0
       --deployment.feature.sensitive-information-protection    Hide sensitive information from metrics and logs - Required ArangoDB >= 3.8.0
       --deployment.feature.short-pod-names                     Enable Short Pod Names - Required ArangoDB >= 3.8.0

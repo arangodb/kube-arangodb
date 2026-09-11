@@ -384,3 +384,10 @@ features:
     releases:
       - operatorVersion: 1.5.0
         state: Production
+  - name: SchedulerV2 Workflow Integration
+    enabled: false
+    flag: --deployment.feature.scheduler-v2-workflow
+    remarks: SchedulerV2 Integration manages ArangoPlatformWorkflow resources instead of calling Helm directly
+    releases:
+      - operatorVersion: 1.5.0
+        state: Alpha

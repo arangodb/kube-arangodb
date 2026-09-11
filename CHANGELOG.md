@@ -4,6 +4,7 @@
 - (Feature) (Platform) Collect ArangoPlatformWorkflow resources in the debug package
 - (Maintenance) Bump Helm to v3.21.4, dropping the containerd and golang.org/x/crypto/openpgp dependencies (clears GO-2026-5932/5622/5338/5064)
 - (Feature) (Platform) Add ArangoPlatformWorkflow CRD
+- (Feature) (Platform) Allow SchedulerV2 Integration to manage ArangoPlatformWorkflow resources instead of calling Helm directly behind the scheduler-v2-workflow feature flag
 - (Maintenance) Bump Go toolchain to 1.26.8 and fix go vet printf findings in logging calls surfaced by it
 - (Maintenance) Bump Kubernetes libraries to 1.34.11
 - (Maintenance) Bump Kubernetes libraries to 1.35.8

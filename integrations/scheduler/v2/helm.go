@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,6 +39,15 @@ func (i *implementation) Alive(ctx context.Context, in *pbSharedV1.Empty) (*pbSh
 	if err := i.client.Alive(ctx); err != nil {
 		logger.Err(err).Warn("Helm is not alive")
 		return nil, status.Errorf(codes.Unavailable, "Service is not alive")
+	}
+
+	// When routing through ArangoPlatformWorkflow, verify the sidecar can actually manage those resources
+	// so a missing RBAC is surfaced here instead of on the first Install/Upgrade/Uninstall.
+	if i.workflowEnabled() {
+		if err := i.checkWorkflowPermissions(ctx); err != nil {
+			logger.Err(err).Warn("Missing RBAC permissions to manage ArangoPlatformWorkflow resources")
+			return nil, status.Errorf(codes.Unavailable, "Service is not alive: %s", err.Error())
+		}
 	}
 
 	return &pbSharedV1.Empty{}, nil
@@ -198,6 +207,10 @@ func (i *implementation) Uninstall(ctx context.Context, in *pbSchedulerV2.Schedu
 		return nil, status.Errorf(codes.InvalidArgument, "Name cannot be empty")
 	}
 
+	if i.workflowEnabled() {
+		return i.uninstallWorkflow(ctx, in.GetName())
+	}
+
 	var mods []util.Mod[action.Uninstall]
 
 	mods = append(mods, func(in *action.Uninstall) {
@@ -241,6 +254,10 @@ func (i *implementation) Test(ctx context.Context, in *pbSchedulerV2.SchedulerV2
 func (i *implementation) InstallV2(ctx context.Context, in *pbSchedulerV2.SchedulerV2InstallV2Request) (*pbSchedulerV2.SchedulerV2InstallV2Response, error) {
 	if in.GetName() == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Name cannot be empty")
+	}
+
+	if i.workflowEnabled() {
+		return i.installV2Workflow(ctx, in)
 	}
 
 	chart, err := i.GetChart(ctx, &pbSchedulerV2.SchedulerV2GetChartRequest{Name: in.GetChart()})
@@ -293,6 +310,10 @@ func (i *implementation) InstallV2(ctx context.Context, in *pbSchedulerV2.Schedu
 func (i *implementation) UpgradeV2(ctx context.Context, in *pbSchedulerV2.SchedulerV2UpgradeV2Request) (*pbSchedulerV2.SchedulerV2UpgradeV2Response, error) {
 	if in.GetName() == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Name cannot be empty")
+	}
+
+	if i.workflowEnabled() {
+		return i.upgradeV2Workflow(ctx, in)
 	}
 
 	chart, err := i.GetChart(ctx, &pbSchedulerV2.SchedulerV2GetChartRequest{Name: in.GetChart()})

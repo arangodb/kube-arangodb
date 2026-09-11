@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,15 @@ func IsPlatformManaged(r *helm.Release) bool {
 	}
 
 	return true
+}
+
+// WithDeploymentName adds the deployment-name release label used by the SchedulerV2 integration to
+// discover releases. Kept 1:1 with SchedulerV2 so workflow-installed releases match its selector.
+func WithDeploymentName(deployment string) util.ModR[map[string]string] {
+	return func(m map[string]string) map[string]string {
+		m[utilConstants.LabelArangoDBDeploymentName] = deployment
+		return m
+	}
 }
 
 func GetLabels(deployment, chart string, mods ...util.ModR[map[string]string]) map[string]string {
