@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 17cb23ba488404452096cf395557d62a
+    arangodb.com/schema: 202256f6a7dc6168823843b017007321
     arangodb.com/status-subresource: "false"
     arangodb.com/version: f154c94d9bc8c3b4d27b6f7c04a571a8
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -169,7 +169,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 69b7d5d96ee6cff4475009b8d3371d80
+    arangodb.com/schema: 1479dc127c6dab28f9f0aba1fdca67aa
     arangodb.com/status-subresource: "false"
     arangodb.com/version: a92e153a08607e58eedd9ba6befae7de
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -447,7 +447,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: b6df67c4eabb0d34230e0779f205a2e9
+    arangodb.com/schema: cbe3415c8ab27f1bb098fb391d0fdf9c
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 084c021a778edddf717e8651355078da
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -36109,7 +36109,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 64ac24ec8a3341d04946e57a018528d6
+    arangodb.com/schema: a5700ea45f98c417b85e06797f5da3d5
     arangodb.com/status-subresource: "false"
     arangodb.com/version: ba7d9af888270bab37493079eff61855
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -36199,7 +36199,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 014436dc928405783ef38b2ccf31e8a5
+    arangodb.com/schema: 16b5a2600bb29798a98021631b04b1e5
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 938e50c44e5265b35534687773ca5c80
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -42982,7 +42982,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 691774a523405597fe0c29a84f482175
+    arangodb.com/schema: 0241245258adc951fc2f330abe329a50
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 389a7f8c66c9426fd0d6ee08590b7eaa
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43079,7 +43079,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 9a39e1c404f2c7da580591d6652b4089
+    arangodb.com/schema: 0d02aa33032d4fef0012fbe38097f08d
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 28f985554c6f6d883e518906ea107d14
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43162,7 +43162,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 6fbd96a3933d64ab6501da91ca83390a
+    arangodb.com/schema: 949fbcf3ef543afc5aeaaf5efc785606
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43218,7 +43218,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 8aea18391465bb00f5ecf125a0b1c900
+    arangodb.com/schema: 8fa50ebc0c83f960b739b52e0580bcf6
     arangodb.com/status-subresource: "false"
     arangodb.com/version: e0fded031e4c71b5823be9b5cedd24ce
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43331,7 +43331,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 7d56a746b7608407aad037c12753a3fd
+    arangodb.com/schema: b82e7a5d28915d9cf1bef70f12b8fa74
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 82c86e31586062462e30751bf7a113e2
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43653,7 +43653,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: fa7356b61656c2f99af557a03316d75d
+    arangodb.com/schema: 47d2687621cecad31dbb029247a9d3ef
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 7fb8ee76af1e71079ea3c64f6f1fc1d0
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43730,7 +43730,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: d84a4b23394c30c378f5d6904f15a712
+    arangodb.com/schema: f7b9b580c1888159b15e89e6dd8e0bd3
     arangodb.com/status-subresource: "false"
     arangodb.com/version: b6ce8014e77e8d26d6feb526d103e08b
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -43859,7 +43859,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 43c0dc78fd206963386fba7e861a4b8c
+    arangodb.com/schema: ea4f27f1623d4fc79f1cb5ea212e5895
     arangodb.com/status-subresource: "false"
     arangodb.com/version: aff966efc3d295c26e2e1207c5b1a2a5
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -44119,7 +44119,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 63c63935bf5a345f45a92a01d0df0d73
+    arangodb.com/schema: c62f92dfc267604736e002c5a5aa6a6f
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 68941b7b3c7fc1d5288b35a1c9251b9f
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -44202,7 +44202,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 4136aee0e90e6e75ae58eec625f79ca9
+    arangodb.com/schema: 85653bdc74b6e586a1ccbed23dba4d0a
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -48729,7 +48729,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: 59da1d764a8628de58132c30238769d5
+    arangodb.com/schema: 75dccf5c3dbb263b88ada3e3b49b3b72
     arangodb.com/status-subresource: "false"
     arangodb.com/version: ed2f810b803d33ebf147bc1c5d4ff3aa
     arangodb.com/x-preserve-unknown-fields: "false"
