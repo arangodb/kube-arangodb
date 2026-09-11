@@ -1510,6 +1510,89 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/schema: 63c63935bf5a345f45a92a01d0df0d73
+    arangodb.com/status-subresource: "false"
+    arangodb.com/version: 68941b7b3c7fc1d5288b35a1c9251b9f
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangoplatformworkflows.platform.arangodb.com
+spec:
+  group: platform.arangodb.com
+  names:
+    kind: ArangoPlatformWorkflow
+    listKind: ArangoPlatformWorkflowList
+    plural: arangoplatformworkflows
+    singular: arangoplatformworkflow
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Workflow is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                chart:
+                  description: Chart keeps the Chart Reference
+                  properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                deployment:
+                  description: Deployment keeps the Deployment Reference
+                  properties:
+                    name:
+                      description: Name of the object
+                      type: string
+                  required:
+                    - name
+                  type: object
+                install:
+                  description: Install keeps the install overrides
+                  properties:
+                    timeout:
+                      description: Timeout defines the install timeout
+                      type: string
+                  type: object
+                upgrade:
+                  description: Upgrade keeps the upgrade overrides
+                  properties:
+                    maxHistory:
+                      description: MaxHistory defines the max history
+                      format: int32
+                      type: integer
+                    timeout:
+                      description: Timeout defines the upgrade timeout
+                      type: string
+                  type: object
+                values:
+                  description: Values keeps the values of the Workflow
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+              required:
+                - chart
+                - deployment
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
     arangodb.com/schema: 4136aee0e90e6e75ae58eec625f79ca9
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77

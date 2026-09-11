@@ -30,6 +30,7 @@ func init() {
 		crds.PlatformChartDefinitionWithOptions,
 		crds.PlatformServiceDefinitionWithOptions,
 		crds.PlatformLinkDefinitionWithOptions,
+		crds.PlatformWorkflowDefinitionWithOptions,
 	}
 	for _, getDef := range defs {
 		defFn := getDef // bring into scope

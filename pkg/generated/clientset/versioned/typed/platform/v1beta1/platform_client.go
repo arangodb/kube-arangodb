@@ -36,6 +36,7 @@ type PlatformV1beta1Interface interface {
 	ArangoPlatformLinksGetter
 	ArangoPlatformServicesGetter
 	ArangoPlatformStoragesGetter
+	ArangoPlatformWorkflowsGetter
 }
 
 // PlatformV1beta1Client is used to interact with features provided by the platform.arangodb.com group.
@@ -57,6 +58,10 @@ func (c *PlatformV1beta1Client) ArangoPlatformServices(namespace string) ArangoP
 
 func (c *PlatformV1beta1Client) ArangoPlatformStorages(namespace string) ArangoPlatformStorageInterface {
 	return newArangoPlatformStorages(c, namespace)
+}
+
+func (c *PlatformV1beta1Client) ArangoPlatformWorkflows(namespace string) ArangoPlatformWorkflowInterface {
+	return newArangoPlatformWorkflows(c, namespace)
 }
 
 // NewForConfig creates a new PlatformV1beta1Client for the given config.

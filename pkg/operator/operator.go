@@ -53,6 +53,7 @@ import (
 	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
 	platformShutdown "github.com/arangodb/kube-arangodb/pkg/handlers/platform/shutdown"
 	platformStorage "github.com/arangodb/kube-arangodb/pkg/handlers/platform/storage"
+	platformWorkflow "github.com/arangodb/kube-arangodb/pkg/handlers/platform/workflow"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
 	schedulerBatchJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/batchjob"
 	schedulerCronJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/cronjob"
@@ -339,6 +340,10 @@ func (o *Operator) onStartOperatorV2Platform(ctx context.Context, operator opera
 	}
 
 	if err := platformService.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := platformWorkflow.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 
