@@ -36,6 +36,8 @@ type Interface interface {
 	ArangoPlatformServices() ArangoPlatformServiceInformer
 	// ArangoPlatformStorages returns a ArangoPlatformStorageInformer.
 	ArangoPlatformStorages() ArangoPlatformStorageInformer
+	// ArangoPlatformWorkflows returns a ArangoPlatformWorkflowInformer.
+	ArangoPlatformWorkflows() ArangoPlatformWorkflowInformer
 }
 
 type version struct {
@@ -67,4 +69,9 @@ func (v *version) ArangoPlatformServices() ArangoPlatformServiceInformer {
 // ArangoPlatformStorages returns a ArangoPlatformStorageInformer.
 func (v *version) ArangoPlatformStorages() ArangoPlatformStorageInformer {
 	return &arangoPlatformStorageInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoPlatformWorkflows returns a ArangoPlatformWorkflowInformer.
+func (v *version) ArangoPlatformWorkflows() ArangoPlatformWorkflowInformer {
+	return &arangoPlatformWorkflowInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

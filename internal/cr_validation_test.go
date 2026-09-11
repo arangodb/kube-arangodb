@@ -287,6 +287,15 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				},
 			},
 		},
+		"platform-workflow": {
+			fmt.Sprintf("%s/pkg/apis/platform", root): {
+				"v1beta1": {
+					objects: map[string]interface{}{
+						"spec": platformApi.ArangoPlatformWorkflow{}.Spec,
+					},
+				},
+			},
+		},
 		"permission-token": {
 			fmt.Sprintf("%s/pkg/apis/permission", root): {
 				"v1alpha1": {

@@ -76,6 +76,10 @@ func WithArangoPlatformServiceUpdateStatusInterfaceRetry(ctx context.Context, cl
 	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformServiceStatus, *platformApi.ArangoPlatformService](ctx, client, obj, status, opts)
 }
 
+func WithArangoPlatformWorkflowUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[platformApi.ArangoPlatformWorkflowStatus, *platformApi.ArangoPlatformWorkflow], obj *platformApi.ArangoPlatformWorkflow, status platformApi.ArangoPlatformWorkflowStatus, opts meta.UpdateOptions) (*platformApi.ArangoPlatformWorkflow, error) {
+	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformWorkflowStatus, *platformApi.ArangoPlatformWorkflow](ctx, client, obj, status, opts)
+}
+
 func WithArangoPermissionTokenUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionTokenStatus, *permissionApi.ArangoPermissionToken], obj *permissionApi.ArangoPermissionToken, status permissionApi.ArangoPermissionTokenStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionToken, error) {
 	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionTokenStatus, *permissionApi.ArangoPermissionToken](ctx, client, obj, status, opts)
 }

@@ -153,6 +153,7 @@ func Test_CRDGetters(t *testing.T) {
 		PlatformChartWithOptions,
 		PlatformServiceWithOptions,
 		PlatformLinkWithOptions,
+		PlatformWorkflowWithOptions,
 		PermissionTokenWithOptions,
 		PermissionPolicyWithOptions,
 		PermissionRoleWithOptions,
