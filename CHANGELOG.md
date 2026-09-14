@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) Collect ArangoPlatformWorkflow resources in the debug package
 - (Maintenance) Bump Helm to v3.21.4, dropping the containerd and golang.org/x/crypto/openpgp dependencies (clears GO-2026-5932/5622/5338/5064)
 - (Feature) (Platform) Add ArangoPlatformWorkflow CRD
 - (Maintenance) Bump Go toolchain to 1.26.8 and fix go vet printf findings in logging calls surfaced by it
