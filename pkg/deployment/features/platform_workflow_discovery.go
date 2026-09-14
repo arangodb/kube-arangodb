@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,16 +18,20 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1beta1
+package features
 
-import api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+func init() {
+	registerFeature(platformWorkflowDiscovery)
+}
 
-const (
-	ChartFoundCondition      api.ConditionType = "ChartFound"
-	DeploymentFoundCondition api.ConditionType = "DeploymentFound"
-	RouteFoundCondition      api.ConditionType = "RouteFound"
-	SpecValidCondition       api.ConditionType = "SpecValid"
-	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
-	DiscoveredCondition      api.ConditionType = "Discovered"
-	ReadyCondition           api.ConditionType = "Ready"
-)
+var platformWorkflowDiscovery = &feature{
+	name:             "platform-workflow-discovery",
+	description:      "Defines if an ArangoPlatformWorkflow without a Chart discovers and reflects an existing Helm release in its status",
+	enabledByDefault: true,
+	dependencies:     []Feature{SchedulerV2Workflow()},
+	hidden:           false,
+}
+
+func PlatformWorkflowDiscovery() Feature {
+	return platformWorkflowDiscovery
+}

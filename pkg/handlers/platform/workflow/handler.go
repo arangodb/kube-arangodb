@@ -34,6 +34,7 @@ import (
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/types"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -130,13 +131,16 @@ func (h *handler) finalizer(ctx context.Context, extension *platformApi.ArangoPl
 	for _, finalizer := range extension.GetFinalizers() {
 		switch finalizer {
 		case platformApi.FinalizerArangoPlatformWorkflowRelease:
-			// Remove Release
-			if _, err := h.helm.Uninstall(ctx, extension.GetName(), func(in *action.Uninstall) {
-				in.IgnoreNotFound = true
-				in.Wait = true
-				in.Timeout = 20 * time.Minute
-			}); err != nil {
-				return "", err
+			// A discovered (chart-less) workflow only reflects an existing release; it does not own it, so
+			// it must NOT uninstall the release on delete.
+			if extension.Spec.Chart != nil {
+				if _, err := h.helm.Uninstall(ctx, extension.GetName(), func(in *action.Uninstall) {
+					in.IgnoreNotFound = true
+					in.Wait = true
+					in.Timeout = 20 * time.Minute
+				}); err != nil {
+					return "", err
+				}
 			}
 
 			return platformApi.FinalizerArangoPlatformWorkflowRelease, nil
@@ -227,7 +231,80 @@ func (h *handler) HandleDeployment(ctx context.Context, item operation.Item, ext
 		return true, nil
 	}
 
+	// No Chart provided: discover and reflect an existing Helm release (when the feature is enabled)
+	// instead of installing one.
+	if extension.Spec.Chart == nil {
+		if !features.PlatformWorkflowDiscovery().Enabled() {
+			if status.Conditions.Update(platformApi.ChartFoundCondition, false, "Chart is required", "Chart is required") {
+				logger.Warn("Chart is required when discovery is disabled")
+				return true, operator.Stop("Chart is required")
+			}
+			return false, operator.Stop("Chart is required")
+		}
+
+		return operator.HandleP4(ctx, item, extension, status, depl, h.HandleDiscovery)
+	}
+
 	return operator.HandleP4(ctx, item, extension, status, depl, h.HandleChart)
+}
+
+// HandleDiscovery reflects an existing Helm release (installed out-of-band, e.g. by the SchedulerV2
+// sidecar) into the workflow status without owning its lifecycle. Used when the workflow has no Chart.
+func (h *handler) HandleDiscovery(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus, depl *api.ArangoDeployment) (bool, error) {
+	release, err := h.helm.Status(ctx, extension.GetName())
+	if err != nil {
+		return false, err
+	}
+
+	if release == nil {
+		status.Release = nil
+		changed := status.Conditions.Update(platformApi.DiscoveredCondition, false, "Release not found", "Release not found")
+		changed = status.Conditions.Update(platformApi.ReleaseReadyCondition, false, "Release not found", "Release not found") || changed
+		if changed {
+			logger.WrapObj(item).Warn("Release to discover not found")
+			return true, operator.Reconcile("Condition Changed")
+		}
+		return false, operator.Stop("Release not discovered")
+	}
+
+	changed := false
+
+	if s := extractReleaseStatus(release, ""); !status.Release.Compare(s) {
+		status.Release = s
+		changed = true
+	}
+
+	// Reflect the chart the release was installed from (name + version), discovered from the Helm release
+	// metadata - there is no ArangoPlatformChart to reference in discovery mode.
+	if c := release.GetChart().GetMetadata(); c != nil {
+		if status.ChartInfo == nil || status.ChartInfo.Details == nil ||
+			status.ChartInfo.Details.Name != c.GetName() || status.ChartInfo.Details.Version != c.GetVersion() {
+			status.ChartInfo = &platformApi.ChartStatusInfo{
+				Valid: true,
+				Details: &platformApi.ChartDetails{
+					Name:    c.GetName(),
+					Version: c.GetVersion(),
+				},
+			}
+			changed = true
+		}
+	}
+
+	if status.Conditions.Update(platformApi.DiscoveredCondition, true, "Release discovered", "Release discovered") {
+		changed = true
+	}
+
+	ready := release.Info.Status == helmRelease.StatusDeployed
+	if status.Conditions.Update(platformApi.ReleaseReadyCondition, ready, "Release "+string(release.Info.Status), "Release "+string(release.Info.Status)) {
+		changed = true
+	}
+
+	if changed {
+		logger.WrapObj(item).Str("release", release.Name).Info("Release Discovered")
+		return true, operator.Reconcile("Discovery updated")
+	}
+
+	return false, nil
 }
 
 func (h *handler) HandleChart(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus, depl *api.ArangoDeployment) (bool, error) {
