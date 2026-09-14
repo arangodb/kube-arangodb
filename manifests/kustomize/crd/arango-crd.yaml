@@ -713,6 +713,38 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     arangodb.com/status-subresource: "false"
+    arangodb.com/version: 68941b7b3c7fc1d5288b35a1c9251b9f
+    arangodb.com/x-preserve-unknown-fields: "true"
+  name: arangoplatformworkflows.platform.arangodb.com
+spec:
+  group: platform.arangodb.com
+  names:
+    kind: ArangoPlatformWorkflow
+    listKind: ArangoPlatformWorkflowList
+    plural: arangoplatformworkflows
+    singular: arangoplatformworkflow
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if Workflow is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          type: object
+          x-kubernetes-preserve-unknown-fields: true
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    arangodb.com/status-subresource: "false"
     arangodb.com/version: 3a71d123e7d0bf3902f91ebcdc4cac77
     arangodb.com/x-preserve-unknown-fields: "true"
   name: arangoprofiles.scheduler.arangodb.com

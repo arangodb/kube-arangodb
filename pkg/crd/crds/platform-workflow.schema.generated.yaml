@@ -1,0 +1,54 @@
+v1beta1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          chart:
+            description: Chart keeps the Chart Reference
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          deployment:
+            description: Deployment keeps the Deployment Reference
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          install:
+            description: Install keeps the install overrides
+            properties:
+              timeout:
+                description: Timeout defines the install timeout
+                type: string
+            type: object
+          upgrade:
+            description: Upgrade keeps the upgrade overrides
+            properties:
+              maxHistory:
+                description: MaxHistory defines the max history
+                format: int32
+                type: integer
+              timeout:
+                description: Timeout defines the upgrade timeout
+                type: string
+            type: object
+          values:
+            description: Values keeps the values of the Workflow
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+        required:
+          - chart
+          - deployment
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

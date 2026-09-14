@@ -53,3 +53,11 @@ type ArangoPlatformStorageListerExpansion interface{}
 // ArangoPlatformStorageNamespaceListerExpansion allows custom methods to be added to
 // ArangoPlatformStorageNamespaceLister.
 type ArangoPlatformStorageNamespaceListerExpansion interface{}
+
+// ArangoPlatformWorkflowListerExpansion allows custom methods to be added to
+// ArangoPlatformWorkflowLister.
+type ArangoPlatformWorkflowListerExpansion interface{}
+
+// ArangoPlatformWorkflowNamespaceListerExpansion allows custom methods to be added to
+// ArangoPlatformWorkflowNamespaceLister.
+type ArangoPlatformWorkflowNamespaceListerExpansion interface{}

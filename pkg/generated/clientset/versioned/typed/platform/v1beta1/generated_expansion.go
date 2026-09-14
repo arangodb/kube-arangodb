@@ -29,3 +29,5 @@ type ArangoPlatformLinkExpansion interface{}
 type ArangoPlatformServiceExpansion interface{}
 
 type ArangoPlatformStorageExpansion interface{}
+
+type ArangoPlatformWorkflowExpansion interface{}

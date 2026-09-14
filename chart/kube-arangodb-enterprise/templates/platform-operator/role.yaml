@@ -24,6 +24,8 @@ rules:
       - "arangoplatformservices/status"
       - "arangoplatformlinks"
       - "arangoplatformlinks/status"
+      - "arangoplatformworkflows"
+      - "arangoplatformworkflows/status"
     verbs:
       - "get"
       - "list"

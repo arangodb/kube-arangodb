@@ -959,7 +959,7 @@ CRDS:=backups-backup backups-backuppolicy \
       database-clustersynchronization database-deployment database-member database-task \
       scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \
       networking-route \
-      platform-storage platform-chart platform-service platform-link \
+      platform-storage platform-chart platform-service platform-link platform-workflow \
       permission-token permission-role permission-policy permission-policy-role-binding permission-role-user-binding
 
 .PHONY: sync
