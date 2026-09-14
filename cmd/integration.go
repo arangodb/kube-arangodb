@@ -37,8 +37,9 @@ func init() {
 	}
 
 	// Bind Operator Feature flags so gates consumed by the integrations (e.g. SchedulerV2Workflow)
-	// are seeded from CLI flags and environment variables in the sidecar process.
-	if err := features.Init(subCommand); err != nil {
+	// are seeded from CLI flags and environment variables in the sidecar process. BindFlags (not Init)
+	// avoids re-parenting the shared `features` subcommand onto the integration command.
+	if err := features.BindFlags(subCommand); err != nil {
 		panic(err.Error())
 	}
 

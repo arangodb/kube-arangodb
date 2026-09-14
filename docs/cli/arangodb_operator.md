@@ -18,7 +18,7 @@ Available Commands:
   crd           CRD operations
   debug-package Generate debug package for debugging
   exporter        
-  features    Describe all operator features
+  features        Describe all operator features
   help            Help about any command
   integration     
   sidecar         Runs the sidecar as a daemon with serving group

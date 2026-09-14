@@ -76,11 +76,30 @@ func Iterate(iterator Iterator) {
 // Init initializes all registered features.
 // If a feature is not provided via process's argument, then it is taken from environment variable
 // or from enabled by default setting.
+// Init registers the full feature tooling on cmd: the `features` describe subcommand, the
+// `--deployment.feature.*` flags (seeded from the environment), and the features ConfigMap flag.
+// Use it for the main operator command. A command that only needs to honor the feature gates (e.g. an
+// integration/sidecar process) should use BindFlags instead, so the shared `features` subcommand is not
+// re-parented onto it.
 func Init(cmd *cobra.Command) error {
+	cmd.AddCommand(internalCMD)
+
+	if err := BindFlags(cmd); err != nil {
+		return err
+	}
+
+	cmd.Flags().StringVar(&configMapName, "features-config-map-name", DefaultFeaturesConfigMap, "Name of the Feature Map ConfigMap")
+
+	return nil
+}
+
+// BindFlags binds the operator feature-gate flags (`--deployment.feature.*`, plus `.all`) to cmd and
+// seeds their defaults from the environment, WITHOUT registering the `features` describe subcommand or
+// the features ConfigMap flag. This lets a process (e.g. a sidecar) read the gates without mutating the
+// shared `internalCMD` (which Init's AddCommand would re-parent).
+func BindFlags(cmd *cobra.Command) error {
 	featuresLock.Lock()
 	defer featuresLock.Unlock()
-
-	cmd.AddCommand(internalCMD)
 
 	f := cmd.Flags()
 
@@ -123,8 +142,6 @@ func Init(cmd *cobra.Command) error {
 			}
 		}
 	}
-
-	f.StringVar(&configMapName, "features-config-map-name", DefaultFeaturesConfigMap, "Name of the Feature Map ConfigMap")
 
 	return nil
 }
