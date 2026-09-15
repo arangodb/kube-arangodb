@@ -32,6 +32,7 @@ import (
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
@@ -65,7 +66,7 @@ func (i *implementation) List(ctx context.Context, in *pbSchedulerV2.SchedulerV2
 			}
 		}
 
-		if r, err := labels.NewRequirement(LabelArangoDBDeploymentName, selection.DoubleEquals, []string{i.cfg.Deployment}); err != nil {
+		if r, err := labels.NewRequirement(utilConstants.LabelArangoDBDeploymentName, selection.DoubleEquals, []string{i.cfg.Deployment}); err != nil {
 			logger.Err(err).Warn("Unable to render selector")
 		} else if r != nil {
 			s = s.Add(*r)
@@ -147,7 +148,7 @@ func (i *implementation) Install(ctx context.Context, in *pbSchedulerV2.Schedule
 			action.Labels = map[string]string{}
 		}
 
-		action.Labels[LabelArangoDBDeploymentName] = i.cfg.Deployment
+		action.Labels[utilConstants.LabelArangoDBDeploymentName] = i.cfg.Deployment
 	})
 
 	resp, err := i.client.Install(ctx, in.GetChart(), in.GetValues(), mods...)
@@ -180,7 +181,7 @@ func (i *implementation) Upgrade(ctx context.Context, in *pbSchedulerV2.Schedule
 			action.Labels = map[string]string{}
 		}
 
-		action.Labels[LabelArangoDBDeploymentName] = i.cfg.Deployment
+		action.Labels[utilConstants.LabelArangoDBDeploymentName] = i.cfg.Deployment
 	})
 
 	resp, err := i.client.Upgrade(ctx, in.GetName(), in.GetChart(), in.GetValues(), mods...)
@@ -293,7 +294,7 @@ func (i *implementation) InstallV2(ctx context.Context, in *pbSchedulerV2.Schedu
 			action.Labels = map[string]string{}
 		}
 
-		action.Labels[LabelArangoDBDeploymentName] = i.cfg.Deployment
+		action.Labels[utilConstants.LabelArangoDBDeploymentName] = i.cfg.Deployment
 	})
 
 	resp, err := i.client.Install(ctx, chart.Chart, values, mods...)
@@ -352,7 +353,7 @@ func (i *implementation) UpgradeV2(ctx context.Context, in *pbSchedulerV2.Schedu
 			action.Labels = map[string]string{}
 		}
 
-		action.Labels[LabelArangoDBDeploymentName] = i.cfg.Deployment
+		action.Labels[utilConstants.LabelArangoDBDeploymentName] = i.cfg.Deployment
 	})
 
 	resp, err := i.client.Upgrade(ctx, in.GetName(), chart.Chart, values, mods...)

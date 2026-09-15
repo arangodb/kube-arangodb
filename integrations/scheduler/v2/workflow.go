@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	platformv1beta1 "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
@@ -183,7 +184,7 @@ func (i *implementation) ensureWorkflow(ctx context.Context, name string, spec p
 	}
 
 	labels := map[string]string{
-		LabelArangoDBDeploymentName: i.cfg.Deployment,
+		utilConstants.LabelArangoDBDeploymentName: i.cfg.Deployment,
 	}
 	for k, v := range extraLabels {
 		labels[k] = v

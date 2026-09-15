@@ -391,10 +391,3 @@ features:
     releases:
       - operatorVersion: 1.5.0
         state: Alpha
-  - name: Platform Workflow Discovery
-    enabled: true
-    flag: --deployment.feature.platform-workflow-discovery
-    remarks: A chart-less ArangoPlatformWorkflow discovers and reflects an existing Helm release; depends on and is enabled by default together with scheduler-v2-workflow
-    releases:
-      - operatorVersion: 1.5.0
-        state: Alpha

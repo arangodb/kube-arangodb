@@ -36,6 +36,7 @@ import (
 	pbSchedulerV2 "github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
@@ -78,7 +79,7 @@ func Test_Workflow(t *testing.T) {
 		require.NotNil(t, wf.Spec.Chart)
 		require.Equal(t, "chart", wf.Spec.Chart.Name)
 		require.NotEmpty(t, wf.Spec.Values)
-		require.Equal(t, "test-deployment", wf.GetLabels()[LabelArangoDBDeploymentName])
+		require.Equal(t, "test-deployment", wf.GetLabels()[utilConstants.LabelArangoDBDeploymentName])
 	})
 
 	t.Run("UpgradeV2 updates the workflow spec", func(t *testing.T) {

@@ -42,3 +42,18 @@ const (
 	// installed via ArangoPlatformWorkflow remain discoverable by the same selector.
 	LabelArangoDBDeploymentName = "deployment.arangodb.com/name"
 )
+
+// HelmType is the value of the HelmLabelArangoDBType label, categorizing a managed Helm release.
+type HelmType string
+
+const (
+	// HelmTypePlatform tags releases that are part of the platform itself.
+	HelmTypePlatform HelmType = "platform"
+	// HelmTypeService tags releases that provide a platform service (e.g. installed via SchedulerV2).
+	HelmTypeService HelmType = "service"
+)
+
+// String returns the label value for the type.
+func (t HelmType) String() string {
+	return string(t)
+}

@@ -34,7 +34,6 @@ import (
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/types"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
@@ -231,17 +230,10 @@ func (h *handler) HandleDeployment(ctx context.Context, item operation.Item, ext
 		return true, nil
 	}
 
-	// No Chart provided: discover and reflect an existing Helm release (when the feature is enabled)
-	// instead of installing one.
+	// No Chart provided: adopt and reflect an existing Helm release in the status instead of installing
+	// one. This is intrinsic reconcile behavior for a chart-less workflow; whether such workflows get
+	// created (the discovery loop that scans releases by label) is gated separately by its own feature.
 	if extension.Spec.Chart == nil {
-		if !features.PlatformWorkflowDiscovery().Enabled() {
-			if status.Conditions.Update(platformApi.ChartFoundCondition, false, "Chart is required", "Chart is required") {
-				logger.Warn("Chart is required when discovery is disabled")
-				return true, operator.Stop("Chart is required")
-			}
-			return false, operator.Stop("Chart is required")
-		}
-
 		return operator.HandleP4(ctx, item, extension, status, depl, h.HandleDiscovery)
 	}
 
@@ -267,6 +259,20 @@ func (h *handler) HandleDiscovery(ctx context.Context, item operation.Item, exte
 		return false, operator.Stop("Release not discovered")
 	}
 
+	// Only adopt releases we actually manage for this deployment: the release must be tagged as
+	// platform-managed and carry the same deployment name. A same-named release that we do not manage (or
+	// that belongs to another deployment) must not be reflected as if it were ours.
+	if !labels.IsPlatformManaged(release) || labels.DeploymentName(release) != status.Deployment.GetName() {
+		status.Release = nil
+		changed := status.Conditions.Update(platformApi.DiscoveredCondition, false, "Release not managed", "Release not managed")
+		changed = status.Conditions.Update(platformApi.ReleaseReadyCondition, false, "Release not managed", "Release not managed") || changed
+		if changed {
+			logger.WrapObj(item).Str("release", release.Name).Warn("Release to discover is not managed for this deployment")
+			return true, operator.Reconcile("Condition Changed")
+		}
+		return false, operator.Stop("Release not managed")
+	}
+
 	changed := false
 
 	if s := extractReleaseStatus(release, ""); !status.Release.Compare(s) {
@@ -274,8 +280,31 @@ func (h *handler) HandleDiscovery(ctx context.Context, item operation.Item, exte
 		changed = true
 	}
 
+	// Link the source ArangoPlatformChart when the release carries the chart label and the chart CR still
+	// exists, so a discovered workflow references the same chart object as a chart-owning one.
+	if chartName := labels.Chart(release); chartName != "" {
+		chart, err := h.client.PlatformV1beta1().ArangoPlatformCharts(extension.GetNamespace()).Get(ctx, chartName, meta.GetOptions{})
+		if err != nil {
+			if !apiErrors.IsNotFound(err) {
+				return false, err
+			}
+
+			// The chart CR is gone; discovery still works from the release metadata below.
+			if status.Chart != nil {
+				status.Chart = nil
+				changed = true
+			}
+		} else if status.Chart == nil || !status.Chart.Equals(chart) {
+			status.Chart = util.NewType(sharedApi.NewObject(chart))
+			changed = true
+		}
+	} else if status.Chart != nil {
+		status.Chart = nil
+		changed = true
+	}
+
 	// Reflect the chart the release was installed from (name + version), discovered from the Helm release
-	// metadata - there is no ArangoPlatformChart to reference in discovery mode.
+	// metadata. This is the actual Helm chart, independent of the linked ArangoPlatformChart above.
 	if c := release.GetChart().GetMetadata(); c != nil {
 		if status.ChartInfo == nil || status.ChartInfo.Details == nil ||
 			status.ChartInfo.Details.Name != c.GetName() || status.ChartInfo.Details.Version != c.GetVersion() {
@@ -438,7 +467,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 			in.ReleaseName = extension.GetName()
 			in.Namespace = extension.GetNamespace()
 
-			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()))
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()), labels.WithType(utilConstants.HelmTypeService))
 		}, withInstallActionOverrides(extension.Spec.Install))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Install Failed", "Release Install failed: %s", err.Error())
@@ -500,7 +529,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 		_, err = h.helm.Upgrade(ctx, extension.GetName(), helm.Chart(status.ChartInfo.Definition), helm.Values(status.Values), func(in *action.Upgrade) {
 			in.Namespace = extension.GetNamespace()
 
-			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()))
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()), labels.WithType(utilConstants.HelmTypeService))
 		}, withUpgradeActionOverrides(extension.Spec.Upgrade))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Upgrade Failed", "Release upgrade failed: %s", err.Error())
@@ -535,7 +564,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 		_, err = h.helm.Upgrade(ctx, extension.GetName(), helm.Chart(status.ChartInfo.Definition), helm.Values(status.Values), func(in *action.Upgrade) {
 			in.Namespace = extension.GetNamespace()
 
-			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()))
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()), labels.WithType(utilConstants.HelmTypeService))
 		}, withUpgradeActionOverrides(extension.Spec.Upgrade))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Upgrade Failed", "Release upgrade failed: %s", err.Error())

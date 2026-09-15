@@ -26,20 +26,38 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 )
 
+// IsPlatformManaged reports whether the Helm release is managed by the ArangoDB platform operator. It
+// keys solely on the `managed` label; the `type` label (platform vs service) only categorizes the
+// release and must not gate ownership, so both platform- and service-typed releases are recognized.
 func IsPlatformManaged(r *helm.Release) bool {
 	if r == nil {
 		return false
 	}
 
-	if managed, ok := r.Labels[utilConstants.HelmLabelArangoDBManaged]; !ok || managed != "true" {
-		return false
-	}
+	return Label(r, utilConstants.HelmLabelArangoDBManaged) == "true"
+}
 
-	if managed, ok := r.Labels[utilConstants.HelmLabelArangoDBType]; !ok || managed != "platform" {
-		return false
+// Label returns the value of the given release label, or "" if the release or label is absent.
+func Label(r *helm.Release, key string) string {
+	if r == nil {
+		return ""
 	}
+	return r.Labels[key]
+}
 
-	return true
+// Chart returns the ArangoPlatformChart name a release was installed from, from the `chart` label.
+func Chart(r *helm.Release) string {
+	return Label(r, utilConstants.HelmLabelArangoDBChart)
+}
+
+// DeploymentName returns the owning ArangoDeployment name recorded on a release.
+func DeploymentName(r *helm.Release) string {
+	return Label(r, utilConstants.LabelArangoDBDeploymentName)
+}
+
+// Type returns the platform type (platform or service) recorded on a release.
+func Type(r *helm.Release) utilConstants.HelmType {
+	return utilConstants.HelmType(Label(r, utilConstants.HelmLabelArangoDBType))
 }
 
 // WithDeploymentName adds the deployment-name release label used by the SchedulerV2 integration to
@@ -51,12 +69,20 @@ func WithDeploymentName(deployment string) util.ModR[map[string]string] {
 	}
 }
 
+// WithType overrides the platform type label (platform or service) on a release.
+func WithType(t utilConstants.HelmType) util.ModR[map[string]string] {
+	return func(m map[string]string) map[string]string {
+		m[utilConstants.HelmLabelArangoDBType] = t.String()
+		return m
+	}
+}
+
 func GetLabels(deployment, chart string, mods ...util.ModR[map[string]string]) map[string]string {
 	m := map[string]string{
 		utilConstants.HelmLabelArangoDBManaged:    "true",
 		utilConstants.HelmLabelArangoDBDeployment: deployment,
 		utilConstants.HelmLabelArangoDBChart:      chart,
-		utilConstants.HelmLabelArangoDBType:       "platform",
+		utilConstants.HelmLabelArangoDBType:       utilConstants.HelmTypePlatform.String(),
 	}
 
 	for _, mod := range mods {
