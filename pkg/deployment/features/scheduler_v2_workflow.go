@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,19 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v2
+package features
 
-const (
-	LabelArangoDBDeploymentName = "deployment.arangodb.com/name"
-)
+func init() {
+	registerFeature(schedulerV2Workflow)
+}
+
+var schedulerV2Workflow = &feature{
+	name:             "scheduler-v2-workflow",
+	description:      "Defines if SchedulerV2 Integration manages ArangoPlatformWorkflow resources instead of calling Helm directly",
+	enabledByDefault: false,
+	hidden:           false,
+}
+
+func SchedulerV2Workflow() Feature {
+	return schedulerV2Workflow
+}

@@ -130,13 +130,16 @@ func (h *handler) finalizer(ctx context.Context, extension *platformApi.ArangoPl
 	for _, finalizer := range extension.GetFinalizers() {
 		switch finalizer {
 		case platformApi.FinalizerArangoPlatformWorkflowRelease:
-			// Remove Release
-			if _, err := h.helm.Uninstall(ctx, extension.GetName(), func(in *action.Uninstall) {
-				in.IgnoreNotFound = true
-				in.Wait = true
-				in.Timeout = 20 * time.Minute
-			}); err != nil {
-				return "", err
+			// A discovered (chart-less) workflow only reflects an existing release; it does not own it, so
+			// it must NOT uninstall the release on delete.
+			if extension.Spec.Chart != nil {
+				if _, err := h.helm.Uninstall(ctx, extension.GetName(), func(in *action.Uninstall) {
+					in.IgnoreNotFound = true
+					in.Wait = true
+					in.Timeout = 20 * time.Minute
+				}); err != nil {
+					return "", err
+				}
 			}
 
 			return platformApi.FinalizerArangoPlatformWorkflowRelease, nil
@@ -227,7 +230,110 @@ func (h *handler) HandleDeployment(ctx context.Context, item operation.Item, ext
 		return true, nil
 	}
 
+	// No Chart provided: adopt and reflect an existing Helm release in the status instead of installing
+	// one. This is intrinsic reconcile behavior for a chart-less workflow; whether such workflows get
+	// created (the discovery loop that scans releases by label) is gated separately by its own feature.
+	if extension.Spec.Chart == nil {
+		return operator.HandleP4(ctx, item, extension, status, depl, h.HandleDiscovery)
+	}
+
 	return operator.HandleP4(ctx, item, extension, status, depl, h.HandleChart)
+}
+
+// HandleDiscovery reflects an existing Helm release (installed out-of-band, e.g. by the SchedulerV2
+// sidecar) into the workflow status without owning its lifecycle. Used when the workflow has no Chart.
+func (h *handler) HandleDiscovery(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus, depl *api.ArangoDeployment) (bool, error) {
+	release, err := h.helm.Status(ctx, extension.GetName())
+	if err != nil {
+		return false, err
+	}
+
+	if release == nil {
+		status.Release = nil
+		changed := status.Conditions.Update(platformApi.DiscoveredCondition, false, "Release not found", "Release not found")
+		changed = status.Conditions.Update(platformApi.ReleaseReadyCondition, false, "Release not found", "Release not found") || changed
+		if changed {
+			logger.WrapObj(item).Warn("Release to discover not found")
+			return true, operator.Reconcile("Condition Changed")
+		}
+		return false, operator.Stop("Release not discovered")
+	}
+
+	// Only adopt releases we actually manage for this deployment: the release must be tagged as
+	// platform-managed and carry the same deployment name. A same-named release that we do not manage (or
+	// that belongs to another deployment) must not be reflected as if it were ours.
+	if !labels.IsPlatformManaged(release) || labels.DeploymentName(release) != status.Deployment.GetName() {
+		status.Release = nil
+		changed := status.Conditions.Update(platformApi.DiscoveredCondition, false, "Release not managed", "Release not managed")
+		changed = status.Conditions.Update(platformApi.ReleaseReadyCondition, false, "Release not managed", "Release not managed") || changed
+		if changed {
+			logger.WrapObj(item).Str("release", release.Name).Warn("Release to discover is not managed for this deployment")
+			return true, operator.Reconcile("Condition Changed")
+		}
+		return false, operator.Stop("Release not managed")
+	}
+
+	changed := false
+
+	if s := extractReleaseStatus(release, ""); !status.Release.Compare(s) {
+		status.Release = s
+		changed = true
+	}
+
+	// Link the source ArangoPlatformChart when the release carries the chart label and the chart CR still
+	// exists, so a discovered workflow references the same chart object as a chart-owning one.
+	if chartName := labels.Chart(release); chartName != "" {
+		chart, err := h.client.PlatformV1beta1().ArangoPlatformCharts(extension.GetNamespace()).Get(ctx, chartName, meta.GetOptions{})
+		if err != nil {
+			if !apiErrors.IsNotFound(err) {
+				return false, err
+			}
+
+			// The chart CR is gone; discovery still works from the release metadata below.
+			if status.Chart != nil {
+				status.Chart = nil
+				changed = true
+			}
+		} else if status.Chart == nil || !status.Chart.Equals(chart) {
+			status.Chart = util.NewType(sharedApi.NewObject(chart))
+			changed = true
+		}
+	} else if status.Chart != nil {
+		status.Chart = nil
+		changed = true
+	}
+
+	// Reflect the chart the release was installed from (name + version), discovered from the Helm release
+	// metadata. This is the actual Helm chart, independent of the linked ArangoPlatformChart above.
+	if c := release.GetChart().GetMetadata(); c != nil {
+		if status.ChartInfo == nil || status.ChartInfo.Details == nil ||
+			status.ChartInfo.Details.Name != c.GetName() || status.ChartInfo.Details.Version != c.GetVersion() {
+			status.ChartInfo = &platformApi.ChartStatusInfo{
+				Valid: true,
+				Details: &platformApi.ChartDetails{
+					Name:    c.GetName(),
+					Version: c.GetVersion(),
+				},
+			}
+			changed = true
+		}
+	}
+
+	if status.Conditions.Update(platformApi.DiscoveredCondition, true, "Release discovered", "Release discovered") {
+		changed = true
+	}
+
+	ready := release.Info.Status == helmRelease.StatusDeployed
+	if status.Conditions.Update(platformApi.ReleaseReadyCondition, ready, "Release "+string(release.Info.Status), "Release "+string(release.Info.Status)) {
+		changed = true
+	}
+
+	if changed {
+		logger.WrapObj(item).Str("release", release.Name).Info("Release Discovered")
+		return true, operator.Reconcile("Discovery updated")
+	}
+
+	return false, nil
 }
 
 func (h *handler) HandleChart(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus, depl *api.ArangoDeployment) (bool, error) {
@@ -361,7 +467,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 			in.ReleaseName = extension.GetName()
 			in.Namespace = extension.GetNamespace()
 
-			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()), labels.WithType(utilConstants.HelmTypeService))
 		}, withInstallActionOverrides(extension.Spec.Install))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Install Failed", "Release Install failed: %s", err.Error())
@@ -423,7 +529,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 		_, err = h.helm.Upgrade(ctx, extension.GetName(), helm.Chart(status.ChartInfo.Definition), helm.Values(status.Values), func(in *action.Upgrade) {
 			in.Namespace = extension.GetNamespace()
 
-			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()), labels.WithType(utilConstants.HelmTypeService))
 		}, withUpgradeActionOverrides(extension.Spec.Upgrade))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Upgrade Failed", "Release upgrade failed: %s", err.Error())
@@ -458,7 +564,7 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 		_, err = h.helm.Upgrade(ctx, extension.GetName(), helm.Chart(status.ChartInfo.Definition), helm.Values(status.Values), func(in *action.Upgrade) {
 			in.Namespace = extension.GetNamespace()
 
-			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName())
+			in.Labels = labels.GetLabels(status.Deployment.GetName(), status.Chart.GetName(), labels.WithDeploymentName(status.Deployment.GetName()), labels.WithType(utilConstants.HelmTypeService))
 		}, withUpgradeActionOverrides(extension.Spec.Upgrade))
 		if err != nil {
 			h.eventRecorder.Warning(extension, "Release Upgrade Failed", "Release upgrade failed: %s", err.Error())

@@ -28,5 +28,6 @@ const (
 	RouteFoundCondition      api.ConditionType = "RouteFound"
 	SpecValidCondition       api.ConditionType = "SpecValid"
 	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
+	DiscoveredCondition      api.ConditionType = "Discovered"
 	ReadyCondition           api.ConditionType = "Ready"
 )

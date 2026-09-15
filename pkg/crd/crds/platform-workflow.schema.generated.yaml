@@ -4,7 +4,10 @@ v1beta1:
       spec:
         properties:
           chart:
-            description: Chart keeps the Chart Reference
+            description: |-
+              Chart keeps the Chart Reference. Optional: when omitted (and the platform-workflow-discovery feature
+              is enabled) the workflow discovers and reflects an existing Helm release in its status instead of
+              installing one.
             properties:
               name:
                 description: Name of the object
@@ -44,7 +47,6 @@ v1beta1:
             type: object
             x-kubernetes-preserve-unknown-fields: true
         required:
-          - chart
           - deployment
         type: object
       status:

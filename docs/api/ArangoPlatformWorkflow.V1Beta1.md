@@ -60,7 +60,7 @@ Default Value: `20m`
 
 ### .spec.values
 
-Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/platform/v1beta1/workflow_spec.go#L46)</sup>
+Type: `Object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/platform/v1beta1/workflow_spec.go#L47)</sup>
 
 Values keeps the values of the Workflow
 

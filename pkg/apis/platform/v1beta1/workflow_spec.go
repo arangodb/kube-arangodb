@@ -34,8 +34,9 @@ type ArangoPlatformWorkflowSpec struct {
 	// +doc/skip: checksum
 	Deployment *sharedApi.Object `json:"deployment,omitempty"`
 
-	// Chart keeps the Chart Reference
-	// +doc/required
+	// Chart keeps the Chart Reference. Optional: when omitted (and the platform-workflow-discovery feature
+	// is enabled) the workflow discovers and reflects an existing Helm release in its status instead of
+	// installing one.
 	// +doc/skip: namespace
 	// +doc/skip: uid
 	// +doc/skip: checksum
@@ -59,7 +60,7 @@ func (c *ArangoPlatformWorkflowSpec) Validate() error {
 
 	return shared.WithErrors(
 		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
-		shared.ValidateRequiredInterfacePath("chart", c.Chart),
+		shared.ValidateOptionalInterfacePath("chart", c.Chart),
 		shared.ValidateOptionalInterfacePath("upgrade", c.Upgrade),
 		shared.ValidateOptionalInterfacePath("install", c.Install),
 	)
