@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) Discover platform service Helm releases by label and create an ArangoPlatformWorkflow for each behind the platform-workflow-discovery feature
 - (Feature) (Platform) Discover and reflect an existing Helm release in the status of a chart-less ArangoPlatformWorkflow
 - (Feature) (Platform) Collect ArangoPlatformWorkflow resources in the debug package
 - (Maintenance) Bump Helm to v3.21.4, dropping the containerd and golang.org/x/crypto/openpgp dependencies (clears GO-2026-5932/5622/5338/5064)

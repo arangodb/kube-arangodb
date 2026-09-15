@@ -64,5 +64,9 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 		return err
 	}
 
+	if err := operator.RegisterStarter(h); err != nil {
+		return err
+	}
+
 	return nil
 }
