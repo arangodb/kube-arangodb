@@ -515,9 +515,20 @@ func (h *handler) HandleRelease(ctx context.Context, item operation.Item, extens
 	}
 
 	if status.Release == nil || status.Release.Version != release.Version {
+		// status.Release == nil means we are seeing this release for the first time. For a release we
+		// installed ourselves the status is populated at install time, so this is an out-of-band release
+		// adopted from discovery: we have no trusted desired-state hash and cannot assume it matches.
+		adopted := status.Release == nil
+
 		logger.WrapObj(item).Info("Fetch Helm Release Info")
 
 		status.Release = extractReleaseStatus(release, expectedChecksum)
+
+		if adopted {
+			// Clear the hash so the upgrade path below runs once and converges the adopted release to the
+			// desired chart and values on the next reconcile.
+			status.Release.Hash = ""
+		}
 
 		return true, operator.Reconcile("Release Fetched")
 	}

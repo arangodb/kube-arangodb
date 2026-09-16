@@ -391,3 +391,10 @@ features:
     releases:
       - operatorVersion: 1.5.0
         state: Alpha
+  - name: Platform Workflow Discovery
+    enabled: true
+    flag: --deployment.feature.platform-workflow-discovery
+    remarks: Discovers existing platform service Helm releases by label and creates a chart-less ArangoPlatformWorkflow for each (requires scheduler-v2-workflow)
+    releases:
+      - operatorVersion: 1.5.0
+        state: Alpha
