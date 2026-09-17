@@ -162,7 +162,10 @@ func Test_GatewayConfig(t *testing.T) {
 		})
 	})
 
-	t.Run("With WebSocket", func(t *testing.T) {
+	t.Run("With WebSocket to HTTP1 upstream", func(t *testing.T) {
+		// Feature on + websocket upgrade, but the upstream is HTTP/1: Extended CONNECT must NOT be
+		// advertised on the listener (the websocket is served over the classic HTTP/1 Upgrade), while
+		// the route keeps its websocket upgrade.
 		renderAndPrintGatewayConfig(t, Config{
 			DefaultDestination: ConfigDestination{
 				Targets: []ConfigDestinationTarget{
@@ -192,7 +195,7 @@ func Test_GatewayConfig(t *testing.T) {
 			require.NotNil(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0])
 			var o httpConnectionManagerAPI.HttpConnectionManager
 			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
-			requireListenerHTTP2AllowConnect(t, &o)
+			requireListenerHTTP2NoAllowConnect(t, &o)
 			rc := o.GetRouteConfig()
 			require.NotNil(t, rc)
 			require.NotNil(t, rc.VirtualHosts)
@@ -207,6 +210,64 @@ func Test_GatewayConfig(t *testing.T) {
 			require.EqualValues(t, "websocket", r.UpgradeConfigs[0].UpgradeType)
 			require.NotNil(t, r.UpgradeConfigs[0].Enabled)
 			require.True(t, r.UpgradeConfigs[0].Enabled.GetValue())
+		})
+	})
+
+	t.Run("With WebSocket to HTTP2 upstream", func(t *testing.T) {
+		// Feature on + websocket upgrade to an HTTP/2 upstream: Extended CONNECT is advertised on the
+		// listener so an HTTP/2 client can tunnel the websocket end to end.
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Protocol: util.NewType(ConfigDestinationProtocolHTTP2),
+				Targets: []ConfigDestinationTarget{
+					ConfigDestinationTargetEndpoint{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				UpgradeConfigs: ConfigDestinationsUpgrade{
+					{
+						Type: "websocket",
+					},
+				},
+			},
+			Options: &ConfigOptions{
+				WebSocketsHTTP2: util.NewType(true),
+			},
+		}, func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap) {
+			require.Len(t, b.StaticResources.Listeners, 1)
+			var o httpConnectionManagerAPI.HttpConnectionManager
+			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			requireListenerHTTP2AllowConnect(t, &o)
+			r := o.GetRouteConfig().VirtualHosts[0].Routes[0].GetRoute()
+			require.Len(t, r.UpgradeConfigs, 1)
+			require.EqualValues(t, "websocket", r.UpgradeConfigs[0].UpgradeType)
+		})
+	})
+
+	t.Run("With WebSocket feature off keeps Extended CONNECT off for HTTP2 upstream", func(t *testing.T) {
+		// Even with an HTTP/2 upstream websocket, the feature being off must keep Extended CONNECT off.
+		renderAndPrintGatewayConfig(t, Config{
+			DefaultDestination: ConfigDestination{
+				Protocol: util.NewType(ConfigDestinationProtocolHTTP2),
+				Targets: []ConfigDestinationTarget{
+					ConfigDestinationTargetEndpoint{
+						Host: "127.0.0.1",
+						Port: 12345,
+					},
+				},
+				UpgradeConfigs: ConfigDestinationsUpgrade{
+					{
+						Type: "websocket",
+					},
+				},
+			},
+			// Options.WebSocketsHTTP2 left unset (feature off).
+		}, func(t *testing.T, b *pbEnvoyBootstrapV3.Bootstrap) {
+			require.Len(t, b.StaticResources.Listeners, 1)
+			var o httpConnectionManagerAPI.HttpConnectionManager
+			tgrpc.GRPCAnyCastAs(t, b.StaticResources.Listeners[0].DefaultFilterChain.Filters[0].GetTypedConfig(), &o)
+			requireListenerHTTP2NoAllowConnect(t, &o)
 		})
 	})
 

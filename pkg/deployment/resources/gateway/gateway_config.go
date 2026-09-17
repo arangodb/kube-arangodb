@@ -332,17 +332,18 @@ func listenerHttp2ProtocolOptions() *pbEnvoyCoreV3.Http2ProtocolOptions {
 	}
 }
 
-// hasWebSocketUpgrade reports whether any destination (the default or a named one) allows a
-// websocket upgrade. It gates RFC 8441 Extended CONNECT on the downstream listener so it is only
-// enabled when a route can actually forward a websocket upgrade, matching the per-destination
-// opt-in gating of websockets.
-func (c Config) hasWebSocketUpgrade() bool {
-	if c.DefaultDestination.hasWebSocketUpgrade() {
+// hasHTTP2WebSocketUpgrade reports whether any destination (the default or a named one) allows a
+// websocket upgrade to an HTTP/2 upstream. It gates RFC 8441 Extended CONNECT on the downstream
+// listener: it is advertised only when a route can actually forward a websocket over HTTP/2 to the
+// backend. For an HTTP/1 upstream the websocket is served over the classic HTTP/1 Upgrade, so
+// advertising Extended CONNECT would only add a fragile HTTP/2->HTTP/1 translation to the path.
+func (c Config) hasHTTP2WebSocketUpgrade() bool {
+	if c.DefaultDestination.hasHTTP2WebSocketUpgrade() {
 		return true
 	}
 
 	for _, d := range c.Destinations {
-		if d.hasWebSocketUpgrade() {
+		if d.hasHTTP2WebSocketUpgrade() {
 			return true
 		}
 	}
@@ -403,9 +404,9 @@ func (c Config) RenderFilters() ([]*pbEnvoyListenerV3.Filter, error) {
 	}
 
 	// Enable RFC 8441 Extended CONNECT on the downstream listener only when the WebSockets-over-HTTP/2
-	// option is on (gated by the hidden gateway-websockets feature) and a destination actually allows
-	// a websocket upgrade.
-	if c.Options.GetWebSocketsHTTP2() && c.hasWebSocketUpgrade() {
+	// option is on (gated by the hidden gateway-websockets feature) and a destination allows a
+	// websocket upgrade to an HTTP/2 upstream. HTTP/1 upstreams keep the classic HTTP/1 Upgrade path.
+	if c.Options.GetWebSocketsHTTP2() && c.hasHTTP2WebSocketUpgrade() {
 		httpConnectionManager.Http2ProtocolOptions = listenerHttp2ProtocolOptions()
 	}
 
