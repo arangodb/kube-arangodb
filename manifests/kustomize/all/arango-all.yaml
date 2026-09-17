@@ -1044,6 +1044,18 @@ rules:
       - "get"
       - "list"
       - "watch"
+  - apiGroups:
+      - "networking.k8s.io"
+    resources:
+      - "networkpolicies"
+    verbs:
+      - "get"
+      - "list"
+      - "create"
+      - "update"
+      - "patch"
+      - "delete"
+      - "watch"
 ---
 # Source: kube-arangodb/templates/scheduler-operator/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
