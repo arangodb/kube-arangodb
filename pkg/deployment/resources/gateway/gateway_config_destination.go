@@ -331,7 +331,7 @@ func (c *ConfigDestination) RenderCluster(name string) (*pbEnvoyClusterV3.Cluste
 		return nil, nil
 	}
 
-	hpo, err := anypb.New(c.Protocol.Options())
+	hpo, err := anypb.New(c.Protocol.Options(c.hasWebSocketUpgrade()))
 	if err != nil {
 		return nil, err
 	}

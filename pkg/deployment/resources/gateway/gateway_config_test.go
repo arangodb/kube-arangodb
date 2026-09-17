@@ -26,7 +26,9 @@ import (
 	"testing"
 
 	pbEnvoyBootstrapV3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	httpConnectionManagerAPI "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	upstreamHttpApi "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -593,4 +595,54 @@ func Test_GatewayConfig_SDSRequiresNode(t *testing.T) {
 	require.NotNil(t, b.Node, "static bootstrap must set Node when SDS is used")
 	require.NotEmpty(t, b.Node.Id, "Envoy requires node.id when SDS is used")
 	require.NotEmpty(t, b.Node.Cluster, "Envoy requires node.cluster when SDS is used")
+}
+
+// Test_GatewayConfig_UpstreamWebSocketAllowConnect verifies that a websocket upgrade also enables
+// Extended CONNECT on an HTTP/2 upstream cluster, so a WebSocket tunnelled over the downstream
+// connection can be forwarded when the upstream itself speaks HTTP/2. On an HTTP/1.1 upstream Envoy
+// translates the tunnel into a standard HTTP/1.1 Upgrade, so no HTTP/2 option is set there.
+func Test_GatewayConfig_UpstreamWebSocketAllowConnect(t *testing.T) {
+	upstreamHTTP2 := func(t *testing.T, d ConfigDestination) *pbEnvoyCoreV3.Http2ProtocolOptions {
+		c, err := d.RenderCluster("test")
+		require.NoError(t, err)
+		require.NotNil(t, c)
+		a, ok := c.TypedExtensionProtocolOptions["envoy.extensions.upstreams.http.v3.HttpProtocolOptions"]
+		require.True(t, ok, "upstream HttpProtocolOptions must be rendered")
+		var o upstreamHttpApi.HttpProtocolOptions
+		tgrpc.GRPCAnyCastAs(t, a, &o)
+		return o.GetExplicitHttpConfig().GetHttp2ProtocolOptions()
+	}
+
+	target := ConfigDestinationTargetEndpoint{Host: "127.0.0.1", Port: 12345}
+	ws := ConfigDestinationsUpgrade{{Type: "websocket"}}
+
+	t.Run("HTTP/2 upstream with websocket enables allowConnect", func(t *testing.T) {
+		h2 := upstreamHTTP2(t, ConfigDestination{
+			Type:           util.NewType(ConfigDestinationTypeHTTP),
+			Protocol:       util.NewType(ConfigDestinationProtocolHTTP2),
+			Targets:        []ConfigDestinationTarget{target},
+			UpgradeConfigs: ws,
+		})
+		require.NotNil(t, h2)
+		require.True(t, h2.AllowConnect, "an HTTP/2 upstream carrying a websocket must allow Extended CONNECT")
+	})
+
+	t.Run("HTTP/2 upstream without websocket keeps allowConnect off", func(t *testing.T) {
+		h2 := upstreamHTTP2(t, ConfigDestination{
+			Type:     util.NewType(ConfigDestinationTypeHTTP),
+			Protocol: util.NewType(ConfigDestinationProtocolHTTP2),
+			Targets:  []ConfigDestinationTarget{target},
+		})
+		require.NotNil(t, h2)
+		require.False(t, h2.AllowConnect)
+	})
+
+	t.Run("HTTP/1.1 upstream with websocket sets no HTTP/2 options", func(t *testing.T) {
+		require.Nil(t, upstreamHTTP2(t, ConfigDestination{
+			Type:           util.NewType(ConfigDestinationTypeHTTP),
+			Protocol:       util.NewType(ConfigDestinationProtocolHTTP1),
+			Targets:        []ConfigDestinationTarget{target},
+			UpgradeConfigs: ws,
+		}), "an HTTP/1.1 upstream must not carry HTTP/2 protocol options")
+	})
 }
