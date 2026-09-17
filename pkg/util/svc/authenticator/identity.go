@@ -78,3 +78,8 @@ func GetIdentity(ctx context.Context) *Identity {
 
 	return z
 }
+
+// WithIdentity returns a context carrying the given authenticated identity, as the auth interceptor does.
+func WithIdentity(ctx context.Context, identity *Identity) context.Context {
+	return context.WithValue(ctx, identityContextKey, identity)
+}

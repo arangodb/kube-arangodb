@@ -299,3 +299,8 @@ actions:
     description: Sync the operator managed predefined RBAC roles into the authorization sidecar (super-admin ships an Allow-all policy bound to the root user; other roles are created empty)
     scopes:
       - High
+  GatewayConfigPush:
+    description: Push the gateway dynamic config to a gateway member sidecar over ADS when running in push mode
+    isInternal: true
+    scopes:
+      - High

@@ -26,7 +26,9 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
 	client "github.com/arangodb/kube-arangodb/pkg/deployment/client"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	sharedReconcile "github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared"
@@ -35,15 +37,15 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
-func (r *Reconciler) createMemberGatewayConfigConditionPlan(ctx context.Context, _ k8sutil.APIObject, _ api.DeploymentSpec,
+func (r *Reconciler) createMemberGatewayConfigConditionPlan(ctx context.Context, apiObject k8sutil.APIObject, spec api.DeploymentSpec,
 	status api.DeploymentStatus, planCtx PlanBuilderContext) api.Plan {
 	var plan api.Plan
 
 	// Check for members in failed state.
 	for _, m := range status.Members.AsListInGroup(api.ServerGroupGateways) {
-		inv, err := r.getGatewayInventoryConfig(ctx, planCtx, m.Group, m.Member)
+		hash, err := r.getGatewayMemberConfigHash(ctx, planCtx, apiObject, spec, m.Group, m.Member)
 		if err != nil {
-			r.log.Str("member", m.Member.ID).Err(err).Debug("Failed to get gateway inventory config")
+			r.log.Str("member", m.Member.ID).Err(err).Debug("Failed to get gateway config hash")
 			if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionTrue {
 				plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config is not present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, false, "Config is not present", "Config is not present", ""))
 			}
@@ -51,9 +53,9 @@ func (r *Reconciler) createMemberGatewayConfigConditionPlan(ctx context.Context,
 			continue
 		}
 
-		r.log.Str("member", m.Member.ID).Str("hash", inv.Configuration.Hash).Debug("Gateway inventory config received")
-		if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != inv.Configuration.Hash {
-			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config Present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, true, "Config Present", "Config Present", inv.Configuration.Hash))
+		r.log.Str("member", m.Member.ID).Str("hash", hash).Debug("Gateway config hash received")
+		if c, ok := m.Member.Conditions.Get(api.ConditionTypeGatewayConfig); !ok || c.Status == core.ConditionFalse || c.Hash != hash {
+			plan = append(plan, sharedReconcile.UpdateMemberConditionActionV2("Config Present", api.ConditionTypeGatewayConfig, m.Group, m.Member.ID, true, "Config Present", "Config Present", hash))
 		}
 	}
 
@@ -112,6 +114,71 @@ func (r *Reconciler) createGatewayConfigConditionPlan(ctx context.Context, _ k8s
 	}
 
 	return plan
+}
+
+// createGatewayConfigPushPlan pushes the gateway dynamic config to gateway member sidecars over ADS when
+// the deployment runs in push mode. The action itself is a no-op when a member already serves the desired
+// revision, so it is safe to emit periodically (guarded by a back-off in the high plan).
+func (r *Reconciler) createGatewayConfigPushPlan(_ context.Context, _ k8sutil.APIObject, spec api.DeploymentSpec,
+	status api.DeploymentStatus, _ PlanBuilderContext) api.Plan {
+	if !spec.Gateway.IsDynamicModePush() {
+		return nil
+	}
+
+	var plan api.Plan
+
+	for _, m := range status.Members.AsListInGroup(api.ServerGroupGateways) {
+		if m.Member.Phase != api.MemberPhaseCreated {
+			continue
+		}
+
+		plan = append(plan, actions.NewAction(api.ActionTypeGatewayConfigPush, api.ServerGroupGateways, m.Member, "Push gateway config to member sidecar"))
+	}
+
+	return plan
+}
+
+// getGatewayMemberConfigHash returns the config revision the gateway member is currently serving. In push
+// mode this is the version served by the sidecar ADS snapshot (queried over the EnvoyConfigV1 control
+// channel); otherwise it is the hash reported by the gateway /_inventory endpoint. Keeping readiness in
+// push mode tied to the ADS snapshot (rather than /_inventory, which reflects a different, mounted source)
+// lets it converge to the pushed config.
+func (r *Reconciler) getGatewayMemberConfigHash(ctx context.Context, planCtx PlanBuilderContext, apiObject k8sutil.APIObject, spec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus) (string, error) {
+	if spec.Gateway.IsDynamicModePush() {
+		return r.getGatewayPushedVersion(ctx, planCtx, apiObject, spec, member)
+	}
+
+	inv, err := r.getGatewayInventoryConfig(ctx, planCtx, group, member)
+	if err != nil {
+		return "", err
+	}
+
+	return inv.Configuration.Hash, nil
+}
+
+// getGatewayPushedVersion queries the member sidecar's EnvoyConfigV1 control channel for the version of the
+// config it is currently serving over ADS.
+func (r *Reconciler) getGatewayPushedVersion(ctx context.Context, planCtx PlanBuilderContext, apiObject k8sutil.APIObject, spec api.DeploymentSpec, member api.MemberStatus) (string, error) {
+	lCtx, c := context.WithTimeout(ctx, 5*time.Second)
+	defer c()
+
+	token, err := planCtx.GetMembersToken(lCtx)
+	if err != nil {
+		return "", err
+	}
+
+	cl, closer, err := newGatewayConfigClient(lCtx, apiObject, spec, member.ID, token)
+	if err != nil {
+		return "", err
+	}
+	defer closer()
+
+	st, err := cl.Status(lCtx, &pbSharedV1.Empty{})
+	if err != nil {
+		return "", err
+	}
+
+	return st.GetVersion(), nil
 }
 
 func (r *Reconciler) getGatewayInventoryConfig(ctx context.Context, planCtx PlanBuilderContext, group api.ServerGroup, member api.MemberStatus) (client.Inventory, error) {

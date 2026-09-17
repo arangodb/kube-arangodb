@@ -260,14 +260,25 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 		return nil, errors.Errorf("Unable to find accepted integration")
 	}
 
-	integrations, err := integrationsSidecar.NewIntegrationEnablement(
+	enabledIntegrations := []integrationsSidecar.Integration{
 		integrationsSidecar.IntegrationEnvoyV3{
 			DeploymentName: m.context.GetName(),
 			Spec:           m.Deployment,
 		}, integrationsSidecar.IntegrationAuthenticationV1{
 			DeploymentName: m.context.GetName(),
 			Spec:           m.Deployment,
+		},
+	}
+
+	if m.Deployment.Gateway.IsDynamicModePush() {
+		// Push mode: the sidecar serves the gateway dynamic config to Envoy over ADS.
+		enabledIntegrations = append(enabledIntegrations, integrationsSidecar.IntegrationEnvoyConfigV1{
+			DeploymentName: m.context.GetName(),
+			Spec:           m.Deployment,
 		})
+	}
+
+	integrations, err := integrationsSidecar.NewIntegrationEnablement(enabledIntegrations...)
 
 	if err != nil {
 		return nil, err
