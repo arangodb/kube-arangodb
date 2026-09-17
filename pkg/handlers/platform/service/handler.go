@@ -325,6 +325,7 @@ func (h *handler) HandleValues(ctx context.Context, item operation.Item, extensi
 			Deployment: types.ServicePlatformDeployment{
 				Name: depl.GetName(),
 			},
+			Hibernated: extension.Spec.IsHibernated(),
 		},
 	}.Values()
 	if err != nil {

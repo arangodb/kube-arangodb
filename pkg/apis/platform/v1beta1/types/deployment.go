@@ -32,6 +32,9 @@ func (s Service) Values() (helm.Values, error) {
 
 type ServicePlatform struct {
 	Deployment ServicePlatformDeployment `json:"deployment,omitempty"`
+
+	// Hibernated is injected into the chart values when the owning resource requests hibernation.
+	Hibernated bool `json:"hibernated,omitempty"`
 }
 
 type ServicePlatformDeployment struct {

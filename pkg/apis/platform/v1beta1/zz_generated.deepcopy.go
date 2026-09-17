@@ -345,6 +345,11 @@ func (in *ArangoPlatformServiceSpec) DeepCopyInto(out *ArangoPlatformServiceSpec
 		*out = make(v1.Any, len(*in))
 		copy(*out, *in)
 	}
+	if in.Hibernate != nil {
+		in, out := &in.Hibernate, &out.Hibernate
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Upgrade != nil {
 		in, out := &in.Upgrade, &out.Upgrade
 		*out = new(ArangoPlatformServiceSpecUpgrade)
@@ -893,6 +898,11 @@ func (in *ArangoPlatformWorkflowSpec) DeepCopyInto(out *ArangoPlatformWorkflowSp
 		in, out := &in.Values, &out.Values
 		*out = make(v1.Any, len(*in))
 		copy(*out, *in)
+	}
+	if in.Hibernate != nil {
+		in, out := &in.Hibernate, &out.Hibernate
+		*out = new(bool)
+		**out = **in
 	}
 	if in.Upgrade != nil {
 		in, out := &in.Upgrade, &out.Upgrade
