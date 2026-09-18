@@ -46,11 +46,21 @@ type ArangoPlatformWorkflowSpec struct {
 	// +doc/type: Object
 	Values sharedApi.Any `json:"values,omitempty,omitzero"`
 
+	// Hibernate, when true, injects the hibernated flag into the chart values (arangodb_platform.hibernated)
+	// so the chart can render its hibernated form.
+	// +doc/default: false
+	Hibernate *bool `json:"hibernate,omitempty"`
+
 	// Upgrade keeps the upgrade overrides
 	Upgrade *ArangoPlatformWorkflowSpecUpgrade `json:"upgrade,omitempty"`
 
 	// Install keeps the install overrides
 	Install *ArangoPlatformWorkflowSpecInstall `json:"install,omitempty"`
+}
+
+// IsHibernated returns whether the workflow requests hibernation.
+func (c *ArangoPlatformWorkflowSpec) IsHibernated() bool {
+	return c != nil && c.Hibernate != nil && *c.Hibernate
 }
 
 func (c *ArangoPlatformWorkflowSpec) Validate() error {
