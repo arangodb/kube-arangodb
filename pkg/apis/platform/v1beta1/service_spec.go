@@ -45,11 +45,21 @@ type ArangoPlatformServiceSpec struct {
 	// +doc/type: Object
 	Values sharedApi.Any `json:"values,omitempty,omitzero"`
 
+	// Hibernate, when true, injects the hibernated flag into the chart values (arangodb_platform.hibernated)
+	// so the chart can render its hibernated form.
+	// +doc/default: false
+	Hibernate *bool `json:"hibernate,omitempty"`
+
 	// Upgrade keeps the upgrade overrides
 	Upgrade *ArangoPlatformServiceSpecUpgrade `json:"upgrade,omitempty"`
 
 	// Install keeps the install overrides
 	Install *ArangoPlatformServiceSpecInstall `json:"install,omitempty"`
+}
+
+// IsHibernated returns whether the service requests hibernation.
+func (c *ArangoPlatformServiceSpec) IsHibernated() bool {
+	return c != nil && c.Hibernate != nil && *c.Hibernate
 }
 
 func (c *ArangoPlatformServiceSpec) Validate() error {

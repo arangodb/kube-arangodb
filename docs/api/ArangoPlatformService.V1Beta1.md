@@ -28,6 +28,17 @@ Name of the object
 
 ***
 
+### .spec.hibernate
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/platform/v1beta1/service_spec.go#L51)</sup>
+
+Hibernate, when true, injects the hibernated flag into the chart values (arangodb_platform.hibernated)
+so the chart can render its hibernated form.
+
+Default Value: `false`
+
+***
+
 ### .spec.install.timeout
 
 Type: `integer` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/platform/v1beta1/service_spec_install.go#L35)</sup>
