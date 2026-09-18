@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (Gateway) Advertise WebSocket-over-HTTP/2 (Extended CONNECT) only for destinations with an HTTP/2 upstream and enable it on that upstream cluster; HTTP/1 upstreams keep the classic WebSocket upgrade
 - (Feature) (Platform) Add spec.hibernate on ArangoPlatformService and ArangoPlatformWorkflow to inject the hibernated flag into the chart values
 - (Bugfix) (Platform) Grant the platform operator RBAC to manage NetworkPolicies so it can install platform charts that define them
 - (Feature) (Platform) Discover platform service Helm releases by label and create an ArangoPlatformWorkflow for each behind the platform-workflow-discovery feature

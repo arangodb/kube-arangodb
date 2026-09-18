@@ -326,12 +326,19 @@ func (c ConfigDestination) hasWebSocketUpgrade() bool {
 	return false
 }
 
+// hasHTTP2WebSocketUpgrade reports whether the destination enables a websocket upgrade and speaks
+// HTTP/2 upstream. Only such destinations need (and can use) RFC 8441 Extended CONNECT end to end;
+// an HTTP/1 upstream is served over the classic HTTP/1 Upgrade instead.
+func (c ConfigDestination) hasHTTP2WebSocketUpgrade() bool {
+	return c.hasWebSocketUpgrade() && c.Protocol.Get() == ConfigDestinationProtocolHTTP2
+}
+
 func (c *ConfigDestination) RenderCluster(name string) (*pbEnvoyClusterV3.Cluster, error) {
 	if c.Type.Get() == ConfigDestinationTypeStatic {
 		return nil, nil
 	}
 
-	hpo, err := anypb.New(c.Protocol.Options())
+	hpo, err := anypb.New(c.Protocol.Options(c.hasWebSocketUpgrade()))
 	if err != nil {
 		return nil, err
 	}
