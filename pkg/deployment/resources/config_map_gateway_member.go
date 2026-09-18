@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,10 @@ package resources
 
 import (
 	"context"
+	"path"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -32,6 +34,22 @@ import (
 func (r *Resources) ensureMemberConfigGatewayConfig(ctx context.Context, cachedStatus inspectorInterface.Inspector, member api.DeploymentStatusMemberElement) (map[string]string, error) {
 	if member.Group != api.ServerGroupGateways {
 		return nil, nil
+	}
+
+	if features.GatewayDynamicModePush(r.context.GetSpec().Gateway) {
+		// Push mode: Envoy subscribes to CDS/LDS over ADS served by the integration sidecar, instead of
+		// watching the mounted ConfigMap directory.
+		data, _, _, err := gateway.NodeADSConfig("arangodb", member.Member.ID, utilConstants.EnvoyGatewayADSCluster,
+			gateway.ConfigDestinationTargetUnix{
+				Path: path.Join(utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountFile),
+			})
+		if err != nil {
+			return nil, err
+		}
+
+		return map[string]string{
+			utilConstants.GatewayConfigFileName: string(data),
+		}, nil
 	}
 
 	data, _, _, err := gateway.NodeDynamicConfig("arangodb", member.Member.ID, &gateway.DynamicConfig{

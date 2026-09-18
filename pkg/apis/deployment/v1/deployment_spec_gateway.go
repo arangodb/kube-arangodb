@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,19 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
+// GatewayDynamicMode defines how the dynamic gateway configuration is delivered to the gateway.
+type GatewayDynamicMode string
+
+const (
+	// GatewayDynamicModeConfigMap delivers the config via a mounted ConfigMap that the gateway watches for
+	// live updates (kubelet ConfigMap sync).
+	GatewayDynamicModeConfigMap GatewayDynamicMode = "configmap"
+	// GatewayDynamicModePush keeps the ConfigMap mounted for bootstrap, but the operator additionally pushes
+	// the config to the gateway over an authenticated API so changes propagate without waiting for the
+	// kubelet ConfigMap sync. This is the default while the gateway-config-push feature is enabled.
+	GatewayDynamicModePush GatewayDynamicMode = "push"
+)
+
 type DeploymentSpecGateway struct {
 	// Enabled setting enables/disables support for gateway in the cluster.
 	// When enabled, the cluster will contain a number of `gateway` servers.
@@ -38,6 +51,14 @@ type DeploymentSpecGateway struct {
 	// When enabled, gateway config will be reloaded by ConfigMap live updates.
 	// +doc/default: true
 	Dynamic *bool `json:"dynamic,omitempty"`
+
+	// DynamicMode defines how the dynamic gateway config is delivered when Dynamic is enabled. When unset,
+	// the mode defaults to push while the gateway-config-push feature is enabled (the default), otherwise
+	// configmap.
+	// +doc/enum: configmap|Gateway reloads its config from ConfigMap live updates
+	// +doc/enum: push|Operator pushes the config to the gateway over an authenticated API; the ConfigMap is kept for bootstrap
+	// +doc/default: push
+	DynamicMode *GatewayDynamicMode `json:"dynamicMode,omitempty"`
 
 	// Image is the image to use for the gateway.
 	// By default, the image is determined by the operator.
@@ -109,6 +130,15 @@ func (d *DeploymentSpecGateway) IsDynamic() bool {
 	return *d.Dynamic
 }
 
+// GetDynamicMode returns the dynamic config delivery mode, defaulting to ConfigMap.
+func (d *DeploymentSpecGateway) GetDynamicMode() GatewayDynamicMode {
+	if d == nil || d.DynamicMode == nil {
+		return GatewayDynamicModeConfigMap
+	}
+
+	return *d.DynamicMode
+}
+
 // GetTimeout returns default gateway timeout.
 func (d *DeploymentSpecGateway) GetTimeout() meta.Duration {
 	if d == nil || d.Timeout == nil {
@@ -134,6 +164,14 @@ func (d *DeploymentSpecGateway) Validate() error {
 				return errors.Errorf("Timeout greater than %s not allowed", utilConstants.MaxEnvoyUpstreamTimeout.String())
 			}
 			return nil
+		}),
+		shared.PrefixResourceErrorFunc("dynamicMode", func() error {
+			switch m := d.GetDynamicMode(); m {
+			case GatewayDynamicModeConfigMap, GatewayDynamicModePush:
+				return nil
+			default:
+				return errors.Errorf("Unknown dynamicMode %s", m)
+			}
 		}),
 	)
 }

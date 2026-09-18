@@ -102,6 +102,8 @@ type ActionContext interface {
 	GetName() string
 	// SelectImage select currently used image by pod
 	SelectImage(spec api.DeploymentSpec, status api.DeploymentStatus) (api.ImageInfo, bool)
+	// GetMembersToken returns a signed superuser (server) JWT for authenticating gRPC calls to member sidecars
+	GetMembersToken(ctx context.Context) (string, error)
 }
 
 type ActionLocalsContext interface {
@@ -304,6 +306,10 @@ func (ac *actionContext) GetCachedStatus() inspectorInterface.Inspector {
 
 func (ac *actionContext) GetName() string {
 	return ac.context.GetName()
+}
+
+func (ac *actionContext) GetMembersToken(ctx context.Context) (string, error) {
+	return ac.context.GetMembersToken(ctx)
 }
 
 func (ac *actionContext) GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error) {
