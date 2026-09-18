@@ -7089,7 +7089,10 @@ v1:
                   When enabled, gateway config will be reloaded by ConfigMap live updates.
                 type: boolean
               dynamicMode:
-                description: DynamicMode defines how the dynamic gateway config is delivered when Dynamic is enabled.
+                description: |-
+                  DynamicMode defines how the dynamic gateway config is delivered when Dynamic is enabled. When unset,
+                  the mode defaults to push while the gateway-config-push feature is enabled (the default), otherwise
+                  configmap.
                 enum:
                   - configmap
                   - push
@@ -24893,7 +24896,10 @@ v2alpha1:
                   When enabled, gateway config will be reloaded by ConfigMap live updates.
                 type: boolean
               dynamicMode:
-                description: DynamicMode defines how the dynamic gateway config is delivered when Dynamic is enabled.
+                description: |-
+                  DynamicMode defines how the dynamic gateway config is delivered when Dynamic is enabled. When unset,
+                  the mode defaults to push while the gateway-config-push feature is enabled (the default), otherwise
+                  configmap.
                 enum:
                   - configmap
                   - push

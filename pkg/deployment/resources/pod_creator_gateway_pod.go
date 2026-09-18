@@ -32,6 +32,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
@@ -270,7 +271,7 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 		},
 	}
 
-	if m.Deployment.Gateway.IsDynamicModePush() {
+	if features.GatewayDynamicModePush(m.Deployment.Gateway) {
 		// Push mode: the sidecar serves the gateway dynamic config to Envoy over ADS.
 		enabledIntegrations = append(enabledIntegrations, integrationsSidecar.IntegrationEnvoyConfigV1{
 			DeploymentName: m.context.GetName(),

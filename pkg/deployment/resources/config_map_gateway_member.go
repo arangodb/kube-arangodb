@@ -25,6 +25,7 @@ import (
 	"path"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources/gateway"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	inspectorInterface "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector"
@@ -35,7 +36,7 @@ func (r *Resources) ensureMemberConfigGatewayConfig(ctx context.Context, cachedS
 		return nil, nil
 	}
 
-	if r.context.GetSpec().Gateway.IsDynamicModePush() {
+	if features.GatewayDynamicModePush(r.context.GetSpec().Gateway) {
 		// Push mode: Envoy subscribes to CDS/LDS over ADS served by the integration sidecar, instead of
 		// watching the mounted ConfigMap directory.
 		data, _, _, err := gateway.NodeADSConfig("arangodb", member.Member.ID, utilConstants.EnvoyGatewayADSCluster,

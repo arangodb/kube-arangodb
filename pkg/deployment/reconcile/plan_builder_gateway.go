@@ -121,7 +121,7 @@ func (r *Reconciler) createGatewayConfigConditionPlan(ctx context.Context, _ k8s
 // revision, so it is safe to emit periodically (guarded by a back-off in the high plan).
 func (r *Reconciler) createGatewayConfigPushPlan(_ context.Context, _ k8sutil.APIObject, spec api.DeploymentSpec,
 	status api.DeploymentStatus, _ PlanBuilderContext) api.Plan {
-	if !spec.Gateway.IsDynamicModePush() {
+	if !features.GatewayDynamicModePush(spec.Gateway) {
 		return nil
 	}
 
@@ -144,7 +144,7 @@ func (r *Reconciler) createGatewayConfigPushPlan(_ context.Context, _ k8sutil.AP
 // push mode tied to the ADS snapshot (rather than /_inventory, which reflects a different, mounted source)
 // lets it converge to the pushed config.
 func (r *Reconciler) getGatewayMemberConfigHash(ctx context.Context, planCtx PlanBuilderContext, apiObject k8sutil.APIObject, spec api.DeploymentSpec, group api.ServerGroup, member api.MemberStatus) (string, error) {
-	if spec.Gateway.IsDynamicModePush() {
+	if features.GatewayDynamicModePush(spec.Gateway) {
 		return r.getGatewayPushedVersion(ctx, planCtx, apiObject, spec, member)
 	}
 

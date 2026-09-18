@@ -28,6 +28,7 @@ import (
 	pbEnvoyConfigV1 "github.com/arangodb/kube-arangodb/integrations/envoy/config/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/resources"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
@@ -52,7 +53,7 @@ type actionGatewayConfigPush struct {
 func (a *actionGatewayConfigPush) Start(ctx context.Context) (bool, error) {
 	spec := a.actionCtx.GetSpec()
 
-	if !spec.Gateway.IsDynamicModePush() {
+	if !features.GatewayDynamicModePush(spec.Gateway) {
 		return true, nil
 	}
 

@@ -33,11 +33,11 @@ type GatewayDynamicMode string
 
 const (
 	// GatewayDynamicModeConfigMap delivers the config via a mounted ConfigMap that the gateway watches for
-	// live updates (kubelet ConfigMap sync). This is the default.
+	// live updates (kubelet ConfigMap sync).
 	GatewayDynamicModeConfigMap GatewayDynamicMode = "configmap"
 	// GatewayDynamicModePush keeps the ConfigMap mounted for bootstrap, but the operator additionally pushes
 	// the config to the gateway over an authenticated API so changes propagate without waiting for the
-	// kubelet ConfigMap sync.
+	// kubelet ConfigMap sync. This is the default while the gateway-config-push feature is enabled.
 	GatewayDynamicModePush GatewayDynamicMode = "push"
 )
 
@@ -52,10 +52,12 @@ type DeploymentSpecGateway struct {
 	// +doc/default: true
 	Dynamic *bool `json:"dynamic,omitempty"`
 
-	// DynamicMode defines how the dynamic gateway config is delivered when Dynamic is enabled.
-	// +doc/enum: configmap|Gateway reloads its config from ConfigMap live updates (default)
+	// DynamicMode defines how the dynamic gateway config is delivered when Dynamic is enabled. When unset,
+	// the mode defaults to push while the gateway-config-push feature is enabled (the default), otherwise
+	// configmap.
+	// +doc/enum: configmap|Gateway reloads its config from ConfigMap live updates
 	// +doc/enum: push|Operator pushes the config to the gateway over an authenticated API; the ConfigMap is kept for bootstrap
-	// +doc/default: configmap
+	// +doc/default: push
 	DynamicMode *GatewayDynamicMode `json:"dynamicMode,omitempty"`
 
 	// Image is the image to use for the gateway.
@@ -135,11 +137,6 @@ func (d *DeploymentSpecGateway) GetDynamicMode() GatewayDynamicMode {
 	}
 
 	return *d.DynamicMode
-}
-
-// IsDynamicModePush returns whether the operator should push the config to the gateway over the API.
-func (d *DeploymentSpecGateway) IsDynamicModePush() bool {
-	return d.IsDynamic() && d.GetDynamicMode() == GatewayDynamicModePush
 }
 
 // GetTimeout returns default gateway timeout.
