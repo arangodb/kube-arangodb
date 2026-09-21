@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,8 @@ func (r *Reconciler) createNormalPlan(ctx context.Context, apiObject k8sutil.API
 	}
 
 	q := recoverPlanAppender(r.log, newPlanAppender(NewWithPlanBuilder(ctx, apiObject, spec, status, builderCtx), status.BackOff, currentPlan).
+		// Hibernate/dehibernate the deployment - pre-empts scale/rotate/maintenance while (de)hibernating
+		ApplyIfEmpty(r.createHibernatePlan).
 		// Define topology
 		ApplyIfEmpty(r.createTopologyEnablementPlan).
 		// Adjust topology settings

@@ -448,7 +448,8 @@ func (h *handler) HandleValues(ctx context.Context, item operation.Item, extensi
 			Deployment: types.ServicePlatformDeployment{
 				Name: depl.GetName(),
 			},
-			Hibernated: extension.Spec.IsHibernated(),
+			// The parent deployment's hibernate switch overrides the workflow's own value.
+			Hibernated: extension.Spec.IsHibernated() || depl.Spec.IsHibernate(),
 		},
 	}.Values()
 	if err != nil {
