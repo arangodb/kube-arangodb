@@ -41,6 +41,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pbEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1/definition"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 	"github.com/arangodb/kube-arangodb/pkg/version"
@@ -55,6 +56,10 @@ const (
 
 	// dimensionBootID is the event dimension carrying the unique boot identifier.
 	dimensionBootID = "bootID"
+
+	// dimensionPodUID is the event dimension carrying the UID of the Pod the collector runs in. It is
+	// sourced from the MY_POD_UID lifecycle env and omitted when that env is not set.
+	dimensionPodUID = "podUID"
 )
 
 const (
@@ -125,6 +130,11 @@ func run(ctx context.Context, opts Options) error {
 	// keep cross-platform compatibility with the events integration.
 	created := shutdown.BootTime().Truncate(time.Second)
 
+	// podUID is the UID of the Pod the collector runs in, sourced from the MY_POD_UID lifecycle env.
+	// It is stable for the lifetime of the Pod and correlates the boot to a concrete Pod object; it is
+	// empty when the env is not injected (e.g. running outside a managed Pod).
+	podUID := os.Getenv(utilConstants.EnvOperatorPodUID)
+
 	logger.Str("bootID", bootID).Info("Starting arangodb-operator collector (%s), version %s build %s",
 		version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
@@ -132,7 +142,7 @@ func run(ctx context.Context, opts Options) error {
 	defer t.Stop()
 
 	for {
-		if err := collect(ctx, opts, bootID, created); err != nil {
+		if err := collect(ctx, opts, bootID, podUID, created); err != nil {
 			logger.Err(err).Str("bootID", bootID).Warn("Collector cycle failed, will retry")
 		} else {
 			logger.Str("bootID", bootID).Info("Collector finished")
@@ -153,13 +163,13 @@ func run(ctx context.Context, opts Options) error {
 // a single startup event whose body is the collected metrics. The event is tagged with the boot id
 // and the start timestamp so it can be correlated to a single pod boot. It is emitted to the events
 // integration when an endpoint is configured, otherwise printed to stdout.
-func collect(ctx context.Context, opts Options, bootID string, created time.Time) error {
+func collect(ctx context.Context, opts Options, bootID, podUID string, created time.Time) error {
 	metrics, err := GetCollector().Collect()
 	if err != nil {
 		return err
 	}
 
-	event := buildEvent(metrics, bootID, created)
+	event := buildEvent(metrics, bootID, podUID, created)
 
 	if opts.Endpoint != "" {
 		if err := emit(ctx, opts, event); err != nil {
@@ -174,21 +184,26 @@ func collect(ctx context.Context, opts Options, bootID string, created time.Time
 }
 
 // buildEvent assembles the startup event from the collected metrics, tagging it with the boot id and
-// the start timestamp.
-func buildEvent(metrics []Metric, bootID string, created time.Time) *pbEventsV1.Event {
+// the start timestamp. The Pod UID dimension is added only when a non-empty podUID is provided.
+func buildEvent(metrics []Metric, bootID, podUID string, created time.Time) *pbEventsV1.Event {
 	body := make(map[string]float32, len(metrics))
 	for _, m := range metrics {
 		body[m.K] = m.V
 	}
 
+	dimensions := map[string]string{
+		dimensionBootID: bootID,
+	}
+	if podUID != "" {
+		dimensions[dimensionPodUID] = podUID
+	}
+
 	return &pbEventsV1.Event{
-		Type:      eventTypeStartup,
-		ServiceId: serviceID,
-		Created:   timestamppb.New(created),
-		Dimensions: map[string]string{
-			dimensionBootID: bootID,
-		},
-		Body: body,
+		Type:       eventTypeStartup,
+		ServiceId:  serviceID,
+		Created:    timestamppb.New(created),
+		Dimensions: dimensions,
+		Body:       body,
 	}
 }
 

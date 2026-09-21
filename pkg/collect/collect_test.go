@@ -82,23 +82,34 @@ func TestRegistry_CollectError(t *testing.T) {
 func TestBuildEvent(t *testing.T) {
 	created := time.Date(2026, 6, 30, 12, 0, 0, 0, time.UTC)
 
-	event := buildEvent([]Metric{{K: "cpu", V: 4}, {K: "memory", V: 1024}}, "boot-123", created)
+	event := buildEvent([]Metric{{K: "cpu", V: 4}, {K: "memory", V: 1024}}, "boot-123", "uid-abc", created)
 
 	require.Equal(t, eventTypeStartup, event.GetType())
 	require.Equal(t, serviceID, event.GetServiceId())
 	require.Equal(t, created, event.GetCreated().AsTime())
 	require.Equal(t, "boot-123", event.GetDimensions()[dimensionBootID])
+	require.Equal(t, "uid-abc", event.GetDimensions()[dimensionPodUID])
 	require.Equal(t, map[string]float32{"cpu": 4, "memory": 1024}, event.GetBody())
 }
 
 func TestBuildEvent_NoMetrics(t *testing.T) {
 	created := time.Date(2026, 6, 30, 12, 0, 0, 0, time.UTC)
 
-	event := buildEvent(nil, "boot-123", created)
+	event := buildEvent(nil, "boot-123", "uid-abc", created)
 
 	require.Equal(t, eventTypeStartup, event.GetType())
 	require.Equal(t, "boot-123", event.GetDimensions()[dimensionBootID])
+	require.Equal(t, "uid-abc", event.GetDimensions()[dimensionPodUID])
 	require.Empty(t, event.GetBody())
+}
+
+func TestBuildEvent_NoPodUID(t *testing.T) {
+	created := time.Date(2026, 6, 30, 12, 0, 0, 0, time.UTC)
+
+	event := buildEvent(nil, "boot-123", "", created)
+
+	require.Equal(t, "boot-123", event.GetDimensions()[dimensionBootID])
+	require.NotContains(t, event.GetDimensions(), dimensionPodUID, "podUID dimension must be omitted when unset")
 }
 
 func TestResourceCollector(t *testing.T) {
