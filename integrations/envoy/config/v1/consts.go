@@ -1,5 +1,7 @@
 //
-// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
+// DISCLAIMER
+//
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,21 +18,8 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package reconcile
+package v1
 
-import "github.com/spf13/cobra"
-
-var ActionsConfigGlobal ActionsConfig
-
-type ActionsConfig struct {
-	// PVCResize keeps configuration for action api.ActionTypePVCResize
-	PVCResize ActionPVCResizeConfig
-}
-
-// Init initializes all registered actions config options.
-func (a *ActionsConfig) Init(cmd *cobra.Command) error {
-	if err := a.PVCResize.Init(cmd, "action.PVCResize"); err != nil {
-		return err
-	}
-	return nil
-}
+const (
+	Name = "envoy.config.v1"
+)

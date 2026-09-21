@@ -306,6 +306,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("GatewayConfigPush", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeGatewayConfigPush)
+		t.Run("Internal", func(t *testing.T) {
+			require.True(t, api.ActionTypeGatewayConfigPush.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeGatewayConfigPush.Optional())
+		})
+	})
+
 	t.Run("Idle", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeIdle)
 		t.Run("Internal", func(t *testing.T) {
