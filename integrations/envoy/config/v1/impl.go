@@ -22,10 +22,10 @@ package v1
 
 import (
 	"context"
+	"os"
+	goStrings "strings"
 	"sync"
-	"time"
 
-	pbEnvoyClusterV3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	pbEnvoyCoreV3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	discoveryservice "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	cachetypes "github.com/envoyproxy/go-control-plane/pkg/cache/types"
@@ -37,10 +37,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/durationpb"
 
 	pbEnvoyConfigV1 "github.com/arangodb/kube-arangodb/integrations/envoy/config/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
+	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
@@ -56,9 +56,15 @@ type constHash struct{}
 func (constHash) ID(_ *pbEnvoyCoreV3.Node) string { return nodeKey }
 
 // New builds the EnvoyConfigV1 xDS integration: an ADS server backed by a SnapshotCache. Envoy connects to
-// it (as a cluster over the integration sidecar) and receives the config via ADS. The initial snapshot is a
-// mock config; the operator control channel replaces it via SetSnapshot.
-func New() (svc.Handler, error) {
+// it (as a cluster over the integration sidecar) and receives the config via ADS.
+//
+// The initial snapshot is loaded from the gateway CDS/LDS ConfigMap files mounted into the sidecar
+// (cdsFile/ldsFile hold DiscoveryResponse YAML, versionFile the config checksum). This makes a restarted
+// gateway serve the last-known-good local config immediately - without waiting for the operator to push -
+// and, because the snapshot version equals the ConfigMap checksum, the operator skips a redundant push when
+// the config is unchanged. If the local config cannot be read (files missing or unparsable), the server
+// starts with an empty snapshot and relies on the operator control channel to push the config via Push.
+func New(cdsFile, ldsFile, versionFile string) (svc.Handler, error) {
 	cache := cachev3.NewSnapshotCache(true, constHash{}, gcpLogger{})
 
 	i := &impl{
@@ -68,7 +74,16 @@ func New() (svc.Handler, error) {
 
 	i.server = serverv3.NewServer(i.ctx, cache, nil)
 
-	if err := i.SetSnapshot("mock-1", mockResources()); err != nil {
+	version, resources, err := loadLocalSnapshot(cdsFile, ldsFile, versionFile)
+	if err != nil {
+		logger.Err(err).Warn("Unable to load local gateway config for the initial snapshot; starting empty and waiting for an operator push")
+		version, resources = "empty", map[resourcev3.Type][]cachetypes.Resource{
+			resourcev3.ClusterType:  {},
+			resourcev3.ListenerType: {},
+		}
+	}
+
+	if err := i.SetSnapshot(version, resources); err != nil {
 		return nil, err
 	}
 
@@ -207,16 +222,46 @@ func decodeResources(in []*anypb.Any) ([]cachetypes.Resource, error) {
 	return res, nil
 }
 
-// mockResources returns a placeholder xDS snapshot (a single static cluster) so the ADS delivery can be
-// exercised end-to-end before the operator control channel is wired in.
-func mockResources() map[resourcev3.Type][]cachetypes.Resource {
-	mockCluster := &pbEnvoyClusterV3.Cluster{
-		Name:                 "mock_cluster",
-		ConnectTimeout:       durationpb.New(5 * time.Second),
-		ClusterDiscoveryType: &pbEnvoyClusterV3.Cluster_Type{Type: pbEnvoyClusterV3.Cluster_STATIC},
+// loadLocalSnapshot reads the gateway CDS and LDS DiscoveryResponse files (as mounted from the gateway
+// ConfigMaps) into an xDS snapshot, versioned by the config checksum so it matches what the operator would
+// push. It errors if either resource file cannot be read or parsed.
+func loadLocalSnapshot(cdsFile, ldsFile, versionFile string) (string, map[resourcev3.Type][]cachetypes.Resource, error) {
+	clusters, err := loadResourceFile(cdsFile)
+	if err != nil {
+		return "", nil, err
 	}
 
-	return map[resourcev3.Type][]cachetypes.Resource{
-		resourcev3.ClusterType: {mockCluster},
+	listeners, err := loadResourceFile(ldsFile)
+	if err != nil {
+		return "", nil, err
 	}
+
+	version := "local"
+	if versionFile != "" {
+		if data, err := os.ReadFile(versionFile); err == nil {
+			if v := goStrings.TrimSpace(string(data)); v != "" {
+				version = v
+			}
+		}
+	}
+
+	return version, map[resourcev3.Type][]cachetypes.Resource{
+		resourcev3.ClusterType:  clusters,
+		resourcev3.ListenerType: listeners,
+	}, nil
+}
+
+// loadResourceFile reads a gateway CDS/LDS DiscoveryResponse (YAML) file and decodes its resources.
+func loadResourceFile(file string) ([]cachetypes.Resource, error) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := ugrpc.UnmarshalYAML[*discoveryservice.DiscoveryResponse](data)
+	if err != nil {
+		return nil, err
+	}
+
+	return decodeResources(resp.GetResources())
 }

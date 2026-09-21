@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) (Gateway) In push mode, serve the gateway inventory inline in the ADS-pushed config instead of from a mounted file, so inventory changes propagate immediately over ADS rather than being read out of band from the ConfigMap
+- (Feature) (Gateway) Seed the gateway config-push sidecar's initial ADS snapshot from the mounted CDS/LDS ConfigMaps, so a restarted gateway serves the last-known-good local config immediately instead of waiting for the operator to push
 - (Feature) (Gateway) Deliver the dynamic gateway config via ADS push from the operator (sidecar-served, SuperUser-authenticated) by default, gated behind the gateway-config-push feature; disabling the feature falls back to the mounted ConfigMap
 - (Bugfix) (Gateway) Advertise WebSocket-over-HTTP/2 (Extended CONNECT) only for destinations with an HTTP/2 upstream and enable it on that upstream cluster; HTTP/1 upstreams keep the classic WebSocket upgrade
 - (Feature) (Platform) Add spec.hibernate on ArangoPlatformService and ArangoPlatformWorkflow to inject the hibernated flag into the chart values

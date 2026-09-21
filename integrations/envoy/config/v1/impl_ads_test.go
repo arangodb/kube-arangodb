@@ -42,7 +42,7 @@ import (
 // the real ADS server, connects a client, then measures the time from SetSnapshot to the client receiving
 // the update.
 func Test_XDS_FastReload(t *testing.T) {
-	h, err := New()
+	h, err := New("", "", "")
 	require.NoError(t, err)
 	i := h.(*impl)
 
@@ -66,13 +66,13 @@ func Test_XDS_FastReload(t *testing.T) {
 
 	node := &pbEnvoyCoreV3.Node{Id: "gtw-1"}
 
-	// Subscribe to CDS and receive the initial (mock) snapshot.
+	// Subscribe to CDS and receive the initial (empty) snapshot.
 	require.NoError(t, stream.Send(&discoveryservice.DiscoveryRequest{Node: node, TypeUrl: resourcev3.ClusterType}))
 
 	resp1, err := stream.Recv()
 	require.NoError(t, err)
-	require.Equal(t, "mock-1", resp1.GetVersionInfo())
-	require.Len(t, resp1.GetResources(), 1)
+	require.Equal(t, "empty", resp1.GetVersionInfo())
+	require.Empty(t, resp1.GetResources())
 
 	// ACK the initial snapshot so the server will push the next version.
 	require.NoError(t, stream.Send(&discoveryservice.DiscoveryRequest{
