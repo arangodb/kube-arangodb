@@ -22,10 +22,12 @@ package integrations
 
 import (
 	"context"
+	"path"
 
 	"github.com/spf13/cobra"
 
 	pbImplEnvoyConfigV1 "github.com/arangodb/kube-arangodb/integrations/envoy/config/v1"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
@@ -43,7 +45,13 @@ func (a *envoyConfigV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error {
 }
 
 func (a *envoyConfigV1) Handler(ctx context.Context, cmd *cobra.Command) (svc.Handler, error) {
-	return pbImplEnvoyConfigV1.New()
+	// Seed the initial ADS snapshot from the gateway CDS/LDS ConfigMap files mounted into the sidecar, so a
+	// restarted gateway serves the last-known-good local config until the operator pushes an update.
+	return pbImplEnvoyConfigV1.New(
+		path.Join(utilConstants.GatewayCDSVolumeMountDir, utilConstants.GatewayConfigFileName),
+		path.Join(utilConstants.GatewayLDSVolumeMountDir, utilConstants.GatewayConfigFileName),
+		path.Join(utilConstants.GatewayCDSVolumeMountDir, utilConstants.GatewayConfigChecksum),
+	)
 }
 
 func (a *envoyConfigV1) Name() string {

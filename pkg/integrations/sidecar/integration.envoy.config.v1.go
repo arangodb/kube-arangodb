@@ -27,6 +27,12 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
+)
+
+const (
+	gatewayPushCDSVolumeName = "gateway-push-cds"
+	gatewayPushLDSVolumeName = "gateway-push-lds"
 )
 
 // IntegrationEnvoyConfigV1 enables the EnvoyConfigV1 (ADS/xDS) integration on the gateway sidecar. When
@@ -37,6 +43,11 @@ type IntegrationEnvoyConfigV1 struct {
 	Core           *Core
 	DeploymentName string
 	Spec           api.DeploymentSpec
+
+	// CDSConfigMapName and LDSConfigMapName are the gateway CDS/LDS ConfigMaps mounted read-only into the
+	// sidecar so it can seed its initial ADS snapshot from the last-known-good local config on startup.
+	CDSConfigMapName string
+	LDSConfigMapName string
 }
 
 func (i IntegrationEnvoyConfigV1) Name() []string {
@@ -76,5 +87,35 @@ func (i IntegrationEnvoyConfigV1) GlobalEnvs() ([]core.EnvVar, error) {
 }
 
 func (i IntegrationEnvoyConfigV1) Volumes() ([]core.Volume, []core.VolumeMount, error) {
-	return nil, nil, nil
+	// Mount the gateway CDS/LDS ConfigMaps read-only so the sidecar can seed its initial ADS snapshot from
+	// the last-known-good local config on startup (matching the paths the sidecar reads).
+	return []core.Volume{
+			{
+				Name: gatewayPushCDSVolumeName,
+				VolumeSource: core.VolumeSource{
+					ConfigMap: &core.ConfigMapVolumeSource{
+						LocalObjectReference: core.LocalObjectReference{Name: i.CDSConfigMapName},
+					},
+				},
+			},
+			{
+				Name: gatewayPushLDSVolumeName,
+				VolumeSource: core.VolumeSource{
+					ConfigMap: &core.ConfigMapVolumeSource{
+						LocalObjectReference: core.LocalObjectReference{Name: i.LDSConfigMapName},
+					},
+				},
+			},
+		}, []core.VolumeMount{
+			{
+				Name:      gatewayPushCDSVolumeName,
+				ReadOnly:  true,
+				MountPath: utilConstants.GatewayCDSVolumeMountDir,
+			},
+			{
+				Name:      gatewayPushLDSVolumeName,
+				ReadOnly:  true,
+				MountPath: utilConstants.GatewayLDSVolumeMountDir,
+			},
+		}, nil
 }

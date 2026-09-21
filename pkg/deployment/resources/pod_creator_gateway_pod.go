@@ -272,10 +272,13 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 	}
 
 	if features.GatewayDynamicModePush(m.Deployment.Gateway) {
-		// Push mode: the sidecar serves the gateway dynamic config to Envoy over ADS.
+		// Push mode: the sidecar serves the gateway dynamic config to Envoy over ADS, seeding its initial
+		// snapshot from the mounted CDS/LDS ConfigMaps so a restart serves the last-known-good local config.
 		enabledIntegrations = append(enabledIntegrations, integrationsSidecar.IntegrationEnvoyConfigV1{
-			DeploymentName: m.context.GetName(),
-			Spec:           m.Deployment,
+			DeploymentName:   m.context.GetName(),
+			Spec:             m.Deployment,
+			CDSConfigMapName: GetGatewayConfigMapName(m.context.GetName(), "cds"),
+			LDSConfigMapName: GetGatewayConfigMapName(m.context.GetName(), "lds"),
 		})
 	}
 
