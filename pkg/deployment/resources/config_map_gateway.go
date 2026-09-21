@@ -137,22 +137,6 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
-	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
-		Type:  util.NewType(gateway.ConfigDestinationTypeFile),
-		Match: util.NewType(gateway.ConfigMatchPath),
-		AuthExtension: &gateway.ConfigAuthZExtension{
-			AuthZExtension: map[string]string{
-				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue,
-				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
-			},
-		},
-		File: gateway.ConfigDestinationFile{
-			File:        path.Join(utilConstants.GatewayVolumeMountDir, utilConstants.InventoryFileName),
-			Code:        200,
-			ContentType: "application/json",
-		},
-	}
-
 	inventory.Arangodb = pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus())
 	inventory.Security = pbInventoryV1.NewInventorySecurity(r.context.GetSpec(), r.context.GetStatus())
 
@@ -168,9 +152,56 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		inventory.Connectors = connectors
 	}
 
+	// The inventory must be fully populated before it is referenced by the inline (Static) destination below.
+	inventoryConfig := gateway.ConfigDestination{
+		Match: util.NewType(gateway.ConfigMatchPath),
+		AuthExtension: &gateway.ConfigAuthZExtension{
+			AuthZExtension: map[string]string{
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue,
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
+			},
+		},
+	}
+
+	if features.GatewayConfigPush().Enabled() {
+		// Push mode: serve the inventory inline so it travels with the ADS-pushed config, instead of a file
+		// that the dynamic loader would read out of band from the separately-synced ConfigMap mount.
+		inventoryConfig.Type = util.NewType(gateway.ConfigDestinationTypeStatic)
+		inventoryConfig.Static = &gateway.ConfigDestinationStatic[*pbInventoryV1.Inventory]{
+			ContentType: "application/json",
+			Code:        util.NewType[uint32](200),
+			Response:    inventory,
+			Marshaller:  ugrpc.Marshal[*pbInventoryV1.Inventory],
+			Options: []util.Mod[protojson.MarshalOptions]{
+				ugrpc.WithUseProtoNames(true),
+				ugrpc.WithEmitDefaultValues(true),
+			},
+		}
+	} else {
+		inventoryConfig.Type = util.NewType(gateway.ConfigDestinationTypeFile)
+		inventoryConfig.File = gateway.ConfigDestinationFile{
+			File:        path.Join(utilConstants.GatewayVolumeMountDir, utilConstants.InventoryFileName),
+			Code:        200,
+			ContentType: "application/json",
+		}
+	}
+
+	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = inventoryConfig
+
 	inventoryPreData, err := ugrpc.Marshal(inventory, ugrpc.WithUseProtoNames(true), ugrpc.WithEmitDefaultValues(true))
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway inventory"))
+	}
+
+	if features.GatewayConfigPush().Enabled() {
+		// Inline (push) mode: the inventory is embedded in the pushed config and rendered below, so its
+		// reported config revision must be set before the render. Use the inventory content hash (the same
+		// value the /_inventory.hash endpoint serves): it is non-circular (independent of the config
+		// checksum, which now covers the inventory) and idempotent for a given state, so it does not churn
+		// across reconcile iterations.
+		inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
+			Hash: util.SHA256(inventoryPreData),
+		}
 	}
 
 	cfg.Destinations[utilConstants.EnvoyInventoryHashConfigDestination] = gateway.ConfigDestination{
@@ -216,8 +247,13 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway sds config"))
 	}
 
-	inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
-		Hash: gatewayCfgYamlChecksum,
+	if !features.GatewayConfigPush().Enabled() {
+		// ConfigMap mode: the inventory is served from the mounted file (rendered after the config), so its
+		// reported revision is the config checksum - which the gateway readiness check compares against
+		// GatewayConfigChecksum. In push mode this was already set (inline) before the render.
+		inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
+			Hash: gatewayCfgYamlChecksum,
+		}
 	}
 
 	inventoryData, err := ugrpc.Marshal(inventory, ugrpc.WithUseProtoNames(true), ugrpc.WithEmitDefaultValues(true))
