@@ -68,6 +68,9 @@ const (
 	// ActionCompactMemberDefaultTimeout define default timeout for action ActionCompactMember
 	ActionCompactMemberDefaultTimeout time.Duration = 28800 * time.Second // 8h0m0s
 
+	// ActionDehibernateMemberDefaultTimeout define default timeout for action ActionDehibernateMember
+	ActionDehibernateMemberDefaultTimeout time.Duration = 900 * time.Second // 15m0s
+
 	// ActionDelayDefaultTimeout define default timeout for action ActionDelay
 	ActionDelayDefaultTimeout time.Duration = ActionsDefaultTimeout
 
@@ -109,6 +112,9 @@ const (
 
 	// ActionGatewayConfigPushDefaultTimeout define default timeout for action ActionGatewayConfigPush
 	ActionGatewayConfigPushDefaultTimeout time.Duration = ActionsDefaultTimeout
+
+	// ActionHibernateMemberDefaultTimeout define default timeout for action ActionHibernateMember
+	ActionHibernateMemberDefaultTimeout time.Duration = 1800 * time.Second // 30m0s
 
 	// ActionIdleDefaultTimeout define default timeout for action ActionIdle
 	ActionIdleDefaultTimeout time.Duration = ActionsDefaultTimeout
@@ -340,6 +346,9 @@ const (
 	// ActionTypeCompactMember in scopes Normal. Runs the Compact API on the Member
 	ActionTypeCompactMember ActionType = "CompactMember"
 
+	// ActionTypeDehibernateMember in scopes Normal. Wake a hibernated member up by triggering its recreation
+	ActionTypeDehibernateMember ActionType = "DehibernateMember"
+
 	// ActionTypeDelay in scopes High and Normal. Define delay operation
 	ActionTypeDelay ActionType = "Delay"
 
@@ -385,6 +394,9 @@ const (
 
 	// ActionTypeGatewayConfigPush in scopes High. Push the gateway dynamic config to a gateway member sidecar over ADS when running in push mode
 	ActionTypeGatewayConfigPush ActionType = "GatewayConfigPush"
+
+	// ActionTypeHibernateMember in scopes Normal. Shut the member down and park it in the Hibernated phase as part of deployment hibernation
+	ActionTypeHibernateMember ActionType = "HibernateMember"
 
 	// ActionTypeIdle in scopes Normal. Define idle operation in case if preconditions are not meet
 	ActionTypeIdle ActionType = "Idle"
@@ -609,6 +621,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionClusterMemberCleanupDefaultTimeout
 	case ActionTypeCompactMember:
 		return ActionCompactMemberDefaultTimeout
+	case ActionTypeDehibernateMember:
+		return ActionDehibernateMemberDefaultTimeout
 	case ActionTypeDelay:
 		return ActionDelayDefaultTimeout
 	case ActionTypeDisableClusterScaling:
@@ -637,6 +651,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionEnforceResignLeadershipDefaultTimeout
 	case ActionTypeGatewayConfigPush:
 		return ActionGatewayConfigPushDefaultTimeout
+	case ActionTypeHibernateMember:
+		return ActionHibernateMemberDefaultTimeout
 	case ActionTypeIdle:
 		return ActionIdleDefaultTimeout
 	case ActionTypeJWTAdd:
@@ -797,6 +813,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeCompactMember:
 		return ActionPriorityNormal
+	case ActionTypeDehibernateMember:
+		return ActionPriorityNormal
 	case ActionTypeDelay:
 		return ActionPriorityHigh
 	case ActionTypeDisableClusterScaling:
@@ -825,6 +843,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeGatewayConfigPush:
 		return ActionPriorityHigh
+	case ActionTypeHibernateMember:
+		return ActionPriorityNormal
 	case ActionTypeIdle:
 		return ActionPriorityNormal
 	case ActionTypeJWTAdd:
@@ -1021,6 +1041,8 @@ func (a ActionType) Optional() bool {
 		return false
 	case ActionTypeCompactMember:
 		return false
+	case ActionTypeDehibernateMember:
+		return false
 	case ActionTypeDelay:
 		return true
 	case ActionTypeDisableClusterScaling:
@@ -1048,6 +1070,8 @@ func (a ActionType) Optional() bool {
 	case ActionTypeEnforceResignLeadership:
 		return true
 	case ActionTypeGatewayConfigPush:
+		return false
+	case ActionTypeHibernateMember:
 		return false
 	case ActionTypeIdle:
 		return false

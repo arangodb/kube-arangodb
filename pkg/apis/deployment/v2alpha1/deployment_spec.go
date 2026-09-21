@@ -97,6 +97,13 @@ type DeploymentSpec struct {
 	// +doc/default: false
 	DisableIPv6 *bool `json:"disableIPv6,omitempty"`
 
+	// Hibernate, when set to true, requests the whole deployment to be hibernated: maintenance mode is
+	// enabled, all members are shut down group by group into the Hibernated phase (keeping their volumes),
+	// and the deployment's platform Services & Workflows are forced into their hibernated form.
+	// Set back to false to wake the deployment up again.
+	// +doc/default: false
+	Hibernate *bool `json:"hibernate,omitempty"`
+
 	// Upgrade allows to configure upgrade-related options
 	Upgrade *DeploymentUpgradeSpec `json:"upgrade,omitempty"`
 
@@ -356,6 +363,11 @@ func (s DeploymentSpec) IsDisableIPv6() bool {
 	return util.TypeOrDefault[bool](s.DisableIPv6)
 }
 
+// IsHibernate returns the value of hibernate, default false.
+func (s DeploymentSpec) IsHibernate() bool {
+	return util.TypeOrDefault[bool](s.Hibernate)
+}
+
 // IsNetworkAttachedVolumes returns the value of networkAttachedVolumes, default false
 func (s DeploymentSpec) IsNetworkAttachedVolumes() bool {
 	return util.TypeOrDefault[bool](s.NetworkAttachedVolumes, true)
@@ -485,6 +497,9 @@ func (s *DeploymentSpec) SetDefaultsFrom(source DeploymentSpec) {
 	}
 	if s.DisableIPv6 == nil {
 		s.DisableIPv6 = util.NewTypeOrNil[bool](source.DisableIPv6)
+	}
+	if s.Hibernate == nil {
+		s.Hibernate = util.NewTypeOrNil[bool](source.Hibernate)
 	}
 
 	if s.AllowUnsafeUpgrade == nil {

@@ -8,6 +8,7 @@
 - (Feature) (Chart) Add a seaweedfs storage mode to the arango-deployment chart that starts a single-pod SeaweedFS and backs an S3 ArangoPlatformStorage with it
 - (Bugfix) Register the ArangoPlatformWorkflow GVR so the debug package can collect it instead of panicking during state dumps
 - (Feature) (Platform) Reflect the requested hibernation state on a Hibernated status condition of ArangoPlatformService and ArangoPlatformWorkflow
+- (Feature) Add spec.hibernate to ArangoDeployment: enable maintenance mode, shut all members down group by group into a new Hibernated member phase (keeping volumes), and force the deployment's platform Services & Workflows into their hibernated form; clearing it wakes the deployment back up
 - (Feature) (Gateway) In push mode, serve the gateway inventory inline in the ADS-pushed config instead of from a mounted file, so inventory changes propagate immediately over ADS rather than being read out of band from the ConfigMap
 - (Feature) (Gateway) Seed the gateway config-push sidecar's initial ADS snapshot from the mounted CDS/LDS ConfigMaps, so a restarted gateway serves the last-known-good local config immediately instead of waiting for the operator to push
 - (Feature) Inject the Pod UID as the MY_POD_UID lifecycle env into ArangoDB and sidecar containers (allowlisted in the rotation compare so adding it does not trigger a member rotation) and tag the collector startup event with podUID and nodeName dimensions

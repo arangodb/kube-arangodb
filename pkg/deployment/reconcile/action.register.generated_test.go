@@ -170,6 +170,16 @@ func Test_Actions(t *testing.T) {
 		})
 	})
 
+	t.Run("DehibernateMember", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeDehibernateMember)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeDehibernateMember.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeDehibernateMember.Optional())
+		})
+	})
+
 	t.Run("Delay", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeDelay)
 		t.Run("Internal", func(t *testing.T) {
@@ -313,6 +323,16 @@ func Test_Actions(t *testing.T) {
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeGatewayConfigPush.Optional())
+		})
+	})
+
+	t.Run("HibernateMember", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeHibernateMember)
+		t.Run("Internal", func(t *testing.T) {
+			require.False(t, api.ActionTypeHibernateMember.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeHibernateMember.Optional())
 		})
 	})
 

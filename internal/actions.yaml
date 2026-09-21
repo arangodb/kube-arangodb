@@ -64,6 +64,12 @@ actions:
   RotateStopMember:
     description: Finalize member rotation. After this action member is started back
     timeout: 15m
+  HibernateMember:
+    description: Shut the member down and park it in the Hibernated phase as part of deployment hibernation
+    timeout: 30m
+  DehibernateMember:
+    description: Wake a hibernated member up by triggering its recreation
+    timeout: 15m
   UpgradeMember:
     description: Run the Upgrade procedure on member
     timeout: 6h
