@@ -162,6 +162,7 @@ func GetLifecycleEnv() []core.EnvVar {
 	return []core.EnvVar{
 		CreateEnvFieldPath(utilConstants.EnvOperatorPodName, "metadata.name"),
 		CreateEnvFieldPath(utilConstants.EnvOperatorPodNamespace, "metadata.namespace"),
+		CreateEnvFieldPath(utilConstants.EnvOperatorPodUID, "metadata.uid"),
 		CreateEnvFieldPath(utilConstants.EnvOperatorNodeName, "spec.nodeName"),
 		CreateEnvFieldPath(utilConstants.EnvOperatorNodeNameArango, "spec.nodeName"),
 	}

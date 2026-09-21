@@ -27,6 +27,7 @@ const (
 	EnvOperatorNodeNameArango = "NODE_NAME"
 	EnvOperatorPodName        = "MY_POD_NAME"
 	EnvOperatorPodNamespace   = "MY_POD_NAMESPACE"
+	EnvOperatorPodUID         = "MY_POD_UID"
 	EnvOperatorCoreContainer  = "MY_POD_CORE_CONTAINER"
 	EnvOperatorPodIP          = "MY_POD_IP"
 
