@@ -1,0 +1,72 @@
+{{- if eq .Values.storage.mode "seaweedfs" }}
+{{- $sw := .Values.storage.seaweedfs }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-seaweedfs" .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: seaweedfs
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: seaweedfs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/name: seaweedfs
+    spec:
+      {{- with $sw.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with $sw.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with $sw.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      containers:
+        - name: seaweedfs
+          image: {{ $sw.image | quote }}
+          imagePullPolicy: {{ $sw.imagePullPolicy }}
+          # `weed server` runs master + volume + filer in one process; `-s3` adds the S3 gateway.
+          command:
+            - weed
+            - server
+            - -dir=/data
+            - -ip.bind=0.0.0.0
+            - -master.volumeSizeLimitMB=1024
+            - -volume.max=0
+            - -s3
+            - -s3.port=8333
+            - -s3.config=/etc/seaweedfs/s3.json
+          ports:
+            - containerPort: 8333
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: s3-config
+              mountPath: /etc/seaweedfs
+              readOnly: true
+          {{- with $sw.resources }}
+          resources:
+{{ toYaml . | indent 12 }}
+          {{- end }}
+      volumes:
+        - name: s3-config
+          secret:
+            secretName: {{ printf "%s-seaweedfs-config" .Release.Name | quote }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-seaweedfs" .Release.Name | quote }}
+{{- end }}

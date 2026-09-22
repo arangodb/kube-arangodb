@@ -831,7 +831,8 @@
             "s3",
             "gcs",
             "azureBlobStorage",
-            "minio"
+            "minio",
+            "seaweedfs"
           ]
         },
         "bucketName": {

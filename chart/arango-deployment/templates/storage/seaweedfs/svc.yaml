@@ -1,0 +1,18 @@
+{{- if eq .Values.storage.mode "seaweedfs" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-seaweedfs" .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: seaweedfs
+spec:
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: seaweedfs
+  ports:
+    - port: 8333
+      targetPort: 8333
+{{- end }}
