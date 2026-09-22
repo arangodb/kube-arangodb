@@ -151,7 +151,24 @@ func (h *handler) Timeout() time.Duration {
 }
 
 func (h *handler) handle(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformService, status *platformApi.ArangoPlatformServiceStatus) (bool, error) {
-	return operator.HandleP3WithCondition(ctx, &status.Conditions, platformApi.ReadyCondition, item, extension, status, h.HandleSpecValidity, h.HandleDeployment)
+	changed, err := operator.HandleP3WithCondition(ctx, &status.Conditions, platformApi.ReadyCondition, item, extension, status, h.HandleSpecValidity, h.HandleDeployment)
+
+	// Reflect the requested hibernation state after the reconcile chain has updated the release.
+	if updateHibernatedCondition(&status.Conditions, extension.Spec.IsHibernated()) {
+		changed = true
+	}
+
+	return changed, err
+}
+
+// updateHibernatedCondition reflects the requested hibernation state on the Hibernated status condition.
+func updateHibernatedCondition(conditions *api.ConditionList, hibernated bool) bool {
+	reason, message := "Running", "Hibernation not requested"
+	if hibernated {
+		reason, message = "Hibernated", "Hibernation requested"
+	}
+
+	return conditions.Update(platformApi.HibernatedCondition, hibernated, reason, message)
 }
 
 func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformService, status *platformApi.ArangoPlatformServiceStatus) (bool, error) {
