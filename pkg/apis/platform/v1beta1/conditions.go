@@ -29,5 +29,6 @@ const (
 	SpecValidCondition       api.ConditionType = "SpecValid"
 	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
 	DiscoveredCondition      api.ConditionType = "Discovered"
+	HibernatedCondition      api.ConditionType = "Hibernated"
 	ReadyCondition           api.ConditionType = "Ready"
 )
