@@ -128,9 +128,11 @@ deployment. Leave `storage.mode` empty to skip it. Templates live under
 | `gcs` | Google Cloud Storage (`storage.gcs.projectID`) | `gcs.credentials: secret` → reference `gcs.credentialsSecret`; `gcs.credentials: json` → inline `gcs.serviceAccount` (chart creates `<release>-gcs-credentials`) |
 | `azureBlobStorage` | Azure Blob Storage (`tenantID`/`accountName`) | reference `credentialsSecret`, or provide `clientId`/`clientSecret` inline (chart creates `<release>-azure-credentials`) |
 | `minio` | In-cluster MinIO deployed by the chart | chart-managed; an `s3` backend points at `http://<release>-minio.<ns>.svc:9000` |
+| `seaweedfs` | In-cluster single-pod [SeaweedFS](https://github.com/seaweedfs/seaweedfs) deployed by the chart | chart-managed; an `s3` backend points at `http://<release>-seaweedfs.<ns>.svc:8333` |
 
-`storage.bucketName` / `storage.bucketPath` are shared by all backends. The `minio` mode also creates
-a Deployment, Service and PVC (`storage.minio.storage.{class,size}`) plus its credentials.
+`storage.bucketName` / `storage.bucketPath` are shared by all backends. The `minio` and `seaweedfs`
+modes also create a Deployment, Service and PVC (`storage.<backend>.storage.{class,size}`) plus their
+credentials (generated on first install, reused on upgrade).
 
 ### Providing credentials
 
@@ -149,6 +151,8 @@ helm install my-db . --set storage.mode=azureBlobStorage --set storage.azureBlob
   --set storage.azureBlobStorage.accountName=a --set storage.azureBlobStorage.clientId=... --set storage.azureBlobStorage.clientSecret=...
 # MinIO (optional; defaults to minioadmin + a generated password reused on upgrade)
 helm install my-db . --set storage.mode=minio --set storage.minio.rootUser=admin --set storage.minio.rootPassword=...
+# SeaweedFS (optional; defaults to seaweedfsadmin + a generated password reused on upgrade)
+helm install my-db . --set storage.mode=seaweedfs --set storage.seaweedfs.accessKey=admin --set storage.seaweedfs.secretKey=...
 ```
 
 ## Generated resources
@@ -165,3 +169,4 @@ use predefined names and are reused on upgrade (never rotated):
 | License secret | `license.secretName` | `license.secretName` set **and** `license.value` (or `clientID`+`clientSecret`) provided |
 | Storage credentials | `<release>-s3-credentials` / `<release>-gcs-credentials` / `<release>-azure-credentials` | inline credentials provided for the matching `storage.mode` |
 | MinIO | `<release>-minio` (Deployment/Service/PVC) + `<release>-minio-root` / `<release>-minio-credentials` | `storage.mode: minio` |
+| SeaweedFS | `<release>-seaweedfs` (Deployment/Service/PVC) + `<release>-seaweedfs-config` / `<release>-seaweedfs-credentials` | `storage.mode: seaweedfs` |
