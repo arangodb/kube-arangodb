@@ -1,0 +1,41 @@
+FOR m IN @members
+    LET latest = FIRST(
+        FOR e IN _events
+            FILTER e.serviceId == "collector" AND e.type == "startup" AND e.dimensions.serverID == m.id
+            SORT e.created DESC
+            LIMIT 1
+            RETURN e
+    )
+    // serverID is never emitted raw - it is hashed so the License Manager inventory does not carry the
+    // cluster member id.
+    LET base = {
+        "serverID": SHA256(m.id),
+        "role": m.role
+    }
+    LET items = latest == null
+        ? [
+            {
+                "type": "ARANGO_MEMBER_STARTUP",
+                "dimensions": MERGE(base, {"detail": "present"}),
+                "value": {
+                    "bool": true
+                }
+            }
+        ]
+        : (
+            LET common = MERGE(base, {
+                "nodeName": latest.dimensions.nodeName == null ? "" : SHA256(latest.dimensions.nodeName),
+                "podUID": NOT_NULL(latest.dimensions.podUID, ""),
+                "bootID": NOT_NULL(latest.dimensions.bootID, "")
+            })
+            FOR attr IN ATTRIBUTES(latest.body)
+                RETURN {
+                    "type": "ARANGO_MEMBER_STARTUP",
+                    "dimensions": MERGE(common, {"detail": attr}),
+                    "value": {
+                        "dec": latest.body[attr]
+                    }
+                }
+        )
+    FOR item IN items
+        RETURN item

@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) Tag collector startup events with the arangod serverID/role and add a License Manager inventory fetcher that enumerates DBServers and Coordinators (or the single server) via cluster health and reports each member's latest startup values as ARANGO_MEMBER_STARTUP items with the serverID and nodeName SHA256-hashed and the podUID/bootID as dimensions (members present in health without a startup event still yield a marker item); skipped when the _events collection is absent
 - (Feature) Emit the arangod data volume (/data) total and available size as collector startup event metrics (data_storage / data_storage_available)
 - (Feature) (Chart) Add a seaweedfs storage mode to the arango-deployment chart that starts a single-pod SeaweedFS and backs an S3 ArangoPlatformStorage with it
 - (Bugfix) Register the ArangoPlatformWorkflow GVR so the debug package can collect it instead of panicking during state dumps

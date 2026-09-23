@@ -67,6 +67,15 @@ func emit(ctx context.Context, opts Options, event *pbEventsV1.Event) error {
 		return errors.Wrapf(err, "unable to connect to arangodb at %s", opts.Endpoint)
 	}
 
+	// Best-effort: tag the event with the arangod server identity so the inventory can join startup
+	// events to cluster members. Single servers may not expose a server id; that is fine.
+	if id, err := c.ServerID(ctx); err == nil && id != "" {
+		event.Dimensions[dimensionServerID] = id
+	}
+	if role, err := c.ServerRole(ctx); err == nil && role != "" {
+		event.Dimensions[dimensionRole] = string(role)
+	}
+
 	clientObj := cache.NewObject[adbDriverV2.Client](func(ctx context.Context) (adbDriverV2.Client, time.Duration, error) {
 		return c, time.Hour, nil
 	})

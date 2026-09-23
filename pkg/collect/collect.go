@@ -64,6 +64,13 @@ const (
 	// dimensionNodeName is the event dimension carrying the name of the Node the collector runs on. It
 	// is sourced from the MY_NODE_NAME lifecycle env and omitted when that env is not set.
 	dimensionNodeName = "nodeName"
+
+	// dimensionServerID and dimensionRole carry the arangod server identity of the member the collector
+	// runs in. They let the inventory join startup events to cluster members (see the member.startup
+	// inventory fetcher). They are set only when emitting to an ArangoDB endpoint and the identity is
+	// resolvable.
+	dimensionServerID = "serverID"
+	dimensionRole     = "role"
 )
 
 const (
