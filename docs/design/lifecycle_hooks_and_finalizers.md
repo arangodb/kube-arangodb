@@ -64,7 +64,8 @@ These variables are allow-listed in the Pod rotation comparison, so adding one t
 members updates the Pod in place without triggering a member rotation.
 
 The postStart collector also emits the container requests/limits as `cpu_requests` / `cpu_limits`
-(millicores) and `memory_requests` / `memory_limits` (MiB) event body metrics.
+(millicores) and `memory_requests` / `memory_limits` (MiB) event body metrics, plus the arangod data
+volume (`/data`) total and free size as `data_storage` / `data_storage_available` (GB).
 
 ## Finalizers
 
