@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Emit the arangod data volume (/data) total and available size as collector startup event metrics (data_storage / data_storage_available)
 - (Feature) (Chart) Add a seaweedfs storage mode to the arango-deployment chart that starts a single-pod SeaweedFS and backs an S3 ArangoPlatformStorage with it
 - (Bugfix) Register the ArangoPlatformWorkflow GVR so the debug package can collect it instead of panicking during state dumps
 - (Feature) (Platform) Reflect the requested hibernation state on a Hibernated status condition of ArangoPlatformService and ArangoPlatformWorkflow

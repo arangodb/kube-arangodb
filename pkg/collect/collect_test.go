@@ -165,6 +165,20 @@ func TestResourceRequestsLimitsCollector_Unset(t *testing.T) {
 	require.Empty(t, out.Collect(), "no resource metrics when the envs are unset")
 }
 
+func TestDataStorage(t *testing.T) {
+	// An existing directory reports a positive total size.
+	total, available, exists, err := dataStorage(t.TempDir())
+	require.NoError(t, err)
+	require.True(t, exists)
+	require.Greater(t, total, uint64(0))
+	require.LessOrEqual(t, available, total)
+
+	// A missing path is skipped (exists=false), not an error.
+	_, _, exists, err = dataStorage("/this/path/does/not/exist")
+	require.NoError(t, err)
+	require.False(t, exists)
+}
+
 func TestTotalMemory(t *testing.T) {
 	mem, err := totalMemory()
 	require.NoError(t, err)
