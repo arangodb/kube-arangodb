@@ -42,6 +42,7 @@ cluster JWT); on the gateway it is printed to stdout.
 Every emitted event carries the following dimensions so a boot can be correlated to a concrete Pod:
 - `bootID`: a unique identifier stable for the lifetime of the process boot
 - `podUID`: the UID of the `Pod`, sourced from the `MY_POD_UID` lifecycle environment variable
+- `nodeName`: the node the `Pod` runs on, sourced from the `MY_NODE_NAME` lifecycle environment variable
   (omitted when the variable is not injected)
 
 ## Lifecycle environment variables

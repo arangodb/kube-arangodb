@@ -60,6 +60,10 @@ const (
 	// dimensionPodUID is the event dimension carrying the UID of the Pod the collector runs in. It is
 	// sourced from the MY_POD_UID lifecycle env and omitted when that env is not set.
 	dimensionPodUID = "podUID"
+
+	// dimensionNodeName is the event dimension carrying the name of the Node the collector runs on. It
+	// is sourced from the MY_NODE_NAME lifecycle env and omitted when that env is not set.
+	dimensionNodeName = "nodeName"
 )
 
 const (
@@ -135,6 +139,10 @@ func run(ctx context.Context, opts Options) error {
 	// empty when the env is not injected (e.g. running outside a managed Pod).
 	podUID := os.Getenv(utilConstants.EnvOperatorPodUID)
 
+	// nodeName is the Node the collector runs on, sourced from the MY_NODE_NAME lifecycle env; empty
+	// when the env is not injected.
+	nodeName := os.Getenv(utilConstants.EnvOperatorNodeName)
+
 	logger.Str("bootID", bootID).Info("Starting arangodb-operator collector (%s), version %s build %s",
 		version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
@@ -142,7 +150,7 @@ func run(ctx context.Context, opts Options) error {
 	defer t.Stop()
 
 	for {
-		if err := collect(ctx, opts, bootID, podUID, created); err != nil {
+		if err := collect(ctx, opts, bootID, podUID, nodeName, created); err != nil {
 			logger.Err(err).Str("bootID", bootID).Warn("Collector cycle failed, will retry")
 		} else {
 			logger.Str("bootID", bootID).Info("Collector finished")
@@ -163,13 +171,13 @@ func run(ctx context.Context, opts Options) error {
 // a single startup event whose body is the collected metrics. The event is tagged with the boot id
 // and the start timestamp so it can be correlated to a single pod boot. It is emitted to the events
 // integration when an endpoint is configured, otherwise printed to stdout.
-func collect(ctx context.Context, opts Options, bootID, podUID string, created time.Time) error {
+func collect(ctx context.Context, opts Options, bootID, podUID, nodeName string, created time.Time) error {
 	metrics, err := GetCollector().Collect()
 	if err != nil {
 		return err
 	}
 
-	event := buildEvent(metrics, bootID, podUID, created)
+	event := buildEvent(metrics, bootID, podUID, nodeName, created)
 
 	if opts.Endpoint != "" {
 		if err := emit(ctx, opts, event); err != nil {
@@ -184,8 +192,9 @@ func collect(ctx context.Context, opts Options, bootID, podUID string, created t
 }
 
 // buildEvent assembles the startup event from the collected metrics, tagging it with the boot id and
-// the start timestamp. The Pod UID dimension is added only when a non-empty podUID is provided.
-func buildEvent(metrics []Metric, bootID, podUID string, created time.Time) *pbEventsV1.Event {
+// the start timestamp. The Pod UID and Node name dimensions are added only when non-empty values are
+// provided.
+func buildEvent(metrics []Metric, bootID, podUID, nodeName string, created time.Time) *pbEventsV1.Event {
 	body := make(map[string]float32, len(metrics))
 	for _, m := range metrics {
 		body[m.K] = m.V
@@ -196,6 +205,9 @@ func buildEvent(metrics []Metric, bootID, podUID string, created time.Time) *pbE
 	}
 	if podUID != "" {
 		dimensions[dimensionPodUID] = podUID
+	}
+	if nodeName != "" {
+		dimensions[dimensionNodeName] = nodeName
 	}
 
 	return &pbEventsV1.Event{
