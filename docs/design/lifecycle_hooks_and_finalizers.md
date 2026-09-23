@@ -53,9 +53,18 @@ containers so the running processes and lifecycle hooks can identify themselves:
 - `MY_POD_NAMESPACE`: the `Pod` namespace (`metadata.namespace`)
 - `MY_POD_UID`: the `Pod` UID (`metadata.uid`)
 - `MY_NODE_NAME` / `NODE_NAME`: the node the `Pod` is scheduled on (`spec.nodeName`)
+- `MY_CPU_REQUESTS` / `MY_CPU_LIMITS`: the container CPU request/limit in millicores (`resourceFieldRef`)
+- `MY_MEMORY_REQUESTS` / `MY_MEMORY_LIMITS`: the container memory request/limit in MiB (`resourceFieldRef`)
+
+The resource variables reflect the container the env is injected into. Note the downward-API behaviour:
+when a request or limit is not set on the container, the value falls back to the node's allocatable
+capacity rather than being empty.
 
 These variables are allow-listed in the Pod rotation comparison, so adding one to already-running
 members updates the Pod in place without triggering a member rotation.
+
+The postStart collector also emits the container requests/limits as `cpu_requests` / `cpu_limits`
+(millicores) and `memory_requests` / `memory_limits` (MiB) event body metrics.
 
 ## Finalizers
 

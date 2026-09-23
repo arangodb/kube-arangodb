@@ -676,6 +676,21 @@ func CreateEnvFieldPath(name, fieldPath string) core.EnvVar {
 	}
 }
 
+// CreateEnvFieldResource exposes a container resource request/limit (e.g. requests.cpu, limits.memory)
+// as an env var via the downward API. The divisor selects the reported unit (e.g. 1m for CPU millicores,
+// 1Mi for memory MiB). containerName is left empty so it resolves to the container the env is defined in.
+func CreateEnvFieldResource(name, resourceName, divisor string) core.EnvVar {
+	return core.EnvVar{
+		Name: name,
+		ValueFrom: &core.EnvVarSource{
+			ResourceFieldRef: &core.ResourceFieldSelector{
+				Resource: resourceName,
+				Divisor:  resource.MustParse(divisor),
+			},
+		},
+	}
+}
+
 func CreateEnvSecretKeySelector(name, SecretKeyName, secretKey string) core.EnvVar {
 	return core.EnvVar{
 		Name:  name,

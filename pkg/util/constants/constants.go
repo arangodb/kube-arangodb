@@ -31,6 +31,11 @@ const (
 	EnvOperatorCoreContainer  = "MY_POD_CORE_CONTAINER"
 	EnvOperatorPodIP          = "MY_POD_IP"
 
+	EnvOperatorCPURequests    = "MY_CPU_REQUESTS"    // Container CPU request in millicores (downward API)
+	EnvOperatorCPULimits      = "MY_CPU_LIMITS"      // Container CPU limit in millicores (downward API)
+	EnvOperatorMemoryRequests = "MY_MEMORY_REQUESTS" // Container memory request in MiB (downward API)
+	EnvOperatorMemoryLimits   = "MY_MEMORY_LIMITS"   // Container memory limit in MiB (downward API)
+
 	EnvOperatorNodeNameEnv       util.EnvironmentVariable = EnvOperatorNodeName
 	EnvOperatorNodeNameArangoEnv util.EnvironmentVariable = EnvOperatorNodeNameArango
 	EnvOperatorPodNameEnv        util.EnvironmentVariable = EnvOperatorPodName

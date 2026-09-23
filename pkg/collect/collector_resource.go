@@ -27,6 +27,7 @@ import (
 	goStrings "strings"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -39,10 +40,49 @@ const (
 
 	// bytesPerGB is the number of bytes in one gigabyte.
 	bytesPerGB = 1024 * 1024 * 1024
+
+	// Container resource requests/limits, sourced from the downward-API lifecycle envs. CPU is reported
+	// in millicores, memory in MiB. Note: when a request/limit is not set on the container, the downward
+	// API reports the node's allocatable value rather than 0.
+	metricCPURequests    = "cpu_requests"
+	metricCPULimits      = "cpu_limits"
+	metricMemoryRequests = "memory_requests"
+	metricMemoryLimits   = "memory_limits"
 )
 
 func init() {
 	GetCollector().Register(resourceCollector{})
+	GetCollector().Register(resourceRequestsLimitsCollector{})
+}
+
+// resourceRequestsLimitsCollector pushes the container's CPU/memory requests and limits (from the
+// downward-API lifecycle envs) as event body metrics. CPU is in millicores, memory in MiB. Envs that
+// are not set are skipped.
+type resourceRequestsLimitsCollector struct{}
+
+func (resourceRequestsLimitsCollector) CollectEvents(out util.Pusher[Metric]) error {
+	envToMetric := []struct{ env, metric string }{
+		{utilConstants.EnvOperatorCPURequests, metricCPURequests},
+		{utilConstants.EnvOperatorCPULimits, metricCPULimits},
+		{utilConstants.EnvOperatorMemoryRequests, metricMemoryRequests},
+		{utilConstants.EnvOperatorMemoryLimits, metricMemoryLimits},
+	}
+
+	for _, e := range envToMetric {
+		v := os.Getenv(e.env)
+		if v == "" {
+			continue
+		}
+
+		f, err := strconv.ParseFloat(v, 32)
+		if err != nil {
+			return errors.Wrapf(err, "unable to parse %s=%q", e.env, v)
+		}
+
+		out.Push(Metric{K: e.metric, V: float32(f)})
+	}
+
+	return nil
 }
 
 // resourceCollector pushes the available CPU and memory as event body metrics.

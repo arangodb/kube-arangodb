@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 // fakeCollector is a test ECollector pushing a fixed set of metrics, or returning an error.
@@ -128,6 +129,40 @@ func TestResourceCollector(t *testing.T) {
 
 	require.Equal(t, float32(runtime.NumCPU()), values[metricCPU])
 	require.Greater(t, values[metricMemory], float32(0))
+}
+
+func TestResourceRequestsLimitsCollector(t *testing.T) {
+	t.Setenv(utilConstants.EnvOperatorCPURequests, "250")
+	t.Setenv(utilConstants.EnvOperatorCPULimits, "1000")
+	t.Setenv(utilConstants.EnvOperatorMemoryRequests, "256")
+	t.Setenv(utilConstants.EnvOperatorMemoryLimits, "512")
+
+	out := util.NewCollector[Metric]()
+	require.NoError(t, resourceRequestsLimitsCollector{}.CollectEvents(out))
+	require.NoError(t, out.Done())
+
+	values := map[string]float32{}
+	for _, m := range out.Collect() {
+		values[m.K] = m.V
+	}
+
+	require.Equal(t, float32(250), values[metricCPURequests])
+	require.Equal(t, float32(1000), values[metricCPULimits])
+	require.Equal(t, float32(256), values[metricMemoryRequests])
+	require.Equal(t, float32(512), values[metricMemoryLimits])
+}
+
+func TestResourceRequestsLimitsCollector_Unset(t *testing.T) {
+	t.Setenv(utilConstants.EnvOperatorCPURequests, "")
+	t.Setenv(utilConstants.EnvOperatorCPULimits, "")
+	t.Setenv(utilConstants.EnvOperatorMemoryRequests, "")
+	t.Setenv(utilConstants.EnvOperatorMemoryLimits, "")
+
+	out := util.NewCollector[Metric]()
+	require.NoError(t, resourceRequestsLimitsCollector{}.CollectEvents(out))
+	require.NoError(t, out.Done())
+
+	require.Empty(t, out.Collect(), "no resource metrics when the envs are unset")
 }
 
 func TestTotalMemory(t *testing.T) {

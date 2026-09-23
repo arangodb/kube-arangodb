@@ -165,6 +165,10 @@ func GetLifecycleEnv() []core.EnvVar {
 		CreateEnvFieldPath(utilConstants.EnvOperatorPodUID, "metadata.uid"),
 		CreateEnvFieldPath(utilConstants.EnvOperatorNodeName, "spec.nodeName"),
 		CreateEnvFieldPath(utilConstants.EnvOperatorNodeNameArango, "spec.nodeName"),
+		CreateEnvFieldResource(utilConstants.EnvOperatorCPURequests, "requests.cpu", "1m"),
+		CreateEnvFieldResource(utilConstants.EnvOperatorCPULimits, "limits.cpu", "1m"),
+		CreateEnvFieldResource(utilConstants.EnvOperatorMemoryRequests, "requests.memory", "1Mi"),
+		CreateEnvFieldResource(utilConstants.EnvOperatorMemoryLimits, "limits.memory", "1Mi"),
 	}
 }
 
