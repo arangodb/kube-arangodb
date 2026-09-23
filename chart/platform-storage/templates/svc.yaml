@@ -17,6 +17,7 @@ spec:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     release: {{ .Release.Name }}
+  {{- $port := ternary 8333 9000 (eq .Values.backend "seaweedfs") }}
   ports:
-    - port: 9000
-      targetPort: 9000
+    - port: {{ $port }}
+      targetPort: {{ $port }}

@@ -1,8 +1,23 @@
+# backend selects the in-cluster S3 implementation to deploy: minio (default) or seaweedfs.
+backend: minio
 storage:
   class: ""
   size: 5Gi
 minio:
   image: minio/minio:latest
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  resources:
+    limits:
+      cpu: 250m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  nodeSelector: {}
+  tolerations: []
+seaweedfs:
+  image: chrislusf/seaweedfs:4.47
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   resources:

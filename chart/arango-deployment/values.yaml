@@ -547,3 +547,19 @@ storage:
     resources: {}
     nodeSelector: {}
     tolerations: []
+  # seaweedfs: in-cluster single-pod SeaweedFS (all-in-one) deployed by this chart, backing an s3
+  # ArangoPlatformStorage via its S3-compatible API.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.47
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    # accessKey / secretKey optionally set the S3 credentials (e.g. via `helm install --set`).
+    # Empty secretKey generates one on first install and reuses it on upgrade.
+    accessKey: seaweedfsadmin
+    secretKey: ""
+    storage:
+      class: ""
+      size: 5Gi
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
