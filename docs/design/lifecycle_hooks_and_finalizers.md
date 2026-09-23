@@ -31,6 +31,41 @@ ArangoDB docker image, it has to be brought into the filesystem of a `Pod`.
 This is done by an initial container that copies the binary to an `emptyDir` volume that
 is shared between the init-container and the server container.
 
+## postStart collector hook
+
+When the (hidden) `collector` feature is enabled, the server and gateway containers get a `postStart`
+hook that runs the operator binary's collector. The collector runs in the foreground, gathers the
+metrics for the current boot and emits a single `startup` event, then exits - it is not a daemon.
+On an ArangoDB member the event is written to the `_events` collection (authenticated with the
+cluster JWT); on the gateway it is printed to stdout.
+
+Every emitted event carries the following dimensions so a boot can be correlated to a concrete Pod:
+- `bootID`: a unique identifier stable for the lifetime of the process boot
+- `podUID`: the UID of the `Pod`, sourced from the `MY_POD_UID` lifecycle environment variable
+- `nodeName`: the node the `Pod` runs on, sourced from the `MY_NODE_NAME` lifecycle environment variable
+  (omitted when the variable is not injected)
+
+## Lifecycle environment variables
+
+The operator injects a small set of downward-API environment variables into the ArangoDB and sidecar
+containers so the running processes and lifecycle hooks can identify themselves:
+- `MY_POD_NAME`: the `Pod` name (`metadata.name`)
+- `MY_POD_NAMESPACE`: the `Pod` namespace (`metadata.namespace`)
+- `MY_POD_UID`: the `Pod` UID (`metadata.uid`)
+- `MY_NODE_NAME` / `NODE_NAME`: the node the `Pod` is scheduled on (`spec.nodeName`)
+- `MY_CPU_REQUESTS` / `MY_CPU_LIMITS`: the container CPU request/limit in millicores (`resourceFieldRef`)
+- `MY_MEMORY_REQUESTS` / `MY_MEMORY_LIMITS`: the container memory request/limit in MiB (`resourceFieldRef`)
+
+The resource variables reflect the container the env is injected into. Note the downward-API behaviour:
+when a request or limit is not set on the container, the value falls back to the node's allocatable
+capacity rather than being empty.
+
+These variables are allow-listed in the Pod rotation comparison, so adding one to already-running
+members updates the Pod in place without triggering a member rotation.
+
+The postStart collector also emits the container requests/limits as `cpu_requests` / `cpu_limits`
+(millicores) and `memory_requests` / `memory_limits` (MiB) event body metrics.
+
 ## Finalizers
 
 The ArangoDB operators adds the following finalizers to `Pods`:

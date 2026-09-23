@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,8 @@ func compareServerContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, 
 				resources.ArangoDBOverrideEnterpriseEnv:
 				// Those envs can change without restart
 				continue
-			case utilConstants.EnvOperatorPodName, utilConstants.EnvOperatorPodNamespace, utilConstants.EnvOperatorNodeName, utilConstants.EnvOperatorNodeNameArango:
+			case utilConstants.EnvOperatorPodName, utilConstants.EnvOperatorPodNamespace, utilConstants.EnvOperatorPodUID, utilConstants.EnvOperatorNodeName, utilConstants.EnvOperatorNodeNameArango,
+				utilConstants.EnvOperatorCPURequests, utilConstants.EnvOperatorCPULimits, utilConstants.EnvOperatorMemoryRequests, utilConstants.EnvOperatorMemoryLimits:
 				// Lifecycle envs can change without restart
 				continue
 			default:
@@ -76,7 +77,8 @@ func compareAnyContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, sta
 
 		for k := range diff {
 			switch k {
-			case utilConstants.EnvOperatorPodName, utilConstants.EnvOperatorPodNamespace, utilConstants.EnvOperatorNodeName, utilConstants.EnvOperatorNodeNameArango:
+			case utilConstants.EnvOperatorPodName, utilConstants.EnvOperatorPodNamespace, utilConstants.EnvOperatorPodUID, utilConstants.EnvOperatorNodeName, utilConstants.EnvOperatorNodeNameArango,
+				utilConstants.EnvOperatorCPURequests, utilConstants.EnvOperatorCPULimits, utilConstants.EnvOperatorMemoryRequests, utilConstants.EnvOperatorMemoryLimits:
 				// Lifecycle envs can change without restart
 				continue
 			default:
