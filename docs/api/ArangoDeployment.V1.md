@@ -982,7 +982,7 @@ Links:
 
 ### .spec.allowUnsafeUpgrade
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L155)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L162)</sup>
 
 AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync shards is allowed
 
@@ -990,7 +990,7 @@ AllowUnsafeUpgrade determines if upgrade on missing member or with not in sync s
 
 ### .spec.annotations
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L118)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L125)</sup>
 
 Annotations specifies the annotations added to all ArangoDeployment owned resources (pods, services, PVC’s, PDB’s).
 
@@ -998,7 +998,7 @@ Annotations specifies the annotations added to all ArangoDeployment owned resour
 
 ### .spec.annotationsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L121)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L128)</sup>
 
 AnnotationsIgnoreList list regexp or plain definitions which annotations should be ignored
 
@@ -1006,7 +1006,7 @@ AnnotationsIgnoreList list regexp or plain definitions which annotations should 
 
 ### .spec.annotationsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L127)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L134)</sup>
 
 AnnotationsMode defines annotations mode which should be use while overriding annotations.
 
@@ -1019,7 +1019,7 @@ Possible Values:
 
 ### .spec.architecture
 
-Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L261)</sup>
+Type: `[]string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L268)</sup>
 
 Architecture defines the list of supported architectures.
 First element on the list is marked as default architecture.
@@ -1096,7 +1096,7 @@ KillPodProbability is the chance of a pod being killed during an event
 
 ### .spec.ClusterDomain
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L233)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L240)</sup>
 
 ClusterDomain define domain used in the kubernetes cluster.
 
@@ -1106,7 +1106,7 @@ Default Value: `cluster.local`
 
 ### .spec.communicationMethod
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L241)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L248)</sup>
 
 CommunicationMethod define communication method used in deployment
 
@@ -4289,6 +4289,19 @@ Links:
 
 ***
 
+### .spec.hibernate
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L105)</sup>
+
+Hibernate, when set to true, requests the whole deployment to be hibernated: maintenance mode is
+enabled, all members are shut down group by group into the Hibernated phase (keeping their volumes),
+and the deployment's platform Services & Workflows are forced into their hibernated form.
+Set back to false to wake the deployment up again.
+
+Default Value: `false`
+
+***
+
 ### .spec.id.affinity
 
 Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/server_id_group_spec.go#L48)</sup>
@@ -4779,7 +4792,7 @@ might be configured in the container image.
 
 ### .spec.labels
 
-Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L130)</sup>
+Type: `object` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L137)</sup>
 
 Labels specifies the labels added to Pods in this group.
 
@@ -4787,7 +4800,7 @@ Labels specifies the labels added to Pods in this group.
 
 ### .spec.labelsIgnoreList
 
-Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L133)</sup>
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L140)</sup>
 
 LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
@@ -4795,7 +4808,7 @@ LabelsIgnoreList list regexp or plain definitions which labels should be ignored
 
 ### .spec.labelsMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L139)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L146)</sup>
 
 LabelsMode Define labels mode which should be use while overriding labels
 
@@ -4882,7 +4895,7 @@ Links:
 
 ### .spec.memberPropagationMode
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L217)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L224)</sup>
 
 MemberPropagationMode defines how changes to pod spec should be propogated.
 Changes to a pod’s configuration require a restart of that pod in almost all cases.
@@ -5018,7 +5031,7 @@ This field is **immutable**: Change of the ArangoDeployment Mode is not possible
 
 ### .spec.networkAttachedVolumes
 
-Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L115)</sup>
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L122)</sup>
 
 NetworkAttachedVolumes
 If set to `true`, a ResignLeadership operation will be triggered when a DB-Server pod is evicted (rather than a CleanOutServer operation).
@@ -5069,7 +5082,7 @@ Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.
 
 ### .spec.restoreEncryptionSecret
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L152)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L159)</sup>
 
 RestoreEncryptionSecret specifies optional name of secret which contains encryption key used for restore
 
@@ -5077,7 +5090,7 @@ RestoreEncryptionSecret specifies optional name of secret which contains encrypt
 
 ### .spec.restoreFrom
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L149)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L156)</sup>
 
 RestoreFrom setting specifies a `ArangoBackup` resource name the cluster should be restored from.
 After a restore or failure to do so, the status of the deployment contains information about the restore operation in the restore key.
@@ -8303,7 +8316,7 @@ MaintenanceGracePeriod action timeout
 
 ### .spec.timezone
 
-Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L265)</sup>
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.5/pkg/apis/deployment/v1/deployment_spec.go#L272)</sup>
 
 Timezone if specified, will set a timezone for deployment.
 Must be in format accepted by "tzdata", e.g. `America/New_York` or `Europe/London`

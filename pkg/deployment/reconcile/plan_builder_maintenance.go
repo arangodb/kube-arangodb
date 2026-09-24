@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,6 +131,11 @@ func (r *Reconciler) createMaintenanceManagementPlan(ctx context.Context, apiObj
 	spec api.DeploymentSpec, status api.DeploymentStatus,
 	planCtx PlanBuilderContext) api.Plan {
 	if spec.Mode.Get() == api.DeploymentModeSingle {
+		return nil
+	}
+
+	if spec.IsHibernate() {
+		// While hibernation is requested the hibernate plan owns maintenance mode.
 		return nil
 	}
 
