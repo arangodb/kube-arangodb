@@ -24,7 +24,7 @@ FOR m IN @members
         ]
         : (
             LET common = MERGE(base, {
-                "nodeName": latest.dimensions.nodeName == null ? "" : SHA256(latest.dimensions.nodeName),
+                "nodeName": SHA256(latest.dimensions.nodeName == null ? "" : latest.dimensions.nodeName),
                 "podUID": NOT_NULL(latest.dimensions.podUID, ""),
                 "bootID": NOT_NULL(latest.dimensions.bootID, "")
             })
