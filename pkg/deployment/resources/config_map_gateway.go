@@ -163,7 +163,12 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
-	if features.GatewayConfigPush().Enabled() {
+	// Push (inline/ADS) inventory delivery applies only when the push feature is enabled AND the gateway is
+	// dynamic. A static (non-dynamic) gateway is always served from the mounted ConfigMap and must report
+	// the config checksum, so the feature flag alone is not enough - double-check the gateway is dynamic.
+	pushMode := features.GatewayConfigPush().Enabled() && r.context.GetSpec().Gateway.IsDynamic()
+
+	if pushMode {
 		// Push mode: serve the inventory inline so it travels with the ADS-pushed config, instead of a file
 		// that the dynamic loader would read out of band from the separately-synced ConfigMap mount.
 		inventoryConfig.Type = util.NewType(gateway.ConfigDestinationTypeStatic)
@@ -193,7 +198,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway inventory"))
 	}
 
-	if features.GatewayConfigPush().Enabled() {
+	if pushMode {
 		// Inline (push) mode: the inventory is embedded in the pushed config and rendered below, so its
 		// reported config revision must be set before the render. Use the inventory content hash (the same
 		// value the /_inventory.hash endpoint serves): it is non-circular (independent of the config
@@ -247,7 +252,7 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway sds config"))
 	}
 
-	if !features.GatewayConfigPush().Enabled() {
+	if !pushMode {
 		// ConfigMap mode: the inventory is served from the mounted file (rendered after the config), so its
 		// reported revision is the config checksum - which the gateway readiness check compares against
 		// GatewayConfigChecksum. In push mode this was already set (inline) before the render.
