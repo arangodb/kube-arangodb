@@ -36,6 +36,10 @@ const (
 	EnvOperatorMemoryRequests = "MY_MEMORY_REQUESTS" // Container memory request in MiB (downward API)
 	EnvOperatorMemoryLimits   = "MY_MEMORY_LIMITS"   // Container memory limit in MiB (downward API)
 
+	// EnvArangoDBOverrideMemberID carries the arangod member id (== the cluster server id) into the
+	// ArangoDB container so the collector can tag its startup events without a connection.
+	EnvArangoDBOverrideMemberID = "ARANGODB_OVERRIDE_MEMBER_ID"
+
 	EnvOperatorNodeNameEnv       util.EnvironmentVariable = EnvOperatorNodeName
 	EnvOperatorNodeNameArangoEnv util.EnvironmentVariable = EnvOperatorNodeNameArango
 	EnvOperatorPodNameEnv        util.EnvironmentVariable = EnvOperatorPodName

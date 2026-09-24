@@ -33,6 +33,8 @@ package collect
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"time"
@@ -64,6 +66,12 @@ const (
 	// dimensionNodeName is the event dimension carrying the name of the Node the collector runs on. It
 	// is sourced from the MY_NODE_NAME lifecycle env and omitted when that env is not set.
 	dimensionNodeName = "nodeName"
+
+	// dimensionServerID carries the SHA256 hash of the arangod server id of the member the collector runs
+	// in. It lets the inventory join startup events to cluster members (see the member.startup inventory
+	// fetcher) without ever storing the raw member id. The id is sourced from the ARANGODB_OVERRIDE_MEMBER_ID
+	// env the operator injects, and the dimension is omitted when that env is not set (e.g. a non-arangod member).
+	dimensionServerID = "serverID"
 )
 
 const (
@@ -143,6 +151,12 @@ func run(ctx context.Context, opts Options) error {
 	// when the env is not injected.
 	nodeName := os.Getenv(utilConstants.EnvOperatorNodeName)
 
+	// serverID is the SHA256 hash of the arangod member id (== the cluster server id) sourced from the
+	// ARANGODB_OVERRIDE_MEMBER_ID env the operator injects. Hashing at the source keeps the raw member id
+	// out of the events collection while still letting the inventory join on it. It is empty when the env
+	// is not set (e.g. the collector running alongside a non-arangod member).
+	serverID := hashServerID(os.Getenv(utilConstants.EnvArangoDBOverrideMemberID))
+
 	logger.Str("bootID", bootID).Info("Starting arangodb-operator collector (%s), version %s build %s",
 		version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
 
@@ -150,7 +164,7 @@ func run(ctx context.Context, opts Options) error {
 	defer t.Stop()
 
 	for {
-		if err := collect(ctx, opts, bootID, podUID, nodeName, created); err != nil {
+		if err := collect(ctx, opts, bootID, podUID, nodeName, serverID, created); err != nil {
 			logger.Err(err).Str("bootID", bootID).Warn("Collector cycle failed, will retry")
 		} else {
 			logger.Str("bootID", bootID).Info("Collector finished")
@@ -166,18 +180,29 @@ func run(ctx context.Context, opts Options) error {
 	}
 }
 
+// hashServerID returns the SHA256 hash (lowercase hex) of the given arangod member id, or an empty string
+// when the id is empty. The member.startup inventory fetcher matches events on this hash (SHA256 of the
+// member id reported by cluster health), so the raw member id never leaves the pod.
+func hashServerID(id string) string {
+	if id == "" {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(id))
+	return hex.EncodeToString(sum[:])
+}
+
 // collect performs a single collection cycle for the given boot: it runs every registered collector,
 // each pushing its metrics into a shared collector, waits until all of them have completed and builds
 // a single startup event whose body is the collected metrics. The event is tagged with the boot id
 // and the start timestamp so it can be correlated to a single pod boot. It is emitted to the events
 // integration when an endpoint is configured, otherwise printed to stdout.
-func collect(ctx context.Context, opts Options, bootID, podUID, nodeName string, created time.Time) error {
+func collect(ctx context.Context, opts Options, bootID, podUID, nodeName, serverID string, created time.Time) error {
 	metrics, err := GetCollector().Collect()
 	if err != nil {
 		return err
 	}
 
-	event := buildEvent(metrics, bootID, podUID, nodeName, created)
+	event := buildEvent(metrics, bootID, podUID, nodeName, serverID, created)
 
 	if opts.Endpoint != "" {
 		if err := emit(ctx, opts, event); err != nil {
@@ -192,9 +217,9 @@ func collect(ctx context.Context, opts Options, bootID, podUID, nodeName string,
 }
 
 // buildEvent assembles the startup event from the collected metrics, tagging it with the boot id and
-// the start timestamp. The Pod UID and Node name dimensions are added only when non-empty values are
-// provided.
-func buildEvent(metrics []Metric, bootID, podUID, nodeName string, created time.Time) *pbEventsV1.Event {
+// the start timestamp. The Pod UID, Node name and server id dimensions are added only when non-empty
+// values are provided.
+func buildEvent(metrics []Metric, bootID, podUID, nodeName, serverID string, created time.Time) *pbEventsV1.Event {
 	body := make(map[string]float32, len(metrics))
 	for _, m := range metrics {
 		body[m.K] = m.V
@@ -208,6 +233,9 @@ func buildEvent(metrics []Metric, bootID, podUID, nodeName string, created time.
 	}
 	if nodeName != "" {
 		dimensions[dimensionNodeName] = nodeName
+	}
+	if serverID != "" {
+		dimensions[dimensionServerID] = serverID
 	}
 
 	return &pbEventsV1.Event{
