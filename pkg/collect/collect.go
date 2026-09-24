@@ -33,16 +33,15 @@ package collect
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	pbEventsV1 "github.com/arangodb/kube-arangodb/integrations/events/v1/definition"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -68,10 +67,10 @@ const (
 	// is sourced from the MY_NODE_NAME lifecycle env and omitted when that env is not set.
 	dimensionNodeName = "nodeName"
 
-	// dimensionServerID carries the arangod server id of the member the collector runs in. It lets the
-	// inventory join startup events to cluster members (see the member.startup inventory fetcher). It is
-	// read from the UUID file the operator writes into the arangod data volume and is omitted when that
-	// file is absent (e.g. the collector running alongside a non-arangod member).
+	// dimensionServerID carries the SHA256 hash of the arangod server id of the member the collector runs
+	// in. It lets the inventory join startup events to cluster members (see the member.startup inventory
+	// fetcher) without ever storing the raw member id. The id is sourced from the ARANGODB_OVERRIDE_MEMBER_ID
+	// env the operator injects, and the dimension is omitted when that env is not set (e.g. a non-arangod member).
 	dimensionServerID = "serverID"
 )
 
@@ -152,11 +151,11 @@ func run(ctx context.Context, opts Options) error {
 	// when the env is not injected.
 	nodeName := os.Getenv(utilConstants.EnvOperatorNodeName)
 
-	// serverID is the arangod server id of the member the collector runs in. The operator writes it into
-	// the UUID file on the arangod data volume, and arangod uses the same file as its cluster server id,
-	// so reading it here yields the id the cluster health endpoint reports - without needing a connection.
-	// It is empty when the file is absent (e.g. the collector running alongside a non-arangod member).
-	serverID := readServerID()
+	// serverID is the SHA256 hash of the arangod member id (== the cluster server id) sourced from the
+	// ARANGODB_OVERRIDE_MEMBER_ID env the operator injects. Hashing at the source keeps the raw member id
+	// out of the events collection while still letting the inventory join on it. It is empty when the env
+	// is not set (e.g. the collector running alongside a non-arangod member).
+	serverID := hashServerID(os.Getenv(utilConstants.EnvArangoDBOverrideMemberID))
 
 	logger.Str("bootID", bootID).Info("Starting arangodb-operator collector (%s), version %s build %s",
 		version.GetVersionV1().Edition.Title(), version.GetVersionV1().Version, version.GetVersionV1().Build)
@@ -181,15 +180,15 @@ func run(ctx context.Context, opts Options) error {
 	}
 }
 
-// readServerID reads the arangod server id from the UUID file the operator writes into the arangod data
-// volume. arangod uses the same file as its cluster server id, so its content matches the id the cluster
-// health endpoint reports. It returns an empty string (best-effort) when the file is absent or unreadable.
-func readServerID() string {
-	data, err := os.ReadFile(filepath.Join(shared.ArangodVolumeMountDir, "UUID"))
-	if err != nil {
+// hashServerID returns the SHA256 hash (lowercase hex) of the given arangod member id, or an empty string
+// when the id is empty. The member.startup inventory fetcher matches events on this hash (SHA256 of the
+// member id reported by cluster health), so the raw member id never leaves the pod.
+func hashServerID(id string) string {
+	if id == "" {
 		return ""
 	}
-	return strings.TrimSpace(string(data))
+	sum := sha256.Sum256([]byte(id))
+	return hex.EncodeToString(sum[:])
 }
 
 // collect performs a single collection cycle for the given boot: it runs every registered collector,

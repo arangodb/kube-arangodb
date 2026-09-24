@@ -47,7 +47,7 @@ func compareServerContainerEnvs(ds api.DeploymentSpec, g api.ServerGroup, spec, 
 			switch k {
 			case topology.ArangoDBZone, resources.ArangoDBOverrideServerGroupEnv,
 				resources.ArangoDBOverrideDeploymentModeEnv, resources.ArangoDBOverrideVersionEnv,
-				resources.ArangoDBOverrideEnterpriseEnv:
+				resources.ArangoDBOverrideEnterpriseEnv, utilConstants.EnvArangoDBOverrideMemberID:
 				// Those envs can change without restart
 				continue
 			case utilConstants.EnvOperatorPodName, utilConstants.EnvOperatorPodNamespace, utilConstants.EnvOperatorPodUID, utilConstants.EnvOperatorNodeName, utilConstants.EnvOperatorNodeNameArango,

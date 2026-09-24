@@ -119,6 +119,17 @@ func TestBuildEvent_NoOptionalDimensions(t *testing.T) {
 	require.NotContains(t, event.GetDimensions(), dimensionServerID, "serverID dimension must be omitted when unset")
 }
 
+func TestHashServerID(t *testing.T) {
+	// The inventory fetcher joins on the AQL SHA256() of the member id, so the collector must produce the
+	// same lowercase-hex hash. SHA256("PRMR-abc") is a fixed, 64-char value.
+	require.Equal(t, "", hashServerID(""), "empty member id must hash to empty so the dimension is omitted")
+
+	h := hashServerID("PRMR-abc")
+	require.Len(t, h, 64)
+	require.Equal(t, "7f5adc31938dad86c3944dd9a9c3cb25655bf59346aa849bab3a5c39466cb8f4", h)
+	require.NotEqual(t, h, hashServerID("PRMR-def"))
+}
+
 func TestResourceCollector(t *testing.T) {
 	out := util.NewCollector[Metric]()
 

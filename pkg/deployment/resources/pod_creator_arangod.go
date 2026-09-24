@@ -238,6 +238,10 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 		Value: a.Group.AsRole(),
 	})
 	envs.Add(true, core.EnvVar{
+		Name:  utilConstants.EnvArangoDBOverrideMemberID,
+		Value: a.Member.ID,
+	})
+	envs.Add(true, core.EnvVar{
 		Name:  ArangoDBOverrideDeploymentModeEnv,
 		Value: string(a.Deployment.GetMode()),
 	})

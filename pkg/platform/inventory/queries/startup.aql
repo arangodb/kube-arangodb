@@ -1,7 +1,7 @@
 FOR m IN @members
     LET latest = FIRST(
         FOR e IN _events
-            FILTER e.serviceId == "collector" AND e.type == "startup" AND e.dimensions.serverID == m.id
+            FILTER e.serviceId == "collector" AND e.type == "startup" AND e.dimensions.serverID == SHA256(m.id)
             SORT e.created DESC
             LIMIT 1
             RETURN e
