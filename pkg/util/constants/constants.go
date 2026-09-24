@@ -117,5 +117,6 @@ func ManagedFinalizers() []string {
 		FinalizerPodGracefulShutdown,
 		FinalizerPVCMemberExists,
 		FinalizerDelayPodTermination,
+		FinalizerPodGatewayTLSKeyfile,
 	}
 }
