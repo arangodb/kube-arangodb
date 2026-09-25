@@ -685,6 +685,222 @@ func local_request_AuthorizationAPI_APIReplaceUserRoleScope_0(ctx context.Contex
 	return msg, metadata, err
 }
 
+func request_AuthorizationAPI_APIListGroupRoleBindings_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AuthorizationAPIGroupRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["group"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group")
+	}
+	protoReq.Group, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group", err)
+	}
+	msg, err := client.APIListGroupRoleBindings(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AuthorizationAPI_APIListGroupRoleBindings_0(ctx context.Context, marshaler runtime.Marshaler, server AuthorizationAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AuthorizationAPIGroupRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["group"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group")
+	}
+	protoReq.Group, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group", err)
+	}
+	msg, err := server.APIListGroupRoleBindings(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_AuthorizationAPI_APIAssignGroupRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AuthorizationAPIGroupRoleBindingRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["group"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group")
+	}
+	protoReq.Group, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group", err)
+	}
+	val, ok = pathParams["role"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "role")
+	}
+	protoReq.Role, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "role", err)
+	}
+	msg, err := client.APIAssignGroupRole(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AuthorizationAPI_APIAssignGroupRole_0(ctx context.Context, marshaler runtime.Marshaler, server AuthorizationAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AuthorizationAPIGroupRoleBindingRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["group"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group")
+	}
+	protoReq.Group, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group", err)
+	}
+	val, ok = pathParams["role"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "role")
+	}
+	protoReq.Role, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "role", err)
+	}
+	msg, err := server.APIAssignGroupRole(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_AuthorizationAPI_APIRemoveGroupRole_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AuthorizationAPIGroupRoleRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["group"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group")
+	}
+	protoReq.Group, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group", err)
+	}
+	val, ok = pathParams["role"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "role")
+	}
+	protoReq.Role, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "role", err)
+	}
+	msg, err := client.APIRemoveGroupRole(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AuthorizationAPI_APIRemoveGroupRole_0(ctx context.Context, marshaler runtime.Marshaler, server AuthorizationAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AuthorizationAPIGroupRoleRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["group"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group")
+	}
+	protoReq.Group, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group", err)
+	}
+	val, ok = pathParams["role"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "role")
+	}
+	protoReq.Role, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "role", err)
+	}
+	msg, err := server.APIRemoveGroupRole(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_AuthorizationAPI_APIReplaceGroupRoleScope_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AuthorizationAPIGroupRoleBindingRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["group"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group")
+	}
+	protoReq.Group, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group", err)
+	}
+	val, ok = pathParams["role"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "role")
+	}
+	protoReq.Role, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "role", err)
+	}
+	msg, err := client.APIReplaceGroupRoleScope(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_AuthorizationAPI_APIReplaceGroupRoleScope_0(ctx context.Context, marshaler runtime.Marshaler, server AuthorizationAPIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq AuthorizationAPIGroupRoleBindingRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["group"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group")
+	}
+	protoReq.Group, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group", err)
+	}
+	val, ok = pathParams["role"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "role")
+	}
+	protoReq.Role, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "role", err)
+	}
+	msg, err := server.APIReplaceGroupRoleScope(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_AuthorizationAPI_APIRefresh_0(ctx context.Context, marshaler runtime.Marshaler, client AuthorizationAPIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq AuthorizationAPIRefreshRequest
@@ -1018,6 +1234,86 @@ func RegisterAuthorizationAPIHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 		forward_AuthorizationAPI_APIReplaceUserRoleScope_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIListGroupRoleBindings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/service.AuthorizationAPI/APIListGroupRoleBindings", runtime.WithHTTPPathPattern("/_management/permissions/group/{group}/role"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AuthorizationAPI_APIListGroupRoleBindings_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIListGroupRoleBindings_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_AuthorizationAPI_APIAssignGroupRole_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/service.AuthorizationAPI/APIAssignGroupRole", runtime.WithHTTPPathPattern("/_management/permissions/group/{group}/role/{role}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AuthorizationAPI_APIAssignGroupRole_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIAssignGroupRole_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_AuthorizationAPI_APIRemoveGroupRole_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/service.AuthorizationAPI/APIRemoveGroupRole", runtime.WithHTTPPathPattern("/_management/permissions/group/{group}/role/{role}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AuthorizationAPI_APIRemoveGroupRole_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIRemoveGroupRole_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPut, pattern_AuthorizationAPI_APIReplaceGroupRoleScope_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/service.AuthorizationAPI/APIReplaceGroupRoleScope", runtime.WithHTTPPathPattern("/_management/permissions/group/{group}/role/{role}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_AuthorizationAPI_APIReplaceGroupRoleScope_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIReplaceGroupRoleScope_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_AuthorizationAPI_APIRefresh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1333,6 +1629,74 @@ func RegisterAuthorizationAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_AuthorizationAPI_APIReplaceUserRoleScope_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_AuthorizationAPI_APIListGroupRoleBindings_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/service.AuthorizationAPI/APIListGroupRoleBindings", runtime.WithHTTPPathPattern("/_management/permissions/group/{group}/role"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AuthorizationAPI_APIListGroupRoleBindings_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIListGroupRoleBindings_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_AuthorizationAPI_APIAssignGroupRole_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/service.AuthorizationAPI/APIAssignGroupRole", runtime.WithHTTPPathPattern("/_management/permissions/group/{group}/role/{role}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AuthorizationAPI_APIAssignGroupRole_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIAssignGroupRole_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_AuthorizationAPI_APIRemoveGroupRole_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/service.AuthorizationAPI/APIRemoveGroupRole", runtime.WithHTTPPathPattern("/_management/permissions/group/{group}/role/{role}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AuthorizationAPI_APIRemoveGroupRole_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIRemoveGroupRole_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPut, pattern_AuthorizationAPI_APIReplaceGroupRoleScope_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/service.AuthorizationAPI/APIReplaceGroupRoleScope", runtime.WithHTTPPathPattern("/_management/permissions/group/{group}/role/{role}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_AuthorizationAPI_APIReplaceGroupRoleScope_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_AuthorizationAPI_APIReplaceGroupRoleScope_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_AuthorizationAPI_APIRefresh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1354,39 +1718,47 @@ func RegisterAuthorizationAPIHandlerClient(ctx context.Context, mux *runtime.Ser
 }
 
 var (
-	pattern_AuthorizationAPI_ValidateSelfPermission_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "validate"}, ""))
-	pattern_AuthorizationAPI_APIListPolicy_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "policy"}, ""))
-	pattern_AuthorizationAPI_APIGetPolicy_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
-	pattern_AuthorizationAPI_APIDeletePolicy_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
-	pattern_AuthorizationAPI_APICreatePolicy_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
-	pattern_AuthorizationAPI_APIUpdatePolicy_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
-	pattern_AuthorizationAPI_APIListRole_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "role"}, ""))
-	pattern_AuthorizationAPI_APIGetRole_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
-	pattern_AuthorizationAPI_APIDeleteRole_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
-	pattern_AuthorizationAPI_APICreateRole_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
-	pattern_AuthorizationAPI_APIUpdateRole_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
-	pattern_AuthorizationAPI_APIListUserRoleBindings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"_management", "permissions", "user", "role"}, ""))
-	pattern_AuthorizationAPI_APIAssignUserRole_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "user", "role"}, ""))
-	pattern_AuthorizationAPI_APIRemoveUserRole_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "user", "role"}, ""))
-	pattern_AuthorizationAPI_APIReplaceUserRoleScope_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "user", "role"}, ""))
-	pattern_AuthorizationAPI_APIRefresh_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "refresh"}, ""))
+	pattern_AuthorizationAPI_ValidateSelfPermission_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "validate"}, ""))
+	pattern_AuthorizationAPI_APIListPolicy_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "policy"}, ""))
+	pattern_AuthorizationAPI_APIGetPolicy_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
+	pattern_AuthorizationAPI_APIDeletePolicy_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
+	pattern_AuthorizationAPI_APICreatePolicy_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
+	pattern_AuthorizationAPI_APIUpdatePolicy_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "policy", "name"}, ""))
+	pattern_AuthorizationAPI_APIListRole_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "role"}, ""))
+	pattern_AuthorizationAPI_APIGetRole_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
+	pattern_AuthorizationAPI_APIDeleteRole_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
+	pattern_AuthorizationAPI_APICreateRole_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
+	pattern_AuthorizationAPI_APIUpdateRole_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "role", "name"}, ""))
+	pattern_AuthorizationAPI_APIListUserRoleBindings_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"_management", "permissions", "user", "role"}, ""))
+	pattern_AuthorizationAPI_APIAssignUserRole_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "user", "role"}, ""))
+	pattern_AuthorizationAPI_APIRemoveUserRole_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "user", "role"}, ""))
+	pattern_AuthorizationAPI_APIReplaceUserRoleScope_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "user", "role"}, ""))
+	pattern_AuthorizationAPI_APIListGroupRoleBindings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"_management", "permissions", "group", "role"}, ""))
+	pattern_AuthorizationAPI_APIAssignGroupRole_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "group", "role"}, ""))
+	pattern_AuthorizationAPI_APIRemoveGroupRole_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "group", "role"}, ""))
+	pattern_AuthorizationAPI_APIReplaceGroupRoleScope_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"_management", "permissions", "group", "role"}, ""))
+	pattern_AuthorizationAPI_APIRefresh_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"_management", "permissions", "refresh"}, ""))
 )
 
 var (
-	forward_AuthorizationAPI_ValidateSelfPermission_0  = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIListPolicy_0           = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIGetPolicy_0            = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIDeletePolicy_0         = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APICreatePolicy_0         = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIUpdatePolicy_0         = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIListRole_0             = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIGetRole_0              = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIDeleteRole_0           = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APICreateRole_0           = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIUpdateRole_0           = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIListUserRoleBindings_0 = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIAssignUserRole_0       = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIRemoveUserRole_0       = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIReplaceUserRoleScope_0 = runtime.ForwardResponseMessage
-	forward_AuthorizationAPI_APIRefresh_0              = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_ValidateSelfPermission_0   = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIListPolicy_0            = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIGetPolicy_0             = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIDeletePolicy_0          = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APICreatePolicy_0          = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIUpdatePolicy_0          = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIListRole_0              = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIGetRole_0               = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIDeleteRole_0            = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APICreateRole_0            = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIUpdateRole_0            = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIListUserRoleBindings_0  = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIAssignUserRole_0        = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIRemoveUserRole_0        = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIReplaceUserRoleScope_0  = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIListGroupRoleBindings_0 = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIAssignGroupRole_0       = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIRemoveGroupRole_0       = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIReplaceGroupRoleScope_0 = runtime.ForwardResponseMessage
+	forward_AuthorizationAPI_APIRefresh_0               = runtime.ForwardResponseMessage
 )

@@ -59,6 +59,11 @@ func NewAuthorizer(client db.Database, authType pbImplAuthorizationV1.Configurat
 			WithUniqueIndex("user_role_bindings_unique_sequence_index", "sequence").
 			WithTTLIndex("user_role_bindings_deleted_index", deletedTTL, "deleted").
 			Get(), pool.DefaultPoolerTimeout),
+		groupRoleBindings: pool.NewPooler[*sidecarSvcAuthzTypes.UserRoleBinding](client.
+			CreateCollection("_group_role_bindings", db.SourceCollectionProps("_users")).
+			WithUniqueIndex("group_role_bindings_unique_sequence_index", "sequence").
+			WithTTLIndex("group_role_bindings_deleted_index", deletedTTL, "deleted").
+			Get(), pool.DefaultPoolerTimeout),
 		authType: authType,
 	}
 }
@@ -70,9 +75,10 @@ type implementation struct {
 	sidecarSvcAuthzDefinition.UnimplementedAuthorizationPoolServiceServer
 	sidecarSvcAuthzDefinition.UnimplementedAuthorizationAPIServer
 
-	policies         pool.Pooler[*sidecarSvcAuthzTypes.Policy]
-	roles            pool.Pooler[*sidecarSvcAuthzTypes.Role]
-	userRoleBindings pool.Pooler[*sidecarSvcAuthzTypes.UserRoleBinding]
+	policies          pool.Pooler[*sidecarSvcAuthzTypes.Policy]
+	roles             pool.Pooler[*sidecarSvcAuthzTypes.Role]
+	userRoleBindings  pool.Pooler[*sidecarSvcAuthzTypes.UserRoleBinding]
+	groupRoleBindings pool.Pooler[*sidecarSvcAuthzTypes.UserRoleBinding]
 
 	authType pbImplAuthorizationV1.ConfigurationType
 }
@@ -95,7 +101,7 @@ func (a *implementation) Plugin() pbImplAuthorizationV1Shared.Plugin {
 }
 
 func (a *implementation) Health(ctx context.Context) svc.HealthState {
-	if !a.roles.Ready() || !a.policies.Ready() || !a.userRoleBindings.Ready() {
+	if !a.roles.Ready() || !a.policies.Ready() || !a.userRoleBindings.Ready() || !a.groupRoleBindings.Ready() {
 		return svc.Unhealthy
 	}
 	return svc.Healthy
@@ -125,6 +131,9 @@ func (a *implementation) Refresh(ctx context.Context) error {
 		return err
 	}
 	if err := a.userRoleBindings.Refresh(ctx); err != nil {
+		return err
+	}
+	if err := a.groupRoleBindings.Refresh(ctx); err != nil {
 		return err
 	}
 
