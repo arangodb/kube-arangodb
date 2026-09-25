@@ -18,23 +18,21 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v1alpha1
+package role_group_binding
 
 import (
-	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
+	permissionApi "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1"
 )
 
-type ArangoPermissionRoleGroupBindingStatus struct {
-	// Conditions specific to this binding
-	// +doc/type: api.Conditions
-	Conditions sharedApi.ConditionList `json:"conditions,omitempty"`
+func Kind() string {
+	return permission.ArangoPermissionRoleGroupBindingResourceKind
+}
 
-	// Deployment keeps the Deployment Reference
-	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+func Group() string {
+	return permissionApi.SchemeGroupVersion.Group
+}
 
-	// Role keeps the Role Reference
-	Role *sharedApi.Object `json:"role,omitempty"`
-
-	// GroupRoleBinding keeps the GroupRoleBinding Reference
-	GroupRoleBinding *sharedApi.Object `json:"groupRoleBinding,omitempty"`
+func Version() string {
+	return permissionApi.SchemeGroupVersion.Version
 }

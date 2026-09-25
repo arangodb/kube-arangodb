@@ -20,7 +20,71 @@
 
 package v1alpha1
 
-// ArangoPermissionRoleGroupBindingSpec is intentionally empty for now; the binding fields are added in a
-// follow-up together with the reconcile handler.
+import (
+	"github.com/arangodb/kube-arangodb/pkg/apis/permission"
+	permissionApiPolicy "github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy"
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
+)
+
 type ArangoPermissionRoleGroupBindingSpec struct {
+	// Deployment keeps the Deployment Reference
+	// +doc/required
+	// +doc/skip: namespace
+	// +doc/skip: uid
+	// +doc/skip: checksum
+	Deployment *sharedApi.Object `json:"deployment"`
+
+	// Role defines the role to bind, either by CRD name or direct sidecar name
+	// +doc/required
+	Role *ArangoPermissionBindingRef `json:"role"`
+
+	// GroupName is the name of the group to bind the role to. The group is matched against the groups
+	// claim of the identity token, so the binding applies to every user whose token lists this group.
+	// +doc/required
+	GroupName string `json:"groupName"`
+
+	// Scope defines the inline scope policy for this binding
+	// +doc/required
+	Scope *permissionApiPolicy.Policy `json:"scope"`
+}
+
+func (c *ArangoPermissionRoleGroupBindingSpec) Hash() string {
+	if c == nil {
+		return ""
+	}
+	return util.SHA256FromStringArray(
+		c.Deployment.GetName(),
+		c.Role.Hash(),
+		c.GroupName,
+		c.Scope.Hash(),
+	)
+}
+
+func (c *ArangoPermissionRoleGroupBindingSpec) Validate() error {
+	if c == nil {
+		return errors.Errorf("Nil spec not allowed")
+	}
+
+	return shared.WithErrors(
+		shared.ValidateRequiredInterfacePath("deployment", c.Deployment),
+		shared.ValidateRequiredInterfacePath("role", c.Role),
+		func() error {
+			// The super-admin role is reserved: it grants full access and is bound to the root user
+			// automatically, so it must not be assignable to a group by a customer binding.
+			if permission.IsReservedRoleName(c.Role.GetReference()) {
+				return errors.Errorf("role %q is reserved and cannot be assigned", c.Role.GetReference())
+			}
+			return nil
+		}(),
+		func() error {
+			if c.GroupName == "" {
+				return errors.Errorf("groupName is required")
+			}
+			return nil
+		}(),
+		shared.ValidateRequiredInterfacePath("scope", c.Scope),
+	)
 }

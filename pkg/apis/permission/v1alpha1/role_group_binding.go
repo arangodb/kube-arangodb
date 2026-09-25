@@ -39,7 +39,9 @@ type ArangoPermissionRoleGroupBindingList struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ArangoPermissionRoleGroupBinding binds a Role to a Group within an ArangoDeployment.
+// ArangoPermissionRoleGroupBinding binds a Role to a Group with a scope Policy within an ArangoDeployment.
+// Group membership is resolved from the identity token's groups claim, so the binding applies to every
+// user whose token lists the group.
 type ArangoPermissionRoleGroupBinding struct {
 	meta.TypeMeta   `json:",inline"`
 	meta.ObjectMeta `json:"metadata,omitempty"`
