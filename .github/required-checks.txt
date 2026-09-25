@@ -1,0 +1,42 @@
+# Required status-check contexts for master, one per line.
+# Authoritative committed list. required-checks-drift compares it against the live
+# protection: a context here but not required on master is a gate that does not
+# block merges; a required context no job emits blocks every merge forever.
+# The live config is classic branch protection on master, not a ruleset: the only
+# ruleset rules reaching this branch are enterprise deletion and non_fast_forward,
+# which cannot carry status checks.
+# Strings are read off a real pipeline (`gh pr checks`), never hand-derived:
+# CircleCI appends an unpredictable instance suffix to duplicated jobs, so every
+# workflow entry carries a unique name.
+
+# --- Required on master today -------------------------------------------------
+ci/circleci: check-code
+
+# --- Blocking gates added by the security suite ------------------------------
+# Integrity control over the exception path: an undated or expired suppression, or
+# a SAST scope reduction, must not be mergeable.
+ci/circleci: disposition-check
+# Diff-aware SAST at WARNING over new code; the full-repo tier is report-only
+# while its 9 pre-existing ERROR findings are open.
+ci/circleci: sast-scan-diff
+# Carries the blocking Dockerfile credential guard; the misconfig scan in the same
+# job is report-only.
+ci/circleci: misconfig-scan
+# Blocking since the x/text bump emptied the fixable CRITICAL,HIGH band.
+ci/circleci: dependency-cve-scan
+
+# --- Deliberately NOT required yet, with flip criteria ------------------------
+# ci/circleci: image-cve-scan        warn-only per #2132: five fixable HIGH in the
+#     released 1.4.4 image, so blocking only after a release ships the fixes.
+# ci/circleci: image-cve-scan-ubi    same, plus seven more from the UBI9 base.
+# ci/circleci: secret-scan           report-only until the nine private-key
+#     findings under pkg/deployment/agency/state/testdata/ are dispositioned.
+# ci/circleci: sast-scan             report-only until the nine ERROR findings in
+#     SECURITY.md are cleared or dispositioned.
+# ci/circleci: vulncheck             Adam's call: needs the executor on go
+#     1.25.12+ and a decision on containerd v1 and x/crypto/openpgp.
+# ci/circleci: required-checks-drift last, after the lines above are live on both
+#     sides.
+#
+# Adding a line here configures nothing: an admin edits branch protection, this
+# file is the record the drift job checks it against.
