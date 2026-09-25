@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (RBAC) Add the ArangoPermissionRoleGroupBinding CRD (registration only; spec and reconcile handler follow separately)
 - (Feature) (RBAC) Add group role bindings to the authorization sidecar: a dedicated group-binding pool with Assign/Replace/Remove/List gRPC (and pool streaming), and both evaluation paths union the roles bound to the groups carried in the request's token groups claim with the user's direct bindings
 - (Bugfix) (Gateway) Include the gateway TLS-keyfile finalizer in ManagedFinalizers so it is removed during deployment cleanup, instead of leaving gateway pods stuck terminating after the ArangoDeployment is deleted
 - (Bugfix) (Gateway) Key the gateway inventory delivery mode and reported config revision on the per-deployment resolved mode (GatewayDynamicModePush) instead of the global gateway-config-push feature flag, so a static (non-dynamic) gateway reports the config checksum and its GatewayConfig condition propagates instead of hanging deployment readiness

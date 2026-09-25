@@ -44,6 +44,10 @@ func (c *FakePermissionV1alpha1) ArangoPermissionRoles(namespace string) v1alpha
 	return newFakeArangoPermissionRoles(c, namespace)
 }
 
+func (c *FakePermissionV1alpha1) ArangoPermissionRoleGroupBindings(namespace string) v1alpha1.ArangoPermissionRoleGroupBindingInterface {
+	return newFakeArangoPermissionRoleGroupBindings(c, namespace)
+}
+
 func (c *FakePermissionV1alpha1) ArangoPermissionRoleUserBindings(namespace string) v1alpha1.ArangoPermissionRoleUserBindingInterface {
 	return newFakeArangoPermissionRoleUserBindings(c, namespace)
 }

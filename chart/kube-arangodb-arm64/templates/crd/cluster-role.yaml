@@ -85,6 +85,7 @@ rules:
       - "arangopermissionpolicyrolebindings.permission.arangodb.com"
       - "arangopermissionroles.permission.arangodb.com"
       - "arangopermissionroleuserbindings.permission.arangodb.com"
+      - "arangopermissionrolegroupbindings.permission.arangodb.com"
       - "arangopermissiontokens.permission.arangodb.com"
 {{- end }}
 

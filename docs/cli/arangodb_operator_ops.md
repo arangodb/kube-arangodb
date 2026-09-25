@@ -113,6 +113,7 @@ Flags:
       --generator.arango-permission-policy                Define if generator arango-permission-policy is enabled (default true)
       --generator.arango-permission-policy-role-binding   Define if generator arango-permission-policy-role-binding is enabled (default true)
       --generator.arango-permission-role                  Define if generator arango-permission-role is enabled (default true)
+      --generator.arango-permission-role-group-binding    Define if generator arango-permission-role-group-binding is enabled (default true)
       --generator.arango-permission-role-user-binding     Define if generator arango-permission-role-user-binding is enabled (default true)
       --generator.arango-permission-token                 Define if generator arango-permission-token is enabled (default true)
       --generator.arango-platform-chart                   Define if generator arango-platform-chart is enabled (default true)

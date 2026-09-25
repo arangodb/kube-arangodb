@@ -139,6 +139,7 @@ rules:
       - "arangopermissionpolicyrolebindings.permission.arangodb.com"
       - "arangopermissionroles.permission.arangodb.com"
       - "arangopermissionroleuserbindings.permission.arangodb.com"
+      - "arangopermissionrolegroupbindings.permission.arangodb.com"
       - "arangopermissiontokens.permission.arangodb.com"
 ---
 # Source: kube-arangodb/templates/deployment-operator/cluster-role.yaml
@@ -965,6 +966,8 @@ rules:
       - "arangopermissionpolicyrolebindings/status"
       - "arangopermissionroleuserbindings"
       - "arangopermissionroleuserbindings/status"
+      - "arangopermissionrolegroupbindings"
+      - "arangopermissionrolegroupbindings/status"
     verbs:
       - "get"
       - "list"
