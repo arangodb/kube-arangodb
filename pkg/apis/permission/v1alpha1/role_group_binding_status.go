@@ -28,4 +28,13 @@ type ArangoPermissionRoleGroupBindingStatus struct {
 	// Conditions specific to this binding
 	// +doc/type: api.Conditions
 	Conditions sharedApi.ConditionList `json:"conditions,omitempty"`
+
+	// Deployment keeps the Deployment Reference
+	Deployment *sharedApi.Object `json:"deployment,omitempty"`
+
+	// Role keeps the Role Reference
+	Role *sharedApi.Object `json:"role,omitempty"`
+
+	// GroupRoleBinding keeps the GroupRoleBinding Reference
+	GroupRoleBinding *sharedApi.Object `json:"groupRoleBinding,omitempty"`
 }
