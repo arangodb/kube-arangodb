@@ -97,6 +97,7 @@ func AllDefinitions() []Definition {
 		PermissionRoleDefinitionWithOptions(),
 		PermissionPolicyRoleBindingDefinitionWithOptions(),
 		PermissionRoleUserBindingDefinitionWithOptions(),
+		PermissionRoleGroupBindingDefinitionWithOptions(),
 	}
 }
 

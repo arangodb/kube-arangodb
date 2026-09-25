@@ -34,6 +34,8 @@ type Interface interface {
 	ArangoPermissionPolicyRoleBindings() ArangoPermissionPolicyRoleBindingInformer
 	// ArangoPermissionRoles returns a ArangoPermissionRoleInformer.
 	ArangoPermissionRoles() ArangoPermissionRoleInformer
+	// ArangoPermissionRoleGroupBindings returns a ArangoPermissionRoleGroupBindingInformer.
+	ArangoPermissionRoleGroupBindings() ArangoPermissionRoleGroupBindingInformer
 	// ArangoPermissionRoleUserBindings returns a ArangoPermissionRoleUserBindingInformer.
 	ArangoPermissionRoleUserBindings() ArangoPermissionRoleUserBindingInformer
 	// ArangoPermissionTokens returns a ArangoPermissionTokenInformer.
@@ -64,6 +66,11 @@ func (v *version) ArangoPermissionPolicyRoleBindings() ArangoPermissionPolicyRol
 // ArangoPermissionRoles returns a ArangoPermissionRoleInformer.
 func (v *version) ArangoPermissionRoles() ArangoPermissionRoleInformer {
 	return &arangoPermissionRoleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ArangoPermissionRoleGroupBindings returns a ArangoPermissionRoleGroupBindingInformer.
+func (v *version) ArangoPermissionRoleGroupBindings() ArangoPermissionRoleGroupBindingInformer {
+	return &arangoPermissionRoleGroupBindingInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ArangoPermissionRoleUserBindings returns a ArangoPermissionRoleUserBindingInformer.

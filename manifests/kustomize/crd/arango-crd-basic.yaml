@@ -553,6 +553,47 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
+    arangodb.com/schema: df9ac825cae7d9a80461bbb8eaad6260
+    arangodb.com/status-subresource: "false"
+    arangodb.com/version: f1943467a078927404b55bc13105539f
+    arangodb.com/x-preserve-unknown-fields: "false"
+  name: arangopermissionrolegroupbindings.permission.arangodb.com
+spec:
+  group: permission.arangodb.com
+  names:
+    kind: ArangoPermissionRoleGroupBinding
+    listKind: ArangoPermissionRoleGroupBindingList
+    plural: arangopermissionrolegroupbindings
+    shortNames:
+      - arangorolegroupbinding
+    singular: arangopermissionrolegroupbinding
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Defines if RoleGroupBinding is valid
+          jsonPath: .status.conditions[?(@.type=="Ready")].status
+          name: Ready
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              type: object
+            status:
+              description: Object with preserved fields for backward compatibility
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
     arangodb.com/schema: 6fbd96a3933d64ab6501da91ca83390a
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 3153a771a3b24742eee61f10fd64ce1d
@@ -1121,7 +1162,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: d84a4b23394c30c378f5d6904f15a712
+    arangodb.com/schema: 4848cbd582629a2f1e19780b38725883
     arangodb.com/status-subresource: "false"
     arangodb.com/version: b6ce8014e77e8d26d6feb526d103e08b
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -1210,6 +1251,11 @@ spec:
                   required:
                     - name
                   type: object
+                hibernate:
+                  description: |-
+                    Hibernate, when true, injects the hibernated flag into the chart values (arangodb_platform.hibernated)
+                    so the chart can render its hibernated form.
+                  type: boolean
                 install:
                   description: Install keeps the install overrides
                   properties:
@@ -1510,7 +1556,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    arangodb.com/schema: f04b4c235cc8f9713202a45c16756d8e
+    arangodb.com/schema: 978126126795bbb90c2d7859e5b938f0
     arangodb.com/status-subresource: "false"
     arangodb.com/version: 68941b7b3c7fc1d5288b35a1c9251b9f
     arangodb.com/x-preserve-unknown-fields: "false"
@@ -1556,6 +1602,11 @@ spec:
                   required:
                     - name
                   type: object
+                hibernate:
+                  description: |-
+                    Hibernate, when true, injects the hibernated flag into the chart values (arangodb_platform.hibernated)
+                    so the chart can render its hibernated form.
+                  type: boolean
                 install:
                   description: Install keeps the install overrides
                   properties:

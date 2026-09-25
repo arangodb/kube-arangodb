@@ -35,7 +35,8 @@ func Permission(f shared.FactoryGen) {
 		Register("role", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionRole](arangoPermissionV1alpha1ArangoPermissionRoleList, shared.WithDefinitions[*permissionApi.ArangoPermissionRole])).
 		Register("policy", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionPolicy](arangoPermissionV1alpha1ArangoPermissionPolicyList, shared.WithDefinitions[*permissionApi.ArangoPermissionPolicy])).
 		Register("policy-role-binding", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionPolicyRoleBinding](arangoPermissionV1alpha1ArangoPermissionPolicyRoleBindingList, shared.WithDefinitions[*permissionApi.ArangoPermissionPolicyRoleBinding])).
-		Register("role-user-binding", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionRoleUserBinding](arangoPermissionV1alpha1ArangoPermissionRoleUserBindingList, shared.WithDefinitions[*permissionApi.ArangoPermissionRoleUserBinding]))
+		Register("role-user-binding", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionRoleUserBinding](arangoPermissionV1alpha1ArangoPermissionRoleUserBindingList, shared.WithDefinitions[*permissionApi.ArangoPermissionRoleUserBinding])).
+		Register("role-group-binding", true, shared.WithKubernetesItems[*permissionApi.ArangoPermissionRoleGroupBinding](arangoPermissionV1alpha1ArangoPermissionRoleGroupBindingList, shared.WithDefinitions[*permissionApi.ArangoPermissionRoleGroupBinding]))
 
 }
 
@@ -90,6 +91,18 @@ func arangoPermissionV1alpha1ArangoPermissionPolicyRoleBindingList(ctx context.C
 func arangoPermissionV1alpha1ArangoPermissionRoleUserBindingList(ctx context.Context, client kclient.Client, namespace string) ([]*permissionApi.ArangoPermissionRoleUserBinding, error) {
 	return list.ListObjects[*permissionApi.ArangoPermissionRoleUserBindingList, *permissionApi.ArangoPermissionRoleUserBinding](ctx, client.Arango().PermissionV1alpha1().ArangoPermissionRoleUserBindings(namespace), func(result *permissionApi.ArangoPermissionRoleUserBindingList) []*permissionApi.ArangoPermissionRoleUserBinding {
 		q := make([]*permissionApi.ArangoPermissionRoleUserBinding, len(result.Items))
+
+		for id, e := range result.Items {
+			q[id] = e.DeepCopy()
+		}
+
+		return q
+	})
+}
+
+func arangoPermissionV1alpha1ArangoPermissionRoleGroupBindingList(ctx context.Context, client kclient.Client, namespace string) ([]*permissionApi.ArangoPermissionRoleGroupBinding, error) {
+	return list.ListObjects[*permissionApi.ArangoPermissionRoleGroupBindingList, *permissionApi.ArangoPermissionRoleGroupBinding](ctx, client.Arango().PermissionV1alpha1().ArangoPermissionRoleGroupBindings(namespace), func(result *permissionApi.ArangoPermissionRoleGroupBindingList) []*permissionApi.ArangoPermissionRoleGroupBinding {
+		q := make([]*permissionApi.ArangoPermissionRoleGroupBinding, len(result.Items))
 
 		for id, e := range result.Items {
 			q[id] = e.DeepCopy()

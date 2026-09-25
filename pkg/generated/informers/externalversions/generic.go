@@ -107,6 +107,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionPolicyRoleBindings().Informer()}, nil
 	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissionroles"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionRoles().Informer()}, nil
+	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissionrolegroupbindings"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionRoleGroupBindings().Informer()}, nil
 	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissionroleuserbindings"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionRoleUserBindings().Informer()}, nil
 	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissiontokens"):

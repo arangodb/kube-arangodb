@@ -31,6 +31,7 @@ func init() {
 		crds.PermissionPolicyDefinitionWithOptions,
 		crds.PermissionPolicyRoleBindingDefinitionWithOptions,
 		crds.PermissionRoleUserBindingDefinitionWithOptions,
+		crds.PermissionRoleGroupBindingDefinitionWithOptions,
 	}
 	for _, getDef := range defs {
 		defFn := getDef // bring into scope

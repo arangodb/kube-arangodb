@@ -372,6 +372,9 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoPermissionRoleUserBinding.V1Alpha1": {
 						"Spec": permissionApi.ArangoPermissionRoleUserBinding{}.Spec,
 					},
+					"ArangoPermissionRoleGroupBinding.V1Alpha1": {
+						"Spec": permissionApi.ArangoPermissionRoleGroupBinding{}.Spec,
+					},
 				},
 				Shared: []string{
 					"permission/v1alpha1/policy",

@@ -35,6 +35,7 @@ type PermissionV1alpha1Interface interface {
 	ArangoPermissionPoliciesGetter
 	ArangoPermissionPolicyRoleBindingsGetter
 	ArangoPermissionRolesGetter
+	ArangoPermissionRoleGroupBindingsGetter
 	ArangoPermissionRoleUserBindingsGetter
 	ArangoPermissionTokensGetter
 }
@@ -54,6 +55,10 @@ func (c *PermissionV1alpha1Client) ArangoPermissionPolicyRoleBindings(namespace 
 
 func (c *PermissionV1alpha1Client) ArangoPermissionRoles(namespace string) ArangoPermissionRoleInterface {
 	return newArangoPermissionRoles(c, namespace)
+}
+
+func (c *PermissionV1alpha1Client) ArangoPermissionRoleGroupBindings(namespace string) ArangoPermissionRoleGroupBindingInterface {
+	return newArangoPermissionRoleGroupBindings(c, namespace)
 }
 
 func (c *PermissionV1alpha1Client) ArangoPermissionRoleUserBindings(namespace string) ArangoPermissionRoleUserBindingInterface {

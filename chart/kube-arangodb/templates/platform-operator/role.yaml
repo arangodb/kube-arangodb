@@ -47,6 +47,8 @@ rules:
       - "arangopermissionpolicyrolebindings/status"
       - "arangopermissionroleuserbindings"
       - "arangopermissionroleuserbindings/status"
+      - "arangopermissionrolegroupbindings"
+      - "arangopermissionrolegroupbindings/status"
     verbs:
       - "get"
       - "list"
