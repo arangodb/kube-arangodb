@@ -148,6 +148,36 @@ service AuthorizationAPI {
     };
   }
 
+  // List all role bindings for a group
+  rpc APIListGroupRoleBindings(AuthorizationAPIGroupRequest) returns (AuthorizationAPIGroupRoleBindingListResponse){
+    option (google.api.http) = {
+      get: "/_management/permissions/group/{group}/role"
+    };
+  }
+
+  // Assign a role with scope to a group
+  rpc APIAssignGroupRole(AuthorizationAPIGroupRoleBindingRequest) returns (AuthorizationAPIGroupRoleBindingResponse){
+    option (google.api.http) = {
+      post: "/_management/permissions/group/{group}/role/{role}"
+      body: "*"
+    };
+  }
+
+  // Remove a role from a group
+  rpc APIRemoveGroupRole(AuthorizationAPIGroupRoleRequest) returns (AuthorizationAPIGroupRoleBindingResponse){
+    option (google.api.http) = {
+      delete: "/_management/permissions/group/{group}/role/{role}"
+    };
+  }
+
+  // Replace the scope for a role binding of a group
+  rpc APIReplaceGroupRoleScope(AuthorizationAPIGroupRoleBindingRequest) returns (AuthorizationAPIGroupRoleBindingResponse){
+    option (google.api.http) = {
+      put: "/_management/permissions/group/{group}/role/{role}"
+      body: "*"
+    };
+  }
+
   // Refresh all poolers and return once completed
   rpc APIRefresh(AuthorizationAPIRefreshRequest) returns (AuthorizationAPIRefreshResponse){
     option (google.api.http) = {
@@ -267,6 +297,54 @@ message AuthorizationAPIUserRoleBindingResponse {
 // AuthorizationAPI User Role Binding List Response
 message AuthorizationAPIUserRoleBindingListResponse {
   // List of role bindings for the user
+  repeated types.UserRoleBinding bindings = 1;
+}
+
+// AuthorizationAPI Group Request
+message AuthorizationAPIGroupRequest {
+  // Name of the group
+  string group = 1;
+}
+
+// AuthorizationAPI Group Role Request
+message AuthorizationAPIGroupRoleRequest {
+  // Name of the group
+  string group = 1;
+
+  // Name of the role
+  string role = 2;
+}
+
+// AuthorizationAPI Group Role Binding Request
+message AuthorizationAPIGroupRoleBindingRequest {
+  // Name of the group
+  string group = 1;
+
+  // Name of the role
+  string role = 2;
+
+  // Scope policy for this binding
+  types.Policy scope = 3;
+}
+
+// AuthorizationAPI Group Role Binding Response
+message AuthorizationAPIGroupRoleBindingResponse {
+  // Name of the group
+  string group = 1;
+
+  // Name of the role
+  string role = 2;
+
+  // Scope policy for this binding
+  types.Policy scope = 3;
+
+  // Sequence index of the binding in the pool
+  uint32 index = 4;
+}
+
+// AuthorizationAPI Group Role Binding List Response
+message AuthorizationAPIGroupRoleBindingListResponse {
+  // List of role bindings for the group
   repeated types.UserRoleBinding bindings = 1;
 }
 

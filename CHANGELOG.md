@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (RBAC) Add group role bindings to the authorization sidecar: a dedicated group-binding pool with Assign/Replace/Remove/List gRPC (and pool streaming), and both evaluation paths union the roles bound to the groups carried in the request's token groups claim with the user's direct bindings
 - (Bugfix) (Gateway) Include the gateway TLS-keyfile finalizer in ManagedFinalizers so it is removed during deployment cleanup, instead of leaving gateway pods stuck terminating after the ArangoDeployment is deleted
 - (Bugfix) (Gateway) Key the gateway inventory delivery mode and reported config revision on the per-deployment resolved mode (GatewayDynamicModePush) instead of the global gateway-config-push feature flag, so a static (non-dynamic) gateway reports the config checksum and its GatewayConfig condition propagates instead of hanging deployment readiness
 - (Feature) (Platform) Tag collector startup events with the SHA256-hashed arangod member id (sourced from a new ARANGODB_OVERRIDE_MEMBER_ID env, allowlisted in the rotation compare) and add a License Manager inventory fetcher that enumerates DBServers and Coordinators (or the single server) via cluster health and reports each member's latest startup values as ARANGO_MEMBER_STARTUP items with the serverID and nodeName SHA256-hashed and the podUID/bootID as dimensions (members present in health without a startup event still yield a marker item); skipped when the _events collection is absent
