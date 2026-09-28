@@ -2,6 +2,80 @@ v1alpha1:
   openAPIV3Schema:
     properties:
       spec:
+        properties:
+          deployment:
+            description: Deployment keeps the Deployment Reference
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          groupName:
+            description: |-
+              GroupName is the name of the group to bind the role to. The group is matched against the groups
+              claim of the identity token, so the binding applies to every user whose token lists this group.
+            type: string
+          role:
+            description: Role defines the role to bind, either by CRD name or direct sidecar name
+            properties:
+              direct:
+                description: |-
+                  Direct references an existing authorization object (role or policy) by its exact name, without
+                  a backing ArangoPermission CRD - e.g. an operator-managed predefined role
+                  "managed:predefined:coredb-reader". The value is used as-is. Exactly one of Name or Direct
+                  must be set.
+                type: string
+              name:
+                description: Name references an ArangoPermission CRD by name. The operator resolves it to the sidecar name.
+                type: string
+            type: object
+          scope:
+            description: Scope defines the inline scope policy for this binding
+            properties:
+              description:
+                description: Description is an optional human-readable description of this policy
+                type: string
+              statements:
+                description: Statements list of the policy Statements
+                items:
+                  properties:
+                    actions:
+                      description: |-
+                        Actions defines the list of actions.
+                        Action needs to be defined in format `<namespace>:<name>`
+                      items:
+                        type: string
+                      type: array
+                    description:
+                      description: Description is an optional human-readable description of what this statement does
+                      type: string
+                    effect:
+                      description: Effect defines the statement effect.
+                      enum:
+                        - Allow
+                        - Deny
+                      type: string
+                    resources:
+                      description: Resources defines the list of resources
+                      items:
+                        type: string
+                      type: array
+                  required:
+                    - actions
+                    - effect
+                    - resources
+                  type: object
+                type: array
+            required:
+              - statements
+            type: object
+        required:
+          - deployment
+          - groupName
+          - role
+          - scope
         type: object
       status:
         description: Object with preserved fields for backward compatibility

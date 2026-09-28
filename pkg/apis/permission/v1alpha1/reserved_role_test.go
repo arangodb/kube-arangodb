@@ -58,6 +58,24 @@ func Test_ReservedRole_NotAssignable(t *testing.T) {
 		}).Validate())
 	})
 
+	t.Run("RoleGroupBinding rejects super-admin", func(t *testing.T) {
+		require.ErrorContains(t, (&ArangoPermissionRoleGroupBindingSpec{
+			Deployment: depl,
+			Role:       &ArangoPermissionBindingRef{Direct: superAdmin},
+			GroupName:  "developers",
+			Scope:      scope,
+		}).Validate(), "reserved")
+	})
+
+	t.Run("RoleGroupBinding allows a normal predefined role", func(t *testing.T) {
+		require.NoError(t, (&ArangoPermissionRoleGroupBindingSpec{
+			Deployment: depl,
+			Role:       &ArangoPermissionBindingRef{Direct: coreDBReader},
+			GroupName:  "developers",
+			Scope:      scope,
+		}).Validate())
+	})
+
 	t.Run("PolicyRoleBinding rejects super-admin", func(t *testing.T) {
 		require.ErrorContains(t, (&ArangoPermissionPolicyRoleBindingSpec{
 			Deployment: depl,
