@@ -144,6 +144,10 @@ func (a *implementation) APIRemoveUserRole(ctx context.Context, request *sidecar
 	key := userRoleBindingKey(request.GetUser(), request.GetRole())
 
 	if index, err := a.userRoleBindings.Delete(ctx, key); err != nil {
+		if pool.IsPoolNotFound(err) {
+			return nil, status.Error(codes.NotFound, "User role binding not found")
+		}
+
 		return nil, status.Error(codes.Internal, err.Error())
 	} else {
 		identity := authenticator.GetIdentity(ctx)
