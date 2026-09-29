@@ -23,6 +23,7 @@ package integration
 import (
 	"context"
 	"fmt"
+	"sort"
 	goStrings "strings"
 	"sync"
 
@@ -166,6 +167,9 @@ func (m *inMemoryMetaStore) List(ctx context.Context, in *pbMetaV1.ListRequest, 
 			keys = append(keys, k)
 		}
 	}
+
+	// Mirror the server, which returns keys sorted ascending (AQL SORT doc._key).
+	sort.Strings(keys)
 
 	return &mockListClient{keys: keys}, nil
 }

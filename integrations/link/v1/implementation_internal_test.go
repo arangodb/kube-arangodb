@@ -44,7 +44,7 @@ func Test_Internal_PickUpJob_Success(t *testing.T) {
 	pickedID := pickUp(t, impl)
 	require.Equal(t, id, pickedID)
 
-	job := requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_SCHEDULED)
+	job := requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING)
 	require.NotNil(t, job.HandlerId)
 	require.NotEmpty(t, *job.HandlerId)
 	require.NotNil(t, job.Result)
@@ -52,8 +52,8 @@ func Test_Internal_PickUpJob_Success(t *testing.T) {
 	require.Contains(t, *job.Result, id)
 
 	requireStatusHistory(t, job,
-		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
 		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_TODO,
 	)
 }
 
@@ -73,20 +73,20 @@ func Test_Internal_FullLifecycle(t *testing.T) {
 
 	id := createTestJob(t, impl, `{"aql": "FOR d IN col RETURN d"}`)
 
-	// Pending → Scheduled
+	// Todo → Pending
 	pickUp(t, impl)
 
-	// Scheduled → Running
-	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing query")
+	// In-progress update (stays Pending)
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Executing query")
 
-	// Running → Completed
-	job := updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_COMPLETED, "Done")
+	// Pending → Finished
+	job := updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FINISHED, "Done")
 
 	requireStatusHistory(t, job,
-		pbLinkV1.JobState_JOB_STATE_COMPLETED,
-		pbLinkV1.JobState_JOB_STATE_RUNNING,
-		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
+		pbLinkV1.JobState_JOB_STATE_FINISHED,
 		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_TODO,
 	)
 }
 
@@ -95,16 +95,16 @@ func Test_Internal_FailedJob(t *testing.T) {
 
 	id := createTestJob(t, impl, "bad-query")
 	pickUp(t, impl)
-	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing")
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Executing")
 
 	job := updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FAILED, "Syntax error")
 
 	require.Equal(t, "Syntax error", job.Statuses[0].Description)
 	requireStatusHistory(t, job,
 		pbLinkV1.JobState_JOB_STATE_FAILED,
-		pbLinkV1.JobState_JOB_STATE_RUNNING,
-		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
 		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_TODO,
 	)
 }
 
@@ -113,11 +113,11 @@ func Test_Internal_InvalidTransition(t *testing.T) {
 
 	id := createTestJob(t, impl, "invalid")
 
-	// Pending → Completed is invalid (must go through Scheduled)
+	// Todo → Finished is invalid (a job must be picked up into Pending first)
 	_, err := impl.UpdateJobStatus(context.Background(), &pbLinkV1.UpdateJobStatusRequest{
 		Id: id,
 		Status: &pbLinkV1.JobStatus{
-			State: pbLinkV1.JobState_JOB_STATE_COMPLETED,
+			State: pbLinkV1.JobState_JOB_STATE_FINISHED,
 		},
 	})
 	require.Error(t, err)
@@ -131,7 +131,7 @@ func Test_Internal_StatusHistoryMaxEntries(t *testing.T) {
 
 	// Push many status updates to exceed maxStatusHistory
 	for i := 0; i < 15; i++ {
-		updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Running")
+		updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Running")
 		updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FAILED, "Failed")
 
 		// Re-create and pick up fresh for next iteration since Failed is terminal
@@ -139,7 +139,7 @@ func Test_Internal_StatusHistoryMaxEntries(t *testing.T) {
 		pickUp(t, impl)
 	}
 
-	job := requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_SCHEDULED)
+	job := requireJobState(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING)
 	require.LessOrEqual(t, len(job.Statuses), maxStatusHistory)
 }
 

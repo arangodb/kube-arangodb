@@ -30,25 +30,25 @@ import (
 )
 
 // Test_Lifecycle_Complete tests the full happy path:
-// CreateJob → PickUp → Running → Upload files → Completed
+// CreateJob → PickUp → in-progress update → Upload files → Finished
 func Test_Lifecycle_Complete(t *testing.T) {
 	env := newTestEnv(t)
 	ctx := context.Background()
 
 	// 1. Create job
 	id := createTestJob(t, env.implementation, `{"aql": "FOR d IN users RETURN d"}`)
-	requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_PENDING)
+	requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_TODO)
 
 	// 2. Pick up
 	pickedID := pickUp(t, env.implementation)
 	require.Equal(t, id, pickedID)
-	job := requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_SCHEDULED)
+	job := requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_PENDING)
 	require.NotNil(t, job.HandlerId)
 	require.NotNil(t, job.Result)
 
-	// 3. Running
-	updateStatus(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing AQL query")
-	requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_RUNNING)
+	// 3. In-progress update (stays Pending)
+	updateStatus(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Executing AQL query")
+	requireJobState(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_PENDING)
 
 	// 4. Upload result files
 	resultData := []byte(`[{"name":"alice"},{"name":"bob"}]`)
@@ -88,55 +88,55 @@ func Test_Lifecycle_Complete(t *testing.T) {
 	require.Equal(t, 2, gotStats["count"])
 	require.Equal(t, 15, gotStats["time_ms"])
 
-	// 6. Complete
-	job = updateStatus(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_COMPLETED, "Query returned 2 documents")
+	// 6. Finish
+	job = updateStatus(t, env.implementation, id, pbLinkV1.JobState_JOB_STATE_FINISHED, "Query returned 2 documents")
 
 	requireStatusHistory(t, job,
-		pbLinkV1.JobState_JOB_STATE_COMPLETED,
-		pbLinkV1.JobState_JOB_STATE_RUNNING,
-		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
+		pbLinkV1.JobState_JOB_STATE_FINISHED,
 		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_TODO,
 	)
 }
 
 // Test_Lifecycle_Failed tests the failure path:
-// CreateJob → PickUp → Running → Failed
+// CreateJob → PickUp → in-progress → Failed
 func Test_Lifecycle_Failed(t *testing.T) {
 	impl := newTestImpl(t)
 
 	id := createTestJob(t, impl, `{"aql": "INVALID SYNTAX"}`)
 	pickUp(t, impl)
-	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing")
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Executing")
 
 	job := updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FAILED, "AQL parse error at position 1:8")
 
 	require.Equal(t, "AQL parse error at position 1:8", job.Statuses[0].Description)
 	requireStatusHistory(t, job,
 		pbLinkV1.JobState_JOB_STATE_FAILED,
-		pbLinkV1.JobState_JOB_STATE_RUNNING,
-		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
 		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_TODO,
 	)
 }
 
 // Test_Lifecycle_CancelWhileRunning tests cancellation during execution:
-// CreateJob → PickUp → Running → Cancel
+// CreateJob → PickUp → in-progress → Cancel
 func Test_Lifecycle_CancelWhileRunning(t *testing.T) {
 	impl := newTestImpl(t)
 	ctx := context.Background()
 
 	id := createTestJob(t, impl, `{"aql": "FOR d IN huge_collection RETURN d"}`)
 	pickUp(t, impl)
-	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing long query")
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Executing long query")
 
 	resp, err := impl.CancelJob(ctx, &pbLinkV1.CancelJobRequest{Id: id})
 	require.NoError(t, err)
 
 	requireStatusHistory(t, resp.Job,
 		pbLinkV1.JobState_JOB_STATE_CANCELLED,
-		pbLinkV1.JobState_JOB_STATE_RUNNING,
-		pbLinkV1.JobState_JOB_STATE_SCHEDULED,
 		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_PENDING,
+		pbLinkV1.JobState_JOB_STATE_TODO,
 	)
 }
 
@@ -154,10 +154,10 @@ func Test_Lifecycle_MultipleJobs(t *testing.T) {
 		id := pickUp(t, impl)
 
 		if i < 2 {
-			updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Running")
-			updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_COMPLETED, "Done")
+			updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Running")
+			updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FINISHED, "Done")
 		} else {
-			updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Running")
+			updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Running")
 			updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FAILED, "Error")
 		}
 	}
@@ -173,10 +173,10 @@ func Test_Lifecycle_MultipleJobs(t *testing.T) {
 	require.Nil(t, resp2.Id)
 
 	// Count by state
-	completed := pbLinkV1.JobState_JOB_STATE_COMPLETED
-	respCompleted, err := impl.ListJobs(ctx, &pbLinkV1.ListJobsRequest{State: &completed})
+	finished := pbLinkV1.JobState_JOB_STATE_FINISHED
+	respFinished, err := impl.ListJobs(ctx, &pbLinkV1.ListJobsRequest{State: &finished})
 	require.NoError(t, err)
-	require.Len(t, respCompleted.Jobs, 2)
+	require.Len(t, respFinished.Jobs, 2)
 
 	failed := pbLinkV1.JobState_JOB_STATE_FAILED
 	respFailed, err := impl.ListJobs(ctx, &pbLinkV1.ListJobsRequest{State: &failed})
