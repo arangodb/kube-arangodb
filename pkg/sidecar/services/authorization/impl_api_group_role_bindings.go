@@ -52,6 +52,10 @@ func (a *implementation) APIListGroupRoleBindings(ctx context.Context, request *
 		return nil, err
 	}
 
+	if err := a.groupRoleBindings.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	if request.GetGroup() == "" {
 		return nil, status.Error(codes.InvalidArgument, "Group cannot be empty")
 	}
@@ -168,6 +172,10 @@ func (a *implementation) APIReplaceGroupRoleScope(ctx context.Context, request *
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:ReplaceGroupRoleScope", request.GetGroup()); err != nil {
 		return nil, err
+	}
+
+	if err := a.groupRoleBindings.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	if request.GetGroup() == "" {
