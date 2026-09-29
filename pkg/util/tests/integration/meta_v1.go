@@ -122,6 +122,39 @@ func (m *inMemoryMetaStore) Delete(ctx context.Context, in *pbMetaV1.ObjectReque
 	return &pbSharedV1.Empty{}, nil
 }
 
+func (m *inMemoryMetaStore) Move(ctx context.Context, in *pbMetaV1.MoveRequest, opts ...grpc.CallOption) (*pbMetaV1.ObjectResponse, error) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	src, ok := m.objects[in.GetSource()]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "Key %s not found", in.GetSource())
+	}
+
+	if rev := in.Revision; rev != nil {
+		if src.resp.GetRevision() != *rev {
+			return nil, status.Errorf(codes.FailedPrecondition, "revision mismatch: expected %s, got %s", src.resp.GetRevision(), *rev)
+		}
+	}
+
+	if _, ok := m.objects[in.GetDestination()]; ok {
+		return nil, status.Errorf(codes.AlreadyExists, "Key %s already exists", in.GetDestination())
+	}
+
+	newRev := m.nextRev()
+	resp := &pbMetaV1.ObjectResponse{
+		Key:      in.GetDestination(),
+		Revision: &newRev,
+		Object:   src.resp.GetObject(),
+		Meta:     src.resp.GetMeta(),
+	}
+
+	m.objects[in.GetDestination()] = &storedObject{resp: resp}
+	delete(m.objects, in.GetSource())
+
+	return resp, nil
+}
+
 func (m *inMemoryMetaStore) List(ctx context.Context, in *pbMetaV1.ListRequest, opts ...grpc.CallOption) (pbMetaV1.MetaV1_ListClient, error) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
