@@ -79,6 +79,11 @@ type RemoteCache[T RemoteCacheObject] interface {
 	// Returns Removed, Error
 	Remove(ctx context.Context, key string) (bool, error)
 
+	// Move atomically renames the object from one key to another within a single transaction.
+	// When rev is not empty, the source object revision is verified as a precondition.
+	// Returns the outcome of the operation (see MoveResult) and an error for infrastructure failures.
+	Move(ctx context.Context, from, to, rev string) (MoveResult, error)
+
 	// Invalidate invalidates internal cache
 	Invalidate(ctx context.Context, key string)
 

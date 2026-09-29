@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (MetaV1) Add a Move operation that atomically renames an object from one key to another within a single transaction, with optional source-revision precondition
 - (Feature) (RBAC) Add the ArangoPermissionRoleGroupBinding CRD (registration only; spec and reconcile handler follow separately)
 - (Feature) (RBAC) Add group role bindings to the authorization sidecar: a dedicated group-binding pool with Assign/Replace/Remove/List gRPC (and pool streaming), and both evaluation paths union the roles bound to the groups carried in the request's token groups claim with the user's direct bindings
 - (Feature) (RBAC) Add the ArangoPermissionRoleGroupBinding CRD and operator handler, reconciling a role-to-group binding (with scope) into the authorization sidecar's group-binding pool
