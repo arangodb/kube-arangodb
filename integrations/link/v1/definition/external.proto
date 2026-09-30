@@ -76,6 +76,9 @@ message CreateJobRequest {
   bytes input = 1;
   // Per-job timeout. If not set, no timeout
   optional google.protobuf.Duration timeout = 2;
+  // Scheduling priority. Higher values are picked up first; ties are broken
+  // FIFO by creation time. Defaults to 0
+  int32 priority = 3;
 }
 
 // Create Job Response
