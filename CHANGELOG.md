@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (RBAC) Return NotFound instead of Internal when removing a user or group role binding that does not exist
 - (Feature) (ArangoLink) Rewire the job store to a state-in-key layout (ToDo/Pending/Finished/Failed/Cancelled buckets, modelled on the ArangoDB agency job lifecycle) with MetaV1 Move for atomic state transitions, add numeric job priority (higher first, FIFO tie-break via a creation-epoch-prefixed job id), and pick up jobs by listing only the ToDo bucket instead of scanning every job
 - (Feature) (MetaV1) Add a Move operation that atomically renames an object from one key to another within a single transaction, with optional source-revision precondition
 - (Feature) (RBAC) Add the ArangoPermissionRoleGroupBinding CRD (registration only; spec and reconcile handler follow separately)
