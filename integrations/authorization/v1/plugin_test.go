@@ -62,6 +62,10 @@ func (p *pluginTestImpl) Ready(ctx context.Context) error {
 	return nil
 }
 
+func (p *pluginTestImpl) Refresh(ctx context.Context) error {
+	return nil
+}
+
 func (p *pluginTestImpl) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
