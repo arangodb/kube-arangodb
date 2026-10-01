@@ -62,6 +62,9 @@ type client struct {
 
 	setLock sync.Mutex
 
+	refreshLock sync.Mutex
+	lastRefresh time.Time
+
 	client cache.Object[sidecarSvcAuthzDefinition.AuthorizationPoolServiceClient]
 
 	closed chan struct{}
@@ -81,9 +84,19 @@ func (c *client) Revision() uint64 {
 }
 
 func (c *client) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
-	groups := c.get().extractGroups(req.GetUser(), req.GetRoles())
+	resp, err := c.get().extractGroups(req.GetUser(), req.GetRoles()).Evaluate(req)
+	if err != nil {
+		return resp, err
+	}
 
-	return groups.Evaluate(req)
+	// A non-Allow result may be a false deny from a stale stream (e.g. a role/policy/binding that was
+	// just written but has not yet propagated to this client's cache). Re-pull the state once (rate
+	// limited) and re-evaluate so the decision reflects the authoritative store.
+	if resp.GetEffect() != sidecarSvcAuthzTypes.Effect_Allow && c.tryRefresh(ctx) {
+		return c.get().extractGroups(req.GetUser(), req.GetRoles()).Evaluate(req)
+	}
+
+	return resp, err
 }
 
 func (c *client) get() *internalCache {

@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (RBAC) On a denied authorization evaluation, re-pull the pool client's cache from the pool service and re-evaluate once (rate limited to once per second) so a false deny from a not-yet-propagated role/policy/binding self-corrects instead of denying until the next stream update
 - (Bugfix) (RBAC) Return NotFound instead of Internal when removing a user or group role binding that does not exist
 - (Feature) (ArangoLink) Rewire the job store to a state-in-key layout (ToDo/Pending/Finished/Failed/Cancelled buckets, modelled on the ArangoDB agency job lifecycle) with MetaV1 Move for atomic state transitions, add numeric job priority (higher first, FIFO tie-break via a creation-epoch-prefixed job id), and pick up jobs by listing only the ToDo bucket instead of scanning every job
 - (Feature) (MetaV1) Add a Move operation that atomically renames an object from one key to another within a single transaction, with optional source-revision precondition
