@@ -52,6 +52,10 @@ func (a *implementation) APIListUserRoleBindings(ctx context.Context, request *s
 		return nil, err
 	}
 
+	if err := a.userRoleBindings.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	if request.GetUser() == "" {
 		return nil, status.Error(codes.InvalidArgument, "User cannot be empty")
 	}
@@ -168,6 +172,10 @@ func (a *implementation) APIReplaceUserRoleScope(ctx context.Context, request *s
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:ReplaceUserRoleScope", request.GetUser()); err != nil {
 		return nil, err
+	}
+
+	if err := a.userRoleBindings.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	if request.GetUser() == "" {
