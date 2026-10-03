@@ -33,6 +33,7 @@ import (
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -106,6 +107,20 @@ func (i *implementation) Evaluate(ctx context.Context, request *pbAuthorizationV
 	}
 
 	return i.plugin.Evaluate(ctx, request)
+}
+
+// Refresh forces the authorization cache to re-pull its state from the pool service so a
+// just-written policy/role/binding is visible immediately. Plugins without a backing cache no-op.
+func (i *implementation) Refresh(ctx context.Context, _ *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
+	if err := i.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := i.plugin.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pbSharedV1.Empty{}, nil
 }
 
 func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionManyRequest) (*pbAuthorizationV1.AuthorizationV1PermissionManyResponse, error) {

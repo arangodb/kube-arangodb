@@ -44,6 +44,10 @@ func (p permissive) Ready(ctx context.Context) error {
 	return p.parent.Ready(ctx)
 }
 
+func (p permissive) Refresh(ctx context.Context) error {
+	return p.parent.Refresh(ctx)
+}
+
 func (p permissive) Revision() uint64 {
 	return p.parent.Revision()
 }

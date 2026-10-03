@@ -25,6 +25,7 @@ package authorization;
 import "google/api/annotations.proto";
 
 import "integrations/authorization/v1/definition/request.proto";
+import "integrations/shared/v1/definition/empty.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition";
 
@@ -57,6 +58,15 @@ service AuthorizationV1 {
   rpc EvaluateTokenMany(AuthorizationV1PermissionTokenManyRequest) returns (AuthorizationV1PermissionManyResponse) {
     option (google.api.http) = {
       post: "/_integration/authorization/v1/evaluate-token-many"
+      body: '*'
+    };
+  }
+
+  // Refresh forces the authorization cache to re-pull the current state from the pool service, so a
+  // just-written policy/role/binding becomes visible immediately instead of on the next streamed update
+  rpc Refresh(shared.Empty) returns (shared.Empty) {
+    option (google.api.http) = {
+      post: "/_integration/authorization/v1/refresh"
       body: '*'
     };
   }

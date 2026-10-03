@@ -67,6 +67,10 @@ func (c *cachedPlugin) Ready(ctx context.Context) error {
 	return c.parent.Ready(ctx)
 }
 
+func (c *cachedPlugin) Refresh(ctx context.Context) error {
+	return c.parent.Refresh(ctx)
+}
+
 func (c *cachedPlugin) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
 	hash := req.Hash()
 
