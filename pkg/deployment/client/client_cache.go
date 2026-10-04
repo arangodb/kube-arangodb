@@ -36,7 +36,6 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/shutdown"
 )
 
@@ -48,8 +47,6 @@ type Cache interface {
 	Get(ctx context.Context, group api.ServerGroup, id string) (adbDriverV2.Client, error)
 
 	GetConnection(group api.ServerGroup, id string) (adbDriverV2Connection.Connection, error)
-
-	GetDatabase(ctx context.Context) (adbDriverV2.Client, error)
 }
 
 type CacheGen interface {
@@ -175,29 +172,4 @@ func (cc *cacheObject) Get(ctx context.Context, group api.ServerGroup, id string
 
 func (cc *cacheObject) GetAuth(ctx context.Context) (adbDriverV2Connection.Authentication, error) {
 	return cc.auth.Get(ctx)
-}
-
-func (cc *cacheObject) getDatabaseClient() (adbDriverV2.Client, error) {
-	c, err := cc.Client(k8sutil.CreateDatabaseClientServiceDNSName(cc.in.GetAPIObject()))
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	return c, nil
-}
-
-// GetDatabase returns a cached client for the entire database (cluster coordinators or single server),
-// creating one if needed.
-func (cc *cacheObject) GetDatabase(ctx context.Context) (adbDriverV2.Client, error) {
-	client, err := cc.getDatabaseClient()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if _, err := client.Version(ctx); err == nil {
-		return client, nil
-	} else if adbDriverV2Shared.IsUnauthorized(err) {
-		return cc.getDatabaseClient()
-	} else {
-		return client, nil
-	}
 }

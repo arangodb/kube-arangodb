@@ -668,9 +668,7 @@ func (d *Deployment) lookForServiceMonitorCRD() {
 
 // SetNumberOfServers adjust number of DBservers and coordinators in arangod
 func (d *Deployment) SetNumberOfServers(ctx context.Context, noCoordinators, noDBServers *int) error {
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := d.clientCache.GetDatabase(ctxChild)
+	c, err := d.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -26,7 +26,9 @@ import (
 	"net"
 	goHttp "net/http"
 	"strconv"
+	"sync"
 
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedCore "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
@@ -34,6 +36,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -61,27 +64,30 @@ func WithRequireAuthentication(ctx context.Context) context.Context {
 	return context.WithValue(ctx, requireAuthenticationKey{}, true)
 }
 
-func sharedHTTPTransport() goHttp.RoundTripper {
-	return operatorHTTP.Transport()
-}
+// Shared once per process so idle keep-alive connections are reused by the next client instead of being stranded on a discarded transport.
+var (
+	sharedHTTPTransport = sync.OnceValue(func() goHttp.RoundTripper {
+		return operatorHTTP.Transport()
+	})
 
-func sharedHTTPSTransport() goHttp.RoundTripper {
-	return operatorHTTP.Transport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure))
-}
+	sharedHTTPSTransport = sync.OnceValue(func() goHttp.RoundTripper {
+		return operatorHTTP.Transport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure))
+	})
 
-func sharedHTTPTransportShortTimeout() goHttp.RoundTripper {
-	return operatorHTTP.RoundTripperWithShortTransport()
-}
+	sharedHTTPTransportShortTimeout = sync.OnceValue(func() goHttp.RoundTripper {
+		return operatorHTTP.RoundTripperWithShortTransport()
+	})
 
-func sharedHTTPSTransportShortTimeout() goHttp.RoundTripper {
-	return operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure))
-}
+	sharedHTTPSTransportShortTimeout = sync.OnceValue(func() goHttp.RoundTripper {
+		return operatorHTTP.RoundTripperWithShortTransport(operatorHTTP.WithTransportTLS(operatorHTTP.Insecure))
+	})
+)
 
 // CreateArangodClient creates a go-driver client for a specific member in the given group.
 func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, group api.ServerGroup, id string, asyncSupport bool) (adbDriverV2.Client, error) {
 	// Create connection
 	dnsName := k8sutil.CreatePodDNSNameWithDomain(apiObject, apiObject.GetAcceptedSpec().ClusterDomain, group.AsRole(), id)
-	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, false, asyncSupport)
+	c, err := createArangodClientForDNSNames(ctx, cli, apiObject, []string{dnsName}, false, asyncSupport)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -89,30 +95,77 @@ func CreateArangodClient(ctx context.Context, cli typedCore.CoreV1Interface, api
 }
 
 // CreateArangodDatabaseClient creates a go-driver client for accessing the entire cluster (or single server).
+// It dials the ready serving members at the same endpoints the deployment reconciler uses for them.
 func CreateArangodDatabaseClient(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, shortTimeout bool, asyncSupport bool) (adbDriverV2.Client, error) {
-	// Create connection
-	dnsName := k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, apiObject.GetAcceptedSpec().ClusterDomain)
-	c, err := createArangodClientForDNSName(ctx, cli, apiObject, dnsName, shortTimeout, asyncSupport)
+	dnsNames, err := databaseClientEndpoints(ctx, cli, apiObject)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	c, err := createArangodClientForDNSNames(ctx, cli, apiObject, dnsNames, shortTimeout, asyncSupport)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return c, nil
+}
+
+// databaseClientEndpoints returns the member endpoints of the ready serving members.
+// Dialing a member both directly and through the database client Service VIP lets two flows share a reply tuple,
+// which kube-proxy IPVS resolves by handing the direct SYN-ACK to the VIP flow.
+func databaseClientEndpoints(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment) ([]string, error) {
+	spec := apiObject.GetAcceptedSpec()
+	mode := spec.GetMode()
+
+	if mode == api.DeploymentModeActiveFailover {
+		// Only the database client Service selector tracks the active failover leader.
+		return []string{k8sutil.CreateDatabaseClientServiceDNSNameWithDomain(apiObject, spec.ClusterDomain)}, nil
+	}
+
+	group := mode.ServingGroup()
+	services := cli.Services(apiObject.GetNamespace())
+
+	var endpoints []string
+	for _, member := range apiObject.Status.Members.MembersOfGroup(group) {
+		if !member.Conditions.IsTrue(api.ConditionTypeReady) {
+			continue
+		}
+
+		ctxChild, cancel := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(ctx)
+		svc, err := services.Get(ctxChild, member.ArangoMemberName(apiObject.GetName(), group), meta.GetOptions{})
+		cancel()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		endpoint, err := pod.GenerateMemberEndpointFromService(svc, apiObject, spec, group, member)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		endpoints = append(endpoints, endpoint)
+	}
+
+	if len(endpoints) == 0 {
+		return nil, errors.Errorf("No ready %s member to connect to", group.AsRole())
+	}
+
+	return endpoints, nil
 }
 
 // CreateArangodImageIDClient creates a go-driver client for an ArangoDB instance
 // running in an Image-ID pod.
 func CreateArangodImageIDClient(ctx context.Context, deployment k8sutil.APIObject, ip string, asyncSupport bool) (adbDriverV2.Client, error) {
 	// Create connection
-	c, err := createArangodClientForDNSName(ctx, nil, nil, ip, false, asyncSupport)
+	c, err := createArangodClientForDNSNames(ctx, nil, nil, []string{ip}, false, asyncSupport)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return c, nil
 }
 
-// CreateArangodClientForDNSName creates a go-driver client for a given DNS name.
-func createArangodClientForDNSName(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, dnsName string, shortTimeout bool, asyncSupport bool) (adbDriverV2.Client, error) {
-	connConfig := createArangodHTTPConfigForDNSNames(apiObject, []string{dnsName}, shortTimeout)
+// createArangodClientForDNSNames creates a go-driver client that round-robins over the given DNS names.
+func createArangodClientForDNSNames(ctx context.Context, cli typedCore.CoreV1Interface, apiObject *api.ArangoDeployment, dnsNames []string, shortTimeout bool, asyncSupport bool) (adbDriverV2.Client, error) {
+	connConfig := createArangodHTTPConfigForDNSNames(apiObject, dnsNames, shortTimeout)
 	// TODO deal with TLS with proper CA checking
 	conn := adbDriverV2Connection.NewHttpConnection(connConfig)
 

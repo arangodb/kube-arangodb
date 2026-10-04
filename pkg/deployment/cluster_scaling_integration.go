@@ -158,12 +158,13 @@ func (ci *clusterScalingIntegration) ListenForClusterEvents(stopCh <-chan struct
 func (ci *clusterScalingIntegration) cleanClusterServers(ctx context.Context) error {
 	log := ci.log
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := ci.depl.clientCache.GetDatabase(ctxChild)
+	c, err := ci.depl.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	defer cancel()
 
 	req, err := arangod.GetNumberOfServers(ctxChild, c.Connection())
 	if err != nil {
@@ -186,14 +187,12 @@ func (ci *clusterScalingIntegration) cleanClusterServers(ctx context.Context) er
 func (ci *clusterScalingIntegration) inspectCluster(ctx context.Context, expectSuccess bool) error {
 	log := ci.log
 
-	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
-	c, err := ci.depl.clientCache.GetDatabase(ctxChild)
+	c, err := ci.depl.GetMembersState().State().GetDatabaseClient()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	ctxChild, cancel = globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
+	ctxChild, cancel := globals.GetGlobalTimeouts().ArangoD().WithTimeout(ctx)
 	defer cancel()
 	req, err := arangod.GetNumberOfServers(ctxChild, c.Connection())
 	if err != nil {
