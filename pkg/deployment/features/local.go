@@ -107,10 +107,7 @@ func BindFlags(cmd *cobra.Command) error {
 	for _, feature := range features {
 		z := ""
 
-		versionDesc := string(feature.Version())
-		if versionDesc == "" {
-			versionDesc = fmt.Sprintf(">= %s", MinSupportedArangoDBVersion)
-		}
+		versionDesc := string(withMinimumSupportedVersion(feature.Version()))
 
 		if feature.EnterpriseRequired() {
 			z = fmt.Sprintf("%s - Required ArangoDB EE %s", feature.Description(), versionDesc)
@@ -157,7 +154,7 @@ func cmdRun(_ *cobra.Command, _ []string) {
 		} else {
 			println("Enabled: false")
 		}
-		if c := feature.Version(); c != "" {
+		if c := withMinimumSupportedVersion(feature.Version()); c != "" {
 			println(fmt.Sprintf("ArangoDB Version Required: %s", c))
 		}
 

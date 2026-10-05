@@ -152,6 +152,25 @@ func (f feature) Version() util.VersionConstrain {
 	return f.version
 }
 
+// withMinimumSupportedVersion renders a feature's version requirement for display: when the declared
+// constraint carries no lower bound (it still accepts the zero version), the `>= MinSupportedArangoDBVersion`
+// floor is prepended, so e.g. "< 3.12" shows as ">= 3.8.0 < 3.12" and an empty constraint as ">= 3.8.0".
+// It affects only the documented requirement, not Supported() gating (a feature may still work below the
+// floor, e.g. encryption on 3.7.x). Constraints that already set a lower bound are left as-is.
+func withMinimumSupportedVersion(c util.VersionConstrain) util.VersionConstrain {
+	if ok, err := c.Validate("0.0.0"); err != nil || !ok {
+		// Invalid, or already excludes the zero version (has a lower bound): keep as declared.
+		return c
+	}
+
+	floor := util.VersionConstrain(">= " + MinSupportedArangoDBVersion)
+	if c.Empty() {
+		return floor
+	}
+
+	return floor + " " + c
+}
+
 func (f feature) EnterpriseRequired() bool {
 	return f.enterpriseRequired
 }
