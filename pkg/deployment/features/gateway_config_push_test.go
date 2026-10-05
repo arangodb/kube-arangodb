@@ -54,4 +54,14 @@ func Test_GatewayDynamicModePush(t *testing.T) {
 		require.False(t, GatewayDynamicModePush(dynamicPush), "explicit push is forced off when the feature is disabled")
 		require.False(t, GatewayDynamicModePush(dynamicConfigMap))
 	})
+
+	t.Run("nil spec", func(t *testing.T) {
+		// Regression: a nil gateway spec must never panic, regardless of the feature state.
+		*gatewayConfigPush.EnabledPointer() = true
+		require.NotPanics(t, func() { GatewayDynamicModePush(nil) })
+		require.False(t, GatewayDynamicModePush(nil))
+
+		*gatewayConfigPush.EnabledPointer() = false
+		require.False(t, GatewayDynamicModePush(nil))
+	})
 }

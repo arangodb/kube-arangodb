@@ -130,6 +130,16 @@ func (d *DeploymentSpecGateway) IsDynamic() bool {
 	return *d.Dynamic
 }
 
+// IsDynamicModePush returns whether the dynamic gateway config should be delivered in push mode. Push is
+// the default when DynamicMode is unset (including a nil spec); an explicit DynamicMode wins.
+func (d *DeploymentSpecGateway) IsDynamicModePush() bool {
+	if d == nil || d.DynamicMode == nil {
+		return true
+	}
+
+	return *d.DynamicMode == GatewayDynamicModePush
+}
+
 // GetDynamicMode returns the dynamic config delivery mode, defaulting to ConfigMap.
 func (d *DeploymentSpecGateway) GetDynamicMode() GatewayDynamicMode {
 	if d == nil || d.DynamicMode == nil {

@@ -44,13 +44,5 @@ func GatewayConfigPush() Feature {
 // spec.gateway.dynamicMode wins (push or configmap), and the feature being disabled forces ConfigMap
 // delivery regardless of the spec.
 func GatewayDynamicModePush(g *api.DeploymentSpecGateway) bool {
-	if !g.IsDynamic() || !gatewayConfigPush.Enabled() {
-		return false
-	}
-
-	if g.DynamicMode != nil {
-		return *g.DynamicMode == api.GatewayDynamicModePush
-	}
-
-	return true
+	return g.IsEnabled() && g.IsDynamic() && gatewayConfigPush.Enabled() && g.IsDynamicModePush()
 }
