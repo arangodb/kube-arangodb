@@ -38,7 +38,6 @@ import (
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
-	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/patch"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
@@ -182,8 +181,14 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		return nil, false
 	}
 
+	// central drops the per-deployment (local) integration when the deployment is actually served by the
+	// central integration service, i.e. when the GatewaySidecarEnabled condition is set. It must key on the
+	// SAME condition as templateCentralServiceEnvs (which injects CENTRAL_INTEGRATION_SERVICE_ADDRESS): if it
+	// keyed on features.CentralServices().Enabled() instead, the two could disagree - e.g. on a version where
+	// the gateway sidecar is not supported, or during the window before the condition settles - leaving the
+	// integration neither served locally nor routed centrally (observed as "unknown service ...").
 	central := func(in func() (integrationsSidecar.Integration, bool)) func() (integrationsSidecar.Integration, bool) {
-		if features.CentralServices().Enabled() {
+		if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
 			return never
 		}
 		return in
