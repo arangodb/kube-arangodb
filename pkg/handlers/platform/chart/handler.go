@@ -207,7 +207,7 @@ func chartInfoExtract(chart *chart.Chart, platform *helm.Platform) *platformApi.
 			c.Requirements = make(platformApi.ChartDetailsPlatformRequirements, len(platform.Requirements))
 
 			for k, v := range platform.Requirements {
-				c.Requirements[k] = platformApi.ChartDetailsPlatformVersionConstrain(v)
+				c.Requirements[k] = util.VersionConstrain(v)
 			}
 		}
 

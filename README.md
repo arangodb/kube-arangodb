@@ -175,7 +175,7 @@ Flags:
       --crd.install                                            Install missing CRD if access is possible (default true)
       --crd.preserve-unknown-fields stringArray                Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
       --crd.validation-schema stringArray                      Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
-      --deployment.feature.active-failover                     Support for ActiveFailover mode - Required ArangoDB >= 3.8.0, < 3.12 (default true)
+      --deployment.feature.active-failover                     Support for ActiveFailover mode - Required ArangoDB < 3.12 (default true)
       --deployment.feature.agency-poll                         Enable Agency Poll for Enterprise deployments - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.all                                 Enable ALL Features
       --deployment.feature.async-backup-creation               Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB >= 3.8.0 (default true)
@@ -186,7 +186,7 @@ Flags:
       --deployment.feature.enable-arango-deployment-status     Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) - Required ArangoDB >= 3.8.0
       --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB >= 3.8.0
-      --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB >= 3.8.0, < 3.12
+      --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB < 3.12
       --deployment.feature.gateway                             Defines if gateway extension is enabled - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.gateway-sidecar                     Enables Gateway Integration - Required ArangoDB EE >= 3.8.0
       --deployment.feature.harden                              Adds hardening arguments to the ArangoDB server containers - Required ArangoDB >= 3.8.0

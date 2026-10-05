@@ -24,6 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
 )
@@ -48,7 +49,7 @@ func (u autoUpgrade) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 
 func (u autoUpgrade) Args(i Input) k8sutil.OptionPairs {
 	// Always add upgrade flag due to fact it is now only in initContainers
-	if i.Image.ArangoDBVersion.CompareTo("3.6.0") >= 0 {
+	if util.Version(i.Image.ArangoDBVersion).CompareTo("3.6.0") >= 0 {
 		switch i.Group {
 		case api.ServerGroupCoordinators:
 			return k8sutil.NewOptionPair(k8sutil.OptionPair{Key: "--cluster.upgrade", Value: "online"})

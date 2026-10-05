@@ -626,8 +626,9 @@ func withSecureWrap(member api.MemberStatus,
 }
 
 func skipResignLeadership(mode api.DeploymentMode, v adbDriverV2.Version) bool {
-	return mode == api.DeploymentModeCluster && features.Maintenance().Enabled() && ((v.CompareTo("3.6.0") >= 0 && v.CompareTo("3.6.14") <= 0) ||
-		(v.CompareTo("3.7.0") >= 0 && v.CompareTo("3.7.12") <= 0))
+	vv := util.Version(v)
+	return mode == api.DeploymentModeCluster && features.Maintenance().Enabled() && ((vv.CompareTo("3.6.0") >= 0 && vv.CompareTo("3.6.14") <= 0) ||
+		(vv.CompareTo("3.7.0") >= 0 && vv.CompareTo("3.7.12") <= 0))
 }
 
 func withWaitForMember(plan api.Plan, group api.ServerGroup, member api.MemberStatus) api.Plan {
@@ -647,7 +648,7 @@ func waitForMemberActions(group api.ServerGroup, member api.MemberStatus) api.Pl
 
 func getUpgradeOrder(spec api.DeploymentSpec, from, to adbDriverV2.Version) api.DeploymentSpecOrder {
 	if upgrade := spec.Upgrade; upgrade == nil || upgrade.Order == nil {
-		if to.CompareTo("3.12.4") >= 0 && from.CompareTo("3.12.4") < 0 && from.CompareTo("3.12.0") >= 0 && from != "" && to != "" {
+		if util.Version(to).CompareTo("3.12.4") >= 0 && util.Version(from).CompareTo("3.12.4") < 0 && util.Version(from).CompareTo("3.12.0") >= 0 && from != "" && to != "" {
 			return api.DeploymentSpecOrderCoordinatorFirst
 		}
 	}
@@ -667,7 +668,7 @@ func checkUpgradeRules(from, to api.ImageInfo) error {
 	if to.ArangoDBVersion.Major() >= 4 {
 		// For 3.12 handling lets switch logic
 		if from.ArangoDBVersion.Major() == 3 {
-			if from.ArangoDBVersion.CompareTo("3.12") >= 0 {
+			if util.Version(from.ArangoDBVersion).CompareTo("3.12") >= 0 {
 				return nil
 			}
 

@@ -23,17 +23,14 @@ package features
 import (
 	"sort"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 const (
 	Enabled  = "true"
 	Disabled = "false"
-
-	NoVersionLimit adbDriverV2.Version = ""
 )
 
 type Features []Feature
@@ -60,7 +57,7 @@ type Feature interface {
 	Name() string
 	Description() string
 	Dependencies() []Feature
-	Version() (adbDriverV2.Version, adbDriverV2.Version)
+	Version() util.VersionConstrain
 	EnterpriseRequired() bool
 	OperatorEnterpriseRequired() bool
 	EnabledByDefault() bool
@@ -68,7 +65,7 @@ type Feature interface {
 	EnabledPointer() *bool
 	Deprecated() (bool, string)
 	Hidden() bool
-	Supported(v adbDriverV2.Version, enterprise bool) bool
+	Supported(v util.Version, enterprise bool) bool
 	ImageSupported(i *api.ImageInfo) bool
 	GetDependencies() []string
 	Reset()
@@ -76,24 +73,12 @@ type Feature interface {
 
 type feature struct {
 	name, description                                                         string
-	version                                                                   featureVersion
+	version                                                                   util.VersionConstrain
 	enterpriseRequired, operatorEnterpriseRequired, enabledByDefault, enabled bool
 	deprecated                                                                string
 	constValue                                                                *bool
 	hidden                                                                    bool
 	dependencies                                                              []Feature
-}
-
-func newFeatureVersion(min, max adbDriverV2.Version) featureVersion {
-	return featureVersion{
-		min: min,
-		max: max,
-	}
-}
-
-type featureVersion struct {
-	min adbDriverV2.Version
-	max adbDriverV2.Version
 }
 
 func (f feature) Dependencies() []Feature {
@@ -109,11 +94,7 @@ func (f feature) Dependencies() []Feature {
 }
 
 func (f feature) ImageSupported(i *api.ImageInfo) bool {
-	if i == nil {
-		return false
-	}
-
-	return f.Supported(i.ArangoDBVersion, i.Enterprise)
+	return i != nil && f.Supported(util.Version(i.ArangoDBVersion), i.Enterprise)
 }
 
 func (f feature) Hidden() bool {
@@ -134,7 +115,7 @@ func (f feature) GetDependencies() []string {
 	return deps
 }
 
-func (f feature) Supported(v adbDriverV2.Version, enterprise bool) bool {
+func (f feature) Supported(v util.Version, enterprise bool) bool {
 	return Supported(&f, v, enterprise)
 }
 
@@ -167,8 +148,8 @@ func (f *feature) EnabledPointer() *bool {
 	return &f.enabled
 }
 
-func (f feature) Version() (adbDriverV2.Version, adbDriverV2.Version) {
-	return f.version.min, f.version.max
+func (f feature) Version() util.VersionConstrain {
+	return f.version
 }
 
 func (f feature) EnterpriseRequired() bool {

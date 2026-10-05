@@ -27,7 +27,7 @@ func init() {
 var version310 = &feature{
 	name:               "version.3-10",
 	description:        "Enable support for 3.10 features",
-	version:            newFeatureVersion("3.10.0", NoVersionLimit),
+	version:            ">= 3.10.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
 	hidden:             true,

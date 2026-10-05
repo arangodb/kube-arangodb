@@ -75,7 +75,7 @@ func (r *Reconciler) createRotateTLSServerSNIPlan(ctx context.Context, apiObject
 				continue
 			}
 
-			if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+			if !features.EncryptionRotation().ImageSupported(status.Images.GetPointerByImageID(m.ImageID)) {
 				continue
 			}
 

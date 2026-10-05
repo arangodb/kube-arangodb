@@ -26,6 +26,7 @@ import (
 
 	policy "k8s.io/api/policy/v1"
 
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	inspectorConstants "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants"
@@ -51,7 +52,7 @@ func (p podDisruptionBudgetsInspectorLoader) Component() definitions.Component {
 func (p podDisruptionBudgetsInspectorLoader) Load(ctx context.Context, i *inspectorState) {
 	var q podDisruptionBudgetsInspector
 
-	if i.versionInfo.CompareTo("1.21") >= 1 {
+	if util.Version(i.versionInfo).CompareTo("1.21") >= 0 {
 		q.v1 = newInspectorVersion[*policy.PodDisruptionBudgetList, *policy.PodDisruptionBudget](ctx,
 			inspectorConstants.PodDisruptionBudgetGRv1(),
 			inspectorConstants.PodDisruptionBudgetGKv1(),

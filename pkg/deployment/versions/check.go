@@ -24,6 +24,7 @@ import (
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func NewCheck(version api.ImageInfo) Check {
@@ -50,7 +51,7 @@ type check struct {
 }
 
 func (c check) Below(version adbDriverV2.Version) Check {
-	if c.version.ArangoDBVersion.CompareTo(version) == 1 {
+	if util.Version(c.version.ArangoDBVersion).CompareTo(util.Version(version)) == 1 {
 		return c
 	}
 
@@ -58,7 +59,7 @@ func (c check) Below(version adbDriverV2.Version) Check {
 }
 
 func (c check) BelowOrEqual(version adbDriverV2.Version) Check {
-	if c.version.ArangoDBVersion.CompareTo(version) <= 0 {
+	if util.Version(c.version.ArangoDBVersion).CompareTo(util.Version(version)) <= 0 {
 		return c
 	}
 
@@ -66,7 +67,7 @@ func (c check) BelowOrEqual(version adbDriverV2.Version) Check {
 }
 
 func (c check) Above(version adbDriverV2.Version) Check {
-	if c.version.ArangoDBVersion.CompareTo(version) == -1 {
+	if util.Version(c.version.ArangoDBVersion).CompareTo(util.Version(version)) == -1 {
 		return c
 	}
 
@@ -74,7 +75,7 @@ func (c check) Above(version adbDriverV2.Version) Check {
 }
 
 func (c check) AboveOrEqual(version adbDriverV2.Version) Check {
-	if c.version.ArangoDBVersion.CompareTo(version) >= 0 {
+	if util.Version(c.version.ArangoDBVersion).CompareTo(util.Version(version)) >= 0 {
 		return c
 	}
 

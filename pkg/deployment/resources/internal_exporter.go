@@ -27,6 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
@@ -83,7 +84,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, 
 
 func getArangoExporterInternalEndpoint(version adbDriverV2.Version) string {
 	path := shared.ArangoExporterInternalEndpoint
-	if version.CompareTo("3.8.0") >= 0 {
+	if util.Version(version).CompareTo("3.8.0") >= 0 {
 		path = shared.ArangoExporterInternalEndpointV2
 	}
 	return path

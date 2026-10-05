@@ -60,7 +60,7 @@ func (r *Reconciler) createRestorePlan(ctx context.Context, apiObject k8sutil.AP
 				return p
 			}
 
-			if i := status.CurrentImage; i != nil && features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+			if i := status.CurrentImage; features.EncryptionRotation().ImageSupported(i) {
 				if !status.Hashes.Encryption.Propagated {
 					r.planLogger.Warn("Backup not able to be restored in non propagated state")
 					return nil
@@ -94,7 +94,7 @@ func (r *Reconciler) createRestorePlanEncryption(ctx context.Context, spec api.D
 			return true, nil
 		}
 
-		if i := status.CurrentImage; i == nil || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+		if i := status.CurrentImage; !features.EncryptionRotation().ImageSupported(i) {
 			return false, nil
 		}
 

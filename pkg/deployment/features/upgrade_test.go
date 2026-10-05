@@ -45,4 +45,6 @@ func Test_IsUpgradeIndexOrderIssueEnabled(t *testing.T) {
 	require.True(t, testIsUpgradeIndexOrderIssueEnabled(true, api.ServerGroupDBServers, "3.12.3", "3.12.4"))
 	require.False(t, testIsUpgradeIndexOrderIssueEnabled(true, api.ServerGroupDBServers, "3.12.4", "3.12.4"))
 	require.True(t, testIsUpgradeIndexOrderIssueEnabled(true, api.ServerGroupDBServers, "3.12.2", "3.12.55"))
+	require.True(t, testIsUpgradeIndexOrderIssueEnabled(true, api.ServerGroupDBServers, "3.12.2", "3.12.11"))
+	require.True(t, testIsUpgradeIndexOrderIssueEnabled(true, api.ServerGroupDBServers, "3.12.2", "3.12.11.1"))
 }

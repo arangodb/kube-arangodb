@@ -132,7 +132,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 	}
 
 	if spec.IsAuthenticated() {
-		if image == nil || !features.JWTRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
+		if !features.JWTRotation().ImageSupported(image) {
 			secretName := spec.Authentication.GetJWTSecretName()
 			getExpectedHash := func() string { return getHashes().AuthJWT }
 			setExpectedHash := func(h string) error {
@@ -159,7 +159,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
-		if image == nil || !features.EncryptionRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
+		if !features.EncryptionRotation().ImageSupported(image) {
 			secretName := spec.RocksDB.Encryption.GetKeySecretName()
 			getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
 			setExpectedHash := func(h string) error {

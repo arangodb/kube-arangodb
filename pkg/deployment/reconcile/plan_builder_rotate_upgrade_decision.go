@@ -52,11 +52,11 @@ func (u updateUpgradeDecisionMap) GetFromTo() (from adbDriverV2.Version, to adbD
 			continue
 		}
 
-		if from == "" || from.CompareTo(el.upgradeDecision.From.ArangoDBVersion) > 0 {
+		if from == "" || util.Version(from).CompareTo(util.Version(el.upgradeDecision.From.ArangoDBVersion)) > 0 {
 			from = el.upgradeDecision.From.ArangoDBVersion
 		}
 
-		if to == "" || to.CompareTo(el.upgradeDecision.To.ArangoDBVersion) < 0 {
+		if to == "" || util.Version(to).CompareTo(util.Version(el.upgradeDecision.To.ArangoDBVersion)) < 0 {
 			to = el.upgradeDecision.To.ArangoDBVersion
 		}
 	}

@@ -29,6 +29,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconcile"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
@@ -131,7 +132,7 @@ func (d *Deployment) renderMember(spec api.DeploymentSpec, status *api.Deploymen
 
 	arch := apiObject.GetAcceptedSpec().Architecture.GetDefault()
 	if arch != api.ArangoDeploymentArchitectureAMD64 && apiObject.Status.CurrentImage != nil &&
-		apiObject.Status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
+		util.Version(apiObject.Status.CurrentImage.ArangoDBVersion).CompareTo("3.10.0") < 0 {
 		arch = api.ArangoDeploymentArchitectureAMD64
 		d.log.Str("arch", string(arch)).Warn("Cannot render pod with requested arch. It's not supported in ArangoDB < 3.10.0. Defaulting architecture to AMD64")
 		d.CreateEvent(k8sutil.NewCannotSetArchitectureEvent(d.GetAPIObject(), string(arch), id))

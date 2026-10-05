@@ -27,6 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -48,7 +49,7 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 			if v, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodChangeArchAnnotation]; ok {
 				archToApply := api.ArangoDeploymentArchitectureType(v)
 				if archToApply.IsArchMismatch(spec.Architecture, member.Architecture) {
-					if archToApply != api.ArangoDeploymentArchitectureAMD64 && status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
+					if archToApply != api.ArangoDeploymentArchitectureAMD64 && util.Version(status.CurrentImage.ArangoDBVersion).CompareTo("3.10.0") < 0 {
 						if member.Conditions.Update(api.ConditionTypeArchitectureChangeCannotBeApplied, true,
 							fmt.Sprintf("Member has ArangoDB in version which not supports Architecture change (%s)", archToApply), "") {
 							r.log.Warn("Cannot apply 'arch' annotation changes. It's not supported in ArangoDB < 3.10.0")

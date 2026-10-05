@@ -43,7 +43,7 @@ func ensureEncryptionSupport(actionCtx ActionContext) error {
 	if image, ok := actionCtx.GetCurrentImageInfo(); !ok {
 		return errors.Errorf("Missing image info")
 	} else {
-		if !features.EncryptionRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
+		if !features.EncryptionRotation().ImageSupported(&image) {
 			return errors.Errorf("Supported only in Enterprise Edition 3.7.0+")
 		}
 	}

@@ -24,14 +24,4 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type ChartDetailsPlatformRequirements map[string]ChartDetailsPlatformVersionConstrain
-
-type ChartDetailsPlatformVersionConstrain string
-
-func (c *ChartDetailsPlatformVersionConstrain) AsSemverConstrain() (util.VersionConstrain, error) {
-	if c == nil {
-		return nil, nil
-	}
-
-	return util.NewVersionConstrain(string(*c))
-}
+type ChartDetailsPlatformRequirements map[string]util.VersionConstrain
