@@ -69,16 +69,29 @@ func (v Version) CompareTo(other Version) int {
 // pre-release/build suffix is dropped and any extra numeric components (the 4th in "3.12.12.1") are
 // discarded, so semver constraint checks accept ArangoDB's 4-part and pre-release versions.
 func (v Version) Semver() string {
+	return fmt.Sprintf("%d.%d.%d", v.component(0), v.component(1), v.component(2))
+}
+
+// Major returns the first numeric component of the version (0 when absent), ignoring a leading "v"
+// and any pre-release/build suffix, so "v3.12.11-devel" -> 3.
+func (v Version) Major() int {
+	return v.component(0)
+}
+
+// Minor returns the second numeric component of the version (0 when absent), with the same
+// normalisation as Major, so "3.12.11-devel" -> 12.
+func (v Version) Minor() int {
+	return v.component(1)
+}
+
+// component returns the i-th dot-separated numeric component, or 0 when the version has no such
+// component.
+func (v Version) component(i int) int {
 	n := v.numbers()
-
-	get := func(i int) int {
-		if i < len(n) {
-			return n[i]
-		}
-		return 0
+	if i < len(n) {
+		return n[i]
 	}
-
-	return fmt.Sprintf("%d.%d.%d", get(0), get(1), get(2))
+	return 0
 }
 
 // numbers returns the dot-separated numeric components, ignoring a leading "v" and any

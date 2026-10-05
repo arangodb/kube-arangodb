@@ -25,12 +25,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-func testIsUpgradeIndexOrderIssueEnabled(enabled bool, group api.ServerGroup, from, to adbDriverV2.Version) bool {
+func testIsUpgradeIndexOrderIssueEnabled(enabled bool, group api.ServerGroup, from, to util.Version) bool {
 	*upgradeIndexOrderIssue.EnabledPointer() = enabled
 
 	return IsUpgradeIndexOrderIssueEnabled(group, from, to)

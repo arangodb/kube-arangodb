@@ -178,3 +178,26 @@ func Test_Version_CompareTo(t *testing.T) {
 		})
 	}
 }
+
+func Test_Version_MajorMinor(t *testing.T) {
+	type c struct {
+		v                    Version
+		wantMajor, wantMinor int
+	}
+
+	for _, tc := range []c{
+		{"3.12.11", 3, 12},
+		{"3.12", 3, 12},
+		{"4", 4, 0},              // missing minor -> 0
+		{"", 0, 0},               // empty -> 0/0
+		{"3.12.12.1", 3, 12},     // 4-part: extra components ignored
+		{"3.12.11-devel", 3, 12}, // pre-release suffix ignored
+		{"v3.12.11", 3, 12},      // leading v ignored
+		{"3.12.11+build", 3, 12},
+	} {
+		t.Run(string(tc.v), func(t *testing.T) {
+			require.Equal(t, tc.wantMajor, tc.v.Major())
+			require.Equal(t, tc.wantMinor, tc.v.Minor())
+		})
+	}
+}

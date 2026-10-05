@@ -31,6 +31,7 @@ import (
 
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/globals"
@@ -98,7 +99,7 @@ func (r *Resources) serviceMonitorSpec() (monitoringApi.ServiceMonitorSpec, erro
 		endpoint.BearerTokenSecret.Key = utilConstants.SecretKeyToken
 
 		version := r.context.GetMembersState().State().Version.Version
-		endpoint.Path = getArangoExporterInternalEndpoint(version)
+		endpoint.Path = getArangoExporterInternalEndpoint(util.Version(version))
 
 		return monitoringApi.ServiceMonitorSpec{
 			JobLabel: "k8s-app",

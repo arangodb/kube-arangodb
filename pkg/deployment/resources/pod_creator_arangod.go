@@ -515,7 +515,7 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 			case api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupSingle:
 				if features.UpgradeVersionCheckV2().Enabled() {
 					c := k8sutil.ArangodVersionCheckInitContainer(api.ServerGroupReservedInitContainerNameVersionCheck, executable, m.resources.context.GetOperatorImage(),
-						m.Image.ArangoDBVersion, m.GroupSpec.SecurityContext.NewSecurityContext())
+						util.Version(m.Image.ArangoDBVersion), m.GroupSpec.SecurityContext.NewSecurityContext())
 					initContainers = append(initContainers, c)
 				} else if features.UpgradeVersionCheck().Enabled() {
 					upgradeContainer := &ArangoVersionCheckContainer{

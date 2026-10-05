@@ -42,7 +42,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, 
 		options.Add("--arangodb.jwt-file", tokenpath)
 	}
 
-	path := getArangoExporterInternalEndpoint(version)
+	path := getArangoExporterInternalEndpoint(util.Version(version))
 
 	if port := groupSpec.InternalPort; port == nil {
 		scheme := "http"
@@ -82,9 +82,9 @@ func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, 
 	return options.Sort().AsArgs()
 }
 
-func getArangoExporterInternalEndpoint(version adbDriverV2.Version) string {
+func getArangoExporterInternalEndpoint(version util.Version) string {
 	path := shared.ArangoExporterInternalEndpoint
-	if util.Version(version).CompareTo("3.8.0") >= 0 {
+	if version.CompareTo("3.8.0") >= 0 {
 		path = shared.ArangoExporterInternalEndpointV2
 	}
 	return path
