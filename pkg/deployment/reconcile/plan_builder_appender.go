@@ -21,6 +21,7 @@
 package reconcile
 
 import (
+	"runtime/debug"
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -84,7 +85,7 @@ func (p planAppenderRecovery) create(ret func(in PlanAppender) PlanAppender) (r 
 	defer func() {
 		if e := recover(); e != nil {
 			r = p
-			p.log.Interface("panic", e).Error("Recovering from panic")
+			p.log.Interface("panic", e).Str("stack", string(debug.Stack())).Error("Recovering from panic")
 		}
 	}()
 
