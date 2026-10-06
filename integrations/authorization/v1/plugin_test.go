@@ -42,12 +42,17 @@ type pluginTest interface {
 	pbImplAuthorizationV1Shared.Plugin
 
 	Set(t *testing.T, req *pbAuthorizationV1.AuthorizationV1PermissionRequest, resp *pbAuthorizationV1.AuthorizationV1PermissionResponse)
+
+	// RefreshCount returns how many times Refresh has been called.
+	RefreshCount() int
 }
 
 type pluginTestImpl struct {
 	lock sync.Mutex
 
 	responses map[string]*pbAuthorizationV1.AuthorizationV1PermissionResponse
+
+	refreshCount int
 }
 
 func (p *pluginTestImpl) Revision() uint64 {
@@ -63,7 +68,18 @@ func (p *pluginTestImpl) Ready(ctx context.Context) error {
 }
 
 func (p *pluginTestImpl) Refresh(ctx context.Context) error {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	p.refreshCount++
 	return nil
+}
+
+func (p *pluginTestImpl) RefreshCount() int {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	return p.refreshCount
 }
 
 func (p *pluginTestImpl) Evaluate(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
