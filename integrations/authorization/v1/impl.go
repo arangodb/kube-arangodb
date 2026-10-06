@@ -23,10 +23,12 @@ package v1
 import (
 	"context"
 	"fmt"
+	goStrings "strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
@@ -106,7 +108,45 @@ func (i *implementation) Evaluate(ctx context.Context, request *pbAuthorizationV
 		return nil, err
 	}
 
+	if err := i.refreshIfRequested(ctx); err != nil {
+		return nil, err
+	}
+
 	return i.plugin.Evaluate(ctx, request)
+}
+
+// refreshIfRequested re-pulls the authorization pools from the store before evaluating when the caller
+// set the definition.RefreshHeader request metadata to "true". It gives a caller that just changed RBAC
+// state read-your-writes consistency even when the evaluation is served by a different (still-streaming)
+// sidecar. All Evaluate* entry points funnel through Evaluate, so hooking it here covers them. A refresh
+// error is surfaced so the caller retries rather than silently evaluating against a stale cache.
+func (i *implementation) refreshIfRequested(ctx context.Context) error {
+	if !authorizationRefreshRequested(ctx) {
+		return nil
+	}
+
+	if err := i.plugin.Refresh(ctx); err != nil {
+		return status.Error(codes.Internal, err.Error())
+	}
+
+	return nil
+}
+
+// authorizationRefreshRequested reports whether the incoming gRPC metadata carries
+// definition.RefreshHeader set to "true".
+func authorizationRefreshRequested(ctx context.Context) bool {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return false
+	}
+
+	for _, v := range md.Get(pbAuthorizationV1.RefreshHeader) {
+		if goStrings.EqualFold(goStrings.TrimSpace(v), "true") {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Refresh forces the authorization cache to re-pull its state from the pool service so a
