@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (Gateway) Resolve the gateway config-push mode through nil-safe DeploymentSpecGateway accessors so the config-push plan builder no longer panics for deployments without a spec.gateway
 - (Feature) (RBAC) Add a Refresh RPC to the AuthorizationV1 integration that forces its authorization cache to re-pull the current state from the pool service, so a just-written policy/role/binding becomes visible immediately instead of on the next streamed update
 - (Bugfix) (RBAC) Refresh the backing pool from the store on every get/update/list of policies, roles and role bindings in the authorization API so callers never see stale in-memory state
 - (Bugfix) (RBAC) Return NotFound instead of Internal when removing a user or group role binding that does not exist
