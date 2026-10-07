@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Register the ArangoPermissionRoleGroupBinding GVR so the debug package can collect it instead of panicking with 'Unable to get GVR' during state dumps
 - (Feature) (RBAC) Support an `x-arangodb-authorization-refresh: true` request header on AuthorizationV1 Evaluate/EvaluateMany/EvaluateToken/EvaluateTokenMany that re-pulls the RBAC pools before evaluating, giving callers read-your-writes consistency against a just-changed, still-streaming sidecar cache
 - (Bugfix) (Platform) Make the member-startup License Manager inventory query version-agnostic (guard FOR operands against null and move the per-attribute subquery out of the ternary) so the collector inventory works on all supported ArangoDB versions instead of failing with an AQL 'collection or array expected ... null' error
 - (Bugfix) (Gateway) Resolve the gateway config-push mode through nil-safe DeploymentSpecGateway accessors so the config-push plan builder no longer panics for deployments without a spec.gateway
