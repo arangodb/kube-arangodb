@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Feature) (RBAC) Support an `x-arangodb-authorization-refresh: true` request header on AuthorizationV1 Evaluate/EvaluateMany/EvaluateToken/EvaluateTokenMany that re-pulls the RBAC pools before evaluating, giving callers read-your-writes consistency against a just-changed, still-streaming sidecar cache
+- (Bugfix) (Platform) Make the member-startup License Manager inventory query version-agnostic (guard FOR operands against null and move the per-attribute subquery out of the ternary) so the collector inventory works on all supported ArangoDB versions instead of failing with an AQL 'collection or array expected ... null' error
 - (Bugfix) (Gateway) Resolve the gateway config-push mode through nil-safe DeploymentSpecGateway accessors so the config-push plan builder no longer panics for deployments without a spec.gateway
 - (Bugfix) (Integration) Gate the per-deployment (local) meta.v1/storage.v2 integrations on the GatewaySidecarEnabled condition instead of the central-services feature flag, so they match the central routing and are never left served neither locally nor centrally
 - (Feature) (RBAC) Add a Refresh RPC to the AuthorizationV1 integration that forces its authorization cache to re-pull the current state from the pool service, so a just-written policy/role/binding becomes visible immediately instead of on the next streamed update
