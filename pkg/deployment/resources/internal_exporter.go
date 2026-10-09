@@ -27,6 +27,7 @@ import (
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/probes"
@@ -41,7 +42,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, 
 		options.Add("--arangodb.jwt-file", tokenpath)
 	}
 
-	path := getArangoExporterInternalEndpoint(version)
+	path := getArangoExporterInternalEndpoint(util.Version(version))
 
 	if port := groupSpec.InternalPort; port == nil {
 		scheme := "http"
@@ -81,7 +82,7 @@ func createInternalExporterArgs(spec api.DeploymentSpec, group api.ServerGroup, 
 	return options.Sort().AsArgs()
 }
 
-func getArangoExporterInternalEndpoint(version adbDriverV2.Version) string {
+func getArangoExporterInternalEndpoint(version util.Version) string {
 	path := shared.ArangoExporterInternalEndpoint
 	if version.CompareTo("3.8.0") >= 0 {
 		path = shared.ArangoExporterInternalEndpointV2

@@ -28,8 +28,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -109,16 +107,7 @@ func BindFlags(cmd *cobra.Command) error {
 	for _, feature := range features {
 		z := ""
 
-		minVersion, maxVersion := feature.Version()
-
-		if minVersion == "" {
-			minVersion = MinSupportedArangoDBVersion
-		}
-
-		versionDesc := fmt.Sprintf(">= %s", minVersion)
-		if maxVersion != NoVersionLimit {
-			versionDesc = fmt.Sprintf(">= %s, < %s", minVersion, maxVersion)
-		}
+		versionDesc := string(withMinimumSupportedVersion(feature.Version()))
 
 		if feature.EnterpriseRequired() {
 			z = fmt.Sprintf("%s - Required ArangoDB EE %s", feature.Description(), versionDesc)
@@ -165,12 +154,8 @@ func cmdRun(_ *cobra.Command, _ []string) {
 		} else {
 			println("Enabled: false")
 		}
-		if min, max := feature.Version(); min != NoVersionLimit && max != NoVersionLimit {
-			println(fmt.Sprintf("ArangoDB Version Required: >= %s, <= %s", min, max))
-		} else if min != NoVersionLimit {
-			println(fmt.Sprintf("ArangoDB Version Required: >= %s", min))
-		} else if max != NoVersionLimit {
-			println(fmt.Sprintf("ArangoDB Version Required: <= %s", max))
+		if c := withMinimumSupportedVersion(feature.Version()); c != "" {
+			println(fmt.Sprintf("ArangoDB Version Required: %s", c))
 		}
 
 		if feature.EnterpriseRequired() {
@@ -196,7 +181,7 @@ func cmdRun(_ *cobra.Command, _ []string) {
 // - any feature dependency is disabled.
 // - a given version is lower than minimum feature version.
 // - feature expects enterprise but a given enterprise arg is not true.
-func Supported(f Feature, v adbDriverV2.Version, enterprise bool) bool {
+func Supported(f Feature, v util.Version, enterprise bool) bool {
 	if !f.Enabled() {
 		return false
 	}
@@ -212,17 +197,8 @@ func Supported(f Feature, v adbDriverV2.Version, enterprise bool) bool {
 		}
 	}
 
-	min, max := f.Version()
-	if min != NoVersionLimit {
-		if v.CompareTo(min) < 0 {
-			return false
-		}
-	}
-
-	if max != NoVersionLimit {
-		if v.CompareTo(max) >= 0 {
-			return false
-		}
+	if ok, err := f.Version().Validate(v); err != nil || !ok {
+		return false
 	}
 
 	return true

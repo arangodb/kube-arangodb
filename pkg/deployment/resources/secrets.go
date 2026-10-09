@@ -169,7 +169,7 @@ func (r *Resources) EnsureSecrets(ctx context.Context, cachedStatus inspectorInt
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
-		if i := status.CurrentImage; i != nil && features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+		if i := status.CurrentImage; features.EncryptionRotation().ImageSupported(i) {
 			if err := reconcileRequired.WithError(r.ensureEncryptionKeyfolderSecret(ctx, cachedStatus, secrets, spec.RocksDB.Encryption.GetKeySecretName(), pod.GetEncryptionFolderSecretName(deploymentName))); err != nil {
 				return errors.Section(err, "Encryption")
 			}

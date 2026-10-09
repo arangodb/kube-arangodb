@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,38 +20,140 @@
 
 package util
 
-import "github.com/Masterminds/semver/v3"
+import (
+	"fmt"
+	goStrings "strings"
 
-type VersionConstrain interface {
-	Validate(version string) (bool, error)
+	"github.com/Masterminds/semver/v3"
+)
+
+// Version is an ArangoDB server version ("major.minor.patch[.sub][-suffix]"). It exists to carry a
+// correct comparison that, unlike github.com/arangodb/go-driver/v2 arangodb.Version.CompareTo, does
+// not fall back to a lexicographic comparison of the sub-part (which mis-orders e.g. "3.12.11-devel"
+// below "3.12.8"). Cast a driver version (or any version string) with util.Version(v).
+type Version string
+
+// CompareTo returns -1 if v < other, 0 if v == other, and +1 if v > other. Every dot-separated
+// numeric component is compared in order (so "3.12.12.1" > "3.12.12"), a missing component counts
+// as 0 ("3.12" == "3.12.0"), and any pre-release/build suffix (e.g. "-devel", "-pre", "+meta") is
+// ignored ("3.12.11-devel" == "3.12.11").
+func (v Version) CompareTo(other Version) int {
+	a, b := v.numbers(), other.numbers()
+
+	n := len(a)
+	if len(b) > n {
+		n = len(b)
+	}
+
+	for i := 0; i < n; i++ {
+		var x, y int
+		if i < len(a) {
+			x = a[i]
+		}
+		if i < len(b) {
+			y = b[i]
+		}
+
+		switch {
+		case x < y:
+			return -1
+		case x > y:
+			return 1
+		}
+	}
+
+	return 0
 }
 
-type versionConstrain struct {
-	constrain *semver.Constraints
+// Semver returns the version as a plain "major.minor.patch" string suitable for semver parsing: the
+// pre-release/build suffix is dropped and any extra numeric components (the 4th in "3.12.12.1") are
+// discarded, so semver constraint checks accept ArangoDB's 4-part and pre-release versions.
+func (v Version) Semver() string {
+	return fmt.Sprintf("%d.%d.%d", v.component(0), v.component(1), v.component(2))
 }
 
-func (v versionConstrain) Validate(version string) (bool, error) {
-	ver, err := semver.NewVersion(version)
+// Major returns the first numeric component of the version (0 when absent), ignoring a leading "v"
+// and any pre-release/build suffix, so "v3.12.11-devel" -> 3.
+func (v Version) Major() int {
+	return v.component(0)
+}
+
+// Minor returns the second numeric component of the version (0 when absent), with the same
+// normalisation as Major, so "3.12.11-devel" -> 12.
+func (v Version) Minor() int {
+	return v.component(1)
+}
+
+// component returns the i-th dot-separated numeric component, or 0 when the version has no such
+// component.
+func (v Version) component(i int) int {
+	n := v.numbers()
+	if i < len(n) {
+		return n[i]
+	}
+	return 0
+}
+
+// numbers returns the dot-separated numeric components, ignoring a leading "v" and any
+// pre-release/build suffix. Each component is read up to its first non-digit, so "11-devel" -> 11.
+func (v Version) numbers() []int {
+	s := goStrings.TrimPrefix(string(v), "v")
+
+	if i := goStrings.IndexAny(s, "-+"); i >= 0 {
+		s = s[:i]
+	}
+
+	if s == "" {
+		return nil
+	}
+
+	fields := goStrings.Split(s, ".")
+	out := make([]int, len(fields))
+	for i, f := range fields {
+		out[i] = leadingInt(f)
+	}
+	return out
+}
+
+func leadingInt(s string) int {
+	n := 0
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			break
+		}
+		n = n*10 + int(r-'0')
+	}
+	return n
+}
+
+// VersionConstrain is a semver constraint expression (e.g. ">= 3.12.0 < 3.13.0"). Cast a string with
+// util.VersionConstrain(s); Validate reports any parse error.
+type VersionConstrain string
+
+// Empty reports whether the constraint is unset, i.e. imposes no version requirement.
+func (c VersionConstrain) Empty() bool {
+	return c == ""
+}
+
+// Validate reports whether the given version satisfies the constraint. An empty constraint imposes no
+// requirement and always returns true. Any pre-release suffix on the version is dropped before
+// checking, so a "-devel" build is treated as its release version.
+func (c VersionConstrain) Validate(version Version) (bool, error) {
+	if c.Empty() {
+		return true, nil
+	}
+
+	constrain, err := semver.NewConstraint(string(c))
 	if err != nil {
 		return false, err
 	}
 
-	if ver.Prerelease() != "" {
-		nver, nerr := ver.SetPrerelease("")
-		if nerr != nil {
-			return false, nerr
-		}
-		ver = &nver
-	}
-
-	return v.constrain.Check(ver), nil
-}
-
-func NewVersionConstrain(constrain string) (VersionConstrain, error) {
-	c, err := semver.NewConstraint(constrain)
+	// Normalise to major.minor.patch: drops the pre-release/build suffix and any extra numeric
+	// component (e.g. the 4th in "3.12.12.1"), so ArangoDB's 4-part and "-devel" versions parse.
+	ver, err := semver.NewVersion(version.Semver())
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	return versionConstrain{constrain: c}, nil
+	return constrain.Check(ver), nil
 }

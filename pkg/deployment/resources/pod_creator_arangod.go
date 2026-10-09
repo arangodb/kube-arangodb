@@ -188,7 +188,7 @@ func (a *ArangoDContainer) GetImage() string {
 func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
-	if a.Deployment.License.HasSecretName() && a.Image.ArangoDBVersion.CompareTo("3.9.0") < 0 {
+	if a.Deployment.License.HasSecretName() && util.Version(a.Image.ArangoDBVersion).CompareTo("3.9.0") < 0 {
 		env := k8sutil.CreateEnvSecretKeySelector(utilConstants.EnvArangoLicenseKey, a.Deployment.License.GetSecretName(),
 			utilConstants.SecretKeyToken)
 
@@ -515,7 +515,7 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 			case api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupSingle:
 				if features.UpgradeVersionCheckV2().Enabled() {
 					c := k8sutil.ArangodVersionCheckInitContainer(api.ServerGroupReservedInitContainerNameVersionCheck, executable, m.resources.context.GetOperatorImage(),
-						m.Image.ArangoDBVersion, m.GroupSpec.SecurityContext.NewSecurityContext())
+						util.Version(m.Image.ArangoDBVersion), m.GroupSpec.SecurityContext.NewSecurityContext())
 					initContainers = append(initContainers, c)
 				} else if features.UpgradeVersionCheck().Enabled() {
 					upgradeContainer := &ArangoVersionCheckContainer{

@@ -39,7 +39,7 @@ var jwtAsymmetricKey = &feature{
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 	hidden:             false,
-	version:            newFeatureVersion("3.12.8", NoVersionLimit),
+	version:            ">= 3.12.8",
 }
 
 func JWTRotation() Feature {

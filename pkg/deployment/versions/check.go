@@ -21,9 +21,8 @@
 package versions
 
 import (
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 func NewCheck(version api.ImageInfo) Check {
@@ -36,11 +35,11 @@ type Check interface {
 	Enterprise() Check
 	Community() Check
 
-	Above(version adbDriverV2.Version) Check
-	AboveOrEqual(version adbDriverV2.Version) Check
+	Above(version util.Version) Check
+	AboveOrEqual(version util.Version) Check
 
-	Below(version adbDriverV2.Version) Check
-	BelowOrEqual(version adbDriverV2.Version) Check
+	Below(version util.Version) Check
+	BelowOrEqual(version util.Version) Check
 
 	Evaluate() bool
 }
@@ -49,32 +48,32 @@ type check struct {
 	version api.ImageInfo
 }
 
-func (c check) Below(version adbDriverV2.Version) Check {
-	if c.version.ArangoDBVersion.CompareTo(version) == 1 {
+func (c check) Below(version util.Version) Check {
+	if util.Version(c.version.ArangoDBVersion).CompareTo(version) == 1 {
 		return c
 	}
 
 	return falseCheck{}
 }
 
-func (c check) BelowOrEqual(version adbDriverV2.Version) Check {
-	if c.version.ArangoDBVersion.CompareTo(version) <= 0 {
+func (c check) BelowOrEqual(version util.Version) Check {
+	if util.Version(c.version.ArangoDBVersion).CompareTo(version) <= 0 {
 		return c
 	}
 
 	return falseCheck{}
 }
 
-func (c check) Above(version adbDriverV2.Version) Check {
-	if c.version.ArangoDBVersion.CompareTo(version) == -1 {
+func (c check) Above(version util.Version) Check {
+	if util.Version(c.version.ArangoDBVersion).CompareTo(version) == -1 {
 		return c
 	}
 
 	return falseCheck{}
 }
 
-func (c check) AboveOrEqual(version adbDriverV2.Version) Check {
-	if c.version.ArangoDBVersion.CompareTo(version) >= 0 {
+func (c check) AboveOrEqual(version util.Version) Check {
+	if util.Version(c.version.ArangoDBVersion).CompareTo(version) >= 0 {
 		return c
 	}
 
@@ -104,19 +103,19 @@ func (c check) Evaluate() bool {
 type falseCheck struct {
 }
 
-func (f falseCheck) Below(version adbDriverV2.Version) Check {
+func (f falseCheck) Below(version util.Version) Check {
 	return f
 }
 
-func (f falseCheck) BelowOrEqual(version adbDriverV2.Version) Check {
+func (f falseCheck) BelowOrEqual(version util.Version) Check {
 	return f
 }
 
-func (f falseCheck) Above(version adbDriverV2.Version) Check {
+func (f falseCheck) Above(version util.Version) Check {
 	return f
 }
 
-func (f falseCheck) AboveOrEqual(version adbDriverV2.Version) Check {
+func (f falseCheck) AboveOrEqual(version util.Version) Check {
 	return f
 }
 

@@ -247,7 +247,7 @@ func (d *Deployment) getAuth() (adbDriverV2Connection.Authentication, error) {
 }
 
 func (d *Deployment) getJWTSecret() (utilToken.Secret, error) {
-	if i := d.currentObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if i := d.currentObject.Status.CurrentImage; i == nil || features.JWTRotation().ImageSupported(i) {
 		ctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(shutdown.Context())
 		defer c()
 

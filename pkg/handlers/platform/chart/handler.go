@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -207,7 +207,7 @@ func chartInfoExtract(chart *chart.Chart, platform *helm.Platform) *platformApi.
 			c.Requirements = make(platformApi.ChartDetailsPlatformRequirements, len(platform.Requirements))
 
 			for k, v := range platform.Requirements {
-				c.Requirements[k] = platformApi.ChartDetailsPlatformVersionConstrain(v)
+				c.Requirements[k] = util.VersionConstrain(v)
 			}
 		}
 

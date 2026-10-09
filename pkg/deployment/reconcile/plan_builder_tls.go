@@ -473,12 +473,8 @@ func createKeyfileRenewalPlanMode(
 			break
 		}
 
-		if i, ok := status.Images.GetByImageID(e.Member.ImageID); !ok {
+		if !features.TLSRotation().ImageSupported(status.Images.GetPointerByImageID(e.Member.ImageID)) {
 			mode = api.TLSRotateModeRecreate
-		} else {
-			if !features.TLSRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
-				mode = api.TLSRotateModeRecreate
-			}
 		}
 	}
 

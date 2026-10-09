@@ -26,13 +26,12 @@ import (
 
 	core "k8s.io/api/core/v1"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
-
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 // ArangodVersionCheckInitContainer creates a container configured to check version.
-func ArangodVersionCheckInitContainer(name, executable, operatorImage string, version adbDriverV2.Version, securityContext *core.SecurityContext) core.Container {
+func ArangodVersionCheckInitContainer(name, executable, operatorImage string, version util.Version, securityContext *core.SecurityContext) core.Container {
 	versionFile := filepath.Join(shared.ArangodVolumeMountDir, "VERSION-1")
 	var command = []string{
 		executable,
