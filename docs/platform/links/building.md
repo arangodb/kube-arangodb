@@ -76,6 +76,7 @@ Create two Kubernetes resources in your Helm chart's `templates/` directory:
 1. An `ArangoRoute` that gives your connector a user-friendly URL
 2. An `ArangoPlatformLink` that registers it with the platform
 
+{% raw %}
 ```yaml
 # templates/route.yaml
 apiVersion: networking.arangodb.com/v1beta1
@@ -115,6 +116,7 @@ spec:
       - myParam
   version: "1.0.0"
 ```
+{% endraw %}
 
 The `schema` field defines what input your connector accepts. The platform
 validates submitted jobs against this schema — your link does not need
@@ -224,6 +226,7 @@ my-connector/
 
 ### Deployment with Sidecar Labels
 
+{% raw %}
 ```yaml
 # templates/deployment.yaml
 apiVersion: apps/v1
@@ -247,6 +250,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           command: ["/bin/my-connector"]
 ```
+{% endraw %}
 
 The `profiles.arangodb.com/deployment` label triggers sidecar injection.
 The `integration.profiles.arangodb.com` labels enable specific integrations:
@@ -263,6 +267,7 @@ The `integration.profiles.arangodb.com` labels enable specific integrations:
 The chart must also create an `ArangoProfile` to pass the connector ID
 to the integration sidecar:
 
+{% raw %}
 ```yaml
 # templates/profile.yaml
 apiVersion: scheduler.arangodb.com/v1beta1
@@ -284,6 +289,7 @@ spec:
             - name: INTEGRATION_LINK_V1_CONNECTOR_ID
               value: {{ .Values.link.id | quote }}
 ```
+{% endraw %}
 
 ### Environment Variables
 

@@ -55,21 +55,25 @@ resource is deleted); the deployment name is preserved.
 A chart reacts to the flag by rendering its hibernated form when the value is set. For example, scaling a
 workload down while hibernated:
 
+{% raw %}
 ```yaml
 spec:
   replicas: {{ if .Values.arangodb_platform.hibernated }}0{{ else }}{{ .Values.replicas }}{{ end }}
 ```
+{% endraw %}
 
 or guarding entire resources:
 
+{% raw %}
 ```yaml
 {{- if not .Values.arangodb_platform.hibernated }}
 # resources that should not run while hibernated (e.g. CronJobs, workers)
 {{- end }}
 ```
+{% endraw %}
 
 Because `hibernated` is omitted when `false`, always access it defensively, e.g.
-`{{ if .Values.arangodb_platform.hibernated }}`; do not assume the key exists.
+{% raw %}`{{ if .Values.arangodb_platform.hibernated }}`{% endraw %}; do not assume the key exists.
 
 Hibernation only changes the values passed to the chart — the operator does not itself stop, delete, or
 scale any workload. What "hibernated" means for a given service is entirely defined by how that service's
