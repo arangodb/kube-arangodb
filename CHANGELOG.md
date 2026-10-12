@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Documentation) (Platform) Wrap the Helm-templated code blocks in the platform Links "Building a link" and Developer Guide docs in Jekyll `{% raw %}` so the published site stops interpreting `{{ ... }}` as Liquid and blanking every templated YAML field
 - (Bugfix) (Security) Bump the Go toolchain to 1.26.9 and golang.org/x/net, google.golang.org/grpc, go.opentelemetry.io/otel/sdk, oras.land/oras-go/v2 and github.com/klauspost/compress to clear all called govulncheck findings
 - (Bugfix) (Security) (Gateway) Bump the bundled Envoy image to v1.39.1 and the go-control-plane/envoy xDS module to v1.39.0 to clear the Envoy CVEs fixed through the 1.39.1 release (path-matching/auth bypass, HTTP/3 use-after-free, TLS certificate-parsing DoS)
 - (Bugfix) Register the ArangoPermissionRoleGroupBinding GVR so the debug package can collect it instead of panicking with 'Unable to get GVR' during state dumps
