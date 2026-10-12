@@ -15,7 +15,7 @@ KUBERNETES_VERSION_MINOR:=36
 KUBERNETES_VERSION_PATCH:=4
 
 BASEIMAGE ?= ubuntu:24.04
-ENVOY_IMAGE ?= envoyproxy/envoy:v1.37.5
+ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
