@@ -28,7 +28,7 @@ var collector = &feature{
 	name:               "collector",
 	description:        "Defines if the collector postStart lifecycle hook is enabled on members",
 	enterpriseRequired: false,
-	enabledByDefault:   false,
+	enabledByDefault:   true,
 	hidden:             true,
 }
 
