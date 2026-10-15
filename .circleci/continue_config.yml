@@ -98,18 +98,26 @@ jobs:
   # needed in CI. The tag is read from VERSION rather than hardcoded so the
   # scan tracks whatever this checkout's release line actually ships -
   # the repo's own "latest" Docker Hub tag was found stale (unrelated to any
-  # recent release) when this job was added.
+  # recent release) when this job was added. A -preview VERSION is published
+  # to the kube-arangodb-enterprise-preview repo (not the release repo), so
+  # the repo is switched accordingly or the pull fails with MANIFEST_UNKNOWN.
   image-cve-scan:
     executor: golang-executor
     steps:
       - checkout
       - run:
-          name: Resolve released image tag from VERSION
+          name: Resolve released image repo and tag from VERSION
           command: |
-            echo "export OPERATOR_IMAGE_TAG=$(cut -f1 -d'+' VERSION)" >> "$BASH_ENV"
+            OPERATOR_IMAGE_TAG="$(cut -f1 -d'+' VERSION)"
+            OPERATOR_IMAGE_REPO="arangodb/kube-arangodb-enterprise"
+            case "$OPERATOR_IMAGE_TAG" in
+              *-preview-*) OPERATOR_IMAGE_REPO="arangodb/kube-arangodb-enterprise-preview" ;;
+            esac
+            echo "export OPERATOR_IMAGE_TAG=$OPERATOR_IMAGE_TAG" >> "$BASH_ENV"
+            echo "export OPERATOR_IMAGE_REPO=$OPERATOR_IMAGE_REPO" >> "$BASH_ENV"
       - trivy-scan/scan:
           scan-type: image
-          image-ref: "arangodb/kube-arangodb-enterprise:${OPERATOR_IMAGE_TAG}"
+          image-ref: "${OPERATOR_IMAGE_REPO}:${OPERATOR_IMAGE_TAG}"
           image-src: remote
           severity: "CRITICAL,HIGH"
           fail-on-findings: false
@@ -126,12 +134,18 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Resolve released image tag from VERSION
+          name: Resolve released image repo and tag from VERSION
           command: |
-            echo "export OPERATOR_IMAGE_TAG=$(cut -f1 -d'+' VERSION)" >> "$BASH_ENV"
+            OPERATOR_IMAGE_TAG="$(cut -f1 -d'+' VERSION)"
+            OPERATOR_IMAGE_REPO="arangodb/kube-arangodb-enterprise"
+            case "$OPERATOR_IMAGE_TAG" in
+              *-preview-*) OPERATOR_IMAGE_REPO="arangodb/kube-arangodb-enterprise-preview" ;;
+            esac
+            echo "export OPERATOR_IMAGE_TAG=$OPERATOR_IMAGE_TAG" >> "$BASH_ENV"
+            echo "export OPERATOR_IMAGE_REPO=$OPERATOR_IMAGE_REPO" >> "$BASH_ENV"
       - trivy-scan/scan:
           scan-type: image
-          image-ref: "arangodb/kube-arangodb-enterprise:${OPERATOR_IMAGE_TAG}-ubi"
+          image-ref: "${OPERATOR_IMAGE_REPO}:${OPERATOR_IMAGE_TAG}-ubi"
           image-src: remote
           severity: "CRITICAL,HIGH"
           fail-on-findings: false
