@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Enable the collector postStart lifecycle hook feature by default
 - (Maintenance) Route the image CVE scan to the kube-arangodb-enterprise-preview repo for -preview VERSIONs so it pulls the actually-published preview image instead of failing with MANIFEST_UNKNOWN on the release repo
 - (Documentation) (Platform) Wrap the Helm-templated code blocks in the platform Links "Building a link" and Developer Guide docs in Jekyll `{% raw %}` so the published site stops interpreting `{{ ... }}` as Liquid and blanking every templated YAML field
 - (Bugfix) (Security) Bump the Go toolchain to 1.26.9 and golang.org/x/net, google.golang.org/grpc, go.opentelemetry.io/otel/sdk, oras.land/oras-go/v2 and github.com/klauspost/compress to clear all called govulncheck findings
