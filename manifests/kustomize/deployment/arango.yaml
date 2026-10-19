@@ -6,8 +6,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 # Do not auto-mount the token on every pod using this ServiceAccount; the operator pod opts in explicitly.
@@ -20,8 +20,8 @@ metadata:
   name: arango-default-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -89,8 +89,8 @@ metadata:
   name: arango-default-operator-rbac-deployment
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -119,8 +119,8 @@ metadata:
   name: arango-default-operator-rbac-networking
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -140,8 +140,8 @@ metadata:
   name: arango-default-operator-rbac-platform
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -161,8 +161,8 @@ metadata:
   name: arango-default-operator-rbac-scheduler
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -182,8 +182,8 @@ metadata:
   name: arango-default-operator-rbac-webhook
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -205,8 +205,8 @@ metadata:
   name: arango-default-operator-rbac-crd
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -225,8 +225,8 @@ metadata:
   name: arango-default-operator-rbac-deployment
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -245,8 +245,8 @@ metadata:
   name: arango-default-operator-rbac-networking
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -265,8 +265,8 @@ metadata:
   name: arango-default-operator-rbac-platform
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -285,8 +285,8 @@ metadata:
   name: arango-default-operator-rbac-scheduler
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -305,8 +305,8 @@ metadata:
   name: arango-default-operator-rbac-webhook
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -326,8 +326,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -346,8 +346,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -518,8 +518,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -565,8 +565,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -706,8 +706,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 rules:
@@ -790,8 +790,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -811,8 +811,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -832,8 +832,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -853,8 +853,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -874,8 +874,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 roleRef:
@@ -895,8 +895,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 spec:
@@ -915,7 +915,7 @@ spec:
       targetPort: 8728
   selector:
     app.kubernetes.io/name: kube-arangodb
-    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
   type: ClusterIP
@@ -929,8 +929,8 @@ metadata:
   namespace: default
   labels:
     app.kubernetes.io/name: kube-arangodb
-    helm.sh/chart: kube-arangodb-1.4.5
-    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: kube-arangodb-1.4.6
+    app.kubernetes.io/managed-by: Tiller
     app.kubernetes.io/instance: default
     release: default
 spec:
@@ -940,15 +940,15 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: kube-arangodb
-      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/managed-by: Tiller
       app.kubernetes.io/instance: default
       release: default
   template:
     metadata:
       labels:
         app.kubernetes.io/name: kube-arangodb
-        helm.sh/chart: kube-arangodb-1.4.5
-        app.kubernetes.io/managed-by: Helm
+        helm.sh/chart: kube-arangodb-1.4.6
+        app.kubernetes.io/managed-by: Tiller
         app.kubernetes.io/instance: default
         release: default
       annotations:
@@ -995,7 +995,7 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb:1.4.5
+          image: arangodb/kube-arangodb-enterprise:1.4.6
           args:
             - --threads=8
             - --api.secondary-name=arango-default-operator
@@ -1057,3 +1057,107 @@ spec:
         - key: "kubernetes.io/arch"
           operator: "Exists"
           effect: "NoSchedule"
+
+# Source: kube-arangodb/templates/backup-operator/cluster-role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/backup-operator/cluster-role.yaml
+---
+
+
+# Source: kube-arangodb/templates/backup-operator/role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/backup-operator/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/ca.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/certificate.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/issuer.ca.yaml
+---
+
+
+# Source: kube-arangodb/templates/certificates/issuer.yaml
+---
+
+
+# Source: kube-arangodb/templates/debug/cluster-role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/debug/cluster-role.yaml
+---
+
+
+# Source: kube-arangodb/templates/debug/role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/debug/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/k2k-cluster-sync-operator/cluster-role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/k2k-cluster-sync-operator/cluster-role.yaml
+---
+
+
+# Source: kube-arangodb/templates/k2k-cluster-sync-operator/role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/k2k-cluster-sync-operator/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/pod-disruption-budget.yaml
+---
+
+
+# Source: kube-arangodb/templates/service-webhooks.yaml
+---
+
+
+# Source: kube-arangodb/templates/storage-operator/cluster-role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/storage-operator/cluster-role.yaml
+---
+
+
+# Source: kube-arangodb/templates/storage-operator/crd.yaml
+---
+
+
+# Source: kube-arangodb/templates/storage-operator/role-binding.yaml
+---
+
+
+# Source: kube-arangodb/templates/storage-operator/role.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/certificate.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/mutation.yaml
+---
+
+
+# Source: kube-arangodb/templates/webhook/validation.yaml
+---
+
