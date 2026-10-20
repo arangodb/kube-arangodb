@@ -298,15 +298,15 @@ func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
 	}
 
 	if features.Collector().Enabled() {
-		// The collector writes its startup event directly into the local arangod _events collection.
+		// The collector writes its startup event into the central _events collection through the database
+		// client service, which routes to a Coordinator in cluster mode (or the single server in single
+		// mode). Targeting the member's own 127.0.0.1 endpoint would, on a DBServer or agent, write to a
+		// node-local _events collection that the cluster (and the member.startup inventory) cannot read.
+		// The postStart hook runs detached and retries, so addressing a Coordinator never blocks member
+		// startup even when no Coordinator is ready yet.
 		scheme := "http"
 		if a.Deployment.IsSecure() {
 			scheme = "https"
-		}
-
-		port := shared.ArangoPort
-		if p := a.GroupSpec.Port; p != nil {
-			port = int(*p)
 		}
 
 		var jwtPath string
@@ -314,7 +314,8 @@ func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
 			jwtPath = shared.ClusterJWTSecretVolumeMountDir
 		}
 
-		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler(fmt.Sprintf("%s://127.0.0.1:%d", scheme, port), jwtPath)
+		endpoint := fmt.Sprintf("%s://%s:%d", scheme, k8sutil.CreateDatabaseClientServiceDNSName(a.ApiObject), shared.ArangoPort)
+		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler(endpoint, jwtPath)
 	}
 
 	return lifecycle, nil
