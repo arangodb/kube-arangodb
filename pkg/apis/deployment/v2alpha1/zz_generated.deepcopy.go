@@ -991,6 +991,11 @@ func (in *DeploymentSpec) DeepCopyInto(out *DeploymentSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.Hibernate != nil {
+		in, out := &in.Hibernate, &out.Hibernate
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Upgrade != nil {
 		in, out := &in.Upgrade, &out.Upgrade
 		*out = new(DeploymentUpgradeSpec)

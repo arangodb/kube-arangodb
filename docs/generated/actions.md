@@ -26,6 +26,7 @@ nav_order: 11
 | CleanTLSKeyfileCertificate | no | 30m0s | no | Enterprise Only | Remove old TLS certificate from server |
 | ClusterMemberCleanup | no | 10m0s | no | Community & Enterprise | Remove member from Cluster if it is gone already (Coordinators) |
 | CompactMember | no | 8h0m0s | no | Community & Enterprise | Runs the Compact API on the Member |
+| DehibernateMember | no | 15m0s | no | Community & Enterprise | Wake a hibernated member up by triggering its recreation |
 | Delay | no | 10m0s | yes | Community & Enterprise | Define delay operation |
 | ~~DisableClusterScaling~~ | no | 10m0s | no | Community & Enterprise | Disable Cluster Scaling integration |
 | DisableMaintenance | no | 10m0s | no | Community & Enterprise | Disable ArangoDB maintenance mode |
@@ -40,6 +41,7 @@ nav_order: 11
 | EncryptionKeyStatusUpdate | yes | 10m0s | no | Enterprise Only | Update status of encryption propagation |
 | EnforceResignLeadership | no | 45m0s | yes | Community & Enterprise | Run the ResignLeadership job on DBServer and checks data compatibility after |
 | GatewayConfigPush | yes | 10m0s | no | Community & Enterprise | Push the gateway dynamic config to a gateway member sidecar over ADS when running in push mode |
+| HibernateMember | no | 30m0s | no | Community & Enterprise | Shut the member down and park it in the Hibernated phase as part of deployment hibernation |
 | Idle | no | 10m0s | no | Community & Enterprise | Define idle operation in case if preconditions are not meet |
 | JWTAdd | no | 10m0s | no | Enterprise Only | Adds new JWT to the pool |
 | JWTClean | no | 10m0s | no | Enterprise Only | Remove JWT key from the pool |
@@ -127,6 +129,7 @@ spec:
       CleanTLSKeyfileCertificate: 30m0s
       ClusterMemberCleanup: 10m0s
       CompactMember: 8h0m0s
+      DehibernateMember: 15m0s
       Delay: 10m0s
       DisableClusterScaling: 10m0s
       DisableMaintenance: 10m0s
@@ -141,6 +144,7 @@ spec:
       EncryptionKeyStatusUpdate: 10m0s
       EnforceResignLeadership: 45m0s
       GatewayConfigPush: 10m0s
+      HibernateMember: 30m0s
       Idle: 10m0s
       JWTAdd: 10m0s
       JWTClean: 10m0s

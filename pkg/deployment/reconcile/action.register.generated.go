@@ -69,6 +69,9 @@ var (
 	_ Action        = &actionCompactMember{}
 	_ actionFactory = newCompactMemberAction
 
+	_ Action        = &actionDehibernateMember{}
+	_ actionFactory = newDehibernateMemberAction
+
 	_ Action        = &actionDelay{}
 	_ actionFactory = newDelayAction
 
@@ -104,6 +107,9 @@ var (
 
 	_ Action        = &actionGatewayConfigPush{}
 	_ actionFactory = newGatewayConfigPushAction
+
+	_ Action        = &actionHibernateMember{}
+	_ actionFactory = newHibernateMemberAction
 
 	_ Action        = &actionIdle{}
 	_ actionFactory = newIdleAction
@@ -482,6 +488,20 @@ func init() {
 		registerAction(action, function)
 	}
 
+	// DehibernateMember
+	{
+		// Get Action type
+		action := api.ActionTypeDehibernateMember
+
+		// Get Action defition
+		function := newDehibernateMemberAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
 	// Delay
 	{
 		// Get Action type
@@ -669,6 +689,20 @@ func init() {
 
 		// Get Action defition
 		function := newGatewayConfigPushAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// HibernateMember
+	{
+		// Get Action type
+		action := api.ActionTypeHibernateMember
+
+		// Get Action defition
+		function := newHibernateMemberAction
 
 		// Wrap action main function
 

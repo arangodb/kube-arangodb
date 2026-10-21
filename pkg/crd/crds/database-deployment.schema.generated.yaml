@@ -9401,6 +9401,13 @@ v1:
                   type: object
                 type: array
             type: object
+          hibernate:
+            description: |-
+              Hibernate, when set to true, requests the whole deployment to be hibernated: maintenance mode is
+              enabled, all members are shut down group by group into the Hibernated phase (keeping their volumes),
+              and the deployment's platform Services & Workflows are forced into their hibernated form.
+              Set back to false to wake the deployment up again.
+            type: boolean
           id:
             description: ServerIDGroupSpec contains the specification for Image Discovery image.
             properties:
@@ -27208,6 +27215,13 @@ v2alpha1:
                   type: object
                 type: array
             type: object
+          hibernate:
+            description: |-
+              Hibernate, when set to true, requests the whole deployment to be hibernated: maintenance mode is
+              enabled, all members are shut down group by group into the Hibernated phase (keeping their volumes),
+              and the deployment's platform Services & Workflows are forced into their hibernated form.
+              Set back to false to wake the deployment up again.
+            type: boolean
           id:
             description: ServerIDGroupSpec contains the specification for Image Discovery image.
             properties:

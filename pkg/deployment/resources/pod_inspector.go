@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -470,7 +470,7 @@ func (r *Resources) InspectPods(ctx context.Context, cachedStatus inspectorInter
 				case api.MemberPhaseNone, api.MemberPhasePending, api.MemberPhaseCreationFailed:
 					// Do nothing
 					log.Str("pod-name", podName).Debug("PodPhase is None, waiting for the pod to be recreated")
-				case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating:
+				case api.MemberPhaseShuttingDown, api.MemberPhaseUpgrading, api.MemberPhaseFailed, api.MemberPhaseRotateStart, api.MemberPhaseRotating, api.MemberPhaseHibernated:
 					// Shutdown was intended, so not need to do anything here.
 					// Just mark terminated
 					m.Conditions.Update(api.ConditionTypeTerminated, true, "Pod Terminated", "")

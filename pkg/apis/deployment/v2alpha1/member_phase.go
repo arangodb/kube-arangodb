@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,8 @@ const (
 	MemberPhaseRotateStart MemberPhase = "RotateStart"
 	// MemberPhaseUpgrading indicates that a member is in the process of upgrading its database data format
 	MemberPhaseUpgrading MemberPhase = "Upgrading"
+	// MemberPhaseHibernated indicates that a member is intentionally shut down as part of deployment hibernation and wont get up outside of plan
+	MemberPhaseHibernated MemberPhase = "Hibernated"
 )
 
 // IsPending returns true when given phase == "" OR "Pending"
@@ -70,6 +72,11 @@ func (p MemberPhase) IsCreatedOrDrain() bool {
 	return p == MemberPhaseCreated || p == MemberPhaseDrain
 }
 
+// IsHibernated returns true when given phase == "Hibernated"
+func (p MemberPhase) IsHibernated() bool {
+	return p == MemberPhaseHibernated
+}
+
 // String returns string from MemberPhase
 func (p MemberPhase) String() string {
 	return string(p)
@@ -78,7 +85,7 @@ func (p MemberPhase) String() string {
 // GetPhase parses string into phase
 func GetPhase(phase string) (MemberPhase, bool) {
 	switch p := MemberPhase(phase); p {
-	case MemberPhaseNone, MemberPhasePending, MemberPhaseCreated, MemberPhaseCreationFailed, MemberPhaseFailed, MemberPhaseCleanOut, MemberPhaseDrain, MemberPhaseResign, MemberPhaseShuttingDown, MemberPhaseRotating, MemberPhaseRotateStart, MemberPhaseUpgrading:
+	case MemberPhaseNone, MemberPhasePending, MemberPhaseCreated, MemberPhaseCreationFailed, MemberPhaseFailed, MemberPhaseCleanOut, MemberPhaseDrain, MemberPhaseResign, MemberPhaseShuttingDown, MemberPhaseRotating, MemberPhaseRotateStart, MemberPhaseUpgrading, MemberPhaseHibernated:
 		return p, true
 	default:
 		return "", false
