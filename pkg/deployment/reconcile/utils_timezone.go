@@ -64,7 +64,7 @@ func IsTimezoneValid(cache generic.Inspector[*core.Secret], name string, timezon
 			return false
 		}
 		if v, ok := s.Data[pod.TimezoneTZKey]; ok {
-			if string(v) != timezone.Zone {
+			if string(v) != timezone.Name {
 				return false
 			}
 		} else {
