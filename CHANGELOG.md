@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Write the IANA zone name (e.g. America/Chicago) instead of its abbreviation (e.g. CDT) to /etc/timezone with timezone management enabled, so arangod can resolve the server timezone
 - (Bugfix) (Collector) Write the member startup event through the database client service (a Coordinator, or the single server) instead of the member's local 127.0.0.1 endpoint, so DBServer and agent events reach the central _events collection the member.startup inventory reads instead of a node-local collection
 
 ## [1.4.6](https://github.com/arangodb/kube-arangodb/tree/1.4.6) (2026-10-19)

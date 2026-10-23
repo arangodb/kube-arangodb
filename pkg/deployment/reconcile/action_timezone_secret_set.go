@@ -113,7 +113,7 @@ func (a *actionTimezoneSecretSet) Start(ctx context.Context) (bool, error) {
 			Data: map[string][]byte{
 				pod.TimezoneNameKey: []byte(tz.Name),
 				pod.TimezoneDataKey: tzd,
-				pod.TimezoneTZKey:   []byte(tz.Zone),
+				pod.TimezoneTZKey:   []byte(tz.Name),
 			},
 			Type: core.SecretTypeOpaque,
 		}
