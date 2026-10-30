@@ -15,7 +15,7 @@ KUBERNETES_VERSION_MINOR:=36
 KUBERNETES_VERSION_PATCH:=4
 
 BASEIMAGE ?= ubuntu:24.04
-ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.1
+ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.6
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -58,7 +58,7 @@ K3D_CLUSTER ?= $(REPONAME)
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.26.9
+GOBASEVERSION := 1.26.10
 GOVERSION ?= $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION ?= alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
