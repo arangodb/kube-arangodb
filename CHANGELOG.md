@@ -2,6 +2,8 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Bugfix) (Collector) Write the member startup event through the database client service (a Coordinator, or the single server) instead of the member's local 127.0.0.1 endpoint, so DBServer and agent events reach the central _events collection the member.startup inventory reads instead of a node-local collection
+- (Bugfix) (Security) Bump the Go toolchain to 1.26.10 and github.com/go-jose/go-jose/v4 to 4.1.6 to clear the HIGH image CVEs CVE-2026-111943 (crypto/x509 man-in-the-middle via untrusted intermediate certificates) and CVE-2026-116587 (go-jose JWK RSA-parameter denial of service)
+- (Bugfix) (Security) (Gateway) Bump the bundled Envoy image to v1.39.6 (latest 1.39 patch) to clear the statically-linked Brotli decoder RCE CVE-2026-111497 (fixed in 1.39.3, CISA KEV) which version-based scanners cannot see in the Bazel-built Envoy binary, plus the subsequent 1.39.4-1.39.6 patch fixes
 
 ## [1.4.6](https://github.com/arangodb/kube-arangodb/tree/1.4.6) (2026-10-19)
 - (Feature) Enable the collector postStart lifecycle hook feature by default
