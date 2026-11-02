@@ -20,10 +20,10 @@
 
 package helm
 
+import "github.com/arangodb/kube-arangodb/pkg/util"
+
 type Platform struct {
 	Requirements PlatformRequirements `json:"requirements,omitempty"`
 }
 
-type PlatformRequirements map[string]PlatformVersionDefinition
-
-type PlatformVersionDefinition string
+type PlatformRequirements map[string]util.VersionConstrain
