@@ -22,6 +22,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"helm.sh/helm/v3/pkg/action"
@@ -44,6 +46,7 @@ import (
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
+	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("platform-service-operator", logging.Info)
@@ -309,7 +312,102 @@ func (h *handler) HandleChart(ctx context.Context, item operation.Item, extensio
 		return false, operator.Stop("Chart Not Ready")
 	}
 
-	return operator.HandleP5WithCondition(ctx, &status.Conditions, platformApi.ReleaseReadyCondition, item, extension, status, depl, chart, h.HandleChartInfo, h.HandleValues, h.HandleRelease)
+	return operator.HandleP5WithCondition(ctx, &status.Conditions, platformApi.ReleaseReadyCondition, item, extension, status, depl, chart, h.HandleChartInfo, h.HandleRequirements, h.HandleValues, h.HandleRelease)
+}
+
+// reservedRequirementKeys lists the reserved requirement keys in a fixed order so condition messages
+// are stable across reconciles (map iteration order is otherwise random).
+var reservedRequirementKeys = []string{
+	platformApi.ChartRequirementArangoDB,
+	platformApi.ChartRequirementOperator,
+}
+
+// HandleRequirements evaluates the chart's reserved platform requirements - the ArangoDB constraint
+// against the bound deployment's running version and the Operator constraint against the operator's own
+// version - and reflects the outcome in the RequirementsFulfilled condition. It is informational and
+// does not block the release.
+func (h *handler) HandleRequirements(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformService, status *platformApi.ArangoPlatformServiceStatus, depl *api.ArangoDeployment, chart *platformApi.ArangoPlatformChart) (bool, error) {
+	var requirements platformApi.ChartDetailsPlatformRequirements
+	if info := chart.Status.Info; info != nil {
+		requirements = info.Details.GetPlatform().GetRequirements()
+	}
+
+	results := evaluateReservedRequirements(requirements, depl)
+
+	fulfilled, failures := true, make([]string, 0, len(reservedRequirementKeys))
+	for _, key := range reservedRequirementKeys {
+		if err := results[key]; err != nil {
+			fulfilled = false
+			failures = append(failures, fmt.Sprintf("%s: %s", key, err.Error()))
+		}
+	}
+
+	if !fulfilled {
+		message := fmt.Sprintf("Requirements not fulfilled: %s", strings.Join(failures, "; "))
+
+		// Gate the install/upgrade: stop before HandleValues/HandleRelease so an incompatible chart is
+		// never rendered or released against this deployment.
+		if status.Conditions.Update(platformApi.RequirementsFulfilledCondition, false, message, message) {
+			return true, operator.Stop("Requirements not fulfilled")
+		}
+
+		return false, operator.Stop("Requirements not fulfilled")
+	}
+
+	if status.Conditions.Update(platformApi.RequirementsFulfilledCondition, true, "Requirements fulfilled", "Requirements fulfilled") {
+		return true, operator.Reconcile("Condition Changed")
+	}
+
+	return false, nil
+}
+
+// evaluateReservedRequirements checks the reserved ArangoDB and Operator requirement constraints. The
+// returned map holds one entry per declared reserved requirement: a nil value means it is fulfilled, a
+// non-nil error describes why it is not. An absent or empty constraint imposes no requirement and
+// produces no entry, so an empty map means fulfilled.
+func evaluateReservedRequirements(requirements platformApi.ChartDetailsPlatformRequirements, depl *api.ArangoDeployment) map[string]error {
+	arangoDBVersion, arangoDBKnown := deploymentArangoDBVersion(depl)
+
+	results := make(map[string]error, len(reservedRequirementKeys))
+
+	for _, reserved := range []struct {
+		key     string
+		version util.Version
+		known   bool
+	}{
+		{platformApi.ChartRequirementArangoDB, arangoDBVersion, arangoDBKnown},
+		{platformApi.ChartRequirementOperator, util.Version(version.GetVersionV1().Version), true},
+	} {
+		constraint, ok := requirements[reserved.key]
+		if !ok || constraint.Empty() {
+			continue
+		}
+
+		if !reserved.known {
+			results[reserved.key] = fmt.Errorf("version is not known yet")
+			continue
+		}
+
+		if valid, err := constraint.Validate(reserved.version); err != nil {
+			results[reserved.key] = fmt.Errorf("version %s is invalid for constraint %q: %w", reserved.version, constraint, err)
+		} else if !valid {
+			results[reserved.key] = fmt.Errorf("version %s does not satisfy required %q", reserved.version, constraint)
+		} else {
+			results[reserved.key] = nil
+		}
+	}
+
+	return results
+}
+
+// deploymentArangoDBVersion returns the ArangoDB server version reported by the deployment's current
+// image and whether it is known yet (it is unset until the deployment has pulled and inspected its image).
+func deploymentArangoDBVersion(depl *api.ArangoDeployment) (util.Version, bool) {
+	if depl == nil || depl.Status.CurrentImage == nil {
+		return "", false
+	}
+
+	return util.Version(depl.Status.CurrentImage.ArangoDBVersion), true
 }
 
 func (h *handler) HandleChartInfo(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformService, status *platformApi.ArangoPlatformServiceStatus, depl *api.ArangoDeployment, chart *platformApi.ArangoPlatformChart) (bool, error) {

@@ -25,3 +25,12 @@ import (
 )
 
 type ChartDetailsPlatformRequirements map[string]util.VersionConstrain
+
+const (
+	// ChartRequirementArangoDB is the reserved requirements key whose constraint is evaluated against
+	// the ArangoDB server version the operator ships (version.ArangoDBVersion).
+	ChartRequirementArangoDB = "ArangoDB"
+	// ChartRequirementOperator is the reserved requirements key whose constraint is evaluated against
+	// the operator's own build version (version.GetVersionV1().Version).
+	ChartRequirementOperator = "Operator"
+)
