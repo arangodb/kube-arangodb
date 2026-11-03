@@ -60,28 +60,28 @@ covers individual newer features separately.
 
 | Platform | State | Kubernetes Version | ArangoDB Version | Remarks | Provider Remarks |
 |:--- |:--- |:--- |:--- |:--- |:--- |
-| Google GKE | Production | 1.28-1.34 | >= 3.11.0 | Don't use micro nodes |  |
+| Google GKE | Production | 1.28-1.37 | >= 3.11.0 | Don't use micro nodes |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 | Don't use micro nodes |  |
 |  | NotSupported | < 1.25 | < 3.8.0 | Don't use micro nodes |  |
-| Azure AKS | Production | 1.28-1.34 | >= 3.11.0 |  |  |
+| Azure AKS | Production | 1.28-1.37 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
-| Amazon EKS | Production | 1.28-1.34 | >= 3.11.0 |  | [Amazon EKS](./docs/providers/eks) |
+| Amazon EKS | Production | 1.28-1.37 | >= 3.11.0 |  | [Amazon EKS](./docs/providers/eks) |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  | [Amazon EKS](./docs/providers/eks) |
 |  | NotSupported | < 1.25 | < 3.8.0 |  | [Amazon EKS](./docs/providers/eks) |
-| IBM Cloud | Production | 1.29-1.31 | >= 3.11.0 |  |  |
+| IBM Cloud | Production | 1.29-1.36 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.28 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
-| OpenShift | Production | 4.11-4.17 | >= 3.11.0 |  |  |
+| OpenShift | Production | 4.11-4.22 | >= 3.11.0 |  |  |
 |  | EOL | 4.2-4.11 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 4.2 | < 3.8.0 |  |  |
-| BareMetal (kubeadm) | Production | 1.28-1.34 | >= 3.11.0 |  |  |
+| BareMetal (kubeadm) | Production | 1.28-1.37 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
-| Minikube | Devel Only | 1.28-1.34 | >= 3.11.0 |  |  |
+| Minikube | Devel Only | 1.28-1.37 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
-| Other | Production | 1.28-1.34 | >= 3.11.0 |  |  |
+| Other | Production | 1.28-1.37 | >= 3.11.0 |  |  |
 |  | EOL | 1.25-1.27 | 3.9.0-3.10.0 |  |  |
 |  | NotSupported | < 1.25 | < 3.8.0 |  |  |
 
@@ -270,8 +270,8 @@ Flags:
 ### Installation and Usage
 
 Docker images:
-- Community Edition: `arangodb/kube-arangodb:1.4.6`
-- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.4.6`
+- Community Edition: `arangodb/kube-arangodb:1.4.7`
+- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.4.7`
 
 ### Installation of latest release using Kubectl
 
@@ -280,18 +280,18 @@ running ArangoDB deployments.
 
 ##### Community Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.6/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.6/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.6/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/arango-storage.yaml
 ```
 
 ##### Enterprise Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.6/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.6/manifests/enterprise-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.6/manifests/enterprise-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/enterprise-storage.yaml
 ```
 
 ### Installation of latest release using kustomize
@@ -310,8 +310,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.4.6
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.4.6
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.4.7
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.4.7
 ```
 
 ##### Enterprise Edition example
@@ -320,8 +320,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.4.6
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.4.6
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.4.7
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.4.7
 ```
 
 ### Installation of latest release using Helm
@@ -357,17 +357,17 @@ helm install --generate-name kube-arangodb/kube-arangodb-enterprise --set "opera
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-1.4.6.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-1.4.6.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-enterprise-1.4.6.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-enterprise-1.4.7.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-enterprise-1.4.6.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-enterprise-1.4.7.tgz --set "operator.features.storage=true"
 ```
 
 #### Supporting charts
@@ -387,23 +387,23 @@ kube-arangodb-1-1696919877	default  	1       	2023-10-10 08:37:57.884783199 +020
 
 So here, you would have to do
 ```bash
-helm upgrade --install kube-arangodb-1-1696919877 https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-1.4.6.tgz
+helm upgrade --install kube-arangodb-1-1696919877 https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz
 ```
 
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-1.4.6.tgz
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-1.4.6.tgz --set "operator.features.storage=true"
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-enterprise-1.4.6.tgz
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-enterprise-1.4.7.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.6/kube-arangodb-enterprise-1.4.6.tgz --set "operator.features.storage=true"
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-enterprise-1.4.7.tgz --set "operator.features.storage=true"
 ```
 
 ## Building
