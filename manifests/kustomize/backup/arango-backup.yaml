@@ -345,7 +345,7 @@ spec:
       containers:
         - name: operator
           imagePullPolicy: Always
-          image: arangodb/kube-arangodb-enterprise:1.4.7
+          image: arangodb/kube-arangodb:1.4.7
           args:
             - --threads=8
             - --api.secondary-name=arango-backup-operator
