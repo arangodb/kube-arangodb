@@ -1,6 +1,8 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+
+## [1.4.7](https://github.com/arangodb/kube-arangodb/tree/1.4.7) (2026-11-03)
 - (Bugfix) (Collector) Write the member startup event through the database client service (a Coordinator, or the single server) instead of the member's local 127.0.0.1 endpoint, so DBServer and agent events reach the central _events collection the member.startup inventory reads instead of a node-local collection
 - (Documentation) Update the supported Kubernetes versions table to each provider's current latest release (GKE/AKS/EKS/BareMetal/Minikube/Other up to 1.37, IBM Cloud up to 1.36, OpenShift up to 4.22)
 - (Bugfix) (Security) Bump the Go toolchain to 1.26.10 and github.com/go-jose/go-jose/v4 to 4.1.6 to clear the HIGH image CVEs CVE-2026-111943 (crypto/x509 man-in-the-middle via untrusted intermediate certificates) and CVE-2026-116587 (go-jose JWK RSA-parameter denial of service)
