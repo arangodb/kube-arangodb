@@ -6,6 +6,34 @@
 # be restored before merge.
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@5.1
+
+parameters:
+  # Dev image destination and the OIDC role CircleCI assumes to push to it.
+  # NOTE: the kube-arangodb CircleCI project's OIDC role does not yet grant ECR
+  # push for this repo (terraform-self-managed platform.tf lists "kube-arangodb"
+  # with images: {}); the push/merge jobs will 403 until that is added and
+  # dev-role is set to the project's role ARN.
+  ecr-registry:
+    type: string
+    default: "889010145541.dkr.ecr.eu-central-1.amazonaws.com"
+  ecr-repo:
+    type: string
+    default: "kube-arangodb"
+  aws-region:
+    type: string
+    default: "eu-central-1"
+  dev-role:
+    type: string
+    default: ""
+  image-base:
+    type: string
+    default: "ubuntu:24.04"
+  envoy-image:
+    type: string
+    default: "envoyproxy/envoy:v1.39.6"
+
 executors:
   # Native-arch Go toolchain executors for the per-architecture operator binary
   # builds. These only compile the binary and hand it to the image jobs via the
@@ -20,6 +48,59 @@ executors:
     docker:
       - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.26.8
     resource_class: arangodb/large-arm64
+
+  # Privileged self-hosted runners for the per-architecture image builds. The
+  # public framework runner ships docker-ce-cli, regctl and aws-cli; setup_docker
+  # starts a local dockerd on the -privileged class.
+  image-builder-amd64:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/large-amd64-privileged
+
+  image-builder-arm64:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/large-arm64-privileged
+
+  # The manifest merge needs no Docker (regctl talks straight to the registry),
+  # so it runs on the non-privileged small class.
+  manifest-runner:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/small-amd64
+
+commands:
+  setup_docker:
+    description: Start a local dockerd on the self-hosted privileged runner.
+    steps:
+      - run:
+          name: Set up Docker
+          command: |
+            export DEBIAN_FRONTEND=noninteractive
+            if ! command -v dockerd >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y \
+                docker-ce=5:29.9.0-1~ubuntu.24.04~noble \
+                docker-ce-cli=5:29.9.0-1~ubuntu.24.04~noble \
+                containerd.io=2.4.1-2~ubuntu.24.04~noble \
+                docker-buildx-plugin=0.38.0-1~ubuntu.24.04~noble
+            fi
+            if ! docker info >/dev/null 2>&1; then
+              DOCKERD_ARGS=""
+              mkdir -p /var/lib/docker
+              if truncate -s 60G /tmp/docker.img && mkfs.ext4 -q -F /tmp/docker.img && mount -o loop /tmp/docker.img /var/lib/docker; then
+                echo "dockerd storage: overlayfs on loop-mounted ext4"
+              elif apt-get install -y fuse-overlayfs && [ -e /dev/fuse ]; then
+                echo "dockerd storage: fuse-overlayfs"
+                DOCKERD_ARGS="--feature containerd-snapshotter=false --storage-driver=fuse-overlayfs"
+              else
+                echo "dockerd storage: vfs"
+                DOCKERD_ARGS="--feature containerd-snapshotter=false --storage-driver=vfs"
+              fi
+              dockerd --registry-mirror=https://mirror.gcr.io ${DOCKERD_ARGS} >/tmp/dockerd.log 2>&1 &
+              for i in $(seq 1 30); do docker info >/dev/null 2>&1 && break; sleep 1; done
+            fi
+            docker info || { tail -50 /tmp/dockerd.log; exit 1; }
 
 jobs:
   # Per-architecture operator binary builds. Each binary is compiled on its own
@@ -50,6 +131,90 @@ jobs:
           paths:
             - bin/linux/arm64/arangodb_operator
 
+  # Per-architecture image builds. The prebuilt binary is pulled back from the
+  # workspace and the default Dockerfile only ADDs it (no in-image compile), so a
+  # plain `docker build` is enough. UBI is intentionally not built yet.
+  build-image-amd64:
+    executor: image-builder-amd64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator image (linux/amd64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-amd64"
+            docker build --platform linux/amd64 -f Dockerfile \
+              --build-arg "IMAGE=<< pipeline.parameters.image-base >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              --build-arg "BUILD_SKIP_UPDATE=true" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  build-image-arm64:
+    executor: image-builder-arm64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator image (linux/arm64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-arm64"
+            docker build --platform linux/arm64 -f Dockerfile \
+              --build-arg "IMAGE=<< pipeline.parameters.image-base >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              --build-arg "BUILD_SKIP_UPDATE=true" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  # Merge the two per-architecture tags into a single multi-arch image. regctl is
+  # in the runner image and talks straight to the registry, so no Docker is
+  # needed. --platform is required (regctl 0.7.2 otherwise nests the indexes).
+  push-image-manifest:
+    executor: manifest-runner
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR (regctl)
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | regctl registry login << pipeline.parameters.ecr-registry >> --user AWS --pass-stdin
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Merge per-architecture images into one manifest
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>"
+            regctl index create "${IMAGE}:${DEV_TAG}" \
+              --ref "${IMAGE}:${DEV_TAG}-amd64" --platform linux/amd64 \
+              --ref "${IMAGE}:${DEV_TAG}-arm64" --platform linux/arm64
+            regctl manifest get "${IMAGE}:${DEV_TAG}"
+
 workflows:
   version: 2
 
@@ -57,6 +222,19 @@ workflows:
     jobs:
       - build-binary-amd64
       - build-binary-arm64
+      - build-image-amd64:
+          context: aws
+          requires:
+            - build-binary-amd64
+      - build-image-arm64:
+          context: aws
+          requires:
+            - build-binary-arm64
+      - push-image-manifest:
+          context: aws
+          requires:
+            - build-image-amd64
+            - build-image-arm64
 
 # TEMP(arm64-migration): everything below is the original pipeline, disabled for
 # the duration of the migration. Restore before merge (uncomment, and move the
