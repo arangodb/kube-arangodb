@@ -23,7 +23,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
+	goStrings "strings"
 	"time"
 
 	"helm.sh/helm/v3/pkg/action"
@@ -343,7 +343,7 @@ func (h *handler) HandleRequirements(ctx context.Context, item operation.Item, e
 	}
 
 	if !fulfilled {
-		message := fmt.Sprintf("Requirements not fulfilled: %s", strings.Join(failures, "; "))
+		message := fmt.Sprintf("Requirements not fulfilled: %s", goStrings.Join(failures, "; "))
 
 		// Gate the install/upgrade: stop before HandleValues/HandleRelease so an incompatible chart is
 		// never rendered or released against this deployment.
