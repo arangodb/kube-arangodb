@@ -206,6 +206,7 @@ func Test_GenerateSecondaryAPIDocs(t *testing.T) {
 		"parent": "ArangoDBPlatform",
 	})
 	writef(t, out, "# Installation Definition\n\n")
+	writef(t, out, "Published ArangoDB Platform releases (the versions referenced by the `platform` LicenseManager package below) are available at the [ArangoDB Platform Releases portal](https://releases.license.arango.ai/).\n\n")
 	writef(t, out, "## Example\n\n")
 	writef(t, out, "```yaml\n")
 	writef(t, out, `packages:
