@@ -96,8 +96,8 @@ from the request context.
 curl -X POST -H "Authorization: Bearer $TOKEN" \
   https://<gateway>/_management/permissions/validate \
   -d '{
-    "action": "collection:write",
-    "resource": "my-collection"
+    "action": "db:WriteData",
+    "resource": "db:collection:sales:orders"
   }'
 ```
 
@@ -127,8 +127,8 @@ curl -X POST https://<gateway>/_integration/authorization/v1/evaluate \
   -d '{
     "user": "alice",
     "roles": ["viewer"],
-    "action": "collection:read",
-    "resource": "reports"
+    "action": "db:Read",
+    "resource": "db:collection:sales:reports"
   }'
 ```
 
@@ -150,9 +150,9 @@ curl -X POST https://<gateway>/_integration/authorization/v1/evaluate-many \
     "user": "alice",
     "roles": ["viewer"],
     "items": [
-      {"action": "collection:read", "resource": "reports"},
-      {"action": "collection:write", "resource": "reports"},
-      {"action": "database:read", "resource": "analytics"}
+      {"action": "db:Read", "resource": "db:collection:sales:reports"},
+      {"action": "db:WriteData", "resource": "db:collection:sales:reports"},
+      {"action": "db:Read", "resource": "db:database:analytics"}
     ]
   }'
 ```
@@ -181,8 +181,8 @@ are extracted from the token claims.
 curl -X POST https://<gateway>/_integration/authorization/v1/evaluate-token \
   -d '{
     "token": "<jwt-token>",
-    "action": "collection:read",
-    "resource": "reports"
+    "action": "db:Read",
+    "resource": "db:collection:sales:reports"
   }'
 ```
 
