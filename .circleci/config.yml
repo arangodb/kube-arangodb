@@ -450,8 +450,13 @@ jobs:
 workflows:
   version: 2
 
-  dev-images:
+  pipeline:
     jobs:
+      - check-code
+      - govulncheck
+      - dependency-cve-scan
+      - image-cve-scan
+      - image-cve-scan-ubi
       - build-binary-amd64
       - build-binary-arm64
       - build-image-amd64:
@@ -480,11 +485,3 @@ workflows:
           requires:
             - build-image-ubi-amd64
             - build-image-ubi-arm64
-
-  run_tests:
-    jobs:
-      - check-code
-      - govulncheck
-      - dependency-cve-scan
-      - image-cve-scan
-      - image-cve-scan-ubi
