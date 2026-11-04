@@ -388,29 +388,25 @@ jobs:
           fail-on-findings: false
           store-junit-results: true
 
-  # Image-layer CVE gate (warn-only): the published operator image bundles the
-  # base OS packages and the compiled arangodb_operator/envoy binaries, none of
-  # which are visible to the fs scan above. Scans the already-published Docker Hub
-  # tag directly via the registry (image-src: remote), so no image build/docker
-  # daemon is needed. The tag is read from VERSION; a -preview VERSION is
-  # published to the kube-arangodb-enterprise-preview repo (not the release repo).
+  # Image-layer CVE gate (warn-only): the operator image bundles the base OS
+  # packages and the compiled arangodb_operator/envoy binaries, none of which are
+  # visible to the fs scan above. Scans the multi-arch dev image this pipeline
+  # just built and pushed to ECR (image-src: remote, pulled straight from the
+  # registry), so it runs after push-image-manifest and assumes the project OIDC
+  # role so trivy can authenticate to the private ECR repo.
   image-cve-scan:
     executor: golang-executor
     steps:
       - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
       - run:
-          name: Resolve released image repo and tag from VERSION
-          command: |
-            OPERATOR_IMAGE_TAG="$(cut -f1 -d'+' VERSION)"
-            OPERATOR_IMAGE_REPO="arangodb/kube-arangodb-enterprise"
-            case "$OPERATOR_IMAGE_TAG" in
-              *-preview-*) OPERATOR_IMAGE_REPO="arangodb/kube-arangodb-enterprise-preview" ;;
-            esac
-            echo "export OPERATOR_IMAGE_TAG=$OPERATOR_IMAGE_TAG" >> "$BASH_ENV"
-            echo "export OPERATOR_IMAGE_REPO=$OPERATOR_IMAGE_REPO" >> "$BASH_ENV"
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
       - trivy-scan/scan:
           scan-type: image
-          image-ref: "${OPERATOR_IMAGE_REPO}:${OPERATOR_IMAGE_TAG}"
+          image-ref: "<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}"
           image-src: remote
           severity: "CRITICAL,HIGH"
           fail-on-findings: false
@@ -420,24 +416,20 @@ jobs:
           path: /tmp/sbom-image.cdx.json
           destination: sbom-image.cdx.json
 
-  # Same gate against the UBI9 variant published alongside the Debian-based image.
+  # Same gate against the UBI9 variant built by this pipeline.
   image-cve-scan-ubi:
     executor: golang-executor
     steps:
       - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
       - run:
-          name: Resolve released image repo and tag from VERSION
-          command: |
-            OPERATOR_IMAGE_TAG="$(cut -f1 -d'+' VERSION)"
-            OPERATOR_IMAGE_REPO="arangodb/kube-arangodb-enterprise"
-            case "$OPERATOR_IMAGE_TAG" in
-              *-preview-*) OPERATOR_IMAGE_REPO="arangodb/kube-arangodb-enterprise-preview" ;;
-            esac
-            echo "export OPERATOR_IMAGE_TAG=$OPERATOR_IMAGE_TAG" >> "$BASH_ENV"
-            echo "export OPERATOR_IMAGE_REPO=$OPERATOR_IMAGE_REPO" >> "$BASH_ENV"
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
       - trivy-scan/scan:
           scan-type: image
-          image-ref: "${OPERATOR_IMAGE_REPO}:${OPERATOR_IMAGE_TAG}-ubi"
+          image-ref: "<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-ubi"
           image-src: remote
           severity: "CRITICAL,HIGH"
           fail-on-findings: false
@@ -455,8 +447,14 @@ workflows:
       - check-code
       - govulncheck
       - dependency-cve-scan
-      - image-cve-scan
-      - image-cve-scan-ubi
+      - image-cve-scan:
+          context: aws
+          requires:
+            - push-image-manifest
+      - image-cve-scan-ubi:
+          context: aws
+          requires:
+            - push-image-ubi-manifest
       - build-binary-amd64
       - build-binary-arm64
       - build-image-amd64:
