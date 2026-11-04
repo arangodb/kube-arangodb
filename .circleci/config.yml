@@ -395,7 +395,7 @@ jobs:
   # registry), so it runs after push-image-manifest and assumes the project OIDC
   # role so trivy can authenticate to the private ECR repo.
   image-cve-scan:
-    executor: golang-executor
+    executor: manifest-runner
     steps:
       - checkout
       - aws-cli/setup:
@@ -418,7 +418,7 @@ jobs:
 
   # Same gate against the UBI9 variant built by this pipeline.
   image-cve-scan-ubi:
-    executor: golang-executor
+    executor: manifest-runner
     steps:
       - checkout
       - aws-cli/setup:
