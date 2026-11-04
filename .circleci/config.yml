@@ -29,6 +29,9 @@ parameters:
   image-base:
     type: string
     default: "ubuntu:24.04"
+  ubi-base-image:
+    type: string
+    default: "registry.access.redhat.com/ubi9/ubi-minimal:9.4"
   envoy-image:
     type: string
     default: "envoyproxy/envoy:v1.39.6"
@@ -214,6 +217,85 @@ jobs:
               --ref "${IMAGE}:${DEV_TAG}-arm64" --platform linux/arm64
             regctl manifest get "${IMAGE}:${DEV_TAG}"
 
+  # UBI variant of the per-architecture image builds. Same prebuilt binary from
+  # the workspace, built from Dockerfile.ubi on the UBI base, tagged -ubi-<arch>
+  # and merged into the single <tag>-ubi image.
+  build-image-ubi-amd64:
+    executor: image-builder-amd64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator UBI image (linux/amd64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-ubi-amd64"
+            docker build --platform linux/amd64 -f Dockerfile.ubi \
+              --build-arg "IMAGE=<< pipeline.parameters.ubi-base-image >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  build-image-ubi-arm64:
+    executor: image-builder-arm64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator UBI image (linux/arm64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-ubi-arm64"
+            docker build --platform linux/arm64 -f Dockerfile.ubi \
+              --build-arg "IMAGE=<< pipeline.parameters.ubi-base-image >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  push-image-ubi-manifest:
+    executor: manifest-runner
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR (regctl)
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | regctl registry login << pipeline.parameters.ecr-registry >> --user AWS --pass-stdin
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Merge per-architecture UBI images into one manifest
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>"
+            regctl index create "${IMAGE}:${DEV_TAG}-ubi" \
+              --ref "${IMAGE}:${DEV_TAG}-ubi-amd64" --platform linux/amd64 \
+              --ref "${IMAGE}:${DEV_TAG}-ubi-arm64" --platform linux/arm64
+            regctl manifest get "${IMAGE}:${DEV_TAG}-ubi"
+
 workflows:
   version: 2
 
@@ -234,6 +316,19 @@ workflows:
           requires:
             - build-image-amd64
             - build-image-arm64
+      - build-image-ubi-amd64:
+          context: aws
+          requires:
+            - build-binary-amd64
+      - build-image-ubi-arm64:
+          context: aws
+          requires:
+            - build-binary-arm64
+      - push-image-ubi-manifest:
+          context: aws
+          requires:
+            - build-image-ubi-amd64
+            - build-image-ubi-arm64
 
 # TEMP(arm64-migration): everything below is the original pipeline, disabled for
 # the duration of the migration. Restore before merge (uncomment, and move the
