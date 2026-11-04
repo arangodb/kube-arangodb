@@ -6,20 +6,26 @@
 # be restored before merge.
 version: 2.1
 
+orbs:
+  aws-cli: circleci/aws-cli@5.1
+
 parameters:
-  # Dev image destination. ECR auth uses the self-hosted runner's ambient
-  # credentials (the circleci-worker[-privileged] role that backs these runners),
-  # the same way the executor images are pulled from ECR - no OIDC role is
-  # assumed. That role must allow ECR push to this repo.
+  # Dev image destination and the CircleCI OIDC role assumed to push to it, the
+  # same pattern as the other ARM64-migrated repos (e.g. gral): the role is
+  # arn:aws:iam::889010145541:role/circleci-project-<stage>-<project> and images
+  # land at release/<stage>/kube-arangodb/<repo> in us-east-1.
   ecr-registry:
     type: string
-    default: "889010145541.dkr.ecr.eu-central-1.amazonaws.com"
+    default: "889010145541.dkr.ecr.us-east-1.amazonaws.com"
   ecr-repo:
     type: string
-    default: "kube-arangodb"
+    default: "release/dev/kube-arangodb/kube-arangodb"
   aws-region:
     type: string
-    default: "eu-central-1"
+    default: "us-east-1"
+  dev-role:
+    type: string
+    default: "arn:aws:iam::889010145541:role/circleci-project-dev-kube-arangodb"
   image-base:
     type: string
     default: "ubuntu:24.04"
@@ -134,6 +140,9 @@ jobs:
       - setup_docker
       - attach_workspace:
           at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
       - run:
           name: Log in to ECR
           command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
@@ -159,6 +168,9 @@ jobs:
       - setup_docker
       - attach_workspace:
           at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
       - run:
           name: Log in to ECR
           command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
@@ -184,6 +196,9 @@ jobs:
     executor: manifest-runner
     steps:
       - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
       - run:
           name: Log in to ECR (regctl)
           command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | regctl registry login << pipeline.parameters.ecr-registry >> --user AWS --pass-stdin
@@ -207,12 +222,15 @@ workflows:
       - build-binary-amd64
       - build-binary-arm64
       - build-image-amd64:
+          context: aws
           requires:
             - build-binary-amd64
       - build-image-arm64:
+          context: aws
           requires:
             - build-binary-arm64
       - push-image-manifest:
+          context: aws
           requires:
             - build-image-amd64
             - build-image-arm64
