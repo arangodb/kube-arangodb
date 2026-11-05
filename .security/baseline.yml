@@ -81,9 +81,9 @@ controls:
     requirement: "Static analysis runs over first-party code on every change."
     target-level: 2
     state: partial
-    evidence: "sast-scan (Semgrep CE p/default plus the org rules) over the whole checkout on every push, and sast-scan-diff gating new code at WARNING against master. Measured 227 rules over 3478 files: 9 ERROR, 91 WARNING, 1 INFO."
+    evidence: "sast-scan (Semgrep CE p/default plus the org rules) over the whole checkout on every push, and sast-scan-diff gating new code at WARNING against master. Measured 228 rules over 3700 files in pipeline 4023: 11 ERROR, 104 WARNING, 1 INFO."
     proven: true
-    note: "PARTIAL for two named reasons. The full-repo tier is fail-on-severity NONE while its 9 pre-existing ERROR findings are open. strict is false because 288 analysis errors are structural (214 chart/*/templates/*.yaml are Go templates rather than YAML documents, 61 partial parses in pkg/generated), so strict: true would fail every SAST job on a scanner limitation rather than on a finding."
+    note: "PARTIAL for two named reasons. The full-repo tier is fail-on-severity NONE while its 11 pre-existing ERROR findings are open. strict is false because 319 analysis errors are structural (237 chart/*/templates/*.yaml are Go templates rather than YAML documents, 67 partial parses in pkg/generated), so strict: true would fail every SAST job on a scanner limitation rather than on a finding."
 
   - id: OSPS-VM-01
     requirement: "Known vulnerabilities in dependencies are detected on every change."

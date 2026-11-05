@@ -564,8 +564,8 @@ jobs:
 
   # ---- SAST tiers ------------------------------------------------------------
   # Semgrep CE, pinned in the orb: the layer that covers the code written here.
-  # strict: false is measured, not convenient. Semgrep records 288 analysis errors on
-  # this checkout, 214 because chart/*/templates/*.yaml are Go templates and 61 in
+  # strict: false is measured, not convenient. Semgrep records 319 analysis errors on
+  # this checkout, 237 because chart/*/templates/*.yaml are Go templates and 67 in
   # pkg/generated. strict: true would fail every SAST job on a scanner limitation.
   # Chart templates are covered by the misconfig tier instead.
   sast-scan:
@@ -582,12 +582,13 @@ jobs:
     steps:
       - checkout
       - semgrep-scan/scan:
-          # Report-only at fail-on-severity NONE: 9 ERROR and 91 WARNING at this commit, all
+          # Report-only at fail-on-severity NONE: 11 ERROR and 104 WARNING at this commit, all
           # pre-existing, so gating means red-on-arrival.
-          # Flip criterion: the nine ERROR findings (three jwt-go none-algorithm in
-          # pkg/util/token, three missing-unlock in integrations/storage/v1/shared/s3, one
-          # dangerous-exec in pkg/debug_package, one secret in docs/, one missing-user in
-          # Dockerfile) are cleared or dispositioned by their owners.
+          # Flip criterion: the eleven ERROR findings (three jwt-go none-algorithm in
+          # pkg/util/token, three missing-unlock in integrations/storage/v1/shared/s3, two
+          # dangerous-exec in pkg/debug_package and cmd/lifecycle_post_start.go, one
+          # insecure gRPC server in an envoy config test, one secret in docs/, one
+          # missing-user in Dockerfile) are cleared or dispositioned by their owners.
           fail-on-severity: << parameters.gate >>
           # severity is the report floor, not the gate: INFO keeps the whole band in the
           # JSON, SARIF and JUnit as evidence of what the gate did not count.

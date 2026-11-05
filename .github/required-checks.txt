@@ -17,7 +17,7 @@ ci/circleci: check-code
 # a SAST scope reduction, must not be mergeable.
 ci/circleci: disposition-check
 # Diff-aware SAST at WARNING over new code; the full-repo tier is report-only
-# while its 9 pre-existing ERROR findings are open.
+# while its 11 pre-existing ERROR findings are open.
 ci/circleci: sast-scan-diff
 # Carries the blocking Dockerfile credential guard; the misconfig scan in the same
 # job is report-only.
@@ -31,7 +31,7 @@ ci/circleci: dependency-cve-scan
 # ci/circleci: image-cve-scan-ubi    same, on the UBI9 base.
 # ci/circleci: secret-scan           report-only until the nine private-key
 #     findings under pkg/deployment/agency/state/testdata/ are dispositioned.
-# ci/circleci: sast-scan             report-only until the nine ERROR findings in
+# ci/circleci: sast-scan             report-only until the eleven ERROR findings in
 #     SECURITY.md are cleared or dispositioned.
 # ci/circleci: vulncheck             Adam's call: no reachable finding after the
 #     master merge, see SECURITY.md.

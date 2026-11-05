@@ -133,11 +133,12 @@ someone gets round to it".
   readDB). What happens to them, redaction or rotation plus a dated acceptance,
   is the owning team's call. It flips when they are dispositioned.
 - **`sast-scan`** is `fail-on-severity: NONE` because the full-repo band holds
-  nine pre-existing ERROR findings: three `jwt-go-none-algorithm` in
+  eleven pre-existing ERROR findings: three `jwt-go-none-algorithm` in
   `pkg/util/token`, three `missing-unlock-before-return` in
-  `integrations/storage/v1/shared/s3`, one `dangerous-exec-command` in
-  `pkg/debug_package`, one generic-secret match in `docs/platform.sso.openid.md`
-  and one missing-user in `Dockerfile`. It flips when their owners clear them or
+  `integrations/storage/v1/shared/s3`, two `dangerous-exec-command` in
+  `pkg/debug_package` and `cmd/lifecycle_post_start.go`, one
+  `grpc-server-insecure-connection` in an envoy config test, one generic-secret
+  match in `docs/platform.sso.openid.md` and one missing-user in `Dockerfile`. It flips when their owners clear them or
   give them dated inline dispositions. New code is not waiting on that:
   `sast-scan-diff` gates it at WARNING today.
 
@@ -266,10 +267,10 @@ Each of these is a deliberate, named gap rather than an oversight.
    lint runs without `--strict`. The misconfiguration scan separately proves it
    reads the charts, because trivy loads all seven of them and reports 115 Helm
    targets.
-5. **SAST runs with `strict: false`.** Semgrep records 288 analysis errors on
-   this checkout: 214 because `chart/*/templates/*.yaml` are Go templates rather
-   than YAML documents, 61 partial parses in the generated clientset under
-   `pkg/generated`, and 13 elsewhere. With `strict: true` the orb correctly fails
+5. **SAST runs with `strict: false`.** Semgrep records 319 analysis errors on
+   this checkout: 237 because `chart/*/templates/*.yaml` are Go templates rather
+   than YAML documents, 67 partial parses in the generated clientset under
+   `pkg/generated`, and 15 elsewhere. With `strict: true` the orb correctly fails
    on an incomplete analysis, so every SAST job would be red for a scanner
    limitation on Helm sources rather than for a finding. The blind spot is not
    hidden: the orb prints the error count and type breakdown on every run, and
