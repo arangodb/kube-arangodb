@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Documentation) Link the ArangoDB Platform Releases portal (https://releases.license.arango.ai/) from the Platform installation file schema
+- (Feature) (Platform) Add a RequirementsFulfilled condition to ArangoPlatformService that evaluates the chart's reserved ArangoDB and Operator version requirements against the bound deployment's ArangoDB version and the operator's own version, gating the install/upgrade until they are satisfied
 
 ## [1.4.7](https://github.com/arangodb/kube-arangodb/tree/1.4.7) (2026-11-03)
 - (Bugfix) (Collector) Write the member startup event through the database client service (a Coordinator, or the single server) instead of the member's local 127.0.0.1 endpoint, so DBServer and agent events reach the central _events collection the member.startup inventory reads instead of a node-local collection

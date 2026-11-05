@@ -21,6 +21,7 @@
 package util
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -200,4 +201,54 @@ func Test_Version_MajorMinor(t *testing.T) {
 			require.Equal(t, tc.wantMinor, tc.v.Minor())
 		})
 	}
+}
+
+func Test_VersionConstrain_JSON(t *testing.T) {
+	t.Run("Marshal", func(t *testing.T) {
+		// json.Marshal HTML-escapes < and >, so assert by decoding the output back rather than matching
+		// the raw bytes.
+		data, err := json.Marshal(VersionConstrain(">= 3.12.0 < 3.13.0"))
+		require.NoError(t, err)
+
+		var s string
+		require.NoError(t, json.Unmarshal(data, &s))
+		require.Equal(t, ">= 3.12.0 < 3.13.0", s)
+
+		data, err = json.Marshal(VersionConstrain(""))
+		require.NoError(t, err)
+		require.Equal(t, `""`, string(data))
+	})
+
+	t.Run("Unmarshal valid", func(t *testing.T) {
+		var c VersionConstrain
+		require.NoError(t, json.Unmarshal([]byte(`">= 3.12.0"`), &c))
+		require.EqualValues(t, ">= 3.12.0", c)
+	})
+
+	t.Run("Unmarshal empty", func(t *testing.T) {
+		var c VersionConstrain
+		require.NoError(t, json.Unmarshal([]byte(`""`), &c))
+		require.True(t, c.Empty())
+	})
+
+	t.Run("Unmarshal invalid constraint is rejected", func(t *testing.T) {
+		var c VersionConstrain
+		require.Error(t, json.Unmarshal([]byte(`"not a constraint"`), &c))
+	})
+
+	t.Run("Unmarshal non-string is rejected", func(t *testing.T) {
+		var c VersionConstrain
+		require.Error(t, json.Unmarshal([]byte(`123`), &c))
+	})
+
+	t.Run("RoundTrip in a map", func(t *testing.T) {
+		in := map[string]VersionConstrain{"platform": ">= 1.2.0", "operator": ""}
+
+		data, err := json.Marshal(in)
+		require.NoError(t, err)
+
+		var out map[string]VersionConstrain
+		require.NoError(t, json.Unmarshal(data, &out))
+		require.Equal(t, in, out)
+	})
 }

@@ -31,4 +31,8 @@ const (
 	DiscoveredCondition      api.ConditionType = "Discovered"
 	HibernatedCondition      api.ConditionType = "Hibernated"
 	ReadyCondition           api.ConditionType = "Ready"
+
+	// RequirementsFulfilledCondition indicates that the chart's reserved platform requirements
+	// (the ArangoDB and Operator version constraints from its platform.yml) are satisfied.
+	RequirementsFulfilledCondition api.ConditionType = "RequirementsFulfilled"
 )

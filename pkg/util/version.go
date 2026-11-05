@@ -21,6 +21,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	goStrings "strings"
 
@@ -129,6 +130,34 @@ func leadingInt(s string) int {
 // VersionConstrain is a semver constraint expression (e.g. ">= 3.12.0 < 3.13.0"). Cast a string with
 // util.VersionConstrain(s); Validate reports any parse error.
 type VersionConstrain string
+
+// MarshalJSON encodes the constraint as a JSON string.
+func (c VersionConstrain) MarshalJSON() ([]byte, error) {
+	return json.Marshal(string(c))
+}
+
+// UnmarshalJSON decodes a JSON string into the constraint. A non-empty value must be a valid semver
+// constraint expression (an empty value imposes no requirement), so a malformed constraint is rejected
+// at decode time rather than silently stored.
+func (c *VersionConstrain) UnmarshalJSON(data []byte) error {
+	if c == nil {
+		return fmt.Errorf("nil VersionConstrain provided")
+	}
+
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	if s != "" {
+		if _, err := semver.NewConstraint(s); err != nil {
+			return fmt.Errorf("invalid version constraint %q: %w", s, err)
+		}
+	}
+
+	*c = VersionConstrain(s)
+	return nil
+}
 
 // Empty reports whether the constraint is unset, i.e. imposes no version requirement.
 func (c VersionConstrain) Empty() bool {
