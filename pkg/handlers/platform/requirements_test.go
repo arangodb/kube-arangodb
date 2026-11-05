@@ -23,9 +23,10 @@ package platform
 import (
 	"testing"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
