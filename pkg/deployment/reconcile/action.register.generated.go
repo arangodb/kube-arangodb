@@ -102,6 +102,9 @@ var (
 	_ Action        = &actionEnforceResignLeadership{}
 	_ actionFactory = newEnforceResignLeadershipAction
 
+	_ Action        = &actionGatewayConfigPush{}
+	_ actionFactory = newGatewayConfigPushAction
+
 	_ Action        = &actionIdle{}
 	_ actionFactory = newIdleAction
 
@@ -652,6 +655,20 @@ func init() {
 
 		// Get Action defition
 		function := newEnforceResignLeadershipAction
+
+		// Wrap action main function
+
+		// Register action
+		registerAction(action, function)
+	}
+
+	// GatewayConfigPush
+	{
+		// Get Action type
+		action := api.ActionTypeGatewayConfigPush
+
+		// Get Action defition
+		function := newGatewayConfigPushAction
 
 		// Wrap action main function
 

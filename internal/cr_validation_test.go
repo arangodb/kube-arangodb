@@ -287,6 +287,15 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				},
 			},
 		},
+		"platform-workflow": {
+			fmt.Sprintf("%s/pkg/apis/platform", root): {
+				"v1beta1": {
+					objects: map[string]interface{}{
+						"spec": platformApi.ArangoPlatformWorkflow{}.Spec,
+					},
+				},
+			},
+		},
 		"permission-token": {
 			fmt.Sprintf("%s/pkg/apis/permission", root): {
 				"v1alpha1": {
@@ -337,6 +346,18 @@ func Test_GenerateCRValidationSchemas(t *testing.T) {
 				"v1alpha1": {
 					objects: map[string]interface{}{
 						"spec": permissionApi.ArangoPermissionRoleUserBinding{}.Spec,
+					},
+					shared: []string{
+						fmt.Sprintf("%s/pkg/apis/permission/v1alpha1/policy", root),
+					},
+				},
+			},
+		},
+		"permission-role-group-binding": {
+			fmt.Sprintf("%s/pkg/apis/permission", root): {
+				"v1alpha1": {
+					objects: map[string]interface{}{
+						"spec": permissionApi.ArangoPermissionRoleGroupBinding{}.Spec,
 					},
 					shared: []string{
 						fmt.Sprintf("%s/pkg/apis/permission/v1alpha1/policy", root),

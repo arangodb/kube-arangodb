@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -132,7 +132,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 	}
 
 	if spec.IsAuthenticated() {
-		if image == nil || !features.JWTRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
+		if !features.JWTRotation().ImageSupported(image) {
 			secretName := spec.Authentication.GetJWTSecretName()
 			getExpectedHash := func() string { return getHashes().AuthJWT }
 			setExpectedHash := func(h string) error {
@@ -159,7 +159,7 @@ func (r *Resources) ValidateSecretHashes(ctx context.Context, cachedStatus inspe
 		}
 	}
 	if spec.RocksDB.IsEncrypted() {
-		if image == nil || !features.EncryptionRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
+		if !features.EncryptionRotation().ImageSupported(image) {
 			secretName := spec.RocksDB.Encryption.GetKeySecretName()
 			getExpectedHash := func() string { return getHashes().RocksDBEncryptionKey }
 			setExpectedHash := func(h string) error {

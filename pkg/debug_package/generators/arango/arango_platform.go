@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,20 @@ func Platform(f shared.FactoryGen) {
 	f.AddSection("platform").
 		Register("storage", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformStorage](arangoPlatformV1beta1ArangoPlatformStorageList, shared.WithDefinitions[*platformApi.ArangoPlatformStorage], arangoPlatformV1beta1ArangoPlatformStorageDebug)).
 		Register("chart", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformChart](arangoPlatformV1beta1ArangoPlatformChartList, shared.WithDefinitions[*platformApi.ArangoPlatformChart], arangoPlatformV1beta1ArangoPlatformChartExtract)).
-		Register("service", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformService](arangoPlatformV1beta1ArangoPlatformServiceList, shared.WithDefinitions[*platformApi.ArangoPlatformService]))
+		Register("service", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformService](arangoPlatformV1beta1ArangoPlatformServiceList, shared.WithDefinitions[*platformApi.ArangoPlatformService])).
+		Register("workflow", true, shared.WithKubernetesItems[*platformApi.ArangoPlatformWorkflow](arangoPlatformV1beta1ArangoPlatformWorkflowList, shared.WithDefinitions[*platformApi.ArangoPlatformWorkflow]))
+}
+
+func arangoPlatformV1beta1ArangoPlatformWorkflowList(ctx context.Context, client kclient.Client, namespace string) ([]*platformApi.ArangoPlatformWorkflow, error) {
+	return list.ListObjects[*platformApi.ArangoPlatformWorkflowList, *platformApi.ArangoPlatformWorkflow](ctx, client.Arango().PlatformV1beta1().ArangoPlatformWorkflows(namespace), func(result *platformApi.ArangoPlatformWorkflowList) []*platformApi.ArangoPlatformWorkflow {
+		q := make([]*platformApi.ArangoPlatformWorkflow, len(result.Items))
+
+		for id, e := range result.Items {
+			q[id] = e.DeepCopy()
+		}
+
+		return q
+	})
 }
 
 func arangoPlatformV1beta1ArangoPlatformStorageList(ctx context.Context, client kclient.Client, namespace string) ([]*platformApi.ArangoPlatformStorage, error) {

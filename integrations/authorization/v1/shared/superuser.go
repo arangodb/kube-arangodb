@@ -41,6 +41,10 @@ func (s superUser) Ready(ctx context.Context) error {
 	return s.parent.Ready(ctx)
 }
 
+func (s superUser) Refresh(ctx context.Context) error {
+	return s.parent.Refresh(ctx)
+}
+
 func (s superUser) Revision() uint64 {
 	return s.parent.Revision()
 }

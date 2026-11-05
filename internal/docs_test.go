@@ -206,6 +206,7 @@ func Test_GenerateSecondaryAPIDocs(t *testing.T) {
 		"parent": "ArangoDBPlatform",
 	})
 	writef(t, out, "# Installation Definition\n\n")
+	writef(t, out, "Published ArangoDB Platform releases (the versions referenced by the `platform` LicenseManager package below) are available at the [ArangoDB Platform Releases portal](https://releases.license.arango.ai/).\n\n")
 	writef(t, out, "## Example\n\n")
 	writef(t, out, "```yaml\n")
 	writef(t, out, `packages:
@@ -340,6 +341,9 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoPlatformLink.V1Beta1": {
 						"Spec": platformApi.ArangoPlatformLink{}.Spec,
 					},
+					"ArangoPlatformWorkflow.V1Beta1": {
+						"Spec": platformApi.ArangoPlatformWorkflow{}.Spec,
+					},
 				},
 				Shared: []string{},
 			},
@@ -368,6 +372,9 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					},
 					"ArangoPermissionRoleUserBinding.V1Alpha1": {
 						"Spec": permissionApi.ArangoPermissionRoleUserBinding{}.Spec,
+					},
+					"ArangoPermissionRoleGroupBinding.V1Alpha1": {
+						"Spec": permissionApi.ArangoPermissionRoleGroupBinding{}.Spec,
 					},
 				},
 				Shared: []string{

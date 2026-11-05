@@ -96,7 +96,7 @@ func (r actionRebalancerGenerateV2) Start(ctx context.Context) (bool, error) {
 		for id, move := range resp.Result.Moves {
 			db, ok := cache.GetCollectionDatabaseByID(move.Collection.String())
 			if !ok {
-				r.log.Warn("Database not found for Collection %s", move.Collection)
+				r.log.Warn("Database not found for Collection %s", move.Collection.String())
 				return true, nil
 			}
 

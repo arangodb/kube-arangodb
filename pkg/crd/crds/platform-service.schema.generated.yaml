@@ -57,6 +57,11 @@ v1beta1:
             required:
               - name
             type: object
+          hibernate:
+            description: |-
+              Hibernate, when true, injects the hibernated flag into the chart values (arangodb_platform.hibernated)
+              so the chart can render its hibernated form.
+            type: boolean
           install:
             description: Install keeps the install overrides
             properties:

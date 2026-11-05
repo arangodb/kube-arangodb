@@ -77,6 +77,7 @@ func (r *Reconciler) createHighPlan(ctx context.Context, apiObject k8sutil.APIOb
 		ApplyWithBackOff(BackOffCheck, time.Minute, r.emptyPlanBuilder)).
 		ApplyIfEmptyWithBackOff(TimezoneCheck, time.Minute, r.createTimezoneUpdatePlan).
 		ApplyIfEmptyWithBackOff(SyncRBACPermissionsCheck, 30*time.Second, r.createSyncRBACPermissionsPlan).
+		ApplyIfEmptyWithBackOff(GatewayConfigPushCheck, 30*time.Second, r.createGatewayConfigPushPlan).
 		Apply(r.createBackupInProgressConditionPlan).
 		Apply(r.createMaintenanceConditionPlan).
 		Apply(r.cleanupConditions).
@@ -290,7 +291,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 		switch m {
 		case compare.EnforcedRotation:
 			if reason != "" {
-				r.log.Bool("enforced", true).Info(reason)
+				r.log.Bool("enforced", true).Info("%s", reason)
 			} else {
 				r.log.Bool("enforced", true).Info("Unknown reason")
 			}
@@ -312,7 +313,7 @@ func (r *Reconciler) updateMemberRotationConditions(apiObject k8sutil.APIObject,
 			return plan, nil
 		case compare.GracefulRotation:
 			if reason != "" {
-				r.log.Bool("enforced", false).Info(reason)
+				r.log.Bool("enforced", false).Info("%s", reason)
 			} else {
 				r.log.Bool("enforced", false).Info("Unknown reason")
 			}

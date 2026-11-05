@@ -125,7 +125,7 @@ func (r *Reconciler) updateClusterLicenseMember(status api.DeploymentStatus, gro
 			return false
 		}
 
-		return i.ArangoDBVersion.CompareTo("3.9.0") >= 0 && i.Enterprise
+		return util.Version(i.ArangoDBVersion).CompareTo("3.9.0") >= 0 && i.Enterprise
 	}).Filter(func(a api.DeploymentStatusMemberElement) bool {
 		return a.Member.Conditions.IsTrue(api.ConditionTypeReady)
 	})

@@ -11,11 +11,11 @@ ifeq ($(shell uname),Darwin)
 	REALPATH ?= grealpath
 endif
 
-KUBERNETES_VERSION_MINOR:=33
-KUBERNETES_VERSION_PATCH:=13
+KUBERNETES_VERSION_MINOR:=36
+KUBERNETES_VERSION_PATCH:=4
 
 BASEIMAGE ?= ubuntu:24.04
-ENVOY_IMAGE ?= envoyproxy/envoy:v1.37.5
+ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.6
 
 PROJECT := arangodb_operator
 SCRIPTDIR := $(shell pwd)
@@ -58,7 +58,7 @@ K3D_CLUSTER ?= $(REPONAME)
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.25.12
+GOBASEVERSION := 1.26.10
 GOVERSION ?= $(GOBASEVERSION)-alpine3.18
 DISTRIBUTION ?= alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
@@ -316,7 +316,7 @@ NON_EE_SOURCES := $(shell $(NON_EE_SOURCES_QUERY))
 
 YAML_EXCLUDE_DIRS := vendor .gobuild deps tools pkg/generated/clientset pkg/generated/informers pkg/generated/listers \
                      chart/kube-arangodb/templates chart/kube-arangodb-arm64/templates chart/kube-arangodb-enterprise/templates chart/kube-arangodb-enterprise-arm64/templates  \
-                     chart/kube-arangodb-crd/templates chart/platform-storage/templates pkg/platform/templates
+                     chart/kube-arangodb-crd/templates chart/platform-storage/templates chart/arango-deployment/templates pkg/platform/templates
 YAML_EXCLUDE_FILES :=
 YAML_QUERY := find ./ -type f -name '*.yaml' $(foreach EXCLUDE_DIR,$(YAML_EXCLUDE_DIRS), ! -path "*/$(EXCLUDE_DIR)/*") $(foreach EXCLUDE_FILE,$(YAML_EXCLUDE_FILES), ! -path "*/$(EXCLUDE_FILE)")
 YAMLS := $(shell $(YAML_QUERY))
@@ -375,6 +375,16 @@ yamlfmt:
 yamlfmt-verify:
 	@echo ">> Verifying style of yaml files"
 	@$(GOPATH)/bin/yamlfmt -lint -quiet $(YAMLS)
+
+.PHONY: helm-lint
+helm-lint:
+	@echo ">> Linting Helm charts"
+	@for chart in $(ROOTDIR)/chart/*/; do \
+		if [ -f "$${chart}Chart.yaml" ]; then \
+			echo ">> Linting $${chart}"; \
+			$(GOPATH)/bin/helm lint "$${chart}" || exit 1; \
+		fi; \
+	done
 
 .PHONY: license
 license:
@@ -486,6 +496,12 @@ bin: $(BIN)
 $(BIN): $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AMD64) $(VBIN_PLATFORM_LINUX_AMD64)
 	@cp "$(VBIN_OPERATOR_LINUX_AMD64)" "$(BIN)"
 	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
+
+.PHONY: operator-binary-linux-amd64
+operator-binary-linux-amd64: $(VBIN_OPERATOR_LINUX_AMD64)
+
+.PHONY: operator-binary-linux-arm64
+operator-binary-linux-arm64: $(VBIN_OPERATOR_LINUX_ARM64)
 
 .PHONY: docker
 docker: clean check-vars $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPERATOR_LINUX_ARM64)
@@ -668,6 +684,22 @@ chart-operator-enterprise-arm64: helm
 
 manifests: chart-operator-enterprise-arm64
 
+.PHONY: chart-arango-deployment
+chart-arango-deployment: export CHART_NAME := arango-deployment
+chart-arango-deployment: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+manifests: chart-arango-deployment
+
+.PHONY: chart-platform-storage
+chart-platform-storage: export CHART_NAME := platform-storage
+chart-platform-storage: helm
+	@mkdir -p "$(ROOTDIR)/bin/charts"
+	@$(HELM_PACKAGE_CMD)
+
+manifests: chart-platform-storage
+
 .PHONY: manifests-verify
 manifests-verify:
 	$(MAKE) manifest-verify-plain-ce
@@ -813,6 +845,8 @@ tools-min: update-vendor
 	@GOBIN=$(GOPATH)/bin go install github.com/google/yamlfmt/cmd/yamlfmt@v0.20.0
 	@echo ">> Fetching protolinter"
 	@GOBIN=$(GOPATH)/bin go install github.com/yoheimuta/protolint/cmd/protolint@v0.56.4
+	@echo ">> Fetching helm"
+	@GOBIN=$(GOPATH)/bin go install helm.sh/helm/v3/cmd/helm@v3.13.0
 
 .PHONY: tools
 tools: tools-min
@@ -851,6 +885,10 @@ set-deployment-api-version-v2alpha1: set-api-version/deployment
 set-deployment-api-version-v1: export API_VERSION=1
 set-deployment-api-version-v1: set-api-version/deployment
 
+# Files excluded from the deployment API-version replace (they intentionally reference multiple
+# deployment API versions, e.g. v1 and v2alpha1 side by side).
+SET_API_VERSION_IGNORE := -e mod_optional_status_test.go
+
 set-typed-api-version/%:
 	@grep -rHn "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+" \
 	      "$(ROOT)/pkg/deployment/" \
@@ -864,7 +902,7 @@ set-typed-api-version/%:
 	      "$(ROOT)/pkg/apis/scheduler/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	      "$(ROOT)/integrations/" \
-	  | cut -d ':' -f 1 | sort | uniq \
+	  | cut -d ':' -f 1 | sort | uniq | grep -vF $(SET_API_VERSION_IGNORE) \
 	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned/typed/$*/v$(API_VERSION)#g"
 
 
@@ -882,7 +920,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/platform/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	      "$(ROOT)/integrations/" \
-	  | cut -d ':' -f 1 | sort | uniq \
+	  | cut -d ':' -f 1 | sort | uniq | grep -vF $(SET_API_VERSION_IGNORE) \
 	  | xargs -n 1 $(SED) -i "s#github.com/arangodb/kube-arangodb/pkg/apis/$*/v[A-Za-z0-9]\+#github.com/arangodb/kube-arangodb/pkg/apis/$*/v$(API_VERSION)#g"
 	@grep -rHn "DatabaseV[A-Za-z0-9]\+()" \
 		  "$(ROOT)/pkg/deployment/" \
@@ -897,7 +935,7 @@ set-api-version/%:
 	      "$(ROOT)/pkg/apis/platform/" \
 	      "$(ROOT)/pkg/upgrade/" \
 	      "$(ROOT)/integrations/" \
-	  | cut -d ':' -f 1 | sort | uniq \
+	  | cut -d ':' -f 1 | sort | uniq | grep -vF $(SET_API_VERSION_IGNORE) \
 	  | xargs -n 1 $(SED) -i "s#DatabaseV[A-Za-z0-9]\+()\.#DatabaseV$(API_VERSION)().#g"
 
 synchronize: synchronize-v2alpha1-with-v1
@@ -938,8 +976,8 @@ CRDS:=backups-backup backups-backuppolicy \
       database-clustersynchronization database-deployment database-member database-task \
       scheduler-profile scheduler-pod scheduler-deployment scheduler-batchjob scheduler-cronjob \
       networking-route \
-      platform-storage platform-chart platform-service platform-link \
-      permission-token permission-role permission-policy permission-policy-role-binding permission-role-user-binding
+      platform-storage platform-chart platform-service platform-link platform-workflow \
+      permission-token permission-role permission-policy permission-policy-role-binding permission-role-user-binding permission-role-group-binding
 
 .PHONY: sync
 sync:
@@ -964,7 +1002,7 @@ sync-charts:
 sync: sync-charts
 
 ci-check:
-	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint
+	@$(MAKE) tidy vendor generate update-generated synchronize-v2alpha1-with-v1 sync fmt yamlfmt license protolint helm-lint
 	@git checkout -- go.sum # ignore changes in go.sum
 	@if [ ! -z "$$(git status --porcelain)" ]; then echo "There are uncommited changes!"; git status; git diff; exit 1; fi
 

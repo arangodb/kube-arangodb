@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 type IntegrationSchedulerV2 struct {
@@ -59,6 +61,13 @@ func (i IntegrationSchedulerV2) Envs() ([]core.EnvVar, error) {
 			Name:  "INTEGRATION_SCHEDULER_V2_DEPLOYMENT",
 			Value: i.DeploymentName,
 		},
+	}
+
+	if features.SchedulerV2Workflow().Enabled() {
+		envs = append(envs, core.EnvVar{
+			Name:  util.NormalizeEnv(features.GetFeatureArgName(features.SchedulerV2Workflow().Name())),
+			Value: features.Enabled,
+		})
 	}
 
 	return i.Core.Envs(i, envs...), nil

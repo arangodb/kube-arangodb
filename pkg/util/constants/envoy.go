@@ -36,4 +36,9 @@ const (
 	EnvoyIntegrationSidecarFilterName = "envoy.filters.http.ext_authz"
 
 	EnvoyIntegrationSidecarCluster = "integration_sidecar"
+
+	// EnvoyGatewayADSCluster is the static bootstrap cluster Envoy uses to reach the integration sidecar's
+	// ADS (xDS) server when the gateway dynamic config is delivered in push mode. It must be static because
+	// the ADS config source cannot itself be discovered via ADS.
+	EnvoyGatewayADSCluster = "gateway_ads"
 )

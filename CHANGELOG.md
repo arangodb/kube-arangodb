@@ -1,6 +1,92 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Documentation) Link the ArangoDB Platform Releases portal (https://releases.license.arango.ai/) from the Platform installation file schema
+- (Feature) (Platform) Add a RequirementsFulfilled condition to ArangoPlatformService that evaluates the chart's reserved ArangoDB and Operator version requirements against the bound deployment's ArangoDB version and the operator's own version, gating the install/upgrade until they are satisfied
+
+## [1.4.7](https://github.com/arangodb/kube-arangodb/tree/1.4.7) (2026-11-03)
+- (Bugfix) (Collector) Write the member startup event through the database client service (a Coordinator, or the single server) instead of the member's local 127.0.0.1 endpoint, so DBServer and agent events reach the central _events collection the member.startup inventory reads instead of a node-local collection
+- (Documentation) Update the supported Kubernetes versions table to each provider's current latest release (GKE/AKS/EKS/BareMetal/Minikube/Other up to 1.37, IBM Cloud up to 1.36, OpenShift up to 4.22)
+- (Bugfix) (Security) Bump the Go toolchain to 1.26.10 and github.com/go-jose/go-jose/v4 to 4.1.6 to clear the HIGH image CVEs CVE-2026-111943 (crypto/x509 man-in-the-middle via untrusted intermediate certificates) and CVE-2026-116587 (go-jose JWK RSA-parameter denial of service)
+- (Bugfix) (Security) (Gateway) Bump the bundled Envoy image to v1.39.6 (latest 1.39 patch) to clear the statically-linked Brotli decoder RCE CVE-2026-111497 (fixed in 1.39.3, CISA KEV) which version-based scanners cannot see in the Bazel-built Envoy binary, plus the subsequent 1.39.4-1.39.6 patch fixes
+
+## [1.4.6](https://github.com/arangodb/kube-arangodb/tree/1.4.6) (2026-10-19)
+- (Feature) Enable the collector postStart lifecycle hook feature by default
+- (Maintenance) Route the image CVE scan to the kube-arangodb-enterprise-preview repo for -preview VERSIONs so it pulls the actually-published preview image instead of failing with MANIFEST_UNKNOWN on the release repo
+- (Documentation) (Platform) Wrap the Helm-templated code blocks in the platform Links "Building a link" and Developer Guide docs in Jekyll `{% raw %}` so the published site stops interpreting `{{ ... }}` as Liquid and blanking every templated YAML field
+- (Bugfix) (Security) Bump the Go toolchain to 1.26.9 and golang.org/x/net, google.golang.org/grpc, go.opentelemetry.io/otel/sdk, oras.land/oras-go/v2 and github.com/klauspost/compress to clear all called govulncheck findings
+- (Bugfix) (Security) (Gateway) Bump the bundled Envoy image to v1.39.1 and the go-control-plane/envoy xDS module to v1.39.0 to clear the Envoy CVEs fixed through the 1.39.1 release (path-matching/auth bypass, HTTP/3 use-after-free, TLS certificate-parsing DoS)
+- (Bugfix) Register the ArangoPermissionRoleGroupBinding GVR so the debug package can collect it instead of panicking with 'Unable to get GVR' during state dumps
+- (Feature) (RBAC) Support an `x-arangodb-authorization-refresh: true` request header on AuthorizationV1 Evaluate/EvaluateMany/EvaluateToken/EvaluateTokenMany that re-pulls the RBAC pools before evaluating, giving callers read-your-writes consistency against a just-changed, still-streaming sidecar cache
+- (Bugfix) (Platform) Make the member-startup License Manager inventory query version-agnostic (guard FOR operands against null and move the per-attribute subquery out of the ternary) so the collector inventory works on all supported ArangoDB versions instead of failing with an AQL 'collection or array expected ... null' error
+- (Bugfix) (Gateway) Resolve the gateway config-push mode through nil-safe DeploymentSpecGateway accessors so the config-push plan builder no longer panics for deployments without a spec.gateway
+- (Bugfix) (Integration) Gate the per-deployment (local) meta.v1/storage.v2 integrations on the GatewaySidecarEnabled condition instead of the central-services feature flag, so they match the central routing and are never left served neither locally nor centrally
+- (Feature) (RBAC) Add a Refresh RPC to the AuthorizationV1 integration that forces its authorization cache to re-pull the current state from the pool service, so a just-written policy/role/binding becomes visible immediately instead of on the next streamed update
+- (Bugfix) (RBAC) Refresh the backing pool from the store on every get/update/list of policies, roles and role bindings in the authorization API so callers never see stale in-memory state
+- (Bugfix) (RBAC) Return NotFound instead of Internal when removing a user or group role binding that does not exist
+- (Feature) (ArangoLink) Rewire the job store to a state-in-key layout (ToDo/Pending/Finished/Failed/Cancelled buckets, modelled on the ArangoDB agency job lifecycle) with MetaV1 Move for atomic state transitions, add numeric job priority (higher first, FIFO tie-break via a creation-epoch-prefixed job id), and pick up jobs by listing only the ToDo bucket instead of scanning every job
+- (Feature) (MetaV1) Add a Move operation that atomically renames an object from one key to another within a single transaction, with optional source-revision precondition
+- (Feature) (RBAC) Add the ArangoPermissionRoleGroupBinding CRD (registration only; spec and reconcile handler follow separately)
+- (Feature) (RBAC) Add group role bindings to the authorization sidecar: a dedicated group-binding pool with Assign/Replace/Remove/List gRPC (and pool streaming), and both evaluation paths union the roles bound to the groups carried in the request's token groups claim with the user's direct bindings
+- (Feature) (RBAC) Add the ArangoPermissionRoleGroupBinding CRD and operator handler, reconciling a role-to-group binding (with scope) into the authorization sidecar's group-binding pool
+- (Bugfix) (Gateway) Include the gateway TLS-keyfile finalizer in ManagedFinalizers so it is removed during deployment cleanup, instead of leaving gateway pods stuck terminating after the ArangoDeployment is deleted
+- (Bugfix) (Gateway) Key the gateway inventory delivery mode and reported config revision on the per-deployment resolved mode (GatewayDynamicModePush) instead of the global gateway-config-push feature flag, so a static (non-dynamic) gateway reports the config checksum and its GatewayConfig condition propagates instead of hanging deployment readiness
+- (Feature) (Platform) Tag collector startup events with the SHA256-hashed arangod member id (sourced from a new ARANGODB_OVERRIDE_MEMBER_ID env, allowlisted in the rotation compare) and add a License Manager inventory fetcher that enumerates DBServers and Coordinators (or the single server) via cluster health and reports each member's latest startup values as ARANGO_MEMBER_STARTUP items with the serverID and nodeName SHA256-hashed and the podUID/bootID as dimensions (members present in health without a startup event still yield a marker item); skipped when the _events collection is absent
+- (Feature) Emit the arangod data volume (/data) total and available size as collector startup event metrics (data_storage / data_storage_available)
+- (Feature) (Chart) Add a seaweedfs storage mode to the arango-deployment chart that starts a single-pod SeaweedFS and backs an S3 ArangoPlatformStorage with it
+- (Bugfix) Register the ArangoPlatformWorkflow GVR so the debug package can collect it instead of panicking during state dumps
+- (Feature) (Platform) Reflect the requested hibernation state on a Hibernated status condition of ArangoPlatformService and ArangoPlatformWorkflow
+- (Feature) (Gateway) In push mode, serve the gateway inventory inline in the ADS-pushed config instead of from a mounted file, so inventory changes propagate immediately over ADS rather than being read out of band from the ConfigMap
+- (Feature) (Gateway) Seed the gateway config-push sidecar's initial ADS snapshot from the mounted CDS/LDS ConfigMaps, so a restarted gateway serves the last-known-good local config immediately instead of waiting for the operator to push
+- (Feature) Inject the Pod UID as the MY_POD_UID lifecycle env into ArangoDB and sidecar containers (allowlisted in the rotation compare so adding it does not trigger a member rotation) and tag the collector startup event with podUID and nodeName dimensions
+- (Feature) Expose the container CPU/memory requests and limits as MY_CPU_REQUESTS/MY_CPU_LIMITS/MY_MEMORY_REQUESTS/MY_MEMORY_LIMITS downward-API lifecycle envs (allowlisted in the rotation compare) and emit them as collector startup event metrics
+- (Feature) (Gateway) Deliver the dynamic gateway config via ADS push from the operator (sidecar-served, SuperUser-authenticated) by default, gated behind the gateway-config-push feature; disabling the feature falls back to the mounted ConfigMap
+- (Bugfix) (Gateway) Advertise WebSocket-over-HTTP/2 (Extended CONNECT) only for destinations with an HTTP/2 upstream and enable it on that upstream cluster; HTTP/1 upstreams keep the classic WebSocket upgrade
+- (Feature) (Platform) Add spec.hibernate on ArangoPlatformService and ArangoPlatformWorkflow to inject the hibernated flag into the chart values
+- (Bugfix) (Platform) Grant the platform operator RBAC to manage NetworkPolicies so it can install platform charts that define them
+- (Feature) (Platform) Discover platform service Helm releases by label and create an ArangoPlatformWorkflow for each behind the platform-workflow-discovery feature
+- (Feature) (Platform) Discover and reflect an existing Helm release in the status of a chart-less ArangoPlatformWorkflow
+- (Feature) (Platform) Collect ArangoPlatformWorkflow resources in the debug package
+- (Maintenance) Bump Helm to v3.21.4, dropping the containerd and golang.org/x/crypto/openpgp dependencies (clears GO-2026-5932/5622/5338/5064)
+- (Feature) (Platform) Add ArangoPlatformWorkflow CRD
+- (Feature) (Platform) Allow SchedulerV2 Integration to manage ArangoPlatformWorkflow resources instead of calling Helm directly behind the scheduler-v2-workflow feature flag
+- (Maintenance) Bump Go toolchain to 1.26.8 and fix go vet printf findings in logging calls surfaced by it
+- (Maintenance) Bump Kubernetes libraries to 1.34.11
+- (Maintenance) Bump Kubernetes libraries to 1.35.8
+- (Maintenance) Bump Kubernetes libraries to 1.36.4
+- (Bugfix) Introduce a correct util.Version comparator (numeric, 4-part and pre-release aware) and use it for all version gates, feature constraints and comparisons, replacing the go-driver Version.CompareTo whose lexicographic sub-part fallback mis-ordered versions such as 3.12.11 below 3.12.8
+
+## [1.4.5](https://github.com/arangodb/kube-arangodb/tree/1.4.5) (2026-09-02)
+- (Bugfix) Serve the serving-member sidecar management API on a routable external HTTP endpoint (TLS per deployment settings) so the platform gateway can reach `/_management` cross-Pod, keeping the internal HTTP endpoint loopback-only for arangod
+- (Feature) Add gateway `ALB` authentication type that trusts identity from an AWS Application Load Balancer terminating OIDC by verifying the signed `x-amzn-oidc-data` token
+- (Maintenance) Register the sidecar authentication.v1 and authorization.v1 integrations through the default integration registry instead of wiring them by hand (no behaviour change; both self-enable only when authentication is configured)
+- (Feature) (Chart) Expose gateway SSO in the arango-deployment chart via `deployment.platform.authentication` (type `OpenID`/`ALB` + an existing config `secretName`)
+- (Feature) (Chart) Expose `deployment.platform.createUsers` in the arango-deployment chart to render `spec.gateway.createUsers` (create gateway-authenticated users in ArangoDB)
+- (Bugfix) (Chart) Emit the platform release image list with `overridePaths` as a list so an image used at several values paths keeps all of them (previously only the first was kept)
+- (Feature) Add the `--sidecar.unix.enabled` flag (default true) to the serving-member sidecar so the internal UNIX socket - and its directory creation - can be disabled
+- (Documentation) Document the RBAC permissions (action/resource) enforced by the Meta V1, Storage V2, Authorization V1 and Authentication V1 integration services
+- (Maintenance) Bump the Go toolchain to go1.25.13, clearing 7 known standard-library vulnerabilities (net/url, html/template, crypto/tls, net/http, encoding/xml, encoding/asn1)
+- (Bugfix) Set the Envoy node identity in the static gateway bootstrap so SDS-served TLS initializes (a static-config gateway otherwise crashed with `TlsCertificateSdsApi: node 'id' and 'cluster' are required`)
+- (Bugfix) Build the platform release chart's aggregated image list only from each chart's root `images` map (not its `images.yaml`), so unowned upstream dependency images (e.g. busybox, curl, grafana-image-renderer) stay out
+- (Feature) Add a dedicated `--timeout.license-manager` (default 30s) for the ArangoDB License Manager API call (license generation), so a slow License Manager does not fail licensing within the general 5s ArangoDB request timeout
+- (Maintenance) Raise the default reconciliation timeout (`--timeout.reconciliation`) from 1 to 2 minutes
+- (Feature) Validate gateway serving certificates (endpoint verification, expiry margin and alt-name match) like arangod members and trigger keyfile renewal + restart when required
+- (Feature) Deliver the gateway's TLS certificates (internal and SNI) to Envoy via filesystem SDS with a watched directory, so a rotated certificate is reloaded in place without restarting the gateway
+- (Maintenance) Add a finalizer to gateway Pods that cleans up the member TLS keyfile secret when the gateway member is removed
+- (Maintenance) Lint all Helm charts in CI via `make helm-lint`; fix the `platform-storage` passwords template document separator and add the missing `apiVersion` to the `kube-arangodb-crd` chart
+- (Documentation) Add a README for the `platform-storage` chart and reference it from `docs/helm.md`, the MinIO storage-integration docs and the main README
+- (Feature) (Chart) Add the arango-deployment Helm chart that renders an ArangoDeployment (Single, Cluster or ActiveFailover) with schema-validated values for the common use-cases and a deep-merged spec override; the chart can also render an ArangoPlatformStorage backend (s3, gcs, azureBlobStorage) or deploy an in-cluster MinIO
+- (Bugfix) Report `INTEGRATION_AUTHORIZATION_MODE_COREDB` as `RBAC` when the `rbac-coredb` feature enables core-level RBAC enforcement (`--server.external-rbac-service`); it was always downgraded to `Native`
+- (Feature) Add the hidden `rbac-coredb` feature (requires `rbac-enforced` and `central-services`) that points the serving member's arangod at the local authorization integration sidecar via `--server.external-rbac-service`
+- (Feature) Allow an svc HTTP gateway to opt into plain HTTP, honoured only on a loopback address (a routable/0.0.0.0 listener is always served with TLS); the serving-member sidecar's HTTP gateway binds loopback and opts in, while its gRPC endpoint keeps TLS
+- (Feature) Mark the JWT/TLS/Encryption `*StatusUpdate` actions and `ArangoMemberUpdatePodStatus` as internal so a pure status/propagation write does not hold the deployment out of the `UpToDate` condition
+- (Bugfix) (Gateway) Sign the integration sidecar's ArangoDB client token locally from the mounted cluster JWT secret (`database.auth`) instead of minting it via the central authorization CreateToken RPC, so gateway `/_login` works under central services with `rbac-enforced`
+- (Bugfix) Default the integration sidecar `database.source` collection to `_graphs` instead of `_statistics`, so integration backing collections (meta/events) are created on ArangoDB versions that no longer ship the `_statistics` system collection
+- (Documentation) Document the `harden` feature (docs/features/harden.md) and the arangod arguments it appends
+- (Feature) Add the `harden` feature (requires `secured-containers`, disabled by default) that appends hardening arguments to the arangod server containers, and in cluster mode constrains replication for >=2 DBServers (default replication factor min(DBServers, 3), minimum replication factor 2, and write concern 2 when the default replication factor is 3)
+- (Feature) (Security) Gate authentication token creation behind the authorization integration (IAM) when central services are enabled and asymmetric signing keys are in use (the remote-validation prerequisite), and remove the static `token.allowed` allow-list
+- (Feature) Add the `enable-arango-deployment-status` feature (disabled by default); the chart ships the status subresource on the ArangoDeployment v1 CRD, the operator ensures it when the feature is enabled and, when disabled, leaves it as the chart ships it (neither adds nor removes it)
+- (Feature) Write the ArangoDeployment status through the status subresource (detected via cached discovery) when it is served, falling back to a status patch otherwise
 - (Bugfix) (Gateway) Fix Envoy auth: keep hashing the auth response side-effect free (do not sort the shared groups slice in place) and preserve headers added by earlier handlers when stripping the cookie on cookie authentication
 - (Feature) (Gateway) Allow WebSocket upgrades over HTTP/2 by enabling RFC 8441 Extended CONNECT (allowConnect) on the gateway downstream listener, gated behind the hidden `gateway-websockets` feature (enabled by default) and a destination declaring a websocket upgrade
 - (Bugfix) Strip the pre-release/build suffix (e.g. `-devel`) from the detected ArangoDB version so version and feature gates compare numerically instead of mis-ordering nightly builds below release versions

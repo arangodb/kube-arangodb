@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -173,6 +173,7 @@ func renderCRD(def crds.Definition, opts *crds.CRDOptions) *apiextensions.Custom
 
 	schema := opts.GetWithSchema()
 	preserve := !schema || opts.GetWithPreserve()
+	statusSubresource := opts.GetWithStatusSubresource()
 
 	c := &apiextensions.CustomResourceDefinition{
 		ObjectMeta: meta.ObjectMeta{
@@ -180,6 +181,7 @@ func renderCRD(def crds.Definition, opts *crds.CRDOptions) *apiextensions.Custom
 			Labels: map[string]string{
 				Version:               definitionVersion,
 				PreserveUnknownFields: strconv.FormatBool(preserve),
+				StatusSubresource:     strconv.FormatBool(statusSubresource),
 			},
 		},
 		Spec: def.CRD.Spec,
@@ -203,12 +205,14 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 
 	schema := opts.GetWithSchema()
 	preserve := !schema || opts.GetWithPreserve()
+	statusSubresource := opts.GetWithStatusSubresource()
 
 	if schema {
 		logger = logger.Str("schema", definitionSchemaVersion)
 	}
 
 	logger = logger.Bool("preserve", preserve)
+	logger = logger.Bool("statusSubresource", statusSubresource)
 
 	c, err := crdDefinitions.Get(ctx, crdName, meta.GetOptions{})
 	if err != nil {
@@ -258,8 +262,10 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 		if v, ok := c.Labels[Version]; ok && v == definitionVersion {
 			if v, ok := c.Labels[Schema]; (schema && (ok && v == definitionSchemaVersion)) || (!schema && !ok) {
 				if v, ok := c.Labels[PreserveUnknownFields]; (preserve && ok && v == "true") || (!preserve && (!ok || v != "true")) {
-					logger.Str("crd", crdName).Info("CRD Update not required")
-					return nil
+					if v, ok := c.Labels[StatusSubresource]; (statusSubresource && ok && v == "true") || (!statusSubresource && (!ok || v != "true")) {
+						logger.Str("crd", crdName).Info("CRD Update not required")
+						return nil
+					}
 				}
 			}
 		}
@@ -271,7 +277,18 @@ func tryApplyCRD(ctx context.Context, client kclient.Client, def crds.Definition
 		c.Labels[Schema] = definitionSchemaVersion
 	}
 	c.Labels[PreserveUnknownFields] = strconv.FormatBool(preserve)
-	c.Spec = def.CRD.Spec
+	c.Labels[StatusSubresource] = strconv.FormatBool(statusSubresource)
+
+	if statusSubresource {
+		// Feature enabled: apply the desired spec, which carries the status subresource.
+		c.Spec = def.CRD.Spec
+	} else {
+		// Feature disabled: apply the desired spec but leave the status subresource on the storage
+		// version exactly as the live CRD already has it, so the operator neither adds nor removes it.
+		newSpec := *def.CRD.Spec.DeepCopy()
+		mirrorStorageStatusSubresource(&newSpec, &c.Spec)
+		c.Spec = newSpec
+	}
 
 	if _, err := crdDefinitions.Update(ctx, c, meta.UpdateOptions{}); err != nil {
 		logger.Err(err).Str("crd", crdName).Warn("Failed to update CRD definition")

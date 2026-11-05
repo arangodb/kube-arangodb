@@ -46,8 +46,6 @@ type actionLicenseSet struct {
 }
 
 func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
-	ctxChild, cancel := globals.GetGlobals().Timeouts().ArangoD().WithTimeout(ctx)
-	defer cancel()
 	spec := a.actionCtx.GetSpec()
 	if !spec.License.HasSecretName() {
 		a.log.Error("License is not set")
@@ -75,21 +73,27 @@ func (a *actionLicenseSet) Start(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	client := client.NewClient(c.Connection())
+	dbClient := client.NewClient(c.Connection())
 
-	if license, err := client.GetLicense(ctxChild); err != nil {
+	if current, err := globals.RunWithTimeoutE(ctx, globals.GetGlobals().Timeouts().ArangoD(), func(ctxChild context.Context) (client.License, error) {
+		return dbClient.GetLicense(ctxChild)
+	}); err != nil {
 		a.log.Err(err).Error("Unable to get license")
 		return true, nil
-	} else if license.Hash != l.V2.V2Hash() {
-		if err := client.SetLicense(ctxChild, string(l.V2), true); err != nil {
+	} else if current.Hash != l.V2.V2Hash() {
+		if err := globals.GetGlobals().Timeouts().ArangoD().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+			return dbClient.SetLicense(ctxChild, string(l.V2), true)
+		}); err != nil {
 			a.log.Err(err).Error("Unable to set license")
 			return true, nil
 		}
 	} else {
-		a.log.Str("hash", license.Hash).Info("License already set")
+		a.log.Str("hash", current.Hash).Info("License already set")
 	}
 
-	license, err := client.GetLicense(ctxChild)
+	license, err := globals.RunWithTimeoutE(ctx, globals.GetGlobals().Timeouts().ArangoD(), func(ctxChild context.Context) (client.License, error) {
+		return dbClient.GetLicense(ctxChild)
+	})
 	if err != nil {
 		a.log.Err(err).Error("Unable to get license")
 		return true, nil

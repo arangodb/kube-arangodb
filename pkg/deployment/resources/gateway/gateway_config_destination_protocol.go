@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,11 @@ func (c *ConfigDestinationProtocol) ALPN() ALPNProtocol {
 	}
 }
 
-func (c *ConfigDestinationProtocol) Options() *upstreamHttpApi.HttpProtocolOptions {
+// Options renders the upstream HttpProtocolOptions for the destination. allowConnect enables
+// upstream Extended CONNECT (RFC 8441) on an HTTP/2 upstream so a WebSocket tunnelled over the
+// downstream connection can be forwarded when the upstream itself speaks HTTP/2; it is a no-op for
+// an HTTP/1.1 upstream, where Envoy translates the tunnel into a standard HTTP/1.1 Upgrade.
+func (c *ConfigDestinationProtocol) Options(allowConnect bool) *upstreamHttpApi.HttpProtocolOptions {
 	switch c.Get() {
 	case ConfigDestinationProtocolHTTP1:
 		return &upstreamHttpApi.HttpProtocolOptions{
@@ -79,6 +83,7 @@ func (c *ConfigDestinationProtocol) Options() *upstreamHttpApi.HttpProtocolOptio
 				ExplicitHttpConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig{
 					ProtocolConfig: &upstreamHttpApi.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
 						Http2ProtocolOptions: &pbEnvoyCoreV3.Http2ProtocolOptions{
+							AllowConnect: allowConnect,
 							ConnectionKeepalive: &pbEnvoyCoreV3.KeepaliveSettings{
 								Interval:               durationpb.New(15 * time.Second),
 								Timeout:                durationpb.New(30 * time.Second),

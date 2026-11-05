@@ -48,6 +48,8 @@ type PlanBuilderContext interface {
 	sutil.ACSGetter
 	// GetAuthentication return authentication for members
 	GetAuthentication(ctx context.Context) (adbDriverV2Connection.Authentication, error)
+	// GetMembersToken returns a signed superuser (server) JWT for authenticating gRPC calls to member sidecars
+	GetMembersToken(ctx context.Context) (string, error)
 	// GetBackup receives information about a backup resource
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 }

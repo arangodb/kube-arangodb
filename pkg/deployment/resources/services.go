@@ -483,7 +483,7 @@ func (r *Resources) ensureExternalAccessServices(ctx context.Context, cachedStat
 			return errors.WithStack(err)
 		}
 		if newlyCreated {
-			log.Debug("Created %s external access service")
+			log.Debug("Created %s external access service", eaServiceType)
 		}
 	}
 	return nil

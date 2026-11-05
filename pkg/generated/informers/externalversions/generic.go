@@ -107,6 +107,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionPolicyRoleBindings().Informer()}, nil
 	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissionroles"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionRoles().Informer()}, nil
+	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissionrolegroupbindings"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionRoleGroupBindings().Informer()}, nil
 	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissionroleuserbindings"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Permission().V1alpha1().ArangoPermissionRoleUserBindings().Informer()}, nil
 	case permissionv1alpha1.SchemeGroupVersion.WithResource("arangopermissiontokens"):
@@ -129,6 +131,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformServices().Informer()}, nil
 	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformstorages"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformStorages().Informer()}, nil
+	case platformv1beta1.SchemeGroupVersion.WithResource("arangoplatformworkflows"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Platform().V1beta1().ArangoPlatformWorkflows().Informer()}, nil
 
 		// Group=scheduler.arangodb.com, Version=v1alpha1
 	case schedulerv1alpha1.SchemeGroupVersion.WithResource("arangoprofiles"):

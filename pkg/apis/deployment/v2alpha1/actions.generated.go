@@ -107,6 +107,9 @@ const (
 	// ActionEnforceResignLeadershipDefaultTimeout define default timeout for action ActionEnforceResignLeadership
 	ActionEnforceResignLeadershipDefaultTimeout time.Duration = 2700 * time.Second // 45m0s
 
+	// ActionGatewayConfigPushDefaultTimeout define default timeout for action ActionGatewayConfigPush
+	ActionGatewayConfigPushDefaultTimeout time.Duration = ActionsDefaultTimeout
+
 	// ActionIdleDefaultTimeout define default timeout for action ActionIdle
 	ActionIdleDefaultTimeout time.Duration = ActionsDefaultTimeout
 
@@ -380,6 +383,9 @@ const (
 	// ActionTypeEnforceResignLeadership in scopes Normal. Run the ResignLeadership job on DBServer and checks data compatibility after
 	ActionTypeEnforceResignLeadership ActionType = "EnforceResignLeadership"
 
+	// ActionTypeGatewayConfigPush in scopes High. Push the gateway dynamic config to a gateway member sidecar over ADS when running in push mode
+	ActionTypeGatewayConfigPush ActionType = "GatewayConfigPush"
+
 	// ActionTypeIdle in scopes Normal. Define idle operation in case if preconditions are not meet
 	ActionTypeIdle ActionType = "Idle"
 
@@ -629,6 +635,8 @@ func (a ActionType) DefaultTimeout() time.Duration {
 		return ActionEncryptionKeyStatusUpdateDefaultTimeout
 	case ActionTypeEnforceResignLeadership:
 		return ActionEnforceResignLeadershipDefaultTimeout
+	case ActionTypeGatewayConfigPush:
+		return ActionGatewayConfigPushDefaultTimeout
 	case ActionTypeIdle:
 		return ActionIdleDefaultTimeout
 	case ActionTypeJWTAdd:
@@ -815,6 +823,8 @@ func (a ActionType) Priority() ActionPriority {
 		return ActionPriorityNormal
 	case ActionTypeEnforceResignLeadership:
 		return ActionPriorityNormal
+	case ActionTypeGatewayConfigPush:
+		return ActionPriorityHigh
 	case ActionTypeIdle:
 		return ActionPriorityNormal
 	case ActionTypeJWTAdd:
@@ -947,9 +957,17 @@ func (a ActionType) Priority() ActionPriority {
 // Internal returns true if action is considered to be internal
 func (a ActionType) Internal() bool {
 	switch a {
+	case ActionTypeArangoMemberUpdatePodStatus:
+		return true
 	case ActionTypeEncryptionKeyPropagated:
 		return true
+	case ActionTypeEncryptionKeyStatusUpdate:
+		return true
+	case ActionTypeGatewayConfigPush:
+		return true
 	case ActionTypeJWTPropagated:
+		return true
+	case ActionTypeJWTStatusUpdate:
 		return true
 	case ActionTypeRebalancerGenerateV2:
 		return true
@@ -960,6 +978,8 @@ func (a ActionType) Internal() bool {
 	case ActionTypeSetMaintenanceCondition:
 		return true
 	case ActionTypeSetMemberConditionV2:
+		return true
+	case ActionTypeTLSKeyStatusUpdate:
 		return true
 	case ActionTypeTLSPropagated:
 		return true
@@ -1027,6 +1047,8 @@ func (a ActionType) Optional() bool {
 		return false
 	case ActionTypeEnforceResignLeadership:
 		return true
+	case ActionTypeGatewayConfigPush:
+		return false
 	case ActionTypeIdle:
 		return false
 	case ActionTypeJWTAdd:

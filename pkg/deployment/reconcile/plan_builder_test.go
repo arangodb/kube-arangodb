@@ -259,6 +259,10 @@ func (c *testContext) GetAuthentication(ctx context.Context) (adbDriverV2Connect
 	return nil, nil
 }
 
+func (c *testContext) GetMembersToken(ctx context.Context) (string, error) {
+	return "", nil
+}
+
 func (c *testContext) GetName() string {
 	return "name"
 }

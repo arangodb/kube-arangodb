@@ -27,7 +27,7 @@ func init() {
 var rebalancerV2 = &feature{
 	name:               "rebalancer-v2",
 	description:        "Rebalancer V2 feature",
-	version:            newFeatureVersion("3.10.0", NoVersionLimit),
+	version:            ">= 3.10.0",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
 	deprecated:         "Only Rebalancer V2 feature allowed",

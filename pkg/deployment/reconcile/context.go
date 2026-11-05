@@ -62,4 +62,6 @@ type Context interface {
 	GetBackup(ctx context.Context, backup string) (*backupApi.ArangoBackup, error)
 	// GetAuthentication return authentication for members
 	GetAuthentication(ctx context.Context) (adbDriverV2Connection.Authentication, error)
+	// GetMembersToken returns a signed superuser (server) JWT for authenticating gRPC calls to member sidecars
+	GetMembersToken(ctx context.Context) (string, error)
 }

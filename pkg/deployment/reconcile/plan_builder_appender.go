@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 package reconcile
 
 import (
+	"runtime/debug"
 	"time"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
@@ -84,7 +85,7 @@ func (p planAppenderRecovery) create(ret func(in PlanAppender) PlanAppender) (r 
 	defer func() {
 		if e := recover(); e != nil {
 			r = p
-			p.log.Interface("panic", e).Error("Recovering from panic")
+			p.log.Interface("panic", e).Str("stack", string(debug.Stack())).Error("Recovering from panic")
 		}
 	}()
 

@@ -44,6 +44,7 @@ const (
 	MetaV1_GetBatch_FullMethodName = "/meta.MetaV1/GetBatch"
 	MetaV1_Set_FullMethodName      = "/meta.MetaV1/Set"
 	MetaV1_Delete_FullMethodName   = "/meta.MetaV1/Delete"
+	MetaV1_Move_FullMethodName     = "/meta.MetaV1/Move"
 	MetaV1_List_FullMethodName     = "/meta.MetaV1/List"
 )
 
@@ -62,6 +63,9 @@ type MetaV1Client interface {
 	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*ObjectResponse, error)
 	// Delete deletes the object from the Meta Store
 	Delete(ctx context.Context, in *ObjectRequest, opts ...grpc.CallOption) (*definition.Empty, error)
+	// Move atomically renames an object from one key to another within a transaction.
+	// Optionally, will check Revision of the source object for the conflict management
+	Move(ctx context.Context, in *MoveRequest, opts ...grpc.CallOption) (*ObjectResponse, error)
 	// List lists the object from the Meta Store
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ListResponseChunk], error)
 }
@@ -114,6 +118,16 @@ func (c *metaV1Client) Delete(ctx context.Context, in *ObjectRequest, opts ...gr
 	return out, nil
 }
 
+func (c *metaV1Client) Move(ctx context.Context, in *MoveRequest, opts ...grpc.CallOption) (*ObjectResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ObjectResponse)
+	err := c.cc.Invoke(ctx, MetaV1_Move_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *metaV1Client) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[ListResponseChunk], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &MetaV1_ServiceDesc.Streams[0], MetaV1_List_FullMethodName, cOpts...)
@@ -148,6 +162,9 @@ type MetaV1Server interface {
 	Set(context.Context, *SetRequest) (*ObjectResponse, error)
 	// Delete deletes the object from the Meta Store
 	Delete(context.Context, *ObjectRequest) (*definition.Empty, error)
+	// Move atomically renames an object from one key to another within a transaction.
+	// Optionally, will check Revision of the source object for the conflict management
+	Move(context.Context, *MoveRequest) (*ObjectResponse, error)
 	// List lists the object from the Meta Store
 	List(*ListRequest, grpc.ServerStreamingServer[ListResponseChunk]) error
 	mustEmbedUnimplementedMetaV1Server()
@@ -171,6 +188,9 @@ func (UnimplementedMetaV1Server) Set(context.Context, *SetRequest) (*ObjectRespo
 }
 func (UnimplementedMetaV1Server) Delete(context.Context, *ObjectRequest) (*definition.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedMetaV1Server) Move(context.Context, *MoveRequest) (*ObjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Move not implemented")
 }
 func (UnimplementedMetaV1Server) List(*ListRequest, grpc.ServerStreamingServer[ListResponseChunk]) error {
 	return status.Errorf(codes.Unimplemented, "method List not implemented")
@@ -268,6 +288,24 @@ func _MetaV1_Delete_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MetaV1_Move_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MoveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetaV1Server).Move(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MetaV1_Move_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetaV1Server).Move(ctx, req.(*MoveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MetaV1_List_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ListRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -301,6 +339,10 @@ var MetaV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Delete",
 			Handler:    _MetaV1_Delete_Handler,
+		},
+		{
+			MethodName: "Move",
+			Handler:    _MetaV1_Move_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

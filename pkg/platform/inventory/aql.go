@@ -42,6 +42,34 @@ func ExecuteBasicAQL(db string, aql string, bind map[string]any) Executor {
 	return ExecuteAQL(db, aql, bind, false)
 }
 
+// ExecuteBasicAQLIfExists runs the query only when the given collection exists in the database, and is
+// otherwise a no-op. It keeps the inventory resilient to optional collections (e.g. _events, which only
+// exists when the collector is enabled).
+func ExecuteBasicAQLIfExists(db, collection, aql string, bind map[string]any) Executor {
+	inner := ExecuteAQL(db, aql, bind, false)
+
+	return func(conn adbDriverV2Connection.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
+		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {
+			d, err := adbDriverV2.NewClient(conn).GetDatabase(ctx, db, nil)
+			if err != nil {
+				return err
+			}
+
+			exists, err := d.CollectionExists(ctx, collection)
+			if err != nil {
+				return err
+			}
+
+			if !exists {
+				log.Str("collection", collection).Info("Collection not present, skipping")
+				return nil
+			}
+
+			return inner(conn, cfg, out)(ctx, log, t, h)
+		}
+	}
+}
+
 func ExecuteAQL(db string, aql string, bind map[string]any, telemetry bool) Executor {
 	return func(conn adbDriverV2Connection.Connection, cfg *Configuration, out chan<- *Item) executor.RunFunc {
 		return func(ctx context.Context, log logging.Logger, t executor.Thread, h executor.Handler) error {

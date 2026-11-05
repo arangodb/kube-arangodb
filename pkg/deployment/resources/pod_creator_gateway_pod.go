@@ -32,10 +32,12 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/topology"
 	integrationsSidecar "github.com/arangodb/kube-arangodb/pkg/integrations/sidecar"
 	"github.com/arangodb/kube-arangodb/pkg/util/collection"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/interfaces"
@@ -157,6 +159,10 @@ func (m *MemberGatewayPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 }
 
 func (m *MemberGatewayPod) GetFinalizers() []string {
+	if pod.IsTLSEnabled(m.Input) {
+		// Ensure the member's TLS keyfile secret is cleaned up when the gateway member is removed.
+		return []string{utilConstants.FinalizerPodGatewayTLSKeyfile}
+	}
 	return nil
 }
 
@@ -255,14 +261,28 @@ func (m *MemberGatewayPod) Profiles() (schedulerApi.ProfileTemplates, error) {
 		return nil, errors.Errorf("Unable to find accepted integration")
 	}
 
-	integrations, err := integrationsSidecar.NewIntegrationEnablement(
+	enabledIntegrations := []integrationsSidecar.Integration{
 		integrationsSidecar.IntegrationEnvoyV3{
 			DeploymentName: m.context.GetName(),
 			Spec:           m.Deployment,
 		}, integrationsSidecar.IntegrationAuthenticationV1{
 			DeploymentName: m.context.GetName(),
 			Spec:           m.Deployment,
+		},
+	}
+
+	if features.GatewayDynamicModePush(m.Deployment.Gateway) {
+		// Push mode: the sidecar serves the gateway dynamic config to Envoy over ADS, seeding its initial
+		// snapshot from the mounted CDS/LDS ConfigMaps so a restart serves the last-known-good local config.
+		enabledIntegrations = append(enabledIntegrations, integrationsSidecar.IntegrationEnvoyConfigV1{
+			DeploymentName:   m.context.GetName(),
+			Spec:             m.Deployment,
+			CDSConfigMapName: GetGatewayConfigMapName(m.context.GetName(), "cds"),
+			LDSConfigMapName: GetGatewayConfigMapName(m.context.GetName(), "lds"),
 		})
+	}
+
+	integrations, err := integrationsSidecar.NewIntegrationEnablement(enabledIntegrations...)
 
 	if err != nil {
 		return nil, err

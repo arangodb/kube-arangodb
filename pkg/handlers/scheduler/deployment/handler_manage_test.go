@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ func Test_Handler_Create(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "df484e6467f4b2445aae3a93ed7da1e374a689ac7e616c86ba31a3b2dc3e3244", extension.Status.Object.GetChecksum())
+	require.Equal(t, "bb8208823a682ad995a4ac9193ab7623ce56cf1790c1802674e8ccfb92fe27a4", extension.Status.Object.GetChecksum())
 }
 
 func Test_Handler_Update(t *testing.T) {
@@ -75,7 +75,7 @@ func Test_Handler_Update(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "df484e6467f4b2445aae3a93ed7da1e374a689ac7e616c86ba31a3b2dc3e3244", extension.Status.Object.GetChecksum())
+	require.Equal(t, "bb8208823a682ad995a4ac9193ab7623ce56cf1790c1802674e8ccfb92fe27a4", extension.Status.Object.GetChecksum())
 
 	// Update
 	tests.Apply(t, extension, func(t *testing.T, obj *schedulerApi.ArangoSchedulerDeployment) {
@@ -92,7 +92,7 @@ func Test_Handler_Update(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "6ce82430599f0e4a3dc3983226076179a27559f0f1d87194eaa3c2d482aaceb3", extension.Status.Object.GetChecksum())
+	require.Equal(t, "ef3bf4fb27a58d56f18dc739dc33a8fdc7744fc1d6b94282dac12dcc8a546181", extension.Status.Object.GetChecksum())
 }
 
 func Test_Handler_Recreate(t *testing.T) {
@@ -113,7 +113,7 @@ func Test_Handler_Recreate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "df484e6467f4b2445aae3a93ed7da1e374a689ac7e616c86ba31a3b2dc3e3244", extension.Status.Object.GetChecksum())
+	require.Equal(t, "bb8208823a682ad995a4ac9193ab7623ce56cf1790c1802674e8ccfb92fe27a4", extension.Status.Object.GetChecksum())
 
 	// Update
 	tests.Apply(t, extension, func(t *testing.T, obj *schedulerApi.ArangoSchedulerDeployment) {
@@ -130,7 +130,7 @@ func Test_Handler_Recreate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "df484e6467f4b2445aae3a93ed7da1e374a689ac7e616c86ba31a3b2dc3e3244", extension.Status.Object.GetChecksum())
+	require.Equal(t, "bb8208823a682ad995a4ac9193ab7623ce56cf1790c1802674e8ccfb92fe27a4", extension.Status.Object.GetChecksum())
 }
 
 func Test_Handler_Parent(t *testing.T) {
@@ -175,7 +175,7 @@ func Test_Handler_Propagate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "df484e6467f4b2445aae3a93ed7da1e374a689ac7e616c86ba31a3b2dc3e3244", extension.Status.Object.GetChecksum())
+	require.Equal(t, "bb8208823a682ad995a4ac9193ab7623ce56cf1790c1802674e8ccfb92fe27a4", extension.Status.Object.GetChecksum())
 	require.EqualValues(t, 0, extension.Status.Replicas)
 
 	// Update
@@ -197,7 +197,7 @@ func Test_Handler_Propagate(t *testing.T) {
 	// Validate
 	require.NotNil(t, extension.Status.Object)
 	require.Equal(t, extension.GetName(), extension.Status.Object.GetName())
-	require.Equal(t, "6ce82430599f0e4a3dc3983226076179a27559f0f1d87194eaa3c2d482aaceb3", extension.Status.Object.GetChecksum())
+	require.Equal(t, "ef3bf4fb27a58d56f18dc739dc33a8fdc7744fc1d6b94282dac12dcc8a546181", extension.Status.Object.GetChecksum())
 	require.EqualValues(t, 5, extension.Status.Replicas)
 }
 

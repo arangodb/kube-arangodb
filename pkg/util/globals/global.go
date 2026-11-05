@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +25,10 @@ import "time"
 const (
 	DefaultKubernetesTimeout                  = 2 * time.Second
 	DefaultArangoDTimeout                     = time.Second * 5
+	DefaultLicenseManagerTimeout              = time.Second * 30
 	DefaultArangoDAgencyTimeout               = time.Second * 10
 	DefaultArangoDCheckTimeout                = time.Second * 2
-	DefaultReconciliationTimeout              = time.Minute
+	DefaultReconciliationTimeout              = time.Minute * 2
 	DefaultForcePodDeletionGracePeriodTimeout = 15 * time.Minute
 	DefaultPodSchedulingGracePeriod           = 15 * time.Second
 
@@ -54,6 +55,7 @@ var globalObj = &globals{
 	timeouts: &globalTimeouts{
 		requests:                           NewTimeout(DefaultKubernetesTimeout),
 		arangod:                            NewTimeout(DefaultArangoDTimeout),
+		licenseManager:                     NewTimeout(DefaultLicenseManagerTimeout),
 		arangodCheck:                       NewTimeout(DefaultArangoDCheckTimeout),
 		reconciliation:                     NewTimeout(DefaultReconciliationTimeout),
 		agency:                             NewTimeout(DefaultArangoDAgencyTimeout),
@@ -145,6 +147,7 @@ type GlobalTimeouts interface {
 
 	Kubernetes() Timeout
 	ArangoD() Timeout
+	LicenseManager() Timeout
 	ArangoDCheck() Timeout
 	Agency() Timeout
 
@@ -156,10 +159,10 @@ type GlobalTimeouts interface {
 }
 
 type globalTimeouts struct {
-	requests, arangod, reconciliation, arangodCheck, agency, shardRebuild, shardRebuildRetry Timeout
-	backupArangoClientTimeout                                                                Timeout
-	backupArangoClientUploadTimeout                                                          Timeout
-	forcePodDeletionGracePeriodTimeout, podSchedulingGracePeriod                             Timeout
+	requests, arangod, licenseManager, reconciliation, arangodCheck, agency, shardRebuild, shardRebuildRetry Timeout
+	backupArangoClientTimeout                                                                                Timeout
+	backupArangoClientUploadTimeout                                                                          Timeout
+	forcePodDeletionGracePeriodTimeout, podSchedulingGracePeriod                                             Timeout
 }
 
 func (g *globalTimeouts) ForcePodDeletionGracePeriodTimeout() Timeout {
@@ -192,6 +195,10 @@ func (g *globalTimeouts) ShardRebuildRetry() Timeout {
 
 func (g *globalTimeouts) ArangoD() Timeout {
 	return g.arangod
+}
+
+func (g *globalTimeouts) LicenseManager() Timeout {
+	return g.licenseManager
 }
 
 func (g *globalTimeouts) Kubernetes() Timeout {

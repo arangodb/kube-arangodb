@@ -1,61 +1,1056 @@
+# Multi-arch (amd64+arm64) CI for the ARM64/self-hosted-runners migration.
+# Per-architecture binary builds feed the image builds and the regctl manifest
+# merges (default + UBI), alongside the code checks and the security gates.
+# This runs as a plain config. The former setup/path-filtering continuation
+# (.circleci/continue_config.yml) is folded in here, and SECURITY.md documents
+# each gate with its flip criterion.
 version: 2.1
 
 # Pin exact orb versions. A float resolves at compile time, so a later orb publish
-# would change what runs here with no repo diff.
+# would change what runs here with no repo diff. The exception is trivy-scan, which
+# floats on @1 (fleet decision 2026-11-05). Each release is validated in
+# arangoml/ai-infrastructure CI before promotion.
+# aws-cli 5.1.4 and slack 4.1.4 are what the previous @5.1 and @4.1 floats already
+# resolved to, so de-floating them changes nothing. No job uses slack yet.
 orbs:
-  path-filtering: circleci/path-filtering@1.2.0
-  continuation: circleci/continuation@2.0.1
-
-setup: true
+  aws-cli: circleci/aws-cli@5.1.4
+  slack: circleci/slack@4.1.4
+  trivy-scan: arangodb/trivy-scan@1
+  semgrep-scan: arangodb/semgrep-scan@1.0.0
+  supply-chain: arangodb/supply-chain@1.0.0
 
 parameters:
-  manifests-verify:
-    type: boolean
-    default: false
-  # Set only by a CircleCI Scheduled Pipeline; false on push and PR, which selects
-  # the always-run path below.
-  # A legacy `triggers: schedule` cannot replace it: under setup:true it is read only
-  # from this file, and it sets no pipeline parameters, so it could not select
-  # between the two continuation paths (and a pipeline reaching the continuation API
-  # twice fails).
-  # Creating the schedule is an owner action; until then the nightly tier does not
-  # run. Recorded under Known gaps in SECURITY.md.
+  # Dev image destination and the CircleCI OIDC role assumed to push to it, the
+  # same pattern as the other ARM64-migrated repos (e.g. gral): the role is
+  # arn:aws:iam::889010145541:role/circleci-project-<stage>-<project> and images
+  # land at release/<stage>/kube-arangodb/<repo> in us-east-1.
+  ecr-registry:
+    type: string
+    default: "889010145541.dkr.ecr.us-east-1.amazonaws.com"
+  ecr-repo:
+    type: string
+    default: "release/dev/kube-arangodb/kube-arangodb"
+  aws-region:
+    type: string
+    default: "us-east-1"
+  dev-role:
+    type: string
+    default: "arn:aws:iam::889010145541:role/circleci-project-dev-kube-arangodb"
+  image-base:
+    type: string
+    default: "ubuntu:24.04"
+  ubi-base-image:
+    type: string
+    default: "registry.access.redhat.com/ubi9/ubi-minimal:9.4"
+  envoy-image:
+    type: string
+    default: "envoyproxy/envoy:v1.39.6"
+  # Set only by a Scheduled Pipeline. It selects the nightly workflow and skips the
+  # pipeline workflow. Creating the schedule is an owner action, see Known gaps 1
+  # in SECURITY.md.
   nightly:
     type: boolean
     default: false
+  # ---- Security-gate configuration, single source of truth ------------------
+  poam-windows:
+    type: string
+    description: "Per-severity remediation windows in days for dated dispositions. Identical to the SLA table in SECURITY.md, so this repository has ONE window policy, pinned here rather than inherited from an orb default that can move."
+    default: "critical=30,high=30,medium=90,low=180"
+  secret-config-path:
+    type: string
+    description: "Trivy secret-scanner config. Its disable-allow-rules: [tests] is what puts test code back in secret scope, which is where every baked-credential incident in this fleet has lived, and where this repository's two committed agency-state fixtures are."
+    default: ".circleci/trivy-secret.yaml"
+  semgrepignore-allowed:
+    type: string
+    description: "Entries a committed .semgrepignore would be ALLOWED to contain, checked LITERALLY by disposition-check. This repository deliberately commits NO .semgrepignore, so SAST scope is the whole checkout and the orb writes the dependency/VCS exclusions itself at scan time; the value below is that auto-written set. The guard is configured anyway, so committing one later cannot quietly drop a directory from the SAST scan. NOTE the OPPOSITE polarity to sast-required-paths: trivy-scan/disposition-check takes an allowlist of ignore-file lines, semgrep-scan/scan takes the paths that must NOT be excluded. Copying one value into the other inverts the control."
+    default: ".git/ .venv/ venv/ node_modules/ __pycache__/ build/ dist/ vendor/"
+  sast-required-paths:
+    type: string
+    description: "Trees that must NOT be excluded from the SAST scan by the effective .semgrepignore. These are the four first-party Go trees; pkg/ carries the token and TLS handling the operator authenticates with."
+    default: "pkg/ cmd/ integrations/ internal/"
+
+executors:
+  golang-executor:
+    docker:
+      - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.26.8
+    resource_class: arangodb/amd-2xlarge-amd64
+
+  # Native-arch Go toolchain executors for the per-architecture operator binary
+  # builds. These only compile the binary and hand it to the image jobs via the
+  # workspace, so no Docker is required and they run on the non-privileged
+  # self-hosted classes.
+  golang-binary-amd64:
+    docker:
+      - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.26.8
+    resource_class: arangodb/large-amd64
+
+  golang-binary-arm64:
+    docker:
+      - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.26.8
+    resource_class: arangodb/large-arm64
+
+  # Privileged self-hosted runners for the per-architecture image builds. The
+  # public framework runner ships docker-ce-cli, regctl and aws-cli; setup_docker
+  # starts a local dockerd on the -privileged class.
+  image-builder-amd64:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/large-amd64-privileged
+
+  image-builder-arm64:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/large-arm64-privileged
+
+  # The manifest merge needs no Docker (regctl talks straight to the registry),
+  # so it runs on the non-privileged small class.
+  manifest-runner:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/small-amd64
+
+commands:
+  setup_docker:
+    description: Start a local dockerd on the self-hosted privileged runner.
+    steps:
+      - run:
+          name: Set up Docker
+          command: |
+            export DEBIAN_FRONTEND=noninteractive
+            if ! command -v dockerd >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y \
+                docker-ce=5:29.9.0-1~ubuntu.24.04~noble \
+                docker-ce-cli=5:29.9.0-1~ubuntu.24.04~noble \
+                containerd.io=2.4.1-2~ubuntu.24.04~noble \
+                docker-buildx-plugin=0.38.0-1~ubuntu.24.04~noble
+            fi
+            if ! docker info >/dev/null 2>&1; then
+              DOCKERD_ARGS=""
+              mkdir -p /var/lib/docker
+              if truncate -s 60G /tmp/docker.img && mkfs.ext4 -q -F /tmp/docker.img && mount -o loop /tmp/docker.img /var/lib/docker; then
+                echo "dockerd storage: overlayfs on loop-mounted ext4"
+              elif apt-get install -y fuse-overlayfs && [ -e /dev/fuse ]; then
+                echo "dockerd storage: fuse-overlayfs"
+                DOCKERD_ARGS="--feature containerd-snapshotter=false --storage-driver=fuse-overlayfs"
+              else
+                echo "dockerd storage: vfs"
+                DOCKERD_ARGS="--feature containerd-snapshotter=false --storage-driver=vfs"
+              fi
+              dockerd --registry-mirror=https://mirror.gcr.io ${DOCKERD_ARGS} >/tmp/dockerd.log 2>&1 &
+              for i in $(seq 1 30); do docker info >/dev/null 2>&1 && break; sleep 1; done
+            fi
+            docker info || { tail -50 /tmp/dockerd.log; exit 1; }
+
+  # Tag comes from VERSION, not a hardcoded tag or `latest`: this repo's Docker Hub
+  # `latest` was found stale and `latest-ubi` does not exist.
+  resolve-image-tag:
+    steps:
+      - run:
+          name: Resolve released image tag from VERSION
+          command: echo "export OPERATOR_IMAGE_TAG=$(cut -f1 -d'+' VERSION)" >> "$BASH_ENV"
 
 jobs:
-  # Scheduled runs need their own continuation: path-filtering derives its
-  # parameters from changed files and forwards nothing else, so a nightly would
-  # arrive with nothing set and take the pull-request path.
-  nightly-continue:
-    executor: continuation/default
+  # Per-architecture operator binary builds. Each binary is compiled on its own
+  # native-arch runner and persisted to the workspace; the image build and
+  # multi-arch manifest jobs (added in a follow-up) attach the workspace so the
+  # Dockerfile only has to ADD the prebuilt bin/linux/<arch>/arangodb_operator.
+  build-binary-amd64:
+    executor: golang-binary-amd64
     steps:
       - checkout
-      - continuation/continue:
-          configuration_path: .circleci/continue_config.yml
-          # No parameters here, deliberately. A parameter provided at trigger time is
-          # forwarded to the continued config already, so passing it again answers
-          # Conflicting pipeline parameters (job 6898); the continued config must still
-          # declare it or compilation fails (pipeline 3564).
+      - run:
+          name: Build operator binary (linux/amd64)
+          command: make operator-binary-linux-amd64
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/linux/amd64/arangodb_operator
+
+  build-binary-arm64:
+    executor: golang-binary-arm64
+    steps:
+      - checkout
+      - run:
+          name: Build operator binary (linux/arm64)
+          command: make operator-binary-linux-arm64
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/linux/arm64/arangodb_operator
+
+  # Per-architecture image builds. The prebuilt binary is pulled back from the
+  # workspace and the default Dockerfile only ADDs it (no in-image compile), so a
+  # plain `docker build` is enough. UBI is intentionally not built yet.
+  build-image-amd64:
+    executor: image-builder-amd64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator image (linux/amd64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-amd64"
+            docker build --platform linux/amd64 -f Dockerfile \
+              --build-arg "IMAGE=<< pipeline.parameters.image-base >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              --build-arg "BUILD_SKIP_UPDATE=true" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  build-image-arm64:
+    executor: image-builder-arm64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator image (linux/arm64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-arm64"
+            docker build --platform linux/arm64 -f Dockerfile \
+              --build-arg "IMAGE=<< pipeline.parameters.image-base >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              --build-arg "BUILD_SKIP_UPDATE=true" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  # Merge the two per-architecture tags into a single multi-arch image. regctl is
+  # in the runner image and talks straight to the registry, so no Docker is
+  # needed. --platform is required (regctl 0.7.2 otherwise nests the indexes).
+  push-image-manifest:
+    executor: manifest-runner
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR (regctl)
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | regctl registry login << pipeline.parameters.ecr-registry >> --user AWS --pass-stdin
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Merge per-architecture images into one manifest
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>"
+            regctl index create "${IMAGE}:${DEV_TAG}" \
+              --ref "${IMAGE}:${DEV_TAG}-amd64" --platform linux/amd64 \
+              --ref "${IMAGE}:${DEV_TAG}-arm64" --platform linux/arm64
+            regctl manifest get "${IMAGE}:${DEV_TAG}"
+
+  # UBI variant of the per-architecture image builds. Same prebuilt binary from
+  # the workspace, built from Dockerfile.ubi on the UBI base, tagged -ubi-<arch>
+  # and merged into the single <tag>-ubi image.
+  build-image-ubi-amd64:
+    executor: image-builder-amd64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator UBI image (linux/amd64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-ubi-amd64"
+            docker build --platform linux/amd64 -f Dockerfile.ubi \
+              --build-arg "IMAGE=<< pipeline.parameters.ubi-base-image >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  build-image-ubi-arm64:
+    executor: image-builder-arm64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator UBI image (linux/arm64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-ubi-arm64"
+            docker build --platform linux/arm64 -f Dockerfile.ubi \
+              --build-arg "IMAGE=<< pipeline.parameters.ubi-base-image >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  push-image-ubi-manifest:
+    executor: manifest-runner
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR (regctl)
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | regctl registry login << pipeline.parameters.ecr-registry >> --user AWS --pass-stdin
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Merge per-architecture UBI images into one manifest
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>"
+            regctl index create "${IMAGE}:${DEV_TAG}-ubi" \
+              --ref "${IMAGE}:${DEV_TAG}-ubi-amd64" --platform linux/amd64 \
+              --ref "${IMAGE}:${DEV_TAG}-ubi-arm64" --platform linux/arm64
+            regctl manifest get "${IMAGE}:${DEV_TAG}-ubi"
+
+  # Restored code checks. govulncheck runs in its own vulncheck job below, so it
+  # keeps a status context, an artifact and a nightly run of its own.
+  check-code:
+    executor: golang-executor
+    environment:
+      GOCACHE: "/tmp/go/cache"
+      GOPATH: "/tmp/go/path"
+      GO111MODULES: off
+      KEEP_GOPATH: 1
+    steps:
+      - run: apt-get update && apt-get install -y unzip
+      - checkout
+      - run:
+          name: Run Vendor
+          command: make vendor tools-min init
+      - run:
+          name: License check
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make license-verify license-range-verify
+      - run: make fmt-verify
+      - run: make yamlfmt-verify
+      - run: make linter
+      - run:
+          name: Unit tests
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make run-unit-tests
+      - run:
+          name: make bin
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make bin
+      - run:
+          name: Check that everything what should be generated is commited
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+            make ci-check
+
+  # ---- Dependency CVE tier ---------------------------------------------------
+  # Orb executor, not golang-executor. supply-chain/validate-sbom parses the SBOM
+  # with jq, and the ECR Go image ships none (build 6863).
+  dependency-cve-scan:
+    executor: trivy-scan/default
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          # Dependency CVEs only; committed secrets are secret-scan's job, so a fixture can
+          # never be why this reports.
+          scanners: "vuln"
+          # Blocking per the flip criterion this gate was introduced with. The
+          # fixable CRITICAL,HIGH band is empty at this commit, re-measured on
+          # trivy v0.76.1 after the master merge.
+          fail-on-findings: true
+          # Gate band: fixable CRITICAL,HIGH. UNKNOWN is out because in Go advisory data it
+          # means no CVSS was assigned, so gating on it fails on a missing score.
+          # ignore-unfixed stays true: an unfixed finding is not actionable in a PR, and the
+          # nightly report is where unfixed findings are visible.
+          severity: "CRITICAL,HIGH"
+          # Wide report, narrow gate, one scan: --severity applies at scan time, so without
+          # this the MEDIUM/LOW/UNKNOWN findings are absent from every artifact.
+          report-severity: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
+          # Not detection-priority: comprehensive. On an fs scan it derives stdlib CVEs from
+          # the `go` directive rather than a real toolchain, so directive drift invents
+          # findings; measured zero extra findings here. Binary-accurate stdlib detection is
+          # the image tier's job.
+          # Coverage assertion: min-targets 1 is satisfied by accident in a single-manifest
+          # repo, so naming go.mod is what makes a rename fail by name (read off a real scan).
+          expect-targets: "go.mod"
+          min-targets: 1
+          store-junit-results: true
+          # CycloneDX for the internal pipeline and Dependency-Track ingest, SPDX
+          # as the interchange render for agency consumers. Measured 210
+          # components and 211 dependency relationships on trivy v0.76.1 after the
+          # master merge. --include-dev-deps is deliberately absent and would change
+          # nothing: a Go module graph has no dev-only group, and the flag was
+          # measured to add zero findings and zero components here.
+          sbom-format: both
+          sbom-output: /tmp/sbom.cdx.json
+          sbom-spdx-output: /tmp/sbom.spdx.json
+      # A structurally valid SBOM can still be worthless: this fleet has shipped one
+      # naming the wrong tag and one that read clean from a single aggregate target.
+      - supply-chain/validate-sbom:
+          sbom-path: /tmp/sbom.cdx.json
+          # Floor, not the exact count (measured 210): catches an empty or aggregate SBOM
+          # without going red on a legitimate dependency removal. Per-component hash, licence
+          # and supplier stay at `warn` because trivy emits none of them for Go modules.
+          min-components: "180"
+      - store_artifacts:
+          path: /tmp/sbom.cdx.json
+          destination: sbom.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom.spdx.json
+          destination: sbom.spdx.json
+
+  # ---- Image tier ------------------------------------------------------------
+  # The operator image bundles base OS packages and the compiled operator and envoy
+  # binaries, none of which the fs scan can see. This scans the multi-arch dev image
+  # this pipeline just built and pushed to ECR (image-src remote, read straight
+  # from the registry), so it runs after the manifest merge and assumes the project
+  # OIDC role to authenticate to the private repository. The amd64 runner resolves
+  # the linux/amd64 half of the index. `variant` selects the default or UBI9 image.
+  image-cve-scan:
+    executor: manifest-runner
+    parameters:
+      variant:
+        type: string
+        default: ""
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - trivy-scan/scan:
+          scan-type: image
+          image-ref: "<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}<< parameters.variant >>"
+          image-src: remote
+          # Explicit: an empty scanners value keeps trivy's defaults, which include secret
+          # detection, and the secret baseline is still being enumerated by its own job.
+          scanners: "vuln"
+          # Warn-only by team decision (#2132), kept for the dev image. Its OS layer comes
+          # from the mutable base tags in the pipeline parameters, so a gate would go red
+          # on base-image advisories the change under review did not introduce.
+          fail-on-findings: false
+          severity: "CRITICAL,HIGH"
+          report-severity: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
+          # detection-priority comprehensive reads the stdlib version out of
+          # the compiled binary; it surfaced CVE-2026-39822.
+          detection-priority: "comprehensive"
+          # Not exit-on-eol: it fires independently of fail-on-findings, so it would make
+          # this warn-only job blocking on the EOL dimension alone. Arm it together with
+          # fail-on-findings.
+          # Coverage assertion: without it a base-image-only result (2 targets down to 1)
+          # would still pass.
+          expect-targets: "usr/bin/arangodb_operator"
+          min-targets: 2
+          store-junit-results: true
+          secret-config-path: << pipeline.parameters.secret-config-path >>
+          sbom-format: both
+          sbom-output: /tmp/sbom-image.cdx.json
+          sbom-spdx-output: /tmp/sbom-image.spdx.json
+      # The runner image ships jq, which validate-sbom needs.
+      - supply-chain/validate-sbom:
+          sbom-path: /tmp/sbom-image.cdx.json
+          # Master's dev images measured 289 (default) and 306 (UBI) components. 60 is a
+          # floor that catches an empty or aggregate SBOM.
+          min-components: "60"
+      - store_artifacts:
+          path: /tmp/sbom-image.cdx.json
+          destination: sbom-image.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-image.spdx.json
+          destination: sbom-image.spdx.json
+
+  # ---- Committed-secret tier -------------------------------------------------
+  # Report-only. With trivy's `tests` allow-rule disabled it reports nine HIGH
+  # private-key hits in two committed agency-state fixtures under
+  # pkg/deployment/agency/state/testdata/. Their disposition is the owning team's
+  # call, so gating now would be permanently red on something CI cannot fix.
+  secret-scan:
+    executor: golang-executor
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          scanners: "secret"
+          secret-config-path: << pipeline.parameters.secret-config-path >>
+          # Report-only, so widening the band is free and surfaces the MEDIUM/LOW secret
+          # rules the CRITICAL,HIGH default hides.
+          severity: "CRITICAL,HIGH,MEDIUM,LOW"
+          fail-on-findings: false
+          store-junit-results: true
+
+  # ---- Misconfiguration tier -------------------------------------------------
+  # Report-only. The CRITICAL,HIGH band holds 95 findings over 273 config files
+  # (trivy v0.76.1 after the master merge), mostly KSV-0056 (wildcard RBAC) and
+  # KSV-0114 on the operator's own Role and ClusterRole templates, which is what a
+  # Kubernetes operator legitimately holds.
+  # trivy-scan/helm-lint is not used because check-code already runs `helm lint`
+  # over every chart through `make ci-check` (#2156).
+  misconfig-scan:
+    executor: golang-executor
+    parameters:
+      report-severity:
+        type: string
+        default: "CRITICAL,HIGH,MEDIUM,LOW"
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          scanners: "misconfig"
+          severity: "CRITICAL,HIGH"
+          report-severity: << parameters.report-severity >>
+          fail-on-findings: false
+          store-junit-results: true
+      # Deterministic final-stage credential check for the class the secret
+      # scanner cannot see: a build credential surviving into the shipped
+      # image. Blocking; all five Dockerfiles pass today.
+      - trivy-scan/dockerfile-credential-guard:
+          dockerfiles: "Dockerfile Dockerfile.debug Dockerfile.test Dockerfile.ubi tools/codegen/Dockerfile"
+
+  # ---- SAST tiers ------------------------------------------------------------
+  # Semgrep CE, pinned in the orb: the layer that covers the code written here.
+  # strict: false is measured, not convenient. Semgrep records 288 analysis errors on
+  # this checkout, 214 because chart/*/templates/*.yaml are Go templates and 61 in
+  # pkg/generated. strict: true would fail every SAST job on a scanner limitation.
+  # Chart templates are covered by the misconfig tier instead.
+  sast-scan:
+    parameters:
+      gate:
+        type: string
+        default: "NONE"
+      prefix:
+        type: string
+        default: "semgrep"
+    executor:
+      name: semgrep-scan/default
+      resource-class: large
+    steps:
+      - checkout
+      - semgrep-scan/scan:
+          # Report-only at fail-on-severity NONE: 9 ERROR and 91 WARNING at this commit, all
+          # pre-existing, so gating means red-on-arrival.
+          # Flip criterion: the nine ERROR findings (three jwt-go none-algorithm in
+          # pkg/util/token, three missing-unlock in integrations/storage/v1/shared/s3, one
+          # dangerous-exec in pkg/debug_package, one secret in docs/, one missing-user in
+          # Dockerfile) are cleared or dispositioned by their owners.
+          fail-on-severity: << parameters.gate >>
+          # severity is the report floor, not the gate: INFO keeps the whole band in the
+          # JSON, SARIF and JUnit as evidence of what the gate did not count.
+          severity: INFO
+          # Semgrep's built-in ignore list drops test/, build/, dist/ and vendor/. The token
+          # and TLS helpers under pkg/util/token must stay in scope.
+          scan-tests: true
+          semgrepignore-baseline: << pipeline.parameters.sast-required-paths >>
+          strict: false
+          # Local artifact only: SARIF upload to GitHub code scanning needs the paid Code
+          # Security SKU.
+          sarif-output: "/tmp/<< parameters.prefix >>.sarif"
+          output-prefix: << parameters.prefix >>
+  # Blocking tier: gate the code this change adds, not the code it inherited.
+  # WARNING rather than ERROR because the backlog keeps the full-repo tier
+  # report-only, so new code is held to the stricter band.
+  sast-scan-diff:
+    executor:
+      name: semgrep-scan/default
+      resource-class: large
+    steps:
+      - checkout
+      - semgrep-scan/scan:
+          baseline-commit: master
+          fail-on-severity: WARNING
+          severity: INFO
+          scan-tests: true
+          semgrepignore-baseline: << pipeline.parameters.sast-required-paths >>
+          strict: false
+          # Distinct prefix so this report does not collide with sast-scan's.
+          output-prefix: semgrep-diff
+
+  # ---- Disposition integrity -------------------------------------------------
+  # Blocking: not gate strictness, but whether the exception path can be trusted. An
+  # undated or expired suppression is a permanent invisible hole, and a
+  # .semgrepignore that grew is how a SAST gate dies without ever going red.
+  disposition-check:
+    executor: golang-executor
+    steps:
+      - checkout
+      - trivy-scan/disposition-check:
+          # None of these files exist and none should: an accepted risk belongs in a scoped,
+          # dated, attributed record. Named anyway so reintroducing one unreviewed fails
+          # here; a missing file is skipped with a diagnostic.
+          ignorefiles: ".trivyignore,.trivyignore.yaml,.trivyignore.yml"
+          secret-config-path: << pipeline.parameters.secret-config-path >>
+          semgrepignore-baseline: << pipeline.parameters.semgrepignore-allowed >>
+          poam-windows: << pipeline.parameters.poam-windows >>
+          # The default globs are pathspecs from the repo root, so `Dockerfile*` misses
+          # tools/codegen/Dockerfile. Both anchored forms are needed.
+          nosem-globs: "*.py *.go *.sh *.js *.ts *.yaml *.yml Dockerfile* *Dockerfile* *.dockerfile *.tf *.jsx *.tsx *.md *.proto *.tmpl *.tpl *.groovy *.aql"
+      # No validate-waivers step and no waivers file: a zero-entry waivers file is a hard
+      # failure by design, and there is no owner-approved risk acceptance yet. It lands
+      # with the first one, together with OpenVEX, which is generated from the waiver
+      # set.
+
+  # ---- Reachability gate -----------------------------------------------------
+  # govulncheck is not new here; enforcement and visibility were. The only invocation
+  # was a step inside check-code guarded on CIRCLE_PULL_REQUEST, using the `-optional`
+  # variant whose leading `-` makes make ignore the exit status, and `make vulncheck`
+  # was invoked by nothing. Same single invocation, moved out so it has its own
+  # context, artifact and nightly run.
+  # Still `-optional`. Measured after the master merge with v1.6.0 and the declared
+  # go1.26.10 toolchain, `make vulncheck` finds no reachable vulnerability. The
+  # executor image is go 1.26.8, so standard-library findings fixed in 1.26.9 and
+  # 1.26.10 can still show here.
+  # The flip is Adam's call. It needs the executor on 1.26.10 or later, then
+  # `vulncheck` instead of `vulncheck-optional` and the context added to
+  # .github/required-checks.txt.
+  vulncheck:
+    executor: golang-executor
+    steps:
+      - checkout
+      # go.sum hash verification, the half of hash-pinned installs Go gives for free and
+      # that nothing in this pipeline asserted.
+      - run:
+          name: Verify the module graph against go.sum
+          command: go mod verify
+      # The Makefile target, so the pin lives in GOVULNCHECK_VERSION only. Split out of
+      # `make tools` so this job installs one binary.
+      - run:
+          name: Install the pinned govulncheck
+          command: make tool-govulncheck
+      - run:
+          name: govulncheck (repository Makefile target, warn-only)
+          no_output_timeout: 30m
+          command: |
+            set -o pipefail
+            make vulncheck-optional 2>&1 | tee /tmp/govulncheck.txt
+      - store_artifacts:
+          path: /tmp/govulncheck.txt
+          destination: govulncheck.txt
+
+  # ---- Required-check drift --------------------------------------------------
+  required-checks-drift:
+    executor: golang-executor
+    steps:
+      - checkout
+      - run:
+          name: Compare live branch protection against .github/required-checks.txt
+          command: |
+            set -eu
+            LIST=".github/required-checks.txt"
+            BRANCH="master"
+            if [ ! -s "${LIST}" ]; then
+              echo "WARNING: ${LIST} is missing or empty, so there is no committed list to compare the live protection against. Commit it." >&2
+              exit 0
+            fi
+            { grep -vE '^[[:space:]]*(#|$)' "${LIST}" || true; } | sed -e 's/[[:space:]]*$//' | sort -u > /tmp/required-expected.txt
+            echo "Committed required contexts (${LIST}):"
+            sed -e 's/^/  /' /tmp/required-expected.txt
+            if [ -z "${GITHUB_TOKEN:-}" ]; then
+              echo "WARNING: GITHUB_TOKEN is not in the environment, so the live protection could not be read and drift is UNVERIFIED on this run. Attach a context carrying a read-only token with repository administration:read." >&2
+              exit 0
+            fi
+            API="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+            gh_get() {
+              curl -sS -o "$2" -w '%{http_code}' --retry 3 --retry-delay 2 --max-time 60 \
+                -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "$1"
+            }
+            READ_OK=0
+            PROT_OK=0
+            : > /tmp/required-live.txt
+            # The EFFECTIVE rules for the branch, not a ruleset by id: ids change when a
+            # ruleset is recreated, and this repo's rulesets carry only the enterprise deletion
+            # and non-fast-forward rules, which cannot hold required_status_checks.
+            # grep and sed rather than a heredoc-fed interpreter: CircleCI reserves the
+            # double-angle sequence for parameter interpolation, so a heredoc operator in a
+            # command body is a standing edit hazard. "context" appears only inside
+            # required_status_checks entries, and zero matches is a real state, hence `|| true`
+            # under the default -eo pipefail shell.
+            CODE="$(gh_get "${API}/rules/branches/${BRANCH}" /tmp/rules.json)" || CODE="000"
+            if [ "${CODE}" = "200" ]; then
+              READ_OK=1
+              { grep -oE '"context":[[:space:]]*"[^"]*"' /tmp/rules.json || true; } | sed -e 's/.*"\([^"]*\)"$/\1/' >> /tmp/required-live.txt
+            else
+              echo "WARNING: reading the rules that apply to ${BRANCH} returned ${CODE}." >&2
+            fi
+            # Classic branch protection, not covered above, and where this repo's one required
+            # context lives. 404 means no protection object, 403 means the token lacks
+            # administration:read.
+            CODE="$(gh_get "${API}/branches/${BRANCH}/protection/required_status_checks" /tmp/protection.json)" || CODE="000"
+            case "${CODE}" in
+              200)
+                READ_OK=1
+                PROT_OK=1
+                { grep -oE '"context":[[:space:]]*"[^"]*"' /tmp/protection.json || true; } | sed -e 's/.*"\([^"]*\)"$/\1/' >> /tmp/required-live.txt
+                ;;
+              404)
+                READ_OK=1
+                PROT_OK=1
+                echo "No classic branch protection on ${BRANCH}."
+                ;;
+              *)
+                echo "NOTE: reading classic branch protection returned ${CODE}. A 403 means the token has no repository administration:read." >&2
+                ;;
+            esac
+            if [ "${READ_OK}" = "0" ]; then
+              echo "WARNING: neither protection source could be read, so drift is UNVERIFIED on this run." >&2
+              exit 0
+            fi
+            sort -u /tmp/required-live.txt > /tmp/required-live.sorted
+            mv /tmp/required-live.sorted /tmp/required-live.txt
+            echo "Live required contexts on ${BRANCH}:"
+            if [ -s /tmp/required-live.txt ]; then
+              sed -e 's/^/  /' /tmp/required-live.txt
+            else
+              echo "  (none)"
+            fi
+            MISSING="$(comm -23 /tmp/required-expected.txt /tmp/required-live.txt)"
+            EXTRA="$(comm -13 /tmp/required-expected.txt /tmp/required-live.txt)"
+            PARTIAL=0
+            if [ "${PROT_OK}" = "0" ] && [ -n "${MISSING}" ]; then
+              # Only classic protection can prove absence; the rules read
+              # alone is a partial view.
+              echo "NOTICE: classic protection was unreadable, so it is unknown whether these committed contexts are live:" >&2
+              printf '%s\n' "${MISSING}" | sed -e 's/^/  /' >&2
+              MISSING=""
+              PARTIAL=1
+            fi
+            if [ -z "${MISSING}" ] && [ -z "${EXTRA}" ]; then
+              if [ "${PARTIAL}" = "0" ]; then
+                echo "The live protection matches the committed list."
+              fi
+              exit 0
+            fi
+            if [ -n "${MISSING}" ]; then
+              echo "DRIFT: committed but NOT required by the live protection, so these gates do not block a merge:" >&2
+              printf '%s\n' "${MISSING}" | sed -e 's/^/  /' >&2
+            fi
+            if [ -n "${EXTRA}" ]; then
+              echo "DRIFT: required by the live protection but NOT committed. A required context no job emits is fail-closed and blocks every merge; one that matches the wrong job silently drops the intended gate:" >&2
+              printf '%s\n' "${EXTRA}" | sed -e 's/^/  /' >&2
+            fi
+            # The flip: this exit 0 becomes exit 1 in the change that puts these contexts on
+            # the live protection.
+            echo "WARN-ONLY until ${BRANCH} requires these contexts." >&2
+            exit 0
+
+  # ---- Nightly tiers ---------------------------------------------------------
+  # Permanent positive control: if this goes green against a known-bad fixture, every
+  # other scan in this pipeline passed vacuously.
+  nightly-self-test:
+    executor: golang-executor
+    steps:
+      - trivy-scan/scan:
+          # python:3.9-slim pinned by digest so the fixture cannot drift. Not an EOL distro
+          # tag: EOL distros stop publishing fix data, so ignore-unfixed would leave almost
+          # nothing to detect.
+          image-ref: "python:3.9-slim@sha256:2d97f6910b16bd338d3060f261f53f144965f755599aab1acda1e13cf1731b1b"
+          image-src: remote
+          scanners: "vuln"
+          # Same band and ignore-unfixed as the real gates, so this proves their config.
+          severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
+          # false so the assertion below owns the verdict: the orb has no expect-failure
+          # mode, and a red scan here would read as a pass.
+          fail-on-findings: false
+          output-prefix: "selftest-"
+          store-junit-results: false
+      - run:
+          name: Assert the positive control detected findings
+          command: |
+            set -eu
+            REPORT="/tmp/selftest-trivy-results.json"
+            FLOOR=5
+            if [ ! -s "${REPORT}" ]; then
+              echo "ERROR: the positive control produced no report at ${REPORT}, so the scan machinery did not run. This is a broken gate, not a clean image." >&2
+              exit 1
+            fi
+            COUNT="$({ grep -oE '"VulnerabilityID":[[:space:]]*"[^"]+"' "${REPORT}" || true; } | sort -u | wc -l | tr -d ' ')"
+            echo "Positive control: ${COUNT} unique fixable CRITICAL/HIGH id(s) in the pinned fixture image (floor ${FLOOR})."
+            if [ "${COUNT}" -lt "${FLOOR}" ]; then
+              echo "ERROR: the pinned known-vulnerable fixture came back with ${COUNT} findings, below the floor of ${FLOOR}. The vulnerability database, the scanner install or the severity filter is broken, so every OTHER gate in this pipeline is currently passing vacuously. Do not disposition this; fix the scanner." >&2
+              exit 1
+            fi
+            echo "Detection is proven for this configuration on this run."
+      - store_artifacts:
+          path: /tmp/selftest-trivy-results.json
+          destination: selftest-trivy-results.json
+  # The visibility tier the blocking band cannot show: every severity, unfixed
+  # findings included, licences and the full SBOM. Report only.
+  nightly-dependency-report:
+    executor: trivy-scan/default
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          scanners: "vuln,license"
+          severity: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
+          # This tier exists for findings with no published fix, which no other job here
+          # reports. None is open at this commit.
+          ignore-unfixed: false
+          fail-on-findings: false
+          license-full: true
+          # Empty on purpose: this tier produces the baseline that decides what belongs here.
+          ignored-licenses: ""
+          expect-targets: "go.mod"
+          min-targets: 1
+          store-junit-results: true
+          sbom-format: both
+          sbom-output: /tmp/sbom-full.cdx.json
+          sbom-spdx-output: /tmp/sbom-full.spdx.json
+          output-prefix: "depreport-"
+      - supply-chain/validate-sbom:
+          sbom-path: /tmp/sbom-full.cdx.json
+          min-components: "180"
+      - store_artifacts:
+          path: /tmp/sbom-full.cdx.json
+          destination: sbom-full.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-full.spdx.json
+          destination: sbom-full.spdx.json
+      # Exploitation signal, read against the FULL-severity report or the point is lost.
+      # Report-only for the first cycle; threshold 1.0 so a KEV match is the signal.
+      - trivy-scan/kev-epss-check:
+          report-path: /tmp/depreport-trivy-results.json
+          epss-threshold: "1.0"
+          fail-on-match: false
+
+  # Nightly rescan of the released image customers pull from Docker Hub. The image
+  # does not change between releases, the advisory data does. Releases are built
+  # by the Jenkins release job (Jenkinsfile.groovy), not by this pipeline.
+  # `variant` selects the default or UBI9 image. `large` because an image scan is
+  # disk and network bound.
+  published-image-cve-scan:
+    executor:
+      name: trivy-scan/default
+      resource-class: large
+    parameters:
+      variant:
+        type: string
+        default: ""
+    steps:
+      - checkout
+      - resolve-image-tag
+      - trivy-scan/scan:
+          scan-type: image
+          image-ref: "arangodb/kube-arangodb-enterprise:${OPERATOR_IMAGE_TAG}<< parameters.variant >>"
+          image-src: remote
+          scanners: "vuln"
+          fail-on-findings: false
+          severity: "CRITICAL,HIGH"
+          report-severity: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
+          # Unfixed findings included, so the KEV correlation below sees them too.
+          ignore-unfixed: false
+          detection-priority: "comprehensive"
+          expect-targets: "usr/bin/arangodb_operator"
+          min-targets: 2
+          store-junit-results: true
+          secret-config-path: << pipeline.parameters.secret-config-path >>
+          sbom-format: both
+          sbom-output: /tmp/sbom-image.cdx.json
+          sbom-spdx-output: /tmp/sbom-image.spdx.json
+      - supply-chain/validate-sbom:
+          sbom-path: /tmp/sbom-image.cdx.json
+          min-components: "60"
+      - store_artifacts:
+          path: /tmp/sbom-image.cdx.json
+          destination: sbom-image.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-image.spdx.json
+          destination: sbom-image.spdx.json
+      # A KEV-listed MEDIUM sits below every severity gate here and is otherwise never
+      # seen. 1.0 so EPSS alone never escalates, a KEV match is the signal. Report-only
+      # for the first cycle, since the released image carries findings only a release
+      # can clear.
+      - trivy-scan/kev-epss-check:
+          report-path: /tmp/trivy-results.json
+          epss-threshold: "1.0"
+          fail-on-match: false
+
+  # Fan-in gate: succeeds only once every other job in the pipeline has.
+  completed:
+    executor: golang-executor
+    steps:
+      - run:
+          name: Completed
+          command: echo "Completed"
 
 workflows:
-  # The two conditions are complements: a pipeline that calls the continuation API
-  # twice fails, so this is a correctness constraint.
-  always-run:
+  version: 2
+
+  pipeline:
     when:
       not: << pipeline.parameters.nightly >>
     jobs:
-      - path-filtering/filter:
-          name: check-updated-files
-          base-revision: << pipeline.git.base_revision >>
-          config-path: .circleci/continue_config.yml
-          tag: "3.12"
-          mapping: |
-            manifests/.* manifests-verify true
-            chart/.* manifests-verify true
+      # check-code carries no explicit name and appears in exactly one workflow, which
+      # keeps its context at `ci/circleci: check-code`, the one string branch protection
+      # requires. CircleCI appends an unpredictable instance suffix to duplicated jobs.
+      - check-code
+      # Explicit unique names for the same reason: a topology change must not renumber
+      # the contexts branch protection requires.
+      - dependency-cve-scan:
+          name: dependency-cve-scan
+      - image-cve-scan:
+          name: image-cve-scan
+          variant: ""
+          context: aws
+          requires:
+            - push-image-manifest
+      - image-cve-scan:
+          name: image-cve-scan-ubi
+          variant: "-ubi"
+          context: aws
+          requires:
+            - push-image-ubi-manifest
+      - secret-scan:
+          name: secret-scan
+      - misconfig-scan:
+          name: misconfig-scan
+      - sast-scan:
+          name: sast-scan
+      - sast-scan-diff:
+          name: sast-scan-diff
+      - disposition-check:
+          name: disposition-check
+      - vulncheck:
+          name: vulncheck
+      - required-checks-drift:
+          name: required-checks-drift
+      - build-binary-amd64
+      - build-binary-arm64
+      - build-image-amd64:
+          context: aws
+          requires:
+            - build-binary-amd64
+      - build-image-arm64:
+          context: aws
+          requires:
+            - build-binary-arm64
+      - push-image-manifest:
+          context: aws
+          requires:
+            - build-image-amd64
+            - build-image-arm64
+      - build-image-ubi-amd64:
+          context: aws
+          requires:
+            - build-binary-amd64
+      - build-image-ubi-arm64:
+          context: aws
+          requires:
+            - build-binary-arm64
+      - push-image-ubi-manifest:
+          context: aws
+          requires:
+            - build-image-ubi-amd64
+            - build-image-ubi-arm64
+      # Fan-in over every job in this workflow.
+      - completed:
+          requires:
+            - check-code
+            - dependency-cve-scan
+            - image-cve-scan
+            - image-cve-scan-ubi
+            - secret-scan
+            - misconfig-scan
+            - sast-scan
+            - sast-scan-diff
+            - disposition-check
+            - vulncheck
+            - required-checks-drift
+            - build-binary-amd64
+            - build-binary-arm64
+            - build-image-amd64
+            - build-image-arm64
+            - push-image-manifest
+            - build-image-ubi-amd64
+            - build-image-ubi-arm64
+            - push-image-ubi-manifest
 
-  nightly-setup:
+  nightly:
     when: << pipeline.parameters.nightly >>
     jobs:
-      - nightly-continue
+      # Precondition for reading anything else here.
+      - nightly-self-test:
+          name: nightly-self-test
+      - nightly-dependency-report:
+          name: nightly-dependency-report
+      # Re-scan what is published against a fresh vulnerability database: the image does
+      # not change, the advisory data does.
+      - published-image-cve-scan:
+          name: image-cve-scan-nightly
+          variant: ""
+      - published-image-cve-scan:
+          name: image-cve-scan-ubi-nightly
+          variant: "-ubi"
+      # Dispositions expire on a calendar, not on a push.
+      - disposition-check:
+          name: disposition-check-nightly
+      - sast-scan:
+          name: sast-report-nightly
+          prefix: semgrep-report
+      # Reachability between pull requests: nothing ran govulncheck on a schedule before,
+      # so a new advisory against an unchanged module graph went unnoticed.
+      - vulncheck:
+          name: vulncheck-nightly
+      # The MEDIUM band the commit-time report leaves out, where trivy's k8s
+      # least-privilege and trusted-registry checks live.
+      - misconfig-scan:
+          name: misconfig-report-nightly

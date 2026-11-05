@@ -1,0 +1,59 @@
+{{- if eq .Values.storage.mode "minio" }}
+{{- $minio := .Values.storage.minio }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-minio" .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: minio
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/name: minio
+    spec:
+      {{- with $minio.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with $minio.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with $minio.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      containers:
+        - name: minio
+          image: {{ $minio.image | quote }}
+          imagePullPolicy: {{ $minio.imagePullPolicy }}
+          args:
+            - server
+            - /data
+          envFrom:
+            - secretRef:
+                name: {{ printf "%s-minio-root" .Release.Name | quote }}
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          {{- with $minio.resources }}
+          resources:
+{{ toYaml . | indent 12 }}
+          {{- end }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ printf "%s-minio" .Release.Name | quote }}
+{{- end }}

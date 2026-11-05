@@ -58,6 +58,8 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ArangoPermissionPolicyRoleBindingList{},
 		&ArangoPermissionRoleUserBinding{},
 		&ArangoPermissionRoleUserBindingList{},
+		&ArangoPermissionRoleGroupBinding{},
+		&ArangoPermissionRoleGroupBindingList{},
 	)
 	meta.AddToGroupVersion(s, SchemeGroupVersion)
 	return nil

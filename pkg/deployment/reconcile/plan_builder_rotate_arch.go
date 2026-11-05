@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2022 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/actions"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 )
 
@@ -48,7 +49,7 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 			if v, ok := pod.GetAnnotations()[deployment.ArangoDeploymentPodChangeArchAnnotation]; ok {
 				archToApply := api.ArangoDeploymentArchitectureType(v)
 				if archToApply.IsArchMismatch(spec.Architecture, member.Architecture) {
-					if archToApply != api.ArangoDeploymentArchitectureAMD64 && status.CurrentImage.ArangoDBVersion.CompareTo("3.10.0") < 0 {
+					if archToApply != api.ArangoDeploymentArchitectureAMD64 && util.Version(status.CurrentImage.ArangoDBVersion).CompareTo("3.10.0") < 0 {
 						if member.Conditions.Update(api.ConditionTypeArchitectureChangeCannotBeApplied, true,
 							fmt.Sprintf("Member has ArangoDB in version which not supports Architecture change (%s)", archToApply), "") {
 							r.log.Warn("Cannot apply 'arch' annotation changes. It's not supported in ArangoDB < 3.10.0")
@@ -56,7 +57,7 @@ func (r *Reconciler) createChangeMemberArchPlan(ctx context.Context,
 							context.CreateEvent(k8sutil.NewCannotSetArchitectureEvent(pod, string(archToApply), member.ID))
 
 							if err := context.UpdateMember(ctx, member); err != nil {
-								r.log.Error("Can not save member condition", member.ID, api.ConditionTypeArchitectureChangeCannotBeApplied, err)
+								r.log.Error("Can not save member condition member=%v condition=%v error=%v", member.ID, api.ConditionTypeArchitectureChangeCannotBeApplied, err)
 							}
 						}
 					} else {

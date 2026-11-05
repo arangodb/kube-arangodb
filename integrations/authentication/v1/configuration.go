@@ -21,7 +21,6 @@
 package v1
 
 import (
-	"slices"
 	"time"
 
 	"github.com/arangodb/kube-arangodb/pkg/util"
@@ -48,12 +47,11 @@ func NewConfiguration() Configuration {
 		TTL:     DefaultTTL,
 		Path:    "",
 		Create: Token{
-			DefaultUser:  DefaultUser,
-			AllowedUsers: nil,
-			MinTTL:       DefaultTokenMinTTL,
-			MaxTTL:       DefaultTokenMaxTTL,
-			DefaultTTL:   DefaultTokenDefaultTTL,
-			MaxSize:      DefaultMaxTokenSize,
+			DefaultUser: DefaultUser,
+			MinTTL:      DefaultTokenMinTTL,
+			MaxTTL:      DefaultTokenMaxTTL,
+			DefaultTTL:  DefaultTokenDefaultTTL,
+			MaxSize:     DefaultMaxTokenSize,
 		},
 	}
 }
@@ -97,8 +95,6 @@ func (c Configuration) Validate() error {
 type Token struct {
 	DefaultUser string
 
-	AllowedUsers []string
-
 	MinTTL, MaxTTL, DefaultTTL time.Duration
 
 	MaxSize uint16
@@ -123,14 +119,6 @@ func (t Token) Validate() error {
 
 	if t.MaxSize <= 0 {
 		return errors.Errorf("MaxSize cannot be less or equal 0")
-	}
-
-	if len(t.AllowedUsers) > 0 {
-		// We are enforcing allowed users
-
-		if !slices.Contains(t.AllowedUsers, t.DefaultUser) {
-			return errors.Errorf("DefaultUser should be always allowed")
-		}
 	}
 
 	return nil

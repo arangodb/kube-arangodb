@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ func TestLogEventSampler(t *testing.T) {
 
 	trigger := func(t *testing.T, invocation int) {
 		for _, ev := range events {
-			sampled := s.Sample(ev.l, ev.msg)
+			sampled := s.Sample(ev.l, "%s", ev.msg)
 			if invocation == 0 {
 				require.True(t, sampled, invocation)
 			} else {
@@ -87,7 +87,7 @@ func TestLogEventSampler(t *testing.T) {
 				defer wg.Done()
 
 				for j := int32(0); j < iters; j++ {
-					sampled := s.Sample(l, msg)
+					sampled := s.Sample(l, "%s", msg)
 					if sampled {
 						results[i].Add(1)
 					}

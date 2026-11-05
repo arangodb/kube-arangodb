@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,23 @@
 // Copyright holder is ArangoDB GmbH, Cologne, Germany
 //
 
-package v2
+package workflow
 
-const (
-	LabelArangoDBDeploymentName = "deployment.arangodb.com/name"
+import (
+	"helm.sh/helm/v3/pkg/action"
+
+	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 )
+
+func withUpgradeActionOverrides(spec *platformApi.ArangoPlatformWorkflowSpecUpgrade) func(in *action.Upgrade) {
+	return func(in *action.Upgrade) {
+		in.Timeout = spec.GetTimeout()
+		in.MaxHistory = spec.GetMaxHistory()
+	}
+}
+
+func withInstallActionOverrides(spec *platformApi.ArangoPlatformWorkflowSpecInstall) func(in *action.Install) {
+	return func(in *action.Install) {
+		in.Timeout = spec.GetTimeout()
+	}
+}

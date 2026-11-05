@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,14 +24,4 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
-type ChartDetailsPlatformRequirements map[string]ChartDetailsPlatformVersionConstrain
-
-type ChartDetailsPlatformVersionConstrain string
-
-func (c *ChartDetailsPlatformVersionConstrain) AsSemverConstrain() (util.VersionConstrain, error) {
-	if c == nil {
-		return nil, nil
-	}
-
-	return util.NewVersionConstrain(string(*c))
-}
+type ChartDetailsPlatformRequirements map[string]util.VersionConstrain

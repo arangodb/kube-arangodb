@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,4 +28,8 @@ const (
 	SpecValidCondition       api.ConditionType = "SpecValid"
 	ReleaseReadyCondition    api.ConditionType = "ReleaseReady"
 	ReadyCondition           api.ConditionType = "Ready"
+
+	// RequirementsFulfilledCondition indicates that the chart's reserved platform requirements
+	// (the ArangoDB and Operator version constraints from its platform.yml) are satisfied.
+	RequirementsFulfilledCondition api.ConditionType = "RequirementsFulfilled"
 )

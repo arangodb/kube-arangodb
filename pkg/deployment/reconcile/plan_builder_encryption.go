@@ -41,7 +41,7 @@ func skipEncryptionPlan(spec api.DeploymentSpec, status api.DeploymentStatus) bo
 		return true
 	}
 
-	if i := status.CurrentImage; i == nil || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if i := status.CurrentImage; !features.EncryptionRotation().ImageSupported(i) {
 		return true
 	}
 
@@ -253,7 +253,7 @@ func (r *Reconciler) isEncryptionKeyUpToDate(ctx context.Context, status api.Dep
 		return false, true
 	}
 
-	if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.EncryptionRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if !features.EncryptionRotation().ImageSupported(status.Images.GetPointerByImageID(m.ImageID)) {
 		return false, false
 	}
 

@@ -46,6 +46,7 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	"github.com/arangodb/kube-arangodb/pkg/api/impl"
+	deploymentApi "github.com/arangodb/kube-arangodb/pkg/apis/deployment"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/crd"
 	agencyConfig "github.com/arangodb/kube-arangodb/pkg/deployment/agency/config"
@@ -151,6 +152,7 @@ var (
 	operatorTimeouts struct {
 		k8s                         time.Duration
 		arangoD                     time.Duration
+		licenseManager              time.Duration
 		arangoDCheck                time.Duration
 		reconciliation              time.Duration
 		agency                      time.Duration
@@ -235,6 +237,7 @@ func initE() error {
 	f.String("scope", "", "Define scope on which Operator works. Legacy - pre 1.1.0 scope with limited cluster access")
 	f.DurationVar(&operatorTimeouts.k8s, "timeout.k8s", globals.DefaultKubernetesTimeout, "The request timeout to the kubernetes")
 	f.DurationVar(&operatorTimeouts.arangoD, "timeout.arangod", globals.DefaultArangoDTimeout, "The request timeout to the ArangoDB")
+	f.DurationVar(&operatorTimeouts.licenseManager, "timeout.license-manager", globals.DefaultLicenseManagerTimeout, "The request timeout for the ArangoDB License Manager API calls")
 	f.DurationVar(&operatorTimeouts.arangoDCheck, "timeout.arangod-check", globals.DefaultArangoDCheckTimeout, "The version check request timeout to the ArangoDB")
 	f.DurationVar(&operatorTimeouts.agency, "timeout.agency", globals.DefaultArangoDAgencyTimeout, "The Agency read timeout")
 	f.DurationVar(&operatorTimeouts.reconciliation, "timeout.reconciliation", globals.DefaultReconciliationTimeout, "The reconciliation timeout to the ArangoDB CR")
@@ -349,6 +352,7 @@ func executeMain(cmd *cobra.Command, args []string) {
 
 	globals.GetGlobalTimeouts().Kubernetes().Set(operatorTimeouts.k8s)
 	globals.GetGlobalTimeouts().ArangoD().Set(operatorTimeouts.arangoD)
+	globals.GetGlobalTimeouts().LicenseManager().Set(operatorTimeouts.licenseManager)
 	globals.GetGlobalTimeouts().Agency().Set(operatorTimeouts.agency)
 	globals.GetGlobalTimeouts().ArangoDCheck().Set(operatorTimeouts.arangoDCheck)
 	globals.GetGlobalTimeouts().Reconciliation().Set(operatorTimeouts.reconciliation)
@@ -442,6 +446,11 @@ func executeMain(cmd *cobra.Command, args []string) {
 			crdOpts, err := prepareCRDOptions(crdOptions.validationSchema, crdOptions.preserveUnknownFields)
 			if err != nil {
 				logger.Fatal("Invalid --crd.validation-schema args: %s", err)
+			}
+
+			if o, ok := crdOpts[deploymentApi.ArangoDeploymentCRDName]; ok {
+				o.WithStatusSubresource = features.EnableArangoDeploymentStatus().Enabled()
+				crdOpts[deploymentApi.ArangoDeploymentCRDName] = o
 			}
 
 			_ = crd.EnsureCRDWithOptions(ctx, client, crd.EnsureCRDOptions{IgnoreErrors: true, CRDOptions: crdOpts})

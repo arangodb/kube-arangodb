@@ -38,7 +38,7 @@ Request body (POST/PUT): `AuthorizationAPIPolicyCreateRequest { rules[] }` where
 Response body (GET single): `AuthorizationAPIPolicyResponse { name, rules[] }`
 Response body (GET list): `AuthorizationAPIPolicyListResponse { policies[] }`
 Response body (POST/PUT): `AuthorizationAPIPolicyResponse { name, rules[] }`
-Response body (DELETE): empty (204 No Content)
+Response body (DELETE): `AuthorizationAPIPolicyResponse { name, index }` (HTTP 200; `item` is not populated on delete)
 
 Implementation: `pkg/sidecar/services/authorization/impl_api_policy.go`
 
@@ -56,7 +56,7 @@ Request body (POST/PUT): `AuthorizationAPIRoleCreateRequest { policies[] }` wher
 Response body (GET single): `AuthorizationAPIRoleResponse { name, policies[] }`
 Response body (GET list): `AuthorizationAPIRoleListResponse { roles[] }`
 Response body (POST/PUT): `AuthorizationAPIRoleResponse { name, policies[] }`
-Response body (DELETE): empty (204 No Content)
+Response body (DELETE): `AuthorizationAPIRoleResponse { name, index }` (HTTP 200; `item` is not populated on delete)
 
 Implementation: `pkg/sidecar/services/authorization/impl_api_roles.go`
 
@@ -73,7 +73,7 @@ Request body (POST): `AuthorizationAPIUserRoleBindingCreateRequest { scope }` (o
 Request body (PUT): `AuthorizationAPIUserRoleBindingUpdateRequest { scope }` (new scope for the binding)
 Response body (GET list): `AuthorizationAPIUserRoleBindingListResponse { bindings[] }` where each binding contains `{ role, scope }`
 Response body (POST/PUT): `AuthorizationAPIUserRoleBindingResponse { user, role, scope }`
-Response body (DELETE): empty (204 No Content)
+Response body (DELETE): `AuthorizationAPIUserRoleBindingResponse { user, role, index }` (HTTP 200; `scope` is not populated on delete)
 
 Implementation: `pkg/sidecar/services/authorization/impl_api_user_role_bindings.go`
 

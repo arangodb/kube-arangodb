@@ -1,0 +1,22 @@
+{{- if eq .Values.storage.mode "seaweedfs" }}
+apiVersion: platform.arangodb.com/v1beta1
+kind: ArangoPlatformStorage
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  backend:
+    s3:
+      # Points at the in-cluster SeaweedFS S3 Service deployed by this chart.
+      endpoint: {{ printf "http://%s-seaweedfs.%s.svc:8333" .Release.Name .Release.Namespace | quote }}
+      bucketName: {{ .Values.storage.bucketName | default .Release.Name | quote }}
+      {{- with .Values.storage.bucketPath }}
+      bucketPath: {{ . | quote }}
+      {{- end }}
+      allowInsecure: true
+      credentialsSecret:
+        name: {{ printf "%s-seaweedfs-credentials" .Release.Name | quote }}
+{{- end }}

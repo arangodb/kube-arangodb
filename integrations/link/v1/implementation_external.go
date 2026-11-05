@@ -23,7 +23,6 @@ package v1
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	pbLinkV1 "github.com/arangodb/kube-arangodb/integrations/link/v1/definition"
@@ -31,21 +30,23 @@ import (
 )
 
 func (i *implementation) CreateJob(ctx context.Context, req *pbLinkV1.CreateJobRequest) (*pbLinkV1.CreateJobResponse, error) {
-	id := uuid.New().String()
+	now := timestamppb.Now()
+	id := newJobID(now)
 
 	job := &pbLinkV1.Job{
-		Id:      id,
-		LinkId:  i.linkID,
-		Input:   req.GetInput(),
-		Timeout: req.Timeout,
+		Id:       id,
+		LinkId:   i.linkID,
+		Input:    req.GetInput(),
+		Timeout:  req.Timeout,
+		Priority: req.GetPriority(),
 		Statuses: []*pbLinkV1.JobStatus{
 			{
-				State:       pbLinkV1.JobState_JOB_STATE_PENDING,
+				State:       pbLinkV1.JobState_JOB_STATE_TODO,
 				Description: "Job created",
-				Updated:     timestamppb.Now(),
+				Updated:     now,
 			},
 		},
-		Created: timestamppb.Now(),
+		Created: now,
 	}
 
 	if err := i.store.Create(ctx, job); err != nil {
@@ -56,25 +57,9 @@ func (i *implementation) CreateJob(ctx context.Context, req *pbLinkV1.CreateJobR
 }
 
 func (i *implementation) ListJobs(ctx context.Context, req *pbLinkV1.ListJobsRequest) (*pbLinkV1.ListJobsResponse, error) {
-	keys, err := i.store.List(ctx)
+	jobs, err := i.store.ListJobs(ctx, req.State)
 	if err != nil {
 		return nil, err
-	}
-
-	prefix := i.store.jobKeyPrefix()
-	var jobs []*pbLinkV1.Job
-	for _, key := range keys {
-		id := key[len(prefix):]
-		job, _, err := i.store.Get(ctx, id)
-		if err != nil {
-			continue
-		}
-
-		if req.State != nil && currentState(job) != *req.State {
-			continue
-		}
-
-		jobs = append(jobs, job)
 	}
 
 	return &pbLinkV1.ListJobsResponse{Jobs: jobs}, nil

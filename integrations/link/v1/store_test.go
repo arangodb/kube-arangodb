@@ -34,28 +34,22 @@ func Test_ValidateTransition(t *testing.T) {
 		to    pbLinkV1.JobState
 		valid bool
 	}{
-		// From Scheduled
-		{pbLinkV1.JobState_JOB_STATE_SCHEDULED, pbLinkV1.JobState_JOB_STATE_RUNNING, true},
-		{pbLinkV1.JobState_JOB_STATE_SCHEDULED, pbLinkV1.JobState_JOB_STATE_FAILED, true},
-		{pbLinkV1.JobState_JOB_STATE_SCHEDULED, pbLinkV1.JobState_JOB_STATE_CANCELLED, true},
-		{pbLinkV1.JobState_JOB_STATE_SCHEDULED, pbLinkV1.JobState_JOB_STATE_COMPLETED, false},
-		{pbLinkV1.JobState_JOB_STATE_SCHEDULED, pbLinkV1.JobState_JOB_STATE_PENDING, false},
+		// From Pending (in progress)
+		{pbLinkV1.JobState_JOB_STATE_PENDING, pbLinkV1.JobState_JOB_STATE_PENDING, true},
+		{pbLinkV1.JobState_JOB_STATE_PENDING, pbLinkV1.JobState_JOB_STATE_FINISHED, true},
+		{pbLinkV1.JobState_JOB_STATE_PENDING, pbLinkV1.JobState_JOB_STATE_FAILED, true},
+		{pbLinkV1.JobState_JOB_STATE_PENDING, pbLinkV1.JobState_JOB_STATE_CANCELLED, true},
+		{pbLinkV1.JobState_JOB_STATE_PENDING, pbLinkV1.JobState_JOB_STATE_TODO, false},
 
-		// From Running
-		{pbLinkV1.JobState_JOB_STATE_RUNNING, pbLinkV1.JobState_JOB_STATE_COMPLETED, true},
-		{pbLinkV1.JobState_JOB_STATE_RUNNING, pbLinkV1.JobState_JOB_STATE_FAILED, true},
-		{pbLinkV1.JobState_JOB_STATE_RUNNING, pbLinkV1.JobState_JOB_STATE_CANCELLED, true},
-		{pbLinkV1.JobState_JOB_STATE_RUNNING, pbLinkV1.JobState_JOB_STATE_PENDING, false},
-		{pbLinkV1.JobState_JOB_STATE_RUNNING, pbLinkV1.JobState_JOB_STATE_SCHEDULED, false},
-
-		// From Pending (only PickUp can move it)
-		{pbLinkV1.JobState_JOB_STATE_PENDING, pbLinkV1.JobState_JOB_STATE_RUNNING, false},
-		{pbLinkV1.JobState_JOB_STATE_PENDING, pbLinkV1.JobState_JOB_STATE_COMPLETED, false},
+		// From Todo (only PickUp moves it to Pending; UpdateStatus may only cancel it)
+		{pbLinkV1.JobState_JOB_STATE_TODO, pbLinkV1.JobState_JOB_STATE_CANCELLED, true},
+		{pbLinkV1.JobState_JOB_STATE_TODO, pbLinkV1.JobState_JOB_STATE_PENDING, false},
+		{pbLinkV1.JobState_JOB_STATE_TODO, pbLinkV1.JobState_JOB_STATE_FINISHED, false},
 
 		// From terminal states
-		{pbLinkV1.JobState_JOB_STATE_COMPLETED, pbLinkV1.JobState_JOB_STATE_RUNNING, false},
-		{pbLinkV1.JobState_JOB_STATE_FAILED, pbLinkV1.JobState_JOB_STATE_RUNNING, false},
-		{pbLinkV1.JobState_JOB_STATE_CANCELLED, pbLinkV1.JobState_JOB_STATE_RUNNING, false},
+		{pbLinkV1.JobState_JOB_STATE_FINISHED, pbLinkV1.JobState_JOB_STATE_PENDING, false},
+		{pbLinkV1.JobState_JOB_STATE_FAILED, pbLinkV1.JobState_JOB_STATE_PENDING, false},
+		{pbLinkV1.JobState_JOB_STATE_CANCELLED, pbLinkV1.JobState_JOB_STATE_PENDING, false},
 	}
 
 	for _, tt := range tests {
@@ -73,18 +67,18 @@ func Test_ValidateTransition(t *testing.T) {
 func Test_CurrentState(t *testing.T) {
 	t.Run("empty status", func(t *testing.T) {
 		job := &pbLinkV1.Job{}
-		require.Equal(t, pbLinkV1.JobState_JOB_STATE_PENDING, currentState(job))
+		require.Equal(t, pbLinkV1.JobState_JOB_STATE_TODO, currentState(job))
 	})
 
 	t.Run("with status", func(t *testing.T) {
 		job := &pbLinkV1.Job{
 			Statuses: []*pbLinkV1.JobStatus{
-				{State: pbLinkV1.JobState_JOB_STATE_RUNNING},
-				{State: pbLinkV1.JobState_JOB_STATE_SCHEDULED},
+				{State: pbLinkV1.JobState_JOB_STATE_FINISHED},
 				{State: pbLinkV1.JobState_JOB_STATE_PENDING},
+				{State: pbLinkV1.JobState_JOB_STATE_TODO},
 			},
 		}
-		require.Equal(t, pbLinkV1.JobState_JOB_STATE_RUNNING, currentState(job))
+		require.Equal(t, pbLinkV1.JobState_JOB_STATE_FINISHED, currentState(job))
 	})
 }
 
@@ -92,17 +86,17 @@ func Test_PushStatus(t *testing.T) {
 	t.Run("appends to front", func(t *testing.T) {
 		job := &pbLinkV1.Job{
 			Statuses: []*pbLinkV1.JobStatus{
-				{State: pbLinkV1.JobState_JOB_STATE_PENDING, Description: "created"},
+				{State: pbLinkV1.JobState_JOB_STATE_TODO, Description: "created"},
 			},
 		}
 		pushStatus(job, &pbLinkV1.JobStatus{
-			State:       pbLinkV1.JobState_JOB_STATE_SCHEDULED,
-			Description: "scheduled",
+			State:       pbLinkV1.JobState_JOB_STATE_PENDING,
+			Description: "picked up",
 		})
 
 		require.Len(t, job.Statuses, 2)
-		require.Equal(t, pbLinkV1.JobState_JOB_STATE_SCHEDULED, job.Statuses[0].State)
-		require.Equal(t, pbLinkV1.JobState_JOB_STATE_PENDING, job.Statuses[1].State)
+		require.Equal(t, pbLinkV1.JobState_JOB_STATE_PENDING, job.Statuses[0].State)
+		require.Equal(t, pbLinkV1.JobState_JOB_STATE_TODO, job.Statuses[1].State)
 		require.NotNil(t, job.Statuses[0].Updated)
 	})
 
@@ -110,12 +104,20 @@ func Test_PushStatus(t *testing.T) {
 		job := &pbLinkV1.Job{}
 		for i := 0; i < 15; i++ {
 			pushStatus(job, &pbLinkV1.JobStatus{
-				State:       pbLinkV1.JobState_JOB_STATE_RUNNING,
+				State:       pbLinkV1.JobState_JOB_STATE_PENDING,
 				Description: "iteration",
 			})
 		}
 		require.Len(t, job.Statuses, maxStatusHistory)
 	})
+}
+
+func Test_InvPriority_Ordering(t *testing.T) {
+	// Higher priority must produce a smaller inverted key so it sorts first ascending.
+	require.Less(t, invPriority(10), invPriority(5))
+	require.Less(t, invPriority(1), invPriority(0))
+	// Negative priorities are clamped to 0.
+	require.Equal(t, invPriority(0), invPriority(-5))
 }
 
 func Test_FileStorePath(t *testing.T) {

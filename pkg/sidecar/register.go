@@ -22,6 +22,7 @@ package sidecar
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/cli"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	ktls "github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
@@ -45,6 +47,7 @@ func Register() (*cobra.Command, error) {
 	flags := []cli.FlagRegisterer{
 		flagAddress,
 		flagGatewayAddress,
+		flagGatewayExternalAddress,
 		flagKeyfile,
 		flagAuth,
 		flagAuthMode,
@@ -52,6 +55,7 @@ func Register() (*cobra.Command, error) {
 		flagHealthAddress,
 		flagArangodb,
 		flagCentralServicesEnabled,
+		flagUnixEnabled,
 	}
 	for _, item := range global.Items() {
 		flags = append(flags, item.V.Flags...)
@@ -90,10 +94,30 @@ func configuration(cmd *cobra.Command) (svc.Configuration, error) {
 		cfg.Address = addr
 	}
 
+	// A unix socket for internal service-to-service calls (e.g. authorization.v1 -> authentication.v1
+	// Validate). The svc client dials the socket directly, bypassing the network authenticator - which in
+	// strict (rbac-enforced/central) mode would otherwise reject these in-process calls with Unauthorized.
+	// Enabled by default; when disabled the svc leaves the socket (and its directory) uncreated.
+	if unixEnabled, err := flagUnixEnabled.Get(cmd); err != nil {
+		return svc.Configuration{}, err
+	} else if unixEnabled {
+		cfg.Unix = fmt.Sprintf("%s/%s", utilConstants.SidecarUnixSocketMountPath, utilConstants.SidecarUnixSocketMountFile)
+	}
+
 	if addr, err := flagGatewayAddress.Get(cmd); err != nil {
 		return svc.Configuration{}, err
 	} else {
-		cfg.Gateway = &svc.ConfigurationGateway{Address: addr}
+		// The sidecar's HTTP gateway is an in-Pod endpoint (default loopback address), so it opts into
+		// plain HTTP. If it is bound to a routable address instead, the svc still serves it over TLS.
+		cfg.Gateway = &svc.ConfigurationGateway{Address: addr, Insecure: true}
+	}
+
+	// The external gateway address, when set, serves the same routes on a routable listener (the platform
+	// gateway reaches the management API here). It always follows the deployment TLS setting.
+	if addr, err := flagGatewayExternalAddress.Get(cmd); err != nil {
+		return svc.Configuration{}, err
+	} else if addr != "" {
+		cfg.Gateway.ExternalAddress = addr
 	}
 
 	if keyfile, err := flagKeyfile.Get(cmd); err != nil {

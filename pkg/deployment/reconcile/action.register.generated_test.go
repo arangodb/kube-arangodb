@@ -63,7 +63,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("ArangoMemberUpdatePodStatus", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeArangoMemberUpdatePodStatus)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeArangoMemberUpdatePodStatus.Internal())
+			require.True(t, api.ActionTypeArangoMemberUpdatePodStatus.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeArangoMemberUpdatePodStatus.Optional())
@@ -289,7 +289,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("EncryptionKeyStatusUpdate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeEncryptionKeyStatusUpdate)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeEncryptionKeyStatusUpdate.Internal())
+			require.True(t, api.ActionTypeEncryptionKeyStatusUpdate.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeEncryptionKeyStatusUpdate.Optional())
@@ -303,6 +303,16 @@ func Test_Actions(t *testing.T) {
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.True(t, api.ActionTypeEnforceResignLeadership.Optional())
+		})
+	})
+
+	t.Run("GatewayConfigPush", func(t *testing.T) {
+		ActionsExistence(t, api.ActionTypeGatewayConfigPush)
+		t.Run("Internal", func(t *testing.T) {
+			require.True(t, api.ActionTypeGatewayConfigPush.Internal())
+		})
+		t.Run("Optional", func(t *testing.T) {
+			require.False(t, api.ActionTypeGatewayConfigPush.Optional())
 		})
 	})
 
@@ -369,7 +379,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("JWTStatusUpdate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeJWTStatusUpdate)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeJWTStatusUpdate.Internal())
+			require.True(t, api.ActionTypeJWTStatusUpdate.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeJWTStatusUpdate.Optional())
@@ -811,7 +821,7 @@ func Test_Actions(t *testing.T) {
 	t.Run("TLSKeyStatusUpdate", func(t *testing.T) {
 		ActionsExistence(t, api.ActionTypeTLSKeyStatusUpdate)
 		t.Run("Internal", func(t *testing.T) {
-			require.False(t, api.ActionTypeTLSKeyStatusUpdate.Internal())
+			require.True(t, api.ActionTypeTLSKeyStatusUpdate.Internal())
 		})
 		t.Run("Optional", func(t *testing.T) {
 			require.False(t, api.ActionTypeTLSKeyStatusUpdate.Optional())

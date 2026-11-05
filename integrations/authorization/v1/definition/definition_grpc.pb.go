@@ -28,6 +28,7 @@ package definition
 
 import (
 	context "context"
+	definition "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -43,6 +44,7 @@ const (
 	AuthorizationV1_EvaluateMany_FullMethodName      = "/authorization.AuthorizationV1/EvaluateMany"
 	AuthorizationV1_EvaluateToken_FullMethodName     = "/authorization.AuthorizationV1/EvaluateToken"
 	AuthorizationV1_EvaluateTokenMany_FullMethodName = "/authorization.AuthorizationV1/EvaluateTokenMany"
+	AuthorizationV1_Refresh_FullMethodName           = "/authorization.AuthorizationV1/Refresh"
 )
 
 // AuthorizationV1Client is the client API for AuthorizationV1 service.
@@ -59,6 +61,9 @@ type AuthorizationV1Client interface {
 	EvaluateToken(ctx context.Context, in *AuthorizationV1PermissionTokenRequest, opts ...grpc.CallOption) (*AuthorizationV1PermissionResponse, error)
 	// Evaluates multiple permission from JWT Token
 	EvaluateTokenMany(ctx context.Context, in *AuthorizationV1PermissionTokenManyRequest, opts ...grpc.CallOption) (*AuthorizationV1PermissionManyResponse, error)
+	// Refresh forces the authorization cache to re-pull the current state from the pool service, so a
+	// just-written policy/role/binding becomes visible immediately instead of on the next streamed update
+	Refresh(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error)
 }
 
 type authorizationV1Client struct {
@@ -109,6 +114,16 @@ func (c *authorizationV1Client) EvaluateTokenMany(ctx context.Context, in *Autho
 	return out, nil
 }
 
+func (c *authorizationV1Client) Refresh(ctx context.Context, in *definition.Empty, opts ...grpc.CallOption) (*definition.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(definition.Empty)
+	err := c.cc.Invoke(ctx, AuthorizationV1_Refresh_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthorizationV1Server is the server API for AuthorizationV1 service.
 // All implementations must embed UnimplementedAuthorizationV1Server
 // for forward compatibility.
@@ -123,6 +138,9 @@ type AuthorizationV1Server interface {
 	EvaluateToken(context.Context, *AuthorizationV1PermissionTokenRequest) (*AuthorizationV1PermissionResponse, error)
 	// Evaluates multiple permission from JWT Token
 	EvaluateTokenMany(context.Context, *AuthorizationV1PermissionTokenManyRequest) (*AuthorizationV1PermissionManyResponse, error)
+	// Refresh forces the authorization cache to re-pull the current state from the pool service, so a
+	// just-written policy/role/binding becomes visible immediately instead of on the next streamed update
+	Refresh(context.Context, *definition.Empty) (*definition.Empty, error)
 	mustEmbedUnimplementedAuthorizationV1Server()
 }
 
@@ -144,6 +162,9 @@ func (UnimplementedAuthorizationV1Server) EvaluateToken(context.Context, *Author
 }
 func (UnimplementedAuthorizationV1Server) EvaluateTokenMany(context.Context, *AuthorizationV1PermissionTokenManyRequest) (*AuthorizationV1PermissionManyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EvaluateTokenMany not implemented")
+}
+func (UnimplementedAuthorizationV1Server) Refresh(context.Context, *definition.Empty) (*definition.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Refresh not implemented")
 }
 func (UnimplementedAuthorizationV1Server) mustEmbedUnimplementedAuthorizationV1Server() {}
 func (UnimplementedAuthorizationV1Server) testEmbeddedByValue()                         {}
@@ -238,6 +259,24 @@ func _AuthorizationV1_EvaluateTokenMany_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthorizationV1_Refresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(definition.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorizationV1Server).Refresh(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthorizationV1_Refresh_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorizationV1Server).Refresh(ctx, req.(*definition.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthorizationV1_ServiceDesc is the grpc.ServiceDesc for AuthorizationV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -260,6 +299,10 @@ var AuthorizationV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EvaluateTokenMany",
 			Handler:    _AuthorizationV1_EvaluateTokenMany_Handler,
+		},
+		{
+			MethodName: "Refresh",
+			Handler:    _AuthorizationV1_Refresh_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

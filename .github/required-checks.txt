@@ -26,15 +26,15 @@ ci/circleci: misconfig-scan
 ci/circleci: dependency-cve-scan
 
 # --- Deliberately NOT required yet, with flip criteria ------------------------
-# ci/circleci: image-cve-scan        warn-only per #2132: five fixable HIGH in the
-#     released 1.4.4 image, so blocking only after a release ships the fixes.
-# ci/circleci: image-cve-scan-ubi    same, plus seven more from the UBI9 base.
+# ci/circleci: image-cve-scan        warn-only per #2132: fixable findings from the
+#     mutable base tag, so blocking only once the dev build clears them itself.
+# ci/circleci: image-cve-scan-ubi    same, on the UBI9 base.
 # ci/circleci: secret-scan           report-only until the nine private-key
 #     findings under pkg/deployment/agency/state/testdata/ are dispositioned.
 # ci/circleci: sast-scan             report-only until the nine ERROR findings in
 #     SECURITY.md are cleared or dispositioned.
-# ci/circleci: vulncheck             Adam's call: needs the executor on go
-#     1.25.12+ and a decision on containerd v1 and x/crypto/openpgp.
+# ci/circleci: vulncheck             Adam's call: no reachable finding after the
+#     master merge, see SECURITY.md.
 # ci/circleci: required-checks-drift last, after the lines above are live on both
 #     sides.
 #

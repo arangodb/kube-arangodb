@@ -46,6 +46,7 @@ import (
 	permissionPolicy "github.com/arangodb/kube-arangodb/pkg/handlers/permission/policy"
 	permissionPolicyRoleBinding "github.com/arangodb/kube-arangodb/pkg/handlers/permission/policy_role_binding"
 	permissionRole "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role"
+	permissionRoleGroupBinding "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role_group_binding"
 	permissionRoleUserBinding "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role_user_binding"
 	permissionToken "github.com/arangodb/kube-arangodb/pkg/handlers/permission/token"
 	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
@@ -53,6 +54,7 @@ import (
 	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
 	platformShutdown "github.com/arangodb/kube-arangodb/pkg/handlers/platform/shutdown"
 	platformStorage "github.com/arangodb/kube-arangodb/pkg/handlers/platform/storage"
+	platformWorkflow "github.com/arangodb/kube-arangodb/pkg/handlers/platform/workflow"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/policy"
 	schedulerBatchJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/batchjob"
 	schedulerCronJobHandler "github.com/arangodb/kube-arangodb/pkg/handlers/scheduler/cronjob"
@@ -342,6 +344,10 @@ func (o *Operator) onStartOperatorV2Platform(ctx context.Context, operator opera
 		panic(err)
 	}
 
+	if err := platformWorkflow.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
 	if err := platformShutdown.RegisterInformer(operator, recorder, client, kubeInformer); err != nil {
 		panic(err)
 	}
@@ -363,6 +369,10 @@ func (o *Operator) onStartOperatorV2Platform(ctx context.Context, operator opera
 	}
 
 	if err := permissionRoleUserBinding.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+		panic(err)
+	}
+
+	if err := permissionRoleGroupBinding.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
 		panic(err)
 	}
 }

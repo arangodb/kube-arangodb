@@ -19,6 +19,7 @@ import (
 	schedulerPodApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod"
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -136,7 +137,7 @@ func NewIntegrationEnablement(integrations ...Integration) (*schedulerApi.Profil
 	}, nil
 }
 
-func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
+func NewIntegration(name string, spec api.DeploymentSpec, status api.DeploymentStatus, image *schedulerContainerResourcesApi.Image, integration *schedulerIntegrationApi.Sidecar, profiles ...*schedulerApi.ProfileTemplate) (*schedulerApi.ProfileTemplate, error) {
 	// Arguments
 
 	exePath := k8sutil.BinaryPath()
@@ -158,6 +159,11 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 	options.Add("--database.endpoint", k8sutil.ExtendDeploymentClusterDomain(fmt.Sprintf("%s-%s", name, spec.GetMode().ServingGroup().AsRole()), spec.ClusterDomain))
 	options.Addf("--database.port", "%d", shared.ArangoPort)
 	options.Add("--database.proto", util.BoolSwitch(spec.IsSecure(), "https", "http"))
+	if spec.IsAuthenticated() {
+		// Sign the ArangoDB client token locally from the mounted cluster JWT secret (the pre-central
+		// "old mode") instead of minting it via the central authorization CreateToken RPC.
+		options.Add("--database.auth", shared.ClusterJWTSecretVolumeMountDir)
+	}
 	options.Add("--services.gateway.enabled", true)
 
 	// Envs
@@ -187,6 +193,21 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 			Name:  utilConstants.INTEGRATION_HTTP_ADDRESS_FULL.String(),
 			Value: fmt.Sprintf("http://127.0.0.1:%d", integration.GetHTTPListenPort()),
 		},
+	}
+
+	// Expose the deployment authentication/authorization modes to every container covered by the
+	// integration sidecar profile.
+	envs = append(envs, securityModeEnvs(spec, status)...)
+
+	// Sign the integration's client connection to the central authorization service with a local
+	// superuser (server) token from the mounted cluster JWT (the same secret used for --database.auth),
+	// mirroring the serving member's sidecar. Without it the authz pool client falls back to empty
+	// authentication and the central service rejects it with "Unauthorized".
+	if spec.IsAuthenticated() {
+		envs = append(envs, core.EnvVar{
+			Name:  utilConstants.INTEGRATION_ARANGO_JWT_FOLDER.String(),
+			Value: shared.ClusterJWTSecretVolumeMountDir,
+		})
 	}
 
 	c := schedulerContainerApi.Container{
@@ -290,4 +311,35 @@ func NewIntegration(name string, spec api.DeploymentSpec, image *schedulerContai
 	}
 
 	return res, nil
+}
+
+// securityModeEnvs returns env vars describing the deployment's authentication and authorization
+// modes. INTEGRATION_AUTHORIZATION_MODE_COREDB reports RBAC only when the rbac-coredb feature enables
+// core-level enforcement (arangod --server.external-rbac-service); otherwise the ArangoDB core does not
+// enforce RBAC (it is applied by the platform gateway) and it reports None or Native.
+func securityModeEnvs(spec api.DeploymentSpec, status api.DeploymentStatus) []core.EnvVar {
+	authentication := "None"
+	if spec.Gateway != nil && spec.Gateway.Authentication != nil {
+		authentication = "SSO"
+	} else if spec.Authentication.IsAuthenticated() {
+		authentication = "Native"
+	}
+
+	authorization := "None"
+	if status.Conditions.IsTrue(api.ConditionTypeGatewaySidecarEnabled) {
+		authorization = "RBAC"
+	} else if spec.Authentication.IsAuthenticated() {
+		authorization = "Native"
+	}
+
+	authorizationCoreDB := authorization
+	if authorizationCoreDB == "RBAC" && !features.RBACCoreDB().Enabled() {
+		authorizationCoreDB = "Native"
+	}
+
+	return []core.EnvVar{
+		{Name: "INTEGRATION_AUTHENTICATION_MODE", Value: authentication},
+		{Name: "INTEGRATION_AUTHORIZATION_MODE", Value: authorization},
+		{Name: "INTEGRATION_AUTHORIZATION_MODE_COREDB", Value: authorizationCoreDB},
+	}
 }

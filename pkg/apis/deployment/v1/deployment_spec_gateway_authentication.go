@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ func (d *DeploymentSpecGatewayAuthenticationType) Validate() error {
 	}
 
 	switch v := *d; v {
-	case DeploymentSpecGatewayAuthenticationTypeOpenID:
+	case DeploymentSpecGatewayAuthenticationTypeOpenID, DeploymentSpecGatewayAuthenticationTypeALB:
 		return nil
 	default:
 		return errors.Errorf("Invalid AuthenticationType `%s`", v)
@@ -43,11 +43,13 @@ func (d *DeploymentSpecGatewayAuthenticationType) Validate() error {
 
 const (
 	DeploymentSpecGatewayAuthenticationTypeOpenID DeploymentSpecGatewayAuthenticationType = "OpenID"
+	DeploymentSpecGatewayAuthenticationTypeALB    DeploymentSpecGatewayAuthenticationType = "ALB"
 )
 
 type DeploymentSpecGatewayAuthentication struct {
 	// Type defines the Authentication Type
 	// +doc/enum: OpenID|Configure OpenID Authentication Type
+	// +doc/enum: ALB|Trust identity forwarded by an AWS Application Load Balancer that terminates OIDC
 	// +doc/grade: Alpha
 	// +doc/grade: Feature under active development
 	Type DeploymentSpecGatewayAuthenticationType `json:"type"`

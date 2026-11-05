@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,6 +87,41 @@ func (l *localRemoteCache[T]) Remove(ctx context.Context, key string) (bool, err
 	}
 
 	return false, nil
+}
+
+func (l *localRemoteCache[T]) Move(ctx context.Context, from, to, rev string) (cache.MoveResult, error) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+
+	data, ok := l.objects[from]
+	if !ok {
+		return cache.MoveResultSourceNotFound, nil
+	}
+
+	var obj T
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return cache.MoveResultMoved, err
+	}
+
+	if rev != "" && cache.GetRemoteCacheObjectRev(obj) != rev {
+		return cache.MoveResultRevisionConflict, nil
+	}
+
+	if _, ok := l.objects[to]; ok {
+		return cache.MoveResultDestinationExists, nil
+	}
+
+	obj.SetKey(to)
+
+	ndata, err := json.Marshal(obj)
+	if err != nil {
+		return cache.MoveResultMoved, err
+	}
+
+	l.objects[to] = ndata
+	delete(l.objects, from)
+
+	return cache.MoveResultMoved, nil
 }
 
 func (l *localRemoteCache[T]) Invalidate(ctx context.Context, key string) {

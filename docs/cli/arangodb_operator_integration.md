@@ -19,11 +19,12 @@ Available Commands:
   version     Show the version
 
 Flags:
+      --database.auth string                                                                   Path to the JWT secret folder used to sign a local superuser (server) token for the ArangoDB client. When set, the client authenticates locally instead of minting a token via the CreateToken RPC (which is routed to the central authorization service) (Env: DATABASE_AUTH)
       --database.endpoint string                                                               Endpoint of ArangoDB (Env: DATABASE_ENDPOINT) (default "localhost")
       --database.name string                                                                   Database Name (Env: DATABASE_NAME) (default "_system")
       --database.port int                                                                      Port of ArangoDB (Env: DATABASE_PORT) (default 8529)
       --database.proto string                                                                  Proto of the ArangoDB endpoint (Env: DATABASE_PROTO) (default "http")
-      --database.source string                                                                 Database Source Collection (Env: DATABASE_SOURCE) (default "_statistics")
+      --database.source string                                                                 Database Source Collection (Env: DATABASE_SOURCE) (default "_graphs")
       --health.address string                                                                  Address to expose health service (Env: HEALTH_ADDRESS) (default "0.0.0.0:9091")
       --health.auth.token string                                                               Token for health service (when auth service is token) (Env: HEALTH_AUTH_TOKEN)
       --health.auth.type string                                                                Auth type for health service (Env: HEALTH_AUTH_TYPE) (default "None")
@@ -35,7 +36,6 @@ Flags:
       --integration.authentication.v1.external                                                 Defines if External access to service authentication.v1 is enabled (Env: INTEGRATION_AUTHENTICATION_V1_EXTERNAL)
       --integration.authentication.v1.internal                                                 Defines if Internal access to service authentication.v1 is enabled (Env: INTEGRATION_AUTHENTICATION_V1_INTERNAL) (default true)
       --integration.authentication.v1.path string                                              Path to the JWT Folder (Env: INTEGRATION_AUTHENTICATION_V1_PATH)
-      --integration.authentication.v1.token.allowed strings                                    Allowed users for the Token (Env: INTEGRATION_AUTHENTICATION_V1_TOKEN_ALLOWED)
       --integration.authentication.v1.token.max-size uint16                                    Max Token max size in bytes (Env: INTEGRATION_AUTHENTICATION_V1_TOKEN_MAX_SIZE) (default 64)
       --integration.authentication.v1.token.ttl.default duration                               Default Token TTL (Env: INTEGRATION_AUTHENTICATION_V1_TOKEN_TTL_DEFAULT) (default 1h0m0s)
       --integration.authentication.v1.token.ttl.max duration                                   Max Token TTL (Env: INTEGRATION_AUTHENTICATION_V1_TOKEN_TTL_MAX) (default 1h0m0s)
@@ -63,6 +63,9 @@ Flags:
       --integration.envoy.auth.v3.extensions.users.create                                      Defines if UserCreation extension is enabled (Env: INTEGRATION_ENVOY_AUTH_V3_EXTENSIONS_USERS_CREATE)
       --integration.envoy.auth.v3.external                                                     Defines if External access to service envoy.auth.v3 is enabled (Env: INTEGRATION_ENVOY_AUTH_V3_EXTERNAL)
       --integration.envoy.auth.v3.internal                                                     Defines if Internal access to service envoy.auth.v3 is enabled (Env: INTEGRATION_ENVOY_AUTH_V3_INTERNAL) (default true)
+      --integration.envoy.config.v1                                                            Enable EnvoyConfigV1 Integration Service (Env: INTEGRATION_ENVOY_CONFIG_V1)
+      --integration.envoy.config.v1.external                                                   Defines if External access to service envoy.config.v1 is enabled (Env: INTEGRATION_ENVOY_CONFIG_V1_EXTERNAL)
+      --integration.envoy.config.v1.internal                                                   Defines if Internal access to service envoy.config.v1 is enabled (Env: INTEGRATION_ENVOY_CONFIG_V1_INTERNAL) (default true)
       --integration.events.v1                                                                  Enable EventsV1 Integration Service (Env: INTEGRATION_EVENTS_V1)
       --integration.events.v1.async                                                            Enables async injection of the events (Env: INTEGRATION_EVENTS_V1_ASYNC) (default true)
       --integration.events.v1.async.retry.delay duration                                       Delay of the retries (Env: INTEGRATION_EVENTS_V1_ASYNC_RETRY_DELAY) (default 1s)

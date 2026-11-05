@@ -201,6 +201,24 @@ Integration Service HTTP Address with protocol
 
 Example: `http://localhost:1234`
 
+#### INTEGRATION_AUTHENTICATION_MODE
+
+Deployment authentication mode. One of `None` (disabled), `Native` (ArangoDB JWT) or `SSO` (Gateway OpenID).
+
+Example: `Native`
+
+#### INTEGRATION_AUTHORIZATION_MODE
+
+Effective deployment authorization mode. One of `None`, `Native` or `RBAC` (`RBAC` when enforced by the platform gateway).
+
+Example: `Native`
+
+#### INTEGRATION_AUTHORIZATION_MODE_COREDB
+
+Authorization mode enforced by the ArangoDB core. One of `None` or `Native` - RBAC is enforced upstream at the gateway, so it is reported as `Native` here.
+
+Example: `Native`
+
 #### CENTRAL_INTEGRATION_API_ADDRESS
 
 Integration Service API Address via the Serving Sidecar

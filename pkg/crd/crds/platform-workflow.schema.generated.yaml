@@ -1,0 +1,61 @@
+v1beta1:
+  openAPIV3Schema:
+    properties:
+      spec:
+        properties:
+          chart:
+            description: |-
+              Chart keeps the Chart Reference. Optional: when omitted (and the platform-workflow-discovery feature
+              is enabled) the workflow discovers and reflects an existing Helm release in its status instead of
+              installing one.
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          deployment:
+            description: Deployment keeps the Deployment Reference
+            properties:
+              name:
+                description: Name of the object
+                type: string
+            required:
+              - name
+            type: object
+          hibernate:
+            description: |-
+              Hibernate, when true, injects the hibernated flag into the chart values (arangodb_platform.hibernated)
+              so the chart can render its hibernated form.
+            type: boolean
+          install:
+            description: Install keeps the install overrides
+            properties:
+              timeout:
+                description: Timeout defines the install timeout
+                type: string
+            type: object
+          upgrade:
+            description: Upgrade keeps the upgrade overrides
+            properties:
+              maxHistory:
+                description: MaxHistory defines the max history
+                format: int32
+                type: integer
+              timeout:
+                description: Timeout defines the upgrade timeout
+                type: string
+            type: object
+          values:
+            description: Values keeps the values of the Workflow
+            type: object
+            x-kubernetes-preserve-unknown-fields: true
+        required:
+          - deployment
+        type: object
+      status:
+        description: Object with preserved fields for backward compatibility
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    type: object

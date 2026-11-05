@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -181,11 +181,11 @@ func (h *handler) processBackupPolicy(policy *backupApi.ArangoBackupPolicy) back
 				}
 			} else if numRemoved > 0 {
 				eventMsg := fmt.Sprintf("Cleaned up %d old backups due to maxBackups setting %s/%s", numRemoved, deployment.Namespace, deployment.Name)
-				h.eventRecorder.Normal(policy, cleanedUpOldBackups, eventMsg)
+				h.eventRecorder.Normal(policy, cleanedUpOldBackups, "%s", eventMsg)
 			}
 			if !policy.Spec.GetAllowConcurrent() && h.isPreviousBackupInProgress(backups) {
 				eventMsg := fmt.Sprintf("Skipping ArangoBackup creation because earlier backup still running %s/%s", deployment.Namespace, deployment.Name)
-				h.eventRecorder.Normal(policy, scheduleSkipped, eventMsg)
+				h.eventRecorder.Normal(policy, scheduleSkipped, "%s", eventMsg)
 				continue
 			}
 		}

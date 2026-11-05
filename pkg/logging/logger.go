@@ -356,7 +356,7 @@ func (c *chain) TraceIO() LoggerIO {
 	return loggerIO{
 		parent: c,
 		caller: func(l Logger, msg string) {
-			l.Trace(msg)
+			l.Trace("%s", msg)
 		},
 	}
 }
@@ -365,7 +365,7 @@ func (c *chain) DebugIO() LoggerIO {
 	return loggerIO{
 		parent: c,
 		caller: func(l Logger, msg string) {
-			l.Debug(msg)
+			l.Debug("%s", msg)
 		},
 	}
 }
@@ -374,7 +374,7 @@ func (c *chain) InfoIO() LoggerIO {
 	return loggerIO{
 		parent: c,
 		caller: func(l Logger, msg string) {
-			l.Info(msg)
+			l.Info("%s", msg)
 		},
 	}
 }
@@ -383,7 +383,7 @@ func (c *chain) WarnIO() LoggerIO {
 	return loggerIO{
 		parent: c,
 		caller: func(l Logger, msg string) {
-			l.Warn(msg)
+			l.Warn("%s", msg)
 		},
 	}
 }
@@ -392,7 +392,7 @@ func (c *chain) ErrorIO() LoggerIO {
 	return loggerIO{
 		parent: c,
 		caller: func(l Logger, msg string) {
-			l.Error(msg)
+			l.Error("%s", msg)
 		},
 	}
 }
@@ -401,7 +401,7 @@ func (c *chain) FatalIO() LoggerIO {
 	return loggerIO{
 		parent: c,
 		caller: func(l Logger, msg string) {
-			l.Fatal(msg)
+			l.Fatal("%s", msg)
 		},
 	}
 }
@@ -467,7 +467,7 @@ func (c *chain) applyIfNeeded(level Level, msg string, args ...interface{}) {
 		return
 	}
 
-	if c.sampler != nil && !c.sampler.Sample(level, msg, args) {
+	if c.sampler != nil && !c.sampler.Sample(level, msg, args...) {
 		// skip duplicate event
 		return
 	}

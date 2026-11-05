@@ -18,5 +18,5 @@ spec:
       bucketName: "{{ template "platform-storage.releaseName" . }}"
       credentialsSecret:
         name: "{{ template "platform-storage.releaseName" . }}-credentials"
-      endpoint: "http://{{ template "platform-storage.releaseName" . }}.{{ .Release.Namespace }}.svc:9000"
+      endpoint: "http://{{ template "platform-storage.releaseName" . }}.{{ .Release.Namespace }}.svc:{{ ternary 8333 9000 (eq .Values.backend "seaweedfs") }}"
 {{- end }}

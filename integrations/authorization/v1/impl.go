@@ -22,16 +22,20 @@ package v1
 
 import (
 	"context"
+	"fmt"
+	goStrings "strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	pbImplAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1"
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
 	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
+	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -104,7 +108,59 @@ func (i *implementation) Evaluate(ctx context.Context, request *pbAuthorizationV
 		return nil, err
 	}
 
+	if err := i.refreshIfRequested(ctx); err != nil {
+		return nil, err
+	}
+
 	return i.plugin.Evaluate(ctx, request)
+}
+
+// refreshIfRequested re-pulls the authorization pools from the store before evaluating when the caller
+// set the definition.RefreshHeader request metadata to "true". It gives a caller that just changed RBAC
+// state read-your-writes consistency even when the evaluation is served by a different (still-streaming)
+// sidecar. All Evaluate* entry points funnel through Evaluate, so hooking it here covers them. A refresh
+// error is surfaced so the caller retries rather than silently evaluating against a stale cache.
+func (i *implementation) refreshIfRequested(ctx context.Context) error {
+	if !authorizationRefreshRequested(ctx) {
+		return nil
+	}
+
+	if err := i.plugin.Refresh(ctx); err != nil {
+		return status.Error(codes.Internal, err.Error())
+	}
+
+	return nil
+}
+
+// authorizationRefreshRequested reports whether the incoming gRPC metadata carries
+// definition.RefreshHeader set to "true".
+func authorizationRefreshRequested(ctx context.Context) bool {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return false
+	}
+
+	for _, v := range md.Get(pbAuthorizationV1.RefreshHeader) {
+		if goStrings.EqualFold(goStrings.TrimSpace(v), "true") {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Refresh forces the authorization cache to re-pull its state from the pool service so a
+// just-written policy/role/binding is visible immediately. Plugins without a backing cache no-op.
+func (i *implementation) Refresh(ctx context.Context, _ *pbSharedV1.Empty) (*pbSharedV1.Empty, error) {
+	if err := i.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := i.plugin.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pbSharedV1.Empty{}, nil
 }
 
 func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizationV1.AuthorizationV1PermissionManyRequest) (*pbAuthorizationV1.AuthorizationV1PermissionManyResponse, error) {
@@ -134,6 +190,17 @@ func (i *implementation) EvaluateMany(ctx context.Context, request *pbAuthorizat
 		}
 
 		r[id] = resp
+
+		// Debug tracing: the exact evaluation input (user/roles + action/resource as sent by the caller,
+		// e.g. arangod external RBAC) and the resulting effect, to pin down authorization mismatches.
+		logger.
+			Str("user", request.GetUser()).
+			Strs("roles", request.GetRoles()...).
+			Str("action", v.GetAction()).
+			Str("resource", v.GetResource()).
+			Str("effect", resp.GetEffect().String()).
+			Str("message", resp.GetMessage()).
+			Debug("AUTHZ-EVAL-DIAG evaluate item")
 	}
 
 	for _, v := range r {
@@ -186,23 +253,60 @@ func (i *implementation) EvaluateTokenMany(ctx context.Context, request *pbAutho
 		return nil, err
 	}
 
+	// Debug tracing: the token-validation path of EvaluateTokenMany. arangod's external RBAC fail-closes
+	// any error here into "API version forbidden", so a validation failure looks identical to an
+	// authorization denial - these traces distinguish the two.
+	logger.Int("token_len", len(request.GetToken())).Int("items", len(request.GetItems())).Debug("AUTHZ-EVAL-DIAG EvaluateTokenMany entry")
+
 	auth, err := i.auth.Get(ctx)
 	if err != nil {
+		logger.Err(err).Debug("AUTHZ-EVAL-DIAG auth plugin not available")
 		return nil, status.Errorf(codes.FailedPrecondition, "Authentication V1 Plugin not enabled: %v", err)
 	}
 
 	resp, err := auth.Validate(ctx, &pbAuthenticationV1.ValidateRequest{Token: request.GetToken()})
 	if err != nil {
+		logger.Err(err).Debug("AUTHZ-EVAL-DIAG token Validate returned error")
 		return nil, status.Errorf(codes.FailedPrecondition, "Unable to validate the token: %v", err)
 	}
 
 	if !resp.GetIsValid() {
+		logger.Str("message", resp.GetMessage()).Debug("AUTHZ-EVAL-DIAG token reported invalid")
 		return nil, status.Errorf(codes.FailedPrecondition, "JWT Token is invalid")
 	}
 
-	return i.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
-		User:  util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User),
-		Roles: resp.GetDetails().GetGroups(),
+	user := util.BoolSwitch(resp.GetDetails() == nil, nil, resp.GetDetails().User)
+	roles := resp.GetDetails().GetGroups()
+
+	// Debug tracing: the whole request (resolved identity + every action/resource item arangod asks
+	// about) so we can see exactly what is being evaluated.
+	for id, it := range request.GetItems() {
+		logger.
+			Str("user", util.TypeOrDefault(user)).
+			Strs("roles", roles...).
+			Int("item", id).
+			Str("action", it.GetAction()).
+			Str("resource", it.GetResource()).
+			Interface("context", it.GetContext()).
+			Debug("AUTHZ-EVAL-DIAG request item")
+	}
+
+	out, err := i.EvaluateMany(ctx, &pbAuthorizationV1.AuthorizationV1PermissionManyRequest{
+		User:  user,
+		Roles: roles,
 		Items: request.GetItems(),
 	})
+	if err != nil {
+		logger.Err(err).Debug("AUTHZ-EVAL-DIAG EvaluateMany returned error")
+		return out, err
+	}
+
+	// Debug tracing: the whole response (overall effect + per-item effect/message).
+	l := logger.Str("user", util.TypeOrDefault(user)).Str("effect", out.GetEffect().String()).Str("message", out.GetMessage())
+	for id, it := range out.GetItems() {
+		l = l.Str(fmt.Sprintf("item_%d_effect", id), it.GetEffect().String()).Str(fmt.Sprintf("item_%d_message", id), it.GetMessage())
+	}
+	l.Debug("AUTHZ-EVAL-DIAG response")
+
+	return out, nil
 }

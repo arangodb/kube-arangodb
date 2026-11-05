@@ -26,8 +26,8 @@ import (
 	goHttp "net/http"
 	"testing"
 
-	dto "github.com/prometheus/client_model/go"
-	"github.com/prometheus/prom2json"
+	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/api/server"
@@ -59,17 +59,9 @@ func Test_Metrics(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	mfChan := make(chan *dto.MetricFamily, 2048)
-
-	go func() {
-		if err := prom2json.ParseReader(resp.Body, mfChan); err != nil {
-			require.NoError(t, err)
-		}
-	}()
-
-	for mf := range mfChan {
-		prom2json.NewFamily(mf)
-	}
+	parser := expfmt.NewTextParser(model.UTF8Validation)
+	_, err = parser.TextToMetricFamilies(resp.Body)
+	require.NoError(t, err)
 }
 
 func Test_Health(t *testing.T) {

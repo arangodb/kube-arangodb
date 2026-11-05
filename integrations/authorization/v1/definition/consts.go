@@ -22,4 +22,11 @@ package definition
 
 const (
 	Name = "authorization.v1"
+
+	// RefreshHeader, when set to "true" as gRPC request metadata on an Evaluate/EvaluateMany/
+	// EvaluateToken/EvaluateTokenMany call, forces the authorization service to re-pull its RBAC pools
+	// (policies, roles and user/group role bindings) from the store before evaluating. It trades a little
+	// latency for read-your-writes consistency and is intended for callers that just changed RBAC state
+	// and must not observe a stale, still-streaming cache (e.g. a different coordinator's sidecar).
+	RefreshHeader = "x-arangodb-authorization-refresh"
 )

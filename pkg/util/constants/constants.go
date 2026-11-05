@@ -27,8 +27,18 @@ const (
 	EnvOperatorNodeNameArango = "NODE_NAME"
 	EnvOperatorPodName        = "MY_POD_NAME"
 	EnvOperatorPodNamespace   = "MY_POD_NAMESPACE"
+	EnvOperatorPodUID         = "MY_POD_UID"
 	EnvOperatorCoreContainer  = "MY_POD_CORE_CONTAINER"
 	EnvOperatorPodIP          = "MY_POD_IP"
+
+	EnvOperatorCPURequests    = "MY_CPU_REQUESTS"    // Container CPU request in millicores (downward API)
+	EnvOperatorCPULimits      = "MY_CPU_LIMITS"      // Container CPU limit in millicores (downward API)
+	EnvOperatorMemoryRequests = "MY_MEMORY_REQUESTS" // Container memory request in MiB (downward API)
+	EnvOperatorMemoryLimits   = "MY_MEMORY_LIMITS"   // Container memory limit in MiB (downward API)
+
+	// EnvArangoDBOverrideMemberID carries the arangod member id (== the cluster server id) into the
+	// ArangoDB container so the collector can tag its startup events without a connection.
+	EnvArangoDBOverrideMemberID = "ARANGODB_OVERRIDE_MEMBER_ID"
 
 	EnvOperatorNodeNameEnv       util.EnvironmentVariable = EnvOperatorNodeName
 	EnvOperatorNodeNameArangoEnv util.EnvironmentVariable = EnvOperatorNodeNameArango
@@ -74,6 +84,7 @@ const (
 	FinalizerPodGracefulShutdown       = "database.arangodb.com/graceful-shutdown"       // Finalizer added to All members, indicating the need for graceful shutdown
 	FinalizerPVCMemberExists           = "pvc.database.arangodb.com/member-exists"       // Finalizer added to PVCs, indicating the need to keep is as long as its member exists
 	FinalizerDelayPodTermination       = "pod.database.arangodb.com/delay"               // Finalizer added to Pod, delays termination
+	FinalizerPodGatewayTLSKeyfile      = "gateway.database.arangodb.com/tls-keyfile"     // Finalizer added to Gateway Pods, ensures the member TLS keyfile secret is removed when the member is removed
 
 	AnnotationShutdownManagedContainer      = "shutdown.arangodb.com/managed"
 	AnnotationShutdownContainer             = "container.shutdown.arangodb.com"
@@ -106,5 +117,6 @@ func ManagedFinalizers() []string {
 		FinalizerPodGracefulShutdown,
 		FinalizerPVCMemberExists,
 		FinalizerDelayPodTermination,
+		FinalizerPodGatewayTLSKeyfile,
 	}
 }

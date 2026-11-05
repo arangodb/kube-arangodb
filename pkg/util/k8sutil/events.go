@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
 
@@ -238,7 +239,7 @@ func NewUpgradeNotAllowedEvent(apiObject APIObject, from, to api.ImageInfo) *Eve
 	event := newDeploymentEvent(apiObject)
 	event.Type = core.EventTypeNormal
 	var verb string
-	if from.ArangoDBVersion.CompareTo(to.ArangoDBVersion) < 0 {
+	if util.Version(from.ArangoDBVersion).CompareTo(util.Version(to.ArangoDBVersion)) < 0 {
 		event.Reason = "Upgrade not allowed"
 		verb = "Upgrading"
 	} else {

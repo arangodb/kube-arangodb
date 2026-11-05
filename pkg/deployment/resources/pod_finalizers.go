@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,6 +85,24 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 				log.Debug("Server Container is dead, removing finalizer")
 				removalList = append(removalList, f)
 			}
+		case utilConstants.FinalizerPodGatewayTLSKeyfile:
+			// Cleanup marker for the gateway member TLS keyfile secret. The secret is
+			// owner-referenced to the ArangoMember and garbage-collected on member removal; this
+			// finalizer only adds a prompt best-effort cleanup on a genuine teardown.
+			//
+			// The gateway container's preStop hook waits for the pod's finalizers to be removed, so
+			// this finalizer MUST NOT wait for the server container to stop: that would deadlock
+			// (preStop waits for the finalizer, the finalizer waits for the container). It is
+			// therefore released as soon as the pod is being deleted - never gated on
+			// isServerContainerDead - so it never blocks a restart. It is kept while the pod is not
+			// terminating so it is present for the eventual teardown.
+			if p.ObjectMeta.DeletionTimestamp == nil {
+				continue
+			}
+			if err := r.inspectFinalizerPodGatewayTLSKeyfile(ctx, memberStatus); err != nil {
+				log.Err(err).Str("finalizer", f).Debug("Failed to clean up gateway TLS keyfile secret, releasing finalizer anyway")
+			}
+			removalList = append(removalList, f)
 		case utilConstants.FinalizerDelayPodTermination:
 			if isServerContainerDead {
 				log.Debug("Server Container is dead, removing finalizer")
@@ -125,6 +143,34 @@ func (r *Resources) runPodFinalizers(ctx context.Context, p *core.Pod, memberSta
 	}
 	// Check again at given interval
 	return recheckPodFinalizerInterval, nil
+}
+
+// inspectFinalizerPodGatewayTLSKeyfile performs a best-effort, prompt removal of the gateway
+// member's TLS keyfile secret. The secret is owner-referenced to the ArangoMember and is
+// garbage-collected once the member is removed, so this is only an optimization: it acts only when
+// the member is marked to be removed (a genuine teardown), never on a rolling restart where the
+// member and its keyfile must survive. It returns nil so the finalizer can always be released.
+func (r *Resources) inspectFinalizerPodGatewayTLSKeyfile(ctx context.Context, memberStatus api.MemberStatus) error {
+	if !memberStatus.Conditions.IsTrue(api.ConditionTypeMarkedToRemove) {
+		// Not a teardown (e.g. a rolling restart) - keep the keyfile secret.
+		return nil
+	}
+
+	_, group, ok := r.context.GetStatus().Members.ElementByID(memberStatus.ID)
+	if !ok {
+		return nil
+	}
+
+	secretName := k8sutil.AppendTLSKeyfileSecretPostfix(memberStatus.ArangoMemberName(r.context.GetAPIObject().GetName(), group))
+
+	err := globals.GetGlobalTimeouts().Kubernetes().RunWithTimeout(ctx, func(ctxChild context.Context) error {
+		return r.context.ACS().CurrentClusterCache().SecretsModInterface().V1().Delete(ctxChild, secretName, meta.DeleteOptions{})
+	})
+	if err != nil && !kerrors.IsNotFound(err) {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
 
 // inspectFinalizerPodAgencyServing checks the finalizer condition for agency-serving.

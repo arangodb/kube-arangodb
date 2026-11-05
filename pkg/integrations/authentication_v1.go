@@ -51,7 +51,6 @@ func (a *authenticationV1) Register(cmd *cobra.Command, fs FlagEnvHandler) error
 		fs.DurationVar(&a.config.Create.MinTTL, "token.ttl.min", pbImplAuthenticationV1.DefaultTokenMinTTL, "Min Token TTL"),
 		fs.DurationVar(&a.config.Create.MaxTTL, "token.ttl.max", pbImplAuthenticationV1.DefaultTokenMaxTTL, "Max Token TTL"),
 		fs.Uint16Var(&a.config.Create.MaxSize, "token.max-size", pbImplAuthenticationV1.DefaultMaxTokenSize, "Max Token max size in bytes"),
-		fs.StringSliceVar(&a.config.Create.AllowedUsers, "token.allowed", []string{}, "Allowed users for the Token"),
 	)
 }
 

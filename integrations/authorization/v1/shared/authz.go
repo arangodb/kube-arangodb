@@ -36,6 +36,11 @@ type Plugin interface {
 	Ready(ctx context.Context) error
 
 	Revision() uint64
+
+	// Refresh forces the plugin to re-pull its authorization state from the source, so a
+	// just-written policy/role/binding becomes visible without waiting for the next streamed update.
+	// Plugins without a backing cache (always/never) are a no-op.
+	Refresh(ctx context.Context) error
 }
 
 type PluginFunc func(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error)
@@ -49,3 +54,5 @@ func (p PluginFunc) Evaluate(ctx context.Context, req *pbAuthorizationV1.Authori
 }
 
 func (p PluginFunc) Ready(ctx context.Context) error { return nil }
+
+func (p PluginFunc) Refresh(ctx context.Context) error { return nil }

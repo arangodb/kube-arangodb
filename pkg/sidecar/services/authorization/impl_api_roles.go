@@ -41,6 +41,10 @@ func (a *implementation) APIListRole(ctx context.Context, request *pbSharedV1.Of
 		return nil, err
 	}
 
+	if err := a.roles.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	page, items := pbSharedV1.Paginate(request, a.roles.Items())
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIListResponse{
@@ -56,6 +60,10 @@ func (a *implementation) APIGetRole(ctx context.Context, request *sidecarSvcAuth
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:GetRole", request.GetName()); err != nil {
 		return nil, err
+	}
+
+	if err := a.roles.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	role, index, ok := a.roles.Item(request.GetName())
@@ -152,6 +160,10 @@ func (a *implementation) APIUpdateRole(ctx context.Context, request *sidecarSvcA
 
 	if item := request.GetItem(); item == nil {
 		return nil, status.Error(codes.InvalidArgument, "Item cannot be empty")
+	}
+
+	if err := a.roles.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	identity := authenticator.GetIdentity(ctx)

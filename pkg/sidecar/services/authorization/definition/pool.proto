@@ -51,6 +51,12 @@ service AuthorizationPoolService {
 
   // Gets Current UserRoleBinding setup.
   rpc GetUserRoleBinding(shared.Empty) returns (stream AuthorizationPoolUserRoleBindingResponse);
+
+  // Pools group role binding changes from the API.
+  rpc PoolGroupRoleBindingChanges(AuthorizationPoolRequest) returns (stream AuthorizationPoolGroupRoleBindingResponse);
+
+  // Gets Current GroupRoleBinding setup.
+  rpc GetGroupRoleBinding(shared.Empty) returns (stream AuthorizationPoolGroupRoleBindingResponse);
 }
 
 // AuthorizationPoolService Policy Response
@@ -112,5 +118,23 @@ message AuthorizationPoolUserRoleBindingResponseItem {
   uint32 index = 2;
 
   // UserRoleBinding Content
+  types.UserRoleBinding item = 3;
+}
+
+// AuthorizationPoolService GroupRoleBinding Response
+message AuthorizationPoolGroupRoleBindingResponse {
+  // List of the GroupRoleBinding Response Items
+  repeated AuthorizationPoolGroupRoleBindingResponseItem items = 1;
+}
+
+// AuthorizationPoolService GroupRoleBinding Response Item
+message AuthorizationPoolGroupRoleBindingResponseItem {
+  // Name (key) of the binding
+  string name = 1;
+
+  // Index of the binding
+  uint32 index = 2;
+
+  // GroupRoleBinding Content (reuses the UserRoleBinding shape: role + scope)
   types.UserRoleBinding item = 3;
 }

@@ -213,6 +213,22 @@ func (d *Deployment) GetAuthentication(ctx context.Context) (adbDriverV2Connecti
 	return d.clientCache.GetAuth(ctx)
 }
 
+// GetMembersToken returns a signed superuser (server) JWT for authenticating gRPC calls to member
+// sidecars, or an empty string when the deployment is not authenticated. It mirrors the header used by
+// GetAuthentication.
+func (d *Deployment) GetMembersToken(_ context.Context) (string, error) {
+	if !d.GetSpec().Authentication.IsAuthenticated() {
+		return "", nil
+	}
+
+	token, err := d.getJWTSecret()
+	if err != nil {
+		return "", err
+	}
+
+	return token.Sign(utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb")))
+}
+
 func (d *Deployment) getAuth() (adbDriverV2Connection.Authentication, error) {
 	if !d.GetSpec().Authentication.IsAuthenticated() {
 		return nil, nil
@@ -222,13 +238,7 @@ func (d *Deployment) getAuth() (adbDriverV2Connection.Authentication, error) {
 		return nil, errors.Errorf("Cache is not yet started")
 	}
 
-	// Check if we can find token in folder
-	token, err := d.getJWTSecret()
-	if err != nil {
-		return nil, err
-	}
-
-	header, err := token.Sign(utilToken.NewClaims().With(utilToken.WithDefaultClaims(), utilToken.WithServerID("kube-arangodb")))
+	header, err := d.GetMembersToken(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +247,7 @@ func (d *Deployment) getAuth() (adbDriverV2Connection.Authentication, error) {
 }
 
 func (d *Deployment) getJWTSecret() (utilToken.Secret, error) {
-	if i := d.currentObject.Status.CurrentImage; i == nil || features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if i := d.currentObject.Status.CurrentImage; i == nil || features.JWTRotation().ImageSupported(i) {
 		ctx, c := globals.GetGlobalTimeouts().Kubernetes().WithTimeout(shutdown.Context())
 		defer c()
 

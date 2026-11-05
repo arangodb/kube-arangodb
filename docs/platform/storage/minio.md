@@ -12,10 +12,11 @@ In order to connect to the MinIO, or any other S3 Compatible storage in the Aran
 
 ## Provided Helm Chart
 
-In order to create Storage Integration provided MinIO Chart can be used:
+The [`platform-storage`](../../../chart/platform-storage/README.md) chart deploys MinIO and the
+`ArangoPlatformStorage` in one step:
 
-```yaml
-helm- upgrade -i platform-storage-integration ./chart/platform-storage/ --set deployment.name=<ArangoDeployment Name>
+```sh
+helm upgrade -i platform-storage-integration ./chart/platform-storage/ --set deployment.name=<ArangoDeployment Name>
 ```
 
 ## Generic

@@ -28,8 +28,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
-
 	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
@@ -76,11 +74,30 @@ func Iterate(iterator Iterator) {
 // Init initializes all registered features.
 // If a feature is not provided via process's argument, then it is taken from environment variable
 // or from enabled by default setting.
+// Init registers the full feature tooling on cmd: the `features` describe subcommand, the
+// `--deployment.feature.*` flags (seeded from the environment), and the features ConfigMap flag.
+// Use it for the main operator command. A command that only needs to honor the feature gates (e.g. an
+// integration/sidecar process) should use BindFlags instead, so the shared `features` subcommand is not
+// re-parented onto it.
 func Init(cmd *cobra.Command) error {
+	cmd.AddCommand(internalCMD)
+
+	if err := BindFlags(cmd); err != nil {
+		return err
+	}
+
+	cmd.Flags().StringVar(&configMapName, "features-config-map-name", DefaultFeaturesConfigMap, "Name of the Feature Map ConfigMap")
+
+	return nil
+}
+
+// BindFlags binds the operator feature-gate flags (`--deployment.feature.*`, plus `.all`) to cmd and
+// seeds their defaults from the environment, WITHOUT registering the `features` describe subcommand or
+// the features ConfigMap flag. This lets a process (e.g. a sidecar) read the gates without mutating the
+// shared `internalCMD` (which Init's AddCommand would re-parent).
+func BindFlags(cmd *cobra.Command) error {
 	featuresLock.Lock()
 	defer featuresLock.Unlock()
-
-	cmd.AddCommand(internalCMD)
 
 	f := cmd.Flags()
 
@@ -90,16 +107,7 @@ func Init(cmd *cobra.Command) error {
 	for _, feature := range features {
 		z := ""
 
-		minVersion, maxVersion := feature.Version()
-
-		if minVersion == "" {
-			minVersion = MinSupportedArangoDBVersion
-		}
-
-		versionDesc := fmt.Sprintf(">= %s", minVersion)
-		if maxVersion != NoVersionLimit {
-			versionDesc = fmt.Sprintf(">= %s, < %s", minVersion, maxVersion)
-		}
+		versionDesc := string(withMinimumSupportedVersion(feature.Version()))
 
 		if feature.EnterpriseRequired() {
 			z = fmt.Sprintf("%s - Required ArangoDB EE %s", feature.Description(), versionDesc)
@@ -124,8 +132,6 @@ func Init(cmd *cobra.Command) error {
 		}
 	}
 
-	f.StringVar(&configMapName, "features-config-map-name", DefaultFeaturesConfigMap, "Name of the Feature Map ConfigMap")
-
 	return nil
 }
 
@@ -148,12 +154,8 @@ func cmdRun(_ *cobra.Command, _ []string) {
 		} else {
 			println("Enabled: false")
 		}
-		if min, max := feature.Version(); min != NoVersionLimit && max != NoVersionLimit {
-			println(fmt.Sprintf("ArangoDB Version Required: >= %s, <= %s", min, max))
-		} else if min != NoVersionLimit {
-			println(fmt.Sprintf("ArangoDB Version Required: >= %s", min))
-		} else if max != NoVersionLimit {
-			println(fmt.Sprintf("ArangoDB Version Required: <= %s", max))
+		if c := withMinimumSupportedVersion(feature.Version()); c != "" {
+			println(fmt.Sprintf("ArangoDB Version Required: %s", c))
 		}
 
 		if feature.EnterpriseRequired() {
@@ -179,7 +181,7 @@ func cmdRun(_ *cobra.Command, _ []string) {
 // - any feature dependency is disabled.
 // - a given version is lower than minimum feature version.
 // - feature expects enterprise but a given enterprise arg is not true.
-func Supported(f Feature, v adbDriverV2.Version, enterprise bool) bool {
+func Supported(f Feature, v util.Version, enterprise bool) bool {
 	if !f.Enabled() {
 		return false
 	}
@@ -195,17 +197,8 @@ func Supported(f Feature, v adbDriverV2.Version, enterprise bool) bool {
 		}
 	}
 
-	min, max := f.Version()
-	if min != NoVersionLimit {
-		if v.CompareTo(min) < 0 {
-			return false
-		}
-	}
-
-	if max != NoVersionLimit {
-		if v.CompareTo(max) >= 0 {
-			return false
-		}
+	if ok, err := f.Version().Validate(v); err != nil || !ok {
+		return false
 	}
 
 	return true

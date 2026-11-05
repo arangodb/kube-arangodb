@@ -45,6 +45,10 @@ service MetaV1 {
   // Delete deletes the object from the Meta Store
   rpc Delete (ObjectRequest) returns (shared.Empty);
 
+  // Move atomically renames an object from one key to another within a transaction.
+  // Optionally, will check Revision of the source object for the conflict management
+  rpc Move (MoveRequest) returns (ObjectResponse);
+
   // List lists the object from the Meta Store
   rpc List (ListRequest) returns (stream ListResponseChunk);
 }
@@ -80,6 +84,18 @@ message SetRequest {
 
   // Secret defines secret for the object encryption
   optional ObjectSecret secret = 5;
+}
+
+// MoveRequest defines request for MetaV1 Object Move Request
+message MoveRequest {
+  // Source defines the source Object Key (optionally, prefixed with global prefix)
+  string source = 1;
+
+  // Destination defines the destination Object Key (optionally, prefixed with global prefix)
+  string destination = 2;
+
+  // Revision defines the source object revision. When set, precondition is verified on the Meta Store level
+  optional string revision = 3;
 }
 
 // ObjectResponse defines response for MetaV1 Object Meta

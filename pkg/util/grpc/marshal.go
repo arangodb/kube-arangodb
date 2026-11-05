@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -89,4 +89,13 @@ func UnmarshalFile[T proto.Message](path string, opts ...util.Mod[protojson.Unma
 	}
 
 	return Unmarshal[T](data, opts...)
+}
+
+func UnmarshalYAML[T proto.Message](data []byte, opts ...util.Mod[protojson.UnmarshalOptions]) (T, error) {
+	j, err := yaml.YAMLToJSON(data)
+	if err != nil {
+		return util.Default[T](), err
+	}
+
+	return Unmarshal[T](j, opts...)
 }

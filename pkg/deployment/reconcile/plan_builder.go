@@ -36,6 +36,7 @@ const (
 	LicenseCheck             api.BackOffKey = "license"
 	TimezoneCheck            api.BackOffKey = "timezone"
 	SyncRBACPermissionsCheck api.BackOffKey = "syncRBACPermissions"
+	GatewayConfigPushCheck   api.BackOffKey = "gatewayConfigPush"
 )
 
 // CreatePlan considers the current specification & status of the deployment creates a plan to

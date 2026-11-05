@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ func init() {
 var activeFailover = &feature{
 	name:               "active-failover",
 	description:        "Support for ActiveFailover mode",
-	version:            newFeatureVersion("", "3.12"),
+	version:            "< 3.12",
 	enterpriseRequired: false,
 	enabledByDefault:   true,
 }
@@ -36,7 +36,7 @@ var activeFailover = &feature{
 var failoverLeadership = &feature{
 	name:               "failover-leadership",
 	description:        "Support for leadership in fail-over mode",
-	version:            newFeatureVersion("", "3.12"),
+	version:            "< 3.12",
 	enterpriseRequired: false,
 	enabledByDefault:   false,
 }

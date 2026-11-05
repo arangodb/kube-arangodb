@@ -40,22 +40,26 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthorizationAPI_ValidateSelfPermission_FullMethodName  = "/service.AuthorizationAPI/ValidateSelfPermission"
-	AuthorizationAPI_APIListPolicy_FullMethodName           = "/service.AuthorizationAPI/APIListPolicy"
-	AuthorizationAPI_APIGetPolicy_FullMethodName            = "/service.AuthorizationAPI/APIGetPolicy"
-	AuthorizationAPI_APIDeletePolicy_FullMethodName         = "/service.AuthorizationAPI/APIDeletePolicy"
-	AuthorizationAPI_APICreatePolicy_FullMethodName         = "/service.AuthorizationAPI/APICreatePolicy"
-	AuthorizationAPI_APIUpdatePolicy_FullMethodName         = "/service.AuthorizationAPI/APIUpdatePolicy"
-	AuthorizationAPI_APIListRole_FullMethodName             = "/service.AuthorizationAPI/APIListRole"
-	AuthorizationAPI_APIGetRole_FullMethodName              = "/service.AuthorizationAPI/APIGetRole"
-	AuthorizationAPI_APIDeleteRole_FullMethodName           = "/service.AuthorizationAPI/APIDeleteRole"
-	AuthorizationAPI_APICreateRole_FullMethodName           = "/service.AuthorizationAPI/APICreateRole"
-	AuthorizationAPI_APIUpdateRole_FullMethodName           = "/service.AuthorizationAPI/APIUpdateRole"
-	AuthorizationAPI_APIListUserRoleBindings_FullMethodName = "/service.AuthorizationAPI/APIListUserRoleBindings"
-	AuthorizationAPI_APIAssignUserRole_FullMethodName       = "/service.AuthorizationAPI/APIAssignUserRole"
-	AuthorizationAPI_APIRemoveUserRole_FullMethodName       = "/service.AuthorizationAPI/APIRemoveUserRole"
-	AuthorizationAPI_APIReplaceUserRoleScope_FullMethodName = "/service.AuthorizationAPI/APIReplaceUserRoleScope"
-	AuthorizationAPI_APIRefresh_FullMethodName              = "/service.AuthorizationAPI/APIRefresh"
+	AuthorizationAPI_ValidateSelfPermission_FullMethodName   = "/service.AuthorizationAPI/ValidateSelfPermission"
+	AuthorizationAPI_APIListPolicy_FullMethodName            = "/service.AuthorizationAPI/APIListPolicy"
+	AuthorizationAPI_APIGetPolicy_FullMethodName             = "/service.AuthorizationAPI/APIGetPolicy"
+	AuthorizationAPI_APIDeletePolicy_FullMethodName          = "/service.AuthorizationAPI/APIDeletePolicy"
+	AuthorizationAPI_APICreatePolicy_FullMethodName          = "/service.AuthorizationAPI/APICreatePolicy"
+	AuthorizationAPI_APIUpdatePolicy_FullMethodName          = "/service.AuthorizationAPI/APIUpdatePolicy"
+	AuthorizationAPI_APIListRole_FullMethodName              = "/service.AuthorizationAPI/APIListRole"
+	AuthorizationAPI_APIGetRole_FullMethodName               = "/service.AuthorizationAPI/APIGetRole"
+	AuthorizationAPI_APIDeleteRole_FullMethodName            = "/service.AuthorizationAPI/APIDeleteRole"
+	AuthorizationAPI_APICreateRole_FullMethodName            = "/service.AuthorizationAPI/APICreateRole"
+	AuthorizationAPI_APIUpdateRole_FullMethodName            = "/service.AuthorizationAPI/APIUpdateRole"
+	AuthorizationAPI_APIListUserRoleBindings_FullMethodName  = "/service.AuthorizationAPI/APIListUserRoleBindings"
+	AuthorizationAPI_APIAssignUserRole_FullMethodName        = "/service.AuthorizationAPI/APIAssignUserRole"
+	AuthorizationAPI_APIRemoveUserRole_FullMethodName        = "/service.AuthorizationAPI/APIRemoveUserRole"
+	AuthorizationAPI_APIReplaceUserRoleScope_FullMethodName  = "/service.AuthorizationAPI/APIReplaceUserRoleScope"
+	AuthorizationAPI_APIListGroupRoleBindings_FullMethodName = "/service.AuthorizationAPI/APIListGroupRoleBindings"
+	AuthorizationAPI_APIAssignGroupRole_FullMethodName       = "/service.AuthorizationAPI/APIAssignGroupRole"
+	AuthorizationAPI_APIRemoveGroupRole_FullMethodName       = "/service.AuthorizationAPI/APIRemoveGroupRole"
+	AuthorizationAPI_APIReplaceGroupRoleScope_FullMethodName = "/service.AuthorizationAPI/APIReplaceGroupRoleScope"
+	AuthorizationAPI_APIRefresh_FullMethodName               = "/service.AuthorizationAPI/APIRefresh"
 )
 
 // AuthorizationAPIClient is the client API for AuthorizationAPI service.
@@ -94,6 +98,14 @@ type AuthorizationAPIClient interface {
 	APIRemoveUserRole(ctx context.Context, in *AuthorizationAPIUserRoleRequest, opts ...grpc.CallOption) (*AuthorizationAPIUserRoleBindingResponse, error)
 	// Replace the scope for a role binding of a user
 	APIReplaceUserRoleScope(ctx context.Context, in *AuthorizationAPIUserRoleBindingRequest, opts ...grpc.CallOption) (*AuthorizationAPIUserRoleBindingResponse, error)
+	// List all role bindings for a group
+	APIListGroupRoleBindings(ctx context.Context, in *AuthorizationAPIGroupRequest, opts ...grpc.CallOption) (*AuthorizationAPIGroupRoleBindingListResponse, error)
+	// Assign a role with scope to a group
+	APIAssignGroupRole(ctx context.Context, in *AuthorizationAPIGroupRoleBindingRequest, opts ...grpc.CallOption) (*AuthorizationAPIGroupRoleBindingResponse, error)
+	// Remove a role from a group
+	APIRemoveGroupRole(ctx context.Context, in *AuthorizationAPIGroupRoleRequest, opts ...grpc.CallOption) (*AuthorizationAPIGroupRoleBindingResponse, error)
+	// Replace the scope for a role binding of a group
+	APIReplaceGroupRoleScope(ctx context.Context, in *AuthorizationAPIGroupRoleBindingRequest, opts ...grpc.CallOption) (*AuthorizationAPIGroupRoleBindingResponse, error)
 	// Refresh all poolers and return once completed
 	APIRefresh(ctx context.Context, in *AuthorizationAPIRefreshRequest, opts ...grpc.CallOption) (*AuthorizationAPIRefreshResponse, error)
 }
@@ -256,6 +268,46 @@ func (c *authorizationAPIClient) APIReplaceUserRoleScope(ctx context.Context, in
 	return out, nil
 }
 
+func (c *authorizationAPIClient) APIListGroupRoleBindings(ctx context.Context, in *AuthorizationAPIGroupRequest, opts ...grpc.CallOption) (*AuthorizationAPIGroupRoleBindingListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthorizationAPIGroupRoleBindingListResponse)
+	err := c.cc.Invoke(ctx, AuthorizationAPI_APIListGroupRoleBindings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authorizationAPIClient) APIAssignGroupRole(ctx context.Context, in *AuthorizationAPIGroupRoleBindingRequest, opts ...grpc.CallOption) (*AuthorizationAPIGroupRoleBindingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthorizationAPIGroupRoleBindingResponse)
+	err := c.cc.Invoke(ctx, AuthorizationAPI_APIAssignGroupRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authorizationAPIClient) APIRemoveGroupRole(ctx context.Context, in *AuthorizationAPIGroupRoleRequest, opts ...grpc.CallOption) (*AuthorizationAPIGroupRoleBindingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthorizationAPIGroupRoleBindingResponse)
+	err := c.cc.Invoke(ctx, AuthorizationAPI_APIRemoveGroupRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authorizationAPIClient) APIReplaceGroupRoleScope(ctx context.Context, in *AuthorizationAPIGroupRoleBindingRequest, opts ...grpc.CallOption) (*AuthorizationAPIGroupRoleBindingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AuthorizationAPIGroupRoleBindingResponse)
+	err := c.cc.Invoke(ctx, AuthorizationAPI_APIReplaceGroupRoleScope_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authorizationAPIClient) APIRefresh(ctx context.Context, in *AuthorizationAPIRefreshRequest, opts ...grpc.CallOption) (*AuthorizationAPIRefreshResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AuthorizationAPIRefreshResponse)
@@ -302,6 +354,14 @@ type AuthorizationAPIServer interface {
 	APIRemoveUserRole(context.Context, *AuthorizationAPIUserRoleRequest) (*AuthorizationAPIUserRoleBindingResponse, error)
 	// Replace the scope for a role binding of a user
 	APIReplaceUserRoleScope(context.Context, *AuthorizationAPIUserRoleBindingRequest) (*AuthorizationAPIUserRoleBindingResponse, error)
+	// List all role bindings for a group
+	APIListGroupRoleBindings(context.Context, *AuthorizationAPIGroupRequest) (*AuthorizationAPIGroupRoleBindingListResponse, error)
+	// Assign a role with scope to a group
+	APIAssignGroupRole(context.Context, *AuthorizationAPIGroupRoleBindingRequest) (*AuthorizationAPIGroupRoleBindingResponse, error)
+	// Remove a role from a group
+	APIRemoveGroupRole(context.Context, *AuthorizationAPIGroupRoleRequest) (*AuthorizationAPIGroupRoleBindingResponse, error)
+	// Replace the scope for a role binding of a group
+	APIReplaceGroupRoleScope(context.Context, *AuthorizationAPIGroupRoleBindingRequest) (*AuthorizationAPIGroupRoleBindingResponse, error)
 	// Refresh all poolers and return once completed
 	APIRefresh(context.Context, *AuthorizationAPIRefreshRequest) (*AuthorizationAPIRefreshResponse, error)
 	mustEmbedUnimplementedAuthorizationAPIServer()
@@ -358,6 +418,18 @@ func (UnimplementedAuthorizationAPIServer) APIRemoveUserRole(context.Context, *A
 }
 func (UnimplementedAuthorizationAPIServer) APIReplaceUserRoleScope(context.Context, *AuthorizationAPIUserRoleBindingRequest) (*AuthorizationAPIUserRoleBindingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method APIReplaceUserRoleScope not implemented")
+}
+func (UnimplementedAuthorizationAPIServer) APIListGroupRoleBindings(context.Context, *AuthorizationAPIGroupRequest) (*AuthorizationAPIGroupRoleBindingListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method APIListGroupRoleBindings not implemented")
+}
+func (UnimplementedAuthorizationAPIServer) APIAssignGroupRole(context.Context, *AuthorizationAPIGroupRoleBindingRequest) (*AuthorizationAPIGroupRoleBindingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method APIAssignGroupRole not implemented")
+}
+func (UnimplementedAuthorizationAPIServer) APIRemoveGroupRole(context.Context, *AuthorizationAPIGroupRoleRequest) (*AuthorizationAPIGroupRoleBindingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method APIRemoveGroupRole not implemented")
+}
+func (UnimplementedAuthorizationAPIServer) APIReplaceGroupRoleScope(context.Context, *AuthorizationAPIGroupRoleBindingRequest) (*AuthorizationAPIGroupRoleBindingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method APIReplaceGroupRoleScope not implemented")
 }
 func (UnimplementedAuthorizationAPIServer) APIRefresh(context.Context, *AuthorizationAPIRefreshRequest) (*AuthorizationAPIRefreshResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method APIRefresh not implemented")
@@ -653,6 +725,78 @@ func _AuthorizationAPI_APIReplaceUserRoleScope_Handler(srv interface{}, ctx cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthorizationAPI_APIListGroupRoleBindings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorizationAPIGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorizationAPIServer).APIListGroupRoleBindings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthorizationAPI_APIListGroupRoleBindings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorizationAPIServer).APIListGroupRoleBindings(ctx, req.(*AuthorizationAPIGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthorizationAPI_APIAssignGroupRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorizationAPIGroupRoleBindingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorizationAPIServer).APIAssignGroupRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthorizationAPI_APIAssignGroupRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorizationAPIServer).APIAssignGroupRole(ctx, req.(*AuthorizationAPIGroupRoleBindingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthorizationAPI_APIRemoveGroupRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorizationAPIGroupRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorizationAPIServer).APIRemoveGroupRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthorizationAPI_APIRemoveGroupRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorizationAPIServer).APIRemoveGroupRole(ctx, req.(*AuthorizationAPIGroupRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthorizationAPI_APIReplaceGroupRoleScope_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorizationAPIGroupRoleBindingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorizationAPIServer).APIReplaceGroupRoleScope(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthorizationAPI_APIReplaceGroupRoleScope_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorizationAPIServer).APIReplaceGroupRoleScope(ctx, req.(*AuthorizationAPIGroupRoleBindingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuthorizationAPI_APIRefresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthorizationAPIRefreshRequest)
 	if err := dec(in); err != nil {
@@ -737,6 +881,22 @@ var AuthorizationAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "APIReplaceUserRoleScope",
 			Handler:    _AuthorizationAPI_APIReplaceUserRoleScope_Handler,
+		},
+		{
+			MethodName: "APIListGroupRoleBindings",
+			Handler:    _AuthorizationAPI_APIListGroupRoleBindings_Handler,
+		},
+		{
+			MethodName: "APIAssignGroupRole",
+			Handler:    _AuthorizationAPI_APIAssignGroupRole_Handler,
+		},
+		{
+			MethodName: "APIRemoveGroupRole",
+			Handler:    _AuthorizationAPI_APIRemoveGroupRole_Handler,
+		},
+		{
+			MethodName: "APIReplaceGroupRoleScope",
+			Handler:    _AuthorizationAPI_APIReplaceGroupRoleScope_Handler,
 		},
 		{
 			MethodName: "APIRefresh",

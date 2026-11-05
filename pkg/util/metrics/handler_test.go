@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,12 +27,26 @@ import (
 	goHttp "net/http"
 	"testing"
 
-	dto "github.com/prometheus/client_model/go"
-	"github.com/prometheus/prom2json"
+	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 
 	operatorHTTP "github.com/arangodb/kube-arangodb/pkg/util/http"
 )
+
+// metricFamilyNames parses the Prometheus text-format metrics from in and returns the set of metric
+// family names.
+func metricFamilyNames(t *testing.T, in io.Reader) map[string]bool {
+	parser := expfmt.NewTextParser(model.UTF8Validation)
+	mfs, err := parser.TextToMetricFamilies(in)
+	require.NoError(t, err)
+
+	names := map[string]bool{}
+	for name := range mfs {
+		names[name] = true
+	}
+	return names
+}
 
 func Test_Handler(t *testing.T) {
 	m := goHttp.NewServeMux()
@@ -113,8 +127,6 @@ func Test_Handler(t *testing.T) {
 	})
 
 	t.Run("Read metrics - plain", func(t *testing.T) {
-		mfChan := make(chan *dto.MetricFamily, 1024*1024)
-
 		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
@@ -125,21 +137,12 @@ func Test_Handler(t *testing.T) {
 
 		require.Equal(t, goHttp.StatusOK, resp.StatusCode)
 
-		require.NoError(t, prom2json.ParseReader(resp.Body, mfChan))
-
-		metrics := map[string]bool{}
-
-		for mf := range mfChan {
-			result := prom2json.NewFamily(mf)
-			metrics[result.Name] = true
-		}
+		metrics := metricFamilyNames(t, resp.Body)
 
 		require.Contains(t, metrics, "go_info")
 	})
 
 	t.Run("Read metrics - gzip", func(t *testing.T) {
-		mfChan := make(chan *dto.MetricFamily, 1024*1024)
-
 		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
@@ -153,21 +156,12 @@ func Test_Handler(t *testing.T) {
 		reader, err := gzip.NewReader(resp.Body)
 		require.NoError(t, err)
 
-		require.NoError(t, prom2json.ParseReader(reader, mfChan))
-
-		metrics := map[string]bool{}
-
-		for mf := range mfChan {
-			result := prom2json.NewFamily(mf)
-			metrics[result.Name] = true
-		}
+		metrics := metricFamilyNames(t, reader)
 
 		require.Contains(t, metrics, "go_info")
 	})
 
 	t.Run("Read metrics - default", func(t *testing.T) {
-		mfChan := make(chan *dto.MetricFamily, 1024*1024)
-
 		r, err := goHttp.NewRequest("GET", metricsEndpoint, nil)
 		require.NoError(t, err)
 
@@ -176,14 +170,7 @@ func Test_Handler(t *testing.T) {
 
 		require.Equal(t, goHttp.StatusOK, resp.StatusCode)
 
-		require.NoError(t, prom2json.ParseReader(resp.Body, mfChan))
-
-		metrics := map[string]bool{}
-
-		for mf := range mfChan {
-			result := prom2json.NewFamily(mf)
-			metrics[result.Name] = true
-		}
+		metrics := metricFamilyNames(t, resp.Body)
 
 		require.Contains(t, metrics, "go_info")
 	})

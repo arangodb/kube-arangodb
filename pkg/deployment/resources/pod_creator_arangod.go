@@ -188,7 +188,7 @@ func (a *ArangoDContainer) GetImage() string {
 func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs := NewEnvBuilder()
 
-	if a.Deployment.License.HasSecretName() && a.Image.ArangoDBVersion.CompareTo("3.9.0") < 0 {
+	if a.Deployment.License.HasSecretName() && util.Version(a.Image.ArangoDBVersion).CompareTo("3.9.0") < 0 {
 		env := k8sutil.CreateEnvSecretKeySelector(utilConstants.EnvArangoLicenseKey, a.Deployment.License.GetSecretName(),
 			utilConstants.SecretKeyToken)
 
@@ -236,6 +236,10 @@ func (a *ArangoDContainer) GetEnvs() ([]core.EnvVar, []core.EnvFromSource) {
 	envs.Add(true, core.EnvVar{
 		Name:  ArangoDBOverrideServerGroupEnv,
 		Value: a.Group.AsRole(),
+	})
+	envs.Add(true, core.EnvVar{
+		Name:  utilConstants.EnvArangoDBOverrideMemberID,
+		Value: a.Member.ID,
 	})
 	envs.Add(true, core.EnvVar{
 		Name:  ArangoDBOverrideDeploymentModeEnv,
@@ -294,15 +298,15 @@ func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
 	}
 
 	if features.Collector().Enabled() {
-		// The collector writes its startup event directly into the local arangod _events collection.
+		// The collector writes its startup event into the central _events collection through the database
+		// client service, which routes to a Coordinator in cluster mode (or the single server in single
+		// mode). Targeting the member's own 127.0.0.1 endpoint would, on a DBServer or agent, write to a
+		// node-local _events collection that the cluster (and the member.startup inventory) cannot read.
+		// The postStart hook runs detached and retries, so addressing a Coordinator never blocks member
+		// startup even when no Coordinator is ready yet.
 		scheme := "http"
 		if a.Deployment.IsSecure() {
 			scheme = "https"
-		}
-
-		port := shared.ArangoPort
-		if p := a.GroupSpec.Port; p != nil {
-			port = int(*p)
 		}
 
 		var jwtPath string
@@ -310,7 +314,8 @@ func (a *ArangoDContainer) GetLifecycle() (*core.Lifecycle, error) {
 			jwtPath = shared.ClusterJWTSecretVolumeMountDir
 		}
 
-		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler(fmt.Sprintf("%s://127.0.0.1:%d", scheme, port), jwtPath)
+		endpoint := fmt.Sprintf("%s://%s:%d", scheme, k8sutil.CreateDatabaseClientServiceDNSName(a.ApiObject), shared.ArangoPort)
+		lifecycle.PostStart = k8sutil.NewCollectorPostStartHandler(endpoint, jwtPath)
 	}
 
 	return lifecycle, nil
@@ -511,7 +516,7 @@ func (m *MemberArangoDPod) GetInitContainers(cachedStatus interfaces.Inspector) 
 			case api.ServerGroupAgents, api.ServerGroupDBServers, api.ServerGroupSingle:
 				if features.UpgradeVersionCheckV2().Enabled() {
 					c := k8sutil.ArangodVersionCheckInitContainer(api.ServerGroupReservedInitContainerNameVersionCheck, executable, m.resources.context.GetOperatorImage(),
-						m.Image.ArangoDBVersion, m.GroupSpec.SecurityContext.NewSecurityContext())
+						util.Version(m.Image.ArangoDBVersion), m.GroupSpec.SecurityContext.NewSecurityContext())
 					initContainers = append(initContainers, c)
 				} else if features.UpgradeVersionCheck().Enabled() {
 					upgradeContainer := &ArangoVersionCheckContainer{
@@ -632,6 +637,14 @@ func (m *MemberArangoDPod) createServingSidecarExporter() (*core.Container, []co
 		volumes = append(volumes, vols...)
 		c.VolumeMounts = append(c.VolumeMounts, mounts...)
 	}
+
+	// A writable emptyDir for the sidecar's internal unix socket (service-to-service calls bypass the
+	// network authenticator - see configuration() in pkg/sidecar).
+	volumes = append(volumes, k8sutil.CreateVolumeEmptyDir(utilConstants.SidecarUnixSocketMountName))
+	c.VolumeMounts = append(c.VolumeMounts, core.VolumeMount{
+		Name:      utilConstants.SidecarUnixSocketMountName,
+		MountPath: utilConstants.SidecarUnixSocketMountPath,
+	})
 
 	return &c, volumes, nil
 }

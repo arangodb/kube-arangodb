@@ -33,8 +33,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
-
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/client"
@@ -261,7 +259,7 @@ func cmdLifecycleProbeRunE(cmd *cobra.Command) error {
 func getEndpoint(probeType api.ProbeType) string {
 	if probeType == api.ProbeTypeReadiness {
 		if probeInput.DeploymentMode == string(api.DeploymentModeActiveFailover) {
-			v := adbDriverV2.Version(probeInput.ArangoDBVersion)
+			v := util.Version(probeInput.ArangoDBVersion)
 			if features.FailoverLeadership().Supported(v, probeInput.Enterprise) {
 				return client.ServerApiVersionEndpoint
 			}
@@ -271,7 +269,7 @@ func getEndpoint(probeType api.ProbeType) string {
 	}
 
 	if probeInput.ServerGroup == api.ServerGroupDBServersString {
-		v := adbDriverV2.Version(probeInput.ArangoDBVersion)
+		v := util.Version(probeInput.ArangoDBVersion)
 		if features.Version310().Supported(v, probeInput.Enterprise) {
 			return client.ServerStatusEndpoint
 		}

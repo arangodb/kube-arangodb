@@ -48,6 +48,10 @@ func (c *FakePlatformV1beta1) ArangoPlatformStorages(namespace string) v1beta1.A
 	return newFakeArangoPlatformStorages(c, namespace)
 }
 
+func (c *FakePlatformV1beta1) ArangoPlatformWorkflows(namespace string) v1beta1.ArangoPlatformWorkflowInterface {
+	return newFakeArangoPlatformWorkflows(c, namespace)
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakePlatformV1beta1) RESTClient() rest.Interface {

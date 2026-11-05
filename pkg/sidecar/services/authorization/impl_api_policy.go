@@ -41,6 +41,10 @@ func (a *implementation) APIListPolicy(ctx context.Context, request *pbSharedV1.
 		return nil, err
 	}
 
+	if err := a.policies.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	page, items := pbSharedV1.Paginate(request, a.policies.Items())
 
 	return &sidecarSvcAuthzDefinition.AuthorizationAPIListResponse{
@@ -56,6 +60,10 @@ func (a *implementation) APIGetPolicy(ctx context.Context, request *sidecarSvcAu
 
 	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:GetPolicy", request.GetName()); err != nil {
 		return nil, err
+	}
+
+	if err := a.policies.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	policy, index, ok := a.policies.Item(request.GetName())
@@ -152,6 +160,10 @@ func (a *implementation) APIUpdatePolicy(ctx context.Context, request *sidecarSv
 
 	if item := request.GetItem(); item == nil {
 		return nil, status.Error(codes.InvalidArgument, "Item cannot be empty")
+	}
+
+	if err := a.policies.Refresh(ctx); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	identity := authenticator.GetIdentity(ctx)

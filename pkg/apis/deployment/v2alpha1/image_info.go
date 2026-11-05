@@ -85,6 +85,18 @@ func (l ImageInfoList) GetByImage(image string) (ImageInfo, bool) {
 	return ImageInfo{}, false
 }
 
+// GetPointerByImage returns a pointer to the info in the given list for the image with given name.
+// If not found, nil is returned.
+func (l ImageInfoList) GetPointerByImage(image string) *ImageInfo {
+	for _, x := range l {
+		if x.Image == image {
+			c := x
+			return &c
+		}
+	}
+	return nil
+}
+
 // GetByImageID returns the info in the given list for the image with given id.
 // If not found, false is returned.
 func (l ImageInfoList) GetByImageID(imageID string) (ImageInfo, bool) {
@@ -94,6 +106,18 @@ func (l ImageInfoList) GetByImageID(imageID string) (ImageInfo, bool) {
 		}
 	}
 	return ImageInfo{}, false
+}
+
+// GetPointerByImageID returns a pointer to the info in the given list for the image with given id.
+// If not found, nil is returned.
+func (l ImageInfoList) GetPointerByImageID(imageID string) *ImageInfo {
+	for _, x := range l {
+		if x.ImageID == imageID {
+			c := x
+			return &c
+		}
+	}
+	return nil
 }
 
 // AddOrUpdate adds the given info to the given list, if its image does not exist

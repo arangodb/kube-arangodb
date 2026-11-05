@@ -256,6 +256,46 @@ func (i *implementation) Delete(ctx context.Context, req *pbMetaV1.ObjectRequest
 	return &pbSharedV1.Empty{}, nil
 }
 
+func (i *implementation) Move(ctx context.Context, req *pbMetaV1.MoveRequest) (*pbMetaV1.ObjectResponse, error) {
+	from := i.cfg.Key(req.GetSource())
+	to := i.cfg.Key(req.GetDestination())
+
+	// Move removes the source object and creates the destination one, so the update
+	// permission is required on both keys.
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:UpdateKey", from); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:UpdateKey", to); err != nil {
+		return nil, err
+	}
+
+	result, err := i.cache.Move(ctx, from, to, util.OptionalType(req.Revision, ""))
+	if err != nil {
+		return nil, err
+	}
+
+	switch result {
+	case cache.MoveResultSourceNotFound:
+		return nil, status.Errorf(codes.NotFound, "Key %s not found", from)
+	case cache.MoveResultRevisionConflict:
+		return nil, status.Errorf(codes.FailedPrecondition, "Key %s cannot be moved with revision %s", from, req.GetRevision())
+	case cache.MoveResultDestinationExists:
+		return nil, status.Errorf(codes.AlreadyExists, "Key %s already exists", to)
+	}
+
+	nObj, exists, err := i.cache.Get(ctx, to)
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		return nil, status.Errorf(codes.NotFound, "Key %s not found", to)
+	}
+
+	return nObj.AsResponse(), nil
+}
+
 func (i *implementation) List(req *pbMetaV1.ListRequest, server pbMetaV1.MetaV1_ListServer) error {
 	log := logger.Str("func", "List")
 

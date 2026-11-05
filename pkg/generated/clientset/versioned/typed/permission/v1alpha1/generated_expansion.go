@@ -28,6 +28,8 @@ type ArangoPermissionPolicyRoleBindingExpansion interface{}
 
 type ArangoPermissionRoleExpansion interface{}
 
+type ArangoPermissionRoleGroupBindingExpansion interface{}
+
 type ArangoPermissionRoleUserBindingExpansion interface{}
 
 type ArangoPermissionTokenExpansion interface{}

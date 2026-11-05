@@ -196,9 +196,11 @@ type DeploymentSpec struct {
 	// Coordinators contains specification for Coordinator pods running in deployment mode `Cluster` or `ActiveFailover`.
 	Coordinators ServerGroupSpec `json:"coordinators"`
 
+	// Deprecated: ArangoSync has been removed.
 	// SyncMasters contains specification for Syncmaster pods running in deployment mode `Cluster`.
 	SyncMasters ServerGroupSpec `json:"syncmasters"`
 
+	// Deprecated: ArangoSync has been removed.
 	// SyncWorkers contains specification for Syncworker pods running in deployment mode `Cluster`.
 	SyncWorkers ServerGroupSpec `json:"syncworkers"`
 

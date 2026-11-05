@@ -27,20 +27,20 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/arangodb/kube-arangodb/integrations/link/v1/definition";
 
-// Job state
+// Job state. Modelled on the ArangoDB Agency supervision job lifecycle
+// (ToDo -> Pending -> Finished/Failed): a job is relocated between per-state
+// buckets in the Meta Store as it progresses.
 enum JobState {
-  // Job submitted, waiting to be picked up by a link
-  JOB_STATE_PENDING = 0;
-  // Job picked up by connector handler, awaiting execution
-  JOB_STATE_SCHEDULED = 1;
-  // link is executing the job on remote source
-  JOB_STATE_RUNNING = 2;
-  // Execution finished, results available in FileStore
-  JOB_STATE_COMPLETED = 3;
+  // Job submitted, queued and waiting to be picked up by a link
+  JOB_STATE_TODO = 0;
+  // Job picked up by a link handler and in progress
+  JOB_STATE_PENDING = 1;
+  // Execution finished successfully, results available in FileStore
+  JOB_STATE_FINISHED = 2;
   // Execution failed. Description field describes the failure (includes timeout)
-  JOB_STATE_FAILED = 4;
-  // Cancelled by AI tool from Pending, Scheduled, or Running state
-  JOB_STATE_CANCELLED = 5;
+  JOB_STATE_FAILED = 3;
+  // Cancelled from the ToDo or Pending state
+  JOB_STATE_CANCELLED = 4;
 }
 
 // Job status
@@ -69,7 +69,10 @@ message Job {
   optional google.protobuf.Duration timeout = 6;
   // Timestamp when job was created
   google.protobuf.Timestamp created = 7;
-  // Result path in FileStore (set when job is Completed)
+  // Result path in FileStore (set when job is Finished)
   // Path format: /links/<link_id>/<job_id>/
   optional string result = 8;
+  // Scheduling priority. Higher values are picked up first; ties are broken
+  // FIFO by creation time. Defaults to 0
+  int32 priority = 9;
 }

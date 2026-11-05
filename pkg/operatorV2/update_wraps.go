@@ -76,6 +76,10 @@ func WithArangoPlatformServiceUpdateStatusInterfaceRetry(ctx context.Context, cl
 	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformServiceStatus, *platformApi.ArangoPlatformService](ctx, client, obj, status, opts)
 }
 
+func WithArangoPlatformWorkflowUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[platformApi.ArangoPlatformWorkflowStatus, *platformApi.ArangoPlatformWorkflow], obj *platformApi.ArangoPlatformWorkflow, status platformApi.ArangoPlatformWorkflowStatus, opts meta.UpdateOptions) (*platformApi.ArangoPlatformWorkflow, error) {
+	return WithUpdateStatusInterfaceRetry[platformApi.ArangoPlatformWorkflowStatus, *platformApi.ArangoPlatformWorkflow](ctx, client, obj, status, opts)
+}
+
 func WithArangoPermissionTokenUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionTokenStatus, *permissionApi.ArangoPermissionToken], obj *permissionApi.ArangoPermissionToken, status permissionApi.ArangoPermissionTokenStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionToken, error) {
 	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionTokenStatus, *permissionApi.ArangoPermissionToken](ctx, client, obj, status, opts)
 }
@@ -94,4 +98,8 @@ func WithArangoPermissionPolicyRoleBindingUpdateStatusInterfaceRetry(ctx context
 
 func WithArangoPermissionRoleUserBindingUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionRoleUserBindingStatus, *permissionApi.ArangoPermissionRoleUserBinding], obj *permissionApi.ArangoPermissionRoleUserBinding, status permissionApi.ArangoPermissionRoleUserBindingStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionRoleUserBinding, error) {
 	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionRoleUserBindingStatus, *permissionApi.ArangoPermissionRoleUserBinding](ctx, client, obj, status, opts)
+}
+
+func WithArangoPermissionRoleGroupBindingUpdateStatusInterfaceRetry(ctx context.Context, client UpdateStatusInterface[permissionApi.ArangoPermissionRoleGroupBindingStatus, *permissionApi.ArangoPermissionRoleGroupBinding], obj *permissionApi.ArangoPermissionRoleGroupBinding, status permissionApi.ArangoPermissionRoleGroupBindingStatus, opts meta.UpdateOptions) (*permissionApi.ArangoPermissionRoleGroupBinding, error) {
+	return WithUpdateStatusInterfaceRetry[permissionApi.ArangoPermissionRoleGroupBindingStatus, *permissionApi.ArangoPermissionRoleGroupBinding](ctx, client, obj, status, opts)
 }

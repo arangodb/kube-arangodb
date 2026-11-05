@@ -68,8 +68,9 @@ type serviceGRPC struct {
 }
 
 type serviceHTTP struct {
-	network *goHttp.Server
-	unix    *goHttp.Server
+	network  *goHttp.Server
+	external *goHttp.Server
+	unix     *goHttp.Server
 }
 
 func (p *service) Dial(opts ...grpc.DialOption) (*grpc.ClientConn, error) {
@@ -158,12 +159,16 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 	opts = append(opts, nopts...)
 
-	opts = append(opts, authenticator.NewInterceptorOptions(cfg.Authenticator)...)
-
 	q.cfg = cfg
-	q.grpc.network = grpc.NewServer(opts...)
+
+	// The network server enforces the configured authenticator.
+	q.grpc.network = grpc.NewServer(append(append([]grpc.ServerOption{}, opts...), authenticator.NewInterceptorOptions(cfg.Authenticator)...)...)
 	if unix := cfg.Unix; unix != "" {
-		q.grpc.unix = grpc.NewServer(opts...)
+		// The unix socket is a trusted, local-only (filesystem-gated) transport for in-process
+		// service-to-service calls. It must not enforce the network authenticator, otherwise strict
+		// (rbac-enforced) mode rejects these internal calls (e.g. authorization.v1 -> authentication.v1
+		// Validate) with Unauthorized.
+		q.grpc.unix = grpc.NewServer(append(append([]grpc.ServerOption{}, opts...), authenticator.NewInterceptorOptions(authenticator.NewAlwaysAuthenticator())...)...)
 	}
 
 	q.handlers = handlers
@@ -177,8 +182,27 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 
 	if gateway := cfg.Gateway; gateway != nil {
 		var http serviceHTTP
+
+		// The HTTP gateway may be served without TLS (gateway.Insecure), but only when it is bound to a
+		// loopback address - reachable solely from within the Pod. A gateway that opts into plain HTTP
+		// while bound to a routable address (e.g. 0.0.0.0) is still served with TLS, so an endpoint exposed
+		// on the network is never served plain. The gRPC endpoint always honours the service TLS options.
+		httpTLS := tls
+		if gateway.Insecure && isLoopbackListenAddress(gateway.Address) {
+			httpTLS = nil
+		}
+
 		http.network = &goHttp.Server{
-			TLSConfig: tls,
+			TLSConfig: httpTLS,
+		}
+
+		// The external listener is network-exposed, so it always follows the service TLS options (TLS on a
+		// secure deployment, plain otherwise) regardless of gateway.Insecure - it is never served plain
+		// while the service has TLS.
+		if gateway.ExternalAddress != "" {
+			http.external = &goHttp.Server{
+				TLSConfig: tls,
+			}
 		}
 
 		if gateway.Unix != "" {
@@ -189,6 +213,29 @@ func newService(cfg Configuration, handlers ...Handler) (*service, error) {
 	}
 
 	return &q, nil
+}
+
+// isLoopbackListenAddress reports whether addr (a "host:port" listen address) binds only to the loopback
+// interface - i.e. the host is "localhost" or a loopback IP (127.0.0.0/8, ::1). An empty host, "0.0.0.0"
+// or "::" binds to all interfaces and is therefore not loopback.
+func isLoopbackListenAddress(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+
+	switch host {
+	case "":
+		return false
+	case "localhost":
+		return true
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		return ip.IsLoopback()
+	}
+
+	return false
 }
 
 func (p *service) GetHandler(name string) (Handler, bool) {

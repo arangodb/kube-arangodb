@@ -1,0 +1,47 @@
+FOR m IN @members
+    LET latest = FIRST(
+        FOR e IN _events
+            FILTER e.serviceId == "collector" AND e.type == "startup" AND e.dimensions.serverID == SHA256(m.id)
+            SORT e.created DESC
+            LIMIT 1
+            RETURN e
+    )
+    // serverID is never emitted raw - it is hashed so the License Manager inventory does not carry the
+    // cluster member id.
+    LET base = {
+        "serverID": SHA256(m.id),
+        "role": m.role
+    }
+    // Compute the per-attribute startup items in a standalone subquery (not inline inside the ternary
+    // below) and guard every FOR operand against null, so the query is valid on all supported ArangoDB
+    // versions: ATTRIBUTES(null) yields null and `FOR ... IN null` is a runtime error, so a startup
+    // event with a missing/empty body (or an older AQL that does not evaluate an inline subquery as a
+    // ternary branch) must not reach a FOR over null.
+    LET detail = (
+        FOR attr IN ATTRIBUTES(NOT_NULL(latest.body, {}))
+            RETURN {
+                "type": "ARANGO_MEMBER_STARTUP",
+                "dimensions": MERGE(base, {
+                    "nodeName": SHA256(NOT_NULL(latest.dimensions.nodeName, "")),
+                    "podUID": NOT_NULL(latest.dimensions.podUID, ""),
+                    "bootID": NOT_NULL(latest.dimensions.bootID, ""),
+                    "detail": attr
+                }),
+                "value": {
+                    "dec": latest.body[attr]
+                }
+            }
+    )
+    LET items = latest == null
+        ? [
+            {
+                "type": "ARANGO_MEMBER_STARTUP",
+                "dimensions": MERGE(base, {"detail": "present"}),
+                "value": {
+                    "bool": true
+                }
+            }
+        ]
+        : detail
+    FOR item IN NOT_NULL(items, [])
+        RETURN item

@@ -26,7 +26,11 @@ import (
 	"strconv"
 	goStrings "strings"
 
+	"golang.org/x/sys/unix"
+
+	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
@@ -39,10 +43,97 @@ const (
 
 	// bytesPerGB is the number of bytes in one gigabyte.
 	bytesPerGB = 1024 * 1024 * 1024
+
+	// Container resource requests/limits, sourced from the downward-API lifecycle envs. CPU is reported
+	// in millicores, memory in MiB. Note: when a request/limit is not set on the container, the downward
+	// API reports the node's allocatable value rather than 0.
+	metricCPURequests    = "cpu_requests"
+	metricCPULimits      = "cpu_limits"
+	metricMemoryRequests = "memory_requests"
+	metricMemoryLimits   = "memory_limits"
+
+	// metricDataStorage is the total size of the arangod data volume (/data) in GB.
+	metricDataStorage = "data_storage"
+
+	// metricDataStorageAvailable is the free space on the arangod data volume (/data) in GB.
+	metricDataStorageAvailable = "data_storage_available"
 )
 
 func init() {
 	GetCollector().Register(resourceCollector{})
+	GetCollector().Register(resourceRequestsLimitsCollector{})
+	GetCollector().Register(dataStorageCollector{})
+}
+
+// resourceRequestsLimitsCollector pushes the container's CPU/memory requests and limits (from the
+// downward-API lifecycle envs) as event body metrics. CPU is in millicores, memory in MiB. Envs that
+// are not set are skipped.
+type resourceRequestsLimitsCollector struct{}
+
+func (resourceRequestsLimitsCollector) CollectEvents(out util.Pusher[Metric]) error {
+	envToMetric := []struct{ env, metric string }{
+		{utilConstants.EnvOperatorCPURequests, metricCPURequests},
+		{utilConstants.EnvOperatorCPULimits, metricCPULimits},
+		{utilConstants.EnvOperatorMemoryRequests, metricMemoryRequests},
+		{utilConstants.EnvOperatorMemoryLimits, metricMemoryLimits},
+	}
+
+	for _, e := range envToMetric {
+		v := os.Getenv(e.env)
+		if v == "" {
+			continue
+		}
+
+		f, err := strconv.ParseFloat(v, 32)
+		if err != nil {
+			return errors.Wrapf(err, "unable to parse %s=%q", e.env, v)
+		}
+
+		out.Push(Metric{K: e.metric, V: float32(f)})
+	}
+
+	return nil
+}
+
+// dataStorageCollector pushes the total and available size of the arangod data volume (/data) as event
+// body metrics (in GB). It is best-effort: when the data directory is not present (e.g. the collector
+// runs in a container without the data volume mounted, such as the gateway) the metrics are skipped.
+type dataStorageCollector struct{}
+
+func (dataStorageCollector) CollectEvents(out util.Pusher[Metric]) error {
+	total, available, exists, err := dataStorage(shared.ArangodVolumeMountDir)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		// No data volume mounted (e.g. gateway); nothing to report.
+		return nil
+	}
+
+	out.Push(Metric{K: metricDataStorage, V: float32(total) / bytesPerGB})
+	out.Push(Metric{K: metricDataStorageAvailable, V: float32(available) / bytesPerGB})
+
+	return nil
+}
+
+// dataStorage returns the total and available size (in bytes) of the filesystem backing path. exists
+// is false when the path does not exist (the metrics are then skipped).
+func dataStorage(path string) (total, available uint64, exists bool, err error) {
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return 0, 0, false, nil
+		}
+		return 0, 0, false, errors.Wrapf(err, "unable to stat %s", path)
+	}
+
+	var stat unix.Statfs_t
+	if err := unix.Statfs(path, &stat); err != nil {
+		return 0, 0, false, errors.Wrapf(err, "unable to statfs %s", path)
+	}
+
+	blockSize := uint64(stat.Bsize)
+
+	return stat.Blocks * blockSize, stat.Bavail * blockSize, true, nil
 }
 
 // resourceCollector pushes the available CPU and memory as event body metrics.

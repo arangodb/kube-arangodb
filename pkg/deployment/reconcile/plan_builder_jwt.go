@@ -224,7 +224,7 @@ func (r *Reconciler) isJWTTokenUpToDate(ctx context.Context, status api.Deployme
 		return false, true
 	}
 
-	if i, ok := status.Images.GetByImageID(m.ImageID); !ok || !features.JWTRotation().Supported(i.ArangoDBVersion, i.Enterprise) {
+	if !features.JWTRotation().ImageSupported(status.Images.GetPointerByImageID(m.ImageID)) {
 		return false, false
 	}
 

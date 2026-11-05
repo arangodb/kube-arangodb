@@ -700,7 +700,7 @@ func (testCase *testCaseStruct) createTestPodData(deployment *Deployment, group 
 		deployment.currentObject.Status.Members.Update(member, group)
 	}
 
-	testCase.createTestEnvVariables(deployment, group)
+	testCase.createTestEnvVariables(deployment, group, memberStatus.ID)
 }
 
 func finalizers(group api.ServerGroup) []string {
@@ -884,7 +884,7 @@ func addLifecycle(name string, uuidRequired bool, license string, group api.Serv
 	}
 }
 
-func (testCase *testCaseStruct) createTestEnvVariables(deployment *Deployment, group api.ServerGroup) {
+func (testCase *testCaseStruct) createTestEnvVariables(deployment *Deployment, group api.ServerGroup, memberID string) {
 	if group == api.ServerGroupSyncMasters || group == api.ServerGroupSyncWorkers {
 
 	} else {
@@ -923,6 +923,13 @@ func (testCase *testCaseStruct) createTestEnvVariables(deployment *Deployment, g
 					core.EnvVar{
 						Name:  resources.ArangoDBOverrideServerGroupEnv,
 						Value: group.AsRole(),
+					})
+			}
+			if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, utilConstants.EnvArangoDBOverrideMemberID) {
+				testCase.ExpectedPod.Spec.Containers[i].Env = append(testCase.ExpectedPod.Spec.Containers[i].Env,
+					core.EnvVar{
+						Name:  utilConstants.EnvArangoDBOverrideMemberID,
+						Value: memberID,
 					})
 			}
 			if !isEnvExist(testCase.ExpectedPod.Spec.Containers[i].Env, resources.ArangoDBOverrideDeploymentModeEnv) {

@@ -48,6 +48,13 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 
 	options.Add("--central", util.BoolSwitch(features.CentralServices().Enabled(), "true", "false"))
 
+	// Run the serving member's authorization sidecar at debug level when the sidecar-debug feature is
+	// enabled, so the authorization evaluate decisions (action/resource/effect, logged at Debug) are
+	// emitted. Off by default - the sidecar runs at info.
+	if features.SidecarDebug().Enabled() {
+		options.Add("--log.level", "debug")
+	}
+
 	if port := groupSpec.InternalPort; port == nil {
 		scheme := "http"
 		if spec.IsSecure() {
@@ -61,6 +68,11 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 	if spec.TLS.IsSecure() {
 		options.Add("--sidecar.keyfile", filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile))
 	}
+
+	// Expose the management API on a routable external endpoint so the platform gateway can reach it
+	// cross-Pod (the internal endpoint stays loopback-only for in-Pod arangod). It follows the deployment
+	// TLS setting via the keyfile above.
+	options.Addf("--sidecar.gateway.external.address", "0.0.0.0:%d", shared.InternalSidecarContainerPortHTTPExternal)
 
 	if storage != nil {
 		options.Merge(internalSidecarStorageV2Args(storage))
@@ -87,6 +99,11 @@ func ArangodbInternalSidecarContainer(image string, args []string,
 			{
 				Name:          shared.InternalSidecarContainerPortHTTPName,
 				ContainerPort: int32(shared.InternalSidecarContainerPortHTTP),
+				Protocol:      core.ProtocolTCP,
+			},
+			{
+				Name:          shared.InternalSidecarContainerPortHTTPExternalName,
+				ContainerPort: int32(shared.InternalSidecarContainerPortHTTPExternal),
 				Protocol:      core.ProtocolTCP,
 			},
 			{

@@ -53,12 +53,31 @@ AWS S3 example - based on [rclone S3](https://rclone.org/s3/) documentation and 
     "access_key_id": "xxx",
     "secret_access_key": "xxx",
     "region": "eu-west-2", # Choose region
-    "acl": "private", # Set permissions on newly created remote object
+    "location_constraint": "eu-west-2", # Match the region (see notes below)
+    "no_check_bucket": "true"
   }
 }
 ```
 
 and you can from now use `S3://bucket/path`.
+
+Note the following when configuring rclone:
+
+- **`acl`**: AWS buckets created since April 2023 default to _Bucket owner
+  enforced_ Object Ownership, which rejects requests with an ACL header. Omit
+  the `acl` key (or set it to `""`) for such buckets. It may still be required
+  for some S3-compatible providers and older AWS buckets with ACLs re-enabled.
+- **Region**: For AWS S3 with a region other than `us-east-1`, set the
+  `location_constraint` to the region, `"no_check_bucket": "true"`, or both.
+  Otherwise rclone (v1.68.0 and later) sends an unspecified location constraint
+  that AWS rejects with an `IllegalLocationConstraintException`.
+- **Checksums**: For S3-compatible providers (e.g. GCS, Ceph, MinIO, Wasabi),
+  uploads may fail unless you set `"use_data_integrity_protections": "false"`,
+  because rclone (v1.68.0 and later) defaults to CRC32/CRC64 checksums while
+  these providers may expect MD5.
+- **Provider quirks**: rclone auto-handles quirks for known providers (e.g.
+  `use_x_id`, `sign_accept_encoding`, `use_multipart_uploads`). You may need to
+  set these manually if your provider is not recognized.
 
 ##### Use IAM with Amazon EKS
 
@@ -140,7 +159,6 @@ Kubernetes service account and configure pods to use the service account.
            "env_auth": "true",
            "location_constraint": "eu-central-1",
            "region": "eu-central-1",
-           "acl": "private",
            "no_check_bucket": "true"
          }
        }

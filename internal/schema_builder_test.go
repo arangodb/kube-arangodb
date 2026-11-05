@@ -142,7 +142,7 @@ func (b *schemaBuilder) isV3IntOrString(types []string) bool {
 	return len(types) == 2 && slices.Contains(types, "number") && slices.Contains(types, "string")
 }
 
-func (b *schemaBuilder) openAPIDefToSchemaPros(t *testing.T, _ *openapi.OpenAPIDefinition) *apiextensions.JSONSchemaProps {
+func (b *schemaBuilder) openAPIDefToSchemaPros(t *testing.T, _ openapi.OpenAPIDefinition) *apiextensions.JSONSchemaProps {
 	require.Fail(t, "openAPIDefToSchemaPros is not implemented because there were no calls to this function. Add the impl if needed.")
 	return nil
 }

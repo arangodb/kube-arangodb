@@ -51,6 +51,13 @@ func (a *implementation) Evaluate(ctx context.Context, req *pbAuthorizationV1.Au
 		return nil, err
 	}
 
+	// Union in the roles bound to the groups the request's token carries (the JWT groups claim, passed as
+	// req.Roles). Group bindings live in a separate pool keyed group:role, so they never collide with a
+	// user whose name happens to start with "group:".
+	if err := a.addGroupRoleBindings(req.GetRoles(), groups); err != nil {
+		return nil, err
+	}
+
 	resp, err := groups.Evaluate(req)
 	if err != nil {
 		return nil, err
@@ -104,6 +111,47 @@ func (a *implementation) getUserGroups(user string) (sidecarSvcAuthzClient.Scope
 	}
 
 	return result, nil
+}
+
+// addGroupRoleBindings unions the roles bound to each of the given groups (the request's JWT groups
+// claim) into result. Group bindings are stored in a dedicated pool keyed groupName:role; each resolved
+// binding is added under its own unique key so it augments - never replaces - the user's direct bindings.
+func (a *implementation) addGroupRoleBindings(groups []string, result sidecarSvcAuthzClient.ScopedPolicies) error {
+	if len(groups) == 0 {
+		return nil
+	}
+
+	allPolicies := a.policies.Copy()
+	allRoles := a.roles.Copy()
+	allBindings := a.groupRoleBindings.Copy()
+
+	for _, group := range groups {
+		if group == "" {
+			continue
+		}
+
+		prefix := group + ":"
+
+		for key, binding := range allBindings {
+			if len(key) <= len(prefix) || key[:len(prefix)] != prefix {
+				continue
+			}
+
+			if _, exists := result[key]; exists {
+				continue
+			}
+
+			if g, ok := allRoles[binding.GetRole()]; ok {
+				if sp, err := a.resolveGroupWithScope(g, binding.GetScope(), allPolicies); err != nil {
+					return err
+				} else if sp != nil {
+					result[key] = *sp
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (a *implementation) resolveGroupWithScope(g *sidecarSvcAuthzTypes.Role, scope *sidecarSvcAuthzTypes.Policy, allPolicies map[string]*sidecarSvcAuthzTypes.Policy) (*sidecarSvcAuthzClient.ScopedPolicy, error) {

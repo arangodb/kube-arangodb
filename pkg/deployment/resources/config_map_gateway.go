@@ -75,10 +75,12 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 					pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModePass),
 				},
 			},
+			// Target the sidecar's external HTTP endpoint (routable, TLS-per-settings), not the internal
+			// loopback one which is reachable only in-Pod.
 			Targets: util.FormatList(services, func(a string) gateway.ConfigDestinationTarget {
 				return gateway.ConfigDestinationTargetEndpoint{
 					Host: a,
-					Port: shared.InternalSidecarContainerPortHTTP,
+					Port: shared.InternalSidecarContainerPortHTTPExternal,
 				}
 			}),
 		}
@@ -135,22 +137,6 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		},
 	}
 
-	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = gateway.ConfigDestination{
-		Type:  util.NewType(gateway.ConfigDestinationTypeFile),
-		Match: util.NewType(gateway.ConfigMatchPath),
-		AuthExtension: &gateway.ConfigAuthZExtension{
-			AuthZExtension: map[string]string{
-				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue,
-				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
-			},
-		},
-		File: gateway.ConfigDestinationFile{
-			File:        path.Join(utilConstants.GatewayVolumeMountDir, utilConstants.InventoryFileName),
-			Code:        200,
-			ContentType: "application/json",
-		},
-	}
-
 	inventory.Arangodb = pbInventoryV1.NewArangoDBConfiguration(r.context.GetSpec(), r.context.GetStatus())
 	inventory.Security = pbInventoryV1.NewInventorySecurity(r.context.GetSpec(), r.context.GetStatus())
 
@@ -166,9 +152,61 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		inventory.Connectors = connectors
 	}
 
+	// The inventory must be fully populated before it is referenced by the inline (Static) destination below.
+	inventoryConfig := gateway.ConfigDestination{
+		Match: util.NewType(gateway.ConfigMatchPath),
+		AuthExtension: &gateway.ConfigAuthZExtension{
+			AuthZExtension: map[string]string{
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthRequiredKey: pbImplEnvoyAuthV3Shared.AuthConfigKeywordTrue,
+				pbImplEnvoyAuthV3Shared.AuthConfigAuthPassModeKey: string(networkingApi.ArangoRouteSpecAuthenticationPassModeRemove),
+			},
+		},
+	}
+
+	// Push (inline/ADS) inventory delivery applies only when the push feature is enabled AND the gateway is
+	// dynamic. A static (non-dynamic) gateway is always served from the mounted ConfigMap and must report
+	// the config checksum, so the feature flag alone is not enough - double-check the gateway is dynamic.
+	pushMode := features.GatewayConfigPush().Enabled() && r.context.GetSpec().Gateway.IsDynamic()
+
+	if pushMode {
+		// Push mode: serve the inventory inline so it travels with the ADS-pushed config, instead of a file
+		// that the dynamic loader would read out of band from the separately-synced ConfigMap mount.
+		inventoryConfig.Type = util.NewType(gateway.ConfigDestinationTypeStatic)
+		inventoryConfig.Static = &gateway.ConfigDestinationStatic[*pbInventoryV1.Inventory]{
+			ContentType: "application/json",
+			Code:        util.NewType[uint32](200),
+			Response:    inventory,
+			Marshaller:  ugrpc.Marshal[*pbInventoryV1.Inventory],
+			Options: []util.Mod[protojson.MarshalOptions]{
+				ugrpc.WithUseProtoNames(true),
+				ugrpc.WithEmitDefaultValues(true),
+			},
+		}
+	} else {
+		inventoryConfig.Type = util.NewType(gateway.ConfigDestinationTypeFile)
+		inventoryConfig.File = gateway.ConfigDestinationFile{
+			File:        path.Join(utilConstants.GatewayVolumeMountDir, utilConstants.InventoryFileName),
+			Code:        200,
+			ContentType: "application/json",
+		}
+	}
+
+	cfg.Destinations[utilConstants.EnvoyInventoryConfigDestination] = inventoryConfig
+
 	inventoryPreData, err := ugrpc.Marshal(inventory, ugrpc.WithUseProtoNames(true), ugrpc.WithEmitDefaultValues(true))
 	if err != nil {
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway inventory"))
+	}
+
+	if pushMode {
+		// Inline (push) mode: the inventory is embedded in the pushed config and rendered below, so its
+		// reported config revision must be set before the render. Use the inventory content hash (the same
+		// value the /_inventory.hash endpoint serves): it is non-circular (independent of the config
+		// checksum, which now covers the inventory) and idempotent for a given state, so it does not churn
+		// across reconcile iterations.
+		inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
+			Hash: util.SHA256(inventoryPreData),
+		}
 	}
 
 	cfg.Destinations[utilConstants.EnvoyInventoryHashConfigDestination] = gateway.ConfigDestination{
@@ -209,8 +247,18 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway lds config"))
 	}
 
-	inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
-		Hash: gatewayCfgYamlChecksum,
+	gatewaySDSFiles, err := cfg.RenderSDS()
+	if err != nil {
+		return errors.WithStack(errors.Wrapf(err, "Failed to render gateway sds config"))
+	}
+
+	if !pushMode {
+		// ConfigMap mode: the inventory is served from the mounted file (rendered after the config), so its
+		// reported revision is the config checksum - which the gateway readiness check compares against
+		// GatewayConfigChecksum. In push mode this was already set (inline) before the render.
+		inventory.Configuration = &pbInventoryV1.InventoryConfiguration{
+			Hash: gatewayCfgYamlChecksum,
+		}
 	}
 
 	inventoryData, err := ugrpc.Marshal(inventory, ugrpc.WithUseProtoNames(true), ugrpc.WithEmitDefaultValues(true))
@@ -241,6 +289,15 @@ func (r *Resources) ensureGatewayConfig(ctx context.Context, cachedStatus inspec
 		utilConstants.GatewayConfigChecksum: gatewayCfgYamlChecksum,
 	}); err != nil {
 		return err
+	}
+
+	// SDS secret definitions are only rendered when TLS is enabled. The gateway pod mounts the
+	// resulting ConfigMap only in that case (see createGatewayVolumes), so skip it otherwise to
+	// avoid managing (and repeatedly patching) an empty ConfigMap.
+	if len(gatewaySDSFiles) > 0 {
+		if err := r.ensureGatewayConfigMap(ctx, cachedStatus, configMaps, GetGatewayConfigMapName(r.context.GetAPIObject().GetName(), "sds"), gatewaySDSFiles); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -379,11 +436,15 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 	}
 
 	if spec.TLS.IsSecure() {
-		// Enabled TLS, add config
+		// Enabled TLS, add config. Certificates are delivered to Envoy via filesystem SDS so a
+		// rotated keyfile is reloaded in place; WatchDir points at the mounted secret directory.
 		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
 		cfg.DefaultTLS = &gateway.ConfigTLS{
+			Name:            utilConstants.GatewaySDSInternalName,
 			CertificatePath: keyPath,
 			PrivateKeyPath:  keyPath,
+			WatchDir:        shared.TLSKeyfileVolumeMountDir,
+			SDSPath:         path.Join(utilConstants.GatewaySDSVolumeMountDir, gateway.SDSFileName(utilConstants.GatewaySDSInternalName)),
 		}
 		cfg.DefaultDestination.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
 
@@ -395,11 +456,17 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 					continue
 				}
 
+				name := fmt.Sprintf("sni-%s", volume)
+				watchDir := path.Join(shared.TLSSNIKeyfileVolumeMountDir, volume)
+				f := path.Join(watchDir, utilConstants.SecretTLSKeyfile)
+
 				var s gateway.ConfigSNI
-				f := path.Join(shared.TLSSNIKeyfileVolumeMountDir, volume, utilConstants.SecretTLSKeyfile)
 				s.ConfigTLS = gateway.ConfigTLS{
+					Name:            name,
 					CertificatePath: f,
 					PrivateKeyPath:  f,
+					WatchDir:        watchDir,
+					SDSPath:         path.Join(utilConstants.GatewaySDSVolumeMountDir, gateway.SDSFileName(name)),
 				}
 				s.ServerNames = servers
 				cfg.SNI = append(cfg.SNI, s)

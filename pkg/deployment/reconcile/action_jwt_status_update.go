@@ -54,7 +54,7 @@ func ensureJWTFolderSupport(spec api.DeploymentSpec, status api.DeploymentStatus
 	if image := status.CurrentImage; image == nil {
 		return false, errors.Errorf("Missing image info")
 	} else {
-		if !features.JWTRotation().Supported(image.ArangoDBVersion, image.Enterprise) {
+		if !features.JWTRotation().ImageSupported(image) {
 			return false, nil
 		}
 	}

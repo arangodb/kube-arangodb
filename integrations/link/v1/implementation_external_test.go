@@ -39,11 +39,11 @@ func Test_External_CreateJob(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, resp.Id)
 
-	job := requireJobState(t, impl, resp.Id, pbLinkV1.JobState_JOB_STATE_PENDING)
+	job := requireJobState(t, impl, resp.Id, pbLinkV1.JobState_JOB_STATE_TODO)
 	require.Equal(t, testLinkID, job.LinkId)
 	require.Equal(t, `{"aql": "RETURN 1"}`, string(job.Input))
 	require.NotNil(t, job.Created)
-	requireStatusHistory(t, job, pbLinkV1.JobState_JOB_STATE_PENDING)
+	requireStatusHistory(t, job, pbLinkV1.JobState_JOB_STATE_TODO)
 }
 
 func Test_External_ListJobs(t *testing.T) {
@@ -67,22 +67,22 @@ func Test_External_ListJobs_FilterByState(t *testing.T) {
 	impl := newTestImpl(t)
 	ctx := context.Background()
 
-	createTestJob(t, impl, "pending")
-	createTestJob(t, impl, "also-pending")
+	createTestJob(t, impl, "todo")
+	createTestJob(t, impl, "also-todo")
 
-	// Pick up one → Scheduled
+	// Pick up one → Pending
 	pickedID := pickUp(t, impl)
 
-	// List only Pending — should have 1
-	pending := pbLinkV1.JobState_JOB_STATE_PENDING
-	resp, err := impl.ListJobs(ctx, &pbLinkV1.ListJobsRequest{State: &pending})
+	// List only Todo — should have 1 (the one not picked up)
+	todo := pbLinkV1.JobState_JOB_STATE_TODO
+	resp, err := impl.ListJobs(ctx, &pbLinkV1.ListJobsRequest{State: &todo})
 	require.NoError(t, err)
 	require.Len(t, resp.Jobs, 1)
 	require.NotEqual(t, pickedID, resp.Jobs[0].Id)
 
-	// List only Scheduled — should have 1
-	scheduled := pbLinkV1.JobState_JOB_STATE_SCHEDULED
-	resp, err = impl.ListJobs(ctx, &pbLinkV1.ListJobsRequest{State: &scheduled})
+	// List only Pending — should have 1 (the picked-up one)
+	pending := pbLinkV1.JobState_JOB_STATE_PENDING
+	resp, err = impl.ListJobs(ctx, &pbLinkV1.ListJobsRequest{State: &pending})
 	require.NoError(t, err)
 	require.Len(t, resp.Jobs, 1)
 	require.Equal(t, pickedID, resp.Jobs[0].Id)
@@ -105,7 +105,7 @@ func Test_External_CancelJob_Running(t *testing.T) {
 
 	id := createTestJob(t, impl, "cancel-running")
 	pickUp(t, impl)
-	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Executing")
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Executing")
 
 	resp, err := impl.CancelJob(ctx, &pbLinkV1.CancelJobRequest{Id: id})
 	require.NoError(t, err)
@@ -118,8 +118,8 @@ func Test_External_CancelJob_Completed_Fails(t *testing.T) {
 
 	id := createTestJob(t, impl, "done")
 	pickUp(t, impl)
-	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_RUNNING, "Running")
-	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_COMPLETED, "Done")
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_PENDING, "Running")
+	updateStatus(t, impl, id, pbLinkV1.JobState_JOB_STATE_FINISHED, "Done")
 
 	_, err := impl.CancelJob(ctx, &pbLinkV1.CancelJobRequest{Id: id})
 	require.Error(t, err)

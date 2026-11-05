@@ -159,6 +159,37 @@ func Test_Service_Connections(t *testing.T) {
 		require.NoError(t, st.Wait())
 	})
 
+	t.Run("HTTP External", func(t *testing.T) {
+		// The external listener serves the same routes as the internal one on a second, routable address.
+		// With no TLS options it is served plain, so a direct HTTP GET to HTTPExternalAddress succeeds.
+		h, err := NewService(Configuration{
+			Address: "127.0.0.1:0",
+			Gateway: &ConfigurationGateway{
+				Address:         "127.0.0.1:0",
+				ExternalAddress: "127.0.0.1:0",
+			},
+		}, handler)
+		require.NoError(t, err)
+
+		ctx, c := context.WithCancel(context.Background())
+		defer c()
+
+		st := h.Start(ctx)
+
+		require.NotEmpty(t, st.HTTPExternalAddress())
+
+		// Both the internal and the external listener serve the mux.
+		_, err = ugrpc.Get[*pbPongV1.PongV1PingResponse](context.Background(), operatorHTTP.NewHTTPClient(), fmt.Sprintf("http://%s/_integration/pong/v1/ping", st.HTTPAddress())).WithCode(goHttp.StatusOK).Get()
+		require.NoError(t, err)
+
+		_, err = ugrpc.Get[*pbPongV1.PongV1PingResponse](context.Background(), operatorHTTP.NewHTTPClient(), fmt.Sprintf("http://%s/_integration/pong/v1/ping", st.HTTPExternalAddress())).WithCode(goHttp.StatusOK).Get()
+		require.NoError(t, err)
+
+		c()
+
+		require.NoError(t, st.Wait())
+	})
+
 	t.Run("TCP", func(t *testing.T) {
 		h, err := NewService(Configuration{
 			Address: "127.0.0.1:0",

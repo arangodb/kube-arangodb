@@ -37,5 +37,9 @@ const (
 	ArangoPlatformLinkResourceKind   = "ArangoPlatformLink"
 	ArangoPlatformLinkResourcePlural = "arangoplatformlinks"
 
+	ArangoPlatformWorkflowCRDName        = ArangoPlatformWorkflowResourcePlural + "." + ArangoPlatformGroupName
+	ArangoPlatformWorkflowResourceKind   = "ArangoPlatformWorkflow"
+	ArangoPlatformWorkflowResourcePlural = "arangoplatformworkflows"
+
 	ArangoPlatformGroupName = "platform.arangodb.com"
 )

@@ -70,6 +70,14 @@ func NewArangoDBConfiguration(spec api.DeploymentSpec, status api.DeploymentStat
 		cfg.Sharding = getShardingFromArgs(spec.Coordinators.Args...)
 	}
 
+	// Core security uses the same authentication view as the platform, but authorization at the core
+	// level is ArangoDB-native only - RBAC is a platform-level concept (added later), so downgrade it.
+	sec := NewInventorySecurity(spec, status)
+	if sec.Authorization == SecurityAuthorizationType_AuthorizationRBAC {
+		sec.Authorization = SecurityAuthorizationType_AuthorizationNative
+	}
+	cfg.Security = sec
+
 	return &cfg
 }
 
@@ -99,7 +107,7 @@ func NewInventorySecurity(spec api.DeploymentSpec, status api.DeploymentStatus) 
 	// - SSO: Gateway OpenID (SSO) authentication is configured
 	// - Native: ArangoDB JWT authentication is enabled (default)
 	// - None: ArangoDB JWT authentication is disabled (JWTSecretName set to "None")
-	if spec.Gateway.Authentication != nil {
+	if spec.Gateway != nil && spec.Gateway.Authentication != nil {
 		cfg.Authentication = SecurityAuthenticationType_AuthenticationSSO
 	} else if spec.Authentication.IsAuthenticated() {
 		cfg.Authentication = SecurityAuthenticationType_AuthenticationNative
