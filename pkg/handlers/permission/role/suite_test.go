@@ -49,13 +49,17 @@ func newFakeHandler(_ *testing.T) *handler {
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
-		Group:   Group(),
-		Version: Version(),
-		Kind:    Kind(),
+		ItemGVK: operation.ItemGVK{
+			Group:   Group(),
+			Version: Version(),
+			Kind:    Kind(),
+		},
 
 		Operation: o,
 
-		Namespace: namespace,
-		Name:      name,
+		ItemName: operation.ItemName{
+			Namespace: namespace,
+			Name:      name,
+		},
 	}
 }

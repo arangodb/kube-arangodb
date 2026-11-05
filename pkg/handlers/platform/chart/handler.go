@@ -30,6 +30,7 @@ import (
 
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	platform "github.com/arangodb/kube-arangodb/pkg/handlers/platform"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -48,6 +49,8 @@ type handler struct {
 	eventRecorder event.RecorderInstance
 
 	operator operator.Operator
+
+	platform.Cache
 }
 
 func (h *handler) Name() string {
@@ -59,11 +62,15 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.PlatformV1beta1().ArangoPlatformCharts(item.Namespace).Get, item.Name, meta.GetOptions{})
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
+			h.Charts().Invalidate(item.ItemName)
 			return nil
 		}
 
 		return err
 	}
+
+	// Refresh the shared cache with the current chart on every reconcile iteration.
+	h.Charts().Set(item.ItemName, object)
 
 	status := object.Status.DeepCopy()
 
@@ -86,9 +93,13 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		item.Namespace,
 		item.Name)
 
-	if _, err := operator.WithArangoPlatformChartUpdateStatusInterfaceRetry(context.Background(), h.client.PlatformV1beta1().ArangoPlatformCharts(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
+	updated, err := operator.WithArangoPlatformChartUpdateStatusInterfaceRetry(context.Background(), h.client.PlatformV1beta1().ArangoPlatformCharts(object.GetNamespace()), object, *status, meta.UpdateOptions{})
+	if err != nil {
 		return err
 	}
+
+	// Refresh the shared cache with the updated chart after the status update.
+	h.Charts().Set(item.ItemName, updated)
 
 	return reconcileErr
 }

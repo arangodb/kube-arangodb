@@ -1576,8 +1576,10 @@ func NewItem(t *testing.T, o operation.Operation, object meta.Object) operation.
 	item := operation.Item{
 		Operation: o,
 
-		Namespace: object.GetNamespace(),
-		Name:      object.GetName(),
+		ItemName: operation.ItemName{
+			Namespace: object.GetNamespace(),
+			Name:      object.GetName(),
+		},
 	}
 
 	gvk, ok := inspectorConstants.ExtractGVKFromObject(object)
