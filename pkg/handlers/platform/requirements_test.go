@@ -23,10 +23,10 @@ package platform
 import (
 	"testing"
 
+	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	"github.com/stretchr/testify/require"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/cache"
@@ -36,12 +36,12 @@ import (
 
 const testNamespace = "default"
 
-func chartWithVersion(name, version string) *platformApi.ArangoPlatformChart {
+func mlChart(namespace, version string) *platformApi.ArangoPlatformChart {
 	return &platformApi.ArangoPlatformChart{
-		ObjectMeta: meta.ObjectMeta{Name: name, Namespace: testNamespace},
+		ObjectMeta: meta.ObjectMeta{Name: "ml", Namespace: namespace},
 		Status: platformApi.ArangoPlatformChartStatus{
 			Info: &platformApi.ChartStatusInfo{
-				Details: &platformApi.ChartDetails{Name: name, Version: version},
+				Details: &platformApi.ChartDetails{Name: "ml", Version: version},
 			},
 		},
 	}
@@ -77,13 +77,13 @@ func Test_EvaluateRequirements(t *testing.T) {
 
 	t.Run("Custom chart satisfied", func(t *testing.T) {
 		reqs := platformApi.ChartDetailsPlatformRequirements{"ml": util.VersionConstrain(">=1.2.0")}
-		failures := EvaluateRequirements(newCharts(chartWithVersion("ml", "1.3.0")), testNamespace, reqs, nil)
+		failures := EvaluateRequirements(newCharts(mlChart(testNamespace, "1.3.0")), testNamespace, reqs, nil)
 		require.Empty(t, failures)
 	})
 
 	t.Run("Custom chart version does not satisfy", func(t *testing.T) {
 		reqs := platformApi.ChartDetailsPlatformRequirements{"ml": util.VersionConstrain(">=1.2.0")}
-		failures := EvaluateRequirements(newCharts(chartWithVersion("ml", "1.0.0")), testNamespace, reqs, nil)
+		failures := EvaluateRequirements(newCharts(mlChart(testNamespace, "1.0.0")), testNamespace, reqs, nil)
 		require.Len(t, failures, 1)
 		require.Contains(t, failures[0], "ml:")
 		require.Contains(t, failures[0], "does not satisfy")
@@ -98,14 +98,13 @@ func Test_EvaluateRequirements(t *testing.T) {
 
 	t.Run("Custom chart version not known yet", func(t *testing.T) {
 		reqs := platformApi.ChartDetailsPlatformRequirements{"ml": util.VersionConstrain(">=1.2.0")}
-		failures := EvaluateRequirements(newCharts(chartWithVersion("ml", "")), testNamespace, reqs, nil)
+		failures := EvaluateRequirements(newCharts(mlChart(testNamespace, "")), testNamespace, reqs, nil)
 		require.Len(t, failures, 1)
 		require.Contains(t, failures[0], "ml: version is not known yet")
 	})
 
 	t.Run("Custom chart in another namespace is not visible", func(t *testing.T) {
-		other := chartWithVersion("ml", "1.3.0")
-		other.Namespace = "other"
+		other := mlChart("other", "1.3.0")
 		reqs := platformApi.ChartDetailsPlatformRequirements{"ml": util.VersionConstrain(">=1.2.0")}
 		failures := EvaluateRequirements(newCharts(other), testNamespace, reqs, nil)
 		require.Len(t, failures, 1)
