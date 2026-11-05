@@ -22,6 +22,8 @@ package workflow
 
 import (
 	"context"
+	"fmt"
+	goStrings "strings"
 	"time"
 
 	"helm.sh/helm/v3/pkg/action"
@@ -35,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/types"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	platform "github.com/arangodb/kube-arangodb/pkg/handlers/platform"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -57,6 +60,8 @@ type handler struct {
 	operator operator.Operator
 
 	helm helm.Client
+
+	platform.Cache
 }
 
 func (h *handler) Name() string {
@@ -68,11 +73,15 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.PlatformV1beta1().ArangoPlatformWorkflows(item.Namespace).Get, item.Name, meta.GetOptions{})
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
+			h.Workflows().Invalidate(item.ItemName)
 			return nil
 		}
 
 		return err
 	}
+
+	// Refresh the shared cache with the current workflow on every reconcile iteration.
+	h.Workflows().Set(item.ItemName, object)
 
 	if object.GetDeletionTimestamp() != nil {
 		// We are deleting the object
@@ -119,9 +128,13 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		item.Namespace,
 		item.Name)
 
-	if _, err := operator.WithArangoPlatformWorkflowUpdateStatusInterfaceRetry(ctx, h.client.PlatformV1beta1().ArangoPlatformWorkflows(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
+	updated, err := operator.WithArangoPlatformWorkflowUpdateStatusInterfaceRetry(ctx, h.client.PlatformV1beta1().ArangoPlatformWorkflows(object.GetNamespace()), object, *status, meta.UpdateOptions{})
+	if err != nil {
 		return err
 	}
+
+	// Refresh the shared cache with the updated workflow after the status update.
+	h.Workflows().Set(item.ItemName, updated)
 
 	return reconcileErr
 }
@@ -415,7 +428,38 @@ func (h *handler) HandleChart(ctx context.Context, item operation.Item, extensio
 		return false, operator.Stop("Chart Not Ready")
 	}
 
-	return operator.HandleP5WithCondition(ctx, &status.Conditions, platformApi.ReleaseReadyCondition, item, extension, status, depl, chart, h.HandleChartInfo, h.HandleValues, h.HandleRelease)
+	return operator.HandleP5WithCondition(ctx, &status.Conditions, platformApi.ReleaseReadyCondition, item, extension, status, depl, chart, h.HandleChartInfo, h.HandleRequirements, h.HandleValues, h.HandleRelease)
+}
+
+// HandleRequirements evaluates the chart's platform requirements - the reserved ArangoDB and Operator
+// constraints and any custom requirements referencing other charts (resolved through the shared chart
+// cache) - and reflects the outcome in the RequirementsFulfilled condition, gating the install/upgrade
+// while any requirement is unmet.
+func (h *handler) HandleRequirements(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus, depl *api.ArangoDeployment, chart *platformApi.ArangoPlatformChart) (bool, error) {
+	var requirements platformApi.ChartDetailsPlatformRequirements
+	if info := chart.Status.Info; info != nil {
+		requirements = info.Details.GetPlatform().GetRequirements()
+	}
+
+	failures := platform.EvaluateRequirements(h.Charts(), item.Namespace, requirements, depl)
+
+	if len(failures) > 0 {
+		message := fmt.Sprintf("Requirements not fulfilled: %s", goStrings.Join(failures, "; "))
+
+		// Gate the install/upgrade: stop before HandleValues/HandleRelease so an incompatible chart is
+		// never rendered or released against this deployment.
+		if status.Conditions.Update(platformApi.RequirementsFulfilledCondition, false, message, message) {
+			return true, operator.Stop("Requirements not fulfilled")
+		}
+
+		return false, operator.Stop("Requirements not fulfilled")
+	}
+
+	if status.Conditions.Update(platformApi.RequirementsFulfilledCondition, true, "Requirements fulfilled", "Requirements fulfilled") {
+		return true, operator.Reconcile("Condition Changed")
+	}
+
+	return false, nil
 }
 
 func (h *handler) HandleChartInfo(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus, depl *api.ArangoDeployment, chart *platformApi.ArangoPlatformChart) (bool, error) {

@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) (Platform) Evaluate custom chart requirements (requirement keys referencing other ArangoPlatformCharts) against a shared chart cache and gate the install/upgrade on the RequirementsFulfilled condition for both ArangoPlatformService and ArangoPlatformWorkflow
 - (Documentation) Link the ArangoDB Platform Releases portal (https://releases.license.arango.ai/) from the Platform installation file schema
 - (Feature) (Platform) Add a RequirementsFulfilled condition to ArangoPlatformService that evaluates the chart's reserved ArangoDB and Operator version requirements against the bound deployment's ArangoDB version and the operator's own version, gating the install/upgrade until they are satisfied
 

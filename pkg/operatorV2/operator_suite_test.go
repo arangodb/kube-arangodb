@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,12 +77,16 @@ func randomItem() operation.Item {
 	return operation.Item{
 		Operation: operation.Add,
 
-		Group:   randomString(5),
-		Version: randomString(2),
-		Kind:    randomString(5),
+		ItemGVK: operation.ItemGVK{
+			Group:   randomString(5),
+			Version: randomString(2),
+			Kind:    randomString(5),
+		},
 
-		Namespace: randomString(5),
-		Name:      randomString(5),
+		ItemName: operation.ItemName{
+			Namespace: randomString(5),
+			Name:      randomString(5),
+		},
 	}
 }
 

@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arangodb/kube-arangodb/pkg/crd/crds"
+	platform "github.com/arangodb/kube-arangodb/pkg/handlers/platform"
 	"github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -56,18 +57,23 @@ func newFakeHandler(t *testing.T) (*handler, string, operator.Handler) {
 		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
 		operator:      op,
 		helm:          h,
+		Cache:         platform.NewCache(0),
 	}, ns, chart.Handler(op, recorder, client)
 }
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
-		Group:   Group(),
-		Version: Version(),
-		Kind:    Kind(),
+		ItemGVK: operation.ItemGVK{
+			Group:   Group(),
+			Version: Version(),
+			Kind:    Kind(),
+		},
 
 		Operation: o,
 
-		Namespace: namespace,
-		Name:      name,
+		ItemName: operation.ItemName{
+			Namespace: namespace,
+			Name:      name,
+		},
 	}
 }
