@@ -49,6 +49,7 @@ import (
 	permissionRoleGroupBinding "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role_group_binding"
 	permissionRoleUserBinding "github.com/arangodb/kube-arangodb/pkg/handlers/permission/role_user_binding"
 	permissionToken "github.com/arangodb/kube-arangodb/pkg/handlers/permission/token"
+	platformHandler "github.com/arangodb/kube-arangodb/pkg/handlers/platform"
 	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	platformLink "github.com/arangodb/kube-arangodb/pkg/handlers/platform/link"
 	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
@@ -74,6 +75,9 @@ import (
 
 const (
 	initRetryWaitTime = 30 * time.Second
+
+	// arangoInformerResyncPeriod is the resync period of the Arango shared informer factory.
+	arangoInformerResyncPeriod = 10 * time.Second
 )
 
 var logger = logging.Global().RegisterAndGetLogger("operator", logging.Info)
@@ -275,7 +279,7 @@ func (o *Operator) onStartOperatorV2(ctx context.Context, operatorType operatorV
 
 	eventRecorder := event.NewEventRecorder(operatorName, o.Client.Kubernetes())
 
-	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(o.Client.Arango(), 10*time.Second, arangoInformer.WithNamespace(o.Namespace))
+	arangoInformer := arangoInformer.NewSharedInformerFactoryWithOptions(o.Client.Arango(), arangoInformerResyncPeriod, arangoInformer.WithNamespace(o.Namespace))
 
 	kubeInformer := informers.NewSharedInformerFactoryWithOptions(o.Client.Kubernetes(), 15*time.Second, informers.WithNamespace(o.Namespace))
 
@@ -336,15 +340,20 @@ func (o *Operator) onStartOperatorV2Platform(ctx context.Context, operator opera
 		panic(err)
 	}
 
-	if err := platformChart.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+	// Shared platform object cache, written by each platform handler and read across them to resolve
+	// custom chart requirements. TTL at twice the informer resync period so an object that stops
+	// reconciling is dropped, while a normal resync always refreshes the entry before it can expire.
+	platformCache := platformHandler.NewCache(2 * arangoInformerResyncPeriod)
+
+	if err := platformChart.RegisterInformer(operator, recorder, client, informer, kubeInformer, platformCache); err != nil {
 		panic(err)
 	}
 
-	if err := platformService.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+	if err := platformService.RegisterInformer(operator, recorder, client, informer, kubeInformer, platformCache); err != nil {
 		panic(err)
 	}
 
-	if err := platformWorkflow.RegisterInformer(operator, recorder, client, informer, kubeInformer); err != nil {
+	if err := platformWorkflow.RegisterInformer(operator, recorder, client, informer, kubeInformer, platformCache); err != nil {
 		panic(err)
 	}
 

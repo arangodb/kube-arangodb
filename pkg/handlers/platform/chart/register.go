@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,13 +24,14 @@ import (
 	"k8s.io/client-go/informers"
 
 	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
+	platform "github.com/arangodb/kube-arangodb/pkg/handlers/platform"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/util/kclient"
 )
 
 // RegisterInformer into operator
-func RegisterInformer(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, _ informers.SharedInformerFactory) error {
+func RegisterInformer(operator operator.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, _ informers.SharedInformerFactory, charts platform.Cache) error {
 	if err := operator.RegisterInformer(informer.Platform().V1beta1().ArangoPlatformCharts().Informer(),
 		Group(),
 		Version(),
@@ -45,6 +46,8 @@ func RegisterInformer(operator operator.Operator, recorder event.Recorder, clien
 		eventRecorder: recorder.NewInstance(Group(), Version(), Kind()),
 
 		operator: operator,
+
+		Cache: charts,
 	}
 
 	if err := operator.RegisterHandler(h); err != nil {

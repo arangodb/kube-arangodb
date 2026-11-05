@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,11 +72,15 @@ func NewItemFromObject(operation Operation, group, version, kind string, object 
 func NewItem(operation Operation, group, version, kind, namespace, name string) (Item, error) {
 	i := Item{
 		Operation: operation,
-		Group:     group,
-		Version:   version,
-		Kind:      kind,
-		Namespace: namespace,
-		Name:      name,
+		ItemGVK: ItemGVK{
+			Group:   group,
+			Version: version,
+			Kind:    kind,
+		},
+		ItemName: ItemName{
+			Namespace: namespace,
+			Name:      name,
+		},
 	}
 
 	if err := i.Validate(); err != nil {
@@ -86,22 +90,32 @@ func NewItem(operation Operation, group, version, kind, namespace, name string) 
 	return i, nil
 }
 
-// Item defines action in operator
-type Item struct {
-	Operation Operation
-
+// ItemGVK identifies the GroupVersionKind of an object an Item refers to.
+type ItemGVK struct {
 	Group   string
 	Version string
 	Kind    string
+}
 
+func (i ItemGVK) GVK(gvk schema.GroupVersionKind) bool {
+	return i.Group == gvk.Group &&
+		i.Version == gvk.Version &&
+		i.Kind == gvk.Kind
+}
+
+// ItemName identifies the namespace/name of an object an Item refers to.
+type ItemName struct {
 	Namespace string
 	Name      string
 }
 
-func (i Item) GVK(gvk schema.GroupVersionKind) bool {
-	return i.Group == gvk.Group &&
-		i.Version == gvk.Version &&
-		i.Kind == gvk.Kind
+// Item defines action in operator
+type Item struct {
+	Operation Operation
+
+	ItemGVK
+
+	ItemName
 }
 
 func validateField(name, value string, allowEmpty bool) error {
