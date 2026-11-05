@@ -1,12 +1,14 @@
 version: 2.1
 
 # Pin exact orb versions. A float resolves at compile time, so a later orb publish
-# would change what runs here with no repo diff.
+# would change what runs here with no repo diff. The exception is trivy-scan, which
+# floats on @1 (fleet decision 2026-11-05). Each release is validated in
+# arangoml/ai-infrastructure CI before promotion.
 # slack 4.1.4 is what the previous @4.1 float already resolved to, so de-floating
 # it changes nothing; no job uses it yet.
 orbs:
   slack: circleci/slack@4.1.4
-  trivy-scan: arangodb/trivy-scan@1.6.0
+  trivy-scan: arangodb/trivy-scan@1
   semgrep-scan: arangodb/semgrep-scan@1.0.0
   supply-chain: arangodb/supply-chain@1.0.0
 

@@ -187,9 +187,10 @@ controls:
 
   - id: LOCAL-03
     requirement: "Orb and tool versions cannot change without review."
-    state: met
-    evidence: "every orb pinned to an exact version in both .circleci/config.yml and .circleci/continue_config.yml, including the previously floating circleci/slack@4.1; the trivy, semgrep, helm and govulncheck binaries are pinned and hash-verified inside the orbs; the positive-control fixture is digest-pinned"
+    state: partial
+    evidence: "every orb pinned to an exact version in both .circleci/config.yml and .circleci/continue_config.yml (including the previously floating circleci/slack@4.1) except arangodb/trivy-scan, which floats on @1 and resolves only to releases validated in arangoml/ai-infrastructure CI; the trivy, semgrep, helm and govulncheck binaries are pinned and hash-verified inside the orbs; the positive-control fixture is digest-pinned"
     proven: true
+    remainder: "trivy-scan floats on @1 (2026-11-05), so orb releases reach this pipeline without a bump PR. Each release is validated in arangoml/ai-infrastructure CI before promotion, but publishing is still a manual step. This returns to met once releases are published only by CI from a reviewed tag."
 
   - id: LOCAL-04
     requirement: "The scanned artifact is the artifact that ships."

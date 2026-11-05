@@ -39,6 +39,9 @@ Patches are released for the versions listed in the
 Everything runs on the shared in-house orbs, pinned to exact versions. A float
 (`@1`, `@4.1`) resolves at config-compile time, so a future orb publish would
 change what runs here with no diff and no review.
+The exception is `arangodb/trivy-scan`, which floats on `@1` since 2026-11-05.
+Each of its releases is validated in arangoml/ai-infrastructure CI before
+promotion, so it applies here without a bump PR.
 
 | Job | Tier | Band | Verdict |
 | --- | --- | --- | --- |
@@ -342,7 +345,7 @@ Bumping any of these is a reviewed one-line change.
 
 | Component | Pin | Notes |
 | --- | --- | --- |
-| `arangodb/trivy-scan` | 1.2.0 | carries the Trivy pin (v0.72.0), `disposition-check`, `govulncheck`, `kev-epss-check`; 1.2.0 also sets the FedRAMP waiver-window defaults |
+| `arangodb/trivy-scan` | `@1`, validated 1.x releases | carries the Trivy pin (v0.76.1 in 1.7.0), `disposition-check`, `govulncheck`, `kev-epss-check`; 1.2.0 also sets the FedRAMP waiver-window defaults |
 | `arangodb/semgrep-scan` | 1.0.0 | carries the Semgrep pin (1.168.0) and the org rule pack |
 | `arangodb/supply-chain` | 1.0.0 | SBOM validation (`validate-sbom`); its signing and evidence commands are not used here, see Artifact signing |
 | `circleci/slack` | 4.1.4 | the version the previous `@4.1` float already resolved to |
