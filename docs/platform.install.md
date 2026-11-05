@@ -6,6 +6,8 @@ title: Platform Installation File Schema
 
 # Installation Definition
 
+Published ArangoDB Platform releases (the versions referenced by the `platform` LicenseManager package below) are available at the [ArangoDB Platform Releases portal](https://releases.license.arango.ai/).
+
 ## Example
 
 ```yaml
