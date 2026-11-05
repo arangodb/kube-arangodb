@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2025-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,12 +35,17 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/informers"
 	"sigs.k8s.io/yaml"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
+	arangoInformer "github.com/arangodb/kube-arangodb/pkg/generated/informers/externalversions"
+	platformHandler "github.com/arangodb/kube-arangodb/pkg/handlers/platform"
 	platformChart "github.com/arangodb/kube-arangodb/pkg/handlers/platform/chart"
 	platformService "github.com/arangodb/kube-arangodb/pkg/handlers/platform/service"
+	operatorV2 "github.com/arangodb/kube-arangodb/pkg/operatorV2"
+	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
@@ -224,7 +229,16 @@ func EnsureRegistry(t *testing.T, client kclient.Client, ns string) string {
 func Test_Package(t *testing.T) {
 	client, ns := external.ExternalClient(t)
 
-	defer operator.NewTestingOperator(shutdown.Context(), t, ns, util.Image{Image: "operator:latest"}, client, platformChart.RegisterInformer, platformService.RegisterInformer)()
+	// Chart and service handlers share one platform cache, so the service can resolve the chart it depends on.
+	platformCache := platformHandler.NewCache(0)
+	registerChart := func(op operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) error {
+		return platformChart.RegisterInformer(op, recorder, client, informer, kubeInformer, platformCache)
+	}
+	registerService := func(op operatorV2.Operator, recorder event.Recorder, client kclient.Client, informer arangoInformer.SharedInformerFactory, kubeInformer informers.SharedInformerFactory) error {
+		return platformService.RegisterInformer(op, recorder, client, informer, kubeInformer, platformCache)
+	}
+
+	defer operator.NewTestingOperator(shutdown.Context(), t, ns, util.Image{Image: "operator:latest"}, client, registerChart, registerService)()
 
 	deployment := tests.NewMetaObject[*api.ArangoDeployment](t, ns, "example",
 		func(t *testing.T, obj *api.ArangoDeployment) {})

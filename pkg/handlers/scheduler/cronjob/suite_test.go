@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,13 +50,17 @@ func newFakeHandler() *handler {
 
 func newItem(o operation.Operation, namespace, name string) operation.Item {
 	return operation.Item{
-		Group:   schedulerApi.SchemeGroupVersion.Group,
-		Version: schedulerApi.SchemeGroupVersion.Version,
-		Kind:    scheduler.CronJobResourceKind,
+		ItemGVK: operation.ItemGVK{
+			Group:   schedulerApi.SchemeGroupVersion.Group,
+			Version: schedulerApi.SchemeGroupVersion.Version,
+			Kind:    scheduler.CronJobResourceKind,
+		},
 
 		Operation: o,
 
-		Namespace: namespace,
-		Name:      name,
+		ItemName: operation.ItemName{
+			Namespace: namespace,
+			Name:      name,
+		},
 	}
 }

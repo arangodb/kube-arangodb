@@ -37,6 +37,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/types"
 	sharedApi "github.com/arangodb/kube-arangodb/pkg/apis/shared/v1"
 	arangoClientSet "github.com/arangodb/kube-arangodb/pkg/generated/clientset/versioned"
+	platform "github.com/arangodb/kube-arangodb/pkg/handlers/platform"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	operator "github.com/arangodb/kube-arangodb/pkg/operatorV2"
 	"github.com/arangodb/kube-arangodb/pkg/operatorV2/event"
@@ -46,7 +47,6 @@ import (
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/helm"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil/patcher"
-	"github.com/arangodb/kube-arangodb/pkg/version"
 )
 
 var logger = logging.Global().RegisterAndGetLogger("platform-service-operator", logging.Info)
@@ -60,6 +60,8 @@ type handler struct {
 	operator operator.Operator
 
 	helm helm.Client
+
+	platform.Cache
 }
 
 func (h *handler) Name() string {
@@ -71,11 +73,15 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 	object, err := util.WithKubernetesContextTimeoutP2A2(ctx, h.client.PlatformV1beta1().ArangoPlatformServices(item.Namespace).Get, item.Name, meta.GetOptions{})
 	if err != nil {
 		if apiErrors.IsNotFound(err) {
+			h.Services().Invalidate(item.ItemName)
 			return nil
 		}
 
 		return err
 	}
+
+	// Refresh the shared cache with the current service on every reconcile iteration.
+	h.Services().Set(item.ItemName, object)
 
 	if object.GetDeletionTimestamp() != nil {
 		// We are deleting the object
@@ -122,9 +128,13 @@ func (h *handler) Handle(ctx context.Context, item operation.Item) error {
 		item.Namespace,
 		item.Name)
 
-	if _, err := operator.WithArangoPlatformServiceUpdateStatusInterfaceRetry(ctx, h.client.PlatformV1beta1().ArangoPlatformServices(object.GetNamespace()), object, *status, meta.UpdateOptions{}); err != nil {
+	updated, err := operator.WithArangoPlatformServiceUpdateStatusInterfaceRetry(ctx, h.client.PlatformV1beta1().ArangoPlatformServices(object.GetNamespace()), object, *status, meta.UpdateOptions{})
+	if err != nil {
 		return err
 	}
+
+	// Refresh the shared cache with the updated service after the status update.
+	h.Services().Set(item.ItemName, updated)
 
 	return reconcileErr
 }
@@ -315,34 +325,19 @@ func (h *handler) HandleChart(ctx context.Context, item operation.Item, extensio
 	return operator.HandleP5WithCondition(ctx, &status.Conditions, platformApi.ReleaseReadyCondition, item, extension, status, depl, chart, h.HandleChartInfo, h.HandleRequirements, h.HandleValues, h.HandleRelease)
 }
 
-// reservedRequirementKeys lists the reserved requirement keys in a fixed order so condition messages
-// are stable across reconciles (map iteration order is otherwise random).
-var reservedRequirementKeys = []string{
-	platformApi.ChartRequirementArangoDB,
-	platformApi.ChartRequirementOperator,
-}
-
-// HandleRequirements evaluates the chart's reserved platform requirements - the ArangoDB constraint
-// against the bound deployment's running version and the Operator constraint against the operator's own
-// version - and reflects the outcome in the RequirementsFulfilled condition. It is informational and
-// does not block the release.
+// HandleRequirements evaluates the chart's platform requirements - the reserved ArangoDB and Operator
+// constraints and any custom requirements referencing other charts (resolved through the shared chart
+// cache) - and reflects the outcome in the RequirementsFulfilled condition, gating the install/upgrade
+// while any requirement is unmet.
 func (h *handler) HandleRequirements(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformService, status *platformApi.ArangoPlatformServiceStatus, depl *api.ArangoDeployment, chart *platformApi.ArangoPlatformChart) (bool, error) {
 	var requirements platformApi.ChartDetailsPlatformRequirements
 	if info := chart.Status.Info; info != nil {
 		requirements = info.Details.GetPlatform().GetRequirements()
 	}
 
-	results := evaluateReservedRequirements(requirements, depl)
+	failures := platform.EvaluateRequirements(h.Charts(), item.Namespace, requirements, depl)
 
-	fulfilled, failures := true, make([]string, 0, len(reservedRequirementKeys))
-	for _, key := range reservedRequirementKeys {
-		if err := results[key]; err != nil {
-			fulfilled = false
-			failures = append(failures, fmt.Sprintf("%s: %s", key, err.Error()))
-		}
-	}
-
-	if !fulfilled {
+	if len(failures) > 0 {
 		message := fmt.Sprintf("Requirements not fulfilled: %s", goStrings.Join(failures, "; "))
 
 		// Gate the install/upgrade: stop before HandleValues/HandleRelease so an incompatible chart is
@@ -359,55 +354,6 @@ func (h *handler) HandleRequirements(ctx context.Context, item operation.Item, e
 	}
 
 	return false, nil
-}
-
-// evaluateReservedRequirements checks the reserved ArangoDB and Operator requirement constraints. The
-// returned map holds one entry per declared reserved requirement: a nil value means it is fulfilled, a
-// non-nil error describes why it is not. An absent or empty constraint imposes no requirement and
-// produces no entry, so an empty map means fulfilled.
-func evaluateReservedRequirements(requirements platformApi.ChartDetailsPlatformRequirements, depl *api.ArangoDeployment) map[string]error {
-	arangoDBVersion, arangoDBKnown := deploymentArangoDBVersion(depl)
-
-	results := make(map[string]error, len(reservedRequirementKeys))
-
-	for _, reserved := range []struct {
-		key     string
-		version util.Version
-		known   bool
-	}{
-		{platformApi.ChartRequirementArangoDB, arangoDBVersion, arangoDBKnown},
-		{platformApi.ChartRequirementOperator, util.Version(version.GetVersionV1().Version), true},
-	} {
-		constraint, ok := requirements[reserved.key]
-		if !ok || constraint.Empty() {
-			continue
-		}
-
-		if !reserved.known {
-			results[reserved.key] = fmt.Errorf("version is not known yet")
-			continue
-		}
-
-		if valid, err := constraint.Validate(reserved.version); err != nil {
-			results[reserved.key] = fmt.Errorf("version %s is invalid for constraint %q: %w", reserved.version, constraint, err)
-		} else if !valid {
-			results[reserved.key] = fmt.Errorf("version %s does not satisfy required %q", reserved.version, constraint)
-		} else {
-			results[reserved.key] = nil
-		}
-	}
-
-	return results
-}
-
-// deploymentArangoDBVersion returns the ArangoDB server version reported by the deployment's current
-// image and whether it is known yet (it is unset until the deployment has pulled and inspected its image).
-func deploymentArangoDBVersion(depl *api.ArangoDeployment) (util.Version, bool) {
-	if depl == nil || depl.Status.CurrentImage == nil {
-		return "", false
-	}
-
-	return util.Version(depl.Status.CurrentImage.ArangoDBVersion), true
 }
 
 func (h *handler) HandleChartInfo(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformService, status *platformApi.ArangoPlatformServiceStatus, depl *api.ArangoDeployment, chart *platformApi.ArangoPlatformChart) (bool, error) {
