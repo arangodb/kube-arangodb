@@ -1,23 +1,492 @@
+# Multi-arch (amd64+arm64) CI for the ARM64/self-hosted-runners migration:
+# per-architecture binary builds feed the image builds and the regctl manifest
+# merges (default + UBI), alongside the code checks, govulncheck and CVE scans.
+# This runs as a plain config; the former setup/path-filtering continuation
+# (.circleci/continue_config.yml) stays folded in here and must be restored
+# before merge.
 version: 2.1
 
 orbs:
-  path-filtering: circleci/path-filtering@1.2.0
-
-setup: true
+  aws-cli: circleci/aws-cli@5.1
+  slack: circleci/slack@4.1
+  trivy-scan: arangodb/trivy-scan@1.0.0
 
 parameters:
-  manifests-verify:
-    type: boolean
-    default: false
+  # Dev image destination and the CircleCI OIDC role assumed to push to it, the
+  # same pattern as the other ARM64-migrated repos (e.g. gral): the role is
+  # arn:aws:iam::889010145541:role/circleci-project-<stage>-<project> and images
+  # land at release/<stage>/kube-arangodb/<repo> in us-east-1.
+  ecr-registry:
+    type: string
+    default: "889010145541.dkr.ecr.us-east-1.amazonaws.com"
+  ecr-repo:
+    type: string
+    default: "release/dev/kube-arangodb/kube-arangodb"
+  aws-region:
+    type: string
+    default: "us-east-1"
+  dev-role:
+    type: string
+    default: "arn:aws:iam::889010145541:role/circleci-project-dev-kube-arangodb"
+  image-base:
+    type: string
+    default: "ubuntu:24.04"
+  ubi-base-image:
+    type: string
+    default: "registry.access.redhat.com/ubi9/ubi-minimal:9.4"
+  envoy-image:
+    type: string
+    default: "envoyproxy/envoy:v1.39.6"
+
+executors:
+  golang-executor:
+    docker:
+      - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.26.8
+    resource_class: arangodb/amd-2xlarge-amd64
+
+  # Native-arch Go toolchain executors for the per-architecture operator binary
+  # builds. These only compile the binary and hand it to the image jobs via the
+  # workspace, so no Docker is required and they run on the non-privileged
+  # self-hosted classes.
+  golang-binary-amd64:
+    docker:
+      - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.26.8
+    resource_class: arangodb/large-amd64
+
+  golang-binary-arm64:
+    docker:
+      - image: 889010145541.dkr.ecr.us-east-1.amazonaws.com/cicd/golang:1.26.8
+    resource_class: arangodb/large-arm64
+
+  # Privileged self-hosted runners for the per-architecture image builds. The
+  # public framework runner ships docker-ce-cli, regctl and aws-cli; setup_docker
+  # starts a local dockerd on the -privileged class.
+  image-builder-amd64:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/large-amd64-privileged
+
+  image-builder-arm64:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/large-arm64-privileged
+
+  # The manifest merge needs no Docker (regctl talks straight to the registry),
+  # so it runs on the non-privileged small class.
+  manifest-runner:
+    docker:
+      - image: public.ecr.aws/arangodb-ci/release/prd/framework/runner:v0.2.45@sha256:6f4f59e4084a249bf526acb369bb27ee267e9095374e74a0caaa21a431d09a21
+    resource_class: arangodb/small-amd64
+
+commands:
+  setup_docker:
+    description: Start a local dockerd on the self-hosted privileged runner.
+    steps:
+      - run:
+          name: Set up Docker
+          command: |
+            export DEBIAN_FRONTEND=noninteractive
+            if ! command -v dockerd >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y \
+                docker-ce=5:29.9.0-1~ubuntu.24.04~noble \
+                docker-ce-cli=5:29.9.0-1~ubuntu.24.04~noble \
+                containerd.io=2.4.1-2~ubuntu.24.04~noble \
+                docker-buildx-plugin=0.38.0-1~ubuntu.24.04~noble
+            fi
+            if ! docker info >/dev/null 2>&1; then
+              DOCKERD_ARGS=""
+              mkdir -p /var/lib/docker
+              if truncate -s 60G /tmp/docker.img && mkfs.ext4 -q -F /tmp/docker.img && mount -o loop /tmp/docker.img /var/lib/docker; then
+                echo "dockerd storage: overlayfs on loop-mounted ext4"
+              elif apt-get install -y fuse-overlayfs && [ -e /dev/fuse ]; then
+                echo "dockerd storage: fuse-overlayfs"
+                DOCKERD_ARGS="--feature containerd-snapshotter=false --storage-driver=fuse-overlayfs"
+              else
+                echo "dockerd storage: vfs"
+                DOCKERD_ARGS="--feature containerd-snapshotter=false --storage-driver=vfs"
+              fi
+              dockerd --registry-mirror=https://mirror.gcr.io ${DOCKERD_ARGS} >/tmp/dockerd.log 2>&1 &
+              for i in $(seq 1 30); do docker info >/dev/null 2>&1 && break; sleep 1; done
+            fi
+            docker info || { tail -50 /tmp/dockerd.log; exit 1; }
+
+jobs:
+  # Per-architecture operator binary builds. Each binary is compiled on its own
+  # native-arch runner and persisted to the workspace; the image build and
+  # multi-arch manifest jobs (added in a follow-up) attach the workspace so the
+  # Dockerfile only has to ADD the prebuilt bin/linux/<arch>/arangodb_operator.
+  build-binary-amd64:
+    executor: golang-binary-amd64
+    steps:
+      - checkout
+      - run:
+          name: Build operator binary (linux/amd64)
+          command: make operator-binary-linux-amd64
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/linux/amd64/arangodb_operator
+
+  build-binary-arm64:
+    executor: golang-binary-arm64
+    steps:
+      - checkout
+      - run:
+          name: Build operator binary (linux/arm64)
+          command: make operator-binary-linux-arm64
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/linux/arm64/arangodb_operator
+
+  # Per-architecture image builds. The prebuilt binary is pulled back from the
+  # workspace and the default Dockerfile only ADDs it (no in-image compile), so a
+  # plain `docker build` is enough. UBI is intentionally not built yet.
+  build-image-amd64:
+    executor: image-builder-amd64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator image (linux/amd64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-amd64"
+            docker build --platform linux/amd64 -f Dockerfile \
+              --build-arg "IMAGE=<< pipeline.parameters.image-base >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              --build-arg "BUILD_SKIP_UPDATE=true" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  build-image-arm64:
+    executor: image-builder-arm64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator image (linux/arm64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-arm64"
+            docker build --platform linux/arm64 -f Dockerfile \
+              --build-arg "IMAGE=<< pipeline.parameters.image-base >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              --build-arg "BUILD_SKIP_UPDATE=true" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  # Merge the two per-architecture tags into a single multi-arch image. regctl is
+  # in the runner image and talks straight to the registry, so no Docker is
+  # needed. --platform is required (regctl 0.7.2 otherwise nests the indexes).
+  push-image-manifest:
+    executor: manifest-runner
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR (regctl)
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | regctl registry login << pipeline.parameters.ecr-registry >> --user AWS --pass-stdin
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Merge per-architecture images into one manifest
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>"
+            regctl index create "${IMAGE}:${DEV_TAG}" \
+              --ref "${IMAGE}:${DEV_TAG}-amd64" --platform linux/amd64 \
+              --ref "${IMAGE}:${DEV_TAG}-arm64" --platform linux/arm64
+            regctl manifest get "${IMAGE}:${DEV_TAG}"
+
+  # UBI variant of the per-architecture image builds. Same prebuilt binary from
+  # the workspace, built from Dockerfile.ubi on the UBI base, tagged -ubi-<arch>
+  # and merged into the single <tag>-ubi image.
+  build-image-ubi-amd64:
+    executor: image-builder-amd64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator UBI image (linux/amd64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-ubi-amd64"
+            docker build --platform linux/amd64 -f Dockerfile.ubi \
+              --build-arg "IMAGE=<< pipeline.parameters.ubi-base-image >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  build-image-ubi-arm64:
+    executor: image-builder-arm64
+    steps:
+      - checkout
+      - setup_docker
+      - attach_workspace:
+          at: .
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | docker login --username AWS --password-stdin << pipeline.parameters.ecr-registry >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Build and push operator UBI image (linux/arm64)
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-ubi-arm64"
+            docker build --platform linux/arm64 -f Dockerfile.ubi \
+              --build-arg "IMAGE=<< pipeline.parameters.ubi-base-image >>" \
+              --build-arg "ENVOY_IMAGE=<< pipeline.parameters.envoy-image >>" \
+              --build-arg "VERSION=${DEV_TAG}" \
+              -t "${IMAGE}" .
+            docker push "${IMAGE}"
+
+  push-image-ubi-manifest:
+    executor: manifest-runner
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Log in to ECR (regctl)
+          command: aws ecr get-login-password --region << pipeline.parameters.aws-region >> | regctl registry login << pipeline.parameters.ecr-registry >> --user AWS --pass-stdin
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - run:
+          name: Merge per-architecture UBI images into one manifest
+          command: |
+            IMAGE="<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>"
+            regctl index create "${IMAGE}:${DEV_TAG}-ubi" \
+              --ref "${IMAGE}:${DEV_TAG}-ubi-amd64" --platform linux/amd64 \
+              --ref "${IMAGE}:${DEV_TAG}-ubi-arm64" --platform linux/arm64
+            regctl manifest get "${IMAGE}:${DEV_TAG}-ubi"
+
+  # Restored code checks, govulncheck included (both run in this one job on the
+  # 2xlarge executor so the vendor/tools setup is done once).
+  check-code:
+    executor: golang-executor
+    environment:
+      GOCACHE: "/tmp/go/cache"
+      GOPATH: "/tmp/go/path"
+      GO111MODULES: off
+      KEEP_GOPATH: 1
+    steps:
+      - run: apt-get update && apt-get install -y unzip
+      - checkout
+      - run:
+          name: Run Vendor
+          command: make vendor tools-min init
+      - run:
+          name: License check
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make license-verify license-range-verify
+      - run: make fmt-verify
+      - run: make yamlfmt-verify
+      - run: make linter
+      - run:
+          name: Unit tests
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make run-unit-tests
+      - run:
+          name: make bin
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make bin
+      - run:
+          name: Check that everything what should be generated is commited
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+            make ci-check
+      - run:
+          name: vulncheck
+          no_output_timeout: 1.5h
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              echo "This is not a pull request. Skipping..."
+              exit 0
+            fi
+             make vulncheck-optional
+
+  dependency-cve-scan:
+    executor: golang-executor
+    steps:
+      - checkout
+      - trivy-scan/scan:
+          scan-type: fs
+          scan-path: "."
+          severity: "CRITICAL,HIGH"
+          fail-on-findings: false
+          store-junit-results: true
+
+  # Image-layer CVE gate (warn-only): the operator image bundles the base OS
+  # packages and the compiled arangodb_operator/envoy binaries, none of which are
+  # visible to the fs scan above. Scans the multi-arch dev image this pipeline
+  # just built and pushed to ECR (image-src: remote, pulled straight from the
+  # registry), so it runs after push-image-manifest and assumes the project OIDC
+  # role so trivy can authenticate to the private ECR repo.
+  image-cve-scan:
+    executor: manifest-runner
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - trivy-scan/scan:
+          scan-type: image
+          image-ref: "<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}"
+          image-src: remote
+          severity: "CRITICAL,HIGH"
+          fail-on-findings: false
+          store-junit-results: true
+          sbom-output: /tmp/sbom-image.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-image.cdx.json
+          destination: sbom-image.cdx.json
+
+  # Same gate against the UBI9 variant built by this pipeline.
+  image-cve-scan-ubi:
+    executor: manifest-runner
+    steps:
+      - checkout
+      - aws-cli/setup:
+          role_arn: << pipeline.parameters.dev-role >>
+          region: << pipeline.parameters.aws-region >>
+      - run:
+          name: Compute dev image tag
+          command: echo "export DEV_TAG=$(cut -f1 -d'+' VERSION)-$(echo ${CIRCLE_SHA1} | cut -c -7)" >> "$BASH_ENV"
+      - trivy-scan/scan:
+          scan-type: image
+          image-ref: "<< pipeline.parameters.ecr-registry >>/<< pipeline.parameters.ecr-repo >>:${DEV_TAG}-ubi"
+          image-src: remote
+          severity: "CRITICAL,HIGH"
+          fail-on-findings: false
+          store-junit-results: true
+          sbom-output: /tmp/sbom-image.cdx.json
+      - store_artifacts:
+          path: /tmp/sbom-image.cdx.json
+          destination: sbom-image.cdx.json
+
+  # Fan-in gate: succeeds only once every other job in the pipeline has.
+  completed:
+    executor: golang-executor
+    steps:
+      - run:
+          name: Completed
+          command: echo "Completed"
 
 workflows:
-  always-run:
+  version: 2
+
+  pipeline:
     jobs:
-      - path-filtering/filter:
-          name: check-updated-files
-          base-revision: << pipeline.git.base_revision >>
-          config-path: .circleci/continue_config.yml
-          tag: "3.12"
-          mapping: |
-            manifests/.* manifests-verify true
-            chart/.* manifests-verify true
+      - check-code
+      - dependency-cve-scan
+      - image-cve-scan:
+          context: aws
+          requires:
+            - push-image-manifest
+      - image-cve-scan-ubi:
+          context: aws
+          requires:
+            - push-image-ubi-manifest
+      - build-binary-amd64
+      - build-binary-arm64
+      - build-image-amd64:
+          context: aws
+          requires:
+            - build-binary-amd64
+      - build-image-arm64:
+          context: aws
+          requires:
+            - build-binary-arm64
+      - push-image-manifest:
+          context: aws
+          requires:
+            - build-image-amd64
+            - build-image-arm64
+      - build-image-ubi-amd64:
+          context: aws
+          requires:
+            - build-binary-amd64
+      - build-image-ubi-arm64:
+          context: aws
+          requires:
+            - build-binary-arm64
+      - push-image-ubi-manifest:
+          context: aws
+          requires:
+            - build-image-ubi-amd64
+            - build-image-ubi-arm64
+      - completed:
+          requires:
+            - check-code
+            - dependency-cve-scan
+            - image-cve-scan
+            - image-cve-scan-ubi
+            - build-binary-amd64
+            - build-binary-arm64
+            - build-image-amd64
+            - build-image-arm64
+            - push-image-manifest
+            - build-image-ubi-amd64
+            - build-image-ubi-arm64
+            - push-image-ubi-manifest

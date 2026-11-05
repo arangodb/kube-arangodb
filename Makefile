@@ -492,6 +492,12 @@ $(BIN): $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPS_LINUX_AMD64) $(VBIN_INT_LINUX_AM
 	@cp "$(VBIN_OPERATOR_LINUX_AMD64)" "$(BIN)"
 	@cp "$(VBIN_OPS_LINUX_AMD64)" "$(BIN_OPS)"
 
+.PHONY: operator-binary-linux-amd64
+operator-binary-linux-amd64: $(VBIN_OPERATOR_LINUX_AMD64)
+
+.PHONY: operator-binary-linux-arm64
+operator-binary-linux-arm64: $(VBIN_OPERATOR_LINUX_ARM64)
+
 .PHONY: docker
 docker: clean check-vars $(VBIN_OPERATOR_LINUX_AMD64) $(VBIN_OPERATOR_LINUX_ARM64)
 ifdef PUSHIMAGES
