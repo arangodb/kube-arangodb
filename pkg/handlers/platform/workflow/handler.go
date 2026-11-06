@@ -169,22 +169,59 @@ func (h *handler) Timeout() time.Duration {
 func (h *handler) handle(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus) (bool, error) {
 	changed, err := operator.HandleP3WithCondition(ctx, &status.Conditions, platformApi.ReadyCondition, item, extension, status, h.HandleSpecValidity, h.HandleDeployment)
 
-	// Reflect the requested hibernation state after the reconcile chain has updated the release.
-	if updateHibernatedCondition(&status.Conditions, extension.Spec.IsHibernated()) {
+	// Reflect the hibernation state: Hibernating tracks the request (spec.hibernate), while Hibernated
+	// tracks the effective state, which honors the chart-requirement dependency order - the workflow does
+	// not hibernate while something still depends on it, and does not wake while something it requires is
+	// still hibernated. The Hibernated condition is what gates passing the hibernated flag to the chart.
+	if updateHibernatingCondition(&status.Conditions, extension.Spec.IsHibernated()) {
+		changed = true
+	}
+
+	if updateHibernatedCondition(&status.Conditions, h.evaluateHibernated(item, extension, status)) {
 		changed = true
 	}
 
 	return changed, err
 }
 
-// updateHibernatedCondition reflects the requested hibernation state on the Hibernated status condition.
-func updateHibernatedCondition(conditions *api.ConditionList, hibernated bool) bool {
+// updateHibernatingCondition reflects the requested hibernation state on the Hibernating status condition.
+func updateHibernatingCondition(conditions *api.ConditionList, hibernating bool) bool {
 	reason, message := "Running", "Hibernation not requested"
+	if hibernating {
+		reason, message = "Hibernating", "Hibernation requested"
+	}
+
+	return conditions.Update(platformApi.HibernatingCondition, hibernating, reason, message)
+}
+
+// updateHibernatedCondition reflects whether the workflow has settled into its effective hibernated state on
+// the Hibernated status condition.
+func updateHibernatedCondition(conditions *api.ConditionList, hibernated bool) bool {
+	reason, message := "Running", "Not hibernated"
 	if hibernated {
-		reason, message = "Hibernated", "Hibernation requested"
+		reason, message = "Hibernated", "Hibernated"
 	}
 
 	return conditions.Update(platformApi.HibernatedCondition, hibernated, reason, message)
+}
+
+// evaluateHibernated returns the effective Hibernated state for the workflow, honoring the chart-requirement
+// dependency order across the services and workflows sharing the cache.
+func (h *handler) evaluateHibernated(item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus) bool {
+	var requirements platformApi.ChartDetailsPlatformRequirements
+	if info := status.ChartInfo; info != nil {
+		requirements = info.Details.GetPlatform().GetRequirements()
+	}
+
+	return platform.EvaluateHibernated(h.Cache, platform.HibernationSubject{
+		Kind:       item.Kind,
+		Namespace:  item.Namespace,
+		Name:       item.Name,
+		Chart:      extension.Spec.Chart.GetName(),
+		Requires:   platform.CustomRequirementCharts(requirements),
+		Hibernate:  extension.Spec.IsHibernated(),
+		Hibernated: status.Conditions.IsTrue(platformApi.HibernatedCondition),
+	})
 }
 
 func (h *handler) HandleSpecValidity(ctx context.Context, item operation.Item, extension *platformApi.ArangoPlatformWorkflow, status *platformApi.ArangoPlatformWorkflowStatus) (bool, error) {
@@ -492,7 +529,7 @@ func (h *handler) HandleValues(ctx context.Context, item operation.Item, extensi
 			Deployment: types.ServicePlatformDeployment{
 				Name: depl.GetName(),
 			},
-			Hibernated: extension.Spec.IsHibernated(),
+			Hibernated: status.Conditions.IsTrue(platformApi.HibernatedCondition),
 		},
 	}.Values()
 	if err != nil {

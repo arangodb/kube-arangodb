@@ -41,6 +41,9 @@ type ObjectCache[V any] interface {
 	// Invalidate drops the cached entry for name.
 	Invalidate(name operation.ItemName)
 
+	// List returns all currently cached, non-expired values in an unspecified order.
+	List() []V
+
 	// Clear drops all cached entries.
 	Clear()
 }
@@ -105,6 +108,25 @@ func (c *cache[V]) Invalidate(name operation.ItemName) {
 	defer c.lock.Unlock()
 
 	delete(c.entries, name)
+}
+
+func (c *cache[V]) List() []V {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	now := time.Now()
+
+	values := make([]V, 0, len(c.entries))
+	for name, e := range c.entries {
+		if !e.expires.IsZero() && now.After(e.expires) {
+			delete(c.entries, name)
+			continue
+		}
+
+		values = append(values, e.value)
+	}
+
+	return values
 }
 
 func (c *cache[V]) Clear() {

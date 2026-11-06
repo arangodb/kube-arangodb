@@ -50,6 +50,22 @@ func isReservedRequirement(key string) bool {
 	return false
 }
 
+// CustomRequirementCharts returns the custom requirement keys - the names of the other ArangoPlatformCharts
+// this chart depends on - from a chart's platform requirements. Reserved keys (ArangoDB, Operator) are not
+// chart dependencies and are omitted.
+func CustomRequirementCharts(requirements platformApi.ChartDetailsPlatformRequirements) []string {
+	charts := make([]string, 0, len(requirements))
+	for key := range requirements {
+		if isReservedRequirement(key) {
+			continue
+		}
+
+		charts = append(charts, key)
+	}
+
+	return charts
+}
+
 // EvaluateRequirements evaluates a chart's platform requirements and returns the failure messages (empty
 // if all are satisfied), sorted so the result is stable across reconciles. Reserved keys are evaluated
 // against the bound deployment's ArangoDB version and the operator's own version; every other key names an
