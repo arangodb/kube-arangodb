@@ -92,10 +92,10 @@ func (f fixture) cache() Cache {
 	return c
 }
 
-func serviceSubject(namespace, name, chart string, requires []string, hibernate, hibernated bool) HibernationSubject {
+func serviceSubject(name, chart string, requires []string, hibernate, hibernated bool) HibernationSubject {
 	return HibernationSubject{
 		Kind:       apiPlatform.ArangoPlatformServiceResourceKind,
-		Namespace:  namespace,
+		Namespace:  ns,
 		Name:       name,
 		Chart:      chart,
 		Requires:   requires,
@@ -126,14 +126,14 @@ func Test_EvaluateHibernated(t *testing.T) {
 		c := baseFixture(false, false).cache()
 
 		// b (base) is required by a (app), which is still awake, so b must not hibernate yet.
-		subject := serviceSubject(ns, "b", "base", nil, true, false)
+		subject := serviceSubject("b", "base", nil, true, false)
 		require.False(t, EvaluateHibernated(c, subject))
 	})
 
 	t.Run("Hibernate dependency allowed once dependent is hibernated", func(t *testing.T) {
 		c := baseFixture(true, false).cache()
 
-		subject := serviceSubject(ns, "b", "base", nil, true, false)
+		subject := serviceSubject("b", "base", nil, true, false)
 		require.True(t, EvaluateHibernated(c, subject))
 	})
 
@@ -141,7 +141,7 @@ func Test_EvaluateHibernated(t *testing.T) {
 		c := baseFixture(false, false).cache()
 
 		// Nothing depends on a (app), so it may hibernate right away.
-		subject := serviceSubject(ns, "a", "app", []string{"base"}, true, false)
+		subject := serviceSubject("a", "app", []string{"base"}, true, false)
 		require.True(t, EvaluateHibernated(c, subject))
 	})
 
@@ -149,7 +149,7 @@ func Test_EvaluateHibernated(t *testing.T) {
 		c := baseFixture(false, true).cache()
 
 		// Even though a still depends on b, an already-hibernated b stays hibernated.
-		subject := serviceSubject(ns, "b", "base", nil, true, true)
+		subject := serviceSubject("b", "base", nil, true, true)
 		require.True(t, EvaluateHibernated(c, subject))
 	})
 
@@ -157,14 +157,14 @@ func Test_EvaluateHibernated(t *testing.T) {
 		c := baseFixture(true, true).cache()
 
 		// a wants to wake but b (which a requires) is still hibernated, so a stays hibernated.
-		subject := serviceSubject(ns, "a", "app", []string{"base"}, false, true)
+		subject := serviceSubject("a", "app", []string{"base"}, false, true)
 		require.True(t, EvaluateHibernated(c, subject))
 	})
 
 	t.Run("Wake allowed once dependency is awake", func(t *testing.T) {
 		c := baseFixture(true, false).cache()
 
-		subject := serviceSubject(ns, "a", "app", []string{"base"}, false, true)
+		subject := serviceSubject("a", "app", []string{"base"}, false, true)
 		require.False(t, EvaluateHibernated(c, subject))
 	})
 
@@ -172,14 +172,14 @@ func Test_EvaluateHibernated(t *testing.T) {
 		c := baseFixture(true, true).cache()
 
 		// b depends on nothing, so it may wake right away.
-		subject := serviceSubject(ns, "b", "base", nil, false, true)
+		subject := serviceSubject("b", "base", nil, false, true)
 		require.False(t, EvaluateHibernated(c, subject))
 	})
 
 	t.Run("Already awake stays awake", func(t *testing.T) {
 		c := baseFixture(false, false).cache()
 
-		subject := serviceSubject(ns, "a", "app", []string{"base"}, false, false)
+		subject := serviceSubject("a", "app", []string{"base"}, false, false)
 		require.False(t, EvaluateHibernated(c, subject))
 	})
 
@@ -190,7 +190,7 @@ func Test_EvaluateHibernated(t *testing.T) {
 		}.cache()
 
 		// No service or workflow provides the "missing" chart, so nothing blocks waking.
-		subject := serviceSubject(ns, "a", "app", []string{"missing"}, false, true)
+		subject := serviceSubject("a", "app", []string{"missing"}, false, true)
 		require.False(t, EvaluateHibernated(c, subject))
 	})
 
@@ -206,7 +206,7 @@ func Test_EvaluateHibernated(t *testing.T) {
 			},
 		}.cache()
 
-		subject := serviceSubject(ns, "b", "base", nil, true, false)
+		subject := serviceSubject("b", "base", nil, true, false)
 		require.True(t, EvaluateHibernated(c, subject))
 	})
 
@@ -221,7 +221,7 @@ func Test_EvaluateHibernated(t *testing.T) {
 		}.cache()
 
 		// The workflow w (chart flow) depends on the base chart provided by service b.
-		subject := serviceSubject(ns, "b", "base", nil, true, false)
+		subject := serviceSubject("b", "base", nil, true, false)
 		require.False(t, EvaluateHibernated(c, subject))
 	})
 
@@ -236,7 +236,7 @@ func Test_EvaluateHibernated(t *testing.T) {
 		}.cache()
 
 		// Service a requires the flow chart provided by the still-hibernated workflow w.
-		subject := serviceSubject(ns, "a", "app", []string{"flow"}, false, true)
+		subject := serviceSubject("a", "app", []string{"flow"}, false, true)
 		require.True(t, EvaluateHibernated(c, subject))
 	})
 }
