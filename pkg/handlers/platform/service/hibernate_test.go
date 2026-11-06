@@ -48,3 +48,15 @@ func TestUpdateHibernatedCondition(t *testing.T) {
 	require.False(t, updateHibernatedCondition(&conditions, false))
 	_ = c
 }
+
+func TestUpdateHibernatingCondition(t *testing.T) {
+	var conditions api.ConditionList
+
+	require.True(t, updateHibernatingCondition(&conditions, true))
+	require.True(t, conditions.IsTrue(platformApi.HibernatingCondition))
+
+	require.False(t, updateHibernatingCondition(&conditions, true))
+
+	require.True(t, updateHibernatingCondition(&conditions, false))
+	require.False(t, conditions.IsTrue(platformApi.HibernatingCondition))
+}

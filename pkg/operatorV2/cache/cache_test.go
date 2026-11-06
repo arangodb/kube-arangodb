@@ -117,6 +117,31 @@ func Test_Cache(t *testing.T) {
 		require.False(t, ok)
 	})
 
+	t.Run("List returns all entries", func(t *testing.T) {
+		c := NewObjectCache[int](time.Minute)
+
+		c.Set(name("a"), 1)
+		c.Set(name("b"), 2)
+		c.Set(operation.ItemName{Namespace: "other", Name: "a"}, 3)
+
+		require.ElementsMatch(t, []int{1, 2, 3}, c.List())
+	})
+
+	t.Run("List is empty", func(t *testing.T) {
+		c := NewObjectCache[int](time.Minute)
+
+		require.Empty(t, c.List())
+	})
+
+	t.Run("List drops expired entries", func(t *testing.T) {
+		c := NewObjectCache[int](time.Millisecond)
+
+		c.Set(name("a"), 1)
+		time.Sleep(5 * time.Millisecond)
+
+		require.Empty(t, c.List())
+	})
+
 	t.Run("Clear", func(t *testing.T) {
 		c := NewObjectCache[int](time.Minute)
 
