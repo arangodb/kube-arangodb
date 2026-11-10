@@ -25,6 +25,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pbImplAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
@@ -164,6 +166,38 @@ func Test_API_RefreshesPools(t *testing.T) {
 
 		_, err := a.APIListGroupRoleBindings(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIGroupRequest{Group: "admins"})
 		require.NoError(t, err)
+		require.Equal(t, 1, groupRoleBindings.refreshN)
+	})
+}
+
+// Test_APIRefresh_Authorization asserts that the management refresh endpoint enforces the same
+// permission check as every other management endpoint: an unauthenticated caller is rejected and
+// no pool is refreshed, while an authorized caller refreshes all backing pools.
+func Test_APIRefresh_Authorization(t *testing.T) {
+	t.Run("Rejected without identity", func(t *testing.T) {
+		a, policies, roles, userRoleBindings, groupRoleBindings := newRefreshTestImpl()
+
+		_, err := a.APIRefresh(context.Background(), &sidecarSvcAuthzDefinition.AuthorizationAPIRefreshRequest{})
+		require.Error(t, err)
+		require.Equal(t, codes.Unauthenticated, status.Code(err))
+
+		require.Equal(t, 0, policies.refreshN)
+		require.Equal(t, 0, roles.refreshN)
+		require.Equal(t, 0, userRoleBindings.refreshN)
+		require.Equal(t, 0, groupRoleBindings.refreshN)
+	})
+
+	t.Run("Refreshes all pools when authorized", func(t *testing.T) {
+		ctx := authenticator.WithIdentity(context.Background(), &authenticator.Identity{User: util.NewType("test-user")})
+
+		a, policies, roles, userRoleBindings, groupRoleBindings := newRefreshTestImpl()
+
+		_, err := a.APIRefresh(ctx, &sidecarSvcAuthzDefinition.AuthorizationAPIRefreshRequest{})
+		require.NoError(t, err)
+
+		require.Equal(t, 1, policies.refreshN)
+		require.Equal(t, 1, roles.refreshN)
+		require.Equal(t, 1, userRoleBindings.refreshN)
 		require.Equal(t, 1, groupRoleBindings.refreshN)
 	})
 }
