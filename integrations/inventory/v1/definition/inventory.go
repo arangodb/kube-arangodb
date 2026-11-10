@@ -26,6 +26,7 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 	"github.com/arangodb/kube-arangodb/pkg/util/strings"
 )
@@ -70,10 +71,12 @@ func NewArangoDBConfiguration(spec api.DeploymentSpec, status api.DeploymentStat
 		cfg.Sharding = getShardingFromArgs(spec.Coordinators.Args...)
 	}
 
-	// Core security uses the same authentication view as the platform, but authorization at the core
-	// level is ArangoDB-native only - RBAC is a platform-level concept (added later), so downgrade it.
+	// Core security uses the same authentication view as the platform. Authorization at the core level is
+	// ArangoDB-native unless the rbac-coredb feature enables core-level RBAC enforcement (the serving
+	// member's arangod is pointed at the local authorization sidecar via --server.external-rbac-service);
+	// without it RBAC is applied by the platform gateway, not the core, so downgrade it to Native.
 	sec := NewInventorySecurity(spec, status)
-	if sec.Authorization == SecurityAuthorizationType_AuthorizationRBAC {
+	if sec.Authorization == SecurityAuthorizationType_AuthorizationRBAC && !features.RBACCoreDB().Enabled() {
 		sec.Authorization = SecurityAuthorizationType_AuthorizationNative
 	}
 	cfg.Security = sec
