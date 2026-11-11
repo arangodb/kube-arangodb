@@ -38,27 +38,48 @@ func NewInterceptorClientOptions(auth Authentication) []grpc.DialOption {
 
 	return []grpc.DialOption{
 		grpc.WithUnaryInterceptor(func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-			token, change, err := auth.ExtendAuthentication(ctx)
+			ctx, err := applyClientAuthentication(ctx, auth)
 			if err != nil {
-				return status.Error(codes.Unauthenticated, errors.ExtractGRPCCause(err).Error())
-			}
-
-			if change {
-				ctx = metadata.AppendToOutgoingContext(ctx, "authorization", token)
+				return err
 			}
 
 			return invoker(ctx, method, req, reply, cc, opts...)
 		}),
 		grpc.WithStreamInterceptor(func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-			token, change, err := auth.ExtendAuthentication(ctx)
+			ctx, err := applyClientAuthentication(ctx, auth)
 			if err != nil {
-				return nil, status.Error(codes.Unauthenticated, errors.ExtractGRPCCause(err).Error())
+				return nil, err
 			}
 
-			if change {
-				ctx = metadata.AppendToOutgoingContext(ctx, "authorization", token)
-			}
 			return streamer(ctx, desc, cc, method, opts...)
 		}),
 	}
+}
+
+// applyClientAuthentication stamps the service token produced by auth onto the outgoing context, unless the
+// context already carries an authorization header (e.g. a caller token forwarded by the transparent proxy -
+// pkg/util/svc.Proxy). In that case the forwarded token is preserved untouched: the server-side authenticator
+// accepts only a single authorization value (two values are rejected as Unauthorized), and overriding it would
+// discard the caller identity that the central service's RBAC must evaluate.
+func applyClientAuthentication(ctx context.Context, auth Authentication) (context.Context, error) {
+	token, change, err := auth.ExtendAuthentication(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, errors.ExtractGRPCCause(err).Error())
+	}
+
+	if change && !hasOutgoingAuthorization(ctx) {
+		ctx = metadata.AppendToOutgoingContext(ctx, "authorization", token)
+	}
+
+	return ctx, nil
+}
+
+// hasOutgoingAuthorization reports whether the outgoing context already carries an authorization header.
+func hasOutgoingAuthorization(ctx context.Context) bool {
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if !ok {
+		return false
+	}
+
+	return len(md.Get("authorization")) > 0
 }
