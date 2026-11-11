@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (Security) Enforce the authorization sidecar's health and RBAC permission checks (rbac:Refresh) on the /_management/permissions/refresh endpoint, which previously refreshed the authorization pools without any authentication or authorization
 - (Feature) (Platform) Hibernate ArangoPlatformService and ArangoPlatformWorkflow in chart-requirement dependency order: track the request with a Hibernating condition and the effective state with the Hibernated condition, holding hibernation while another object still depends on the chart and holding wake-up while a chart it requires is still hibernated
 - (Feature) (Platform) Evaluate custom chart requirements (requirement keys referencing other ArangoPlatformCharts) against a shared chart cache and gate the install/upgrade on the RequirementsFulfilled condition for both ArangoPlatformService and ArangoPlatformWorkflow
 - (Documentation) Link the ArangoDB Platform Releases portal (https://releases.license.arango.ai/) from the Platform installation file schema

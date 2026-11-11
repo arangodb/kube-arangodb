@@ -34,6 +34,7 @@ import (
 	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util/arangod/db"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
 type Authorizer interface {
@@ -117,6 +118,14 @@ func (a *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, con
 }
 
 func (a *implementation) APIRefresh(ctx context.Context, _ *sidecarSvcAuthzDefinition.AuthorizationAPIRefreshRequest) (*sidecarSvcAuthzDefinition.AuthorizationAPIRefreshResponse, error) {
+	if err := a.Health(ctx).Require(); err != nil {
+		return nil, err
+	}
+
+	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, a.Plugin(), "rbac:Refresh", ""); err != nil {
+		return nil, err
+	}
+
 	if err := a.Refresh(ctx); err != nil {
 		return nil, err
 	}
