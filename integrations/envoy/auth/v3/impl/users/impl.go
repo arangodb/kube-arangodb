@@ -75,12 +75,16 @@ func New(ctx context.Context, configuration pbImplEnvoyAuthV3Shared.Configuratio
 			if !adbDriverV2Shared.IsConflict(err) {
 				return nil, util.Default[time.Time](), err
 			}
+
+			// The user already exists - it was created by an earlier request. We intentionally do not
+			// re-fetch it by name here: the by-name lookup is a GET with the name in the URL path, which
+			// the server does not resolve for names it does not round-trip there (e.g. containing '+'),
+			// so the re-fetch would spuriously fail with "user not found". The conflict already proves the
+			// user is present, which is all this handler needs.
+			return nil, time.Now().Add(24 * time.Hour), nil
 		} else {
 			return user, time.Now().Add(24 * time.Hour), nil
 		}
-
-		v, err := client.User(ctx, in)
-		return v, time.Now().Add(24 * time.Hour), err
 	})
 
 	return i, true, nil

@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Treat an AlreadyExists conflict as success when auto-creating an authenticated user in the Envoy auth users extension, instead of re-fetching by name and failing with "user not found" for usernames the server does not resolve in the request path (e.g. containing '+')
 - (Documentation) Correct the INTEGRATION_AUTHORIZATION_MODE_COREDB environment variable docs to list RBAC as a value, reported when the rbac-coredb feature enables core-level enforcement
 - (Bugfix) (Security) Resolve the caller identity at the central integration service when it serves the deployment: drop the per-deployment authentication v1 profile so authentication is handled centrally, and preserve a forwarded caller authorization header on integration client calls instead of overriding it with the service token
 - (Bugfix) (Security) Enforce the authorization sidecar's health and RBAC permission checks (rbac:Refresh) on the /_management/permissions/refresh endpoint, which previously refreshed the authorization pools without any authentication or authorization
