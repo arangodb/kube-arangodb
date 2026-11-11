@@ -215,7 +215,7 @@ Example: `Native`
 
 #### INTEGRATION_AUTHORIZATION_MODE_COREDB
 
-Authorization mode enforced by the ArangoDB core. One of `None` or `Native` - RBAC is enforced upstream at the gateway, so it is reported as `Native` here.
+Authorization mode enforced by the ArangoDB core. One of `None`, `Native` or `RBAC`. `RBAC` is reported only when the `rbac-coredb` feature enables core-level enforcement (arangod `--server.external-rbac-service`); otherwise RBAC is applied upstream by the platform gateway and the core reports `Native` (or `None` when authentication is disabled).
 
 Example: `Native`
 
