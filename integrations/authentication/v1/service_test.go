@@ -200,8 +200,8 @@ func tokenRequestForGroups(groups ...string) *pbAuthenticationV1.CreateTokenRequ
 
 // callerCtx returns a context carrying a verified caller identity, as the server auth interceptor would
 // set it. The authorization subject is this identity, never the request.
-func callerCtx(user string, groups ...string) context.Context {
-	return authenticator.WithIdentity(context.Background(), &authenticator.Identity{User: util.NewType(user), Groups: groups})
+func callerCtx() context.Context {
+	return authenticator.WithIdentity(context.Background(), &authenticator.Identity{User: util.NewType(authzTestUser)})
 }
 
 // superuserCtx returns a context carrying a superuser identity (nil user), as a server/superuser token
@@ -250,7 +250,7 @@ func Test_rbac_CreateToken_DeniesUnauthorizedUser(t *testing.T) {
 	parent := &fakeAuthn{}
 	r := &rbac{Interface: parent, authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
 
-	_, err := r.CreateToken(callerCtx(authzTestUser), tokenRequestFor())
+	_, err := r.CreateToken(callerCtx(), tokenRequestFor())
 	require.Error(t, err)
 
 	s, ok := status.FromError(err)
@@ -264,7 +264,7 @@ func Test_rbac_CreateToken_AllowsAuthorizedUser(t *testing.T) {
 	parent := &fakeAuthn{}
 	r := &rbac{Interface: parent, authz: pbImplAuthorizationV1Shared.NewAlwaysPlugin()}
 
-	_, err := r.CreateToken(callerCtx(authzTestUser), tokenRequestFor())
+	_, err := r.CreateToken(callerCtx(), tokenRequestFor())
 	require.NoError(t, err)
 	require.True(t, parent.created)
 }
@@ -302,7 +302,7 @@ func Test_rbac_CreateToken_DeniesUnauthorizedGroup(t *testing.T) {
 	parent := &fakeAuthn{}
 	r := &rbac{Interface: parent, authz: groupEvaluator(&evaluated, "admin")}
 
-	_, err := r.CreateToken(callerCtx(authzTestUser), tokenRequestForGroups("reader", "admin"))
+	_, err := r.CreateToken(callerCtx(), tokenRequestForGroups("reader", "admin"))
 	require.Error(t, err)
 
 	s, ok := status.FromError(err)
@@ -319,7 +319,7 @@ func Test_rbac_CreateToken_AllowsAuthorizedGroups(t *testing.T) {
 	parent := &fakeAuthn{}
 	r := &rbac{Interface: parent, authz: groupEvaluator(&evaluated)}
 
-	_, err := r.CreateToken(callerCtx(authzTestUser), tokenRequestForGroups("reader", "writer"))
+	_, err := r.CreateToken(callerCtx(), tokenRequestForGroups("reader", "writer"))
 	require.NoError(t, err)
 	require.ElementsMatch(t, []string{"reader", "writer"}, evaluated)
 	require.True(t, parent.created)
@@ -331,7 +331,7 @@ func Test_rbac_CreateToken_NoGroupsNoGroupChecks(t *testing.T) {
 	parent := &fakeAuthn{}
 	r := &rbac{Interface: parent, authz: groupEvaluator(&evaluated)}
 
-	_, err := r.CreateToken(callerCtx(authzTestUser), tokenRequestForGroups())
+	_, err := r.CreateToken(callerCtx(), tokenRequestForGroups())
 	require.NoError(t, err)
 	require.Empty(t, evaluated)
 	require.True(t, parent.created)
