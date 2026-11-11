@@ -34,7 +34,9 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
+	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
+	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -256,6 +258,70 @@ func Test_authorizeCreateToken_SuperuserForDefaultUser(t *testing.T) {
 
 	i := &implementation{authz: pbImplAuthorizationV1Shared.SuperUser(pbImplAuthorizationV1Shared.NewNeverPlugin())}
 	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), &pbAuthenticationV1.CreateTokenRequest{}, "root"))
+}
+
+func tokenRequestForGroups(groups ...string) *pbAuthenticationV1.CreateTokenRequest {
+	return &pbAuthenticationV1.CreateTokenRequest{User: util.NewType(authzTestUser), Groups: groups}
+}
+
+// groupEvaluator allows every evaluation except an authentication:CreateTokenGroup check whose resource
+// is one of the denied groups. It records the group resources it evaluated.
+func groupEvaluator(evaluated *[]string, deniedGroups ...string) pbImplAuthorizationV1Shared.Evaluator {
+	denied := map[string]bool{}
+	for _, g := range deniedGroups {
+		denied[g] = true
+	}
+
+	return pbImplAuthorizationV1Shared.PluginFunc(func(ctx context.Context, req *pbAuthorizationV1.AuthorizationV1PermissionRequest) (*pbAuthorizationV1.AuthorizationV1PermissionResponse, error) {
+		if req.GetAction() == ActionCreateTokenGroup {
+			if evaluated != nil {
+				*evaluated = append(*evaluated, req.GetResource())
+			}
+			if denied[req.GetResource()] {
+				return &pbAuthorizationV1.AuthorizationV1PermissionResponse{Effect: sidecarSvcAuthzTypes.Effect_Deny, Message: "group denied"}, nil
+			}
+		}
+		return &pbAuthorizationV1.AuthorizationV1PermissionResponse{Effect: sidecarSvcAuthzTypes.Effect_Allow}, nil
+	})
+}
+
+// With central services + asymmetric key, a token mint the service allows is still rejected when the
+// caller is not authorized to assign one of the requested groups.
+func Test_authorizeCreateToken_DeniesUnauthorizedGroup(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
+	i := &implementation{authz: groupEvaluator(nil, "admin")}
+
+	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestForGroups("reader", "admin"), authzTestUser)
+	require.Error(t, err)
+
+	s, ok := status.FromError(err)
+	require.True(t, ok)
+	require.Equal(t, codes.PermissionDenied, s.Code())
+	require.Contains(t, s.Message(), "admin")
+}
+
+// With central services + asymmetric key, a mint whose groups are all permitted passes, and every group
+// is evaluated with the dedicated group action.
+func Test_authorizeCreateToken_AllowsAuthorizedGroups(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
+	var evaluated []string
+	i := &implementation{authz: groupEvaluator(&evaluated)}
+
+	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestForGroups("reader", "writer"), authzTestUser))
+	require.ElementsMatch(t, []string{"reader", "writer"}, evaluated)
+}
+
+// A request with no groups performs no group checks.
+func Test_authorizeCreateToken_NoGroupsNoGroupChecks(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
+	var evaluated []string
+	i := &implementation{authz: groupEvaluator(&evaluated)}
+
+	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestForGroups(), authzTestUser))
+	require.Empty(t, evaluated)
 }
 
 // New builds a central-delegating evaluator when central services are enabled, without dialing eagerly.

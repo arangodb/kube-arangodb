@@ -98,6 +98,9 @@ func newInternal(ctx context.Context, cfg Configuration) (*implementation, error
 // ActionCreateToken is the IAM action evaluated before minting a token.
 const ActionCreateToken = "authentication:CreateToken"
 
+// ActionCreateTokenGroup is the IAM action evaluated for each group assigned to a minted token.
+const ActionCreateTokenGroup = "authentication:CreateTokenGroup"
+
 var _ pbAuthenticationV1.AuthenticationV1Server = &implementation{}
 var _ svc.Handler = &implementation{}
 
@@ -113,11 +116,14 @@ type implementation struct {
 	authz pbImplAuthorizationV1Shared.Evaluator
 }
 
-// authorizeCreateToken enforces the IAM permission for minting a token. The authorization subject is
-// the user the token is being minted for (request.User/Groups) - which is the identity carried by the
-// request (e.g. the gateway forwards the authenticated end-user here) - evaluated against the central
-// authorization service. A request without an explicit user (nil) is a privileged/default mint and is
-// allowed by the SuperUser wrapper.
+// authorizeCreateToken enforces the IAM permission for minting a token and for each group embedded in
+// it. The authorization subject is the user the token is being minted for (request.User/Groups) - which
+// is the identity carried by the request (e.g. the gateway forwards the authenticated end-user here) -
+// evaluated against the central authorization service. First the mint itself is authorized (action
+// authentication:CreateToken, resource = user); then every requested group is authorized (action
+// authentication:CreateTokenGroup, resource = group) so a permitted mint cannot embed groups the caller
+// is not allowed to assign. A request without an explicit user (nil) is a privileged/default mint and is
+// allowed by the SuperUser wrapper, including its groups.
 //
 // The gate applies only when central services are enabled AND the signing key is asymmetric: remote
 // nodes can validate a minted token only with the public half of an asymmetric key, so the central
@@ -143,11 +149,32 @@ func (i *implementation) authorizeCreateToken(ctx context.Context, secret utilTo
 		return status.Errorf(codes.Internal, "Unable to evaluate token creation permission: %v", err)
 	}
 
-	if resp.GetEffect() == sidecarSvcAuthzTypes.Effect_Allow {
-		return nil
+	if resp.GetEffect() != sidecarSvcAuthzTypes.Effect_Allow {
+		return status.Errorf(codes.PermissionDenied, "Not allowed to create token for user %q: %s", user, resp.GetMessage())
 	}
 
-	return status.Errorf(codes.PermissionDenied, "Not allowed to create token for user %q: %s", user, resp.GetMessage())
+	// The caller must also be authorized to assign each requested group to the token. Without this, a
+	// permitted token mint could still embed arbitrary RBAC groups (for example "admin"), which become
+	// roles when the token is validated - a privilege escalation. The authorization subject mirrors the
+	// user check (the identity carried by the request); the resource is the group being assigned. Any
+	// group the service denies fails the whole request.
+	for _, group := range request.GetGroups() {
+		gResp, err := i.authz.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
+			User:     request.User,
+			Roles:    request.GetGroups(),
+			Action:   ActionCreateTokenGroup,
+			Resource: group,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "Unable to evaluate token group permission: %v", err)
+		}
+
+		if gResp.GetEffect() != sidecarSvcAuthzTypes.Effect_Allow {
+			return status.Errorf(codes.PermissionDenied, "Not allowed to assign group %q to token for user %q: %s", group, user, gResp.GetMessage())
+		}
+	}
+
+	return nil
 }
 
 func (i *implementation) Name() string {
