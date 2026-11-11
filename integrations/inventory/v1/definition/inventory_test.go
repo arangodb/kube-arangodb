@@ -30,9 +30,35 @@ import (
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	schedulerApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1"
+	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	ugrpc "github.com/arangodb/kube-arangodb/pkg/util/grpc"
 )
+
+// enableFeatureWithDependencies enables the feature and all of its dependencies for the duration of the
+// test, restoring their previous values on cleanup.
+func enableFeatureWithDependencies(t *testing.T, f features.Feature) {
+	seen := map[string]bool{}
+
+	var enable func(x features.Feature)
+	enable = func(x features.Feature) {
+		if seen[x.Name()] {
+			return
+		}
+		seen[x.Name()] = true
+
+		p := x.EnabledPointer()
+		old := *p
+		*p = true
+		t.Cleanup(func() { *p = old })
+
+		for _, d := range x.Dependencies() {
+			enable(d)
+		}
+	}
+
+	enable(f)
+}
 
 func Test_NewArangoDBConfiguration_Security(t *testing.T) {
 	t.Run("Authentication disabled", func(t *testing.T) {
@@ -51,17 +77,31 @@ func Test_NewArangoDBConfiguration_Security(t *testing.T) {
 		require.Equal(t, SecurityAuthorizationType_AuthorizationNative, cfg.Security.Authorization)
 	})
 
-	t.Run("CoreDB authorization stays Native when platform RBAC is enabled", func(t *testing.T) {
+	t.Run("CoreDB authorization downgrades to Native when rbac-coredb is disabled", func(t *testing.T) {
 		var status api.DeploymentStatus
 		status.Conditions.Update(api.ConditionTypeGatewaySidecarEnabled, true, "", "")
 
 		// Platform view reports RBAC ...
 		require.Equal(t, SecurityAuthorizationType_AuthorizationRBAC, NewInventorySecurity(api.DeploymentSpec{}, status).Authorization)
 
-		// ... but the core config downgrades it to Native.
+		// ... but without core-level RBAC enforcement the core config downgrades it to Native.
+		require.False(t, features.RBACCoreDB().Enabled())
 		cfg := NewArangoDBConfiguration(api.DeploymentSpec{}, status)
 		require.NotNil(t, cfg.Security)
 		require.Equal(t, SecurityAuthorizationType_AuthorizationNative, cfg.Security.Authorization)
+	})
+
+	t.Run("CoreDB authorization stays RBAC when rbac-coredb is enabled", func(t *testing.T) {
+		enableFeatureWithDependencies(t, features.RBACCoreDB())
+		require.True(t, features.RBACCoreDB().Enabled())
+
+		var status api.DeploymentStatus
+		status.Conditions.Update(api.ConditionTypeGatewaySidecarEnabled, true, "", "")
+
+		// With core-level RBAC enforcement the core config keeps the platform RBAC authorization.
+		cfg := NewArangoDBConfiguration(api.DeploymentSpec{}, status)
+		require.NotNil(t, cfg.Security)
+		require.Equal(t, SecurityAuthorizationType_AuthorizationRBAC, cfg.Security.Authorization)
 	})
 }
 
