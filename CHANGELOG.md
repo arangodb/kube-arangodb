@@ -1,8 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
-- (Maintenance) Drop the per-deployment authentication v1 integration profile when the central integration service serves the deployment (GatewaySidecarEnabled), matching the meta v1 and storage v2 profiles
-- (Maintenance) (Security) Move RBAC enforcement for the authentication, meta and storage integration services into a shared WithRBAC wrapper applied only in the central sidecar, so the standalone integration services no longer require an authorization evaluator
+- (Maintenance) (Security) Move RBAC enforcement for the authentication, meta and storage integration services into a shared WithRBAC wrapper applied only in the central sidecar (so the standalone integration services no longer require an authorization evaluator), and drop the per-deployment authentication v1 profile when the central integration service serves the deployment (GatewaySidecarEnabled), matching the meta v1 and storage v2 profiles
 - (Bugfix) (Security) Authorize CreateToken against the verified caller identity instead of the caller-supplied request user and roles, and authorize each assigned group (authentication:CreateTokenGroup), so a caller cannot mint a token by naming a privileged user or claiming roles
 - (Bugfix) Treat an AlreadyExists conflict as success when auto-creating an authenticated user in the Envoy auth users extension, instead of re-fetching by name and failing with "user not found" for usernames the server does not resolve in the request path (e.g. containing '+')
 - (Documentation) Correct the INTEGRATION_AUTHORIZATION_MODE_COREDB environment variable docs to list RBAC as a value, reported when the rbac-coredb feature enables core-level enforcement
