@@ -36,14 +36,12 @@ import (
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
-	pbAuthorizationV1 "github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition"
 	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_cookie"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
 	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
 	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
-	sidecarSvcAuthzTypes "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -117,13 +115,14 @@ type implementation struct {
 }
 
 // authorizeCreateToken enforces the IAM permission for minting a token and for each group embedded in
-// it. The authorization subject is the user the token is being minted for (request.User/Groups) - which
-// is the identity carried by the request (e.g. the gateway forwards the authenticated end-user here) -
-// evaluated against the central authorization service. First the mint itself is authorized (action
-// authentication:CreateToken, resource = user); then every requested group is authorized (action
-// authentication:CreateTokenGroup, resource = group) so a permitted mint cannot embed groups the caller
-// is not allowed to assign. A request without an explicit user (nil) is a privileged/default mint and is
-// allowed by the SuperUser wrapper, including its groups.
+// it. The authorization subject is the authenticated caller - the verified identity the server
+// interceptor placed in the context - never the request: request.User/Groups are caller-controlled, so
+// using them as the subject let a caller authorize itself by naming a privileged user or claiming roles.
+// The mint itself is authorized with action authentication:CreateToken (resource = the user the token is
+// minted for); then every requested group is authorized with authentication:CreateTokenGroup
+// (resource = group) so a permitted mint cannot embed groups the caller is not allowed to assign. A
+// caller with no identity is rejected as Unauthenticated; a superuser (a nil-user server token) is
+// allowed by the SuperUser wrapper.
 //
 // The gate applies only when central services are enabled AND the signing key is asymmetric: remote
 // nodes can validate a minted token only with the public half of an asymmetric key, so the central
@@ -139,38 +138,22 @@ func (i *implementation) authorizeCreateToken(ctx context.Context, secret utilTo
 		return nil
 	}
 
-	resp, err := i.authz.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-		User:     request.User,
-		Roles:    request.GetGroups(),
-		Action:   ActionCreateToken,
-		Resource: user,
-	})
-	if err != nil {
-		return status.Errorf(codes.Internal, "Unable to evaluate token creation permission: %v", err)
+	caller := authenticator.GetIdentity(ctx)
+	if caller == nil {
+		return status.Error(codes.Unauthenticated, "Unauthenticated")
 	}
 
-	if resp.GetEffect() != sidecarSvcAuthzTypes.Effect_Allow {
-		return status.Errorf(codes.PermissionDenied, "Not allowed to create token for user %q: %s", user, resp.GetMessage())
+	if err := caller.EvaluatePermission(ctx, i.authz, ActionCreateToken, user); err != nil {
+		return err
 	}
 
 	// The caller must also be authorized to assign each requested group to the token. Without this, a
 	// permitted token mint could still embed arbitrary RBAC groups (for example "admin"), which become
-	// roles when the token is validated - a privilege escalation. The authorization subject mirrors the
-	// user check (the identity carried by the request); the resource is the group being assigned. Any
-	// group the service denies fails the whole request.
+	// roles when the token is validated - a privilege escalation. The resource is the group being
+	// assigned; any group the service denies fails the whole request.
 	for _, group := range request.GetGroups() {
-		gResp, err := i.authz.Evaluate(ctx, &pbAuthorizationV1.AuthorizationV1PermissionRequest{
-			User:     request.User,
-			Roles:    request.GetGroups(),
-			Action:   ActionCreateTokenGroup,
-			Resource: group,
-		})
-		if err != nil {
-			return status.Errorf(codes.Internal, "Unable to evaluate token group permission: %v", err)
-		}
-
-		if gResp.GetEffect() != sidecarSvcAuthzTypes.Effect_Allow {
-			return status.Errorf(codes.PermissionDenied, "Not allowed to assign group %q to token for user %q: %s", group, user, gResp.GetMessage())
+		if err := caller.EvaluatePermission(ctx, i.authz, ActionCreateTokenGroup, group); err != nil {
+			return err
 		}
 	}
 

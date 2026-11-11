@@ -42,6 +42,7 @@ import (
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
+	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
@@ -213,6 +214,18 @@ func tokenRequestFor() *pbAuthenticationV1.CreateTokenRequest {
 	return &pbAuthenticationV1.CreateTokenRequest{User: util.NewType(authzTestUser), Groups: []string{"g"}}
 }
 
+// callerCtx returns a context carrying a verified caller identity, as the server auth interceptor would
+// set it. The authorization subject is this identity, never the request.
+func callerCtx(user string, groups ...string) context.Context {
+	return authenticator.WithIdentity(context.Background(), &authenticator.Identity{User: util.NewType(user), Groups: groups})
+}
+
+// superuserCtx returns a context carrying a superuser identity (nil user), as a server/superuser token
+// without a preferred_username claim produces; the SuperUser wrapper allows it.
+func superuserCtx() context.Context {
+	return authenticator.WithIdentity(context.Background(), &authenticator.Identity{})
+}
+
 // Without central services the IAM check is skipped entirely, even with a denying evaluator.
 func Test_authorizeCreateToken_SkippedWithoutCentral(t *testing.T) {
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
@@ -228,14 +241,14 @@ func Test_authorizeCreateToken_SkippedWithSymmetricKey(t *testing.T) {
 	require.NoError(t, i.authorizeCreateToken(context.Background(), symmetricSecret(t), tokenRequestFor(), authzTestUser))
 }
 
-// With central services + asymmetric key, a request for a user the authorization service denies is
-// rejected with PermissionDenied.
+// With central services + asymmetric key, a caller the authorization service denies is rejected with
+// PermissionDenied.
 func Test_authorizeCreateToken_DeniesUnauthorizedUser(t *testing.T) {
 	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
 
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewNeverPlugin()}
 
-	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor(), authzTestUser)
+	err := i.authorizeCreateToken(callerCtx(authzTestUser), asymmetricSecret(t), tokenRequestFor(), authzTestUser)
 	require.Error(t, err)
 
 	s, ok := status.FromError(err)
@@ -243,21 +256,37 @@ func Test_authorizeCreateToken_DeniesUnauthorizedUser(t *testing.T) {
 	require.Equal(t, codes.PermissionDenied, s.Code())
 }
 
-// With central services + asymmetric key, a request for a user the authorization service allows passes.
+// With central services + asymmetric key, a caller the authorization service allows passes.
 func Test_authorizeCreateToken_AllowsAuthorizedUser(t *testing.T) {
 	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
 
 	i := &implementation{authz: pbImplAuthorizationV1Shared.NewAlwaysPlugin()}
-	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor(), authzTestUser))
+	require.NoError(t, i.authorizeCreateToken(callerCtx(authzTestUser), asymmetricSecret(t), tokenRequestFor(), authzTestUser))
 }
 
-// A request without an explicit user is a privileged/default mint: the SuperUser wrapper allows it even
-// when the underlying evaluator denies everything.
+// With central services + asymmetric key, a request carrying no verified caller identity is rejected as
+// Unauthenticated even when the evaluator would allow everything: the subject must come from the verified
+// identity, not from the (caller-controlled) request.
+func Test_authorizeCreateToken_RequiresAuthenticatedCaller(t *testing.T) {
+	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
+
+	i := &implementation{authz: pbImplAuthorizationV1Shared.NewAlwaysPlugin()}
+
+	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestFor(), authzTestUser)
+	require.Error(t, err)
+
+	s, ok := status.FromError(err)
+	require.True(t, ok)
+	require.Equal(t, codes.Unauthenticated, s.Code())
+}
+
+// A superuser caller (nil-user identity) is a privileged mint: the SuperUser wrapper allows it even when
+// the underlying evaluator denies everything.
 func Test_authorizeCreateToken_SuperuserForDefaultUser(t *testing.T) {
 	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
 
 	i := &implementation{authz: pbImplAuthorizationV1Shared.SuperUser(pbImplAuthorizationV1Shared.NewNeverPlugin())}
-	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), &pbAuthenticationV1.CreateTokenRequest{}, "root"))
+	require.NoError(t, i.authorizeCreateToken(superuserCtx(), asymmetricSecret(t), &pbAuthenticationV1.CreateTokenRequest{}, "root"))
 }
 
 func tokenRequestForGroups(groups ...string) *pbAuthenticationV1.CreateTokenRequest {
@@ -290,15 +319,16 @@ func groupEvaluator(evaluated *[]string, deniedGroups ...string) pbImplAuthoriza
 func Test_authorizeCreateToken_DeniesUnauthorizedGroup(t *testing.T) {
 	t.Setenv(string(utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS), "127.0.0.1:0")
 
-	i := &implementation{authz: groupEvaluator(nil, "admin")}
+	var evaluated []string
+	i := &implementation{authz: groupEvaluator(&evaluated, "admin")}
 
-	err := i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestForGroups("reader", "admin"), authzTestUser)
+	err := i.authorizeCreateToken(callerCtx(authzTestUser), asymmetricSecret(t), tokenRequestForGroups("reader", "admin"), authzTestUser)
 	require.Error(t, err)
 
 	s, ok := status.FromError(err)
 	require.True(t, ok)
 	require.Equal(t, codes.PermissionDenied, s.Code())
-	require.Contains(t, s.Message(), "admin")
+	require.Contains(t, evaluated, "admin")
 }
 
 // With central services + asymmetric key, a mint whose groups are all permitted passes, and every group
@@ -309,7 +339,7 @@ func Test_authorizeCreateToken_AllowsAuthorizedGroups(t *testing.T) {
 	var evaluated []string
 	i := &implementation{authz: groupEvaluator(&evaluated)}
 
-	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestForGroups("reader", "writer"), authzTestUser))
+	require.NoError(t, i.authorizeCreateToken(callerCtx(authzTestUser), asymmetricSecret(t), tokenRequestForGroups("reader", "writer"), authzTestUser))
 	require.ElementsMatch(t, []string{"reader", "writer"}, evaluated)
 }
 
@@ -320,7 +350,7 @@ func Test_authorizeCreateToken_NoGroupsNoGroupChecks(t *testing.T) {
 	var evaluated []string
 	i := &implementation{authz: groupEvaluator(&evaluated)}
 
-	require.NoError(t, i.authorizeCreateToken(context.Background(), asymmetricSecret(t), tokenRequestForGroups(), authzTestUser))
+	require.NoError(t, i.authorizeCreateToken(callerCtx(authzTestUser), asymmetricSecret(t), tokenRequestForGroups(), authzTestUser))
 	require.Empty(t, evaluated)
 }
 
