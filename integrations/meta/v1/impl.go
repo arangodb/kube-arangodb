@@ -33,7 +33,6 @@ import (
 
 	adbDriverV2Shared "github.com/arangodb/go-driver/v2/arangodb/shared"
 
-	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	integrationsShared "github.com/arangodb/kube-arangodb/pkg/integrations/shared"
@@ -43,10 +42,9 @@ import (
 	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, cfg Configuration) (Interface, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -54,11 +52,6 @@ func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
 	client, ok := utilConstantsContext.ArangoDBClientCache.Get(ctx)
 	if !ok {
 		return nil, errors.Errorf("Unable to get arangodb client")
-	}
-
-	auth, ok := utilConstantsContext.AuthZClientPlugin.Get(ctx)
-	if !ok {
-		return nil, errors.Errorf("Unable to get AuthZ Client Plugin")
 	}
 
 	dbname, ok := integrationsShared.DatabaseNameContext.Get(ctx)
@@ -76,32 +69,32 @@ func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
 		WithTTLIndex("system_meta_store_object_ttl", 0, "ttl").
 		Get()
 
-	return newInternal(cfg, auth, cache.NewRemoteCacheWithTTL[*Object](col, cfg.TTL)), nil
+	return newInternal(cfg, cache.NewRemoteCacheWithTTL[*Object](col, cfg.TTL)), nil
 }
 
-func newInternal(cfg Configuration, auth pbImplAuthorizationV1Shared.Evaluator, c cache.RemoteCache[*Object]) *implementation {
+func newInternal(cfg Configuration, c cache.RemoteCache[*Object]) *implementation {
 	return &implementation{
 		cfg:   cfg,
 		cache: c,
-		auth:  auth,
 	}
 }
 
-var _ pbMetaV1.MetaV1Server = &implementation{}
-var _ svc.Handler = &implementation{}
+var _ Interface = &implementation{}
 
 type implementation struct {
 	pbMetaV1.UnimplementedMetaV1Server
 
 	cfg Configuration
 
-	auth pbImplAuthorizationV1Shared.Evaluator
-
 	cache cache.RemoteCache[*Object]
 }
 
 func (i *implementation) Name() string {
 	return pbMetaV1.Name
+}
+
+func (i *implementation) Key(parts ...string) string {
+	return i.cfg.Key(parts...)
 }
 
 func (i *implementation) Health(ctx context.Context) svc.HealthState {
@@ -146,10 +139,6 @@ func (i *implementation) Gateway(ctx context.Context, mux *runtime.ServeMux, con
 func (i *implementation) Get(ctx context.Context, req *pbMetaV1.ObjectRequest) (*pbMetaV1.ObjectResponse, error) {
 	key := i.cfg.Key(req.GetKey())
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:GetKey", key); err != nil {
-		return nil, err
-	}
-
 	object, exists, err := i.cache.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -184,10 +173,6 @@ func (i *implementation) GetBatch(ctx context.Context, request *pbMetaV1.ObjectB
 
 func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pbMetaV1.ObjectResponse, error) {
 	key := i.cfg.Key(req.GetKey())
-
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:UpdateKey", key); err != nil {
-		return nil, err
-	}
 
 	var objMeta ObjectMeta
 
@@ -240,10 +225,6 @@ func (i *implementation) Set(ctx context.Context, req *pbMetaV1.SetRequest) (*pb
 func (i *implementation) Delete(ctx context.Context, req *pbMetaV1.ObjectRequest) (*pbSharedV1.Empty, error) {
 	key := i.cfg.Key(req.GetKey())
 
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:DeleteKey", key); err != nil {
-		return nil, err
-	}
-
 	removed, err := i.cache.Remove(ctx, key)
 	if err != nil {
 		return nil, err
@@ -259,16 +240,6 @@ func (i *implementation) Delete(ctx context.Context, req *pbMetaV1.ObjectRequest
 func (i *implementation) Move(ctx context.Context, req *pbMetaV1.MoveRequest) (*pbMetaV1.ObjectResponse, error) {
 	from := i.cfg.Key(req.GetSource())
 	to := i.cfg.Key(req.GetDestination())
-
-	// Move removes the source object and creates the destination one, so the update
-	// permission is required on both keys.
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:UpdateKey", from); err != nil {
-		return nil, err
-	}
-
-	if err := authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, "meta:UpdateKey", to); err != nil {
-		return nil, err
-	}
 
 	result, err := i.cache.Move(ctx, from, to, util.OptionalType(req.Revision, ""))
 	if err != nil {
@@ -298,10 +269,6 @@ func (i *implementation) Move(ctx context.Context, req *pbMetaV1.MoveRequest) (*
 
 func (i *implementation) List(req *pbMetaV1.ListRequest, server pbMetaV1.MetaV1_ListServer) error {
 	log := logger.Str("func", "List")
-
-	if err := authenticator.GetIdentity(server.Context()).EvaluatePermission(server.Context(), i.auth, "meta:ListKey", req.GetPrefix()); err != nil {
-		return err
-	}
 
 	size := int(util.OptionalType(req.Batch, 128))
 

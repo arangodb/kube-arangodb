@@ -36,25 +36,20 @@ import (
 	adbDriverV2 "github.com/arangodb/go-driver/v2/arangodb"
 
 	pbAuthenticationV1 "github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition"
-	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	"github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl/auth_cookie"
 	pbSharedV1 "github.com/arangodb/kube-arangodb/integrations/shared/v1/definition"
 	platformAuthenticationApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication"
-	sidecarSvcAuthzClient "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client"
-	sidecarSvcAuthzDefinition "github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
-	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
-	utilIntegration "github.com/arangodb/kube-arangodb/pkg/util/integration"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 	utilToken "github.com/arangodb/kube-arangodb/pkg/util/token"
 	utilTokenLoader "github.com/arangodb/kube-arangodb/pkg/util/token/loader"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, cfg Configuration) (Interface, error) {
 	return newInternal(ctx, cfg)
 }
 
@@ -68,18 +63,6 @@ func newInternal(ctx context.Context, cfg Configuration) (*implementation, error
 		return nil, errors.Errorf("Unable to get arangodb client")
 	}
 
-	// Token creation is gated by the authorization service when central services are enabled. Like the
-	// authorization integration, authn keeps running locally (so the per-request Validate stays local)
-	// but delegates evaluation to the central AuthorizationPool service, SuperUser-wrapped. When central
-	// services are disabled the gate is skipped entirely, so the permissive Always plugin is a harmless
-	// default.
-	var authz pbImplAuthorizationV1Shared.Evaluator = pbImplAuthorizationV1Shared.NewAlwaysPlugin()
-	if utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Exists() {
-		authz = pbImplAuthorizationV1Shared.SuperUser(
-			sidecarSvcAuthzClient.NewClient(ctx, utilIntegration.NewIntegrationClientCache(sidecarSvcAuthzDefinition.NewAuthorizationPoolServiceClient)),
-		)
-	}
-
 	obj := &implementation{
 		cfg: cfg,
 		ctx: ctx,
@@ -87,20 +70,12 @@ func newInternal(ctx context.Context, cfg Configuration) (*implementation, error
 		cache: cache.NewObject(utilTokenLoader.SecretCacheDirectory(cfg.Path, cfg.TTL)),
 
 		userClient: client,
-		authz:      authz,
 	}
 
 	return obj, nil
 }
 
-// ActionCreateToken is the IAM action evaluated before minting a token.
-const ActionCreateToken = "authentication:CreateToken"
-
-// ActionCreateTokenGroup is the IAM action evaluated for each group assigned to a minted token.
-const ActionCreateTokenGroup = "authentication:CreateTokenGroup"
-
-var _ pbAuthenticationV1.AuthenticationV1Server = &implementation{}
-var _ svc.Handler = &implementation{}
+var _ Interface = &implementation{}
 
 type implementation struct {
 	pbAuthenticationV1.UnimplementedAuthenticationV1Server
@@ -110,54 +85,6 @@ type implementation struct {
 
 	userClient cache.Object[adbDriverV2.Client]
 	cache      cache.Object[utilToken.Secret]
-
-	authz pbImplAuthorizationV1Shared.Evaluator
-}
-
-// authorizeCreateToken enforces the IAM permission for minting a token and for each group embedded in
-// it. The authorization subject is the authenticated caller - the verified identity the server
-// interceptor placed in the context - never the request: request.User/Groups are caller-controlled, so
-// using them as the subject let a caller authorize itself by naming a privileged user or claiming roles.
-// The mint itself is authorized with action authentication:CreateToken (resource = the user the token is
-// minted for); then every requested group is authorized with authentication:CreateTokenGroup
-// (resource = group) so a permitted mint cannot embed groups the caller is not allowed to assign. A
-// caller with no identity is rejected as Unauthenticated; a superuser (a nil-user server token) is
-// allowed by the SuperUser wrapper.
-//
-// The gate applies only when central services are enabled AND the signing key is asymmetric: remote
-// nodes can validate a minted token only with the public half of an asymmetric key, so the central
-// authorization / remote-validation flow is meaningful only there. With symmetric keys (or without
-// central services) token creation keeps its legacy, unrestricted behaviour.
-func (i *implementation) authorizeCreateToken(ctx context.Context, secret utilToken.Secret, request *pbAuthenticationV1.CreateTokenRequest, user string) error {
-	if !utilConstants.CENTRAL_INTEGRATION_SERVICE_ADDRESS.Exists() {
-		return nil
-	}
-
-	if len(secret.PublicKey()) == 0 {
-		// Symmetric signing key - no remote validation path, so the gate does not apply.
-		return nil
-	}
-
-	caller := authenticator.GetIdentity(ctx)
-	if caller == nil {
-		return status.Error(codes.Unauthenticated, "Unauthenticated")
-	}
-
-	if err := caller.EvaluatePermission(ctx, i.authz, ActionCreateToken, user); err != nil {
-		return err
-	}
-
-	// The caller must also be authorized to assign each requested group to the token. Without this, a
-	// permitted token mint could still embed arbitrary RBAC groups (for example "admin"), which become
-	// roles when the token is validated - a privilege escalation. The resource is the group being
-	// assigned; any group the service denies fails the whole request.
-	for _, group := range request.GetGroups() {
-		if err := caller.EvaluatePermission(ctx, i.authz, ActionCreateTokenGroup, group); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (i *implementation) Name() string {
@@ -236,11 +163,6 @@ func (i *implementation) CreateToken(ctx context.Context, request *pbAuthenticat
 	duration := i.cfg.Create.DefaultTTL
 	if v := request.Lifetime; v != nil {
 		duration = v.AsDuration()
-	}
-
-	// Ensure token minting is authorized for the requested user.
-	if err := i.authorizeCreateToken(ctx, cache, request, user); err != nil {
-		return nil, err
 	}
 
 	if v := i.cfg.Create.MaxTTL; duration > v {

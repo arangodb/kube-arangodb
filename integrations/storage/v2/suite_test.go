@@ -27,11 +27,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 	"github.com/arangodb/kube-arangodb/pkg/util/tests/tgrpc"
 )
@@ -44,12 +42,8 @@ func init() {
 
 type configGenerator func(t *testing.T, mods ...util.ModR[Configuration]) Configuration
 
-func testContext(ctx context.Context) context.Context {
-	return utilConstantsContext.AuthZClientPlugin.Set(ctx, pbImplAuthorizationV1Shared.NewAlwaysPlugin())
-}
-
 func Handler(t *testing.T, ctx context.Context, gen configGenerator, mods ...util.ModR[Configuration]) svc.Handler {
-	handler, err := New(testContext(ctx), gen(t, mods...))
+	handler, err := New(ctx, gen(t, mods...))
 	require.NoError(t, err)
 
 	return handler

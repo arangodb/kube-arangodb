@@ -64,7 +64,7 @@ func (constHash) ID(_ *pbEnvoyCoreV3.Node) string { return nodeKey }
 // and, because the snapshot version equals the ConfigMap checksum, the operator skips a redundant push when
 // the config is unchanged. If the local config cannot be read (files missing or unparsable), the server
 // starts with an empty snapshot and relies on the operator control channel to push the config via Push.
-func New(cdsFile, ldsFile, versionFile string) (svc.Handler, error) {
+func New(cdsFile, ldsFile, versionFile string) (Interface, error) {
 	cache := cachev3.NewSnapshotCache(true, constHash{}, gcpLogger{})
 
 	i := &impl{
@@ -90,8 +90,7 @@ func New(cdsFile, ldsFile, versionFile string) (svc.Handler, error) {
 	return i, nil
 }
 
-var _ svc.Handler = &impl{}
-var _ pbEnvoyConfigV1.EnvoyConfigV1Server = &impl{}
+var _ Interface = &impl{}
 
 type impl struct {
 	pbEnvoyConfigV1.UnsafeEnvoyConfigV1Server

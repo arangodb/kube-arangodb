@@ -31,20 +31,16 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	pbStorageV2 "github.com/arangodb/kube-arangodb/integrations/storage/v2/definition"
 	pbImplStorageV2Shared "github.com/arangodb/kube-arangodb/integrations/storage/v2/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
-	utilConstantsContext "github.com/arangodb/kube-arangodb/pkg/util/constants/context"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
-	"github.com/arangodb/kube-arangodb/pkg/util/svc/authenticator"
 )
 
-var _ pbStorageV2.StorageV2Server = &implementation{}
-var _ svc.Handler = &implementation{}
+var _ Interface = &implementation{}
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, cfg Configuration) (Interface, error) {
 	return newInternal(ctx, cfg)
 }
 
@@ -53,32 +49,20 @@ func newInternal(ctx context.Context, c Configuration) (*implementation, error) 
 		return nil, errors.Wrapf(err, "Invalid config")
 	}
 
-	auth, ok := utilConstantsContext.AuthZClientPlugin.Get(ctx)
-	if !ok {
-		return nil, errors.Errorf("Unable to get AuthZ Client Plugin")
-	}
-
 	io, err := c.IO(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	return &implementation{
-		io:   io,
-		auth: auth,
+		io: io,
 	}, nil
 }
 
 type implementation struct {
 	io pbImplStorageV2Shared.IO
 
-	auth pbImplAuthorizationV1Shared.Evaluator
-
 	pbStorageV2.UnimplementedStorageV2Server
-}
-
-func (i *implementation) checkPermission(ctx context.Context, action, resource string) error {
-	return authenticator.GetIdentity(ctx).EvaluatePermission(ctx, i.auth, action, resource)
 }
 
 func (i *implementation) Name() string {
@@ -112,10 +96,6 @@ func (i *implementation) WriteObject(server pbStorageV2.StorageV2_WriteObjectSer
 	if path == "" {
 		log.Debug("path missing")
 		return status.Error(codes.InvalidArgument, "path missing")
-	}
-
-	if err := i.checkPermission(ctx, "storage:WriteObject", path); err != nil {
-		return err
 	}
 
 	wd, err := i.io.Write(ctx, path)
@@ -176,10 +156,6 @@ func (i *implementation) ReadObject(req *pbStorageV2.StorageV2ReadObjectRequest,
 		return status.Errorf(codes.InvalidArgument, "path missing")
 	}
 
-	if err := i.checkPermission(ctx, "storage:ReadObject", path); err != nil {
-		return err
-	}
-
 	rd, err := i.io.Read(ctx, path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -224,10 +200,6 @@ func (i *implementation) HeadObject(ctx context.Context, req *pbStorageV2.Storag
 		return nil, status.Error(codes.InvalidArgument, "path missing")
 	}
 
-	if err := i.checkPermission(ctx, "storage:HeadObject", path); err != nil {
-		return nil, err
-	}
-
 	info, err := i.io.Head(ctx, path)
 	if err != nil {
 		log.Err(err).Debug("getObjectInfo failed")
@@ -254,10 +226,6 @@ func (i *implementation) DeleteObject(ctx context.Context, req *pbStorageV2.Stor
 		return nil, status.Error(codes.InvalidArgument, "path missing")
 	}
 
-	if err := i.checkPermission(ctx, "storage:DeleteObject", path); err != nil {
-		return nil, err
-	}
-
 	deleted, err := i.io.Delete(ctx, path)
 	if err != nil {
 		log.Err(err).Debug("deleteObject failed")
@@ -275,10 +243,6 @@ func (i *implementation) ListObjects(req *pbStorageV2.StorageV2ListObjectsReques
 	log := logger.Str("func", "ReadObject").Str("path", req.GetPath().GetPath())
 	ctx := server.Context()
 	path := req.GetPath().GetPath()
-
-	if err := i.checkPermission(ctx, "storage:ListObjects", path); err != nil {
-		return err
-	}
 
 	lister, err := i.io.List(ctx, path)
 	if err != nil {
@@ -321,10 +285,6 @@ func (i *implementation) ListObjects(req *pbStorageV2.StorageV2ListObjectsReques
 }
 
 func (i *implementation) Init(ctx context.Context, in *pbStorageV2.StorageV2InitRequest) (*pbStorageV2.StorageV2InitResponse, error) {
-	if err := i.checkPermission(ctx, "storage:Init", ""); err != nil {
-		return nil, err
-	}
-
 	if err := i.io.Init(ctx, &pbImplStorageV2Shared.InitOptions{
 		Create: util.NewPointer(in.Create),
 	}); err != nil {

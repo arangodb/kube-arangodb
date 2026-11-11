@@ -42,7 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(cfg Configuration, c context.CancelFunc) svc.Handler {
+func New(cfg Configuration, c context.CancelFunc) Interface {
 	var z = &impl{
 		closer: c,
 		cfg:    cfg,
@@ -53,8 +53,7 @@ func New(cfg Configuration, c context.CancelFunc) svc.Handler {
 	return z
 }
 
-var _ pbShutdownV1.ShutdownV1Server = &impl{}
-var _ svc.Handler = &impl{}
+var _ Interface = &impl{}
 
 type impl struct {
 	pbShutdownV1.UnimplementedShutdownV1Server

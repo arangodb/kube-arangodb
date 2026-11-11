@@ -53,6 +53,11 @@ func init() {
 			return nil, false, err
 		}
 
+		handler, err = pbImplStorageV2.WithRBAC(ctx, handler)
+		if err != nil {
+			return nil, false, err
+		}
+
 		return handler, true, nil
 	}, storageV2CLI)
 }

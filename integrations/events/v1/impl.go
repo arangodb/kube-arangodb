@@ -39,7 +39,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, cfg Configuration) (Interface, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -82,8 +82,7 @@ func newInternal(cfg Configuration, c RemoteStore[*pbEventsV1.Event]) *implement
 	return obj
 }
 
-var _ pbEventsV1.EventsV1Server = &implementation{}
-var _ svc.Handler = &implementation{}
+var _ Interface = &implementation{}
 
 type implementation struct {
 	pbEventsV1.UnimplementedEventsV1Server

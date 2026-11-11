@@ -42,7 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(config Config) (svc.Handler, error) {
+func New(config Config) (Interface, error) {
 	config.Init()
 
 	if len(config.Modules) == 0 {
@@ -77,8 +77,7 @@ func New(config Config) (svc.Handler, error) {
 	}, nil
 }
 
-var _ pbConfigV1.ConfigV1Server = &impl{}
-var _ svc.Handler = &impl{}
+var _ Interface = &impl{}
 
 type impl struct {
 	pbConfigV1.UnsafeConfigV1Server
