@@ -139,7 +139,7 @@ integration sidecar profile:
 |---|---|---|
 | `INTEGRATION_AUTHENTICATION_MODE` | `None` / `Native` / `SSO` | Authentication mode: `SSO` (Gateway OpenID), `Native` (ArangoDB JWT) or `None` (disabled) |
 | `INTEGRATION_AUTHORIZATION_MODE` | `None` / `Native` / `RBAC` | Effective authorization mode (`RBAC` when enforced by the platform gateway) |
-| `INTEGRATION_AUTHORIZATION_MODE_COREDB` | `None` / `Native` | Authorization enforced by the ArangoDB core (RBAC reported as `Native`, since it is enforced upstream at the gateway) |
+| `INTEGRATION_AUTHORIZATION_MODE_COREDB` | `None` / `Native` / `RBAC` | Authorization enforced by the ArangoDB core: `RBAC` only when the `rbac-coredb` feature enables core-level enforcement (arangod `--server.external-rbac-service`); otherwise RBAC is applied upstream by the platform gateway and the core reports `Native` (or `None` when authentication is disabled) |
 
 See [Integration Sidecars](../integration-sidecar.md#envs) for the full list of
 integration sidecar environment variables.
