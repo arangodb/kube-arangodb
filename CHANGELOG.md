@@ -2,6 +2,7 @@
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
 - (Documentation) Correct the INTEGRATION_AUTHORIZATION_MODE_COREDB environment variable docs to list RBAC as a value, reported when the rbac-coredb feature enables core-level enforcement
+- (Bugfix) (Security) Resolve the caller identity at the central integration service when it serves the deployment: drop the per-deployment authentication v1 profile so authentication is handled centrally, and preserve a forwarded caller authorization header on integration client calls instead of overriding it with the service token
 - (Bugfix) (Security) Enforce the authorization sidecar's health and RBAC permission checks (rbac:Refresh) on the /_management/permissions/refresh endpoint, which previously refreshed the authorization pools without any authentication or authorization
 - (Bugfix) (Platform) Report CoreDB inventory authorization as RBAC when the rbac-coredb feature enforces core-level RBAC, instead of always downgrading it to Native, matching the integration sidecar's INTEGRATION_AUTHORIZATION_MODE_COREDB
 - (Feature) (Platform) Hibernate ArangoPlatformService and ArangoPlatformWorkflow in chart-requirement dependency order: track the request with a Hibernating condition and the effective state with the Hibernated condition, holding hibernation while another object still depends on the chart and holding wake-up while a chart it requires is still hibernated

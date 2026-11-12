@@ -235,7 +235,7 @@ func (r *Resources) EnsureArangoProfiles(ctx context.Context, cachedStatus inspe
 		},
 		gen(utilConstants.ProfilesIntegrationAuthz, utilConstants.ProfilesIntegrationV0, always(integrationsSidecar.IntegrationAuthorizationV0{})),
 		gen(utilConstants.ProfilesIntegrationAuthz, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationAuthorizationV1{Status: status})),
-		gen(utilConstants.ProfilesIntegrationAuthn, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()})),
+		gen(utilConstants.ProfilesIntegrationAuthn, utilConstants.ProfilesIntegrationV1, central(always(integrationsSidecar.IntegrationAuthenticationV1{Spec: spec, DeploymentName: apiObject.GetName()}))),
 		gen(utilConstants.ProfilesIntegrationSched, utilConstants.ProfilesIntegrationV1, always(integrationsSidecar.IntegrationSchedulerV1{})),
 		gen(utilConstants.ProfilesIntegrationSched, utilConstants.ProfilesIntegrationV2, always(integrationsSidecar.IntegrationSchedulerV2{
 			Spec:           spec,
