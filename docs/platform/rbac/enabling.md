@@ -77,12 +77,16 @@ The sidecar exposes the authorization service on the integration port
 (default 9201). The authorization mode is passed via environment variable
 `INTEGRATION_AUTHORIZATION_V1_TYPE`.
 
-You can also check via the status endpoint:
+You can also check via the inventory endpoint. `security.authorization` is
+`AuthorizationRBAC` when RBAC is active:
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  https://<gateway>/_management/permissions/status
+  https://<gateway>/_inventory
 ```
+
+The `/_management` route is only added to the gateway while the
+`GatewaySidecarEnabled` condition is `True`.
 
 ### Operator Logs
 
@@ -107,5 +111,51 @@ RBAC requires authentication to be enabled on the ArangoDeployment. If
 `spec.authentication.jwtSecretName` is set to `"None"`, authorization is
 skipped regardless of feature flags.
 
-The JWT token carries the user identity and role assignments that the
-authorization service uses for policy evaluation.
+## Accessing the Management API
+
+The RBAC management API is served by the sidecar under
+`/_management/permissions/*` and is reached through the deployment's gateway,
+for example:
+
+```
+https://<deployment-name>-ea.<namespace>.svc:8529/_management/permissions/role
+```
+
+The gateway forwards the `Authorization` header unchanged. The sidecar
+authenticates the request with a bearer JWT signed with the deployment's JWT
+secret (`spec.authentication.jwtSecretName`). It reads these claims:
+
+| Claim | Use |
+|---|---|
+| `preferred_username` | The user whose role bindings are evaluated |
+| `groups` | Group names used for [group role bindings](group_bindings.md) |
+| `exp` | Token lifetime |
+
+Roles are not taken from the JWT. They are resolved from the user and group
+role bindings stored in the sidecar at evaluation time.
+
+Each management endpoint checks a specific RBAC action, for example
+`rbac:ListRole` or `rbac:AssignUserRole`. Requests pass this check when:
+
+- the token has **no `preferred_username` and no `groups`** claim (a superuser
+  token, such as the one the operator uses internally), or
+- the token's user is `root`, which the operator binds to the reserved
+  `managed:predefined:super-admin` role, or
+- the user's role bindings grant the required `rbac:*` action.
+
+Example of creating a superuser token from the deployment's JWT secret
+(HS256, which is the default):
+
+```bash
+SECRET=$(kubectl get secret <jwtSecretName> -o jsonpath='{.data.token}' | base64 -d)
+TOKEN=$(python3 -c 'import jwt,sys,time; n=int(time.time()); print(jwt.encode({"iss":"arangodb","server_id":"admin","iat":n,"exp":n+3600}, sys.argv[1], algorithm="HS256"))' "$SECRET")
+
+curl -H "Authorization: Bearer $TOKEN" https://<gateway>/_management/permissions/role
+```
+
+> **Warning:** In `central-permissive` mode, requests **without** credentials
+> are not rejected. They are evaluated as the user `system:anonymous`, and
+> because permissive mode allows denied requests, the management API can be
+> used without a token. Requests with an invalid token are still rejected.
+> Only `central` (enforced) mode requires a valid token and the matching
+> permission.

@@ -28,10 +28,25 @@ Predefined roles are named under the reserved prefix `managed:predefined:`, e.g.
 | `managed:predefined:platform-operator` | Operates platform and bundled services, views observability, starts containers. |
 | `managed:predefined:secret-admin` | Manages secrets on scoped resources. |
 
-The full catalog, with the intended access per role and its implementation
-status, is described in the [design notes](../../../design/rbac/predefined_roles.md).
-By default no access is granted (default deny); a role grants nothing until it is
+By default no access is granted (default deny). A role grants nothing until it is
 bound to a user with a scope.
+
+> **Note:** The operator only ships a bundled policy for `super-admin`
+> (Allow-all). It creates all other predefined roles **without policies**. The
+> permissions are added separately by attaching policies to the roles, as
+> described in [Extending predefined roles](#extending-predefined-roles).
+>
+> The platform components ship these policies in their Helm charts, as one
+> `ArangoPermissionPolicy` plus one `ArangoPermissionPolicyRoleBinding` per role,
+> for the ArangoDeployment set in `arangodb_platform.deployment.name`:
+>
+> | Roles | Policies provided by |
+> |---|---|
+> | `tenant-admin`, `coredb-reader`, `coredb-developer`, `coredb-admin` | [`arangodb-core-rbac-permissions`](https://github.com/arangodb/arangodb-core-rbac-permissions/blob/main/charts/arangodb-core-rbac-permissions/templates/predefined_roles_coredb.yaml) chart (CoreDB `db:*` actions) |
+> | `ai-user`, `ai-developer`, `secret-admin` | `arango-control-plane` chart (AI services and Secrets Manager `ai:*` actions) |
+>
+> Until such policies are attached, binding a user to a predefined role grants
+> nothing.
 
 ## Assigning a predefined role to a user
 
@@ -56,20 +71,22 @@ spec:
     statements:
       - effect: Allow
         actions: ["*"]
-        resources: ["reports", "reports/*"]
+        resources: ["db:apiversion:*", "db:database:reports", "db:*:reports:*"]
 ```
 
 The `scope` above limits Alice's `coredb-reader` access to the `reports` database
-and everything under it. To grant the role everywhere, use an Allow-all scope
+and everything in it (`db:*:reports:*` covers its collections, views, analyzers and
+graphs). `db:apiversion:*` is needed because ArangoDB checks `db:UseApiVersion` on
+every request. To grant the role everywhere, use an Allow-all scope
 (`actions: ["*"]`, `resources: ["*"]`).
 
 You can also assign and scope roles through the management API (see
 [User Role Bindings](user_bindings.md)):
 
 ```bash
-curl -X PUT https://<gateway>/_management/permissions/user/alice/role/managed:predefined:coredb-reader \
+curl -X POST -H "Authorization: Bearer $TOKEN" https://<gateway>/_management/permissions/user/alice/role/managed:predefined:coredb-reader \
   -H 'Content-Type: application/json' \
-  -d '{"scope": {"statements": [{"effect": "Allow", "actions": ["*"], "resources": ["reports/*"]}]}}'
+  -d '{"scope": {"statements": [{"effect": "Allow", "actions": ["*"], "resources": ["db:apiversion:*", "db:database:reports", "db:*:reports:*"]}]}}'
 ```
 
 > `super-admin` is reserved: the operator binds it to the deployment `root` user
@@ -87,7 +104,8 @@ role by referencing the role's exact sidecar name through the `direct` field of 
 CRD, so `direct` is used instead of the CRD-resolving `name` field). The operator
 merges the bound policy into the predefined role, alongside its bundled policy.
 
-For example, to grant everyone with `coredb-reader` write access on `reports`:
+For example, to grant everyone with `coredb-reader` write access to the
+collections of the `reports` database:
 
 ```yaml
 # 1. Define the extra policy
@@ -101,8 +119,8 @@ spec:
   policy:
     statements:
       - effect: Allow
-        actions: ["database:read", "database:write"]
-        resources: ["reports/*"]
+        actions: ["db:WriteData"]
+        resources: ["db:collection:reports:*"]
 ---
 # 2. Attach it to the predefined role by its managed:predefined: name
 apiVersion: permission.arangodb.com/v1alpha1
