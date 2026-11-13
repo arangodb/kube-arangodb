@@ -32,10 +32,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-var _ pbAuthorizationV0.AuthorizationV0Server = &implementation{}
-var _ svc.Handler = &implementation{}
+var _ Interface = &implementation{}
 
-func New() svc.Handler {
+func New() Interface {
 	return newInternal()
 }
 

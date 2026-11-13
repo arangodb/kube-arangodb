@@ -36,7 +36,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, config pbImplEnvoyAuthV3Shared.Configuration) (svc.Handler, error) {
+func New(ctx context.Context, config pbImplEnvoyAuthV3Shared.Configuration) (Interface, error) {
 	auth, err := pbImplEnvoyAuthV3Impl.Factory().Render(ctx, config)
 	if err != nil {
 		return nil, err
@@ -48,8 +48,7 @@ func New(ctx context.Context, config pbImplEnvoyAuthV3Shared.Configuration) (svc
 	}, nil
 }
 
-var _ pbEnvoyAuthV3.AuthorizationServer = &impl{}
-var _ svc.Handler = &impl{}
+var _ Interface = &impl{}
 
 type impl struct {
 	pbEnvoyAuthV3.UnimplementedAuthorizationServer

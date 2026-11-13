@@ -48,7 +48,7 @@ func (s Service) asService() *pbPongV1.PongV1Service {
 	}
 }
 
-func New(services ...Service) (svc.Handler, error) {
+func New(services ...Service) (Interface, error) {
 	pServices := make(util.List[Service], 0, len(services))
 
 	for _, svc := range services {
@@ -72,8 +72,7 @@ func New(services ...Service) (svc.Handler, error) {
 	return &impl{services: pServices.List()}, nil
 }
 
-var _ pbPongV1.PongV1Server = &impl{}
-var _ svc.Handler = &impl{}
+var _ Interface = &impl{}
 var _ svc.Background = &impl{}
 
 type impl struct {

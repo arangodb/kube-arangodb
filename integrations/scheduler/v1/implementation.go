@@ -34,10 +34,9 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-var _ pbSchedulerV1.SchedulerV1Server = &implementation{}
-var _ svc.Handler = &implementation{}
+var _ Interface = &implementation{}
 
-func New(ctx context.Context, client kclient.Client, cfg Configuration) (svc.Handler, error) {
+func New(ctx context.Context, client kclient.Client, cfg Configuration) (Interface, error) {
 	return newInternal(ctx, client, cfg)
 }
 

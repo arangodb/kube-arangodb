@@ -42,7 +42,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-func New(ctx context.Context, cfg Configuration) (svc.HandlerInitService, error) {
+func New(ctx context.Context, cfg Configuration) (Interface, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -64,9 +64,7 @@ func newInternal(cfg Configuration, plugin pbImplAuthorizationV1Shared.Plugin) *
 	return obj
 }
 
-var _ pbAuthorizationV1.AuthorizationV1Server = &implementation{}
-var _ svc.Handler = &implementation{}
-var _ svc.HandlerInitService = &implementation{}
+var _ Interface = &implementation{}
 
 type implementation struct {
 	pbAuthorizationV1.UnimplementedAuthorizationV1Server

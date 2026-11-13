@@ -33,14 +33,12 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/util/svc"
 )
 
-var _ pbLinkV1.LinkV1InternalServer = &implementation{}
-var _ pbLinkV1.LinkV1ExternalServer = &implementation{}
-var _ svc.Handler = &implementation{}
+var _ Interface = &implementation{}
 
 // New creates a LinkV1 handler serving both internal and external APIs.
 // linkID is the UUID of this link type (from configuration).
 // handlerID is generated once per runtime instance.
-func New(metaClient pbMetaV1.MetaV1Client, storageClient pbStorageV2.StorageV2Client, linkID string) svc.Handler {
+func New(metaClient pbMetaV1.MetaV1Client, storageClient pbStorageV2.StorageV2Client, linkID string) Interface {
 	handlerID := uuid.New().String()
 	return &implementation{
 		store:     newJobStore(metaClient, linkID, handlerID),

@@ -43,6 +43,13 @@ func (i *Identity) GetUser() string {
 	return *i.User
 }
 
+func (i *Identity) GetGroups() []string {
+	if i == nil {
+		return nil
+	}
+	return i.Groups
+}
+
 func (i *Identity) EvaluatePermission(ctx context.Context, c pbImplAuthorizationV1Shared.Evaluator, action, resource string) error {
 	if i == nil {
 		return status.Error(codes.Unauthenticated, "Unauthenticated")

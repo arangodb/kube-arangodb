@@ -26,7 +26,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	pbImplAuthorizationV1Shared "github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared"
 	pbMetaV1 "github.com/arangodb/kube-arangodb/integrations/meta/v1/definition"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/cache"
@@ -36,7 +35,7 @@ import (
 )
 
 func Handler(cache cache.RemoteCache[*Object], mods ...util.ModR[Configuration]) svc.Handler {
-	return newInternal(NewConfiguration().With(mods...), pbImplAuthorizationV1Shared.Permissive(pbImplAuthorizationV1Shared.NewAlwaysPlugin(), logger), cache)
+	return newInternal(NewConfiguration().With(mods...), cache)
 }
 
 func Server(t *testing.T, cache cache.RemoteCache[*Object], ctx context.Context, mods ...util.ModR[Configuration]) svc.ServiceStarter {

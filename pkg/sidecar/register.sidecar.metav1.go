@@ -69,6 +69,12 @@ func init() {
 		if err != nil {
 			return nil, false, err
 		}
+
+		svc, err = pbImplMetaV1.WithRBAC(ctx, svc)
+		if err != nil {
+			return nil, false, err
+		}
+
 		return svc, true, nil
 	},
 		flagMetaV1Prefix,
