@@ -22,7 +22,7 @@ package v1
 
 import (
 	"context"
-	"strings"
+	goStrings "strings"
 	"sync"
 	"testing"
 
@@ -77,8 +77,8 @@ func evaluator(rec *evalRecorder, allow func(action, resource string) bool) pbIm
 }
 
 func allowAll(rec *evalRecorder) pbImplAuthorizationV1Shared.Evaluator { return evaluator(rec, nil) }
-func denyAll(rec *evalRecorder) pbImplAuthorizationV1Shared.Evaluator {
-	return evaluator(rec, func(string, string) bool { return false })
+func denyAll() pbImplAuthorizationV1Shared.Evaluator {
+	return evaluator(nil, func(string, string) bool { return false })
 }
 
 // caller returns a context carrying a verified caller identity, as the server auth interceptor would.
@@ -100,7 +100,7 @@ type fakeMeta struct {
 	listed     bool
 }
 
-func (f *fakeMeta) Key(parts ...string) string { return "key:" + strings.Join(parts, "/") }
+func (f *fakeMeta) Key(parts ...string) string { return "key:" + goStrings.Join(parts, "/") }
 
 func (f *fakeMeta) Get(_ context.Context, req *pbMetaV1.ObjectRequest) (*pbMetaV1.ObjectResponse, error) {
 	f.mu.Lock()
@@ -167,7 +167,7 @@ func Test_meta_rbac_Get(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeMeta{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		_, err := r.Get(caller(), &pbMetaV1.ObjectRequest{Key: "k"})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -200,7 +200,7 @@ func Test_meta_rbac_Set(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeMeta{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		_, err := r.Set(caller(), &pbMetaV1.SetRequest{Key: "k"})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -222,7 +222,7 @@ func Test_meta_rbac_Delete(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeMeta{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		_, err := r.Delete(caller(), &pbMetaV1.ObjectRequest{Key: "k"})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -266,7 +266,7 @@ func Test_meta_rbac_List(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeMeta{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		err := r.List(&pbMetaV1.ListRequest{Prefix: util.NewType("pre/")}, fakeListServer{ctx: caller()})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))

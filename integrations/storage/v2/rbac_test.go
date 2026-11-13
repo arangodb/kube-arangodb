@@ -74,8 +74,8 @@ func evaluator(rec *evalRecorder, allow func(action, resource string) bool) pbIm
 }
 
 func allowAll(rec *evalRecorder) pbImplAuthorizationV1Shared.Evaluator { return evaluator(rec, nil) }
-func denyAll(rec *evalRecorder) pbImplAuthorizationV1Shared.Evaluator {
-	return evaluator(rec, func(string, string) bool { return false })
+func denyAll() pbImplAuthorizationV1Shared.Evaluator {
+	return evaluator(nil, func(string, string) bool { return false })
 }
 
 // caller returns a context carrying a verified caller identity, as the server auth interceptor would.
@@ -192,7 +192,7 @@ func Test_storage_rbac_HeadObject(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeStorage{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		_, err := r.HeadObject(caller(), &pbStorageV2.StorageV2HeadObjectRequest{Path: path("a/b")})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -223,7 +223,7 @@ func Test_storage_rbac_DeleteObject(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeStorage{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		_, err := r.DeleteObject(caller(), &pbStorageV2.StorageV2DeleteObjectRequest{Path: path("a/b")})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -245,7 +245,7 @@ func Test_storage_rbac_Init(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeStorage{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		_, err := r.Init(caller(), &pbStorageV2.StorageV2InitRequest{})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -267,7 +267,7 @@ func Test_storage_rbac_ReadObject(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeStorage{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		err := r.ReadObject(&pbStorageV2.StorageV2ReadObjectRequest{Path: path("a/b")}, fakeReadServer{ctx: caller()})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -289,7 +289,7 @@ func Test_storage_rbac_ListObjects(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeStorage{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		err := r.ListObjects(&pbStorageV2.StorageV2ListObjectsRequest{Path: path("pre/")}, fakeListServer{ctx: caller()})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
@@ -311,7 +311,7 @@ func Test_storage_rbac_WriteObject(t *testing.T) {
 
 	t.Run("Deny blocks the parent", func(t *testing.T) {
 		parent := &fakeStorage{}
-		r := newRBAC(parent, denyAll(nil))
+		r := newRBAC(parent, denyAll())
 
 		err := r.WriteObject(&fakeWriteServer{ctx: caller(), first: &pbStorageV2.StorageV2WriteObjectRequest{Path: path("w/obj")}})
 		require.Equal(t, codes.PermissionDenied, status.Code(err))
