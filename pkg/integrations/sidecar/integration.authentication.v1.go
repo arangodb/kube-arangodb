@@ -70,21 +70,21 @@ func (i IntegrationAuthenticationV1) GlobalEnvs() ([]core.EnvVar, error) {
 func (i IntegrationAuthenticationV1) Volumes() ([]core.Volume, []core.VolumeMount, error) {
 	if i.Spec.IsAuthenticated() {
 		return []core.Volume{
-				{
-					Name: shared.ClusterJWTSecretVolumeName,
-					VolumeSource: core.VolumeSource{
-						Secret: &core.SecretVolumeSource{
-							SecretName: pod.JWTSecretFolder(i.DeploymentName),
-						},
+			{
+				Name: shared.ClusterJWTSecretVolumeName,
+				VolumeSource: core.VolumeSource{
+					Secret: &core.SecretVolumeSource{
+						SecretName: pod.JWTSecretFolder(i.DeploymentName),
 					},
 				},
-			}, []core.VolumeMount{
-				{
-					Name:      shared.ClusterJWTSecretVolumeName,
-					ReadOnly:  true,
-					MountPath: shared.ClusterJWTSecretVolumeMountDir,
-				},
-			}, nil
+			},
+		}, []core.VolumeMount{
+			{
+				Name:      shared.ClusterJWTSecretVolumeName,
+				ReadOnly:  true,
+				MountPath: shared.ClusterJWTSecretVolumeMountDir,
+			},
+		}, nil
 	}
 
 	return nil, nil, nil

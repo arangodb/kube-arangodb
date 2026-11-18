@@ -58,28 +58,28 @@ func (t timezone) Volumes(i Input) ([]core.Volume, []core.VolumeMount) {
 	}
 
 	return []core.Volume{
-			{
-				Name: shared.ArangoDTimezoneVolumeName,
-				VolumeSource: core.VolumeSource{
-					Secret: &core.SecretVolumeSource{
-						SecretName: TimezoneSecret(i.ApiObject.GetName()),
-					},
+		{
+			Name: shared.ArangoDTimezoneVolumeName,
+			VolumeSource: core.VolumeSource{
+				Secret: &core.SecretVolumeSource{
+					SecretName: TimezoneSecret(i.ApiObject.GetName()),
 				},
 			},
-		}, []core.VolumeMount{
-			{
-				Name:      shared.ArangoDTimezoneVolumeName,
-				ReadOnly:  true,
-				MountPath: "/etc/localtime",
-				SubPath:   TimezoneDataKey,
-			},
-			{
-				Name:      shared.ArangoDTimezoneVolumeName,
-				ReadOnly:  true,
-				MountPath: "/etc/timezone",
-				SubPath:   TimezoneTZKey,
-			},
-		}
+		},
+	}, []core.VolumeMount{
+		{
+			Name:      shared.ArangoDTimezoneVolumeName,
+			ReadOnly:  true,
+			MountPath: "/etc/localtime",
+			SubPath:   TimezoneDataKey,
+		},
+		{
+			Name:      shared.ArangoDTimezoneVolumeName,
+			ReadOnly:  true,
+			MountPath: "/etc/timezone",
+			SubPath:   TimezoneTZKey,
+		},
+	}
 }
 
 func (t timezone) Envs(i Input) []core.EnvVar {
