@@ -145,6 +145,7 @@ func (i *impl) Handle(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, 
 
 	if requestUrl.Path == platformAuthenticationApi.OpenIDRedirectURL {
 		// We got a response, auth flow initiated
+		//nolint:staticcheck // handleOpenIDResponse returns a DeniedResponse (redirect) as a non-nil error carrier by design
 		if err := i.handleOpenIDResponse(ctx, request, requestUrl, cfg, file); err != nil {
 			return err
 		}
@@ -262,6 +263,7 @@ func (i *impl) initOpenIDFlow(request *pbEnvoyAuthV3.CheckRequest, cfg oauth2.Co
 	})
 }
 
+//nolint:staticcheck // always returns a DeniedResponse (redirect) as a non-nil error carrier by design
 func (i *impl) handleOpenIDResponse(ctx context.Context, request *pbEnvoyAuthV3.CheckRequest, requestUrl *url.URL, cfg oauth2.Config, ocfg platformAuthenticationApi.OpenID) error {
 	// Validate state parameter against stored cookie for CSRF protection
 	if ocfg.Features.GetStateMaxAge() > 0 {
