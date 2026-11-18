@@ -352,6 +352,9 @@ func Test_GenerateAPIDocs(t *testing.T) {
 					"ArangoPlatform.V1Beta1.Authentication.OpenID": {
 						"": platformAuthenticationApi.OpenID{},
 					},
+					"ArangoPlatform.V1Beta1.Authentication.ALB": {
+						"": platformAuthenticationApi.ALB{},
+					},
 				},
 			},
 		},
