@@ -36,7 +36,7 @@ else
 	GOBUILDDIR := $(GOPATH)
 endif
 
-GOTOOLCHAIN := auto
+GOTOOLCHAIN := go1.27.4
 export GOTOOLCHAIN
 
 SRCDIR := $(SCRIPTDIR)
