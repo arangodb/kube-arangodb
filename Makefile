@@ -831,7 +831,7 @@ init: vendor tools update-generated $(BIN)
 .PHONY: tools-min
 tools-min: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
 	@echo ">> Fetching goimports"
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@v0.38.0
 	@echo ">> Fetching license check"
