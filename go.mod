@@ -2,8 +2,6 @@ module github.com/arangodb/kube-arangodb
 
 go 1.27.0
 
-toolchain go1.27.0
-
 replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.2
 	github.com/prometheus-operator/prometheus-operator/pkg/client => github.com/prometheus-operator/prometheus-operator/pkg/client v0.71.2
@@ -26,14 +24,30 @@ replace (
 )
 
 require (
+	cloud.google.com/go/storage v1.56.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.3
+	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/arangodb-helper/go-certificates v0.0.0-20180821055445-9fca24fc2680
+	github.com/arangodb-managed/apis v0.89.1
+	github.com/arangodb-managed/integration-apis v0.2.1
 	github.com/arangodb/go-driver/v2 v2.2.1-0.20260331113757-417a4c8df1ea
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/coreos/go-semver v0.3.1
 	github.com/dchest/uniuri v1.2.0
+	github.com/envoyproxy/go-control-plane v0.14.0
+	github.com/envoyproxy/go-control-plane/envoy v1.39.0
+	github.com/evanphx/json-patch v5.9.11+incompatible
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-logr/logr v1.4.4
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
+	github.com/jedib0t/go-pretty/v6 v6.6.5
 	github.com/josephburnett/jd v1.6.1
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/magiconair/properties v1.8.7
@@ -42,53 +56,34 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.0.0-00010101000000-000000000000
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/client_model v0.6.2
+	github.com/prometheus/common v0.67.5
+	github.com/regclient/regclient v0.11.5
 	github.com/robfig/cron v1.2.0
 	github.com/rs/zerolog v1.34.0
+	github.com/siderolabs/grpc-proxy v0.5.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.23.0
 	golang.org/x/sys v0.48.0
 	golang.org/x/text v0.42.0
 	golang.org/x/time v0.14.0
+	google.golang.org/api v0.264.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa
 	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/yaml.v3 v3.0.1
+	helm.sh/helm/v3 v3.21.4
 	k8s.io/api v0.36.4
 	k8s.io/apiextensions-apiserver v0.36.4
 	k8s.io/apimachinery v0.36.4
 	k8s.io/client-go v0.36.4
-	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a
-	sigs.k8s.io/yaml v1.6.0
-)
-
-require (
-	cloud.google.com/go/storage v1.56.0
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
-	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.3
-	github.com/Masterminds/semver/v3 v3.5.0
-	github.com/arangodb-managed/apis v0.89.1
-	github.com/arangodb-managed/integration-apis v0.2.1
-	github.com/aws/aws-sdk-go v1.55.6
-	github.com/coreos/go-oidc/v3 v3.14.1
-	github.com/envoyproxy/go-control-plane v0.14.0
-	github.com/envoyproxy/go-control-plane/envoy v1.39.0
-	github.com/evanphx/json-patch v5.9.11+incompatible
-	github.com/go-logr/logr v1.4.4
-	github.com/golang-jwt/jwt/v5 v5.3.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
-	github.com/jedib0t/go-pretty/v6 v6.6.5
-	github.com/prometheus/common v0.67.5
-	github.com/regclient/regclient v0.11.5
-	github.com/siderolabs/grpc-proxy v0.5.1
-	golang.org/x/oauth2 v0.36.0
-	google.golang.org/api v0.264.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa
-	helm.sh/helm/v3 v3.21.4
 	k8s.io/klog/v2 v2.140.0
+	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
+	sigs.k8s.io/yaml v1.6.0
 )
 
 require (
