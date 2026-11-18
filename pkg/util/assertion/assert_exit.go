@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2023 ArangoDB GmbH, Cologne, Germany
+// Copyright 2023-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ package assertion
 import (
 	"fmt"
 	"os"
-	"strings"
+	goStrings "strings"
 	"syscall"
 )
 
 func _assert(frames []string, msg string) {
-	log.Str("Frames", fmt.Sprintf("(%s)", strings.Join(frames, " -> "))).Str("Message", msg).Warn("Assertion invoked, exiting")
+	log.Str("Frames", fmt.Sprintf("(%s)", goStrings.Join(frames, " -> "))).Str("Message", msg).Warn("Assertion invoked, exiting")
 	os.Exit(int(syscall.SIGSEGV))
 }
