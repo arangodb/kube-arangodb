@@ -502,7 +502,6 @@ type ObjectSecret struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Secret:
-	//
 	//	*ObjectSecret_Token
 	Secret isObjectSecret_Secret `protobuf_oneof:"secret"`
 }
