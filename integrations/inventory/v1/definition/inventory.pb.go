@@ -661,7 +661,6 @@ type InventoryNetworkingRoute struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Route:
-	//
 	//	*InventoryNetworkingRoute_Path
 	Route isInventoryNetworkingRoute_Route `protobuf_oneof:"route"`
 }
