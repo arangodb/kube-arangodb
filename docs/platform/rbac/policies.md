@@ -18,35 +18,68 @@ A policy defines what actions are allowed or denied on which resources.
 statements:
   - effect: Allow        # or Deny
     actions:
-      - "database:read"
-      - "collection:*"
+      - "db:Read"
+      - "db:WriteData"
     resources:
-      - "mydb"
-      - "reports-*"
+      - "db:database:sales"
+      - "db:collection:sales:*"
 ```
 
 ### Actions
 
-Actions use the format `<namespace>:<name>`:
+Actions use the format `<namespace>:<name>`, or `*` for all actions. Each
+component defines the actions it checks under its own namespace:
 
-| Example | Description |
+| Namespace | Checked by | Examples |
+|---|---|---|
+| `db` | ArangoDB (CoreDB) | `db:Read`, `db:WriteData`, `db:WriteMeta`, `db:Create`, `db:Drop`, `db:UseApiVersion`, `db:Admin*` |
+| `rbac` | Authorization sidecar (management API) | `rbac:ListRole`, `rbac:AssignUserRole` |
+| `ai` | AI services / Arango Control Plane | `ai:acp.workspace.read`, `ai:acp.secret.manage` |
+
+The main ArangoDB actions:
+
+| Action | Allows |
 |---|---|
-| `database:read` | Read access to databases |
-| `collection:write` | Write access to collections |
-| `rbac:ListRole` | List authorization roles |
-| `*` | All actions |
-| `database:*` | All database actions |
+| `db:UseApiVersion` | Using the REST API at all. **Every** authenticated request to ArangoDB checks it on `db:apiversion:<version>` |
+| `db:Read` | Seeing and reading databases, collections, views, analyzers, graphs, users |
+| `db:WriteData` | Writing documents to collections |
+| `db:WriteMeta` | Changing properties/metadata (e.g. indexes, view or graph definitions) |
+| `db:Create`, `db:Drop` | Creating and dropping databases, collections, views, analyzers, graphs, users |
+| `db:Admin*` | Server administration (`db:AdminBackup`, `db:AdminReadLogs`, `db:AdminReadUsers`, ...) |
 
 ### Resources
 
-Resources identify what the action applies to. They support the same wildcard
-patterns as actions:
+ArangoDB resources are colon-separated paths:
 
-| Pattern | Matches |
+| Resource | Example |
 |---|---|
-| `mydb` | Exactly `mydb` |
-| `*` | Everything |
-| `reports-*` | `reports-daily`, `reports-weekly`, etc. |
+| `db:database:<db>` | `db:database:sales` |
+| `db:collection:<db>:<collection>` | `db:collection:sales:orders` |
+| `db:view:<db>:<view>` | `db:view:sales:ordersView` |
+| `db:analyzer:<db>:<analyzer>` | `db:analyzer:sales:text_en` |
+| `db:graph:<db>:<graph>` | `db:graph:sales:customers` |
+| `db:user:<user>` | `db:user:alice` |
+| `db:apiversion:<version>` | `db:apiversion:1` |
+
+### Pattern Matching
+
+Patterns are matched segment by segment, split at `:`:
+
+- A segment is `*` (any value), `<prefix>*`, `*<suffix>`, or an exact value.
+- The pattern must have the same number of segments as the value, unless the
+  pattern's last segment is `*`, which also matches any further segments.
+- An action pattern must be `*` or have exactly two segments.
+
+| Pattern | Matches | Does not match |
+|---|---|---|
+| `*` | everything | |
+| `db:*` | every `db` action or resource | `ai:...` |
+| `db:Admin*` | `db:AdminBackup`, `db:AdminReadLogs` | `db:Read` |
+| `*:Read` | `db:Read` | `db:WriteData` |
+| `db:database:sales` | `db:database:sales` | `db:database:sales2` |
+| `db:collection:sales:*` | all collections in `sales` | `db:collection:hr:staff` |
+| `db:*:sales:*` | all collections, views, analyzers and graphs in `sales` | `db:database:sales` (fewer segments) |
+| `db:collection:sales:tmp_*` | `db:collection:sales:tmp_2024` | `db:collection:sales:orders` |
 
 ### Evaluation Rules
 
@@ -54,6 +87,12 @@ patterns as actions:
 - **Explicit deny wins** - A Deny statement overrides any Allow
 - **Order does not matter** - All statements are evaluated; first Deny found
   stops evaluation
+
+> **Note:** Because ArangoDB checks `db:UseApiVersion` on every request, every
+> user who should access ArangoDB needs it, both in the role's policies and in
+> the scope of their binding. A binding scope that only lists databases and
+> collections denies all requests. Include `db:apiversion:*` (or `*`) in the
+> scope's resources.
 
 ## Roles
 
@@ -77,7 +116,9 @@ policies and roles are stored with `managed:operator:` prefixed names:
 |---|---|---|---|
 | ArangoPermissionPolicy | `managed:operator:<crd-name>` | `managed:operator:read-only` | |
 | ArangoPermissionRole | `managed:operator:<crd-uid>` | `managed:operator:a1b2c3d4-...` | |
-| ArangoPermissionToken (role) | `managed:operator:<crd-uid>` | `managed:operator:e5f6g7h8-...` | References named policies via `spec.policies[]` and an optional inline `spec.policy` |
+| ArangoPermissionToken (role) | `managed:operator:<crd-uid>` | `managed:operator:e5f6g7h8-...` | Created only when `spec.policy` is set; references the token's managed policy |
+| ArangoPermissionToken (policy) | `managed:operator:<crd-uid>:policy` | `managed:operator:e5f6g7h8-...:policy` | Created from the inline `spec.policy` |
+| Predefined roles | `managed:predefined:<id>` | `managed:predefined:coredb-reader` | Seeded by the operator, see [Predefined Roles](predefined_roles.md) |
 
 ### How Policies and Roles are Combined
 
@@ -141,8 +182,13 @@ curl -X POST https://<gateway>/_management/permissions/policy/read-only \
       "statements": [
         {
           "effect": "Allow",
-          "actions": ["database:read", "collection:read"],
+          "actions": ["db:UseApiVersion"],
           "resources": ["*"]
+        },
+        {
+          "effect": "Allow",
+          "actions": ["db:Read"],
+          "resources": ["db:database:*", "db:collection:*:*"]
         }
       ]
     }
@@ -153,33 +199,64 @@ curl -X POST https://<gateway>/_management/permissions/policy/read-only \
 
 ```bash
 curl -X POST https://<gateway>/_management/permissions/role/viewer \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "item": {
       "policies": ["read-only"],
-      "scope": {
-        "statements": [
-          {
-            "effect": "Allow",
-            "actions": ["database:read"],
-            "resources": ["*"]
-          }
-        ]
-      }
+      "description": "Read-only access"
     }
   }'
 ```
 
+A role only references policies. Its `scope` field is deprecated and ignored
+during evaluation. Set the scope on the
+[user role binding](user_bindings.md) or [group role binding](group_bindings.md)
+instead.
+
 ### List policies
 
 ```bash
-curl https://<gateway>/_management/permissions/policy
+curl -H "Authorization: Bearer $TOKEN" \
+  https://<gateway>/_management/permissions/policy
 ```
 
 ### List roles
 
 ```bash
-curl https://<gateway>/_management/permissions/role
+curl -H "Authorization: Bearer $TOKEN" \
+  https://<gateway>/_management/permissions/role
 ```
+
+List endpoints return names only, e.g.
+`{"names": ["read-only"], "page": {"items": 10, "page": 0}}`. They accept the
+optional query parameters `items_per_page` and `page`. Use
+`GET .../policy/{name}` or `GET .../role/{name}` to fetch the details.
+
+### Endpoint reference
+
+| Method | Path | RBAC action |
+|---|---|---|
+| GET | `/_management/permissions/policy` | `rbac:ListPolicy` |
+| GET | `/_management/permissions/policy/{name}` | `rbac:GetPolicy` |
+| POST | `/_management/permissions/policy/{name}` | `rbac:CreatePolicy` |
+| PUT | `/_management/permissions/policy/{name}` | `rbac:UpdatePolicy` |
+| DELETE | `/_management/permissions/policy/{name}` | `rbac:DeletePolicy` |
+| GET | `/_management/permissions/role` | `rbac:ListRole` |
+| GET | `/_management/permissions/role/{name}` | `rbac:GetRole` |
+| POST | `/_management/permissions/role/{name}` | `rbac:CreateRole` |
+| PUT | `/_management/permissions/role/{name}` | `rbac:UpdateRole` |
+| DELETE | `/_management/permissions/role/{name}` | `rbac:DeleteRole` |
+| POST | `/_management/permissions/refresh` | none (any authenticated caller) |
+
+`POST /_management/permissions/refresh` makes the receiving sidecar re-read
+all policies, roles and bindings from the database and returns once that is
+done. Use it to skip the regular refresh interval.
+
+Objects created through the API keep the exact name you use. Objects
+reconciled from CRDs get a `managed:operator:` prefix (see
+[Sidecar Resource Naming](#sidecar-resource-naming)). Don't change
+`managed:*` objects through the API; change the CRDs instead, because the
+operator manages these objects.
 
 ## Managing via CRDs
 
@@ -199,10 +276,15 @@ spec:
     statements:
       - effect: Allow
         actions:
-          - "database:read"
-          - "collection:read"
+          - "db:UseApiVersion"
         resources:
           - "*"
+      - effect: Allow
+        actions:
+          - "db:Read"
+        resources:
+          - "db:database:*"
+          - "db:collection:*:*"
 ```
 
 ### Step 2: Create a Role (ArangoPermissionRole)
@@ -248,8 +330,8 @@ policy to the role's evaluation set.
 ### Step 4: Bind the Role to a User (ArangoPermissionRoleUserBinding)
 
 An `ArangoPermissionRoleUserBinding` assigns a role to a specific user with
-an inline scope policy. The scope restricts or extends what the role grants
-for this particular user.
+an inline scope policy. The scope restricts what the role grants for this
+particular user. It can never grant more than the role's policies.
 
 ```yaml
 apiVersion: permission.arangodb.com/v1alpha1
@@ -266,10 +348,11 @@ spec:
     statements:
       - effect: Allow
         actions:
-          - "database:read"
-          - "collection:read"
+          - "*"
         resources:
-          - "reports"
+          - "db:apiversion:*"
+          - "db:database:reports"
+          - "db:collection:reports:*"
 ```
 
 | Field | Required | Description |
@@ -281,8 +364,8 @@ spec:
 
 ### Complete Example
 
-The following set of resources grants user `alice` read-only access scoped to
-the `reports` resource:
+The following set of resources grants user `alice` read-only access to the
+`reports` database and its collections:
 
 ```yaml
 ---
@@ -297,10 +380,15 @@ spec:
     statements:
       - effect: Allow
         actions:
-          - "database:read"
-          - "collection:read"
+          - "db:UseApiVersion"
         resources:
           - "*"
+      - effect: Allow
+        actions:
+          - "db:Read"
+        resources:
+          - "db:database:*"
+          - "db:collection:*:*"
 ---
 apiVersion: permission.arangodb.com/v1alpha1
 kind: ArangoPermissionRole
@@ -336,8 +424,9 @@ spec:
     statements:
       - effect: Allow
         actions:
-          - "database:read"
-          - "collection:read"
+          - "*"
         resources:
-          - "reports"
+          - "db:apiversion:*"
+          - "db:database:reports"
+          - "db:collection:reports:*"
 ```
