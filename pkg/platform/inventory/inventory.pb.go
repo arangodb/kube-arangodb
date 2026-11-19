@@ -178,7 +178,6 @@ type ItemValue struct {
 	// One of the Values
 	//
 	// Types that are assignable to Value:
-	//
 	//	*ItemValue_Str
 	//	*ItemValue_Dec
 	//	*ItemValue_Num

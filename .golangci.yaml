@@ -1,271 +1,293 @@
+version: "2"
 run:
   issues-exit-code: 3
-  timeout: 30m
-issues:
-  exclude-dirs:
-    - vendor
-    - .gobuild
-    - deps
-    - tools
 linters:
-  disable-all: true
+  default: none
   enable:
-    - gosimple
     - govet
+    - importas
     - ineffassign
     - staticcheck
-    - typecheck
     - unconvert
     - unparam
     - unused
-    - importas
+  settings:
+    govet:
+      disable:
+        - printf
+    importas:
+      alias:
+        - pkg: github.com/arangodb/go-driver
+          alias: adbDriverV1
+        - pkg: github.com/arangodb/go-driver/v2/arangodb
+          alias: adbDriverV2
+        - pkg: github.com/arangodb/go-driver/v2/connection
+          alias: adbDriverV2Connection
+        - pkg: github.com/arangodb/go-driver/v2/arangodb/shared
+          alias: adbDriverV2Shared
+        - pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication/definition
+          alias: sidecarSvcAuthnDefinition
+        - pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication
+          alias: sidecarSvcAuthn
+        - pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition
+          alias: sidecarSvcAuthzDefinition
+        - pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization
+          alias: sidecarSvcAuthz
+        - pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types
+          alias: sidecarSvcAuthzTypes
+        - pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client
+          alias: sidecarSvcAuthzClient
+        - pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1
+          alias: pbImplAuthorizationV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared
+          alias: pbImplAuthorizationV1Shared
+        - pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition
+          alias: pbAuthorizationV1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/license_manager
+          alias: lmanager
+        - pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1
+          alias: pbImplMetaV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1/definition
+          alias: pbMetaV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/events/v1
+          alias: pbImplEventsV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/events/v1/definition
+          alias: pbEventsV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/authentication/v1
+          alias: pbImplAuthenticationV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition
+          alias: pbAuthenticationV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v0
+          alias: pbImplAuthorizationV0
+        - pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v0/definition
+          alias: pbAuthorizationV0
+        - pkg: github.com/arangodb/kube-arangodb/integrations/config/v1
+          alias: pbImplConfigV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/config/v1/definition
+          alias: pbConfigV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3
+          alias: pbImplEnvoyAuthV3
+        - pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared
+          alias: pbImplEnvoyAuthV3Shared
+        - pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl
+          alias: pbImplEnvoyAuthV3Impl
+        - pkg: github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition
+          alias: pbInventoryV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1
+          alias: pbImplPongV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1/definition
+          alias: pbPongV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/link/v1
+          alias: pbImplLinkV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/link/v1/definition
+          alias: pbLinkV1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/tests/integration
+          alias: testIntegration
+        - pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1
+          alias: pbImplSchedulerV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition
+          alias: pbSchedulerV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v2
+          alias: pbImplSchedulerV2
+        - pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition
+          alias: pbSchedulerV2
+        - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1
+          alias: pbImplSharedV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1/definition
+          alias: pbSharedV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1
+          alias: pbImplShutdownV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition
+          alias: pbShutdownV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1
+          alias: pbImplStorageV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/shared
+          alias: pbImplStorageV1Shared
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/shared/s3
+          alias: pbImplStorageV1SharedS3
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/definition
+          alias: pbStorageV1
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2
+          alias: pbImplStorageV2
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared
+          alias: pbImplStorageV2Shared
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/gcs
+          alias: pbImplStorageV2SharedGCS
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/abs
+          alias: pbImplStorageV2SharedAzureBlobStorage
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3
+          alias: pbImplStorageV2SharedS3
+        - pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/definition
+          alias: pbStorageV2
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1
+          alias: api
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
+          alias: networkingApiv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1
+          alias: networkingApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy
+          alias: permissionApiPolicy
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1
+          alias: permissionApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1
+          alias: platformApiv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1
+          alias: platformApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication
+          alias: platformAuthenticationApiv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication
+          alias: platformAuthenticationApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1
+          alias: schedulerApiv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container
+          alias: schedulerContainerApiv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources
+          alias: schedulerContainerResourcesApiv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod
+          alias: schedulerPodApiv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources
+          alias: schedulerPodResourcesApiv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/profiles
+          alias: schedulerProfilesv1alpha1
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1
+          alias: schedulerApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container
+          alias: schedulerContainerApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources
+          alias: schedulerContainerResourcesApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration
+          alias: schedulerIntegrationApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/policy
+          alias: schedulerPolicyApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod
+          alias: schedulerPodApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources
+          alias: schedulerPodResourcesApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/profiles
+          alias: schedulerProfiles
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared
+          alias: shared
+        - pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared/v1
+          alias: sharedApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/integrations/shared
+          alias: integrationsShared
+        - pkg: github.com/arangodb/kube-arangodb/pkg/integrations/clients
+          alias: integrationsClients
+        - pkg: github.com/arangodb/kube-arangodb/pkg/integrations/sidecar
+          alias: integrationsSidecar
+        - pkg: github.com/arangodb/kube-arangodb/pkg/integrations
+          alias: integrations
+        - pkg: github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared
+          alias: sharedReconcile
+        - pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/shared
+          alias: enterpriseShared
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources
+          alias: kresources
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls
+          alias: ktls
+        - pkg: github.com/envoyproxy/go-control-plane/envoy/service/auth/v3/impl
+          alias: pbEnvoyAuthV3Impl
+        - pkg: github.com/envoyproxy/go-control-plane/envoy/service/auth/v3
+          alias: pbEnvoyAuthV3
+        - pkg: github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3
+          alias: pbEnvoyBootstrapV3
+        - pkg: github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3
+          alias: pbEnvoyClusterV3
+        - pkg: github.com/envoyproxy/go-control-plane/envoy/config/core/v3
+          alias: pbEnvoyCoreV3
+        - pkg: github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3
+          alias: pbEnvoyEndpointV3
+        - pkg: github.com/envoyproxy/go-control-plane/envoy/config/listener/v3
+          alias: pbEnvoyListenerV3
+        - pkg: github.com/envoyproxy/go-control-plane/envoy/config/route/v3
+          alias: pbEnvoyRouteV3
+        - pkg: github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
+          alias: monitoringApi
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants
+          alias: inspectorConstants
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/token
+          alias: utilToken
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/token/loader
+          alias: utilTokenLoader
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/constants/context
+          alias: utilConstantsContext
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/constants
+          alias: utilConstants
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/tests/cache
+          alias: tcache
+        - pkg: helm.sh/helm/v3/pkg/release
+          alias: helmRelease
+        - pkg: k8s.io/api/discovery/v1
+          alias: discovery
+        - pkg: k8s.io/api/apps/v1
+          alias: apps
+        - pkg: k8s.io/api/batch/v1
+          alias: batch
+        - pkg: k8s.io/api/core/v1
+          alias: core
+        - pkg: k8s.io/api/admission/v1
+          alias: admission
+        - pkg: k8s.io/api/policy/v1
+          alias: policy
+        - pkg: k8s.io/api/storage/v1
+          alias: storage
+        - pkg: k8s.io/apimachinery/pkg/apis/meta/v1
+          alias: meta
+        - pkg: k8s.io/api/autoscaling/v1
+          alias: autoscaling
+        - pkg: k8s.io/client-go/kubernetes/typed/core/v1
+          alias: typedCore
+        - pkg: github.com/arangodb/kube-arangodb/pkg/util/grpc
+          alias: ugrpc
+        - pkg: strings
+          alias: goStrings
+        - pkg: net/http
+          alias: goHttp
+        - pkg: github.com/golang-jwt/jwt/v5
+          alias: jwt
+        - pkg: github.com/arangodb/arangosync-client/client
+          alias: syncClient
+      no-unaliased: true
+    staticcheck:
+      checks:
+        - all
+        - -SA1019
+        - -ST1*
+        - -QF1*
+    unparam:
+      check-exported: false
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - vendor
+      - .gobuild
+      - deps
+      - tools
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
     - gci
-linters-settings:
-  govet:
-    disable:
-      - printf
-  staticcheck:
-    checks:
-      - all
-      - -SA1019
-  unparam:
-    check-exported: false
-  importas:
-    no-unaliased: true
-    alias:
-      - alias: adbDriverV1
-        pkg: github.com/arangodb/go-driver
-      - alias: adbDriverV2
-        pkg: github.com/arangodb/go-driver/v2/arangodb
-      - alias: adbDriverV2Connection
-        pkg: github.com/arangodb/go-driver/v2/connection
-      - alias: adbDriverV2Shared
-        pkg: github.com/arangodb/go-driver/v2/arangodb/shared
-      - alias: sidecarSvcAuthnDefinition
-        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication/definition
-      - alias: sidecarSvcAuthn
-        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authentication
-      - alias: sidecarSvcAuthzDefinition
-        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/definition
-      - alias: sidecarSvcAuthz
-        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization
-      - alias: sidecarSvcAuthzTypes
-        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/types
-      - alias: sidecarSvcAuthzClient
-        pkg: github.com/arangodb/kube-arangodb/pkg/sidecar/services/authorization/client
-      - alias: pbImplAuthorizationV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1
-      - alias: pbImplAuthorizationV1Shared
-        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1/shared
-      - alias: pbAuthorizationV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v1/definition
-      - alias: lmanager
-        pkg: github.com/arangodb/kube-arangodb/pkg/license_manager
-      - alias: pbImplMetaV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1
-      - alias: pbMetaV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/meta/v1/definition
-      - alias: pbImplEventsV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/events/v1
-      - alias: pbEventsV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/events/v1/definition
-      - alias: pbImplAuthenticationV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/authentication/v1
-      - alias: pbAuthenticationV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/authentication/v1/definition
-      - alias: pbImplAuthorizationV0
-        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v0
-      - alias: pbAuthorizationV0
-        pkg: github.com/arangodb/kube-arangodb/integrations/authorization/v0/definition
-      - alias: pbImplConfigV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/config/v1
-      - alias: pbConfigV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/config/v1/definition
-      - alias: pbImplEnvoyAuthV3
-        pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3
-      - alias: pbImplEnvoyAuthV3Shared
-        pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/shared
-      - alias: pbImplEnvoyAuthV3Impl
-        pkg: github.com/arangodb/kube-arangodb/integrations/envoy/auth/v3/impl
-      - alias: pbInventoryV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/inventory/v1/definition
-      - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1
-        alias: pbImplPongV1
-      - pkg: github.com/arangodb/kube-arangodb/integrations/pong/v1/definition
-        alias: pbPongV1
-      - alias: pbImplLinkV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/link/v1
-      - alias: pbLinkV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/link/v1/definition
-      - alias: testIntegration
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/tests/integration
-      - alias: pbImplSchedulerV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1
-      - alias: pbSchedulerV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v1/definition
-      - alias: pbImplSchedulerV2
-        pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v2
-      - alias: pbSchedulerV2
-        pkg: github.com/arangodb/kube-arangodb/integrations/scheduler/v2/definition
-      - alias: pbImplSharedV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1
-      - alias: pbSharedV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/shared/v1/definition
-      - alias: pbImplShutdownV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1
-      - alias: pbShutdownV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/shutdown/v1/definition
-      - alias: pbImplStorageV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1
-      - alias: pbImplStorageV1Shared
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/shared
-      - alias: pbImplStorageV1SharedS3
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/shared/s3
-      - alias: pbStorageV1
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v1/definition
-      - alias: pbImplStorageV2
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2
-      - alias: pbImplStorageV2Shared
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared
-      - alias: pbImplStorageV2SharedGCS
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/gcs
-      - alias: pbImplStorageV2SharedAzureBlobStorage
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/abs
-      - alias: pbImplStorageV2SharedS3
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/shared/s3
-      - alias: pbStorageV2
-        pkg: github.com/arangodb/kube-arangodb/integrations/storage/v2/definition
-      - alias: api
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1
-      - alias: networkingApiv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1alpha1
-      - alias: networkingApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/networking/v1beta1
-      - alias: permissionApiPolicy
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1/policy
-      - alias: permissionApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/permission/v1alpha1
-      - alias: platformApiv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1
-      - alias: platformApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1
-      - alias: platformAuthenticationApiv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1alpha1/authentication
-      - alias: platformAuthenticationApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1/authentication
-      - alias: schedulerApiv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1
-      - alias: schedulerContainerApiv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container
-      - alias: schedulerContainerResourcesApiv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/container/resources
-      - alias: schedulerPodApiv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod
-      - alias: schedulerPodResourcesApiv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/pod/resources
-      - alias: schedulerProfilesv1alpha1
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1alpha1/profiles
-      - alias: schedulerApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1
-      - alias: schedulerContainerApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container
-      - alias: schedulerContainerResourcesApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources
-      - alias: schedulerIntegrationApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/integration
-      - alias: schedulerPolicyApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/policy
-      - alias: schedulerPodApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod
-      - alias: schedulerPodResourcesApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources
-      - alias: schedulerProfiles
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/profiles
-      - alias: shared
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared
-      - alias: sharedApi
-        pkg: github.com/arangodb/kube-arangodb/pkg/apis/shared/v1
-      - alias: integrationsShared
-        pkg: github.com/arangodb/kube-arangodb/pkg/integrations/shared
-      - alias: integrationsClients
-        pkg: github.com/arangodb/kube-arangodb/pkg/integrations/clients
-      - alias: integrationsSidecar
-        pkg: github.com/arangodb/kube-arangodb/pkg/integrations/sidecar
-      - alias: integrations
-        pkg: github.com/arangodb/kube-arangodb/pkg/integrations
-      - alias: sharedReconcile
-        pkg: github.com/arangodb/kube-arangodb/pkg/deployment/reconcile/shared
-      - alias: enterpriseShared
-        pkg: github.com/arangodb/kube-arangodb/pkg/handlers/enterprise/shared
-      - alias: kresources
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/resources
-      - alias: ktls
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/tls
-      - alias: pbEnvoyAuthV3Impl
-        pkg: github.com/envoyproxy/go-control-plane/envoy/service/auth/v3/impl
-      - alias: pbEnvoyAuthV3
-        pkg: github.com/envoyproxy/go-control-plane/envoy/service/auth/v3
-      - alias: pbEnvoyBootstrapV3
-        pkg: github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3
-      - alias: pbEnvoyClusterV3
-        pkg: github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3
-      - alias: pbEnvoyCoreV3
-        pkg: github.com/envoyproxy/go-control-plane/envoy/config/core/v3
-      - alias: pbEnvoyEndpointV3
-        pkg: github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3
-      - alias: pbEnvoyListenerV3
-        pkg: github.com/envoyproxy/go-control-plane/envoy/config/listener/v3
-      - alias: pbEnvoyRouteV3
-        pkg: github.com/envoyproxy/go-control-plane/envoy/config/route/v3
-      - alias: monitoringApi
-        pkg: github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
-      - alias: inspectorConstants
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/k8sutil/inspector/constants
-      - alias: utilToken
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/token
-      - alias: utilTokenLoader
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/token/loader
-      - alias: utilConstantsContext
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/constants/context
-      - alias: utilConstants
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/constants
-      - alias: tcache
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/tests/cache
-      - alias: helmRelease
-        pkg: helm.sh/helm/v3/pkg/release
-      - alias: discovery
-        pkg: k8s.io/api/discovery/v1
-      - alias: apps
-        pkg: k8s.io/api/apps/v1
-      - alias: batch
-        pkg: k8s.io/api/batch/v1
-      - alias: core
-        pkg: k8s.io/api/core/v1
-      - alias: admission
-        pkg: k8s.io/api/admission/v1
-      - alias: policy
-        pkg: k8s.io/api/policy/v1
-      - alias: storage
-        pkg: k8s.io/api/storage/v1
-      - alias: meta
-        pkg: k8s.io/apimachinery/pkg/apis/meta/v1
-      - alias: autoscaling
-        pkg: k8s.io/api/autoscaling/v1
-      - alias: typedCore
-        pkg: k8s.io/client-go/kubernetes/typed/core/v1
-      - alias: ugrpc
-        pkg: github.com/arangodb/kube-arangodb/pkg/util/grpc
-      - alias: goStrings
-        pkg: strings
-      - alias: goHttp
-        pkg: net/http
-      - alias: jwt
-        pkg: github.com/golang-jwt/jwt/v5
-      - alias: syncClient
-        pkg: github.com/arangodb/arangosync-client/client
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/arangodb)
-      - prefix(github.com/arangodb/kube-arangodb)
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/arangodb)
+        - prefix(github.com/arangodb/kube-arangodb)
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - .gobuild
+      - deps
+      - tools
+      - third_party$
+      - builtin$
+      - examples$
