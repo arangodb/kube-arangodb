@@ -133,6 +133,28 @@ func Test_AllDefinitionsDefined(t *testing.T) {
 	}
 }
 
+func Test_ChecksumLabelLength(t *testing.T) {
+	// The definition and schema checksums are written as CRD label values (see pkg/crd/apply.go),
+	// and Kubernetes limits a label value to 63 characters. They must also be deterministic so that
+	// an unchanged definition does not trigger a spurious re-apply.
+	for _, def := range AllDefinitions() {
+		t.Run(def.CRD.GetName(), func(t *testing.T) {
+			definition, schema := def.Checksum()
+
+			require.NotEmpty(t, definition)
+			require.NotEmpty(t, schema)
+
+			require.LessOrEqual(t, len(definition), 63, "definition checksum exceeds the Kubernetes label value limit")
+			require.LessOrEqual(t, len(schema), 63, "schema checksum exceeds the Kubernetes label value limit")
+
+			// Deterministic: a second call on the same data yields the same checksums.
+			definition2, schema2 := def.Checksum()
+			require.Equal(t, definition, definition2)
+			require.Equal(t, schema, schema2)
+		})
+	}
+}
+
 func Test_CRDGetters(t *testing.T) {
 	// getters are exposed for the usage by customers
 	getters := []func(opts ...func(*CRDOptions)) *apiextensions.CustomResourceDefinition{

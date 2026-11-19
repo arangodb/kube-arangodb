@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (Security) Use SHA-224 instead of MD5 for CRD and CA checksums, so the operator runs with GODEBUG=fips140=only
 - (Maintenance) (Security) Move RBAC enforcement for the authentication, meta and storage integration services into a shared WithRBAC wrapper applied only in the central sidecar (so the standalone integration services no longer require an authorization evaluator), and drop the per-deployment authentication v1 profile when the central integration service serves the deployment (GatewaySidecarEnabled), matching the meta v1 and storage v2 profiles
 - (Bugfix) (Security) Authorize CreateToken against the verified caller identity instead of the caller-supplied request user and roles, and authorize each assigned group (authentication:CreateTokenGroup), so a caller cannot mint a token by naming a privileged user or claiming roles
 - (Documentation) Document the ALB gateway authentication type: how the gateway trusts the identity forwarded by an AWS Application Load Balancer that terminates OIDC (x-amzn-oidc-data), with a configuration reference and setup example
