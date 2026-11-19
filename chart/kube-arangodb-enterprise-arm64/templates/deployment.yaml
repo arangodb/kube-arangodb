@@ -170,6 +170,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+{{- if .Values.operator.env }}
+{{ toYaml .Values.operator.env | indent 12 }}
+{{- end }}
           ports:
             - name: metrics
               containerPort: 8528
@@ -234,6 +237,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+{{- if .Values.webhooks.env }}
+{{ toYaml .Values.webhooks.env | indent 12 }}
+{{- end }}
           ports:
             - name: webhooks
               containerPort: 8828
