@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) (Security) Use AES-GCM with an in-module random nonce (NewGCMWithRandomNonce) for meta integration encryption, so the operator runs with GODEBUG=fips140=only (the on-the-wire format is unchanged, so existing encrypted data stays readable)
 - (Bugfix) (Security) Use SHA-256 instead of SHA-1 for pod-name and resource-name hashes, so the operator runs with GODEBUG=fips140=only
 - (Bugfix) (Security) Use SHA-224 instead of MD5 for CRD and CA checksums, so the operator runs with GODEBUG=fips140=only
 - (Maintenance) (Security) Move RBAC enforcement for the authentication, meta and storage integration services into a shared WithRBAC wrapper applied only in the central sidecar (so the standalone integration services no longer require an authorization evaluator), and drop the per-deployment authentication v1 profile when the central integration service serves the deployment (GatewaySidecarEnabled), matching the meta v1 and storage v2 profiles
