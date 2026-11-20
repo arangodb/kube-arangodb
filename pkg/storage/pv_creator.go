@@ -22,7 +22,6 @@ package storage
 
 import (
 	"context"
-	"crypto/sha1"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -396,6 +395,5 @@ func (ls *LocalStorage) bindClaimToVolume(claim core.PersistentVolumeClaim, volu
 
 // shortHash creates a 6 letter hash of the given name.
 func shortHash(name string) string {
-	h := sha1.Sum([]byte(name))
-	return fmt.Sprintf("%0x", h)[:6]
+	return util.SHA256([]byte(name))[:6]
 }

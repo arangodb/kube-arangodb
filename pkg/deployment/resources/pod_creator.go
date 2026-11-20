@@ -22,9 +22,7 @@ package resources
 
 import (
 	"context"
-	"crypto/sha1"
 	"encoding/json"
-	"fmt"
 	"net"
 	"path"
 	"strconv"
@@ -753,8 +751,7 @@ func CreatePodSuffix(spec api.DeploymentSpec) string {
 	}
 
 	raw, _ := json.Marshal(spec)
-	hash := sha1.Sum(raw)
-	return fmt.Sprintf("%0x", hash)[:6]
+	return util.SHA256(raw)[:6]
 }
 
 func updateMemberPhase(phase api.MemberPhase) reconciler.DeploymentMemberStatusUpdateErrFunc {

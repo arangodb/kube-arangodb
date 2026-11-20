@@ -171,12 +171,14 @@ func TestGetDeploymentInfo(t *testing.T) {
 // TestShortHash tests shortHash.
 func TestShortHash(t *testing.T) {
 	tests := map[string]string{
-		"foo": "0beec7",
-		"":    "da39a3",
-		"something very very very very very looooooooooooooooooooooooooooooooong": "68ff76",
+		"foo": "2c26b4",
+		"":    "e3b0c4",
+		"something very very very very very looooooooooooooooooooooooooooooooong": "540f8e",
 	}
 	for input, expected := range tests {
 		output := shortHash(input)
 		assert.Equal(t, expected, output, "Input: '%s'", input)
+		assert.Len(t, output, 6, "Input: '%s'", input)
+		assert.Equal(t, output, shortHash(input), "deterministic, Input: '%s'", input)
 	}
 }

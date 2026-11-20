@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,11 @@
 package shared
 
 import (
-	"crypto/sha1"
 	"fmt"
 	goStrings "strings"
 	"unicode"
+
+	"github.com/arangodb/kube-arangodb/pkg/util"
 )
 
 var (
@@ -64,8 +65,7 @@ func FixupResourceName(name string) string {
 	}
 	result := sb.String()
 	if needHash {
-		hash := sha1.Sum([]byte(name))
-		h := fmt.Sprintf("-%0x", hash[:3])
+		h := fmt.Sprintf("-%s", util.SHA256([]byte(name))[:6])
 		if len(result)+len(h) > qualifiedNameMaxLength {
 			result = result[:qualifiedNameMaxLength-(len(h))]
 		}
