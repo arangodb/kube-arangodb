@@ -22,7 +22,6 @@ package deployment
 
 import (
 	"context"
-	"crypto/sha1"
 	"fmt"
 	"testing"
 	"time"
@@ -58,7 +57,7 @@ type testCaseImageUpdate struct {
 func TestEnsureImages(t *testing.T) {
 	// Arange
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
-	id := fmt.Sprintf("%0x", sha1.Sum([]byte(testNewImage)))[:6]
+	id := util.SHA256([]byte(testNewImage))[:6]
 	hostname := testDeploymentName + "-" + api.ServerGroupImageDiscovery.AsRole() + "-" + id
 
 	var securityContext api.ServerGroupSpecSecurityContext
