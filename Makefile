@@ -36,7 +36,7 @@ else
 	GOBUILDDIR := $(GOPATH)
 endif
 
-GOTOOLCHAIN := auto
+GOTOOLCHAIN := go1.27.4
 export GOTOOLCHAIN
 
 SRCDIR := $(SCRIPTDIR)
@@ -58,8 +58,8 @@ K3D_CLUSTER ?= $(REPONAME)
 
 TEST_BUILD ?= 0
 GOBUILDARGS ?=
-GOBASEVERSION := 1.26.10
-GOVERSION ?= $(GOBASEVERSION)-alpine3.18
+GOBASEVERSION := 1.27.4
+GOVERSION ?= $(GOBASEVERSION)-alpine3.24
 DISTRIBUTION ?= alpine:3.15
 GOCOMPAT := $(shell sed -En 's/^go (.*)$$/\1/p' go.mod)
 
@@ -831,7 +831,7 @@ init: vendor tools update-generated $(BIN)
 .PHONY: tools-min
 tools-min: update-vendor
 	@echo ">> Fetching golangci-lint linter"
-	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+	@GOBIN=$(GOPATH)/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
 	@echo ">> Fetching goimports"
 	@GOBIN=$(GOPATH)/bin go install golang.org/x/tools/cmd/goimports@v0.38.0
 	@echo ">> Fetching license check"

@@ -219,16 +219,6 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 
 	var services []pbImplPongV1.Service
 
-	pong, err := pbImplPongV1.New(services...)
-	if err != nil {
-		return err
-	}
-
-	internalHandlers = append(internalHandlers, pong)
-	externalHandlers = append(externalHandlers, pong)
-	healthHandlers = append(healthHandlers, pong)
-	allHandlers = append(allHandlers, pong)
-
 	var db integrationsShared.Database
 	var endpoint integrationsShared.Endpoint
 
@@ -300,6 +290,16 @@ func (c *configuration) runWithContext(ctx context.Context, cmd *cobra.Command) 
 			}
 		}
 	}
+
+	pong, err := pbImplPongV1.New(services...)
+	if err != nil {
+		return err
+	}
+
+	internalHandlers = append(internalHandlers, pong)
+	externalHandlers = append(externalHandlers, pong)
+	healthHandlers = append(healthHandlers, pong)
+	allHandlers = append(allHandlers, pong)
 
 	health, err := svc.NewHealthService(healthConfig, svc.Readiness, healthHandlers...)
 	if err != nil {
