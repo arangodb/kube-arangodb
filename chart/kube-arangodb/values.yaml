@@ -8,6 +8,7 @@ operator:
     - amd64
   debug: false
   args: []
+  env: []
   service:
     type: ClusterIP
   annotations: {}
@@ -50,6 +51,7 @@ webhooks:
   enabled: false
   inline: true
   args: []
+  env: []
   resources:
     limits:
       cpu: 1

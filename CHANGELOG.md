@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Add operator.env and webhooks.env chart values to inject custom environment variables into the operator and webhooks containers
 - (Bugfix) (Security) Use AES-GCM with an in-module random nonce (NewGCMWithRandomNonce) for meta integration encryption, so the operator runs with GODEBUG=fips140=only (the on-the-wire format is unchanged, so existing encrypted data stays readable)
 - (Bugfix) (Security) Use SHA-256 instead of SHA-1 for pod-name and resource-name hashes, so the operator runs with GODEBUG=fips140=only
 - (Bugfix) (Security) Use SHA-224 instead of MD5 for CRD and CA checksums, so the operator runs with GODEBUG=fips140=only
