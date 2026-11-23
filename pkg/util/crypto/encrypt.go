@@ -23,7 +23,12 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/fips140"
+	"crypto/rand"
 	"crypto/sha256"
+	"io"
+
+	"github.com/arangodb/kube-arangodb/pkg/util/errors"
 )
 
 type EncryptionKey string
@@ -39,16 +44,31 @@ func (ek EncryptionKey) Encrypt(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	// NewGCMWithRandomNonce generates the nonce inside the crypto module and prepends it to the
-	// ciphertext, which is required under GODEBUG=fips140=only. The on-the-wire layout
-	// (12-byte nonce || ciphertext || 16-byte tag) is identical to the previous NewGCM usage with a
-	// manually prepended random nonce, so data encrypted by older operators stays decryptable.
-	gcm, err := cipher.NewGCMWithRandomNonce(block)
+	if fips140.Enabled() {
+		// NewGCMWithRandomNonce generates the nonce inside the crypto module and prepends it to the
+		// ciphertext, which is required under GODEBUG=fips140=only. The on-the-wire layout
+		// (12-byte nonce || ciphertext || 16-byte tag) is identical to the non-FIPS NewGCM path below
+		// with a manually prepended random nonce, so ciphertext is interchangeable between the two
+		// modes and existing encrypted data stays decryptable across an upgrade either way.
+		gcm, err := cipher.NewGCMWithRandomNonce(block)
+		if err != nil {
+			return nil, err
+		}
+
+		return gcm.Seal(nil, nil, data, nil), nil
+	}
+
+	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
 
-	return gcm.Seal(nil, nil, data, nil), nil
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, err
+	}
+
+	return gcm.Seal(nonce, nonce, data, nil), nil
 }
 
 func (ek EncryptionKey) Decrypt(data []byte) ([]byte, error) {
@@ -57,10 +77,25 @@ func (ek EncryptionKey) Decrypt(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	gcm, err := cipher.NewGCMWithRandomNonce(block)
+	if fips140.Enabled() {
+		gcm, err := cipher.NewGCMWithRandomNonce(block)
+		if err != nil {
+			return nil, err
+		}
+
+		return gcm.Open(nil, nil, data, nil)
+	}
+
+	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
 
-	return gcm.Open(nil, nil, data, nil)
+	nonceSize := gcm.NonceSize()
+	if len(data) < nonceSize {
+		return nil, errors.Errorf("ciphertext too short")
+	}
+
+	nonce, encrypted := data[:nonceSize], data[nonceSize:]
+	return gcm.Open(nil, nonce, encrypted, nil)
 }

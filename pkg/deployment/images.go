@@ -135,7 +135,7 @@ func (ib *imagesBuilder) Run(ctx context.Context, cachedStatus inspectorInterfac
 // Returns: retrySoon, error
 func (ib *imagesBuilder) fetchArangoDBImageIDAndVersion(ctx context.Context, cachedStatus inspectorInterface.Inspector, image string) (bool, error) {
 	role := api.ServerGroupImageDiscovery.AsRole()
-	id := util.SHA256([]byte(image))[:6]
+	id := util.ShortHash([]byte(image))
 	podName := k8sutil.CreatePodName(ib.APIObject.GetName(), role, id, "")
 	log := ib.Log.
 		Str("pod", podName).

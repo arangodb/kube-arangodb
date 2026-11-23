@@ -395,5 +395,5 @@ func (ls *LocalStorage) bindClaimToVolume(claim core.PersistentVolumeClaim, volu
 
 // shortHash creates a 6 letter hash of the given name.
 func shortHash(name string) string {
-	return util.SHA256([]byte(name))[:6]
+	return util.ShortHash([]byte(name))
 }

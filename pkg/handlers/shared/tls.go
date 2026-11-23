@@ -96,5 +96,5 @@ func extractDeploymentCA(ctx context.Context, client kubernetes.Interface, deplo
 	if err != nil {
 		return certificates.CA{}, "", err
 	}
-	return ca, util.SHA224FromString(caCert), nil
+	return ca, util.ChecksumFromString(caCert), nil
 }

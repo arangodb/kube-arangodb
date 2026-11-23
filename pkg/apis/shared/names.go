@@ -65,7 +65,7 @@ func FixupResourceName(name string) string {
 	}
 	result := sb.String()
 	if needHash {
-		h := fmt.Sprintf("-%s", util.SHA256([]byte(name))[:6])
+		h := fmt.Sprintf("-%s", util.ShortHash([]byte(name)))
 		if len(result)+len(h) > qualifiedNameMaxLength {
 			result = result[:qualifiedNameMaxLength-(len(h))]
 		}
