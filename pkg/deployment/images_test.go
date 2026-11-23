@@ -57,7 +57,7 @@ type testCaseImageUpdate struct {
 func TestEnsureImages(t *testing.T) {
 	// Arange
 	terminationGracePeriodSeconds := int64((time.Second * 30).Seconds())
-	id := util.SHA256([]byte(testNewImage))[:6]
+	id := util.ShortHash([]byte(testNewImage))
 	hostname := testDeploymentName + "-" + api.ServerGroupImageDiscovery.AsRole() + "-" + id
 
 	var securityContext api.ServerGroupSpecSecurityContext

@@ -751,7 +751,7 @@ func CreatePodSuffix(spec api.DeploymentSpec) string {
 	}
 
 	raw, _ := json.Marshal(spec)
-	return util.SHA256(raw)[:6]
+	return util.ShortHash(raw)
 }
 
 func updateMemberPhase(phase api.MemberPhase) reconciler.DeploymentMemberStatusUpdateErrFunc {

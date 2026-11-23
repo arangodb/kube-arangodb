@@ -21,6 +21,7 @@
 package storage
 
 import (
+	"crypto/fips140"
 	"encoding/json"
 	"testing"
 
@@ -170,10 +171,21 @@ func TestGetDeploymentInfo(t *testing.T) {
 
 // TestShortHash tests shortHash.
 func TestShortHash(t *testing.T) {
+	// shortHash is FIPS-gated: SHA-256 under GODEBUG=fips140=only, SHA-1 otherwise. Assert the golden
+	// values for whichever mode this test binary runs in, so the historical non-FIPS suffixes stay
+	// locked in and the FIPS suffixes are covered by the fips140=only test pass.
+	const long = "something very very very very very looooooooooooooooooooooooooooooooong"
 	tests := map[string]string{
-		"foo": "2c26b4",
-		"":    "e3b0c4",
-		"something very very very very very looooooooooooooooooooooooooooooooong": "540f8e",
+		"foo": "0beec7",
+		"":    "da39a3",
+		long:  "68ff76",
+	}
+	if fips140.Enabled() {
+		tests = map[string]string{
+			"foo": "2c26b4",
+			"":    "e3b0c4",
+			long:  "540f8e",
+		}
 	}
 	for input, expected := range tests {
 		output := shortHash(input)
