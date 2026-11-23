@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,15 +59,21 @@ func (s *Scheduling) Apply(template *core.PodTemplateSpec) error {
 		return nil
 	}
 
-	if len(s.NodeSelector) == 0 {
-		template.Spec.NodeSelector = nil
-	} else {
-		template.Spec.NodeSelector = map[string]string{}
-		for k, v := range s.NodeSelector {
-			if v != "-" {
-				template.Spec.NodeSelector[k] = v
+	// Merge the (already profile-merged) node selector into the pod's existing node selector instead
+	// of replacing it, so keys set by the chart or workload are preserved. A value of "-" removes a
+	// key. When the scheduling sets no node selector, the pod's existing selector is left untouched.
+	for k, v := range s.NodeSelector {
+		if v == "-" {
+			delete(template.Spec.NodeSelector, k)
+		} else {
+			if template.Spec.NodeSelector == nil {
+				template.Spec.NodeSelector = map[string]string{}
 			}
+			template.Spec.NodeSelector[k] = v
 		}
+	}
+	if len(template.Spec.NodeSelector) == 0 {
+		template.Spec.NodeSelector = nil
 	}
 
 	if s.Affinity != nil {
