@@ -64,16 +64,22 @@ authentication, there is no identity to evaluate policies against.
 
 ## Policies
 
-### How do wildcards work in actions?
+### How do wildcards work?
 
-Actions use colon-separated segments matched left to right:
+Actions and resources are split into colon-separated segments and matched
+segment by segment. A segment can be `*`, `<prefix>*`, `*<suffix>`, or an
+exact value. A trailing `*` segment also matches any further segments.
 
 | Pattern | Matches |
 |---|---|
 | `*` | Everything |
-| `database:*` | `database:read`, `database:write`, `database:drop` |
-| `*:read` | `database:read`, `collection:read` |
-| `database:read` | Only `database:read` |
+| `db:*` | Every ArangoDB action, e.g. `db:Read`, `db:WriteData`, `db:Drop` |
+| `db:Admin*` | `db:AdminBackup`, `db:AdminReadLogs`, ... |
+| `*:Read` | `db:Read` |
+| `db:Read` | Only `db:Read` |
+| `db:collection:sales:*` | Every collection in database `sales` |
+
+See [Pattern Matching](policies.md#pattern-matching) for details.
 
 ### Can a Deny override an Allow?
 
@@ -83,14 +89,24 @@ allows it.
 
 ### What is the action format?
 
-Actions follow `<namespace>:<name>`. Common namespaces:
+Actions follow `<namespace>:<name>`. Each component checks actions in its own
+namespace:
 
 | Namespace | Description |
 |---|---|
-| `database` | Database-level operations |
-| `collection` | Collection-level operations |
-| `document` | Document-level operations |
-| `rbac` | RBAC management operations |
+| `db` | ArangoDB operations, e.g. `db:Read`, `db:WriteData`, `db:Create` |
+| `rbac` | RBAC management operations, e.g. `rbac:ListRole` |
+| `ai` | AI services and Arango Control Plane, e.g. `ai:acp.secret.read` |
+
+ArangoDB resources are paths like `db:database:<db>` or
+`db:collection:<db>:<collection>`. See [Policies and Roles](policies.md#actions)
+for the full list.
+
+### Why are all my ArangoDB requests denied, even though the role allows them?
+
+ArangoDB checks `db:UseApiVersion` on `db:apiversion:<version>` for every
+request. If the binding scope only lists databases and collections, this check
+fails. Add `db:apiversion:*` to the scope's resources.
 
 ## Roles and Scopes
 
@@ -106,35 +122,22 @@ Yes. Use the User Role Binding API:
 
 ```bash
 # Alice gets editor scoped to reports
-curl -X POST https://<gw>/_management/permissions/user/alice/role/editor \
-  -d '{"scope": {"statements": [{"effect":"Allow","actions":["*"],"resources":["reports"]}]}}'
+curl -X POST -H "Authorization: Bearer $TOKEN" https://<gw>/_management/permissions/user/alice/role/editor \
+  -d '{"scope": {"statements": [{"effect":"Allow","actions":["*"],"resources":["db:apiversion:*","db:database:reports","db:collection:reports:*"]}]}}'
 
 # Bob gets editor scoped to analytics
-curl -X POST https://<gw>/_management/permissions/user/bob/role/editor \
-  -d '{"scope": {"statements": [{"effect":"Allow","actions":["*"],"resources":["analytics"]}]}}'
+curl -X POST -H "Authorization: Bearer $TOKEN" https://<gw>/_management/permissions/user/bob/role/editor \
+  -d '{"scope": {"statements": [{"effect":"Allow","actions":["*"],"resources":["db:apiversion:*","db:database:analytics","db:collection:analytics:*"]}]}}'
 ```
 
 ## Tokens
 
 ### How do I get a JWT token for my service?
 
-Create an `ArangoPermissionPolicy` and an `ArangoPermissionToken` that
-references it:
+Create an `ArangoPermissionToken` with an inline policy and a scope, and
+optionally bind existing roles:
 
 ```yaml
-apiVersion: permission.arangodb.com/v1alpha1
-kind: ArangoPermissionPolicy
-metadata:
-  name: my-service-policy
-spec:
-  deployment:
-    name: my-deployment
-  policy:
-    statements:
-      - effect: Allow
-        actions: ["collection:read"]
-        resources: ["*"]
----
 apiVersion: permission.arangodb.com/v1alpha1
 kind: ArangoPermissionToken
 metadata:
@@ -142,14 +145,28 @@ metadata:
 spec:
   deployment:
     name: my-deployment
-  roles: [viewer]
-  policyName: my-service-policy
+  policy:
+    statements:
+      - effect: Allow
+        actions: ["db:UseApiVersion", "db:Read"]
+        resources: ["*"]
   scope:
     statements:
       - effect: Allow
-        actions: ["collection:read"]
+        actions: ["db:UseApiVersion", "db:Read"]
         resources: ["*"]
+  roles:
+    - role:
+        name: viewer            # ArangoPermissionRole CRD
+      scope:
+        policy:
+          statements:
+            - effect: Allow
+              actions: ["*"]
+              resources: ["*"]
 ```
+
+Without a `scope`, the token's inline policy grants nothing.
 
 The token is stored in a Kubernetes Secret. See
 [Permission Tokens](tokens.md) for details.
@@ -166,19 +183,32 @@ Use the self-check endpoint:
 ```bash
 curl -X POST -H "Authorization: Bearer $TOKEN" \
   https://<gateway>/_management/permissions/validate \
-  -d '{"action": "collection:write", "resource": "my-collection"}'
+  -d '{"action": "db:WriteData", "resource": "db:collection:sales:orders"}'
 ```
 
-### How do I see what roles my token has?
+### How do I see what roles I have?
 
-Use the validate endpoint:
+Roles are not stored in the JWT. They come from the role bindings of your
+user and of the groups in your token's `groups` claim. List the bindings
+(requires `rbac:ListUserRoleBinding` / `rbac:ListGroupRoleBinding`):
 
 ```bash
-curl -X POST https://<gateway>/_integration/authn/v1/validate \
+curl -H "Authorization: Bearer $TOKEN" \
+  https://<gateway>/_management/permissions/user/<username>/role
+curl -H "Authorization: Bearer $TOKEN" \
+  https://<gateway>/_management/permissions/group/<group>/role
+```
+
+To see the username, groups, and lifetime of a token, use the validate
+endpoint:
+
+```bash
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  https://<gateway>/_integration/authn/v1/validate \
   -d '{"token": "<jwt-token>"}'
 ```
 
-This returns the username, roles list, and token lifetime.
+The `roles` field in its response contains the token's `groups` claim.
 
 ## Troubleshooting
 
@@ -186,25 +216,32 @@ This returns the username, roles list, and token lifetime.
 
 1. Verify you are in `central-permissive` mode first (not `central`)
 2. Check that policies and roles exist in the sidecar
-3. Verify the JWT contains the expected roles:
+3. Verify the JWT carries the expected user and groups:
    ```bash
    echo "$TOKEN" | cut -d. -f2 | base64 -d 2>/dev/null | jq .
    ```
-4. Check operator logs for policy creation errors
+4. Check that every role binding has a scope that allows the action. A
+   binding with an empty scope grants nothing.
+5. Check operator logs for policy creation errors
 
 ### Permission denied but I think I have access
 
-1. Check your identity: `GET /_integration/authn/v1/identity`
-2. List your roles from the token: `POST /_integration/authn/v1/validate`
+1. Check your identity: `GET /_identity`
+2. List your role bindings: `GET /_management/permissions/user/<username>/role`
 3. Test the specific permission: `POST /_management/permissions/validate`
 4. Check if an explicit Deny is overriding your Allow
+5. If you just changed a binding, wait for propagation (up to ~30 seconds,
+   see [Runtime Behavior](behavior.md)) or call
+   `POST /_management/permissions/refresh`
 
-### Token does not contain the managed role
+### My permission token grants nothing
 
-The managed role (`managed:operator:<uid>`) is added to the JWT after the
-role is created in the sidecar. This takes one additional reconcile cycle.
-Wait a few seconds and check the token again — it will be regenerated
-automatically.
+Roles are not part of the JWT. The operator creates user role bindings for the
+token's user. Check:
 
-Also verify that the referenced `ArangoPermissionPolicy` (via `spec.policyName`)
-exists and is in a Ready state before the token can create its managed role.
+- `kubectl get arangopermissiontoken <name> -o yaml`: the token is `Ready`
+  and `status.role` / `status.managedPolicy` are set if you use `spec.policy`
+- `spec.scope` is set when using `spec.policy`. Without it, the managed role
+  is bound with an empty scope and grants nothing.
+- every `spec.roles[]` entry has a scope that allows the required actions
+- the bindings exist: `GET /_management/permissions/user/<token-user>/role`
