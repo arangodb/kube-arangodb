@@ -38,6 +38,7 @@ import (
 	"github.com/arangodb/kube-arangodb/pkg/deployment/member"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/reconciler"
+	"github.com/arangodb/kube-arangodb/pkg/scheduler"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	"github.com/arangodb/kube-arangodb/pkg/util/assertion"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -644,7 +645,7 @@ func RenderArangoPod(ctx context.Context, cachedStatus inspectorInterface.Inspec
 	if profiles, err := podCreator.Profiles(); err != nil {
 		return nil, err
 	} else if len(profiles) > 0 {
-		if err := profiles.RenderOnTemplate(&p); err != nil {
+		if err := scheduler.RenderProfilesOnTemplate(profiles, &p); err != nil {
 			return nil, err
 		}
 	}

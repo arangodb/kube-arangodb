@@ -54,6 +54,16 @@ func (p ProfileTemplates) Merge() *ProfileTemplate {
 }
 
 func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
+	return p.renderOnTemplate(pod, false)
+}
+
+// RenderOnTemplateWithInitContainers behaves like RenderOnTemplate but additionally applies the generic
+// (container.all) template to the pod's init containers.
+func (p ProfileTemplates) RenderOnTemplateWithInitContainers(pod *core.PodTemplateSpec) error {
+	return p.renderOnTemplate(pod, true)
+}
+
+func (p ProfileTemplates) renderOnTemplate(pod *core.PodTemplateSpec, includeInitContainers bool) error {
 	t := p.Merge()
 
 	// Apply  ArangoSchedulerPod Spec
@@ -72,6 +82,13 @@ func (p ProfileTemplates) RenderOnTemplate(pod *core.PodTemplateSpec) error {
 	// Apply Generic Containers Spec
 	if err := t.GetContainer().ApplyGeneric(pod); err != nil {
 		return errors.Wrapf(err, "Error while rendering ArangoSchedulerPod")
+	}
+
+	// Apply Generic Spec to Init Containers (opt-in)
+	if includeInitContainers {
+		if err := t.GetContainer().ApplyGenericInit(pod); err != nil {
+			return errors.Wrapf(err, "Error while rendering ArangoSchedulerPod init containers")
+		}
 	}
 
 	// Apply Containers Spec

@@ -130,6 +130,45 @@ func Test_Generic(t *testing.T) {
 	})
 }
 
+func Test_Generic_ApplyInit(t *testing.T) {
+	gen := &Generic{
+		Environments: &schedulerContainerResourcesApi.Environments{
+			Env: []core.EnvVar{{Name: "key1", Value: "value1"}},
+		},
+	}
+
+	newTemplate := func() *core.PodTemplateSpec {
+		return &core.PodTemplateSpec{
+			Spec: core.PodSpec{
+				InitContainers: []core.Container{{Name: "init"}},
+				Containers:     []core.Container{{Name: "main"}},
+			},
+		}
+	}
+
+	t.Run("Apply targets regular containers only", func(t *testing.T) {
+		template := newTemplate()
+		require.NoError(t, gen.Apply(template))
+		require.Len(t, template.Spec.Containers[0].Env, 1)
+		require.Empty(t, template.Spec.InitContainers[0].Env)
+	})
+
+	t.Run("ApplyInit targets init containers only", func(t *testing.T) {
+		template := newTemplate()
+		require.NoError(t, gen.ApplyInit(template))
+		require.Len(t, template.Spec.InitContainers[0].Env, 1)
+		require.EqualValues(t, "key1", template.Spec.InitContainers[0].Env[0].Name)
+		require.Empty(t, template.Spec.Containers[0].Env)
+	})
+
+	t.Run("ApplyInit on a nil generic is a no-op", func(t *testing.T) {
+		template := newTemplate()
+		var g *Generic
+		require.NoError(t, g.ApplyInit(template))
+		require.Empty(t, template.Spec.InitContainers[0].Env)
+	})
+}
+
 func Test_Generic_Security(t *testing.T) {
 	t.Run("Nil security", func(t *testing.T) {
 		applyGeneric(t, &core.PodTemplateSpec{

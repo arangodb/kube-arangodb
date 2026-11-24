@@ -133,9 +133,9 @@ func (h *handler) HandleObject(ctx context.Context, item operation.Item, extensi
 
 	hash := util.SHA256FromString(fmt.Sprintf("%s|%s", profilesChecksum, deploymentSpecHash))
 
-	if err := schedulerApi.ProfileTemplates(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) *schedulerApi.ProfileTemplate {
+	if err := scheduler.RenderProfilesOnTemplate(schedulerApi.ProfileTemplates(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) *schedulerApi.ProfileTemplate {
 		return a.V.Template
-	})).RenderOnTemplate(&cronJobTemplate.Spec.JobTemplate.Spec.Template); err != nil {
+	})), &cronJobTemplate.Spec.JobTemplate.Spec.Template); err != nil {
 		return false, err
 	}
 

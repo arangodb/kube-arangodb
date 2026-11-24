@@ -55,6 +55,16 @@ func (p *ProfileContainerTemplate) ApplyGeneric(template *core.PodTemplateSpec) 
 	return p.All.Apply(template)
 }
 
+// ApplyGenericInit applies the generic (All) template to the pod's init containers, mirroring ApplyGeneric
+// which applies it to the regular containers.
+func (p *ProfileContainerTemplate) ApplyGenericInit(template *core.PodTemplateSpec) error {
+	if p == nil {
+		return nil
+	}
+
+	return p.All.ApplyInit(template)
+}
+
 func (p *ProfileContainerTemplate) ApplyDefault(template *core.PodTemplateSpec) error {
 	if p == nil {
 		return nil

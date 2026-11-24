@@ -127,9 +127,9 @@ func (h handler) Mutate(ctx context.Context, log logging.Logger, t webhook.Admis
 		return a.K
 	}), ",")
 
-	if err := schedulerApi.ProfileTemplates(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) *schedulerApi.ProfileTemplate {
+	if err := scheduler.RenderProfilesOnTemplate(schedulerApi.ProfileTemplates(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) *schedulerApi.ProfileTemplate {
 		return a.V.Template
-	})).RenderOnTemplate(&template); err != nil {
+	})), &template); err != nil {
 		return webhook.MutationResponse{
 			ValidationResponse: webhook.NewValidationResponse(false, "Unable to get apply ArangoProfiles: %s", err.Error()),
 		}, nil

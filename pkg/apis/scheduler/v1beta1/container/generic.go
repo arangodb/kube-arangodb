@@ -59,6 +59,26 @@ func (g *Generic) Apply(template *core.PodTemplateSpec) error {
 	return nil
 }
 
+// ApplyInit applies the generic values to all InitContainers. It is the companion to Apply, which targets
+// the regular Containers.
+func (g *Generic) ApplyInit(template *core.PodTemplateSpec) error {
+	if g == nil {
+		return nil
+	}
+
+	for id := range template.Spec.InitContainers {
+		if err := shared.WithErrors(
+			g.Environments.Apply(template, &template.Spec.InitContainers[id]),
+			g.VolumeMounts.Apply(template, &template.Spec.InitContainers[id]),
+			g.Security.Apply(template, &template.Spec.InitContainers[id]),
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (g *Generic) GetEnvironments() *schedulerContainerResourcesApi.Environments {
 	if g == nil || g.Environments == nil {
 		return nil
