@@ -80,3 +80,33 @@ metadata:
   annotations:
     profiles.arangodb.com/profiles: "gpu,internal"
 ```
+
+## Applying profile changes to running pods
+
+Profiles are injected by the admission webhook **only on pod CREATE**. When a pod is injected the webhook
+stamps it with:
+
+- `profiles.arangodb.com/applied: "true"`
+- `profiles.arangodb.com/profiles: "<applied profile names>"`
+- `profiles.arangodb.com/checksum: "<resolved profiles checksum>"`
+
+Because injection happens only on CREATE, changing an `ArangoProfile` that already applies to running pods
+has no effect on those pods — they keep the configuration that was injected when they were created. To pick
+up the change, the pods must be recreated.
+
+The operator can do this automatically. The `rotate-on-profile-change` feature
+(`--deployment.feature.rotate-on-profile-change`, **disabled by default**) makes the operator scan once per
+minute: for every `ArangoDeployment` it checks the profile-injected pods it owns, recomputes the resolved
+profiles checksum the same way the webhook does, and when a pod's stamped `profiles.arangodb.com/checksum`
+no longer matches, it records a `ProfileChanged` event and **evicts** the pod through the Eviction API. The
+eviction respects `PodDisruptionBudget`s, and the pod's owning controller (Deployment, StatefulSet, Job, …)
+recreates it — re-admitting it through the webhook with the current profile.
+
+Notes:
+
+- Only pods carrying `profiles.arangodb.com/applied: "true"` and matching a profile are considered; pods
+  that were never profile-injected are never touched.
+- `ArangoDeployment` members (the `arangod` pods) are **not** rotated by this feature; they are reconciled
+  through the normal deployment plan.
+- Eviction deletes the pod, so a standalone pod with no controller owner is not recreated. Use the feature
+  for pods managed by a controller.

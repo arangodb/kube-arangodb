@@ -398,3 +398,10 @@ features:
     releases:
       - operatorVersion: 1.5.0
         state: Alpha
+  - name: Rotate On Profile Change
+    enabled: false
+    flag: --deployment.feature.rotate-on-profile-change
+    remarks: Evicts pods selected by an ArangoProfile whose applied profile checksum differs from the current resolved checksum, so profile changes propagate to running pods
+    releases:
+      - operatorVersion: 1.5.0
+        state: Alpha
