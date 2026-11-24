@@ -50,6 +50,18 @@ const (
 	PathMountServiceAccount          = "/var/run/secrets/kubernetes.io/serviceaccount"
 	PathMountServiceAccountNamespace = PathMountServiceAccount + "/namespace"
 
+	// SafeToEvictAnnotation is the cluster-autoscaler convention annotation; a pod carrying it with the
+	// value "false" opts out of voluntary eviction.
+	SafeToEvictAnnotation      = "cluster-autoscaler.kubernetes.io/safe-to-evict"
+	SafeToEvictAnnotationFalse = "false"
+
+	// KarpenterDoNotDisruptAnnotation is Karpenter's current opt-out annotation and
+	// KarpenterDoNotEvictAnnotation its deprecated predecessor; a pod carrying either with the value
+	// "true" opts out of voluntary disruption/eviction.
+	KarpenterDoNotDisruptAnnotation = "karpenter.sh/do-not-disrupt"
+	KarpenterDoNotEvictAnnotation   = "karpenter.sh/do-not-evict"
+	DoNotEvictAnnotationTrue        = "true"
+
 	EnvArangoLicenseKey          = "ARANGO_LICENSE_KEY"          // Contains the License Key for the Docker Image
 	EnvArangoSyncMonitoringToken = "ARANGOSYNC_MONITORING_TOKEN" // Constains monitoring token for ArangoSync servers
 

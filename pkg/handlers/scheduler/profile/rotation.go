@@ -160,6 +160,12 @@ func (h *handler) rotateDeployment(ctx context.Context, ns, deployment string, p
 			continue
 		}
 
+		if blockedBy := podEvictionBlockedBy(annotations); blockedBy != "" {
+			h.eventRecorder.Normal(p, "ProfileChangedSkipped",
+				"Pod requires rotation but is not safe to evict (%s): %s", blockedBy, reason)
+			continue
+		}
+
 		h.eventRecorder.Normal(p, "ProfileChanged", "Evicting pod: %s", reason)
 
 		if err := h.evictPod(ctx, p); err != nil {
@@ -190,6 +196,26 @@ func profilesForPod(labels, annotations map[string]string) []string {
 	}), func(s string) bool {
 		return s != ""
 	})
+}
+
+// doNotEvictAnnotations maps each well-known "keep this pod" annotation to the value that opts the pod out
+// of voluntary eviction: cluster-autoscaler's safe-to-evict=false, and Karpenter's do-not-disrupt=true
+// (plus its deprecated do-not-evict=true). An ArangoProfile can stamp any of these through its pod metadata.
+var doNotEvictAnnotations = map[string]string{
+	utilConstants.SafeToEvictAnnotation:           utilConstants.SafeToEvictAnnotationFalse,
+	utilConstants.KarpenterDoNotDisruptAnnotation: utilConstants.DoNotEvictAnnotationTrue,
+	utilConstants.KarpenterDoNotEvictAnnotation:   utilConstants.DoNotEvictAnnotationTrue,
+}
+
+// podEvictionBlockedBy returns the opt-out annotation (as `key=value`) that marks the pod as not safe to
+// evict, or an empty string when the pod may be voluntarily evicted.
+func podEvictionBlockedBy(annotations map[string]string) string {
+	for key, optOut := range doNotEvictAnnotations {
+		if annotations[key] == optOut {
+			return fmt.Sprintf("%s=%s", key, optOut)
+		}
+	}
+	return ""
 }
 
 // profileChecksumMismatch reports whether a pod was profile-injected and its stamped profiles checksum
