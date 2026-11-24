@@ -27,6 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	api "github.com/arangodb/kube-arangodb/pkg/apis/deployment/v1"
+	schedulerContainerResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/container/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
@@ -76,5 +77,42 @@ func Test_IntegrationAuthenticationV1_ArangoJWTFolder(t *testing.T) {
 		require.NoError(t, err)
 		require.Empty(t, vols)
 		require.Empty(t, mounts)
+	})
+}
+
+// Test_NewIntegration_NoArangoJWTFolderOnSharedContainer is the regression for the move: the shared
+// integration container must never carry INTEGRATION_ARANGO_JWT_FOLDER, even when the deployment is
+// authenticated. The env belongs to the authentication v1 integration profile (co-located with the
+// cluster JWT volume it mounts), so that when that integration is dropped (e.g. served by the central
+// service) the env is dropped with it rather than pointing at an unmounted folder.
+func Test_NewIntegration_NoArangoJWTFolderOnSharedContainer(t *testing.T) {
+	assertNoFolderEnv := func(t *testing.T, spec api.DeploymentSpec) {
+		pt, err := NewIntegration("test", spec, api.DeploymentStatus{},
+			&schedulerContainerResourcesApi.Image{Image: util.NewType("img")},
+			spec.Integration.GetSidecar())
+		require.NoError(t, err)
+		require.NotNil(t, pt)
+		require.NotNil(t, pt.Container)
+
+		c, ok := pt.Container.Containers[ContainerName]
+		require.True(t, ok, "integration container must exist")
+		require.NotNil(t, c.Environments)
+
+		for _, e := range c.Environments.Env {
+			require.NotEqual(t, utilConstants.INTEGRATION_ARANGO_JWT_FOLDER.String(), e.Name,
+				"the shared integration container must not set INTEGRATION_ARANGO_JWT_FOLDER")
+		}
+	}
+
+	t.Run("Authenticated", func(t *testing.T) {
+		spec := api.DeploymentSpec{}
+		require.True(t, spec.IsAuthenticated())
+		assertNoFolderEnv(t, spec)
+	})
+
+	t.Run("Unauthenticated", func(t *testing.T) {
+		spec := api.DeploymentSpec{Authentication: api.AuthenticationSpec{JWTSecretName: util.NewType(api.JWTSecretNameDisabled)}}
+		require.False(t, spec.IsAuthenticated())
+		assertNoFolderEnv(t, spec)
 	})
 }
