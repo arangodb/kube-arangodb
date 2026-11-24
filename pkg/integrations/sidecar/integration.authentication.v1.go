@@ -27,6 +27,7 @@ import (
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/pod"
 	"github.com/arangodb/kube-arangodb/pkg/util"
+	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 )
 
 type IntegrationAuthenticationV1 struct {
@@ -58,6 +59,20 @@ func (i IntegrationAuthenticationV1) Envs() ([]core.EnvVar, error) {
 			Name:  "INTEGRATION_AUTHENTICATION_V1_PATH",
 			Value: shared.ClusterJWTSecretVolumeMountDir,
 		},
+	}
+
+	if i.Spec.IsAuthenticated() {
+		// Point the integration's client-connection authenticator at the cluster JWT secret this
+		// integration mounts (see Volumes), so it can sign a local superuser token for the central
+		// authorization service. It is set here, gated on the same condition as the mount and scoped to
+		// this integration's profile, rather than on the shared integration container: otherwise the env
+		// would still be present when this local integration is dropped in favour of the central service
+		// (and the folder is not mounted), making every proxied call fail with Unauthenticated. With no
+		// token source the client simply forwards without authentication.
+		envs = append(envs, core.EnvVar{
+			Name:  utilConstants.INTEGRATION_ARANGO_JWT_FOLDER.String(),
+			Value: shared.ClusterJWTSecretVolumeMountDir,
+		})
 	}
 
 	return i.Core.Envs(i, envs...), nil
