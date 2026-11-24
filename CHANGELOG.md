@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Merge the ArangoProfile nodeSelector into the pod's existing node selector instead of replacing it, so chart- or workload-set keys are preserved and a profile that sets no nodeSelector no longer wipes it
 - (Bugfix) Set INTEGRATION_ARANGO_JWT_FOLDER on the authentication integration profile (co-located with the cluster JWT volume it mounts) instead of the shared integration sidecar, so a deployment served by the central integration service no longer points the sidecar at an unmounted token folder and fails every proxied call with Unauthenticated
 - (Feature) Add operator.env and webhooks.env chart values to inject custom environment variables into the operator and webhooks containers
 - (Maintenance) Build with Go 1.27 and upgrade golangci-lint to v2

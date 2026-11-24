@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -850,6 +850,60 @@ func Test_Scheduling_NodeSelector(t *testing.T) {
 
 			require.Contains(t, pod.Spec.NodeSelector, "2")
 			require.EqualValues(t, pod.Spec.NodeSelector["2"], "1")
+		})
+	})
+}
+
+func Test_Scheduling_NodeSelector_PodPreexisting(t *testing.T) {
+	// podWith returns a template that already carries a node selector (as the chart or workload would
+	// set it), to prove Apply merges into it instead of replacing it.
+	podWith := func(sel map[string]string) *core.PodTemplateSpec {
+		return &core.PodTemplateSpec{Spec: core.PodSpec{NodeSelector: sel}}
+	}
+
+	t.Run("Profile merges into the pod selector", func(t *testing.T) {
+		applyScheduling(t, podWith(map[string]string{"chart": "1"}), &Scheduling{
+			NodeSelector: map[string]string{"node-pool": "arango"},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Len(t, pod.Spec.NodeSelector, 2)
+			require.EqualValues(t, "1", pod.Spec.NodeSelector["chart"])
+			require.EqualValues(t, "arango", pod.Spec.NodeSelector["node-pool"])
+		})
+	})
+
+	t.Run("Scheduling without a node selector leaves the pod selector untouched", func(t *testing.T) {
+		applyScheduling(t, podWith(map[string]string{"chart": "1"}), &Scheduling{
+			Tolerations: Tolerations{{Key: "dedicated"}},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Len(t, pod.Spec.NodeSelector, 1)
+			require.EqualValues(t, "1", pod.Spec.NodeSelector["chart"])
+		})
+	})
+
+	t.Run("Profile overrides a conflicting pod key", func(t *testing.T) {
+		applyScheduling(t, podWith(map[string]string{"zone": "a"}), &Scheduling{
+			NodeSelector: map[string]string{"zone": "b"},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Len(t, pod.Spec.NodeSelector, 1)
+			require.EqualValues(t, "b", pod.Spec.NodeSelector["zone"])
+		})
+	})
+
+	t.Run("Dash removes a pod-set key", func(t *testing.T) {
+		applyScheduling(t, podWith(map[string]string{"a": "1", "b": "2"}), &Scheduling{
+			NodeSelector: map[string]string{"a": "-"},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Len(t, pod.Spec.NodeSelector, 1)
+			require.NotContains(t, pod.Spec.NodeSelector, "a")
+			require.EqualValues(t, "2", pod.Spec.NodeSelector["b"])
+		})
+	})
+
+	t.Run("Removing the last key nils the selector", func(t *testing.T) {
+		applyScheduling(t, podWith(map[string]string{"a": "1"}), &Scheduling{
+			NodeSelector: map[string]string{"a": "-"},
+		})(func(t *testing.T, pod *core.PodTemplateSpec) {
+			require.Nil(t, pod.Spec.NodeSelector)
 		})
 	})
 }
