@@ -89,6 +89,7 @@ covers individual newer features separately.
 |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |
 | ArangoDeployment Status Subresource | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Production | False | --deployment.feature.enable-arango-deployment-status | Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) |
 | Platform Workflow Discovery | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | True | --deployment.feature.platform-workflow-discovery | Discovers existing platform service Helm releases by label and creates a chart-less ArangoPlatformWorkflow for each (requires scheduler-v2-workflow) |
+| Rotate On Profile Change | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.rotate-on-profile-change | Evicts pods selected by an ArangoProfile whose applied profile checksum differs from the current resolved checksum, so profile changes propagate to running pods |
 | SchedulerV2 Workflow Integration | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.scheduler-v2-workflow | SchedulerV2 Integration manages ArangoPlatformWorkflow resources instead of calling Helm directly |
 | Backup Policy Until Propagation | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | True | --deployment.feature.backup-policy-until-propagation | Sets Until field in the Backup based on next schedule time |
 | Central Services | 1.4.4 | 1.4.4 | >= 3.8.0 | Enterprise | Alpha | False | --deployment.feature.central-services | Enables Central Services |
@@ -199,6 +200,7 @@ Flags:
       --deployment.feature.random-pod-names                    Enables generating random pod names - Required ArangoDB >= 3.8.0
       --deployment.feature.replace-migration                   During member replacement shards are migrated directly to the new server - Required ArangoDB >= 3.8.0 (default true)
       --deployment.feature.restart-policy-always               Allow to restart containers with always restart policy - Required ArangoDB >= 3.8.0
+      --deployment.feature.rotate-on-profile-change            Evict pods selected by an ArangoProfile whose applied profile checksum differs from the current resolved checksum - Required ArangoDB >= 3.8.0
       --deployment.feature.scheduler-v2-workflow               Defines if SchedulerV2 Integration manages ArangoPlatformWorkflow resources instead of calling Helm directly - Required ArangoDB >= 3.8.0
       --deployment.feature.secured-containers                  Create server's containers with non root privileges. It enables 'ephemeral-volumes' feature implicitly - Required ArangoDB >= 3.8.0
       --deployment.feature.sensitive-information-protection    Hide sensitive information from metrics and logs - Required ArangoDB >= 3.8.0
