@@ -47,6 +47,15 @@ func Profiles(ctx context.Context, client generic.ListInterface[*schedulerApi.Ar
 		return nil, "", err
 	}
 
+	return ProfilesFromList(profileList, labels, profiles...)
+}
+
+// ProfilesFromList resolves the profiles applicable to a workload with the given labels from an
+// already-fetched profile list, exactly as Profiles does after listing: the selector-matched profiles
+// plus the explicitly named ones, de-duplicated, priority-sorted and validated, returning the applied
+// templates and their combined checksum. Use it to resolve many workloads against a single profile list
+// (e.g. a periodic scan) without re-listing profiles for each one.
+func ProfilesFromList(profileList []*schedulerApi.ArangoProfile, labels map[string]string, profiles ...string) ([]util.KV[string, schedulerApi.ProfileAcceptedTemplate], string, error) {
 	profileMap := util.ListAsMap(profileList, func(in *schedulerApi.ArangoProfile) string {
 		return in.GetName()
 	})
