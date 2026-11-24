@@ -199,16 +199,12 @@ func NewIntegration(name string, spec api.DeploymentSpec, status api.DeploymentS
 	// integration sidecar profile.
 	envs = append(envs, securityModeEnvs(spec, status)...)
 
-	// Sign the integration's client connection to the central authorization service with a local
-	// superuser (server) token from the mounted cluster JWT (the same secret used for --database.auth),
-	// mirroring the serving member's sidecar. Without it the authz pool client falls back to empty
-	// authentication and the central service rejects it with "Unauthorized".
-	if spec.IsAuthenticated() {
-		envs = append(envs, core.EnvVar{
-			Name:  utilConstants.INTEGRATION_ARANGO_JWT_FOLDER.String(),
-			Value: shared.ClusterJWTSecretVolumeMountDir,
-		})
-	}
+	// INTEGRATION_ARANGO_JWT_FOLDER (the cluster JWT used to sign the integration's client connection to
+	// the central service) is set by the authentication v1 integration profile, co-located with the
+	// volume it depends on - not here on the shared integration container. Setting it here applied it to
+	// every integration even when the authentication integration (and its mounted cluster JWT) is absent
+	// (e.g. when the deployment is served by the central service), pointing it at an unmounted path and
+	// failing every proxied call with Unauthenticated.
 
 	c := schedulerContainerApi.Container{
 		Core: &schedulerContainerResourcesApi.Core{

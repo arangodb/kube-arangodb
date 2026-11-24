@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Bugfix) Set INTEGRATION_ARANGO_JWT_FOLDER on the authentication integration profile (co-located with the cluster JWT volume it mounts) instead of the shared integration sidecar, so a deployment served by the central integration service no longer points the sidecar at an unmounted token folder and fails every proxied call with Unauthenticated
 - (Feature) Add operator.env and webhooks.env chart values to inject custom environment variables into the operator and webhooks containers
 - (Maintenance) Build with Go 1.27 and upgrade golangci-lint to v2
 - (Maintenance) (Security) Gate the FIPS-only algorithm switches (SHA-224 CRD/CA checksums, SHA-256 pod/resource-name hashes, AES-GCM in-module random nonce) behind the Go FIPS runtime mode (crypto/fips140.Enabled), so non-FIPS operators keep their existing checksums, resource names and ciphertext format unchanged on upgrade
