@@ -3317,6 +3317,37 @@ Default Value: `1m0s`
 
 ***
 
+### .spec.gateway.tls.altNames
+
+Type: `array` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.8/pkg/apis/deployment/v1/deployment_spec_gateway_tls.go#L46)</sup>
+
+AltNames holds additional subject alternative names (DNS names / IPs) added to the generated
+gateway serving certificate.
+
+***
+
+### .spec.gateway.tls.caSecretName
+
+Type: `string` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.8/pkg/apis/deployment/v1/deployment_spec_gateway_tls.go#L42)</sup>
+
+CASecretName optionally names a user-provided CA secret (containing `ca.crt` and `ca.key`) used to
+sign the gateway serving certificate. When unset, the operator generates and manages a self-signed
+CA for the gateway.
+
+***
+
+### .spec.gateway.tls.enabled
+
+Type: `boolean` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.8/pkg/apis/deployment/v1/deployment_spec_gateway_tls.go#L37)</sup>
+
+Enabled turns on the gateway's client-facing TLS listener. Takes effect only when the operator
+`gateway-tls` feature is enabled. When `spec.tls` is already secure the gateway serves TLS
+regardless of this setting.
+
+Default Value: `false`
+
+***
+
 ### .spec.gateways.affinity
 
 Type: `core.PodAffinity` <sup>[\[ref\]](https://github.com/arangodb/kube-arangodb/blob/1.4.8/pkg/apis/deployment/v1/server_group_spec.go#L153)</sup>

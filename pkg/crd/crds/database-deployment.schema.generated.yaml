@@ -7110,6 +7110,31 @@ v1:
               timeout:
                 description: Timeout defines default timeout for the upstream actions (if not overridden)
                 type: string
+              tls:
+                description: |-
+                  TLS configures the gateway client-facing (downstream) TLS listener independently of the deployment
+                  (arangod) TLS. Requires the operator `gateway-tls` feature to be enabled.
+                properties:
+                  altNames:
+                    description: |-
+                      AltNames holds additional subject alternative names (DNS names / IPs) added to the generated
+                      gateway serving certificate.
+                    items:
+                      type: string
+                    type: array
+                  caSecretName:
+                    description: |-
+                      CASecretName optionally names a user-provided CA secret (containing `ca.crt` and `ca.key`) used to
+                      sign the gateway serving certificate. When unset, the operator generates and manages a self-signed
+                      CA for the gateway.
+                    type: string
+                  enabled:
+                    description: |-
+                      Enabled turns on the gateway's client-facing TLS listener. Takes effect only when the operator
+                      `gateway-tls` feature is enabled. When `spec.tls` is already secure the gateway serves TLS
+                      regardless of this setting.
+                    type: boolean
+                type: object
             type: object
           gateways:
             description: Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
@@ -24917,6 +24942,31 @@ v2alpha1:
               timeout:
                 description: Timeout defines default timeout for the upstream actions (if not overridden)
                 type: string
+              tls:
+                description: |-
+                  TLS configures the gateway client-facing (downstream) TLS listener independently of the deployment
+                  (arangod) TLS. Requires the operator `gateway-tls` feature to be enabled.
+                properties:
+                  altNames:
+                    description: |-
+                      AltNames holds additional subject alternative names (DNS names / IPs) added to the generated
+                      gateway serving certificate.
+                    items:
+                      type: string
+                    type: array
+                  caSecretName:
+                    description: |-
+                      CASecretName optionally names a user-provided CA secret (containing `ca.crt` and `ca.key`) used to
+                      sign the gateway serving certificate. When unset, the operator generates and manages a self-signed
+                      CA for the gateway.
+                    type: string
+                  enabled:
+                    description: |-
+                      Enabled turns on the gateway's client-facing TLS listener. Takes effect only when the operator
+                      `gateway-tls` feature is enabled. When `spec.tls` is already secure the gateway serves TLS
+                      regardless of this setting.
+                    type: boolean
+                type: object
             type: object
           gateways:
             description: Gateways contain specification for Gateway pods running in deployment mode `Single` or `Cluster`.
