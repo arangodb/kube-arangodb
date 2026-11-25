@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Trace each sidecar->central proxied call (method, code, duration) at debug level, and surface all upstream error codes
 
 ## [1.4.8](https://github.com/arangodb/kube-arangodb/tree/1.4.8) (2026-11-26)
 - (Bugfix) Exempt the authentication token-check (AuthenticationV1.Validate) from the integration sidecar's auth gate, so it is reachable without credentials (like health checks) while CreateToken and other privileged operations stay gated
