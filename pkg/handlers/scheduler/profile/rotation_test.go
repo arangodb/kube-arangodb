@@ -70,3 +70,29 @@ func Test_profilesForPod(t *testing.T) {
 		require.ElementsMatch(t, []string{"a", "b", "c"}, got)
 	})
 }
+
+func Test_podEvictionBlockedBy(t *testing.T) {
+	t.Run("Safe when no opt-out annotation is present", func(t *testing.T) {
+		require.Empty(t, podEvictionBlockedBy(map[string]string{}))
+	})
+
+	t.Run("Safe for non-opt-out values", func(t *testing.T) {
+		require.Empty(t, podEvictionBlockedBy(map[string]string{utilConstants.SafeToEvictAnnotation: "true"}))
+		require.Empty(t, podEvictionBlockedBy(map[string]string{utilConstants.KarpenterDoNotDisruptAnnotation: "false"}))
+	})
+
+	t.Run("Blocked by cluster-autoscaler safe-to-evict=false", func(t *testing.T) {
+		got := podEvictionBlockedBy(map[string]string{utilConstants.SafeToEvictAnnotation: "false"})
+		require.Equal(t, utilConstants.SafeToEvictAnnotation+"=false", got)
+	})
+
+	t.Run("Blocked by Karpenter do-not-disrupt=true", func(t *testing.T) {
+		got := podEvictionBlockedBy(map[string]string{utilConstants.KarpenterDoNotDisruptAnnotation: "true"})
+		require.Equal(t, utilConstants.KarpenterDoNotDisruptAnnotation+"=true", got)
+	})
+
+	t.Run("Blocked by Karpenter do-not-evict=true", func(t *testing.T) {
+		got := podEvictionBlockedBy(map[string]string{utilConstants.KarpenterDoNotEvictAnnotation: "true"})
+		require.Equal(t, utilConstants.KarpenterDoNotEvictAnnotation+"=true", got)
+	})
+}

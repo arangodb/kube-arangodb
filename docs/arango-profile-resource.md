@@ -110,3 +110,8 @@ Notes:
   through the normal deployment plan.
 - Eviction deletes the pod, so a standalone pod with no controller owner is not recreated. Use the feature
   for pods managed by a controller.
+- A pod can opt out of this rotation by carrying a well-known "do not evict" annotation (which a profile
+  can stamp through its pod `metadata.annotations`): `cluster-autoscaler.kubernetes.io/safe-to-evict: "false"`,
+  or Karpenter's `karpenter.sh/do-not-disrupt: "true"` (or its deprecated `karpenter.sh/do-not-evict: "true"`).
+  On a profile change such a pod is left running and a `ProfileChangedSkipped` event is recorded instead of
+  evicting it.
