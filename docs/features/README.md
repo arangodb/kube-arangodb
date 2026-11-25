@@ -8,6 +8,7 @@ title: List of all features
 
 | Feature | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State | Enabled | Flag | Remarks |
 |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |
+| Apply Profile All To Init Containers | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.apply-profile-all-to-init-containers | Also apply the ArangoProfile container.all template to init containers, not only to regular containers |
 | ArangoDeployment Status Subresource | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Production | False | --deployment.feature.enable-arango-deployment-status | Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) |
 | Platform Workflow Discovery | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | True | --deployment.feature.platform-workflow-discovery | Discovers existing platform service Helm releases by label and creates a chart-less ArangoPlatformWorkflow for each (requires scheduler-v2-workflow) |
 | Rotate On Profile Change | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.rotate-on-profile-change | Evicts pods selected by an ArangoProfile whose applied profile checksum differs from the current resolved checksum, so profile changes propagate to running pods |

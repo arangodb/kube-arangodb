@@ -415,3 +415,10 @@ features:
     releases:
       - operatorVersion: 1.5.0
         state: Alpha
+  - name: Apply Profile All To Init Containers
+    enabled: false
+    flag: --deployment.feature.apply-profile-all-to-init-containers
+    remarks: Also apply the ArangoProfile container.all template to init containers, not only to regular containers
+    releases:
+      - operatorVersion: 1.5.0
+        state: Alpha

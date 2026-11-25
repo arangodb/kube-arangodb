@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -133,9 +133,9 @@ func (h *handler) HandleObject(ctx context.Context, item operation.Item, extensi
 
 	hash := util.SHA256FromString(fmt.Sprintf("%s|%s", profilesChecksum, podSpecHash))
 
-	if err := schedulerApi.ProfileTemplates(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) *schedulerApi.ProfileTemplate {
+	if err := scheduler.RenderProfilesOnTemplate(schedulerApi.ProfileTemplates(util.FormatList(calculatedProfiles, func(a util.KV[string, schedulerApi.ProfileAcceptedTemplate]) *schedulerApi.ProfileTemplate {
 		return a.V.Template
-	})).RenderOnTemplate(&podSpecTemplate); err != nil {
+	})), &podSpecTemplate); err != nil {
 		return false, err
 	}
 

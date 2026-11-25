@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,6 +53,16 @@ func (p *ProfileContainerTemplate) ApplyGeneric(template *core.PodTemplateSpec) 
 	}
 
 	return p.All.Apply(template)
+}
+
+// ApplyGenericInit applies the generic (All) template to the pod's init containers, mirroring ApplyGeneric
+// which applies it to the regular containers.
+func (p *ProfileContainerTemplate) ApplyGenericInit(template *core.PodTemplateSpec) error {
+	if p == nil {
+		return nil
+	}
+
+	return p.All.ApplyInit(template)
 }
 
 func (p *ProfileContainerTemplate) ApplyDefault(template *core.PodTemplateSpec) error {
