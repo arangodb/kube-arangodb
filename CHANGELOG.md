@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Documentation) Document the Enforced RBAC feature and link it and Central Services to the Platform RBAC enabling guide in the feature table
 - (Documentation) Update the Platform RBAC documentation (policies, roles, bindings, tokens, identity, enabling and FAQ)
 - (Feature) Add the rotate-on-profile-change feature (disabled by default): a periodic scan evicts pods selected by an ArangoProfile whose stamped profiles.arangodb.com/checksum no longer matches the current resolved checksum, so a changed profile propagates to running pods
 - (Bugfix) Merge the ArangoProfile nodeSelector into the pod's existing node selector instead of replacing it, so chart- or workload-set keys are preserved and a profile that sets no nodeSelector no longer wipes it

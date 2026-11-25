@@ -302,7 +302,17 @@ features:
     arangoDBEditions: Enterprise
     flag: --deployment.feature.central-services
     enabled: false
-    remarks: Enables Central Services
+    remarks: Enables Central Services (the central ArangoPlatform authorization service in the integration sidecar)
+    doc: docs/platform/rbac/enabling.md
+    releases:
+      - operatorVersion: 1.4.4
+        state: Alpha
+  - name: Enforced RBAC
+    arangoDBEditions: Enterprise
+    flag: --deployment.feature.rbac-enforced
+    enabled: false
+    remarks: Enforces ArangoPlatform RBAC authorization (requires central-services); when disabled RBAC runs in permissive mode (policies evaluated, denials logged but not blocked)
+    doc: docs/platform/rbac/enabling.md
     releases:
       - operatorVersion: 1.4.4
         state: Alpha
