@@ -26,6 +26,105 @@ spec:
     priority: 129
 ```
 
+# Custom CA Certificates
+
+Platform images trust only public Certificate Authorities. When a Platform service connects over TLS to
+infrastructure signed by a private CA (for example an on-prem S3 endpoint, a container registry, an
+identity provider or an LLM endpoint), the connection fails with an unknown-authority error. To make
+every Platform pod trust additional CAs, an [ArangoProfile](./arango-profile-resource.md) can mount a
+CA bundle over the system trust store and point the common TLS libraries at it.
+
+Create a `ConfigMap` holding the bundle (public roots **and** your custom CAs — the mount replaces the
+system store, so it must be complete):
+
+```shell
+kubectl create configmap custom-ca-bundle --from-file 'ca-bundle.crt=<CA Bundle Path>'
+```
+
+Then inject it everywhere with a profile:
+```yaml
+apiVersion: scheduler.arangodb.com/v1beta1
+kind: ArangoProfile
+metadata:
+  name: custom-ca
+spec:
+  selectors:
+    label:
+      matchLabels: {}
+  template:
+    priority: 200
+    pod:
+      volumes:
+        - name: custom-ca
+          configMap:
+            name: custom-ca-bundle
+            items:
+              - key: ca-bundle.crt
+                path: ca-bundle.crt
+    container:
+      all:
+        volumeMounts:
+          - name: custom-ca
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-bundle.crt
+            readOnly: true
+          - name: custom-ca
+            mountPath: /etc/pki/tls/certs/ca-bundle.crt
+            subPath: ca-bundle.crt
+            readOnly: true
+          - name: custom-ca
+            mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+            subPath: ca-bundle.crt
+            readOnly: true
+        env:
+          - name: SSL_CERT_FILE
+            value: /etc/ssl/certs/ca-certificates.crt
+          - name: REQUESTS_CA_BUNDLE
+            value: /etc/ssl/certs/ca-certificates.crt
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/ssl/certs/ca-certificates.crt
+```
+
+The two mount paths cover Debian/Ubuntu (`/etc/ssl/certs`) and RHEL/UBI (`/etc/pki`) based images; the
+environment variables cover OpenSSL, Python/`requests` and Node.js.
+
+Optionally, [trust-manager](https://cert-manager.io/docs/trust/trust-manager/) can assemble and
+distribute the bundle (public roots plus your CAs) to every namespace as the `custom-ca-bundle`
+ConfigMap:
+```yaml
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: custom-ca-bundle
+spec:
+  sources:
+    - useDefaultCAs: true
+    - configMap:
+        name: customer-root-cas
+        key: ca.crt
+  target:
+    configMap:
+      key: ca-bundle.crt
+```
+
+Notes:
+
+* The bundle **replaces** the system trust store, so it must include the public roots as well as the
+  custom CAs (`useDefaultCAs: true` when using trust-manager).
+* A pod is injected only if it carries the `profiles.arangodb.com/apply` or
+  `profiles.arangodb.com/deployment` label, and only on CREATE, so existing pods must be restarted to
+  pick up a new or changed profile.
+* Profiles and the ConfigMap are namespaced: create one per namespace (trust-manager handles the
+  ConfigMap distribution).
+* `subPath` mounts do not refresh when the ConfigMap changes: restart pods after rotating the CA bundle.
+* `container.all` covers `spec.containers` (including the profile-injected `integration` sidecar) but
+  not `initContainers` or native sidecars unless the `apply-profile-all-to-init-containers` feature is
+  enabled.
+* The JVM does not read these settings; Java-based components need their own truststore
+  (`-Djavax.net.ssl.trustStore`).
+* For S3-backed [ArangoPlatformStorage](./platform/storage/s3.md), the storage integration reads its CA
+  from `spec.backend.s3.caSecret` instead; set that in addition to the profile above.
+
 # Scheduling Platform Pods on Specific Nodes
 
 To pin all Platform pods to a dedicated node pool (for example accredited or isolated nodes), an
