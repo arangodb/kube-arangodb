@@ -21,18 +21,20 @@
 package features
 
 func init() {
-	registerFeature(sidecarDebug)
+	registerFeature(passSidecarDebugOptions)
 }
 
-var sidecarDebug = &feature{
-	name:             "sidecar-debug",
-	description:      "Run the serving member's authorization/integration sidecar at debug log level (diagnostics only)",
+var passSidecarDebugOptions = &feature{
+	name:             "pass-sidecar-debug-options",
+	description:      "Propagate the operator's own --log.level options to the integration and internal authorization sidecars (diagnostics only)",
 	enabledByDefault: false,
 	hidden:           true,
 }
 
-// SidecarDebug reports whether the internal (authorization/integration) sidecar should run at debug log
-// level. Off by default; intended for diagnostics.
-func SidecarDebug() Feature {
-	return sidecarDebug
+// PassSidecarDebugOptions reports whether the operator's own --log.level options should be propagated to the
+// integration and internal authorization sidecars, so a single operator-level setting (e.g. --log.level=debug,
+// or --log.level=grpc-service=debug for just the sidecar->central proxy trace) turns on sidecar debug logging
+// too. Off by default; intended for diagnostics.
+func PassSidecarDebugOptions() Feature {
+	return passSidecarDebugOptions
 }
