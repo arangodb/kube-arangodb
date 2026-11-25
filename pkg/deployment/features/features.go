@@ -58,6 +58,7 @@ type Feature interface {
 	Description() string
 	Dependencies() []Feature
 	Version() util.VersionConstrain
+	KubernetesVersion() util.VersionConstrain
 	EnterpriseRequired() bool
 	OperatorEnterpriseRequired() bool
 	EnabledByDefault() bool
@@ -67,6 +68,10 @@ type Feature interface {
 	Hidden() bool
 	Supported(v util.Version, enterprise bool) bool
 	ImageSupported(i *api.ImageInfo) bool
+	// SupportedKubernetesVersion reports whether the feature's declared Kubernetes version constraint is
+	// satisfied by the given discovered cluster Kubernetes version. It defaults to any: a feature that
+	// declares no constraint (almost all of them) is supported on every Kubernetes version.
+	SupportedKubernetesVersion(kubernetes util.Version) bool
 	GetDependencies() []string
 	Reset()
 }
@@ -74,6 +79,7 @@ type Feature interface {
 type feature struct {
 	name, description                                                         string
 	version                                                                   util.VersionConstrain
+	kubernetesVersion                                                         util.VersionConstrain
 	enterpriseRequired, operatorEnterpriseRequired, enabledByDefault, enabled bool
 	deprecated                                                                string
 	constValue                                                                *bool
@@ -119,6 +125,10 @@ func (f feature) Supported(v util.Version, enterprise bool) bool {
 	return Supported(&f, v, enterprise)
 }
 
+func (f feature) SupportedKubernetesVersion(kubernetes util.Version) bool {
+	return SupportedKubernetesVersion(&f, kubernetes)
+}
+
 func (f feature) Enabled() bool {
 	if f.operatorEnterpriseRequired {
 		// Operator Enterprise is required for this feature
@@ -150,6 +160,12 @@ func (f *feature) EnabledPointer() *bool {
 
 func (f feature) Version() util.VersionConstrain {
 	return f.version
+}
+
+// KubernetesVersion returns the Kubernetes version constraint required by the feature. An empty
+// constraint imposes no Kubernetes version requirement (rendered as "Any" in the docs).
+func (f feature) KubernetesVersion() util.VersionConstrain {
+	return f.kubernetesVersion
 }
 
 // withMinimumSupportedVersion renders a feature's version requirement for display: when the declared
