@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2024-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2024-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,14 @@ var (
 		stdout   bool
 	}
 )
+
+// ConfiguredLevels returns the raw --log.level argument values the process was started with (after flag
+// parsing; the default before that). It lets the configured levels be propagated verbatim to child
+// processes - e.g. the injected integration sidecar inherits the operator's log level, so a single
+// operator-level --log.level setting applies everywhere.
+func ConfiguredLevels() []string {
+	return cli.levels
+}
 
 func Init(cmd *cobra.Command) error {
 	f := cmd.PersistentFlags()

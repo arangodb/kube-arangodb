@@ -20,6 +20,7 @@ import (
 	schedulerPodResourcesApi "github.com/arangodb/kube-arangodb/pkg/apis/scheduler/v1beta1/pod/resources"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/errors"
@@ -165,6 +166,16 @@ func NewIntegration(name string, spec api.DeploymentSpec, status api.DeploymentS
 		options.Add("--database.auth", shared.ClusterJWTSecretVolumeMountDir)
 	}
 	options.Add("--services.gateway.enabled", true)
+
+	// When the pass-sidecar-debug-options feature is enabled, propagate the operator's own --log.level to the
+	// injected sidecar, so a single operator-level setting (e.g. --log.level=debug, or --log.level=grpc-service=debug
+	// for just the sidecar->central proxy trace) turns on debug logging here too. Off by default - the sidecar
+	// follows its own default level, matching the internal authorization sidecar (internal_sidecar.go).
+	if features.PassSidecarDebugOptions().Enabled() {
+		for _, lvl := range logging.ConfiguredLevels() {
+			options.Add("--log.level", lvl)
+		}
+	}
 
 	// Envs
 

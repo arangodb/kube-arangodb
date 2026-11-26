@@ -75,12 +75,23 @@ func ProxyServer(obj cache.Object[*grpc.ClientConn]) ([]grpc.ServerOption, Handl
 	return []grpc.ServerOption{
 		grpc.UnknownServiceHandler(func(srv any, stream grpc.ServerStream) error {
 			method, _ := grpc.MethodFromServerStream(stream)
+			start := time.Now()
+
 			err := handler(srv, stream)
-			if err != nil {
-				code := status.Code(err)
-				if code == codes.Unavailable || code == codes.Internal {
-					logger.Str("method", method).Err(err).Str("code", code.String()).Warn("Proxy response error")
-				}
+
+			code := status.Code(err)
+			l := logger.Str("method", method).Str("code", code.String()).Dur("duration", time.Since(start))
+			switch {
+			case err == nil:
+				// Every forwarded call (sidecar -> central) is traced at debug: method, code and duration.
+				// Enable with --log.level=debug (or --log.level=grpc-service=debug).
+				l.Debug("Proxy response")
+			case code == codes.Unavailable || code == codes.Internal:
+				l.Err(err).Warn("Proxy response error")
+			default:
+				// Other non-OK codes (Unauthenticated, PermissionDenied, NotFound, ...) are expected
+				// application errors, so they are traced at debug rather than warned.
+				l.Err(err).Debug("Proxy response error")
 			}
 			return err
 		}),

@@ -31,6 +31,7 @@ import (
 	platformApi "github.com/arangodb/kube-arangodb/pkg/apis/platform/v1beta1"
 	shared "github.com/arangodb/kube-arangodb/pkg/apis/shared"
 	"github.com/arangodb/kube-arangodb/pkg/deployment/features"
+	"github.com/arangodb/kube-arangodb/pkg/logging"
 	"github.com/arangodb/kube-arangodb/pkg/util"
 	utilConstants "github.com/arangodb/kube-arangodb/pkg/util/constants"
 	"github.com/arangodb/kube-arangodb/pkg/util/k8sutil"
@@ -48,11 +49,14 @@ func createInternalSidecarArgs(spec api.DeploymentSpec, groupSpec api.ServerGrou
 
 	options.Add("--central", util.BoolSwitch(features.CentralServices().Enabled(), "true", "false"))
 
-	// Run the serving member's authorization sidecar at debug level when the sidecar-debug feature is
-	// enabled, so the authorization evaluate decisions (action/resource/effect, logged at Debug) are
-	// emitted. Off by default - the sidecar runs at info.
-	if features.SidecarDebug().Enabled() {
-		options.Add("--log.level", "debug")
+	// When the pass-sidecar-debug-options feature is enabled, propagate the operator's own --log.level to the
+	// serving member's authorization sidecar, so a single operator-level setting (e.g. --log.level=debug) turns
+	// on the authorization evaluate decision logs (action/resource/effect, logged at Debug) here too. Off by
+	// default - the sidecar runs at its own default level.
+	if features.PassSidecarDebugOptions().Enabled() {
+		for _, lvl := range logging.ConfiguredLevels() {
+			options.Add("--log.level", lvl)
+		}
 	}
 
 	if port := groupSpec.InternalPort; port == nil {
