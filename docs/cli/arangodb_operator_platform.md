@@ -67,8 +67,8 @@ Usage:
 Flags:
   -h, --help                               help for chart
       --license.client.discover            Discovers the LicenseSecret from ArangoDeployment (default true)
-      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID) (default "arangodb-operator-qa")
-      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET) (default "a3ca3034-c224-429e-b1b0-914998708bc4")
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
       --license.proxy                      Uses System Proxy
       --registry.docker.credentials        Use Docker Credentials
@@ -92,8 +92,8 @@ Usage:
 
 Flags:
   -h, --help                               help for copy
-      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID) (default "arangodb-operator-qa")
-      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET) (default "a3ca3034-c224-429e-b1b0-914998708bc4")
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
       --license.proxy                      Uses System Proxy
       --registry.docker.credentials        Use Docker Credentials
@@ -136,8 +136,8 @@ Usage:
 
 Flags:
   -h, --help                               help for export
-      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID) (default "arangodb-operator-qa")
-      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET) (default "a3ca3034-c224-429e-b1b0-914998708bc4")
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
       --license.proxy                      Uses System Proxy
       --registry.docker.credentials        Use Docker Credentials
@@ -183,8 +183,8 @@ Usage:
 Flags:
   -h, --help                               help for install
       --license.client.discover            Discovers the LicenseSecret from ArangoDeployment (default true)
-      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID) (default "arangodb-operator-qa")
-      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET) (default "a3ca3034-c224-429e-b1b0-914998708bc4")
+      --license.client.id string           LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string       LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string            LicenseManager Endpoint (default "license.arango.ai")
       --license.proxy                      Uses System Proxy
       --platform.name string               Kubernetes Platform Name (name of the ArangoDeployment)
@@ -284,8 +284,8 @@ Flags:
       --arango.insecure                Skips TLS certificate verification
       --arango.token string            Arango JWT Token for Authentication
   -h, --help                           help for activate
-      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID) (default "arangodb-operator-qa")
-      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET) (default "a3ca3034-c224-429e-b1b0-914998708bc4")
+      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --license.interval duration      Interval of the license synchronization
       --license.proxy                  Uses System Proxy
@@ -310,8 +310,8 @@ Flags:
       --deployment.id string           Deployment ID
   -h, --help                           help for generate
       --inventory string               Path to the Inventory File
-      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID) (default "arangodb-operator-qa")
-      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET) (default "a3ca3034-c224-429e-b1b0-914998708bc4")
+      --license.client.id string       LicenseManager Client ID (ENV: LICENSE_CLIENT_ID)
+      --license.client.secret string   LicenseManager Client Secret (ENV: LICENSE_CLIENT_SECRET)
       --license.endpoint string        LicenseManager Endpoint (default "license.arango.ai")
       --license.proxy                  Uses System Proxy
       --ttl duration                   TTL
