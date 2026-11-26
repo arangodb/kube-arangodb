@@ -43,8 +43,8 @@ spec:
   scope:
     statements:
       - effect: Allow
-        actions: ["collection:*"]
-        resources: ["reports"]
+        actions: ["*"]
+        resources: ["db:apiversion:*", "db:database:reports", "db:collection:reports:*"]
 ```
 
 - `groupName` is matched case-sensitively against the entries of the token's
@@ -61,15 +61,15 @@ the bindings directly (the same surface used without a CRD):
 
 ```bash
 # List bindings for a group
-curl https://<gateway>/_management/permissions/group/developers/role
+curl -H "Authorization: Bearer $TOKEN" https://<gateway>/_management/permissions/group/developers/role
 
 # Assign a role to a group
-curl -X POST https://<gateway>/_management/permissions/group/developers/role/editor \
-  -d '{ "scope": { "statements": [ { "effect": "Allow", "actions": ["collection:*"], "resources": ["reports"] } ] } }'
+curl -X POST -H "Authorization: Bearer $TOKEN" https://<gateway>/_management/permissions/group/developers/role/editor \
+  -d '{ "scope": { "statements": [ { "effect": "Allow", "actions": ["*"], "resources": ["db:apiversion:*", "db:database:reports", "db:collection:reports:*"] } ] } }'
 
 # Replace scope / remove
-curl -X PUT    https://<gateway>/_management/permissions/group/developers/role/editor -d '{ "scope": { ... } }'
-curl -X DELETE https://<gateway>/_management/permissions/group/developers/role/editor
+curl -X PUT    -H "Authorization: Bearer $TOKEN" https://<gateway>/_management/permissions/group/developers/role/editor -d '{ "scope": { ... } }'
+curl -X DELETE -H "Authorization: Bearer $TOKEN" https://<gateway>/_management/permissions/group/developers/role/editor
 ```
 
 | Operation | RBAC Action |
@@ -120,18 +120,18 @@ groupName: developers
 role: { name: editor }
 scope:
   statements:
-    - { effect: Allow, actions: ["collection:read"], resources: ["*"] }
+    - { effect: Allow, actions: ["db:UseApiVersion", "db:Read"], resources: ["*"] }
 ```
 
-**User `alice`** - additionally edit the `reports` collection:
+**User `alice`** - additionally edit the collections of the `reports` database:
 ```yaml
 userName: alice
 role: { name: editor }
 scope:
   statements:
-    - { effect: Allow, actions: ["collection:*"], resources: ["reports"] }
+    - { effect: Allow, actions: ["*"], resources: ["db:apiversion:*", "db:database:reports", "db:collection:reports:*"] }
 ```
 
 A token for `alice` carrying `"groups": ["developers"]` resolves to both
 bindings: she can read every collection (from the group binding) and write
-`reports` (from her user binding).
+the collections of `reports` (from her user binding).

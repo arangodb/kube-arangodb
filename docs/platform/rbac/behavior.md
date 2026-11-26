@@ -3,6 +3,31 @@
 How the RBAC system behaves in practice — propagation timing, session
 impact, and degraded-state handling.
 
+## Where RBAC Data Is Stored
+
+RBAC is managed centrally per ArangoDeployment. The authorization service runs
+in the integration sidecar and stores its data in system collections of the
+deployment's `_system` database:
+
+| Collection             | Content  |
+|------------------------|----------|
+| `_policies`            | Policies |
+| `_roles`               | Roles    |
+| `_user_role_bindings`  | User role bindings with their scopes  |
+| `_group_role_bindings` | Group role bindings with their scopes |
+
+Every sidecar instance reads the same collections, so changes made through the
+management API on any gateway, or through CRDs, apply to all services of the
+deployment. Separate deployments have separate RBAC data.
+
+Deletions are soft: a tombstone is kept so that all sidecars observe the
+delete, and it is removed after the sidecar's `--sidecar.auth.deleted-ttl`
+(default 30 days).
+
+Platform services do not store permissions themselves. They only define the
+action names they check and ask their local sidecar to evaluate them (see
+[Making a Service RBAC-Ready](service_integration.md)).
+
 ## Permission Change Propagation
 
 ### When roles or policies are modified, how long until it takes effect?
@@ -11,7 +36,9 @@ Changes propagate through a pipeline:
 
 1. **CRD update** — immediate (Kubernetes API)
 2. **Operator reconciliation** — seconds (operator watches CRD changes)
-3. **Sidecar pool refresh** — up to 10 seconds (pooler reads from ArangoDB)
+3. **Sidecar pool refresh** — up to 10 seconds (pooler reads from ArangoDB).
+   `POST /_management/permissions/refresh` triggers an immediate refresh on
+   the sidecar that receives the request.
 4. **Client cache sync** — up to 15 seconds (streaming long-poll)
 
 **Total worst-case latency: ~30 seconds.**
