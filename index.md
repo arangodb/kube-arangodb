@@ -93,11 +93,14 @@ covers individual newer features separately.
 
 | Feature | Operator Version | Introduced | ArangoDB Version | ArangoDB Edition | State | Enabled | Flag | Remarks |
 |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |:--- |
+| Apply Profile All To Init Containers | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.apply-profile-all-to-init-containers | Also apply the ArangoProfile container.all template to init containers, not only to regular containers |
 | ArangoDeployment Status Subresource | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Production | False | --deployment.feature.enable-arango-deployment-status | Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) |
 | Platform Workflow Discovery | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | True | --deployment.feature.platform-workflow-discovery | Discovers existing platform service Helm releases by label and creates a chart-less ArangoPlatformWorkflow for each (requires scheduler-v2-workflow) |
+| Rotate On Profile Change | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.rotate-on-profile-change | Evicts pods selected by an ArangoProfile whose applied profile checksum differs from the current resolved checksum, so profile changes propagate to running pods |
 | SchedulerV2 Workflow Integration | 1.5.0 | 1.5.0 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.scheduler-v2-workflow | SchedulerV2 Integration manages ArangoPlatformWorkflow resources instead of calling Helm directly |
 | Backup Policy Until Propagation | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | True | --deployment.feature.backup-policy-until-propagation | Sets Until field in the Backup based on next schedule time |
-| Central Services | 1.4.4 | 1.4.4 | >= 3.8.0 | Enterprise | Alpha | False | --deployment.feature.central-services | Enables Central Services |
+| [Central Services](docs/platform/rbac/enabling.md) | 1.4.4 | 1.4.4 | >= 3.8.0 | Enterprise | Alpha | False | --deployment.feature.central-services | Enables Central Services (the central ArangoPlatform authorization service in the integration sidecar) |
+| [Enforced RBAC](docs/platform/rbac/enabling.md) | 1.4.4 | 1.4.4 | >= 3.8.0 | Enterprise | Alpha | False | --deployment.feature.rbac-enforced | Enforces ArangoPlatform RBAC authorization (requires central-services); when disabled RBAC runs in permissive mode (policies evaluated, denials logged but not blocked) |
 | [Harden ArangoDB Server Containers](docs/features/harden.md) | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.harden | Adds hardening arguments to the ArangoDB server containers |
 | JWT Asymmetric Key | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.jwt-asymmetric-key | Uses Asymmetric Key as a default in ArangoDB |
 | Random Pod Names | 1.4.4 | 1.4.4 | >= 3.8.0 | Community, Enterprise | Alpha | False | --deployment.feature.random-pod-names | Enables generating random pod names |
@@ -167,102 +170,104 @@ To upgrade to the Enterprise Edition, you need to get in touch with the ArangoDB
 
 ```
 Flags:
-      --action.PVCResize.concurrency int                       Define limit of concurrent PVC Resizes on the cluster (default 32)
-      --agency.refresh-delay duration                          The Agency refresh delay (0 = no delay) (default 500ms)
-      --agency.refresh-interval duration                       The Agency refresh interval (0 = do not refresh)
-      --agency.retries int                                     The Agency retries (0 = no retries) (default 1)
-      --api.basic-secret-name string                           Name of secret containing username + password for login to the dashboard (default "arangodb-operator-credentials")
-      --api.grpc-port int                                      gRPC API port to listen on (default 8728)
-      --api.http-port int                                      HTTP API port to listen on (default 8528)
-      --api.secondary-name stringArray                         Secondary names for a certificate
-      --api.tls-ca-secret-name string                          Name of secret containing ca.crt & ca.key for HTTPS API (if does not exist, new one is generated) (default "arangodb-operator-ca")
-      --backup-concurrent-uploads int                          Number of concurrent uploads per deployment (default 4)
-      --chaos.allowed                                          Set to allow chaos in deployments. Only activated when allowed and enabled in deployment
-      --crd.install                                            Install missing CRD if access is possible (default true)
-      --crd.preserve-unknown-fields stringArray                Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
-      --crd.validation-schema stringArray                      Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
-      --deployment.feature.active-failover                     Support for ActiveFailover mode - Required ArangoDB >= 3.8.0 < 3.12 (default true)
-      --deployment.feature.agency-poll                         Enable Agency Poll for Enterprise deployments - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.all                                 Enable ALL Features
-      --deployment.feature.async-backup-creation               Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.backup-cleanup                      Cleanup imported backups if required - Required ArangoDB >= 3.8.0
-      --deployment.feature.backup-policy-until-propagation     Sets Until field in the Backup based on next schedule time - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.central-services                    Enables Central Services - Required ArangoDB EE >= 3.8.0
-      --deployment.feature.deployment-spec-defaults-restore    Restore defaults from last accepted state of deployment - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.enable-arango-deployment-status     Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) - Required ArangoDB >= 3.8.0
-      --deployment.feature.enforced-resign-leadership          Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.ephemeral-volumes                   Enables ephemeral volumes for apps and tmp directory - Required ArangoDB >= 3.8.0
-      --deployment.feature.failover-leadership                 Support for leadership in fail-over mode - Required ArangoDB >= 3.8.0 < 3.12
-      --deployment.feature.gateway                             Defines if gateway extension is enabled - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.gateway-sidecar                     Enables Gateway Integration - Required ArangoDB EE >= 3.8.0
-      --deployment.feature.harden                              Adds hardening arguments to the ArangoDB server containers - Required ArangoDB >= 3.8.0
-      --deployment.feature.init-containers-copy-resources      Copy resources spec to built-in init containers if they are not specified - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.init-containers-upscale-resources   Copy resources spec to built-in init containers if they are not specified or lower - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.jwt-asymmetric-key                  Uses Asymmetric Key as a default in ArangoDB - Required ArangoDB >= 3.12.8
-      --deployment.feature.local-storage.pass-reclaim-policy   [LocalStorage] Pass ReclaimPolicy from StorageClass instead of using hardcoded Retain - Required ArangoDB >= 3.8.0
-      --deployment.feature.local-volume-replacement-check      Replace volume for local-storage if volume is unschedulable (ex. node is gone) - Required ArangoDB >= 3.8.0
-      --deployment.feature.platform-workflow-discovery         Defines if the operator discovers existing platform service Helm releases by label and creates a chart-less ArangoPlatformWorkflow for each - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.random-pod-names                    Enables generating random pod names - Required ArangoDB >= 3.8.0
-      --deployment.feature.replace-migration                   During member replacement shards are migrated directly to the new server - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.restart-policy-always               Allow to restart containers with always restart policy - Required ArangoDB >= 3.8.0
-      --deployment.feature.scheduler-v2-workflow               Defines if SchedulerV2 Integration manages ArangoPlatformWorkflow resources instead of calling Helm directly - Required ArangoDB >= 3.8.0
-      --deployment.feature.secured-containers                  Create server's containers with non root privileges. It enables 'ephemeral-volumes' feature implicitly - Required ArangoDB >= 3.8.0
-      --deployment.feature.sensitive-information-protection    Hide sensitive information from metrics and logs - Required ArangoDB >= 3.8.0
-      --deployment.feature.short-pod-names                     Enable Short Pod Names - Required ArangoDB >= 3.8.0
-      --deployment.feature.timezone-management                 Enable timezone management for pods - Required ArangoDB >= 3.8.0
-      --deployment.feature.tls-sni                             TLS SNI Support - Required ArangoDB EE >= 3.8.0 (default true)
-      --deployment.feature.upgrade-version-check               Enable initContainer with pre version check - Required ArangoDB >= 3.8.0 (default true)
-      --deployment.feature.upgrade-version-check-v2            Enable initContainer with pre version check based by Operator - Required ArangoDB >= 3.8.0
-      --features-config-map-name string                        Name of the Feature Map ConfigMap (default "arangodb-operator-feature-config-map")
-      --http1.keep-alive                                       If false, disables HTTP keep-alives and will only use the connection to the server for a single HTTP request (default true)
-      --http1.transport.dial-timeout duration                  Maximum amount of time a dial will wait for a connect to complete (default 30s)
-      --http1.transport.idle-conn-timeout duration             Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit (default 1m30s)
-      --http1.transport.idle-conn-timeout-short duration       Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit (default 100ms)
-      --http1.transport.keep-alive-timeout duration            Interval between keep-alive probes for an active network connection (default 1m30s)
-      --http1.transport.keep-alive-timeout-short duration      Interval between keep-alive probes for an active network connection (default 100ms)
-      --http1.transport.max-idle-conns int                     Maximum number of idle (keep-alive) connections across all hosts. Zero means no limit (default 100)
-      --http1.transport.tls-handshake-timeout duration         Maximum amount of time to wait for a TLS handshake. Zero means no timeout (default 10s)
-      --image.discovery.timeout duration                       Timeout for image discovery process (default 1m0s)
-      --internal.scaling-integration                           Enable Scaling Integration
-      --kubernetes.burst int                                   Burst for the k8s API (default 256)
-      --kubernetes.max-batch-size int                          Size of batch during objects read (default 256)
-      --kubernetes.qps float32                                 Number of queries per second for k8s API. If set to 0 or less, API calls won't be throttled (default 32)
-      --leader.label.skip                                      Skips Leader Label for the Pod
-      --log.format string                                      Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
-      --log.level stringArray                                  Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, arangod-request, assertion, authz-pool-client, backup-operator, backup-policy-operator, chaos-monkey, cli-utils, collector, connector-v1, crd, deployment, deployment-ci, deployment-reconcile, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, grpc-service, helm, http, inspector, integration-authn-v1, integration-authorization-v1, integration-config-v1, integration-envoy-auth-v3, integration-envoy-auth-v3-impl-auth-bearer, integration-envoy-auth-v3-impl-auth-cookie, integration-envoy-auth-v3-impl-auth-custom-alb, integration-envoy-auth-v3-impl-custom-openid, integration-envoy-auth-v3-impl-pass-mode, integration-envoy-config-v1, integration-events-v1, integration-meta-v1, integration-pong-v1, integration-scheduler-v2, integration-shutdown-v1, integration-storage-v1-s3, integration-storage-v2, integrations, k8s-client, kubernetes, kubernetes-access, kubernetes-admission, kubernetes-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-v2, operator-v2-event, operator-v2-worker, panics, permission-role-group-binding-operator, permission-role-user-binding-operator, permission-token-operator, permission-token-webhook, platform-chart-operator, platform-link-operator, platform-pod-shutdown, platform-service-operator, platform-storage-operator, platform-workflow-operator, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, sidecar, sidecar-authz, sidecar-authz-pool, sidecar-service-client-authentication, webhook (default [info])
-      --log.sampling                                           If true, operator will try to minimize duplication of logging events (default true)
-      --log.stdout                                             If true, operator will log to the stdout (default true)
-      --memory-limit uint                                      Define memory limit for hard shutdown and the dump of goroutines. Used for testing
-      --metrics.excluded-prefixes stringArray                  List of the excluded metrics prefixes
-      --mode.single                                            Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions
-      --operator.backup                                        Enable to run the ArangoBackup operator
-      --operator.deployment                                    Enable to run the ArangoDeployment operator
-      --operator.networking                                    Enable to run the Networking operator
-      --operator.platform                                      Enable to run the Platform operator
-      --operator.reconciliation.retry.count int                Count of retries during Object Update operations in the Reconciliation loop (default 25)
-      --operator.reconciliation.retry.delay duration           Delay between Object Update operations in the Reconciliation loop (default 1s)
-      --operator.scheduler                                     Enable to run the Scheduler operator
-      --operator.storage                                       Enable to run the ArangoLocalStorage operator
-      --operator.version                                       Enable only version endpoint in Operator
-      --reconciliation.delay duration                          Delay between reconciliation loops (<= 0 -> Disabled)
-      --shutdown.delay duration                                The delay before running shutdown handlers (default 2s)
-      --shutdown.timeout duration                              Timeout for shutdown handlers (default 30s)
-      --threads int                                            Number of the worker threads (default 16)
-      --timeout.agency duration                                The Agency read timeout (default 10s)
-      --timeout.arangod duration                               The request timeout to the ArangoDB (default 5s)
-      --timeout.arangod-check duration                         The version check request timeout to the ArangoDB (default 2s)
-      --timeout.backup-arangod duration                        The request timeout to the ArangoDB during backup calls (default 30s)
-      --timeout.backup-upload duration                         The request timeout to the ArangoDB during uploading files (default 5m0s)
-      --timeout.force-delete-pod-grace-period duration         Default period when ArangoDB Pod should be forcefully removed after all containers were stopped - set to 0 to disable forceful removals (default 15m0s)
-      --timeout.k8s duration                                   The request timeout to the kubernetes (default 2s)
-      --timeout.license-manager duration                       The request timeout for the ArangoDB License Manager API calls (default 30s)
-      --timeout.pod-scheduling-grace-period duration           Default period when ArangoDB Pod should be deleted in case of scheduling info change - set to 0 to disable (default 15s)
-      --timeout.reconciliation duration                        The reconciliation timeout to the ArangoDB CR (default 2m0s)
-      --timeout.shard-rebuild duration                         Timeout after which particular out-synced shard is considered as failed and rebuild is triggered (default 1h0m0s)
-      --timeout.shard-rebuild-retry duration                   Timeout after which rebuild shards retry flow is triggered (default 4h0m0s)
-      --webhook.enabled                                        Enable integrated webhook server
-      --webhook.mutating stringArray                           Mutating webhook which should have injected internal CA
-      --webhook.validating stringArray                         Validating webhook which should have injected internal CA
+      --action.PVCResize.concurrency int                          Define limit of concurrent PVC Resizes on the cluster (default 32)
+      --agency.refresh-delay duration                             The Agency refresh delay (0 = no delay) (default 500ms)
+      --agency.refresh-interval duration                          The Agency refresh interval (0 = do not refresh)
+      --agency.retries int                                        The Agency retries (0 = no retries) (default 1)
+      --api.basic-secret-name string                              Name of secret containing username + password for login to the dashboard (default "arangodb-operator-credentials")
+      --api.grpc-port int                                         gRPC API port to listen on (default 8728)
+      --api.http-port int                                         HTTP API port to listen on (default 8528)
+      --api.secondary-name stringArray                            Secondary names for a certificate
+      --api.tls-ca-secret-name string                             Name of secret containing ca.crt & ca.key for HTTPS API (if does not exist, new one is generated) (default "arangodb-operator-ca")
+      --backup-concurrent-uploads int                             Number of concurrent uploads per deployment (default 4)
+      --chaos.allowed                                             Set to allow chaos in deployments. Only activated when allowed and enabled in deployment
+      --crd.install                                               Install missing CRD if access is possible (default true)
+      --crd.preserve-unknown-fields stringArray                   Controls which CRD should have enabled preserve unknown fields in validation schema <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
+      --crd.validation-schema stringArray                         Overrides default set of CRDs which should have validation schema enabled <crd-name>=<true/false>. To apply for all, use crd-name 'all'.
+      --deployment.feature.active-failover                        Support for ActiveFailover mode - Required ArangoDB >= 3.8.0 < 3.12 (default true)
+      --deployment.feature.agency-poll                            Enable Agency Poll for Enterprise deployments - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.all                                    Enable ALL Features
+      --deployment.feature.apply-profile-all-to-init-containers   Also apply the ArangoProfile container.all template to init containers, not only to regular containers - Required ArangoDB >= 3.8.0
+      --deployment.feature.async-backup-creation                  Create backups asynchronously to avoid blocking the operator and reaching the timeout - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.backup-cleanup                         Cleanup imported backups if required - Required ArangoDB >= 3.8.0
+      --deployment.feature.backup-policy-until-propagation        Sets Until field in the Backup based on next schedule time - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.central-services                       Enables Central Services - Required ArangoDB EE >= 3.8.0
+      --deployment.feature.deployment-spec-defaults-restore       Restore defaults from last accepted state of deployment - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.enable-arango-deployment-status        Ensures the status subresource on the ArangoDeployment v1 CRD when enabled; when disabled the operator leaves it as the chart ships it (neither adds nor removes it) - Required ArangoDB >= 3.8.0
+      --deployment.feature.enforced-resign-leadership             Enforce ResignLeadership and ensure that Leaders are moved from restarted DBServer - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.ephemeral-volumes                      Enables ephemeral volumes for apps and tmp directory - Required ArangoDB >= 3.8.0
+      --deployment.feature.failover-leadership                    Support for leadership in fail-over mode - Required ArangoDB >= 3.8.0 < 3.12
+      --deployment.feature.gateway                                Defines if gateway extension is enabled - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.gateway-sidecar                        Enables Gateway Integration - Required ArangoDB EE >= 3.8.0
+      --deployment.feature.harden                                 Adds hardening arguments to the ArangoDB server containers - Required ArangoDB >= 3.8.0
+      --deployment.feature.init-containers-copy-resources         Copy resources spec to built-in init containers if they are not specified - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.init-containers-upscale-resources      Copy resources spec to built-in init containers if they are not specified or lower - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.jwt-asymmetric-key                     Uses Asymmetric Key as a default in ArangoDB - Required ArangoDB >= 3.12.8
+      --deployment.feature.local-storage.pass-reclaim-policy      [LocalStorage] Pass ReclaimPolicy from StorageClass instead of using hardcoded Retain - Required ArangoDB >= 3.8.0
+      --deployment.feature.local-volume-replacement-check         Replace volume for local-storage if volume is unschedulable (ex. node is gone) - Required ArangoDB >= 3.8.0
+      --deployment.feature.platform-workflow-discovery            Defines if the operator discovers existing platform service Helm releases by label and creates a chart-less ArangoPlatformWorkflow for each - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.random-pod-names                       Enables generating random pod names - Required ArangoDB >= 3.8.0
+      --deployment.feature.replace-migration                      During member replacement shards are migrated directly to the new server - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.restart-policy-always                  Allow to restart containers with always restart policy - Required ArangoDB >= 3.8.0
+      --deployment.feature.rotate-on-profile-change               Evict pods selected by an ArangoProfile whose applied profile checksum differs from the current resolved checksum - Required ArangoDB >= 3.8.0
+      --deployment.feature.scheduler-v2-workflow                  Defines if SchedulerV2 Integration manages ArangoPlatformWorkflow resources instead of calling Helm directly - Required ArangoDB >= 3.8.0
+      --deployment.feature.secured-containers                     Create server's containers with non root privileges. It enables 'ephemeral-volumes' feature implicitly - Required ArangoDB >= 3.8.0
+      --deployment.feature.sensitive-information-protection       Hide sensitive information from metrics and logs - Required ArangoDB >= 3.8.0
+      --deployment.feature.short-pod-names                        Enable Short Pod Names - Required ArangoDB >= 3.8.0
+      --deployment.feature.timezone-management                    Enable timezone management for pods - Required ArangoDB >= 3.8.0
+      --deployment.feature.tls-sni                                TLS SNI Support - Required ArangoDB EE >= 3.8.0 (default true)
+      --deployment.feature.upgrade-version-check                  Enable initContainer with pre version check - Required ArangoDB >= 3.8.0 (default true)
+      --deployment.feature.upgrade-version-check-v2               Enable initContainer with pre version check based by Operator - Required ArangoDB >= 3.8.0
+      --features-config-map-name string                           Name of the Feature Map ConfigMap (default "arangodb-operator-feature-config-map")
+      --http1.keep-alive                                          If false, disables HTTP keep-alives and will only use the connection to the server for a single HTTP request (default true)
+      --http1.transport.dial-timeout duration                     Maximum amount of time a dial will wait for a connect to complete (default 30s)
+      --http1.transport.idle-conn-timeout duration                Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit (default 1m30s)
+      --http1.transport.idle-conn-timeout-short duration          Maximum amount of time an idle (keep-alive) connection will remain idle before closing itself. Zero means no limit (default 100ms)
+      --http1.transport.keep-alive-timeout duration               Interval between keep-alive probes for an active network connection (default 1m30s)
+      --http1.transport.keep-alive-timeout-short duration         Interval between keep-alive probes for an active network connection (default 100ms)
+      --http1.transport.max-idle-conns int                        Maximum number of idle (keep-alive) connections across all hosts. Zero means no limit (default 100)
+      --http1.transport.tls-handshake-timeout duration            Maximum amount of time to wait for a TLS handshake. Zero means no timeout (default 10s)
+      --image.discovery.timeout duration                          Timeout for image discovery process (default 1m0s)
+      --internal.scaling-integration                              Enable Scaling Integration
+      --kubernetes.burst int                                      Burst for the k8s API (default 256)
+      --kubernetes.max-batch-size int                             Size of batch during objects read (default 256)
+      --kubernetes.qps float32                                    Number of queries per second for k8s API. If set to 0 or less, API calls won't be throttled (default 32)
+      --leader.label.skip                                         Skips Leader Label for the Pod
+      --log.format string                                         Set log format. Allowed values: 'pretty', 'JSON'. If empty, default format is used (default "pretty")
+      --log.level stringArray                                     Set log levels in format <level> or <logger>=<level>. Possible loggers: action, agency, arangod-request, assertion, authz-pool-client, backup-operator, backup-policy-operator, chaos-monkey, cli-utils, collector, connector-v1, crd, deployment, deployment-ci, deployment-reconcile, deployment-resilience, deployment-resources, deployment-storage, deployment-storage-pc, deployment-storage-service, generic-parent-operator, grpc-service, helm, http, inspector, integration-authn-v1, integration-authorization-v1, integration-config-v1, integration-envoy-auth-v3, integration-envoy-auth-v3-impl-auth-bearer, integration-envoy-auth-v3-impl-auth-cookie, integration-envoy-auth-v3-impl-auth-custom-alb, integration-envoy-auth-v3-impl-custom-openid, integration-envoy-auth-v3-impl-pass-mode, integration-envoy-config-v1, integration-events-v1, integration-meta-v1, integration-pong-v1, integration-scheduler-v2, integration-shutdown-v1, integration-storage-v1-s3, integration-storage-v2, integrations, k8s-client, kubernetes, kubernetes-access, kubernetes-admission, kubernetes-client, kubernetes-informer, monitor, networking-route-operator, operator, operator-v2, operator-v2-event, operator-v2-worker, panics, permission-role-group-binding-operator, permission-role-user-binding-operator, permission-token-operator, permission-token-webhook, platform-chart-operator, platform-link-operator, platform-pod-shutdown, platform-service-operator, platform-storage-operator, platform-workflow-operator, pod_compare, root, root-event-recorder, scheduler-batchjob-operator, scheduler-cronjob-operator, scheduler-deployment-operator, scheduler-pod-operator, scheduler-profile-operator, sidecar, sidecar-authz, sidecar-authz-pool, sidecar-service-client-authentication, webhook (default [info])
+      --log.sampling                                              If true, operator will try to minimize duplication of logging events (default true)
+      --log.stdout                                                If true, operator will log to the stdout (default true)
+      --memory-limit uint                                         Define memory limit for hard shutdown and the dump of goroutines. Used for testing
+      --metrics.excluded-prefixes stringArray                     List of the excluded metrics prefixes
+      --mode.single                                               Enable single mode in Operator. WARNING: There should be only one replica of Operator, otherwise Operator can take unexpected actions
+      --operator.backup                                           Enable to run the ArangoBackup operator
+      --operator.deployment                                       Enable to run the ArangoDeployment operator
+      --operator.networking                                       Enable to run the Networking operator
+      --operator.platform                                         Enable to run the Platform operator
+      --operator.reconciliation.retry.count int                   Count of retries during Object Update operations in the Reconciliation loop (default 25)
+      --operator.reconciliation.retry.delay duration              Delay between Object Update operations in the Reconciliation loop (default 1s)
+      --operator.scheduler                                        Enable to run the Scheduler operator
+      --operator.storage                                          Enable to run the ArangoLocalStorage operator
+      --operator.version                                          Enable only version endpoint in Operator
+      --reconciliation.delay duration                             Delay between reconciliation loops (<= 0 -> Disabled)
+      --shutdown.delay duration                                   The delay before running shutdown handlers (default 2s)
+      --shutdown.timeout duration                                 Timeout for shutdown handlers (default 30s)
+      --threads int                                               Number of the worker threads (default 16)
+      --timeout.agency duration                                   The Agency read timeout (default 10s)
+      --timeout.arangod duration                                  The request timeout to the ArangoDB (default 5s)
+      --timeout.arangod-check duration                            The version check request timeout to the ArangoDB (default 2s)
+      --timeout.backup-arangod duration                           The request timeout to the ArangoDB during backup calls (default 30s)
+      --timeout.backup-upload duration                            The request timeout to the ArangoDB during uploading files (default 5m0s)
+      --timeout.force-delete-pod-grace-period duration            Default period when ArangoDB Pod should be forcefully removed after all containers were stopped - set to 0 to disable forceful removals (default 15m0s)
+      --timeout.k8s duration                                      The request timeout to the kubernetes (default 2s)
+      --timeout.license-manager duration                          The request timeout for the ArangoDB License Manager API calls (default 30s)
+      --timeout.pod-scheduling-grace-period duration              Default period when ArangoDB Pod should be deleted in case of scheduling info change - set to 0 to disable (default 15s)
+      --timeout.reconciliation duration                           The reconciliation timeout to the ArangoDB CR (default 2m0s)
+      --timeout.shard-rebuild duration                            Timeout after which particular out-synced shard is considered as failed and rebuild is triggered (default 1h0m0s)
+      --timeout.shard-rebuild-retry duration                      Timeout after which rebuild shards retry flow is triggered (default 4h0m0s)
+      --webhook.enabled                                           Enable integrated webhook server
+      --webhook.mutating stringArray                              Mutating webhook which should have injected internal CA
+      --webhook.validating stringArray                            Validating webhook which should have injected internal CA
 ```
 
 [END_INJECT]: # (operatorArguments)
@@ -270,8 +275,8 @@ Flags:
 ### Installation and Usage
 
 Docker images:
-- Community Edition: `arangodb/kube-arangodb:1.4.7`
-- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.4.7`
+- Community Edition: `arangodb/kube-arangodb:1.4.8`
+- Enterprise Edition: `arangodb/kube-arangodb-enterprise:1.4.8`
 
 ### Installation of latest release using Kubectl
 
@@ -280,18 +285,18 @@ running ArangoDB deployments.
 
 ##### Community Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/arango-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/arango-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.8/manifests/arango-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.8/manifests/arango-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/arango-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.8/manifests/arango-storage.yaml
 ```
 
 ##### Enterprise Edition
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/enterprise-crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/enterprise-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.8/manifests/enterprise-crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.8/manifests/enterprise-deployment.yaml
 # To use `ArangoLocalStorage`, also run
-kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.7/manifests/enterprise-storage.yaml
+kubectl apply -f https://raw.githubusercontent.com/arangodb/kube-arangodb/1.4.8/manifests/enterprise-storage.yaml
 ```
 
 ### Installation of latest release using kustomize
@@ -310,8 +315,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.4.7
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.4.7
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/crd?ref=1.4.8
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize/deployment?ref=1.4.8
 ```
 
 ##### Enterprise Edition example
@@ -320,8 +325,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: my-custom-namespace
 resources:
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.4.7
-  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.4.7
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/crd?ref=1.4.8
+  - https://github.com/arangodb/kube-arangodb/manifests/kustomize-enterprise/deployment?ref=1.4.8
 ```
 
 ### Installation of latest release using Helm
@@ -357,17 +362,17 @@ helm install --generate-name kube-arangodb/kube-arangodb-enterprise --set "opera
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-1.4.8.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-1.4.8.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-enterprise-1.4.7.tgz
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-enterprise-1.4.8.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-enterprise-1.4.7.tgz --set "operator.features.storage=true"
+helm install --generate-name https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-enterprise-1.4.8.tgz --set "operator.features.storage=true"
 ```
 
 #### Supporting charts
@@ -387,23 +392,23 @@ kube-arangodb-1-1696919877	default  	1       	2023-10-10 08:37:57.884783199 +020
 
 So here, you would have to do
 ```bash
-helm upgrade --install kube-arangodb-1-1696919877 https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz
+helm upgrade --install kube-arangodb-1-1696919877 https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-1.4.8.tgz
 ```
 
 ##### Community Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-1.4.8.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-1.4.7.tgz --set "operator.features.storage=true"
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-1.4.8.tgz --set "operator.features.storage=true"
 ```
 
 ##### Enterprise Edition
 ```bash
 # The following will install the operator and basic CRDs resources.
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-enterprise-1.4.7.tgz
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-enterprise-1.4.8.tgz
 # To use `ArangoLocalStorage`, set field `operator.features.storage` to true
-helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.7/kube-arangodb-enterprise-1.4.7.tgz --set "operator.features.storage=true"
+helm upgrade --install <NAME> https://github.com/arangodb/kube-arangodb/releases/download/1.4.8/kube-arangodb-enterprise-1.4.8.tgz --set "operator.features.storage=true"
 ```
 
 ## Building

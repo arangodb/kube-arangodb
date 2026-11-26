@@ -23,17 +23,37 @@ spec:
     name: my-deployment
   ttl: 2h
   roles:
-    - viewer
-    - editor
-  policyName: my-policy
+    - role:
+        name: editor            # ArangoPermissionRole CRD
+      scope:
+        policy:
+          statements:
+            - effect: Allow
+              actions: ["*"]
+              resources: ["db:apiversion:*", "db:database:sales", "db:collection:sales:*"]
+  policy:
+    statements:
+      - effect: Allow
+        actions:
+          - "db:UseApiVersion"
+        resources:
+          - "*"
+      - effect: Allow
+        actions:
+          - "db:Read"
+          - "db:WriteData"
+        resources:
+          - "db:database:sales"
+          - "db:collection:sales:orders"
   scope:
     statements:
       - effect: Allow
         actions:
-          - "collection:read"
-          - "collection:write"
+          - "*"
         resources:
-          - "my-collection"
+          - "db:apiversion:*"
+          - "db:database:sales"
+          - "db:collection:sales:orders"
 ```
 
 ## Spec Fields
@@ -41,48 +61,58 @@ spec:
 | Field | Required | Default | Description |
 |---|---|---|---|
 | `deployment.name` | Yes | - | Name of the ArangoDeployment |
-| `ttl` | No | `1h` | Token lifetime (minimum 15m) |
-| `roles` | No | `[]` | List of role names to include in the JWT |
-| `policyName` | No | - | Name of the `ArangoPermissionPolicy` CRD to reference |
-| `scope` | No | - | Boundary policy that constrains what the referenced policy can grant on this token's managed role |
+| `ttl` | No | `1h` | Token lifetime (minimum `15m`) |
+| `roles` | No | `[]` | Existing roles to bind to the token's user, each with its own scope (see below) |
+| `policy` | No | - | Inline policy. The operator creates it as a managed policy and wraps it in a managed role for this token |
+| `scope` | No | - | Boundary for the managed role created from `policy` |
+
+### `roles`
+
+Each entry binds an existing role to the token's user:
+
+| Field | Required | Description |
+|---|---|---|
+| `role.name` | One of `name`/`direct` | Name of an `ArangoPermissionRole` CRD |
+| `role.direct` | One of `name`/`direct` | Exact sidecar role name, e.g. a predefined role `managed:predefined:coredb-reader` |
+| `scope.policy` | One of `policy`/`ref` | Inline boundary policy for this binding |
+| `scope.ref.name` | One of `policy`/`ref` | Name of an `ArangoPermissionPolicy` CRD to use as the boundary |
+
+Both `role` and `scope` are required for every entry.
 
 ## Scope
 
 The `scope` field defines the **permission boundary** for the token's managed
-role. Even if the referenced policy grants broad access, the scope restricts
-what the managed role can actually provide.
+role (the one created from `spec.policy`). An action is granted only if both
+the policy **and** the scope allow it. For example, if `policy` allows `*` on
+`*` but the scope only allows `db:UseApiVersion` and `db:Read` on
+`db:apiversion:*` and `db:collection:sales:orders`, the managed role only
+grants read access to the `orders` collection.
 
-For example, if `policyName` references a policy that allows `*:*` on `*`, but
-the scope only allows `collection:read` on `my-collection`, then the token's
-managed role will only grant read access to `my-collection`.
-
-When `scope` is omitted, the managed role has no additional constraints beyond
-the referenced policy.
+> **Note:** RBAC is deny-by-default and a binding's scope must allow an action
+> for the binding to grant it. If `spec.policy` is set but `spec.scope` is
+> omitted, the managed role is bound with an empty scope and **grants nothing**.
+> To give the policy full effect, set a scope that allows everything the policy
+> should grant, e.g. `actions: ["*"]`, `resources: ["*"]`.
 
 ## What the Operator Creates
 
-When `spec.policyName` is set, the operator automatically:
-
-1. **Creates an ArangoDB user** with a random password
-2. **Resolves the ArangoPermissionPolicy** CRD referenced by `spec.policyName`
-3. **Creates a role** in the sidecar (`managed:operator:<uid>`) that references
-   the external policy and uses `spec.scope` as its boundary
-4. **Generates a JWT** signed with the deployment's JWT secret, containing:
-   - The created username
-   - Roles from `spec.roles` plus the managed role name
-   - Expiration based on `spec.ttl`
-5. **Stores the JWT** in a Kubernetes Secret (owned by the token resource)
+1. **An ArangoDB user** with a random password.
+2. If `spec.policy` is set:
+   - a **managed policy** `managed:operator:<token-uid>:policy` in the sidecar
+   - a **managed role** `managed:operator:<token-uid>` referencing that policy
+3. **User role bindings** in the sidecar for the created user:
+   - every entry of `spec.roles`, with that entry's scope
+   - the managed role (if any), with `spec.scope`
+4. **A JWT** signed with the deployment's JWT secret, containing the username
+   (`preferred_username`) and expiration based on `spec.ttl`. Roles are **not**
+   put into the JWT. They are resolved from the user role bindings at
+   evaluation time.
+5. **A Kubernetes Secret** (owned by the token resource) holding the JWT under
+   the `token` key.
 
 ## Retrieving the Token
 
-The JWT is stored in a Secret created by the operator:
-
-```bash
-kubectl get secret -l "app.kubernetes.io/managed-by=arangodb-operator" \
-  -o jsonpath='{.items[0].data.token}' | base64 -d
-```
-
-Or check the token status for the secret name:
+Get the Secret name from the token status:
 
 ```bash
 kubectl get arangopermissiontoken my-service-token -o jsonpath='{.status.secret.name}'
@@ -94,49 +124,36 @@ Then:
 kubectl get secret <secret-name> -o jsonpath='{.data.token}' | base64 -d
 ```
 
+## Attaching the Token to a Pod
+
+The operator's mutating webhook can mount the token into pods of the
+deployment. Add the label `permissions.arangodb.com/token: <token-name>` to the
+Pod, or to its ServiceAccount. The pod also needs the label
+`profiles.arangodb.com/deployment: <deployment-name>`. The token must be
+`Ready` and belong to that deployment.
+
+The webhook then:
+
+- mounts the Secret read-only at `/var/run/secrets/arango/token/`
+- sets the environment variable `ARANGO_TOKEN` to the token file path
+  (`/var/run/secrets/arango/token/token`)
+- labels the pod `permissions.arangodb.com/attached: <token-name>`
+
 ## Token Lifecycle
 
-- Tokens are **automatically refreshed** at half their TTL
+- Tokens are **automatically refreshed** at half their TTL.
 - The JWT is **regenerated** when:
-  - The signing secret changes
-  - The roles list changes (e.g., managed role is created)
-  - The TTL changes
+  - the signing secret changes
+  - the TTL changes
+  - the ArangoDB user changes
+- Changes to `roles`, `policy` or `scope` do **not** require a new JWT. The
+  operator updates the sidecar policy, role and bindings, and they take effect
+  on the next evaluation (see [Runtime Behavior](behavior.md)).
 - On **deletion**, the operator cleans up:
-  - The ArangoDB user
-  - The sidecar role
-
-The referenced `ArangoPermissionPolicy` is **not** deleted when the token is
-removed — it is managed independently.
+  - the ArangoDB user
+  - the managed role and the managed policy in the sidecar
 
 ## Example: Read-Only Service Token
-
-First create a policy:
-
-```yaml
-apiVersion: permission.arangodb.com/v1alpha1
-kind: ArangoPermissionPolicy
-metadata:
-  name: monitoring-policy
-spec:
-  deployment:
-    name: production
-  policy:
-    statements:
-      - effect: Allow
-        actions:
-          - "database:read"
-          - "collection:read"
-        resources:
-          - "*"
-      - effect: Deny
-        actions:
-          - "database:write"
-          - "collection:write"
-        resources:
-          - "*"
-```
-
-Then create a token referencing it:
 
 ```yaml
 apiVersion: permission.arangodb.com/v1alpha1
@@ -147,17 +164,53 @@ spec:
   deployment:
     name: production
   ttl: 4h
-  policyName: monitoring-policy
+  policy:
+    statements:
+      - effect: Allow
+        actions:
+          - "db:UseApiVersion"
+          - "db:Read"
+        resources:
+          - "*"
+      - effect: Deny
+        actions:
+          - "db:WriteData"
+          - "db:WriteMeta"
+          - "db:Create"
+          - "db:Drop"
+        resources:
+          - "*"
   scope:
     statements:
       - effect: Allow
         actions:
-          - "database:read"
-          - "collection:read"
+          - "db:UseApiVersion"
+          - "db:Read"
         resources:
           - "*"
 ```
 
-This creates a token scoped to read-only access. The scope acts as a boundary —
-even if the referenced policy were to be updated with broader permissions, this
-token's role would remain limited to read operations.
+This creates a token scoped to read-only access. The scope acts as a boundary:
+even if the policy were later changed to grant broader permissions, this
+token's managed role would stay limited to read operations.
+
+## Example: Token with a Predefined Role
+
+```yaml
+apiVersion: permission.arangodb.com/v1alpha1
+kind: ArangoPermissionToken
+metadata:
+  name: reports-reader
+spec:
+  deployment:
+    name: production
+  roles:
+    - role:
+        direct: managed:predefined:coredb-reader
+      scope:
+        policy:
+          statements:
+            - effect: Allow
+              actions: ["*"]
+              resources: ["db:apiversion:*", "db:database:reports", "db:*:reports:*"]
+```
