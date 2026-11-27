@@ -1,6 +1,7 @@
 # Change Log
 
 ## [master](https://github.com/arangodb/kube-arangodb/tree/master) (N/A)
+- (Feature) Allow a feature to declare a Kubernetes version constraint, gated by a dedicated SupportedKubernetesVersion check against the discovered cluster version (empty constraint defaults to any, shown as "Any" in the feature table)
 - (Feature) Trace each sidecar->central proxied call (method, code, duration) at debug level, and surface all upstream error codes
 - (Feature) Add the pass-sidecar-debug-options feature (disabled by default, replaces sidecar-debug): propagate the operator's --log.level to the integration and internal authorization sidecars, so a single operator-level setting turns on sidecar (incl. the sidecar->central proxy) debug logging
 

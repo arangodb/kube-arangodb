@@ -158,6 +158,10 @@ func cmdRun(_ *cobra.Command, _ []string) {
 			println(fmt.Sprintf("ArangoDB Version Required: %s", c))
 		}
 
+		if c := feature.KubernetesVersion(); !c.Empty() {
+			println(fmt.Sprintf("Kubernetes Version Required: %s", c))
+		}
+
 		if feature.EnterpriseRequired() {
 			println("ArangoDB Edition Required: Enterprise")
 		} else {
@@ -202,6 +206,21 @@ func Supported(f Feature, v util.Version, enterprise bool) bool {
 	}
 
 	return true
+}
+
+// SupportedKubernetesVersion reports whether the feature's declared Kubernetes version constraint is
+// satisfied by the given discovered cluster Kubernetes version. It defaults to any: a feature that
+// declares no Kubernetes version constraint (the empty constraint, almost every feature) is supported
+// on every Kubernetes version, so the (possibly not-yet-discovered) zero version is accepted. When a
+// feature does declare a constraint, an unknown (zero) Kubernetes version fails closed.
+func SupportedKubernetesVersion(f Feature, kubernetes util.Version) bool {
+	c := f.KubernetesVersion()
+	if c.Empty() {
+		return true
+	}
+
+	ok, err := c.Validate(kubernetes)
+	return err == nil && ok
 }
 
 // GetFeatureMap returns all features' arguments names.

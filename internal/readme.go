@@ -75,8 +75,9 @@ type FeatureReleases []FeatureRelease
 type FeatureRelease struct {
 	Doc *string `json:"doc,omitempty" yaml:"doc,omitempty"`
 
-	OperatorVersion *string `json:"operatorVersion,omitempty" yaml:"operatorVersion,omitempty"`
-	ArangoDBVersion *string `json:"arangoDBVersion,omitempty" yaml:"arangoDBVersion,omitempty"`
+	OperatorVersion   *string `json:"operatorVersion,omitempty" yaml:"operatorVersion,omitempty"`
+	ArangoDBVersion   *string `json:"arangoDBVersion,omitempty" yaml:"arangoDBVersion,omitempty"`
+	KubernetesVersion *string `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 
 	OperatorEdition *string `json:"operatorEditions,omitempty" yaml:"operatorEditions,omitempty"`
 	ArangoDBEdition *string `json:"arangoDBEditions,omitempty" yaml:"arangoDBEditions,omitempty"`
@@ -188,15 +189,16 @@ func GenerateHelpRaw(cmd *cobra.Command, args ...string) (string, error) {
 
 func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) {
 	type tableRow struct {
-		Feature         string `table:"Feature" table_align:"left"`
-		OperatorVersion string `table:"Operator Version" table_align:"left"`
-		Introduced      string `table:"Introduced" table_align:"left"`
-		ArangoDBVersion string `table:"ArangoDB Version" table_align:"left"`
-		ArangoDBEdition string `table:"ArangoDB Edition" table_align:"left"`
-		State           string `table:"State" table_align:"left"`
-		Enabled         string `table:"Enabled" table_align:"left"`
-		Flag            string `table:"Flag" table_align:"left"`
-		Remarks         string `table:"Remarks" table_align:"left"`
+		Feature           string `table:"Feature" table_align:"left"`
+		OperatorVersion   string `table:"Operator Version" table_align:"left"`
+		Introduced        string `table:"Introduced" table_align:"left"`
+		ArangoDBVersion   string `table:"ArangoDB Version" table_align:"left"`
+		KubernetesVersion string `table:"Kubernetes Version" table_align:"left"`
+		ArangoDBEdition   string `table:"ArangoDB Edition" table_align:"left"`
+		State             string `table:"State" table_align:"left"`
+		Enabled           string `table:"Enabled" table_align:"left"`
+		Flag              string `table:"Flag" table_align:"left"`
+		Remarks           string `table:"Remarks" table_align:"left"`
 	}
 
 	tb := pretty.NewTable[tableRow]()
@@ -258,15 +260,16 @@ func GenerateReadmeFeatures(root, basePath string, eeOnly bool) (string, error) 
 		}
 
 		tb.Add(tableRow{
-			Feature:         n,
-			Introduced:      util.TypeOrDefault[string](f.Releases[0].OperatorVersion, "ANY"),
-			OperatorVersion: util.TypeOrDefault[string](util.First(r.OperatorVersion, f.OperatorVersion)),
-			ArangoDBVersion: util.TypeOrDefault[string](util.First(r.ArangoDBVersion, f.ArangoDBVersion), fmt.Sprintf(">= %s", features.MinSupportedArangoDBVersion)),
-			ArangoDBEdition: util.TypeOrDefault[string](util.First(r.ArangoDBEdition, f.ArangoDBEdition), "Community, Enterprise"),
-			State:           util.TypeOrDefault[string](util.First(r.State, f.State), "Alpha"),
-			Enabled:         util.BoolSwitch[string](util.TypeOrDefault[bool](util.First(r.Enabled, f.Enabled), true), "True", "False"),
-			Flag:            util.TypeOrDefault[string](util.First(r.Flag, f.Flag), "N/A"),
-			Remarks:         util.TypeOrDefault[string](util.First(r.Remarks, f.Remarks), "N/A"),
+			Feature:           n,
+			Introduced:        util.TypeOrDefault[string](f.Releases[0].OperatorVersion, "ANY"),
+			OperatorVersion:   util.TypeOrDefault[string](util.First(r.OperatorVersion, f.OperatorVersion)),
+			ArangoDBVersion:   util.TypeOrDefault[string](util.First(r.ArangoDBVersion, f.ArangoDBVersion), fmt.Sprintf(">= %s", features.MinSupportedArangoDBVersion)),
+			KubernetesVersion: util.TypeOrDefault[string](util.First(r.KubernetesVersion, f.KubernetesVersion), "Any"),
+			ArangoDBEdition:   util.TypeOrDefault[string](util.First(r.ArangoDBEdition, f.ArangoDBEdition), "Community, Enterprise"),
+			State:             util.TypeOrDefault[string](util.First(r.State, f.State), "Alpha"),
+			Enabled:           util.BoolSwitch[string](util.TypeOrDefault[bool](util.First(r.Enabled, f.Enabled), true), "True", "False"),
+			Flag:              util.TypeOrDefault[string](util.First(r.Flag, f.Flag), "N/A"),
+			Remarks:           util.TypeOrDefault[string](util.First(r.Remarks, f.Remarks), "N/A"),
 		})
 	}
 
