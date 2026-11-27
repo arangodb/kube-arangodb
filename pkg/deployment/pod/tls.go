@@ -1,7 +1,7 @@
 //
 // DISCLAIMER
 //
-// Copyright 2016-2025 ArangoDB GmbH, Cologne, Germany
+// Copyright 2016-2026 ArangoDB GmbH, Cologne, Germany
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,19 @@ func IsRuntimeTLSKeyfileUpdateSupported(i Input) bool {
 }
 
 func IsTLSEnabled(i Input) bool {
+	if i.Group == api.ServerGroupGateways && IsGatewayTLSEnabled(i.Deployment) {
+		// The gateway serves client-facing TLS even when the deployment (arangod) TLS is disabled.
+		return true
+	}
+
 	return i.Deployment.TLS.IsSecure()
+}
+
+// IsGatewayTLSEnabled returns whether the gateway should serve client-facing (downstream) TLS
+// independently of the deployment (arangod) TLS. It is effective only when the gateway-tls operator
+// feature is enabled and spec.gateway.tls is enabled.
+func IsGatewayTLSEnabled(spec api.DeploymentSpec) bool {
+	return features.GatewayTLS().Enabled() && spec.Gateway.GetTLS().IsEnabled()
 }
 
 func GetTLSKeyfileSecretName(i Input) string {

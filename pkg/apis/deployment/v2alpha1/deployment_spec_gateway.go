@@ -83,6 +83,19 @@ type DeploymentSpecGateway struct {
 
 	// Authentication defines the Authentication spec
 	Authentication *DeploymentSpecGatewayAuthentication `json:"authentication,omitempty"`
+
+	// TLS configures the gateway client-facing (downstream) TLS listener independently of the deployment
+	// (arangod) TLS. Requires the operator `gateway-tls` feature to be enabled.
+	TLS *DeploymentSpecGatewayTLS `json:"tls,omitempty"`
+}
+
+// GetTLS returns the gateway TLS spec (never nil).
+func (d *DeploymentSpecGateway) GetTLS() *DeploymentSpecGatewayTLS {
+	if d == nil || d.TLS == nil {
+		return &DeploymentSpecGatewayTLS{}
+	}
+
+	return d.TLS
 }
 
 // IsEnabled returns whether the gateway is enabled.
@@ -183,6 +196,7 @@ func (d *DeploymentSpecGateway) Validate() error {
 				return errors.Errorf("Unknown dynamicMode %s", m)
 			}
 		}),
+		shared.PrefixResourceErrorFunc("tls", d.TLS.Validate),
 	)
 }
 

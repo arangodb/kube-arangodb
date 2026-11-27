@@ -435,7 +435,10 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 		}
 	}
 
-	if spec.TLS.IsSecure() {
+	// The gateway serves client-facing TLS when the deployment (arangod) TLS is secure, or when the
+	// gateway-tls feature decouples it (spec.gateway.tls). The gateway->arangod upstream scheme stays
+	// tied to spec.tls, so it remains plaintext when only the gateway serves TLS.
+	if spec.TLS.IsSecure() || (features.GatewayTLS().Enabled() && spec.Gateway.GetTLS().IsEnabled()) {
 		// Enabled TLS, add config. Certificates are delivered to Envoy via filesystem SDS so a
 		// rotated keyfile is reloaded in place; WatchDir points at the mounted secret directory.
 		keyPath := filepath.Join(shared.TLSKeyfileVolumeMountDir, utilConstants.SecretTLSKeyfile)
@@ -446,7 +449,9 @@ func (r *Resources) renderGatewayConfig(cachedStatus inspectorInterface.Inspecto
 			WatchDir:        shared.TLSKeyfileVolumeMountDir,
 			SDSPath:         path.Join(utilConstants.GatewaySDSVolumeMountDir, gateway.SDSFileName(utilConstants.GatewaySDSInternalName)),
 		}
-		cfg.DefaultDestination.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
+		if spec.TLS.IsSecure() {
+			cfg.DefaultDestination.Type = util.NewType(gateway.ConfigDestinationTypeHTTPS)
+		}
 
 		// Check SNI
 		if sni := spec.TLS.GetSNI().Mapping; len(sni) > 0 {

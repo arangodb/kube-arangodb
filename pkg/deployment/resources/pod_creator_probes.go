@@ -225,7 +225,19 @@ func (r *Resources) probeBuilders(imageInfo api.ImageInfo) map[api.ServerGroup]p
 	}
 }
 
-func (r *Resources) probeCommand(spec api.DeploymentSpec, probeType api.ProbeType) []string {
+// probeIsSecure reports whether the probe for the given group must speak TLS. It follows the
+// deployment (arangod) TLS, except for gateways which additionally serve client-facing TLS when the
+// gateway-tls feature decouples it (spec.gateway.tls) even while arangod TLS is disabled. This mirrors
+// pod.IsTLSEnabled so the probe scheme matches the port the member actually serves.
+func probeIsSecure(spec api.DeploymentSpec, group api.ServerGroup) bool {
+	if group == api.ServerGroupGateways && pod.IsGatewayTLSEnabled(spec) {
+		return true
+	}
+
+	return spec.IsSecure()
+}
+
+func (r *Resources) probeCommand(spec api.DeploymentSpec, group api.ServerGroup, probeType api.ProbeType) []string {
 	exePath := k8sutil.LifecycleBinary()
 	args := []string{
 		exePath,
@@ -234,7 +246,7 @@ func (r *Resources) probeCommand(spec api.DeploymentSpec, probeType api.ProbeTyp
 		string(probeType),
 	}
 
-	if spec.IsSecure() {
+	if probeIsSecure(spec, group) {
 		args = append(args, "--ssl")
 	}
 
@@ -263,7 +275,7 @@ func (r *Resources) probeBuilderStartupCoreSelect(group api.ServerGroup, imageIn
 
 func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup,
 	image api.ImageInfo) (Probe, error) {
-	args := r.probeCommand(spec, api.ProbeTypeLiveness)
+	args := r.probeCommand(spec, group, api.ProbeTypeLiveness)
 
 	cmdProbeConfig := &probes.CMDProbeConfig{
 		Command: args,
@@ -277,7 +289,7 @@ func (r *Resources) probeBuilderLivenessCoreOperator(spec api.DeploymentSpec, gr
 
 func (r *Resources) probeBuilderStartupCoreOperator(spec api.DeploymentSpec, group api.ServerGroup,
 	image api.ImageInfo) (Probe, error) {
-	args := r.probeCommand(spec, api.ProbeTypeStartUp)
+	args := r.probeCommand(spec, group, api.ProbeTypeStartUp)
 
 	retries, periodSeconds := getProbeRetries(group)
 	if IsServerProgressAvailable(group, image) {
@@ -313,7 +325,7 @@ func (r *Resources) probeBuilderLivenessCore(spec api.DeploymentSpec, group api.
 	}
 	return &probes.HTTPProbeConfig{
 		LocalPath:     "/_api/version",
-		Secure:        spec.IsSecure(),
+		Secure:        probeIsSecure(spec, group),
 		Authorization: authorization,
 	}, nil
 }
@@ -340,7 +352,7 @@ func (r *Resources) probeBuilderStartupCore(spec api.DeploymentSpec, group api.S
 	}
 	return &probes.HTTPProbeConfig{
 		LocalPath:     "/_api/version",
-		Secure:        spec.IsSecure(),
+		Secure:        probeIsSecure(spec, group),
 		Authorization: authorization,
 		Common: probes.Common{
 			FailureThreshold:    util.NewType[int32](retries),
@@ -405,7 +417,7 @@ func (r *Resources) probeBuilderReadinessCoreSelect() probeBuilder {
 }
 
 func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
-	args := r.probeCommand(spec, api.ProbeTypeReadiness)
+	args := r.probeCommand(spec, group, api.ProbeTypeReadiness)
 
 	return &probes.CMDProbeConfig{
 		Command: args,
@@ -416,7 +428,7 @@ func (r *Resources) probeBuilderReadinessCoreOperator(spec api.DeploymentSpec, g
 	}, nil
 }
 
-func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.ServerGroup, _ api.ImageInfo) (Probe, error) {
+func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, group api.ServerGroup, _ api.ImageInfo) (Probe, error) {
 	// /_admin/server/availability is the way to go, it is available since 3.3.9
 	localPath := "/_admin/server/availability"
 	if features.FailoverLeadership().Enabled() && r.context.GetMode() == api.DeploymentModeActiveFailover {
@@ -442,7 +454,7 @@ func (r *Resources) probeBuilderReadinessCore(spec api.DeploymentSpec, _ api.Ser
 	}
 	probeCfg := &probes.HTTPProbeConfig{
 		LocalPath:     localPath,
-		Secure:        spec.IsSecure(),
+		Secure:        probeIsSecure(spec, group),
 		Authorization: authorization,
 		Common: probes.Common{
 			InitialDelaySeconds: util.NewType[int32](2),
